@@ -28,7 +28,7 @@ Usage
 =====
 
 1. Install module.
-   Put Emacs lisp files starts with ``ein`` in your load path.
+   Put Emacs lisp files start with ``ein`` in your load path.
 
 2. Require module::
 
