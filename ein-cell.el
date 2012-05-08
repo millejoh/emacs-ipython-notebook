@@ -340,6 +340,19 @@ A specific note can be specified using INDEX."
   ;; escape ANSI & HTML specials in plaintext:
   (ein:insert-read-only (ansi-color-apply data)))
 
+(defun ein:cell-to-json (cell)
+  "Return json-ready plist."
+  (let ((data (list
+               :input (ein:cell-get-text cell)
+               :cell_type "code"
+               :outputs (or (mapcar 'identity (ein:$cell-outputs cell)) [])
+               :language "python"
+               ;; FIXME: implement `collapsed'
+               :collapsed json-false)))
+    (ein:aif (ein:$cell-input-prompt-number cell)
+        (plist-put data :prompt_number it))
+    data))
+
 (defun ein:cell-next (cell)
   "Return next cell of the given CELL or nil if CELL is the last one."
   (ein:aif (ewoc-next (ein:cell-get-ewoc cell)
