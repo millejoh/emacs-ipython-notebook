@@ -35,7 +35,7 @@
 
 (defstruct ein:$cell
   read-only                             ; nil/t
-  data                                  ; default data
+  data                                  ; default data - FIXME: remove this!
   ;; notebook                              ; `ein:$notebook'
   ewoc                                  ; ewoc (NOTE: use `ein:cell-get-ewoc')
   element                               ; ewoc nodes

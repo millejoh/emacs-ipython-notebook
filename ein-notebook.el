@@ -42,7 +42,7 @@
 
 (defstruct ein:$notebook
   notebook-id                           ; uuid string
-  data                                  ; json data
+  data                                  ; json data - FIXME: remove this!
   ewoc                                  ; ewoc
   kernel                                ; ein:$kernel
   pager                                 ; ein:$pager
