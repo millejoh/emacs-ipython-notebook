@@ -146,8 +146,8 @@ A specific note can be specified using INDEX."
 
 (defun ein:cell-insert-prompt (cell)
   ;; Newline is inserted in `ein:cell-insert-input'.
-  (ein:insert-read-only (format "In [%s]:"
-                                (or (ein:$cell-input-prompt-number cell)  " "))))
+  (ein:insert-read-only
+   (format "In [%s]:" (or (ein:$cell-input-prompt-number cell)  " "))))
 
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
