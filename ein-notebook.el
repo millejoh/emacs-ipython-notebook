@@ -48,7 +48,8 @@
   pager                                 ; ein:$pager
   dirty                                 ; t/nil
   msg-cell-map                          ; hash
-  metadata                              ; ?
+  metadata                              ; json data
+  notebook-name                         ; string
   )
 
 (defvar ein:notebook nil)
@@ -113,19 +114,8 @@ Note that SLOT should not be quoted."
 (defun ein:notebook-render ()
   "(Re-)Render the notebook."
   (interactive)
-  (assert (ein:@notebook notebook-id))
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    ;; Enable nonsep for ewoc object (the last argument is non-nil).
-    ;; This is for putting read-only text properties to the newlines.
-    (setf (ein:@notebook ewoc)
-          (ewoc-create 'ein:notebook-pp
-                       (ein:propertize-read-only "IPython notebook\n\n")
-                       nil t))
-    (mapc (lambda (cell-data)
-            (ein:cell-enter-last
-             (ein:notebook-cell-new ein:notebook :data cell-data)))
-          (plist-get (ein:notebook-get-worksheet) :cells)))
+  (assert ein:notebook)  ; make sure in a notebook buffer
+  (ein:notebook-from-json ein:notebook (ein:@notebook data))
   (ein:notebook-mode)
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready" (ein:@notebook notebook-id)))
@@ -338,12 +328,30 @@ Note that SLOT should not be quoted."
 
 ;;; Persistance and loading
 
+(defun ein:notebook-from-json (notebook data)
+  (let* ((metadata (plist-get data :metadata))
+         (notebook-name (plist-get metadata :name)))
+    (setf (ein:$notebook-metadata notebook) metadata)
+    (setf (ein:$notebook-notebook-name notebook) notebook-name))
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    ;; Enable nonsep for ewoc object (the last argument is non-nil).
+    ;; This is for putting read-only text properties to the newlines.
+    (setf (ein:$notebook-ewoc notebook)
+          (ewoc-create 'ein:notebook-pp
+                       (ein:propertize-read-only "IPython notebook\n\n")
+                       nil t))
+    (mapc (lambda (cell-data)
+            (ein:cell-enter-last
+             (ein:notebook-cell-new ein:notebook :data cell-data)))
+          ;; Only handle 1 worksheet for now, as in notebook.js
+          (plist-get (nth 0 (plist-get data :worksheets)) :cells))))
+
 (defun ein:notebook-to-json (notebook)
   "Return json-ready plist."
   (list
    :worksheets
    (list :cells (mapcar #'ein:cell-to-json (ein:notebook-get-cells notebook)))
-   ;; FIXME: Make sure metadata is set at load time!  Currently it's not.
    :metadata (ein:$notebook-metadata notebook)))
 
 
