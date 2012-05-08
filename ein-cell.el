@@ -60,8 +60,7 @@
     ;; set prompt
     (unless (ein:$cell-input-prompt-number cell)
       (ein:aif (ein:cell-data-get cell :prompt_number)
-          (setf (ein:$cell-input-prompt-number cell) it)
-        (setf (ein:$cell-input-prompt-number cell) " ")))
+          (setf (ein:$cell-input-prompt-number cell) it)))
     cell))
 
 (defun ein:cell-data-get (cell prop)
@@ -148,7 +147,7 @@ A specific note can be specified using INDEX."
 (defun ein:cell-insert-prompt (cell)
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only (format "In [%s]:"
-                                (ein:$cell-input-prompt-number cell))))
+                                (or (ein:$cell-input-prompt-number cell)  " "))))
 
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
@@ -208,7 +207,6 @@ A specific note can be specified using INDEX."
   (setf (ein:$cell-running cell) running))
 
 (defun ein:cell-set-input-prompt (cell &optional number)
-  (unless number (setq number " "))
   (setf (ein:$cell-input-prompt-number cell) number)
   (let ((inhibit-read-only t))
     (ewoc-invalidate (ein:cell-get-ewoc cell)
