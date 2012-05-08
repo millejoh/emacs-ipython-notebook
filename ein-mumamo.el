@@ -75,11 +75,13 @@ MAX.  If END is non-`nil', end of the input element is returned."
                         (ewoc-location it))
                       (if end it (1+ it)))))
          (input-pos (funcall find cell)))
+    (ein:log 'debug "input-pos (1) = %s" input-pos)
     (when (< input-pos pos)
       (setq input-pos (funcall find (ein:cell-next cell))))
+    (ein:log 'debug "input-pos (2) = %s" input-pos)
     (when (and (not end) (> input-pos max)) ; FIXME: do I need "(not end)"?
       (setq input-pos nil))
-    (ein:log 'debug "input-pos = %s" input-pos)
+    (ein:log 'debug "input-pos (3) = %s" input-pos)
     input-pos))
 
 (provide 'ein-mumamo)
