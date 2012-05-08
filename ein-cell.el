@@ -318,7 +318,7 @@ A specific note can be specified using INDEX."
 
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(javascript html latex svg png jpeg text)
+   for key in '(javascript svg png jpeg text html latex)
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
