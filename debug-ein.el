@@ -30,7 +30,7 @@
 (setq debug-on-error t)
 (setq websocket-debug t)
 (ein:log-set-level 'debug)
-(ein:log-set-message-level 'debug)
+(ein:log-set-message-level 'verbose)
 (ein:notebooklist-open)
 
 (defun eintest-pop-to-debug-shell ()

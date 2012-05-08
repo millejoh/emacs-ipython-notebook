@@ -32,7 +32,7 @@
 (put 'ein:log-buffer 'permanent-local t)
 
 (defvar ein:log-buffer-name-template " *ein:log %s*")
-(defvar ein:log-orphan-buffer-name " *ein:log-orphan*")
+(defvar ein:log-all-buffer-name " *ein:log-all*")
 
 (defvar ein:log-level-def
   '((debug . 40) (verbose . 30) (info . 20) (warn . 10) (error . 0)))
@@ -67,19 +67,20 @@
   (setq level (ein:log-level-name-to-int level))
   (when (<= level ein:log-level)
     (let* ((levname (ein:log-level-int-to-name level))
-           (msg (format "[%s] %s"  levname (funcall func))))
-      (let ((orphan-p (null ein:log-buffer))
-            (orig-buffer (current-buffer)))
-        (with-current-buffer (or ein:log-buffer
-                                 (get-buffer-create ein:log-orphan-buffer-name))
+           (msg (format "[%s] %s"  levname (funcall func)))
+           (orig-buffer (current-buffer)))
+      (if (and ein:log-max-string
+               (> (length msg) ein:log-max-string))
+          (setq msg (substring msg 0 ein:log-max-string)))
+      (when ein:log-buffer
+        (with-current-buffer ein:log-buffer
           (save-excursion
             (goto-char (point-max))
-            (insert (if (and ein:log-max-string
-                             (> (length msg) ein:log-max-string))
-                        (substring msg 0 ein:log-max-string)
-                      msg))
-            (when orphan-p (insert (format " @%S" orig-buffer)))
-            (insert "\n"))))
+            (insert msg "\n"))))
+      (with-current-buffer (get-buffer-create ein:log-all-buffer-name)
+        (save-excursion
+          (goto-char (point-max))
+          (insert msg (format " @%S" orig-buffer) "\n")))
       (when (<= level ein:log-message-level)
         (message "ein: %s" msg)))))
 
@@ -93,9 +94,9 @@
       (pop-to-buffer ein:log-buffer)
     (message "ein: log buffer for current buffer is not set.")))
 
-(defun ein:log-pop-to-orphan-buffer ()
+(defun ein:log-pop-to-all-buffer ()
   (interactive)
-  (pop-to-buffer (get-buffer-create ein:log-orphan-buffer-name)))
+  (pop-to-buffer (get-buffer-create ein:log-all-buffer-name)))
 
 (provide 'ein-log)
 
