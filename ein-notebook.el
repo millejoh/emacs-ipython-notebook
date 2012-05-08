@@ -336,6 +336,17 @@ Note that SLOT should not be quoted."
     (setf (ein:@notebook dirty) t)))
 
 
+;;; Persistance and loading
+
+(defun ein:notebook-to-json (notebook)
+  "Return json-ready plist."
+  (list
+   :worksheets
+   (list :cells (mapcar #'ein:cell-to-json (ein:notebook-get-cells notebook)))
+   ;; FIXME: Make sure metadata is set at load time!  Currently it's not.
+   :metadata (ein:$notebook-metadata notebook)))
+
+
 ;;; Notebook mode
 
 (defvar ein:notebook-modes
