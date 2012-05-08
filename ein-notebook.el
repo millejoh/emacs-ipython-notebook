@@ -90,12 +90,13 @@ Note that SLOT should not be quoted."
 
 (defun ein:notebook-open (notebook-id)
   (let ((url (ein:notebook-url notebook-id)))
-    (lexical-let ((notebook-id notebook-id))
-      (url-retrieve
-       url
-       (lambda (s) (ein:notebook-pop-buffer notebook-id))))))
+    (url-retrieve url
+                  #'ein:notebook-url-retrieve-callback
+                  (list notebook-id))))
 
-(defun ein:notebook-pop-buffer (notebook-id)
+(defun ein:notebook-url-retrieve-callback (status notebook-id)
+  (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
+           notebook-id status)
   (let ((data (ein:json-read)))
     (kill-buffer (current-buffer))
     (with-current-buffer
