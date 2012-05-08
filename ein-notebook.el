@@ -107,10 +107,6 @@ Note that SLOT should not be quoted."
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
 
-(defun ein:notebook-get-worksheet (&optional wid)
-  (unless wid (setq wid 0))
-  (nth wid (plist-get (ein:@notebook data) :worksheets)))
-
 (defun ein:notebook-render ()
   "(Re-)Render the notebook."
   (interactive)
