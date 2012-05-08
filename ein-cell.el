@@ -322,17 +322,18 @@ A specific note can be specified using INDEX."
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
-   do (case key
-        (javascript
-         (when dynamic
-           (ein:log 'info (concat "ein:cell-append-mime-type does not support "
-                                  "dynamic javascript. got: %s") value)))
-        ((html latex text)
-         (ein:insert-read-only (plist-get json type)))
-        (svg
-         (insert-image (create-image value key t)))
-        ((png jpeg)
-         (insert-image (create-image (base64-decode-string value) key t))))))
+   return
+   (case key
+     (javascript
+      (when dynamic
+        (ein:log 'info (concat "ein:cell-append-mime-type does not support "
+                               "dynamic javascript. got: %s") value)))
+     ((html latex text)
+      (ein:insert-read-only (plist-get json type)))
+     (svg
+      (insert-image (create-image value key t)))
+     ((png jpeg)
+      (insert-image (create-image (base64-decode-string value) key t))))))
 
 (defun ein:cell-append-text (data)
   ;; FIXME: implement HTML special escaping
