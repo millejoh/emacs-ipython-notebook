@@ -79,7 +79,8 @@ MAX.  If END is non-`nil', end of the input element is returned."
     (when (< input-pos pos)
       (setq input-pos (funcall find (ein:cell-next cell))))
     (ein:log 'debug "input-pos (2) = %s" input-pos)
-    (when (and (not end) (> input-pos max)) ; FIXME: do I need "(not end)"?
+    (when (and (not end) input-pos (> input-pos max))
+      ;; FIXME: do I need "(not end)"?
       (setq input-pos nil))
     (ein:log 'debug "input-pos (3) = %s" input-pos)
     input-pos))
