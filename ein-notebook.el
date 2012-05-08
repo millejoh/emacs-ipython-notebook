@@ -81,7 +81,7 @@ Note that SLOT should not be quoted."
          :msg-cell-map (make-hash-table :test 'equal)
          args))
 
-(defun ein:notebook-create (&rest args)
+(defun ein:notebook-setup (&rest args)
   (setq ein:notebook (apply #'ein:notebook-new args)))
 
 (defun ein:notebook-url (notebook-id)
@@ -103,7 +103,7 @@ Note that SLOT should not be quoted."
          (format ein:notebook-buffer-name-template notebook-id))
       (ein:log-setup notebook-id)
       (ein:log 'info "Start logging.")
-      (ein:notebook-create notebook-id data)
+      (ein:notebook-setup notebook-id data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
 
