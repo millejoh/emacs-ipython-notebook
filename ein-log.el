@@ -45,7 +45,8 @@
 
 (defun ein:log-setup (name)
   (setq ein:log-buffer
-        (get-buffer-create (format ein:log-buffer-name-template name))))
+        (get-buffer-create (format ein:log-buffer-name-template name)))
+  (ein:log 'verbose "Start logging."))
 
 (defun ein:log-set-level (level)
   (setq ein:log-level (ein:log-level-name-to-int level)))

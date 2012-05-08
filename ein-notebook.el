@@ -102,7 +102,6 @@ Note that SLOT should not be quoted."
         (get-buffer-create
          (format ein:notebook-buffer-name-template notebook-id))
       (ein:log-setup notebook-id)
-      (ein:log 'info "Start logging.")
       (ein:notebook-setup notebook-id data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
