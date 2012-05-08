@@ -348,13 +348,16 @@ Note that SLOT should not be quoted."
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
   `((worksheets
-     . ,(apply #'vector
-               (mapcar #'ein:cell-to-json (ein:notebook-get-cells notebook))))
+     . [((cells
+          . ,(apply #'vector
+                    (mapcar #'ein:cell-to-json
+                            (ein:notebook-get-cells notebook)))))])
     (metadata . ,(ein:$notebook-metadata notebook))))
 
 (defun ein:notebook-save-notebook (notebook)
   (let ((data (ein:notebook-to-json notebook)))
-    (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
+    (plist-put (cdr (assq 'metadata data))
+               :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger 'notebook_saving.Notebook)
     (let ((url (ein:notebook-url (ein:$notebook-notebook-id notebook)))
