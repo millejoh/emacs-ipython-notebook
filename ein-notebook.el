@@ -50,6 +50,7 @@
   msg-cell-map                          ; hash
   metadata                              ; json data
   notebook-name                         ; string
+  nbformat                              ; int
   )
 
 (defvar ein:notebook nil)
@@ -79,6 +80,7 @@ Note that SLOT should not be quoted."
          :notebook-id notebook-id
          :data data
          :msg-cell-map (make-hash-table :test 'equal)
+         :nbformat 2
          args))
 
 (defun ein:notebook-setup (&rest args)
@@ -350,6 +352,47 @@ Note that SLOT should not be quoted."
    (list :cells (mapcar #'ein:cell-to-json (ein:notebook-get-cells notebook)))
    :metadata (ein:$notebook-metadata notebook)))
 
+(defun ein:notebook-save-notebook (notebook)
+  (let ((data (ein:notebook-to-json notebook)))
+    (plist-put (plist-get data :metadata) :name
+               (ein:$notebook-notebook-name notebook))
+    (plist-put data :nbformat 2)
+    (ein:events-trigger 'notebook_saving.Notebook)
+    (let ((url (ein:notebook-url (ein:$notebook-notebook-id notebook)))
+          (url-request-method "PUT")
+          (url-request-extra-headers '(("Content-Type" . "application/json")))
+          (url-request-data (json-encode data)))
+      (ein:log 'debug "URL-RETRIEVE url = %s" url)
+      (ein:log 'debug "URL-REQUEST-DATA = %s" url-request-data)
+      (url-retrieve
+       url
+       #'ein:notebook-save-notebook-callback
+       (list notebook)))))
+
+(defun ein:notebook-save-notebook-command ()
+  (interactive)
+  (ein:notebook-save-notebook ein:notebook))
+
+(defun ein:notebook-save-notebook-callback (status notebook)
+  (ein:log 'debug "SAVE-NOTEBOOK-CALLBACK nodtebook-id = %S, status = %S"
+           (ein:$notebook-notebook-id notebook)
+           status)
+  (ein:log 'debug "(buffer-string) = \n%s" (buffer-string))
+  (kill-buffer (current-buffer))
+  (with-current-buffer (ewoc-buffer (ein:$notebook-ewoc notebook))
+    (ein:aif (plist-get status :error)
+        (progn
+          (ein:log 'debug "ERROR CODE = %S" it)
+          (ein:notebook-save-notebook-error notebook status))
+      (ein:notebook-save-notebook-success notebook status))))
+
+(defun ein:notebook-save-notebook-success (notebook status)
+  (setf (ein:$notebook-dirty notebook))
+  (ein:events-trigger 'notebook_saved.Notebook))
+
+(defun ein:notebook-save-notebook-error (notebook status)
+  (ein:events-trigger 'notebook_save_failed.Notebook))
+
 
 ;;; Notebook mode
 
@@ -369,6 +412,7 @@ Note that SLOT should not be quoted."
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
+    (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     map))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
