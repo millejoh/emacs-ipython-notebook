@@ -43,11 +43,6 @@
 (defvar ein:log-max-string 1000)
 
 
-(defun ein:log-setup (name)
-  (setq ein:log-buffer
-        (get-buffer-create (format ein:log-buffer-name-template name)))
-  (ein:log 'verbose "Start logging."))
-
 (defun ein:log-set-level (level)
   (setq ein:log-level (ein:log-level-name-to-int level)))
 
@@ -87,6 +82,11 @@
 (defmacro ein:log (level string &rest args)
   (declare (indent 1))
   `(ein:log-wrapper ,level (lambda () (format ,string ,@args))))
+
+(defun ein:log-setup (name)
+  (setq ein:log-buffer
+        (get-buffer-create (format ein:log-buffer-name-template name)))
+  (ein:log 'verbose "Start logging."))
 
 (defun ein:log-pop-to-buffer ()
   (interactive)
