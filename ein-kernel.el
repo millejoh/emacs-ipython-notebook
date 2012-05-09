@@ -120,13 +120,13 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
   ;; message using its function.
   (if early
       (ein:log 'warn
-       "Websocket connection to %s could not be established.
- You will NOT be able to run code.
- Your websocket.el may not be compatible with the websocket version in
- the server, or if the url does not look right, there could be an
- error in the server's configuration." ws-url)
-    (ein:log 'warn "Websocket connection closed unexpectedly.
- The kernel will no longer be responsive.")))
+       "Websocket connection to %s could not be established. \
+You will NOT be able to run code. \
+Your websocket.el may not be compatible with the websocket version in \
+the server, or if the url does not look right, there could be an \
+error in the server's configuration." ws-url)
+    (ein:log 'warn "Websocket connection closed unexpectedly. \
+The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-send-cookie (channel)
