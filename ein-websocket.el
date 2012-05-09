@@ -33,16 +33,24 @@
 
 (defstruct ein:$websocket
   ws
-  onmessage
-  onclose
-  onopen)
+  onmessage       ; function called with (PACKET &rest ARGS)
+  onmessage-args  ; optional arguments for onmessage callback
+  onclose         ; function called with (WEBSOCKET &rest ARGS)
+  onclose-args    ; optional arguments for onclose callback
+  onopen          ; function called with (&rest ARGS)
+  onopen-args)    ; optional arguments for onopen callback
+;; FIXME: probably, first arguments of any callback must be WEBSOCKET.
 
 
-(defun ein:websocket (url &optional onmessage onclose onopen)
+(defun ein:websocket (url &optional onmessage onclose onopen
+                          onmessage-args onclose-args onopen-args)
   (let ((websocket (make-ein:$websocket
                     :onmessage onmessage
                     :onclose onclose
-                    :onopen onopen)))
+                    :onopen onopen
+                    :onmessage-args onmessage-args
+                    :onclose-args onclose-args
+                    :onopen-args onopen-args)))
     (setf (ein:$websocket-ws websocket)
           (lexical-let ((websocket websocket))
             (websocket-open
@@ -52,7 +60,8 @@
     ;; Pseudo onopen callback.  Until websocket.el supports it.
     (run-at-time 1 nil
                  (lambda (ws)
-                   (ein:aif (ein:$websocket-onopen ws) (funcall it)))
+                   (ein:aif (ein:$websocket-onopen ws)
+                       (apply it (ein:$websocket-onopen-args ws))))
                  websocket)
     websocket))
 
@@ -67,12 +76,12 @@
 
 (defun ein:websocket-filter (websocket packet)
   (ein:aif (ein:$websocket-onmessage websocket)
-      (funcall it packet)))
+      (apply it packet (ein:$websocket-onmessage-args websocket))))
 
 
 (defun ein:websocket-onclose (websocket)
   (ein:aif (ein:$websocket-onclose websocket)
-      (funcall it websocket)))
+      (apply it websocket (ein:$websocket-onclose-args websocket))))
 
 
 (provide 'ein-websocket)
