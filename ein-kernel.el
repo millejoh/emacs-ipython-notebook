@@ -135,53 +135,46 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
   (ein:websocket-send channel ""))
 
 
-(defvar ein:kernel--already-called-onclose nil)
-(defvar ein:kernel--ws-url nil)
-(make-variable-buffer-local 'ein:kernel--ws-url)
-
-
-(defun ein:kernel--ws-closed-early (websocket)
-  (unless ein:kernel--already-called-onclose
-    (setq ein:kernel--already-called-onclose t)
-    (unless t  ; event-was-clean don't know how to implement
-      (ein:kernel--websocket-closed ein:kernel--ws-url t))))
-
-
-(defun ein:kernel--ws-closed-late (websocket)
-  (unless ein:kernel--already-called-onclose
-    (setq ein:kernel--already-called-onclose t)
-    (unless t  ; event-was-clean don't know how to implement
-      (ein:kernel--websocket-closed ein:kernel--ws-url nil))))
+(defun ein:kernel--ws-closed-callback (websocket kernel arg)
+  ;; NOTE: The argument ARG should not be "unpacked" using `&rest'.
+  ;; It must be given as a list to hold state `already-called-onclose'
+  ;; so it can be modified in this function.
+  (destructuring-bind (&key already-called-onclose ws-url early)
+      arg
+    (unless already-called-onclose
+      (plist-put arg :already-called-onclose t)
+      (unless t  ; event-was-clean don't know how to implement
+        (ein:kernel--websocket-closed kernel ws-url early)))))
 
 
 (defun ein:kernel-start-channels (kernel)
     (ein:kernel-stop-channels kernel)
-    (let ((ws-url (concat (ein:$kernel-ws-url kernel)
-                          (ein:$kernel-kernel-url kernel))))
-      (setq ein:kernel--ws-url ws-url)
+    (let* ((ws-url (concat (ein:$kernel-ws-url kernel)
+                           (ein:$kernel-kernel-url kernel)))
+           (onclose-arg (list :ws-url ws-url
+                              :already-called-onclose nil
+                              :eary t)))
       (ein:log 'info "Starting WS: %S" ws-url)
       (setf (ein:$kernel-shell-channel kernel)
             (ein:websocket (concat ws-url "/shell")))
       (setf (ein:$kernel-iopub-channel kernel)
             (ein:websocket (concat ws-url "/iopub")))
-      (setq ein:kernel--already-called-onclose nil))
 
-    (loop for c in (list (ein:$kernel-shell-channel kernel)
-                         (ein:$kernel-iopub-channel kernel))
-          do (setf (ein:$websocket-onopen c)
-                   (lexical-let ((channel c))
-                     (lambda () (ein:kernel-send-cookie channel))))
-          do (setf (ein:$websocket-onclose c) #'ein:kernel--ws-closed-early))
+      (loop for c in (list (ein:$kernel-shell-channel kernel)
+                           (ein:$kernel-iopub-channel kernel))
+            do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
+            do (setf (ein:$websocket-onopen c)
+                     (lexical-let ((channel c))
+                       (lambda () (ein:kernel-send-cookie channel))))
+            do (setf (ein:$websocket-onclose c)
+                     #'ein:kernel--ws-closed-callback))
 
-    ;; switch from early-close to late-close message after 1s
-    (run-at-time
-     1 nil
-     (lambda (kernel)
-       (setf (ein:$websocket-onclose (ein:$kernel-shell-channel kernel))
-             #'ein:kernel--ws-closed-late)
-       (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel))
-             #'ein:kernel--ws-closed-late))
-     (list kernel)))
+      ;; switch from early-close to late-close message after 1s
+      (run-at-time
+       1 nil
+       (lambda (onclose-arg)
+         (plist-put onclose-arg :eary nil))
+       (list kernel))))
 
 
 (defun ein:kernel-stop-channels (kernel)
