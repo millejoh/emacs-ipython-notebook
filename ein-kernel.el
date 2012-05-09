@@ -176,12 +176,12 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
     ;; switch from early-close to late-close message after 1s
     (run-at-time
      1 nil
-     (lexical-let ((kernel kernel))
-       (lambda ()
-         (setf (ein:$websocket-onclose (ein:$kernel-shell-channel kernel))
-               #'ein:kernel--ws-closed-late)
-         (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel))
-               #'ein:kernel--ws-closed-late)))))
+     (lambda (kernel)
+       (setf (ein:$websocket-onclose (ein:$kernel-shell-channel kernel))
+             #'ein:kernel--ws-closed-late)
+       (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel))
+             #'ein:kernel--ws-closed-late))
+     (list kernel)))
 
 
 (defun ein:kernel-stop-channels (kernel)
