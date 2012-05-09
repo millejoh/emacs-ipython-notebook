@@ -57,10 +57,8 @@
                      :cell-id (ein:utils-uuid)
                      args)))
     (setf (ein:$cell-outputs cell) (ein:cell-data-get cell :outputs))
-    ;; set prompt
-    (unless (ein:$cell-input-prompt-number cell)
-      (ein:aif (ein:cell-data-get cell :prompt_number)
-          (setf (ein:$cell-input-prompt-number cell) it)))
+    (ein:setf-default (ein:$cell-input-prompt-number cell)
+                      (ein:cell-data-get cell :prompt_number))
     cell))
 
 (defun ein:cell-data-get (cell prop)

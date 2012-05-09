@@ -110,6 +110,11 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
+(defmacro ein:setf-default (place val)
+  "Set VAL to PLACE using `setf' if the value of PLACE is `nil'."
+  `(unless ,place
+     (setf ,place ,val)))
+
 (defun ein:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
 NOTE: This function creates new list."
