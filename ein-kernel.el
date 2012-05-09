@@ -223,7 +223,7 @@ The kernel will no longer be responsive.")))
                    :text ""
                    :line line
                    :cursor_pos cursor-pos))
-         (msg (ein:kernel-get-msg kernel "execute_request" content)))
+         (msg (ein:kernel-get-msg kernel "complete_request" content)))
     (ein:websocket-send
      (ein:$kernel-shell-channel kernel)
      (json-encode msg))
