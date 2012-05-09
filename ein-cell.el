@@ -34,6 +34,7 @@
 (require 'ein-node)
 
 (defstruct ein:$cell
+  type                                  ; "code"/"html"/"markdown"
   read-only                             ; nil/t
   data                                  ; default data - FIXME: remove this!
   ;; notebook                              ; `ein:$notebook'
@@ -59,6 +60,8 @@
     (setf (ein:$cell-outputs cell) (ein:cell-data-get cell :outputs))
     (ein:setf-default (ein:$cell-input-prompt-number cell)
                       (ein:cell-data-get cell :prompt_number))
+    (ein:setf-default (ein:$cell-type cell)
+                      (ein:cell-data-get cell :cell_type))
     cell))
 
 (defun ein:cell-data-get (cell prop)
