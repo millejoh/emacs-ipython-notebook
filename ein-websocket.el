@@ -38,7 +38,8 @@
   onclose         ; function called with (WEBSOCKET &rest ARGS)
   onclose-args    ; optional arguments for onclose callback
   onopen          ; function called with (&rest ARGS)
-  onopen-args)    ; optional arguments for onopen callback
+  onopen-args     ; optional arguments for onopen callback
+  closed-by-client)  ; t/nil
 ;; FIXME: probably, first arguments of any callback must be WEBSOCKET.
 
 
@@ -71,6 +72,7 @@
 
 
 (defun ein:websocket-close (websocket)
+  (setf (ein:$websocket-closed-by-client websocket) t)
   (websocket-close (ein:$websocket-ws websocket)))
 
 

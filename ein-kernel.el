@@ -143,7 +143,8 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
       arg
     (unless already-called-onclose
       (plist-put arg :already-called-onclose t)
-      (unless t  ; event-was-clean don't know how to implement
+      (unless (ein:$websocket-closed-by-client websocket)
+        ;; Use "event-was-clean" when it is implemented in websocket.el.
         (ein:kernel--websocket-closed kernel ws-url early)))))
 
 
