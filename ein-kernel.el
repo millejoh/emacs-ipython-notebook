@@ -154,7 +154,7 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
                            (ein:$kernel-kernel-url kernel)))
            (onclose-arg (list :ws-url ws-url
                               :already-called-onclose nil
-                              :eary t)))
+                              :early t)))
       (ein:log 'info "Starting WS: %S" ws-url)
       (setf (ein:$kernel-shell-channel kernel)
             (ein:websocket (concat ws-url "/shell")))
@@ -174,8 +174,13 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
       (run-at-time
        1 nil
        (lambda (onclose-arg)
-         (plist-put onclose-arg :eary nil))
-       (list kernel))))
+         (plist-put onclose-arg :early nil)
+         (ein:log 'debug "(via run-at-time) onclose-arg changed to: %S"
+                  onclose-arg))
+       onclose-arg)))
+
+;; NOTE: `onclose-arg' can be accessed as:
+;; (nth 1 (ein:$websocket-onclose-args (ein:$kernel-shell-channel (ein:$notebook-kernel ein:notebook))))
 
 
 (defun ein:kernel-stop-channels (kernel)
