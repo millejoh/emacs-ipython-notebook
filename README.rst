@@ -37,13 +37,15 @@ Usage
 =====
 
 1. Install module.
-   Put Emacs lisp files start with ``ein`` in your load path.
+   Put Emacs lisp ``ein*.el`` files in your load path.
 
 2. Require module::
 
      (require 'ein)
 
-3. Hit ``M-x ein:notebooklist-open`` to open notebook list.
+3. Start `IPython notebook server`_.
 
-   Of course, you need to start IPython notebook server before calling
-   this command.
+4. Hit ``M-x ein:notebooklist-open`` to open notebook list.
+
+.. _`IPython notebook server`:
+   http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
