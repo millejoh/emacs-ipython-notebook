@@ -43,13 +43,13 @@
    pos max
    (lambda (pos max) "CHUNK-START-FUN"
      (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
-     (ein:aif (ein:mumamo-find-edge pos max)
+     (ein:aif (ein:mumamo-find-edge pos max nil #'ein:codecell-p)
          (list it 'python-mode nil)))
    (lambda (pos max) "CHUNK-END-FUN"
      (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
-     (ein:mumamo-find-edge pos max t))))
+     (ein:mumamo-find-edge pos max t #'ein:codecell-p))))
 
-(defun ein:mumamo-find-edge (pos max &optional end)
+(defun ein:mumamo-find-edge (pos max end cell-p)
   "Helper function for `ein:notebook-mumamo-python'.
 
 Return the point of beginning of the input element of cell after
@@ -58,7 +58,9 @@ MAX.  If END is non-`nil', end of the input element is returned."
   (let* ((ewoc-node
           (ein:notebook-get-nearest-cell-ewoc-node pos max))
          (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
-         (cell (ein:aif ewoc-node (ein:$node-data (ewoc-data it))))
+         (cell (ein:aand ewoc-node
+                         (ein:$node-data (ewoc-data it))
+                         (if (funcall cell-p it) it)))
          (_ (ein:log 'debug "(null cell) = %s" (null cell)))
          (find
           (lambda (c)
