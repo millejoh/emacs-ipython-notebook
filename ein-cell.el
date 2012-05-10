@@ -27,31 +27,52 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
+(require 'eieio)
 (require 'ansi-color)
 
 (require 'ein-log)
 (require 'ein-utils)
 (require 'ein-node)
 
-(defstruct ein:$cell
-  type                                  ; "code"/"html"/"markdown"
-  read-only                             ; nil/t
-  data                                  ; default data - FIXME: remove this!
-  ;; notebook                              ; `ein:$notebook'
-  ewoc                                  ; ewoc (NOTE: use `ein:cell-get-ewoc')
-  element                               ; ewoc nodes
-  running                               ; nil/t
-  input-prompt-number                   ; int
-  outputs                               ; list
-  cell-id                               ; uuid
-  )
 
-;; In the very first implementation `ein:$cell' had `notebook' slot.
-;; But requiring ein-notebook causes recursive require which should be
-;; avoided if possible.  For now, I just put `ewoc' instead of `notebook'.
-;; To prepare for the future changes, `ein:cell-get-ewoc' must be used
-;; to get ewoc instance instead of `ein:$cell-ewoc'.
+(defclass ein:basecell ()
+  ((cell-type :initarg :cell-type :type string)
+   (read-only :initarg :read-only :initform nil :type boolean)
+   ;; (data :initarg :data
+   ;;  :documentation "default JSON data - FIXME: remove this!")
+   (ewoc :initarg :ewoc :type ewoc
+    :documentation "ewoc (NOTE: use `ein:cell-get-ewoc')")
+   (element :initarg :element :initform nil :type list
+    :documentation "ewoc nodes")
+   (input :initarg :input :initform "" :type string
+    :documentation "Place to hold data until it is rendered via `ewoc'.")
+   (outputs :initarg :outputs :initform nil :type list)
+   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
+  "Notebook cell base class")
 
+(defclass ein:codecell (ein:basecell)
+  ((cell-type :initarg :cell-type :initform "code")
+   (input-prompt-number :initarg :input-prompt-number :type integer)))
+
+(defclass ein:textcell (ein:basecell)
+  ((cell-type :initarg :cell-type :initform "text")))
+
+(defclass ein:htmlcell (ein:textcell)
+  ((cell-type :initarg :cell-type :initform "html")))
+
+(defclass ein:markdowncell (ein:textcell)
+  ((cell-type :initarg :cell-type :initform "markdown")))
+
+(defclass ein:rstcell (ein:textcell)
+  ((cell-type :initarg :cell-type :initform "rst")))
+
+(defun ein:cell-class-from-type (type)
+  (ein:case-equal type
+    (("code") 'ein:codecell)
+    (("text") 'ein:textcell)
+    (("html") 'ein:htmlcell)
+    (("markdown") 'ein:markdowncell)
+    (("rst") 'ein:rstcell)))
 
 (defun ein:cell-new (&rest args)
   (let ((cell (apply 'make-ein:$cell
