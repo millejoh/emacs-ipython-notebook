@@ -56,13 +56,7 @@ Return the point of beginning of the input element of cell after
 the point POS.  Return `nil' if it cannot be found before the point
 MAX.  If END is non-`nil', end of the input element is returned."
   (let* ((ewoc-node
-          (ein:aif (ein:notebook-get-current-ewoc-node pos)
-              (let ((ewoc-node it))
-                ;; can be optimized using the argument `max'
-                (while (and ewoc-node
-                            (not (ein:cell-ewoc-node-p ewoc-node)))
-                  (setq ewoc-node (ewoc-next (ein:@notebook ewoc) ewoc-node)))
-                ewoc-node)))
+          (ein:notebook-get-nearest-cell-ewoc-node pos max))
          (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
          (cell (ein:aif ewoc-node (ein:$node-data (ewoc-data it))))
          (_ (ein:log 'debug "(null cell) = %s" (null cell)))
