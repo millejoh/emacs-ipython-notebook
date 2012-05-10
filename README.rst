@@ -12,13 +12,22 @@ Screenshot
    :alt: Plotting in Emacs IPython Notebook
 
 
-Requirement
-===========
+Requirements
+============
 
+* IPython_ **0.12.1**: EIN won't work with older versions.
 * `websocket.el`_
 * (optional) mumamo_:
-  You will need to load nXhtml_ *before* loading ein.el.
+  It will be automatically loaded when it is on the path.
+  The official way to setup path is to load nXhtml_.
+  So you will need to load nXhtml_ *before* loading EIN.
+* (optional) markdown-mode
+* (optional) python-mode:
+  It should work with either python.el or python-mode.el.
 
+EIN is currently tested in Emacs 24.
+
+.. _IPython: http://ipython.org/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
