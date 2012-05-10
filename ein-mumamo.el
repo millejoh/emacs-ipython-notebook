@@ -31,11 +31,20 @@
 (require 'ein-notebook)
 
 (defvar ein:mumamo-codecell-mode 'python-mode)
+(defvar ein:mumamo-textcell-mode 'text-mode)
+(defvar ein:mumamo-htmlcell-mode 'html-mode)
+(defvar ein:mumamo-markdowncell-mode 'markdown-mode)
+(defvar ein:mumamo-rstcell-mode 'rst-mode)
+
 
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
   "IPython notebook mode."
   ("IPython notebook familiy" fundamental-mode
    (ein:mumamo-chunk-codecell
+    ein:mumamo-chunk-textcell
+    ein:mumamo-chunk-htmlcell
+    ein:mumamo-chunk-markdowncell
+    ein:mumamo-chunk-rstcell
     )))
 
 (setq ein:notebook-mumamo-mode-map ein:notebook-mode-map)
@@ -56,6 +65,10 @@
           (ein:mumamo-find-edge pos max t #',cell-p))))))
 
 (ein:mumamo-define-chunk codecell)
+(ein:mumamo-define-chunk textcell)
+(ein:mumamo-define-chunk htmlcell)
+(ein:mumamo-define-chunk markdowncell)
+(ein:mumamo-define-chunk rstcell)
 
 (defun ein:mumamo-find-edge (pos max end cell-p)
   "Helper function for `ein:mumamo-chunk-codecell'.
@@ -80,7 +93,7 @@ MAX.  If END is non-`nil', end of the input element is returned."
                       (if end it (1+ it)))))
          (input-pos (funcall find cell)))
     (ein:log 'debug "input-pos (1) = %s" input-pos)
-    (when (< input-pos pos)
+    (when (and input-pos (< input-pos pos))
       (setq input-pos (funcall find (ein:cell-next cell))))
     (ein:log 'debug "input-pos (2) = %s" input-pos)
     (when (and (not end) input-pos (> input-pos max))
