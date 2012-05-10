@@ -30,6 +30,8 @@
 
 (require 'ein-notebook)
 
+(defvar ein:mumamo-codecell-mode 'python-mode)
+
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
   "IPython notebook mode."
   ("IPython notebook familiy" fundamental-mode
@@ -38,16 +40,22 @@
 
 (setq ein:notebook-mumamo-mode-map ein:notebook-mode-map)
 
-(defun ein:mumamo-chunk-codecell (pos max)
-  (mumamo-possible-chunk-forward
-   pos max
-   (lambda (pos max) "CHUNK-START-FUN"
-     (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
-     (ein:aif (ein:mumamo-find-edge pos max nil #'ein:codecell-p)
-         (list it 'python-mode nil)))
-   (lambda (pos max) "CHUNK-END-FUN"
-     (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
-     (ein:mumamo-find-edge pos max t #'ein:codecell-p))))
+(defmacro ein:mumamo-define-chunk (name)
+  (let ((funcname (intern (format "ein:mumamo-chunk-%s" name)))
+        (mode (intern (format "ein:mumamo-%s-mode" name)))
+        (cell-p (intern (format "ein:%s-p" name))))
+    `(defun ,funcname (pos max)
+       (mumamo-possible-chunk-forward
+        pos max
+        (lambda (pos max) "CHUNK-START-FUN"
+          (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
+          (ein:aif (ein:mumamo-find-edge pos max nil #',cell-p)
+              (list it ,mode nil)))
+        (lambda (pos max) "CHUNK-END-FUN"
+          (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
+          (ein:mumamo-find-edge pos max t #',cell-p))))))
+
+(ein:mumamo-define-chunk codecell)
 
 (defun ein:mumamo-find-edge (pos max end cell-p)
   "Helper function for `ein:mumamo-chunk-codecell'.
