@@ -222,15 +222,15 @@ A specific node can be specified using optional ARGS."
   (ein:insert-read-only "\n"))
 
 
-(defun ein:cell-node-p (node &optional cell-type)
+(defun ein:cell-node-p (node &optional element-name)
   (let* ((path (ein:$node-path node))
          (p0 (car path))
          (p1 (cadr path))
          (cell (ein:$node-path node)))
-    (and cell (eql p0 'cell) (or (not cell-type) (eql p1 cell-type)))))
+    (and cell (eql p0 'cell) (or (not element-name) (eql p1 element-name)))))
 
-(defun ein:cell-ewoc-node-p (ewoc-node &optional cell-type)
-  (ein:cell-node-p (ewoc-data ewoc-node) cell-type))
+(defun ein:cell-ewoc-node-p (ewoc-node &optional element-name)
+  (ein:cell-node-p (ewoc-data ewoc-node) element-name))
 
 (defun ein:cell-get-text (cell)
   "Grab text in the input area of the cell at point."
