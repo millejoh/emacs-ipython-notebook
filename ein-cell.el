@@ -411,7 +411,7 @@ A specific node can be specified using optional ARGS."
   (ein:aif (ewoc-next (oref cell :ewoc)
                       (ein:cell-element-get cell :footer))
       (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (ein:basecell-p cell)
+        (when (ein:basecell-child-p cell)
           cell))))
 
 (provide 'ein-cell)
