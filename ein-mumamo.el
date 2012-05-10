@@ -33,12 +33,12 @@
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
   "IPython notebook mode."
   ("IPython notebook familiy" fundamental-mode
-   (ein:mumamo-chunk-python
+   (ein:mumamo-chunk-codecell
     )))
 
 (setq ein:notebook-mumamo-mode-map ein:notebook-mode-map)
 
-(defun ein:mumamo-chunk-python (pos max)
+(defun ein:mumamo-chunk-codecell (pos max)
   (mumamo-possible-chunk-forward
    pos max
    (lambda (pos max) "CHUNK-START-FUN"
@@ -50,7 +50,7 @@
      (ein:mumamo-find-edge pos max t #'ein:codecell-p))))
 
 (defun ein:mumamo-find-edge (pos max end cell-p)
-  "Helper function for `ein:mumamo-chunk-python'.
+  "Helper function for `ein:mumamo-chunk-codecell'.
 
 Return the point of beginning of the input element of cell after
 the point POS.  Return `nil' if it cannot be found before the point
