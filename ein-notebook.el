@@ -404,6 +404,7 @@ Note that SLOT should not be quoted."
 
 (defun ein:notebook-save-notebook-success (notebook status)
   (setf (ein:$notebook-dirty notebook))
+  (set-buffer-modified-p nil)
   (ein:events-trigger 'notebook_saved.Notebook))
 
 (defun ein:notebook-save-notebook-error (notebook status)
