@@ -79,11 +79,10 @@ MAX.  If END is non-`nil', end of the input element is returned."
   (ein:log 'debug "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
            pos max end cell-p)
   (let* ((ewoc-node
-          (ein:notebook-get-nearest-cell-ewoc-node pos max))
+          (ein:notebook-get-nearest-cell-ewoc-node pos max cell-p))
          (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
          (cell (ein:aand ewoc-node
-                         (ein:$node-data (ewoc-data it))
-                         (if (funcall cell-p it) it)))
+                         (ein:$node-data (ewoc-data it))))
          (_ (ein:log 'debug "(null cell) = %s" (null cell)))
          (find
           (lambda (c)
@@ -96,7 +95,10 @@ MAX.  If END is non-`nil', end of the input element is returned."
          (input-pos (funcall find cell)))
     (ein:log 'debug "input-pos (1) = %s" input-pos)
     (when (and input-pos (< input-pos pos))
-      (setq input-pos (funcall find (ein:cell-next cell))))
+      (ein:aif (ein:cell-next cell)
+          (if (funcall cell-p it)
+              (setq input-pos (funcall find it))
+            (setq input-pos nil))))
     (ein:log 'debug "input-pos (2) = %s" input-pos)
     (when (and (not end) input-pos (> input-pos max))
       ;; FIXME: do I need "(not end)"?

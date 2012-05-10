@@ -33,6 +33,9 @@
 (ein:log-set-message-level 'verbose)
 (ein:notebooklist-open)
 
+(require 'markdown-mode nil t)
+(require 'rst nil t)
+
 (defun eintest-pop-to-debug-shell ()
   "Open shell challen websocket log buffer."
   (interactive)

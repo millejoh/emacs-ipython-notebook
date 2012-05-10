@@ -302,12 +302,16 @@ Note that SLOT should not be quoted."
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
   (ein:aand ein:notebook (ein:$notebook-ewoc it) (ewoc-locate it pos)))
 
-(defun ein:notebook-get-nearest-cell-ewoc-node (&optional pos max)
+(defun ein:notebook-get-nearest-cell-ewoc-node (&optional pos max cell-p)
   (ein:aif (ein:notebook-get-current-ewoc-node pos)
       (let ((ewoc-node it))
         ;; FIXME: can be optimized using the argument `max'
         (while (and ewoc-node
-                    (not (ein:cell-ewoc-node-p ewoc-node)))
+                    (not (and (ein:cell-ewoc-node-p ewoc-node)
+                              (if cell-p
+                                  (funcall cell-p
+                                           (ein:cell-from-ewoc-node ewoc-node))
+                                t))))
           (setq ewoc-node (ewoc-next (ein:@notebook ewoc) ewoc-node)))
         ewoc-node)))
 
