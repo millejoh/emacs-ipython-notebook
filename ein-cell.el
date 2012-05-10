@@ -62,7 +62,12 @@
 (defclass ein:codecell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "code")
    (element-names :initform (:prompt :input :output :footer))
-   (input-prompt-number :initarg :input-prompt-number :type integer)))
+   (input-prompt-number :initarg :input-prompt-number
+                        ;; FIXME: "*" should be treated some how to
+                        ;;        make this slot typed.
+                        ;; :type integer
+                        )
+   (running :initarg :running :initform nil :type boolean)))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
@@ -193,7 +198,7 @@ A specific node can be specified using optional ARGS."
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (format "In [%s]:" (oref cell :cell_type))))
+   (format "In [%s]:" (oref cell :cell-type))))
 
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
@@ -285,7 +290,7 @@ A specific node can be specified using optional ARGS."
           (let ((inhibit-read-only t))
             (apply #'ewoc-delete ewoc output-nodes))
           (plist-put (oref cell :element) :output nil)
-          (setf (oref :cell outputs) nil))
+          (oset cell :outputs nil))
       (let* ((ewoc-node-list
               (append
                (when stdout (ein:node-filter output-nodes :is 'output-stdout))
@@ -306,8 +311,8 @@ A specific node can be specified using optional ARGS."
                (new-ouptut (ein:remove-by-index old-output indices)))
           (plist-put element :output new-ouptut))
         ;; remove cleared outputs from internal data
-        (setf (oref :cell outputs)
-              (ein:remove-by-index (oref :cell outputs) indices))))))
+        (oset cell :outputs
+              (ein:remove-by-index (oref cell :outputs) indices))))))
 
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
@@ -324,8 +329,8 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-append-output (cell json dynamic)
   ;; (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
-  (setf (oref :cell outputs)
-        (append (oref :cell outputs) (list json)))
+  (oset cell :outputs
+        (append (oref cell :outputs) (list json)))
   ;; enter last output element
   (let* ((inhibit-read-only t)
          (ewoc (oref cell :ewoc))
@@ -392,7 +397,7 @@ A specific node can be specified using optional ARGS."
     (cell_type . "code")
     ,@(ein:aif (oref cell :input-prompt-number)
           `((prompt_number . ,it)))
-    (outputs . ,(apply #'vector (oref :cell outputs)))
+    (outputs . ,(apply #'vector (oref cell :outputs)))
     (language . "python")
     ;; FIXME: implement `collapsed'
     (collapsed . ,json-false)))
