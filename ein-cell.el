@@ -150,6 +150,15 @@ A specific node can be specified using optional ARGS."
       (:before-input (plist-get element :prompt))
       (t (call-next-method)))))
 
+(defmethod ein:cell-all-element ((cell ein:basecell))
+  (list (ein:cell-element-get cell :prompt)
+        (ein:cell-element-get cell :input)
+        (ein:cell-element-get cell :footer)))
+
+(defmethod ein:cell-all-element ((cell ein:codecell))
+  (append (call-next-method)
+          (ein:cell-element-get cell :output)))
+
 (defun ein:cell-make-element (make-node num-outputs)
   (list
    :prompt (funcall make-node 'prompt)

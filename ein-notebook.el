@@ -155,6 +155,20 @@ Note that SLOT should not be quoted."
 
 ;; Insertion and deletion of cells
 
+(defun ein:notebook-delete-cell (notebook cell)
+  (let ((inhibit-read-only t))
+    (apply #'ewoc-delete
+           (ein:$notebook-ewoc notebook)
+           (ein:cell-all-element cell)))
+  (setf (ein:$notebook-dirty notebook) t))
+
+(defun ein:notebook-delete-cell-command ()
+  (interactive)
+  (ein:notebook-in-buffer
+    (ein:aif (ein:notebook-get-current-cell)
+        (ein:notebook-delete-cell ein:notebook it)
+      (ein:log 'warn "Not in cell!"))))
+
 (defun ein:notebook-insert-cell-below (notebook type &optional base-cell)
   (unless base-cell
     (setq base-cell (ein:notebook-get-current-cell)))
@@ -431,6 +445,7 @@ when the prefix argument is given."
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
+    (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     map))
