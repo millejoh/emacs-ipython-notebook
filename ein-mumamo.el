@@ -61,7 +61,7 @@ MAX.  If END is non-`nil', end of the input element is returned."
                 ;; can be optimized using the argument `max'
                 (while (and ewoc-node
                             (not (ein:cell-ewoc-node-p ewoc-node)))
-                  (setq ewoc-node (ein:@notebook ewoc) ewoc-node))
+                  (setq ewoc-node (ewoc-next (ein:@notebook ewoc) ewoc-node)))
                 ewoc-node)))
          (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
          (cell (ein:aif ewoc-node (ein:$node-data (ewoc-data it))))
