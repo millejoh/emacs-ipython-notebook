@@ -127,8 +127,14 @@ Note that SLOT should not be quoted."
 
 ;;; Cell indexing, retrieval, etc.
 
-(defun ein:notebook-cell-new (notebook &rest args)
-  (apply #'ein:cell-new :ewoc (ein:$notebook-ewoc notebook) args))
+
+(defun ein:notebook-cell-from-json (notebook data &rest args)
+  (apply #'ein:cell-from-json
+         data :ewoc (ein:$notebook-ewoc notebook) args))
+
+(defun ein:notebook-cell-from-type (notebook type &rest args)
+  (apply #'ein:cell-from-type
+         (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-get-cells (notebook)
   (let* ((ewoc (ein:$notebook-ewoc notebook))
@@ -140,7 +146,7 @@ Note that SLOT should not be quoted."
          (cell-id (gethash msg-id msg-cell-map)))
     (when cell-id
       (loop for cell in (ein:notebook-get-cells notebook)
-            when (equal (ein:$cell-cell-id cell) cell-id)
+            when (equal (oref cell :cell-id) cell-id)
             return cell))))
 
 (defun ein:notebook-ncells (notebook)
@@ -152,14 +158,7 @@ Note that SLOT should not be quoted."
 (defun ein:notebook-insert-cell-below (notebook type &optional base-cell)
   (unless base-cell
     (setq base-cell (ein:notebook-get-current-cell)))
-  (let ((cell (case type
-                (code (ein:notebook-cell-new notebook))
-                ((markdown html raw heading)
-                 (ein:log 'info "cell type `%s' is not implemented yet" type)
-                 ;; but make a new one anyway for now
-                 (ein:notebook-cell-new notebook))
-                (t
-                 (ein:log 'info "cell type %s is not supported" type)))))
+  (let ((cell (ein:notebook-cell-from-type notebook type)))
     (when cell
       (cond
        ((= (ein:notebook-ncells notebook) 0)
@@ -307,7 +306,7 @@ Note that SLOT should not be quoted."
   (let ((cell (ein:aand (ein:notebook-get-current-ewoc-node pos)
                         (ewoc-data it)
                         (ein:$node-data it))))
-    (when (ein:$cell-p cell) cell)))
+    (when (ein:basecell-child-p cell) cell)))
 
 (defun ein:notebook-execute-current-cell ()
   (interactive)
@@ -320,7 +319,7 @@ Note that SLOT should not be quoted."
     ;; FIXME: treat cell type
     (let* ((code (ein:cell-get-text cell))
            (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
-      (puthash msg-id (ein:$cell-cell-id cell) (ein:@notebook msg-cell-map)))
+      (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
     (setf (ein:@notebook dirty) t)))
 
 
@@ -341,7 +340,7 @@ Note that SLOT should not be quoted."
                        nil t))
     (mapc (lambda (cell-data)
             (ein:cell-enter-last
-             (ein:notebook-cell-new ein:notebook :data cell-data)))
+             (ein:notebook-cell-from-json ein:notebook cell-data)))
           ;; Only handle 1 worksheet for now, as in notebook.js
           (plist-get (nth 0 (plist-get data :worksheets)) :cells))))
 
