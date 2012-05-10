@@ -325,14 +325,17 @@ Note that SLOT should not be quoted."
   ;; FIXME: implement `add_new' and `terminal' option like
   ;; `Notebook.execute_selected_cell'.
   (let ((cell (ein:notebook-get-current-cell)))
-    (ein:cell-clear-output cell t t t)
-    (ein:cell-set-input-prompt cell "*")
-    (ein:cell-running-set cell t)
-    ;; FIXME: treat cell type
-    (let* ((code (ein:cell-get-text cell))
-           (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
-      (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
-    (setf (ein:@notebook dirty) t)))
+    (if (ein:codecell-p cell)
+        (progn
+          (ein:cell-clear-output cell t t t)
+          (ein:cell-set-input-prompt cell "*")
+          (ein:cell-running-set cell t)
+          ;; FIXME: treat cell type
+          (let* ((code (ein:cell-get-text cell))
+                 (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
+            (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
+          (setf (ein:@notebook dirty) t)))
+    (ein:log 'warn "Not in code cell!")))
 
 
 ;;; Persistance and loading
