@@ -312,9 +312,8 @@ Note that SLOT should not be quoted."
         ewoc-node)))
 
 (defun ein:notebook-get-current-cell (&optional pos)
-  (let ((cell (ein:aand (ein:notebook-get-current-ewoc-node pos)
-                        (ewoc-data it)
-                        (ein:$node-data it))))
+  (let ((cell (ein:cell-from-ewoc-node
+               (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
 
 (defun ein:notebook-execute-current-cell ()

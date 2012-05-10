@@ -232,6 +232,9 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-ewoc-node-p (ewoc-node &optional element-name)
   (ein:cell-node-p (ewoc-data ewoc-node) element-name))
 
+(defun ein:cell-from-ewoc-node (ewoc-node)
+  (ein:aand ewoc-node (ewoc-data it) (ein:$node-data it)))
+
 (defun ein:cell-get-text (cell)
   "Grab text in the input area of the cell at point."
   (let* ((ewoc (oref cell :ewoc))
