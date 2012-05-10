@@ -43,13 +43,13 @@
    pos max
    (lambda (pos max) "CHUNK-START-FUN"
      (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
-     (ein:aif (ein:notebook-mumamo-python-chunk pos max)
+     (ein:aif (ein:mumamo-find-edge pos max)
          (list it 'python-mode nil)))
    (lambda (pos max) "CHUNK-END-FUN"
      (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
-     (ein:notebook-mumamo-python-chunk pos max t))))
+     (ein:mumamo-find-edge pos max t))))
 
-(defun ein:notebook-mumamo-python-chunk (pos max &optional end)
+(defun ein:mumamo-find-edge (pos max &optional end)
   "Helper function for `ein:notebook-mumamo-python'.
 
 Return the point of beginning of the input element of cell after
