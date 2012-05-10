@@ -398,7 +398,7 @@ A specific node can be specified using optional ARGS."
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
-    ,@(ein:aif (oref cell :input-prompt-number)
+    ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
           `((prompt_number . ,it)))
     (outputs . ,(apply #'vector (oref cell :outputs)))
     (language . "python")
