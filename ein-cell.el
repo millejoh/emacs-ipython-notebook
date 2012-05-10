@@ -40,10 +40,10 @@
    (read-only :initarg :read-only :initform nil :type boolean)
    ;; (data :initarg :data
    ;;  :documentation "default JSON data - FIXME: remove this!")
-   (ewoc :initarg :ewoc :type ewoc
-    :documentation "ewoc (NOTE: use `ein:cell-get-ewoc')")
+   (ewoc :initarg :ewoc :type ewoc)
    (element :initarg :element :initform nil :type list
     :documentation "ewoc nodes")
+   (element-names :initarg :element-names)
    (input :initarg :input :initform "" :type string
     :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
@@ -52,10 +52,12 @@
 
 (defclass ein:codecell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "code")
+   (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number :type integer)))
 
 (defclass ein:textcell (ein:basecell)
-  ((cell-type :initarg :cell-type :initform "text")))
+  ((cell-type :initarg :cell-type :initform "text")
+   (element-names :initform (:prompt :input :footer))))
 
 (defclass ein:htmlcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "html")))
@@ -95,34 +97,22 @@
       (oset cell :input it))
   cell)
 
-(defun ein:cell-new (&rest args)
-  (let ((cell (apply 'make-ein:$cell
-                     :cell-id (ein:utils-uuid)
-                     args)))
-    (setf (ein:$cell-outputs cell) (ein:cell-data-get cell :outputs))
-    (ein:setf-default (ein:$cell-input-prompt-number cell)
-                      (ein:cell-data-get cell :prompt_number))
-    (ein:setf-default (ein:$cell-type cell)
-                      (ein:cell-data-get cell :cell_type))
-    cell))
+(defmethod ein:cell-num-outputs ((cell ein:codecell))
+  (length (oref cell :outputs)))
 
-(defun ein:cell-data-get (cell prop)
-  (plist-get (ein:$cell-data cell) prop))
+(defmethod ein:cell-num-outputs ((cell ein:textcell))
+  0)
 
-;; (defun ein:cell-data-put (cell prop val)
-;;   (plist-put (ein:$cell-data cell) prop val))
-
-(defun ein:cell-num-outputs (cell)
-  (length (ein:$cell-outputs cell)))
-
-(defvar ein:cell-element-names
-  (list :prompt :input :output :footer))
-
-(defun ein:cell-element-get (cell prop &rest index)
+(defmethod ein:cell-element-get ((cell ein:basecell) prop &rest args)
   "Return ewoc node named PROP in CELL.
 If PROP is `:output' a list of ewoc nodes is returned.
-A specific note can be specified using INDEX."
-  (let ((element (ein:$cell-element cell)))
+A specific node can be specified using optional ARGS."
+  (if (memq prop (oref cell :element-names))
+      (plist-get (oref cell :element) prop)
+    (error "PROP %s is not supported." prop)))
+
+(defmethod ein:cell-element-get ((cell ein:codecell) prop &optional index)
+  (let ((element (oref cell :element)))
     (if index
         (progn
           (assert (eql prop :output))
@@ -139,12 +129,14 @@ A specific note can be specified using INDEX."
          (ein:aif (plist-get element :output)
              (car (last it))
            (plist-get element :input)))
-        (t (if (memq prop ein:cell-element-names)
-               (plist-get element prop)
-             (error "PROP %s is not supported." prop)))))))
+        (t (call-next-method))))))
 
-(defun ein:cell-get-ewoc (cell)
-  (ein:$cell-ewoc cell))
+(defmethod ein:cell-element-get ((cell ein:textcell) prop)
+  (let ((element (oref cell :element)))
+    (case prop
+      (:after-input (plist-get element :footer))
+      (:before-input (plist-get element :prompt))
+      (t (call-next-method)))))
 
 (defun ein:cell-make-element (make-node num-outputs)
   (list
@@ -155,7 +147,7 @@ A specific note can be specified using INDEX."
    :footer (funcall make-node 'footer)))
 
 (defun ein:cell-enter-last (cell)
-  (let* ((ewoc (ein:cell-get-ewoc cell))
+  (let* ((ewoc (oref cell :ewoc))
          ;; Use `cell' as data for ewoc.  Use the whole cell data even
          ;; if it is not used, to access it from the notebook buffer.
          ;; It is equivalent to `this.element.data("cell", this)' in
@@ -165,11 +157,11 @@ A specific note can be specified using INDEX."
             (ewoc-enter-last ewoc (ein:node-new `(cell ,@path) cell))))
          (element (ein:cell-make-element make-node
                                          (ein:cell-num-outputs cell))))
-    (setf (ein:$cell-element cell) element)
+    (oset cell :element element)
     cell))
 
 (defun ein:cell-insert-below (base-cell other-cell)
-  (let* ((ewoc (ein:cell-get-ewoc base-cell))
+  (let* ((ewoc (oref base-cell :ewoc))
          (node (ein:cell-element-get base-cell :footer))
          (make-node
           (lambda (&rest path)
@@ -177,7 +169,7 @@ A specific note can be specified using INDEX."
                         ewoc node (ein:node-new `(cell ,@path) other-cell)))))
          (element (ein:cell-make-element make-node
                                          (ein:cell-num-outputs other-cell))))
-    (setf (ein:$cell-element other-cell) element)
+    (oset other-cell :element element)
     other-cell))
 
 (defun ein:cell-pp (path data)
@@ -187,21 +179,25 @@ A specific note can be specified using INDEX."
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer))))
 
-(defun ein:cell-insert-prompt (cell)
+(defmethod ein:cell-insert-prompt ((cell ein:codecell))
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (format "In [%s]:" (or (ein:$cell-input-prompt-number cell)  " "))))
+   (format "In [%s]:" (or (oref cell :input-prompt-number)  " "))))
+
+(defmethod ein:cell-insert-prompt ((cell ein:textcell))
+  (ein:insert-read-only
+   (format "In [%s]:" (oref cell :cell_type))))
 
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-          (or (ein:cell-data-get cell :input) "")
+          (or (oref cell :input) "")
           (propertize "\n" 'read-only t)))
 
 (defvar ein:cell-output-dynamic nil)
 
 (defun ein:cell-insert-output (index cell)
-  (let ((out (nth index (ein:$cell-outputs cell)))
+  (let ((out (nth index (oref :cell outputs)))
         (dynamic ein:cell-output-dynamic))
     (ein:case-equal (plist-get out :output_type)
       (("pyout")        (ein:cell-append-pyout        cell out dynamic))
@@ -226,7 +222,7 @@ A specific note can be specified using INDEX."
 
 (defun ein:cell-get-text (cell)
   "Grab text in the input area of the cell at point."
-  (let* ((ewoc (ein:cell-get-ewoc cell))
+  (let* ((ewoc (oref cell :ewoc))
          (input-node (ein:cell-element-get cell :input))
          ;; 1+/1- is for skipping newline
          (beg (1+ (ewoc-location input-node)))
@@ -235,24 +231,24 @@ A specific note can be specified using INDEX."
 
 (defun ein:cell-set-text (cell text)
   (let* ((input-node (ein:cell-element-get cell :input))
-         (ewoc (ein:cell-get-ewoc cell))
+         (ewoc (oref cell :ewoc))
            ;; 1+/1- is for skipping newline
          (beg (1+ (ewoc-location input-node)))
          (end (1- (ewoc-location (ewoc-next ewoc input-node)))))
     (save-excursion
-      ;; probably it is better to set $cell-data and update via ewoc?
+      ;; probably it is better to set :input and update via ewoc?
       (goto-char beg)
       (delete-region beg end)
       (insert text))))
 
 (defun ein:cell-running-set (cell running)
   ;; FIXME: change the appearance of the cell
-  (setf (ein:$cell-running cell) running))
+  (oset cell :running running))
 
 (defun ein:cell-set-input-prompt (cell &optional number)
-  (setf (ein:$cell-input-prompt-number cell) number)
+  (oset cell :input-prompt-number number)
   (let ((inhibit-read-only t))
-    (ewoc-invalidate (ein:cell-get-ewoc cell)
+    (ewoc-invalidate (oref cell :ewoc)
                      (ein:cell-element-get cell :prompt))))
 
 (defun ein:cell-finish-completing (cell matched-text matches)
@@ -264,7 +260,7 @@ A specific note can be specified using INDEX."
   (ein:log 'info "`ein:cell-finish-tooltip' is not implemented!"))
 
 (defun ein:cell-goto (cell)
-  (ewoc-goto-node (ein:cell-get-ewoc cell) (ein:cell-element-get cell :input))
+  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
   ;; Skip the newline
   (forward-char))
 
@@ -274,15 +270,15 @@ A specific note can be specified using INDEX."
   ;; instantaneously for now.
   (ein:log 'debug "cell-clear-output stdout=%s stderr=%s other=%s"
            stdout stderr other)
-  (let ((ewoc (ein:cell-get-ewoc cell))
+  (let ((ewoc (oref cell :ewoc))
         (output-nodes (ein:cell-element-get cell :output)))
     (if (and stdout stderr other)
         (progn
           ;; clear all
           (let ((inhibit-read-only t))
             (apply #'ewoc-delete ewoc output-nodes))
-          (plist-put (ein:$cell-element cell) :output nil)
-          (setf (ein:$cell-outputs cell) nil))
+          (plist-put (oref cell :element) :output nil)
+          (setf (oref :cell outputs) nil))
       (let* ((ewoc-node-list
               (append
                (when stdout (ein:node-filter output-nodes :is 'output-stdout))
@@ -297,14 +293,14 @@ A specific note can be specified using INDEX."
         ;; remove from buffer
         (let ((inhibit-read-only t))
           (apply #'ewoc-delete ewoc ewoc-node-list))
-        ;; remove from `ein:$cell-element'
-        (let* ((element (ein:$cell-element cell))
+        ;; remove from `:element'
+        (let* ((element (oref cell :element))
                (old-output (plist-get element :output))
                (new-ouptut (ein:remove-by-index old-output indices)))
           (plist-put element :output new-ouptut))
         ;; remove cleared outputs from internal data
-        (setf (ein:$cell-outputs cell)
-              (ein:remove-by-index (ein:$cell-outputs cell) indices))))))
+        (setf (oref :cell outputs)
+              (ein:remove-by-index (oref :cell outputs) indices))))))
 
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
@@ -321,18 +317,18 @@ A specific note can be specified using INDEX."
 (defun ein:cell-append-output (cell json dynamic)
   ;; (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
-  (setf (ein:$cell-outputs cell)
-        (append (ein:$cell-outputs cell) (list json)))
+  (setf (oref :cell outputs)
+        (append (oref :cell outputs) (list json)))
   ;; enter last output element
   (let* ((inhibit-read-only t)
-         (ewoc (ein:cell-get-ewoc cell))
+         (ewoc (oref cell :ewoc))
          (index (1- (ein:cell-num-outputs cell)))
          (path `(cell output ,index))
          (class (ein:cell-output-json-to-class json))
          (data (ein:node-new path cell class))
          (last-node (ein:cell-element-get cell :last-output))
          (ewoc-node (ewoc-enter-after ewoc last-node data))
-         (element (ein:$cell-element cell)))
+         (element (oref cell :element)))
     (plist-put element :output
                (append (plist-get element :output) (list ewoc-node)))))
 
@@ -383,32 +379,27 @@ A specific note can be specified using INDEX."
   ;; escape ANSI & HTML specials in plaintext:
   (ein:insert-read-only (ansi-color-apply data)))
 
-(defun ein:cell-to-json (cell)
+(defmethod ein:cell-to-json ((cell ein:codecell))
   "Return json-ready alist."
-  (ein:case-equal (ein:$cell-type cell)
-    (("code") (ein:codecell-to-json cell))
-    (t        (ein:textcell-to-json cell))))
-
-(defun ein:codecell-to-json (cell)
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
-    ,@(ein:aif (ein:$cell-input-prompt-number cell)
+    ,@(ein:aif (oref cell :input-prompt-number)
           `((prompt_number . ,it)))
-    (outputs . ,(apply #'vector (ein:$cell-outputs cell)))
+    (outputs . ,(apply #'vector (oref :cell outputs)))
     (language . "python")
     ;; FIXME: implement `collapsed'
     (collapsed . ,json-false)))
 
-(defun ein:textcell-to-json (cell)
-  `((cell_type . ,(ein:$cell-type cell))
+(defmethod ein:cell-to-json ((cell ein:textcell))
+  `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
 (defun ein:cell-next (cell)
   "Return next cell of the given CELL or nil if CELL is the last one."
-  (ein:aif (ewoc-next (ein:cell-get-ewoc cell)
+  (ein:aif (ewoc-next (oref cell :ewoc)
                       (ein:cell-element-get cell :footer))
       (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (ein:$cell-p cell)
+        (when (ein:basecell-p cell)
           cell))))
 
 (provide 'ein-cell)
