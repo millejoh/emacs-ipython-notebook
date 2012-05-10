@@ -77,10 +77,11 @@
     (("rst") 'ein:rstcell)))
 
 (defun ein:cell-from-type (type &rest args)
-  (apply (ein:cell-class-from-type type) args))
+  (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell-from-json (data &rest args)
-  (ein:cell-init (ein:cell-from-type (plist-get data :cell_type) args) data))
+  (ein:cell-init (apply #'ein:cell-from-type
+                        (plist-get data :cell_type) args) data))
 
 (defmacro ein:oset-if-unbound (obj slot value)
   `(unless (slot-boundp ,obj ,slot)
