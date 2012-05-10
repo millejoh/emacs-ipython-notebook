@@ -74,6 +74,27 @@
     (("markdown") 'ein:markdowncell)
     (("rst") 'ein:rstcell)))
 
+(defun ein:cell-from-json (data)
+  (ein:cell-init (funcall (ein:cell-class-from-type
+                           (plist-get data :cell_type)))
+                 data))
+
+(defmacro ein:oset-if-unbound (obj slot value)
+  `(unless (slot-boundp ,obj ,slot)
+     (oset ,obj ,slot ,value)))
+
+(defmethod ein:cell-init ((cell ein:codecell) data)
+  (ein:oset-if-unbound cell :outputs (plist-get data :outputs))
+  (ein:oset-if-unbound cell :input (plist-get data :input))
+  (ein:oset-if-unbound cell :input-prompt-number
+                       (plist-get data :prompt_number))
+  cell)
+
+(defmethod ein:cell-init ((cell ein:textcell) data)
+  (ein:aif (plist-get data :source)
+      (oset cell :input it))
+  cell)
+
 (defun ein:cell-new (&rest args)
   (let ((cell (apply 'make-ein:$cell
                      :cell-id (ein:utils-uuid)
