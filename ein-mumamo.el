@@ -76,6 +76,8 @@
 Return the point of beginning of the input element of cell after
 the point POS.  Return `nil' if it cannot be found before the point
 MAX.  If END is non-`nil', end of the input element is returned."
+  (ein:log 'debug "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
+           pos max end cell-p)
   (let* ((ewoc-node
           (ein:notebook-get-nearest-cell-ewoc-node pos max))
          (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
