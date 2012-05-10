@@ -169,10 +169,13 @@ Note that SLOT should not be quoted."
       (setf (ein:$notebook-dirty notebook) t))
     cell))
 
-(defun ein:notebook-insert-cell-below-command ()
-  (interactive)
+(defun ein:notebook-insert-cell-below-command (&optional markdown)
+  "Insert cell bellow.  Insert markdown cell instead of code cell
+when the prefix argument is given."
+  (interactive "P")
   (ein:notebook-in-buffer
-    (ein:notebook-insert-cell-below ein:notebook 'code)))
+    (ein:notebook-insert-cell-below ein:notebook
+                                    (if markdown 'markdown 'code))))
 
 
 ;;; Kernel related things
