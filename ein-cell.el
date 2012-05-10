@@ -35,6 +35,15 @@
 (require 'ein-node)
 
 
+(defmacro ein:oset-if-empty (obj slot value)
+  `(unless (and (slot-boundp ,obj ,slot) (oref ,obj ,slot))
+     (oset ,obj ,slot ,value)))
+
+(defmacro ein:oref-safe (obj slot)
+  `(when (slot-boundp ,obj ,slot)
+     (oref ,obj ,slot)))
+
+
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
    (read-only :initarg :read-only :initform nil :type boolean)
@@ -44,7 +53,7 @@
    (element :initarg :element :initform nil :type list
     :documentation "ewoc nodes")
    (element-names :initarg :element-names)
-   (input :initarg :input :initform "" :type string
+   (input :initarg :input :type string
     :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
@@ -83,15 +92,11 @@
   (ein:cell-init (apply #'ein:cell-from-type
                         (plist-get data :cell_type) args) data))
 
-(defmacro ein:oset-if-unbound (obj slot value)
-  `(unless (slot-boundp ,obj ,slot)
-     (oset ,obj ,slot ,value)))
-
 (defmethod ein:cell-init ((cell ein:codecell) data)
-  (ein:oset-if-unbound cell :outputs (plist-get data :outputs))
-  (ein:oset-if-unbound cell :input (plist-get data :input))
-  (ein:oset-if-unbound cell :input-prompt-number
-                       (plist-get data :prompt_number))
+  (ein:oset-if-empty cell :outputs (plist-get data :outputs))
+  (ein:oset-if-empty cell :input (plist-get data :input))
+  (ein:aif (plist-get data :prompt_number)
+      (ein:oset-if-empty cell :input-prompt-number it))
   cell)
 
 (defmethod ein:cell-init ((cell ein:textcell) data)
@@ -184,7 +189,7 @@ A specific node can be specified using optional ARGS."
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (format "In [%s]:" (or (oref cell :input-prompt-number)  " "))))
+   (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
@@ -193,13 +198,13 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-          (or (oref cell :input) "")
+          (or (ein:oref-safe cell :input) "")
           (propertize "\n" 'read-only t)))
 
 (defvar ein:cell-output-dynamic nil)
 
 (defun ein:cell-insert-output (index cell)
-  (let ((out (nth index (oref :cell outputs)))
+  (let ((out (nth index (oref cell :outputs)))
         (dynamic ein:cell-output-dynamic))
     (ein:case-equal (plist-get out :output_type)
       (("pyout")        (ein:cell-append-pyout        cell out dynamic))
