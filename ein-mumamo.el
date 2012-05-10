@@ -35,6 +35,7 @@
 (defvar ein:mumamo-htmlcell-mode 'html-mode)
 (defvar ein:mumamo-markdowncell-mode 'markdown-mode)
 (defvar ein:mumamo-rstcell-mode 'rst-mode)
+(defvar ein:mumamo-fallback-mode 'text-mode)
 
 
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
@@ -59,7 +60,10 @@
         (lambda (pos max) "CHUNK-START-FUN"
           (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
           (ein:aif (ein:mumamo-find-edge pos max nil #',cell-p)
-              (list it ,mode nil)))
+              (list it (if (functionp ,mode)
+                           ,mode
+                         ein:mumamo-fallback-mode)
+                    nil)))
         (lambda (pos max) "CHUNK-END-FUN"
           (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
           (ein:mumamo-find-edge pos max t #',cell-p))))))
