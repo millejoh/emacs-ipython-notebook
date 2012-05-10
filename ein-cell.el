@@ -343,6 +343,11 @@ A specific note can be specified using INDEX."
 
 (defun ein:cell-to-json (cell)
   "Return json-ready alist."
+  (ein:case-equal (ein:$cell-type cell)
+    (("code") (ein:codecell-to-json cell))
+    (t        (ein:textcell-to-json cell))))
+
+(defun ein:codecell-to-json (cell)
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
     ,@(ein:aif (ein:$cell-input-prompt-number cell)
@@ -351,6 +356,10 @@ A specific note can be specified using INDEX."
     (language . "python")
     ;; FIXME: implement `collapsed'
     (collapsed . ,json-false)))
+
+(defun ein:textcell-to-json (cell)
+  `((cell_type . ,(ein:$cell-type cell))
+    (source    . ,(ein:cell-get-text cell))))
 
 (defun ein:cell-next (cell)
   "Return next cell of the given CELL or nil if CELL is the last one."
