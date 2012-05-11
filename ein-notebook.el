@@ -67,14 +67,6 @@ Note that SLOT should not be quoted."
   (let ((accessor (intern (format "ein:$notebook-%s" slot))))
     `(,accessor ein:notebook)))
 
-(defmacro ein:notebook-in-buffer (&rest body)
-  "Execute BODY if `ein:notebook' is defined."
-  (declare (indent 0))
-  `(if ein:notebook
-       (progn
-         ,@body)
-     (ein:log 'warn "Not in notebook buffer")))
-
 (defmacro ein:notebook-with-cell (cell-p &rest body)
   "Execute BODY if in cell with a dynamically bound variable `cell'.
 When CELL-P is non-`nil', it is called with the current cell object
