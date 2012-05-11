@@ -75,6 +75,17 @@ Note that SLOT should not be quoted."
          ,@body)
      (ein:log 'warn "Not in notebook buffer")))
 
+(defmacro ein:notebook-with-cell (cell-p &rest body)
+  "Execute BODY if in cell with a dynamically bound variable `cell'.
+When CELL-P is non-`nil', it is called with the current cell object
+and BODY will be executed only when it returns non-`nil'.  If CELL-P
+is `nil', BODY is executed with any cell types."
+  (declare (indent 1))
+  `(let ((cell (ein:notebook-get-current-cell)))
+     (if ,(if cell-p `(and cell (funcall ,cell-p cell)) 'cell)
+         (progn ,@body)
+       (ein:log 'warn "Not in cell"))))
+
 (defun ein:notebook-new (notebook-id data &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :notebook-id notebook-id
@@ -167,10 +178,8 @@ Note that SLOT should not be quoted."
 
 (defun ein:notebook-delete-cell-command ()
   (interactive)
-  (ein:notebook-in-buffer
-    (ein:aif (ein:notebook-get-current-cell)
-        (ein:notebook-delete-cell ein:notebook it)
-      (ein:log 'warn "Not in cell!"))))
+  (ein:notebook-with-cell nil
+    (ein:notebook-delete-cell ein:notebook cell)))
 
 (defun ein:notebook-insert-cell-below (notebook type &optional base-cell)
   (unless base-cell
@@ -344,17 +353,14 @@ when the prefix argument is given."
   (interactive)
   ;; FIXME: implement `add_new' and `terminal' option like
   ;; `Notebook.execute_selected_cell'.
-  (let ((cell (ein:notebook-get-current-cell)))
-    (if (ein:codecell-p cell)
-        (progn
-          (ein:cell-clear-output cell t t t)
-          (ein:cell-set-input-prompt cell "*")
-          (ein:cell-running-set cell t)
-          (let* ((code (ein:cell-get-text cell))
-                 (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
-            (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:cell-clear-output cell t t t)
+    (ein:cell-set-input-prompt cell "*")
+    (ein:cell-running-set cell t)
+    (let* ((code (ein:cell-get-text cell))
+           (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
+      (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
           (setf (ein:@notebook dirty) t)))
-    (ein:log 'warn "Not in code cell!")))
 
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
@@ -363,13 +369,11 @@ when the prefix argument is given."
 
 (defun ein:notebook-complete-cell-command ()
   (interactive)
-  (let ((cell (ein:notebook-get-current-cell)))
-    (if (ein:codecell-p cell)
-        (ein:notebook-complete-cell ein:notebook
-                                    cell
-                                    (thing-at-point 'line)
-                                    (current-column))
-      (ein:log 'warn "Not in code cell!"))))
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:notebook-complete-cell ein:notebook
+                                cell
+                                (thing-at-point 'line)
+                                (current-column))))
 
 
 ;;; Persistance and loading
