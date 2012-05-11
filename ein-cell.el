@@ -114,6 +114,49 @@
       (oset cell :input it))
   cell)
 
+(defmethod ein:cell-convert ((cell ein:basecell) type)
+  (let ((new (ein:cell-class-from-type type)))
+    ;; copy attributes
+    (loop for k in '(:read-only :ewoc)
+          do (oset new k (oref cell k)))
+    ;; copy input
+    (oset new :input (ein:cell-get-text cell))
+    ;; copy output when the new cell has it
+    (when (memq :output (oref new :element-names))
+      (oset new :outputs (mapcar 'identity (oref cell :outputs))))
+    new))
+
+(defmethod ein:cell-copy ((cell ein:basecell))
+  (ein:cell-convert cell (oref cell :cell-type)))
+
+(defmethod ein:cell-convert-inplace ((cell ein:basecell) type)
+  "Convert CELL to TYPE and redraw corresponding ewoc nodes."
+  (let ((new (ein:cell-convert cell type)))
+    ;; copy element attribute
+    (loop for k in (oref new :element-names)
+          with old-element = (oref cell :element)
+          with new-element = (oref new :element)
+          do (plist-put new-element k (plist-get old-element k)))
+    ;; setting ewoc nodes
+    (loop for en in (ein:cell-all-element new)
+          for node = (ewoc-data en)
+          do (setf (ein:$node-data node) new))
+    (let ((inhibit-read-only t))
+      ;; delete ewoc nodes that is not copied
+      (apply
+       #'ewoc-delete (oref new :ewoc)
+       (apply
+        #'append
+        (loop for name in (oref new :element-names)
+              unless (memq name (oref cell :element-names))
+              collect (let ((ens (ein:cell-element-get name)))
+                        (if (listp ens) ens (list ens))))))
+      ;; draw ewoc node
+      (loop with ewoc = (oref new :ewoc)
+            for en in (ein:cell-all-element new)
+            do (ewoc-invalidate ewoc en)))
+    new))
+
 
 ;;; Getter/setter
 
