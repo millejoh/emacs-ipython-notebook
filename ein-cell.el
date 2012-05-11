@@ -34,6 +34,8 @@
 (require 'ein-utils)
 (require 'ein-node)
 
+
+;;; EIEIO related utils
 
 (defmacro ein:oset-if-empty (obj slot value)
   `(unless (and (slot-boundp ,obj ,slot) (oref ,obj ,slot))
@@ -43,6 +45,8 @@
   `(when (slot-boundp ,obj ,slot)
      (oref ,obj ,slot)))
 
+
+:;; Cell classes
 
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
@@ -80,6 +84,9 @@
 (defclass ein:rstcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "rst")))
 
+
+;;; Cell factory
+
 (defun ein:cell-class-from-type (type)
   (ein:case-equal type
     (("code") 'ein:codecell)
@@ -106,6 +113,9 @@
   (ein:aif (plist-get data :source)
       (oset cell :input it))
   cell)
+
+
+;;; Getter/setter
 
 (defmethod ein:cell-num-outputs ((cell ein:codecell))
   (length (oref cell :outputs)))
@@ -156,6 +166,9 @@ A specific node can be specified using optional ARGS."
 (defmethod ein:cell-all-element ((cell ein:codecell))
   (append (call-next-method)
           (ein:cell-element-get cell :output)))
+
+
+;; EWOC
 
 (defun ein:cell-make-element (make-node num-outputs)
   (list
@@ -290,6 +303,9 @@ A specific node can be specified using optional ARGS."
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
   ;; Skip the newline
   (forward-char))
+
+
+;; Data manipulation
 
 (defun ein:cell-clear-output (cell stdout stderr other)
   ;; codecell.js in IPytohn implements it using timeout and callback.
