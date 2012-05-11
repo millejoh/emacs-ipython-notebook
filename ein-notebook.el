@@ -357,6 +357,21 @@ when the prefix argument is given."
           (setf (ein:@notebook dirty) t)))
     (ein:log 'warn "Not in code cell!")))
 
+(defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
+  (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
+                                     line-string rel-pos)))
+    (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map))))
+
+(defun ein:notebook-complete-cell-command ()
+  (interactive)
+  (let ((cell (ein:notebook-get-current-cell)))
+    (if (ein:codecell-p cell)
+        (ein:notebook-complete-cell ein:notebook
+                                    cell
+                                    (thing-at-point 'line)
+                                    (current-column))
+      (ein:log 'warn "Not in code cell!"))))
+
 
 ;;; Persistance and loading
 
@@ -450,6 +465,7 @@ when the prefix argument is given."
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
+    (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     map))
 
