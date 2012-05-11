@@ -47,8 +47,6 @@
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
    (read-only :initarg :read-only :initform nil :type boolean)
-   ;; (data :initarg :data
-   ;;  :documentation "default JSON data - FIXME: remove this!")
    (ewoc :initarg :ewoc :type ewoc)
    (element :initarg :element :initform nil :type list
     :documentation "ewoc nodes")

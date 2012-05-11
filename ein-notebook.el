@@ -350,7 +350,6 @@ when the prefix argument is given."
           (ein:cell-clear-output cell t t t)
           (ein:cell-set-input-prompt cell "*")
           (ein:cell-running-set cell t)
-          ;; FIXME: treat cell type
           (let* ((code (ein:cell-get-text cell))
                  (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
             (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
