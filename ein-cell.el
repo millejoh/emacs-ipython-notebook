@@ -276,8 +276,13 @@ A specific node can be specified using optional ARGS."
                      (ein:cell-element-get cell :prompt))))
 
 (defun ein:cell-finish-completing (cell matched-text matches)
-  ;; FIXME: implement!
-  (ein:log 'info "`ein:cell-finish-completing' is not implemented!"))
+  (let* ((end (point))
+         (beg (re-search-backward (concat matched-text "\\=")))
+         (word (if (and beg matches)
+                   (completing-read "Complete: " matches))))
+    (when word
+      (delete-region beg end)
+      (insert word))))
 
 (defun ein:cell-finish-tooltip (cell content)
   ;; FIXME: implement!
