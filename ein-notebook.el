@@ -181,9 +181,7 @@ is `nil', BODY is executed with any cell types."
   (ein:notebook-with-cell nil
     (ein:notebook-delete-cell ein:notebook cell)))
 
-(defun ein:notebook-insert-cell-below (notebook type &optional base-cell)
-  (unless base-cell
-    (setq base-cell (ein:notebook-get-current-cell)))
+(defun ein:notebook-insert-cell-below (notebook type base-cell)
   (let ((cell (ein:notebook-cell-from-type notebook type)))
     (when cell
       (cond
@@ -199,9 +197,10 @@ is `nil', BODY is executed with any cell types."
   "Insert cell bellow.  Insert markdown cell instead of code cell
 when the prefix argument is given."
   (interactive "P")
-  (ein:notebook-in-buffer
+  (ein:notebook-with-cell nil
     (ein:notebook-insert-cell-below ein:notebook
-                                    (if markdown 'markdown 'code))))
+                                    (if markdown 'markdown 'code)
+                                    cell)))
 
 
 ;;; Kernel related things
@@ -262,7 +261,8 @@ when the prefix argument is given."
              (ein:pager-append-text pager text))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
-        do (let ((new-cell (ein:notebook-insert-cell-below 'code cell)))
+        do (let ((new-cell (ein:notebook-insert-cell-below
+                            notebook 'code cell)))
              (ein:cell-set-text new-cell text)
              (setf (ein:$notebook-dirty notebook) t))))
 
