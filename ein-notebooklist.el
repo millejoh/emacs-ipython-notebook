@@ -31,7 +31,8 @@
 (require 'ein-utils)
 (require 'ein-notebook)
 
-(defvar ein:notebooklist-data nil)
+(defvar ein:notebooklist-data nil
+  "Buffer local variable to store data from the server.")
 (make-variable-buffer-local 'ein:notebooklist-data)
 (put 'ein:notebooklist-data 'permanent-local t)
 
@@ -49,7 +50,9 @@
    (format ein:notebooklist-buffer-name-template ein:port)))
 
 (defun ein:notebooklist-open (&optional no-popup)
+  "Open notebook list buffer."
   (interactive)
+  ;; FIXME: This function must ask server address or port number.
   (url-retrieve
    (ein:notebooklist-url)
    (if no-popup
@@ -57,6 +60,7 @@
      (lambda (s) (pop-to-buffer (ein:notebooklist-url-retrieve-callback))))))
 
 (defun ein:notebooklist-url-retrieve-callback ()
+  "Called via `ein:notebooklist-open'."
   (let ((data (ein:json-read)))
     (kill-buffer (current-buffer))
     (with-current-buffer (ein:notebooklist-get-buffer)
@@ -65,6 +69,7 @@
       (current-buffer))))
 
 (defun ein:notebooklist-new-notebook ()
+  "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
   (url-retrieve
    (ein:notebooklist-new-url)
@@ -76,7 +81,13 @@
        (message "Creating a new notebook... Done.")))
    (list (ein:notebooklist-get-buffer))))
 
+;; FIXME: implement notebook deletion.
+;; See `add_delete_button' in `notebooklist.js'.
+
 (defun ein:notebooklist-render ()
+  "Render notebook list widget.
+Notebook list data is passed via the buffer local variable
+`ein:notebooklist-data'."
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
     (erase-buffer))
