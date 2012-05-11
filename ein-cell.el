@@ -115,10 +115,10 @@
   cell)
 
 (defmethod ein:cell-convert ((cell ein:basecell) type)
-  (let ((new (ein:cell-class-from-type type)))
+  (let ((new (ein:cell-from-type type)))
     ;; copy attributes
     (loop for k in '(:read-only :ewoc)
-          do (oset new k (oref cell k)))
+          do (set-slot-value new k (slot-value cell k)))
     ;; copy input
     (oset new :input (ein:cell-get-text cell))
     ;; copy output when the new cell has it
@@ -135,10 +135,11 @@
     ;; copy element attribute
     (loop for k in (oref new :element-names)
           with old-element = (oref cell :element)
-          with new-element = (oref new :element)
-          do (plist-put new-element k (plist-get old-element k)))
+          do (oset new :element
+                   (plist-put (oref new :element) k
+                              (plist-get old-element k))))
     ;; setting ewoc nodes
-    (loop for en in (ein:cell-all-element new)
+    (loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
           do (setf (ein:$node-data node) new))
     (let ((inhibit-read-only t))
@@ -147,9 +148,9 @@
        #'ewoc-delete (oref new :ewoc)
        (apply
         #'append
-        (loop for name in (oref new :element-names)
-              unless (memq name (oref cell :element-names))
-              collect (let ((ens (ein:cell-element-get name)))
+        (loop for name in (oref cell :element-names)
+              unless (memq name (oref new :element-names))
+              collect (let ((ens (ein:cell-element-get cell name)))
                         (if (listp ens) ens (list ens))))))
       ;; draw ewoc node
       (loop with ewoc = (oref new :ewoc)
