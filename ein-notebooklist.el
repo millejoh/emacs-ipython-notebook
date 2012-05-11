@@ -41,21 +41,40 @@
 (defun ein:notebooklist-url ()
   (concat (ein:base-project-url) "notebooks"))
 
-(defun ein:notebooklist-open ()
+(defun ein:notebooklist-new-url ()
+  (concat (ein:base-project-url) "new"))
+
+(defun ein:notebooklist-get-buffer ()
+  (get-buffer-create
+   (format ein:notebooklist-buffer-name-template ein:port)))
+
+(defun ein:notebooklist-open (&optional no-popup)
   (interactive)
   (url-retrieve
    (ein:notebooklist-url)
-   (lambda (s) (ein:notebooklist-pop-buffer))))
+   (if no-popup
+       (lambda (s) (ein:notebooklist-url-retrieve-callback))
+     (lambda (s) (pop-to-buffer (ein:notebooklist-url-retrieve-callback))))))
 
-(defun ein:notebooklist-pop-buffer ()
+(defun ein:notebooklist-url-retrieve-callback ()
   (let ((data (ein:json-read)))
     (kill-buffer (current-buffer))
-    (with-current-buffer
-        (get-buffer-create
-         (format ein:notebooklist-buffer-name-template ein:port))
+    (with-current-buffer (ein:notebooklist-get-buffer)
       (setq ein:notebooklist-data data)
       (ein:notebooklist-render)
-      (pop-to-buffer (current-buffer)))))
+      (current-buffer))))
+
+(defun ein:notebooklist-new-notebook ()
+  (message "Creating a new notebook...")
+  (url-retrieve
+   (ein:notebooklist-new-url)
+   (lambda (s buffer)
+     ;; To support opening notebook buffer from here will need parsing
+     ;; HTML file.  Let's just reload notebook list buffer.
+     (with-current-buffer buffer
+       (ein:notebooklist-open t) ; FIXME: pass buffer to update (open)
+       (message "Creating a new notebook... Done.")))
+   (list (ein:notebooklist-get-buffer))))
 
 (defun ein:notebooklist-render ()
   (kill-all-local-variables)
@@ -63,7 +82,12 @@
     (erase-buffer))
   (remove-overlays)
   ;; Create notebook list
-  (widget-insert "IPython Notebook list\n\n")
+  (widget-insert "IPython Notebook list ")
+  (widget-create
+   'link
+   :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
+   "New Notebook")
+  (widget-insert "\n\n")
   (loop for note in ein:notebooklist-data
         for name = (plist-get note :name)
         for notebook-id = (plist-get note :notebook_id)
