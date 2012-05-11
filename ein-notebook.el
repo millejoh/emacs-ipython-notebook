@@ -194,6 +194,14 @@ when the prefix argument is given."
                                     (if markdown 'markdown 'code)
                                     cell)))
 
+(defun ein:notebook-toggle-cell-type ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (let ((type (ein:case-equal (oref cell :cell-type)
+                  (("code") "markdown")
+                  (("markdown") "code"))))
+      (ein:cell-convert-inplace cell type))))
+
 
 ;;; Cell selection.
 
@@ -477,6 +485,7 @@ when the prefix argument is given."
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
+    (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
