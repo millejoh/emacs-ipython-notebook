@@ -36,6 +36,16 @@
 (require 'markdown-mode nil t)
 (require 'rst nil t)
 
+(defadvice backtrace (around eintest-short-backtrace activate)
+  "A hack for shorten backtrace.
+
+As code cells hold base64-encoded image data, backtrace tends to
+be VERY long.  So I am setting `print-level' to *1*.  Note that
+setting it globally via `setq' does not work because the value
+for debugger is hard-coded.  See `debugger-setup-buffer'."
+  (let ((print-level 1))
+    ad-do-it))
+
 (defun eintest-pop-to-debug-shell ()
   "Open shell challen websocket log buffer."
   (interactive)
