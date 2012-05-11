@@ -195,6 +195,23 @@ when the prefix argument is given."
                                     cell)))
 
 
+;;; Cell selection.
+
+(defun ein:notebook-goto-next-cell ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:aif (ein:cell-next cell)
+        (ein:cell-goto it)
+      (ein:log 'warn "No next cell"))))
+
+(defun ein:notebook-goto-prev-cell ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:aif (ein:cell-prev cell)
+        (ein:cell-goto it)
+      (ein:log 'warn "No previous cell"))))
+
+
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
@@ -460,6 +477,8 @@ when the prefix argument is given."
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
+    (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
+    (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     map))

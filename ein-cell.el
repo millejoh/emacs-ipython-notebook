@@ -429,6 +429,14 @@ A specific node can be specified using optional ARGS."
         (when (ein:basecell-child-p cell)
           cell))))
 
+(defun ein:cell-prev (cell)
+  "Return previous cell of the given CELL or nil if CELL is the first one."
+  (ein:aif (ewoc-prev (oref cell :ewoc)
+                      (ein:cell-element-get cell :prompt))
+      (let ((cell (ein:$node-data (ewoc-data it))))
+        (when (ein:basecell-child-p cell)
+          cell))))
+
 (provide 'ein-cell)
 
 ;;; ein-cell.el ends here
