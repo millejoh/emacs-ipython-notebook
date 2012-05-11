@@ -82,24 +82,24 @@
     (erase-buffer))
   (remove-overlays)
   ;; Create notebook list
-  (widget-insert "IPython Notebook list ")
+  (widget-insert "IPython Notebook list\n\n")
   (widget-create
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
    "New Notebook")
-  (widget-insert "\n\n")
+  (widget-insert "\n")
   (loop for note in ein:notebooklist-data
         for name = (plist-get note :name)
         for notebook-id = (plist-get note :notebook_id)
-        do (progn (widget-insert name " ")
-                  (widget-create
+        do (progn (widget-create
                    'link
                    :notify (lexical-let ((name name)
                                          (notebook-id notebook-id))
                              (lambda (&rest ignore)
                                (message "Open notebook %s." name)
                                (ein:notebook-open notebook-id)))
-                   "open")
+                   "Open")
+                  (widget-insert " " name)
                   (widget-insert "\n")))
   (use-local-map widget-keymap)
   (widget-setup))
