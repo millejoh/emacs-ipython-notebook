@@ -76,12 +76,15 @@ Note that SLOT should not be quoted."
      (ein:log 'warn "Not in notebook buffer")))
 
 (defun ein:notebook-new (notebook-id data &rest args)
-  (apply #'make-ein:$notebook
-         :notebook-id notebook-id
-         :data data
-         :msg-cell-map (make-hash-table :test 'equal)
-         :nbformat 2
-         args))
+  (let ((notebook (apply #'make-ein:$notebook
+                         :notebook-id notebook-id
+                         :data data
+                         :msg-cell-map (make-hash-table :test 'equal)
+                         :nbformat 2
+                         args)))
+    (setf (ein:$notebook-pager notebook)
+          (ein:pager-new (format "*ein: %s/pager*" notebook-id)))
+    notebook))
 
 (defun ein:notebook-setup (&rest args)
   (setq ein:notebook (apply #'ein:notebook-new args)))
@@ -243,7 +246,7 @@ when the prefix argument is given."
         for text = (plist-get p :text)
         for source = (plist-get p :source)
         if (equal source "IPython.zmq.page.page")
-        when (equal (ein:trim text) "")
+        when (not (equal (ein:trim text) ""))
         do (let ((pager (ein:$notebook-pager notebook)))
              (ein:pager-clear pager)
              (ein:pager-expand pager)

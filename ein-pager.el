@@ -25,19 +25,27 @@
 
 ;;; Code:
 
+(require 'ansi-color)
+
 (require 'ein-log)
 
+(defun ein:pager-new (name)
+  (get-buffer-create name))
+
 (defun ein:pager-clear (pager)
-  ;; FIXME: implement!
-  (ein:log 'info "`ein:pager-clear' is not implemented!"))
+  (with-current-buffer pager
+    (erase-buffer)))
 
 (defun ein:pager-expand (pager)
-  ;; FIXME: implement!
-  (ein:log 'info "`ein:pager-expand' is not implemented!"))
+  (pop-to-buffer pager)
+  (goto-char (point-min))
+  (unless font-lock-mode
+    (font-lock-mode)))
 
 (defun ein:pager-append-text (pager text)
-  ;; FIXME: implement!
-  (ein:log 'info "`ein:pager-append-text' is not implemented!"))
+  (with-current-buffer pager
+    (save-excursion
+      (insert (ansi-color-apply text)))))
 
 (provide 'ein-pager)
 
