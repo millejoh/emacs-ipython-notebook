@@ -113,6 +113,7 @@ Adapted from twittering-mode.el's `case-string'."
        clauses)))
 
 (defun ein:plist-iter (plist)
+  "Return list of (key . value) in PLIST."
   (loop for p in plist
         for i from 0
         for key-p = (= (% i 2) 0)
