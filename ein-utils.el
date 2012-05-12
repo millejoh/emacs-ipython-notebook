@@ -50,6 +50,16 @@
      (if it ,(if rest (macroexpand-all `(ein:aand ,@rest)) 'it))))
 
 
+(defmacro ein:deflocal (name &optional initvalue docstring)
+  "Define permanent buffer local variable named NAME.
+INITVALUE and DOCSTRING are passed to `defvar'."
+  (declare (indent defun))
+  `(progn
+     (defvar ,name ,initvalue ,docstring)
+     (make-variable-buffer-local ',name)
+     (put ',name 'permanent-local t)))
+
+
 (defmacro ein:with-json-setting (&rest body)
   `(let ((json-object-type 'plist)
          (json-array-type 'list))

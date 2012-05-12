@@ -26,10 +26,12 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
+(require 'ein-utils)
 
-(defvar ein:log-buffer)
-(make-variable-buffer-local 'ein:log-buffer)
-(put 'ein:log-buffer 'permanent-local t)
+(ein:deflocal ein:log-buffer nil
+  "Buffer local variable to store a buffer to output log of
+ activities occurred in this buffer.")
+
 
 (defvar ein:log-buffer-name-template " *ein:log %s*")
 (defvar ein:log-all-buffer-name " *ein:log-all*")

@@ -53,9 +53,8 @@
   nbformat                              ; int
   )
 
-(defvar ein:notebook nil)
-(make-variable-buffer-local 'ein:notebook)
-(put 'ein:notebook 'permanent-local t)
+(ein:deflocal ein:notebook nil
+  "Buffer local variable to store an instance of `ein:$notebook'.")
 
 (defmacro ein:@notebook (slot)
   "Quick access to buffer local notebook attributes \(slot of `ein:$notebook').

@@ -31,10 +31,8 @@
 (require 'ein-utils)
 (require 'ein-notebook)
 
-(defvar ein:notebooklist-data nil
+(ein:deflocal ein:notebooklist-data nil
   "Buffer local variable to store data from the server.")
-(make-variable-buffer-local 'ein:notebooklist-data)
-(put 'ein:notebooklist-data 'permanent-local t)
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
