@@ -91,12 +91,15 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-setup (&rest args)
   (setq ein:notebook (apply #'ein:notebook-new args)))
 
-(defun ein:notebook-url (notebook-id)
+(defun ein:notebook-url (notebook)
+  (ein:notebook-url-from-id (ein:$notebook-notebook-id notebook)))
+
+(defun ein:notebook-url-from-id (notebook-id)
   (concat (file-name-as-directory ein:base-project-url)
           "notebooks/" notebook-id))
 
 (defun ein:notebook-open (notebook-id)
-  (let ((url (ein:notebook-url notebook-id)))
+  (let ((url (ein:notebook-url-from-id notebook-id)))
     (url-retrieve url
                   #'ein:notebook-url-retrieve-callback
                   (list notebook-id))))
@@ -428,7 +431,7 @@ when the prefix argument is given."
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger 'notebook_saving.Notebook)
-    (let ((url (ein:notebook-url (ein:$notebook-notebook-id notebook)))
+    (let ((url (ein:notebook-url notebook))
           (url-request-method "PUT")
           (url-request-extra-headers '(("Content-Type" . "application/json")))
           (url-request-data (json-encode data)))
