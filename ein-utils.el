@@ -124,7 +124,30 @@ NOTE: This function creates new list."
         collect l))
 
 (defun ein:utils-uuid ()
-   (car (split-string (shell-command-to-string "uuidgen"))))
+  "Return string with random (version 4) UUID.
+Adapted from org-mode's `org-id-uuid'."
+  (let ((rnd (md5 (format "%s%s%s%s%s%s%s"
+			  (random t)
+			  (current-time)
+			  (user-uid)
+			  (emacs-pid)
+			  (user-full-name)
+			  user-mail-address
+			  (recent-keys)))))
+    (format "%s-%s-4%s-%s%s-%s"
+	    (substring rnd 0 8)
+	    (substring rnd 8 12)
+	    (substring rnd 13 16)
+	    (format "%x"
+		    (logior
+		     #b10000000
+		     (logand
+		      #b10111111
+		      (string-to-number
+		       (substring rnd 16 18) 16))))
+	    (substring rnd 18 20)
+	    (substring rnd 20 32))))
+
 
 (provide 'ein-utils)
 
