@@ -441,11 +441,24 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-append-stream (cell json)
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  (let ((last (last (ein:cell-element-get cell :output))))
-    (when (and last
-               (equal (plist-get last :output_type) "stream")
-               (equal (plist-get json :stream) (plist-get last :stream)))
-      (ein:insert-read-only (plist-get json :text)))))
+  ;; FIXME: IPython codecell.js does something more complex than this.
+  ;; It append to the output of the same type (output-stout/output-stderr)
+  ;; if it already exists.  Maybe stream should be handled in that way
+  ;; but do it in simple way for now.
+  (ein:cell-append-text (plist-get json :text))
+  ;; NOTE: codecell.js append text without adding newline, like this:
+  ;;       "...find('pre').append(text)".  But it looks like jQuery's
+  ;;       `.append' adds newline automatically.  As newline will be
+  ;;       appended in `ein:cell-insert-output', do nothing about
+  ;;       newline here is correct.
+
+  ;; This can be used when implementing output-to-the-same-type handling:
+  ;; (let ((last (last (ein:cell-element-get cell :output))))
+  ;;   (when (and last
+  ;;              (equal (plist-get last :output_type) "stream")
+  ;;              (equal (plist-get json :stream) (plist-get last :stream)))
+  ;;     (ein:insert-read-only (plist-get json :text))))
+  )
 
 (defun ein:cell-append-display-data (cell json dynamic)
   (ein:cell-append-mime-type json dynamic))
