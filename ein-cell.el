@@ -332,7 +332,8 @@ A specific node can be specified using optional ARGS."
 
 (defun ein:cell-finish-completing (cell matched-text matches)
   (let* ((end (point))
-         (beg (re-search-backward (concat matched-text "\\=")))
+         (beg (save-excursion
+                (re-search-backward (concat matched-text "\\="))))
          (word (if (and beg matches)
                    (completing-read "Complete: " matches))))
     (when word
