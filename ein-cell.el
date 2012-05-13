@@ -142,7 +142,8 @@
     (loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
           do (setf (ein:$node-data node) new))
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          (buffer-undo-list t))         ; disable undo recording
       ;; delete ewoc nodes that is not copied
       (apply
        #'ewoc-delete (oref new :ewoc)
@@ -215,12 +216,13 @@ A specific node can be specified using optional ARGS."
 ;; EWOC
 
 (defun ein:cell-make-element (make-node num-outputs)
-  (list
-   :prompt (funcall make-node 'prompt)
-   :input  (funcall make-node 'input)
-   :output (loop for i from 0 below num-outputs
-                 collect (funcall make-node 'output i))
-   :footer (funcall make-node 'footer)))
+  (let ((buffer-undo-list t))           ; disable undo recording
+    (list
+     :prompt (funcall make-node 'prompt)
+     :input  (funcall make-node 'input)
+     :output (loop for i from 0 below num-outputs
+                   collect (funcall make-node 'output i))
+     :footer (funcall make-node 'footer))))
 
 (defun ein:cell-enter-last (cell)
   (let* ((ewoc (oref cell :ewoc))
@@ -326,7 +328,8 @@ A specific node can be specified using optional ARGS."
 
 (defun ein:cell-set-input-prompt (cell &optional number)
   (oset cell :input-prompt-number number)
-  (let ((inhibit-read-only t))
+  (let ((inhibit-read-only t)
+        (buffer-undo-list t))           ; disable undo recording
     (ewoc-invalidate (oref cell :ewoc)
                      (ein:cell-element-get cell :prompt))))
 
@@ -364,7 +367,8 @@ A specific node can be specified using optional ARGS."
     (if (and stdout stderr other)
         (progn
           ;; clear all
-          (let ((inhibit-read-only t))
+          (let ((inhibit-read-only t)
+                (buffer-undo-list t))   ; disable undo recording
             (apply #'ewoc-delete ewoc output-nodes))
           (plist-put (oref cell :element) :output nil)
           (oset cell :outputs nil))
@@ -380,7 +384,8 @@ A specific node can be specified using optional ARGS."
               (mapcar (lambda (n) (last (ein:$node-path (ewoc-data n))))
                       ewoc-node-list)))
         ;; remove from buffer
-        (let ((inhibit-read-only t))
+        (let ((inhibit-read-only t)
+              (buffer-undo-list t))   ; disable undo recording
           (apply #'ewoc-delete ewoc ewoc-node-list))
         ;; remove from `:element'
         (let* ((element (oref cell :element))
@@ -410,6 +415,7 @@ A specific node can be specified using optional ARGS."
         (append (oref cell :outputs) (list json)))
   ;; enter last output element
   (let* ((inhibit-read-only t)
+         (buffer-undo-list t)           ; disable undo recording
          (ewoc (oref cell :ewoc))
          (index (1- (ein:cell-num-outputs cell)))
          (path `(cell output ,index))

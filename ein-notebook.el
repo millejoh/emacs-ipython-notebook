@@ -181,6 +181,7 @@ is `nil', BODY is executed with any cell types."
   (interactive)
   (assert ein:notebook)  ; make sure in a notebook buffer
   (ein:notebook-from-json ein:notebook (ein:@notebook data))
+  (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready" (ein:@notebook notebook-id)))
