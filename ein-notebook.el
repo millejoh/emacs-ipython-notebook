@@ -106,6 +106,11 @@ is `nil', BODY is executed with any cell types."
   (ein:notebook-init notebook data)
   (setq ein:notebook notebook))
 
+(defun ein:notebook-get-buffer (notebook)
+  (get-buffer-create
+   (format ein:notebook-buffer-name-template
+           (ein:$notebook-notebook-id notebook))))
+
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-id notebook)))
@@ -128,9 +133,7 @@ is `nil', BODY is executed with any cell types."
   (let ((data (ein:json-read))
         (notebook-id (ein:$notebook-notebook-id notebook)))
     (kill-buffer (current-buffer))
-    (with-current-buffer
-        (get-buffer-create
-         (format ein:notebook-buffer-name-template notebook-id))
+    (with-current-buffer (ein:notebook-get-buffer notebook)
       (ein:notebook-setup notebook data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
