@@ -56,8 +56,9 @@ FIXME: document other slots."
 ;; IPython developers for an API to get this from notebook server.
 
 
-(defun ein:kernel-init ()
+(defun ein:kernel-new (url-or-port)
   (make-ein:$kernel
+   :url-or-port url-or-port
    :kernel-id nil
    :shell-channel nil
    :iopub-channel nil
@@ -78,14 +79,13 @@ FIXME: document other slots."
    :parent_header (make-hash-table)))
 
 
-(defun ein:kernel-start
-  (kernel url-or-port notebook-id callback &optional cbargs)
+(defun ein:kernel-start (kernel notebook-id callback &optional cbargs)
   "Start kernel of the notebook whose id is NOTEBOOK-ID.
 CALLBACK is called after kernel is started with optional argument CBARGS."
   (unless (ein:$kernel-running kernel)
-    (setf (ein:$kernel-url-or-port kernel) url-or-port)
     (let* ((qs (format "notebook=%s" notebook-id))
-           (url (concat (ein:url url-or-port (ein:$kernel-base-url kernel))
+           (url (concat (ein:url (ein:$kernel-url-or-port kernel)
+                                 (ein:$kernel-base-url kernel))
                         "?" qs))
            (url-request-method "POST"))
       (url-retrieve

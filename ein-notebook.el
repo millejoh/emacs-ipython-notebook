@@ -289,10 +289,9 @@ when the prefix argument is given."
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
-  (let ((kernel (ein:kernel-init)))
+  (let ((kernel (ein:kernel-new (ein:@notebook url-or-port))))
     (setf (ein:@notebook kernel) kernel)
     (ein:kernel-start kernel
-                      (ein:@notebook url-or-port)
                       (ein:@notebook notebook-id)
                       #'ein:notebook-kernel-started
                       (list ein:notebook))))
