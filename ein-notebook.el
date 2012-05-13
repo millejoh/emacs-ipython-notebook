@@ -455,10 +455,11 @@ when the prefix argument is given."
 (defun ein:notebook-complete-cell-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:notebook-complete-cell ein:notebook
-                                cell
-                                (thing-at-point 'line)
-                                (current-column))))
+    (ein:kernel-if-ready (ein:@notebook kernel)
+      (ein:notebook-complete-cell ein:notebook
+                                  cell
+                                  (thing-at-point 'line)
+                                  (current-column)))))
 
 (defun ein:notebook-kernel-interrupt-command ()
   (interactive)
