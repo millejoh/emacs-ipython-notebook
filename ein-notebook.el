@@ -109,11 +109,13 @@ is `nil', BODY is executed with any cell types."
                  (ein:$notebook-url-or-port notebook)
                  (ein:$notebook-notebook-name notebook)))))
 
+(defun ein:notebook-get-buffer-name (notebook)
+  (format ein:notebook-buffer-name-template
+          (ein:$notebook-url-or-port notebook)
+          (ein:$notebook-notebook-name notebook)))
+
 (defun ein:notebook-get-buffer (notebook)
-  (get-buffer-create
-   (format ein:notebook-buffer-name-template
-           (ein:$notebook-url-or-port notebook)
-           (ein:$notebook-notebook-name notebook))))
+  (get-buffer-create (ein:notebook-get-buffer-name notebook)))
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
@@ -426,6 +428,13 @@ when the prefix argument is given."
 
 ;;; Persistance and loading
 
+(defun ein:notebook-set-notebook-name (notebook name)
+  "Check NAME and change the name of NOTEBOOK to it."
+  (if (ein:notebook-test-notebook-name name)
+      (setf (ein:$notebook-notebook-name notebook) name)
+    (ein:log 'error "%S is not a good notebook name." name)
+    (error "%S is not a good notebook name." name)))
+
 (defun ein:notebook-test-notebook-name (name)
   (and (stringp name)
        (> (length name) 0)
@@ -497,6 +506,16 @@ when the prefix argument is given."
 (defun ein:notebook-save-notebook-error (notebook status)
   (ein:events-trigger 'notebook_save_failed.Notebook))
 
+(defun ein:notebook-rename-command (name)
+  "Rename current notebook and save it immediately.
+
+NAME is any non-empty string that does not contain '/' or '\\'."
+  (interactive
+   (list (read-string "Rename notebook: ")))
+  (ein:notebook-set-notebook-name ein:notebook name)
+  (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
+  (ein:notebook-save-notebook ein:notebook))
+
 
 ;;; Notebook mode
 
@@ -522,6 +541,7 @@ when the prefix argument is given."
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
+    (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
     map))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
