@@ -241,7 +241,9 @@ is `nil', BODY is executed with any cell types."
        ((= (ein:notebook-ncells notebook) 0)
         (ein:cell-enter-last cell))
        (base-cell
-        (ein:cell-insert-below base-cell cell)))
+        (ein:cell-insert-below base-cell cell))
+       (t (error (concat "`base-cell' is `nil' but ncells != 0.  "
+                         "There is something wrong..."))))
       (ein:cell-goto cell)
       (setf (ein:$notebook-dirty notebook) t))
     cell))
