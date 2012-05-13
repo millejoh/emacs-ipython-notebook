@@ -34,6 +34,13 @@
 
 
 (defstruct ein:$kernel
+  "Hold kernel variables.
+
+`ein:$kernel-url-or-port'
+  URL or port of IPython server.
+
+FIXME: document other slots."
+  url-or-port
   kernel-id
   shell-channel
   iopub-channel
@@ -71,13 +78,14 @@
    :parent_header (make-hash-table)))
 
 
-(defun ein:kernel-start (kernel notebook-id callback &optional cbargs)
+(defun ein:kernel-start
+  (kernel url-or-port notebook-id callback &optional cbargs)
   "Start kernel of the notebook whose id is NOTEBOOK-ID.
 CALLBACK is called after kernel is started with optional argument CBARGS."
   (unless (ein:$kernel-running kernel)
+    (setf (ein:$kernel-url-or-port kernel) url-or-port)
     (let* ((qs (format "notebook=%s" notebook-id))
-           (url (concat (url-expand-file-name (ein:$kernel-base-url kernel)
-                                              (ein:base-project-url))
+           (url (concat (ein:url url-or-port (ein:$kernel-base-url kernel))
                         "?" qs))
            (url-request-method "POST"))
       (url-retrieve

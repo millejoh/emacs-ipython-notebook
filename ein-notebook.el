@@ -41,6 +41,13 @@
 (defvar ein:notebook-buffer-name-template "*ein: %s*")
 
 (defstruct ein:$notebook
+  "Hold notebook variables.
+
+`ein:$notebook-url-or-port'
+  URL or port of IPython server.
+
+FIXME: document other slots."
+  url-or-port
   notebook-id                           ; uuid string
   data                                  ; json data - FIXME: remove this!
   ewoc                                  ; ewoc
@@ -77,8 +84,9 @@ is `nil', BODY is executed with any cell types."
          (progn ,@body)
        (ein:log 'warn "Not in cell"))))
 
-(defun ein:notebook-new (notebook-id data &rest args)
+(defun ein:notebook-new (url-or-port notebook-id data &rest args)
   (let ((notebook (apply #'make-ein:$notebook
+                         :url-or-port url-or-port
                          :notebook-id notebook-id
                          :data data
                          :msg-cell-map (make-hash-table :test 'equal)
@@ -92,19 +100,21 @@ is `nil', BODY is executed with any cell types."
   (setq ein:notebook (apply #'ein:notebook-new args)))
 
 (defun ein:notebook-url (notebook)
-  (ein:notebook-url-from-id (ein:$notebook-notebook-id notebook)))
+  (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
+                                    (ein:$notebook-notebook-id notebook)))
 
-(defun ein:notebook-url-from-id (notebook-id)
-  (concat (file-name-as-directory ein:base-project-url)
-          "notebooks/" notebook-id))
+(defun ein:notebook-url-from-url-and-id (url-or-port notebook-id)
+  (ein:url url-or-port "notebooks" notebook-id))
 
-(defun ein:notebook-open (notebook-id)
-  (let ((url (ein:notebook-url-from-id notebook-id)))
+(defun ein:notebook-open (url-or-port notebook-id)
+  (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id)))
+    (ein:log 'debug "Opening notebook at %s" url)
+    ;; FIXME: make notebook instance here and pass it to the callback
     (url-retrieve url
                   #'ein:notebook-url-retrieve-callback
-                  (list notebook-id))))
+                  (list url-or-port notebook-id))))
 
-(defun ein:notebook-url-retrieve-callback (status notebook-id)
+(defun ein:notebook-url-retrieve-callback (status url-or-port notebook-id)
   (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
            notebook-id status)
   (let ((data (ein:json-read)))
@@ -113,7 +123,7 @@ is `nil', BODY is executed with any cell types."
         (get-buffer-create
          (format ein:notebook-buffer-name-template notebook-id))
       (ein:log-setup notebook-id)
-      (ein:notebook-setup notebook-id data)
+      (ein:notebook-setup url-or-port notebook-id data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
 
@@ -227,7 +237,9 @@ when the prefix argument is given."
 (defun ein:notebook-start-kernel ()
   (let ((kernel (ein:kernel-init)))
     (setf (ein:@notebook kernel) kernel)
-    (ein:kernel-start kernel (ein:@notebook notebook-id)
+    (ein:kernel-start kernel
+                      (ein:@notebook url-or-port)
+                      (ein:@notebook notebook-id)
                       #'ein:notebook-kernel-started
                       (list ein:notebook))))
 

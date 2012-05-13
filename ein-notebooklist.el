@@ -31,38 +31,55 @@
 (require 'ein-utils)
 (require 'ein-notebook)
 
-(ein:deflocal ein:notebooklist-data nil
-  "Buffer local variable to store data from the server.")
+(defstruct ein:$notebooklist
+  "Hold notebooklist variables.
+
+`ein:$notebooklist-url-or-port'
+  URL or port of IPython server.
+
+`ein:$notebooklist-data'
+  JSON data sent from the server."
+  url-or-port
+  data)
+
+(ein:deflocal ein:notebooklist nil
+  "Buffer local variable to store an instance of `ein:$notebooklist'.")
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
 
-(defun ein:notebooklist-url ()
-  (concat (ein:base-project-url) "notebooks"))
+(defun ein:notebooklist-url (url-or-port)
+  (ein:url url-or-port "notebooks"))
 
-(defun ein:notebooklist-new-url ()
-  (concat (ein:base-project-url) "new"))
+(defun ein:notebooklist-new-url (url-or-port)
+  (ein:url url-or-port "new"))
 
-(defun ein:notebooklist-get-buffer ()
+(defun ein:notebooklist-get-buffer (url-or-port)
   (get-buffer-create
-   (format ein:notebooklist-buffer-name-template ein:port)))
+   (format ein:notebooklist-buffer-name-template url-or-port)))
 
-(defun ein:notebooklist-open (&optional no-popup)
+(defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
   (interactive)
   ;; FIXME: This function must ask server address or port number.
+  (unless url-or-port (setq url-or-port ein:default-port))
   (url-retrieve
-   (ein:notebooklist-url)
+   (ein:notebooklist-url url-or-port)
    (if no-popup
-       (lambda (s) (ein:notebooklist-url-retrieve-callback))
-     (lambda (s) (pop-to-buffer (ein:notebooklist-url-retrieve-callback))))))
+       #'ein:notebooklist-url-retrieve-callback
+     (lambda (&rest args)
+       (pop-to-buffer (apply #'ein:notebooklist-url-retrieve-callback args))))
+   (list url-or-port)))
 
-(defun ein:notebooklist-url-retrieve-callback ()
+(defun ein:notebooklist-url-retrieve-callback (status url-or-port)
   "Called via `ein:notebooklist-open'."
+  ;; FIXME: check status
   (let ((data (ein:json-read)))
     (kill-buffer (current-buffer))
-    (with-current-buffer (ein:notebooklist-get-buffer)
-      (setq ein:notebooklist-data data)
+    (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+      (setq ein:notebooklist
+            (make-ein:$notebooklist :url-or-port url-or-port
+                                    :data data))
       (ein:notebooklist-render)
       (current-buffer))))
 
@@ -70,14 +87,15 @@
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
   (url-retrieve
-   (ein:notebooklist-new-url)
+   (ein:notebooklist-new-url (ein:$notebooklist-url-or-port ein:notebooklist))
    (lambda (s buffer)
      ;; To support opening notebook buffer from here will need parsing
      ;; HTML file.  Let's just reload notebook list buffer.
      (with-current-buffer buffer
-       (ein:notebooklist-open t) ; FIXME: pass buffer to update (open)
+       (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist)
+                              t)
        (message "Creating a new notebook... Done.")))
-   (list (ein:notebooklist-get-buffer))))
+   (list (current-buffer))))
 
 ;; FIXME: implement notebook deletion.
 ;; See `add_delete_button' in `notebooklist.js'.
@@ -97,7 +115,7 @@ Notebook list data is passed via the buffer local variable
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
    "New Notebook")
   (widget-insert "\n")
-  (loop for note in ein:notebooklist-data
+  (loop for note in (ein:$notebooklist-data ein:notebooklist)
         for name = (plist-get note :name)
         for notebook-id = (plist-get note :notebook_id)
         do (progn (widget-create
@@ -106,7 +124,10 @@ Notebook list data is passed via the buffer local variable
                                          (notebook-id notebook-id))
                              (lambda (&rest ignore)
                                (message "Open notebook %s." name)
-                               (ein:notebook-open notebook-id)))
+                               (ein:notebook-open
+                                (ein:$notebooklist-url-or-port
+                                 ein:notebooklist)
+                                notebook-id)))
                    "Open")
                   (widget-insert " " name)
                   (widget-insert "\n")))

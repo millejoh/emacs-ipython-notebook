@@ -28,12 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 
-(defvar ein:port 8888)
-(defvar ein:base-project-url "http://127.0.0.1:8888/")
-
-
-(defun ein:base-project-url ()
-  (format "http://127.0.0.1:%s/" ein:port))
+(defvar ein:default-port 8888)
 
 
 (defmacro ein:aif (test-form then-form &rest else-forms)
@@ -59,6 +54,23 @@ INITVALUE and DOCSTRING are passed to `defvar'."
      (make-variable-buffer-local ',name)
      (put ',name 'permanent-local t)))
 
+
+;;; URL utils
+
+(defvar ein:url-localhost-template "http://127.0.0.1:%s")
+
+(defun ein:url (url-or-port &rest paths)
+  (loop with url = (if (integerp url-or-port)
+                       (format ein:url-localhost-template url-or-port)
+                     url-or-port)
+        for p in paths
+        do (setq url (concat (ein:trim-right url "/")
+                             "/"
+                             (ein:trim-left p "/")))
+        finally return url))
+
+
+;;; JSON utils
 
 (defmacro ein:with-json-setting (&rest body)
   `(let ((json-object-type 'plist)
@@ -89,12 +101,21 @@ INITVALUE and DOCSTRING are passed to `defvar'."
   (insert (ein:propertize-read-only string)))
 
 
-(defun ein:trim (string)
-  (mapc (lambda (r)
-          (string-match r string)
-          (setq string (replace-match "" t t string)))
-        '("^\\(\\s-\\|\n\\)+" "\\(\\s-\\|\n\\)+$"))
-  string)
+(defun ein:trim (string &optional regexp)
+  (ein:trim-left (ein:trim-right string regexp) regexp))
+
+(defun ein:trim-left (string &optional regexp)
+  (unless regexp (setq regexp "\\s-\\|\n"))
+  (ein:trim-regexp string (format "^\\(%s\\)+" regexp)))
+
+(defun ein:trim-right (string &optional regexp)
+  (unless regexp (setq regexp "\\s-\\|\n"))
+  (ein:trim-regexp string (format "\\(%s\\)+$" regexp)))
+
+(defun ein:trim-regexp (string regexp)
+  (if (string-match regexp string)
+      (replace-match "" t t string)
+    string))
 
 (defmacro ein:case-equal (str &rest clauses)
   "Similar to `case' but comparison is done by `equal'.
