@@ -516,7 +516,7 @@ when the prefix argument is given."
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger 'notebook_saving.Notebook)
-    (let ((url (ein:notebook-url notebook))
+    (let ((url (ein:url-no-cache (ein:notebook-url notebook)))
           (url-request-method "PUT")
           (url-request-extra-headers '(("Content-Type" . "application/json")))
           (url-request-data (json-encode data)))
