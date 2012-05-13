@@ -100,6 +100,7 @@ is `nil', BODY is executed with any cell types."
          (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
 
 (defun ein:notebook-setup (notebook data)
+  (ein:log-setup (ein:$notebook-notebook-id notebook))
   (ein:notebook-init notebook data)
   (setq ein:notebook notebook))
 
@@ -128,7 +129,6 @@ is `nil', BODY is executed with any cell types."
     (with-current-buffer
         (get-buffer-create
          (format ein:notebook-buffer-name-template notebook-id))
-      (ein:log-setup notebook-id)
       (ein:notebook-setup notebook data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
