@@ -250,7 +250,10 @@ is `nil', BODY is executed with any cell types."
   "Insert cell bellow.  Insert markdown cell instead of code cell
 when the prefix argument is given."
   (interactive "P")
-  (ein:notebook-with-cell nil
+  (let ((cell (ein:notebook-get-current-cell)))
+    ;; Do not use `ein:notebook-with-cell'.  When there is no cell,
+    ;; This command should add the first cell.  So this clause must be
+    ;; executed even if `cell' is `nil'.
     (ein:notebook-insert-cell-below ein:notebook
                                     (if markdown 'markdown 'code)
                                     cell)))
