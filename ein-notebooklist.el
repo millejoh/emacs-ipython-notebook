@@ -70,6 +70,9 @@
    (list (read-string "URL or port number: "
                       (format "%s" ein:default-port))))
   (unless url-or-port (setq url-or-port ein:default-port))
+  (when (and (stringp url-or-port)
+             (string-match "^[0-9]+$" url-or-port))
+    (setq url-or-port (string-to-number url-or-port)))
   (url-retrieve
    (ein:notebooklist-url url-or-port)
    (if no-popup
