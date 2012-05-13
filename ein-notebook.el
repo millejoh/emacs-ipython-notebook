@@ -546,6 +546,10 @@ when the prefix argument is given."
           (progn
             (ein:log 'debug "ERROR CODE = %S" it)
             (ein:notebook-save-notebook-error notebook status))
+        ;; IPython server returns 204 only when the notebook URL is
+        ;; accessed via PUT or DELETE.  As it seems Emacs failed to
+        ;; choose PUT method every two times, let's check the response
+        ;; here and fail when 204 is not returned.
         (if (eq response 204)
             (ein:notebook-save-notebook-success notebook status)
           (ein:notebook-save-notebook-error notebook status)
