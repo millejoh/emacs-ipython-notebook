@@ -29,6 +29,7 @@
 (require 'websocket)
 
 (require 'ein-utils)
+(require 'ein-log)
 
 
 (defstruct ein:$websocket
@@ -99,8 +100,29 @@
 
 
 (defun ein:websocket-filter (websocket packet)
-  (ein:aif (ein:$websocket-onmessage websocket)
-      (apply it packet (ein:$websocket-onmessage-args websocket))))
+  (let ((onmessage (ein:$websocket-onmessage websocket)))
+    (when onmessage
+      ;; Workaround.  Make onmessage function little bit robust when
+      ;; websocket.el failed to ignore handshake.
+      ;; See: https://github.com/ahyatt/emacs-websocket/issues/8
+      ;; Note that this workaround only works for JSON based
+      ;; communication, which is OK for using with IPython.
+      (unless (string-prefix-p "{" packet)
+        (let ((start-point (string-match "\0{" packet))
+              lost)
+          (if start-point
+              (progn
+                (setq packet (substring packet (1+ start-point)))
+                (setq lost (substring packet 0 (1- start-point))))
+            (setq lost packet)
+            (setq packet nil))
+          (ein:log 'verbose
+            (concat "I am sorry, you may have lost message from kernel. "
+                    "Notebook data is safe."))
+          (ein:log 'debug "Discarded data: %s" lost)))
+      ;; Do not call callback when you lost all data
+      (when packet
+        (apply onmessage packet (ein:$websocket-onmessage-args websocket))))))
 
 
 (defun ein:websocket-onclose (websocket)
