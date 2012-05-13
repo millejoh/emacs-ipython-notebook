@@ -84,20 +84,24 @@ is `nil', BODY is executed with any cell types."
          (progn ,@body)
        (ein:log 'warn "Not in cell"))))
 
-(defun ein:notebook-new (url-or-port notebook-id data &rest args)
+(defun ein:notebook-new (url-or-port notebook-id &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
                          :notebook-id notebook-id
-                         :data data
                          :msg-cell-map (make-hash-table :test 'equal)
                          :nbformat 2
                          args)))
-    (setf (ein:$notebook-pager notebook)
-          (ein:pager-new (format "*ein: %s/pager*" notebook-id)))
     notebook))
 
-(defun ein:notebook-setup (&rest args)
-  (setq ein:notebook (apply #'ein:notebook-new args)))
+(defun ein:notebook-init (notebook data)
+  (setf (ein:$notebook-data notebook) data)
+  (setf (ein:$notebook-pager notebook)
+        (ein:pager-new
+         (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
+
+(defun ein:notebook-setup (notebook data)
+  (ein:notebook-init notebook data)
+  (setq ein:notebook notebook))
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
@@ -107,23 +111,25 @@ is `nil', BODY is executed with any cell types."
   (ein:url url-or-port "notebooks" notebook-id))
 
 (defun ein:notebook-open (url-or-port notebook-id)
-  (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id)))
+  (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
+        (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
-    ;; FIXME: make notebook instance here and pass it to the callback
     (url-retrieve url
                   #'ein:notebook-url-retrieve-callback
-                  (list url-or-port notebook-id))))
+                  (list notebook))))
 
-(defun ein:notebook-url-retrieve-callback (status url-or-port notebook-id)
+(defun ein:notebook-url-retrieve-callback (status notebook)
   (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
-           notebook-id status)
-  (let ((data (ein:json-read)))
+           (ein:$notebook-notebook-id notebook)
+           status)
+  (let ((data (ein:json-read))
+        (notebook-id (ein:$notebook-notebook-id notebook)))
     (kill-buffer (current-buffer))
     (with-current-buffer
         (get-buffer-create
          (format ein:notebook-buffer-name-template notebook-id))
       (ein:log-setup notebook-id)
-      (ein:notebook-setup url-or-port notebook-id data)
+      (ein:notebook-setup notebook data)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
 
