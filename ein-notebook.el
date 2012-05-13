@@ -532,17 +532,24 @@ when the prefix argument is given."
   (ein:notebook-save-notebook ein:notebook))
 
 (defun ein:notebook-save-notebook-callback (status notebook)
+  (declare (special url-http-response-status))
   (ein:log 'debug "SAVE-NOTEBOOK-CALLBACK nodtebook-id = %S, status = %S"
            (ein:$notebook-notebook-id notebook)
            status)
+  (ein:log 'debug "url-http-response-status = %s" url-http-response-status)
   (ein:log 'debug "(buffer-string) = \n%s" (buffer-string))
-  (kill-buffer (current-buffer))
-  (with-current-buffer (ewoc-buffer (ein:$notebook-ewoc notebook))
-    (ein:aif (plist-get status :error)
-        (progn
-          (ein:log 'debug "ERROR CODE = %S" it)
-          (ein:notebook-save-notebook-error notebook status))
-      (ein:notebook-save-notebook-success notebook status))))
+  (let ((response url-http-response-status))
+    ;; ^-- "save" local variable before killing buffer.
+    (kill-buffer (current-buffer))
+    (with-current-buffer (ewoc-buffer (ein:$notebook-ewoc notebook))
+      (ein:aif (plist-get status :error)
+          (progn
+            (ein:log 'debug "ERROR CODE = %S" it)
+            (ein:notebook-save-notebook-error notebook status))
+        (if (eq response 204)
+            (ein:notebook-save-notebook-success notebook status)
+          (ein:notebook-save-notebook-error notebook status)
+          (ein:log 'debug "Status code (=%s) is not 204." response))))))
 
 (defun ein:notebook-save-notebook-success (notebook status)
   (setf (ein:$notebook-dirty notebook))
