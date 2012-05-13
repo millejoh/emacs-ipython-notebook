@@ -241,10 +241,15 @@ The kernel will no longer be responsive.")))
 (defun ein:kernel-interrupt (kernel)
   (when (ein:$kernel-running kernel)
     (ein:log 'info "Interrupting kernel")
-    (url-retrieve (concat (ein:$kernel-kernel-url kernel) "/interrupt")
-                  (lambda (s)
-                    (ein:log 'info "Sent interruption command.")
-                    (kill-buffer (current-buffer))))))
+    (let ((url (ein:url (ein:$kernel-url-or-port kernel)
+                        (ein:$kernel-kernel-url kernel)
+                        "interrupt"))
+          (url-request-method "POST"))
+    (url-retrieve
+     url
+     (lambda (s)
+       (ein:log 'info "Sent interruption command.")
+       (kill-buffer (current-buffer)))))))
 
 
 (defun ein:kernel-kill (kernel)
