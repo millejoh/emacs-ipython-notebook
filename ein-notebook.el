@@ -597,6 +597,15 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 
 (setq ein:notebook-plain-mode-map ein:notebook-mode-map)
 
+(defun ein:notebook-ask-before-kill ()
+  "Return `nil' to prevent killing the notebook buffer.
+Called via `kill-buffer-query-functions'."
+  (not (and (ein:$notebook-p ein:notebook)
+            (ein:$notebook-dirty ein:notebook)
+            (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
+
+(add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
+
 (provide 'ein-notebook)
 
 ;;; ein-notebook.el ends here
