@@ -48,6 +48,12 @@
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
 
+(defvar ein:notebook-keymap
+  (let ((map (copy-keymap widget-keymap)))
+    (define-key map "g" 'ein:notebooklist-reload)
+    map))
+
+
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
 
@@ -140,7 +146,7 @@ Notebook list data is passed via the buffer local variable
                    "Open")
                   (widget-insert " " name)
                   (widget-insert "\n")))
-  (use-local-map widget-keymap)
+  (use-local-map ein:notebook-keymap)
   (widget-setup))
 
 (provide 'ein-notebooklist)
