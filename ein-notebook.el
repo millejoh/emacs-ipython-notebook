@@ -64,6 +64,8 @@ FIXME: document other slots."
 (ein:deflocal ein:notebook nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
+;; FIMXE: Using buffer local variable directly is not good design.
+;;        Remove ein:@notebook macro later
 (defmacro ein:@notebook (slot)
   "Quick access to buffer local notebook attributes \(slot of `ein:$notebook').
 
