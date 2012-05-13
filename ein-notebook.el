@@ -94,17 +94,11 @@ is `nil', BODY is executed with any cell types."
     notebook))
 
 (defun ein:notebook-init (notebook data)
-  "called from `ein:notebook-setup'."
+  "Initialize NOTEBOOK with DATA from the server."
   (setf (ein:$notebook-data notebook) data)
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
          (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
-
-(defun ein:notebook-setup (notebook data)
-  "Setup notebook NOTEBOOK for the current buffer."
-  (ein:log-setup (ein:$notebook-notebook-id notebook))
-  (ein:notebook-init notebook data)
-  (setq ein:notebook notebook))
 
 (defun ein:notebook-get-buffer (notebook)
   (get-buffer-create
@@ -133,8 +127,10 @@ is `nil', BODY is executed with any cell types."
   (let ((data (ein:json-read))
         (notebook-id (ein:$notebook-notebook-id notebook)))
     (kill-buffer (current-buffer))
+    (ein:notebook-init notebook data)
     (with-current-buffer (ein:notebook-get-buffer notebook)
-      (ein:notebook-setup notebook data)
+      (ein:log-setup (ein:$notebook-notebook-id notebook))
+      (setq ein:notebook notebook)
       (ein:notebook-render)
       (pop-to-buffer (current-buffer)))))
 
