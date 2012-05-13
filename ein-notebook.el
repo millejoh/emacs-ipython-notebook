@@ -37,8 +37,9 @@
 (require 'ein-pager)
 (require 'ein-events)
 
+(defvar ein:notebook-pager-buffer-name-template "*ein: %s/%s/pager*")
+(defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
-(defvar ein:notebook-buffer-name-template "*ein: %s*")
 
 (defstruct ein:$notebook
   "Hold notebook variables.
@@ -102,12 +103,15 @@ is `nil', BODY is executed with any cell types."
     (setf (ein:$notebook-notebook-name notebook) notebook-name))
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
-         (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
+         (format ein:notebook-pager-buffer-name-template
+                 (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-name notebook)))))
 
 (defun ein:notebook-get-buffer (notebook)
   (get-buffer-create
    (format ein:notebook-buffer-name-template
-           (ein:$notebook-notebook-id notebook))))
+           (ein:$notebook-url-or-port notebook)
+           (ein:$notebook-notebook-name notebook))))
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
