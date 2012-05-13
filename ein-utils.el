@@ -70,6 +70,11 @@ INITVALUE and DOCSTRING are passed to `defvar'."
                              (ein:trim-left p "/")))
         finally return url))
 
+(defun ein:url-no-cache (url)
+  "Imitate `cache=false' of `jQuery.ajax'.
+See: http://api.jquery.com/jQuery.ajax/"
+  (concat url (format-time-string "?_=%s")))
+
 
 ;;; JSON utils
 

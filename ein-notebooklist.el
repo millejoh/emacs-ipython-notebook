@@ -113,8 +113,25 @@
        (message "Creating a new notebook... Done.")))
    (list (current-buffer))))
 
-;; FIXME: implement notebook deletion.
-;; See `add_delete_button' in `notebooklist.js'.
+(defun ein:notebooklist-delete-notebook-ask (notebook-id name)
+  (when (y-or-n-p (format "Delete notebook %s?" name))
+    (ein:notebooklist-delete-notebook notebook-id name)))
+
+(defun ein:notebooklist-delete-notebook (notebook-id name)
+  (message "Deleting notebook %s..." name)
+  (let ((url (ein:url-no-cache
+              (ein:notebook-url-from-url-and-id
+               (ein:$notebooklist-url-or-port ein:notebooklist)
+               notebook-id)))
+        (url-request-method "DELETE"))
+    (url-retrieve
+     url
+     (lambda (s buffer name)
+       (kill-buffer (current-buffer))
+       (message "Deleting notebook %s... Done." name)
+       (with-current-buffer buffer
+         (ein:notebooklist-reload)))
+     (list (current-buffer) name))))
 
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
@@ -150,7 +167,17 @@ Notebook list data is passed via the buffer local variable
                                  ein:notebooklist)
                                 notebook-id)))
                    "Open")
-                  (widget-insert " " name)
+                  (widget-insert " ")
+                  (widget-create
+                   'link
+                   :notify (lexical-let ((name name)
+                                         (notebook-id notebook-id))
+                             (lambda (&rest ignore)
+                               (ein:notebooklist-delete-notebook-ask
+                                notebook-id
+                                name)))
+                   "Delete")
+                  (widget-insert " : " name)
                   (widget-insert "\n")))
   (use-local-map ein:notebook-keymap)
   (widget-setup))
