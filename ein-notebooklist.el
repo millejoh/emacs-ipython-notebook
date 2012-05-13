@@ -83,6 +83,11 @@
       (ein:notebooklist-render)
       (current-buffer))))
 
+(defun ein:notebooklist-reload ()
+  "Reload current Notebook list."
+  (interactive)
+  (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist) t))
+
 (defun ein:notebooklist-new-notebook ()
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
@@ -92,8 +97,7 @@
      ;; To support opening notebook buffer from here will need parsing
      ;; HTML file.  Let's just reload notebook list buffer.
      (with-current-buffer buffer
-       (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist)
-                              t)
+       (ein:notebooklist-reload)
        (message "Creating a new notebook... Done.")))
    (list (current-buffer))))
 
@@ -114,6 +118,11 @@ Notebook list data is passed via the buffer local variable
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
    "New Notebook")
+  (widget-insert " ")
+  (widget-create
+   'link
+   :notify (lambda (&rest ignore) (ein:notebooklist-reload))
+   "Reload List")
   (widget-insert "\n")
   (loop for note in (ein:$notebooklist-data ein:notebooklist)
         for name = (plist-get note :name)
