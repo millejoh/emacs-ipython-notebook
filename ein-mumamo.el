@@ -40,7 +40,7 @@
 
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
   "IPython notebook mode."
-  ("IPython notebook familiy" fundamental-mode
+  ("IPython notebook familiy" ein:notebook-plain-mode
    (ein:mumamo-chunk-codecell
     ein:mumamo-chunk-textcell
     ein:mumamo-chunk-htmlcell

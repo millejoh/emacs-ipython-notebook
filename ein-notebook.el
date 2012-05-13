@@ -591,7 +591,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     map))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
-  "IPython notebook command without fancy coloring.")
+  "IPython notebook command without fancy coloring."
+  (font-lock-mode))
 
 (setq ein:notebook-plain-mode-map ein:notebook-mode-map)
 
