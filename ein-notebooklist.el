@@ -80,7 +80,9 @@
 
 (defun ein:notebooklist-url-retrieve-callback (status url-or-port)
   "Called via `ein:notebooklist-open'."
-  ;; FIXME: check status
+  (ein:aif (plist-get status :error)
+      (error "Failed to connect to server '%s'.  Got: %S"
+             (ein:url url-or-port) it))
   (let ((data (ein:json-read)))
     (kill-buffer (current-buffer))
     (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
