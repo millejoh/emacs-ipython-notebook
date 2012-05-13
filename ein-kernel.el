@@ -208,6 +208,7 @@ The kernel will no longer be responsive.")))
 
 
 (defmacro ein:kernel-if-ready (kernel &rest body)
+  "Execute BODY if KERNEL is ready.  Warn user otherwise."
   (declare (indent 1))
   `(if (ein:kernel-ready-p ,kernel)
        (progn ,@body)
