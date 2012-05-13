@@ -96,6 +96,10 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-init (notebook data)
   "Initialize NOTEBOOK with DATA from the server."
   (setf (ein:$notebook-data notebook) data)
+  (let* ((metadata (plist-get data :metadata))
+         (notebook-name (plist-get metadata :name)))
+    (setf (ein:$notebook-metadata notebook) metadata)
+    (setf (ein:$notebook-notebook-name notebook) notebook-name))
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
          (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
@@ -417,10 +421,6 @@ when the prefix argument is given."
 ;;; Persistance and loading
 
 (defun ein:notebook-from-json (notebook data)
-  (let* ((metadata (plist-get data :metadata))
-         (notebook-name (plist-get metadata :name)))
-    (setf (ein:$notebook-metadata notebook) metadata)
-    (setf (ein:$notebook-notebook-name notebook) notebook-name))
   (let ((inhibit-read-only t))
     (erase-buffer)
     ;; Enable nonsep for ewoc object (the last argument is non-nil).
