@@ -94,12 +94,14 @@ is `nil', BODY is executed with any cell types."
     notebook))
 
 (defun ein:notebook-init (notebook data)
+  "called from `ein:notebook-setup'."
   (setf (ein:$notebook-data notebook) data)
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
          (format "*ein: %s/pager*" (ein:$notebook-notebook-id notebook)))))
 
 (defun ein:notebook-setup (notebook data)
+  "Setup notebook NOTEBOOK for the current buffer."
   (ein:log-setup (ein:$notebook-notebook-id notebook))
   (ein:notebook-init notebook data)
   (setq ein:notebook notebook))
