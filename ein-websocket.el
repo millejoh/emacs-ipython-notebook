@@ -35,6 +35,7 @@
   "A wrapper object of `websocket'.
 
 `ein:$websocket-ws'               : an instance returned by `websocket-open'
+`ein:$websocket-readyState'       : one of '(connecting open closing closed)
 
 `ein:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
 `ein:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
@@ -47,6 +48,7 @@
 `ein:$websocket-closed-by-client' : t/nil'
 "
   ws
+  readyState
   onmessage
   onmessage-args
   onclose
@@ -60,6 +62,7 @@
 (defun ein:websocket (url &optional onmessage onclose onopen
                           onmessage-args onclose-args onopen-args)
   (let ((websocket (make-ein:$websocket
+                    :readyState 'connecting
                     :onmessage onmessage
                     :onclose onclose
                     :onopen onopen
@@ -76,9 +79,14 @@
     (run-at-time 1 nil
                  (lambda (ws)
                    (ein:aif (ein:$websocket-onopen ws)
-                       (apply it (ein:$websocket-onopen-args ws))))
+                       (apply it (ein:$websocket-onopen-args ws)))
+                   (setf (ein:$websocket-readyState ws) 'open))
                  websocket)
     websocket))
+
+
+(defun ein:websocket-open-p (websocket)
+  (eql (ein:$websocket-readyState websocket) 'open))
 
 
 (defun ein:websocket-send (websocket text)
@@ -96,8 +104,10 @@
 
 
 (defun ein:websocket-onclose (websocket)
+  (setf (ein:$websocket-readyState websocket) 'closing)
   (ein:aif (ein:$websocket-onclose websocket)
-      (apply it websocket (ein:$websocket-onclose-args websocket))))
+      (apply it websocket (ein:$websocket-onclose-args websocket)))
+  (setf (ein:$websocket-readyState websocket) 'closed))
 
 
 (provide 'ein-websocket)
