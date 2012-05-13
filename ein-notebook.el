@@ -47,18 +47,48 @@
 `ein:$notebook-url-or-port'
   URL or port of IPython server.
 
-FIXME: document other slots."
+`ein:$notebook-notebook-id' : string
+  uuid string
+
+`ein:$notebook-data' - FIXME: remove this!
+  Original notebook JSON data sent from server.  This slot exists
+  first for debugging reason and should be deleted later.
+
+`ein:$notebook-ewoc' : `ewoc'
+  An instance of `ewoc'.  Notebook is rendered using `ewoc'.
+  Also `ewoc' nodes are used for saving cell data.
+
+`ein:$notebook-kernel' : `ein:$kernel'
+  `ein:$kernel' instance.
+
+`ein:$notebook-pager'
+  Variable for `ein:pager-*' functions. See ein-pager.el.
+
+`ein:$notebook-dirty' : boolean
+  Set to `t' if notebook has unsaved changes.  Otherwise `nil'.
+
+`ein:$notebook-msg-cell-map' : hash
+  Hash to hold map from msg-id to cell-id.
+
+`ein:$notebook-metadata' : plist
+  Notebook meta data (e.g., notebook name).
+
+`ein:$notebook-name' : string
+  Notebook name.
+
+`ein:$notebook-nbformat' : integer
+  Notebook file format version."
   url-or-port
-  notebook-id                           ; uuid string
-  data                                  ; json data - FIXME: remove this!
-  ewoc                                  ; ewoc
-  kernel                                ; ein:$kernel
-  pager                                 ; ein:$pager
-  dirty                                 ; t/nil
-  msg-cell-map                          ; hash
-  metadata                              ; json data
-  notebook-name                         ; string
-  nbformat                              ; int
+  notebook-id
+  data
+  ewoc
+  kernel
+  pager
+  dirty
+  msg-cell-map
+  metadata
+  notebook-name
+  nbformat
   )
 
 (ein:deflocal ein:notebook nil
