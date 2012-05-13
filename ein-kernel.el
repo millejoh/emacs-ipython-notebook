@@ -202,6 +202,18 @@ The kernel will no longer be responsive.")))
     (setf (ein:$kernel-iopub-channel kernel) nil)))
 
 
+(defun ein:kernel-ready-p (kernel)
+  (and (ein:websocket-open-p (ein:$kernel-shell-channel kernel))
+       (ein:websocket-open-p (ein:$kernel-iopub-channel kernel))))
+
+
+(defmacro ein:kernel-if-ready (kernel &rest body)
+  (declare (indent 1))
+  `(if (ein:kernel-ready-p ,kernel)
+       (progn ,@body)
+     (ein:log 'warn "Kernel is not ready yet!")))
+
+
 (defun ein:kernel-object-info-request (kernel objname)
   (when objname
     (let* ((content (list :oname (format "%S" objname)))

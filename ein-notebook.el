@@ -438,13 +438,14 @@ when the prefix argument is given."
   ;; FIXME: implement `add_new' and `terminal' option like
   ;; `Notebook.execute_selected_cell'.
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:cell-clear-output cell t t t)
-    (ein:cell-set-input-prompt cell "*")
-    (ein:cell-running-set cell t)
-    (let* ((code (ein:cell-get-text cell))
-           (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
-      (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
-          (setf (ein:@notebook dirty) t)))
+    (ein:kernel-if-ready (ein:@notebook kernel)
+      (ein:cell-clear-output cell t t t)
+      (ein:cell-set-input-prompt cell "*")
+      (ein:cell-running-set cell t)
+      (let* ((code (ein:cell-get-text cell))
+             (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
+        (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
+      (setf (ein:@notebook dirty) t))))
 
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
