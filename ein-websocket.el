@@ -32,14 +32,28 @@
 
 
 (defstruct ein:$websocket
+  "A wrapper object of `websocket'.
+
+`ein:$websocket-ws'               : an instance returned by `websocket-open'
+
+`ein:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
+`ein:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
+`ein:$websocket-onopen'           : function called with (&rest ARGS)'
+
+`ein:$websocket-onmessage-args'   : optional arguments for onmessage callback'
+`ein:$websocket-onclose-args'     : optional arguments for onclose callback'
+`ein:$websocket-onopen-args'      : optional arguments for onopen callback'
+
+`ein:$websocket-closed-by-client' : t/nil'
+"
   ws
-  onmessage       ; function called with (PACKET &rest ARGS)
-  onmessage-args  ; optional arguments for onmessage callback
-  onclose         ; function called with (WEBSOCKET &rest ARGS)
-  onclose-args    ; optional arguments for onclose callback
-  onopen          ; function called with (&rest ARGS)
-  onopen-args     ; optional arguments for onopen callback
-  closed-by-client)  ; t/nil
+  onmessage
+  onmessage-args
+  onclose
+  onclose-args
+  onopen
+  onopen-args
+  closed-by-client)
 ;; FIXME: probably, first arguments of any callback must be WEBSOCKET.
 
 
