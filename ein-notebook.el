@@ -329,7 +329,7 @@ when the prefix argument is given."
        ((equal msg_type "object_info_reply")
         (when (plist-get content :found)
           (ein:cell-finish-tooltip cell content)))
-       (t (ein:log 'info "nown reply: %s" msg_type)))
+       (t (ein:log 'info "unknown reply: %s" msg_type)))
       (when (plist-member content :payload)
         (ein:notebook-handle-payload notebook cell
                                      (plist-get content :payload))))))
