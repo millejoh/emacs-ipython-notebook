@@ -66,8 +66,9 @@
 
 (defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
-  (interactive)
-  ;; FIXME: This function must ask server address or port number.
+  (interactive
+   (list (read-string "URL or port number: "
+                      (format "%s" ein:default-port))))
   (unless url-or-port (setq url-or-port ein:default-port))
   (url-retrieve
    (ein:notebooklist-url url-or-port)
