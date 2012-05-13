@@ -532,11 +532,15 @@ when the prefix argument is given."
   (ein:notebook-save-notebook ein:notebook))
 
 (defun ein:notebook-save-notebook-callback (status notebook)
-  (declare (special url-http-response-status))
+  (declare (special url-http-response-status
+                    url-http-method))
   (ein:log 'debug "SAVE-NOTEBOOK-CALLBACK nodtebook-id = %S, status = %S"
            (ein:$notebook-notebook-id notebook)
            status)
   (ein:log 'debug "url-http-response-status = %s" url-http-response-status)
+  (ein:log 'debug "url-request-method = %s" url-request-method)
+  (ein:log 'debug "url-http-method = %s" (when (boundp 'url-http-method)
+                                           url-http-method))
   (ein:log 'debug "(buffer-string) = \n%s" (buffer-string))
   (let ((response url-http-response-status))
     ;; ^-- "save" local variable before killing buffer.
