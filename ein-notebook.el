@@ -426,6 +426,11 @@ when the prefix argument is given."
 
 ;;; Persistance and loading
 
+(defun ein:notebook-test-notebook-name (name)
+  (and (stringp name)
+       (> (length name) 0)
+       (not (string-match "[\\/\\\\]" name))))
+
 (defun ein:notebook-from-json (notebook data)
   (let ((inhibit-read-only t))
     (erase-buffer)
