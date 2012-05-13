@@ -215,6 +215,7 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-object-info-request (kernel objname)
+  (assert (ein:kernel-ready-p kernel))
   (when objname
     (let* ((content (list :oname (format "%S" objname)))
            (msg (ein:kernel-get-msg kernel "object_info_request" content)))
@@ -225,6 +226,7 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-execute (kernel code)
+  (assert (ein:kernel-ready-p kernel))
   (let* ((content (list
                    :code code
                    :silent json-false
@@ -239,6 +241,7 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-complete (kernel line cursor-pos)
+  (assert (ein:kernel-ready-p kernel))
   (let* ((content (list
                    :text ""
                    :line line
