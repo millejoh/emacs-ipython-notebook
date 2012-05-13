@@ -335,7 +335,8 @@ A specific node can be specified using optional ARGS."
          (beg (save-excursion
                 (re-search-backward (concat matched-text "\\="))))
          (word (if (and beg matches)
-                   (completing-read "Complete: " matches))))
+                   (completing-read "Complete: " matches
+                                    nil nil matched-text))))
     (when word
       (delete-region beg end)
       (insert word))))
