@@ -464,6 +464,11 @@ when the prefix argument is given."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:notebook)))
 
+(defun ein:notebook-kernel-kill-command ()
+  (interactive)
+  (when (y-or-n-p "Really kill kernel?")
+    (ein:kernel-kill (ein:$notebook-kernel ein:notebook))))
+
 
 ;;; Persistance and loading
 
@@ -580,6 +585,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
+    (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
     map))

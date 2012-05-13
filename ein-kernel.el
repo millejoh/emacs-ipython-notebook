@@ -256,9 +256,9 @@ The kernel will no longer be responsive.")))
   (when (ein:$kernel-running kernel)
     (setf (ein:$kernel-running kernel) nil)
     (let ((url-request-method "DELETE")
-          ;; cache = false (http://api.jquery.com/jQuery.ajax/)
-          (url (concat (ein:$kernel-kernel-url kernel)
-                       (format-time-string "?_=%s"))))
+          (url (ein:url-no-cache
+                (ein:url (ein:$kernel-url-or-port kernel)
+                         (ein:$kernel-kernel-url kernel)))))
       (url-retrieve
        url
        (lambda (s)
