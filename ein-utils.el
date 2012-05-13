@@ -48,7 +48,8 @@
 (defmacro ein:deflocal (name &optional initvalue docstring)
   "Define permanent buffer local variable named NAME.
 INITVALUE and DOCSTRING are passed to `defvar'."
-  (declare (indent defun))
+  (declare (indent defun)
+           (doc-string 3))
   `(progn
      (defvar ,name ,initvalue ,docstring)
      (make-variable-buffer-local ',name)
