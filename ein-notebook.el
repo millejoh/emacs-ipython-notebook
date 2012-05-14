@@ -609,6 +609,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
+    (define-key map "\C-c\C-z" 'ein:notebook-console-open)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
     map))
@@ -627,6 +628,54 @@ Called via `kill-buffer-query-functions'."
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
+
+(defvar ein:notebook-console-security-dir
+  "~/.config/ipython/profile_nbserver/security/"
+  "Security directory setting.
+
+Following type is accepted:
+string   : Use this value as a path to security directory.
+           Handy when you have only one IPython server.
+alist    : An alist whose element is \"(URL-OR-PORT . DIR)\".
+           Key (URL-OR-PORT) can be string (URL), integer (port), or
+           `default' (symbol).  The value of `default' is used when
+           other key does not much.  Normally you should have this
+           entry.
+function : Called with an argument URL-OR-PORT (integer or string).
+           You can have complex setting using this.")
+
+(defun ein:notebook-console-security-dir (notebook)
+  (let ((dir ein:notebook-console-security-dir))
+    (file-name-as-directory
+     (expand-file-name
+      (cond
+       ((stringp dir) dir)
+       ((functionp dir) (funcall dir (ein:$notebook-url-or-port notebook)))
+       ((listp dir)
+        (or (assoc-default (ein:$notebook-url-or-port notebook) dir)
+            (assoc-default 'default dir)))
+       (t (error "Unsupported type of `ein:notebook-console-security-dir': %s"
+                 (type-of ein:notebook-console-security-dir))))))))
+
+(defun ein:notebook-console-open ()
+  "Open IPython console.
+To use this function, `ein:notebook-console-security-dir' must be set
+This function requires Fabian Gallina's python.el for now:
+https://github.com/fgallina/python.el"
+  (interactive)
+  (unless ein:notebook (error "Not in notebook buffer!"))
+  (if (fboundp 'python-shell-switch-to-shell)
+      (progn
+        (let* ((dir (ein:notebook-console-security-dir ein:notebook))
+               (python-shell-setup-codes nil)
+               (python-shell-interpreter
+                (format "python %s console --existing %skernel-%s.json"
+                        (executable-find "ipython")
+                        dir
+                        (ein:$kernel-kernel-id
+                         (ein:$notebook-kernel ein:notebook)))))
+          (funcall 'python-shell-switch-to-shell)))
+    (ein:log 'warn "python.el is not loaded!")))
 
 (provide 'ein-notebook)
 
