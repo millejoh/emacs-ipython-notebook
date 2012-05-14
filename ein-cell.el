@@ -238,6 +238,21 @@ A specific node can be specified using optional ARGS."
     (oset cell :element element)
     cell))
 
+(defun ein:cell-enter-first (cell)
+  (let* ((ewoc (oref cell :ewoc))
+         (node nil)
+         (make-node
+          (lambda (&rest path)
+            (let ((ewoc-data (ein:node-new `(cell ,@path) cell)))
+              (setq node
+                    (if node
+                        (ewoc-enter-after ewoc node ewoc-data)
+                      (ewoc-enter-first ewoc ewoc-data))))))
+         (element (ein:cell-make-element make-node
+                                         (ein:cell-num-outputs cell))))
+    (oset cell :element element)
+    cell))
+
 (defun ein:cell-insert-below (base-cell other-cell)
   (let* ((ewoc (oref base-cell :ewoc))
          (node (ein:cell-element-get base-cell :footer))

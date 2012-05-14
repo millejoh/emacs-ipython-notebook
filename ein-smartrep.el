@@ -33,6 +33,7 @@
     "C-c"
   '(("C-t" . ein:notebook-toggle-cell-type)
     ("C-d" . ein:notebook-delete-cell-command)
+    ("C-a" . ein:notebook-insert-cell-above-command)
     ("C-b" . ein:notebook-insert-cell-below-command)
     ("C-n" . ein:notebook-goto-next-cell)
     ("C-p" . ein:notebook-goto-prev-cell)

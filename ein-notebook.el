@@ -251,7 +251,7 @@ is `nil', BODY is executed with any cell types."
     cell))
 
 (defun ein:notebook-insert-cell-below-command (&optional markdown)
-  "Insert cell bellow.  Insert markdown cell instead of code cell
+  "Insert cell below.  Insert markdown cell instead of code cell
 when the prefix argument is given."
   (interactive "P")
   (let ((cell (ein:notebook-get-current-cell)))
@@ -259,6 +259,32 @@ when the prefix argument is given."
     ;; This command should add the first cell.  So this clause must be
     ;; executed even if `cell' is `nil'.
     (ein:notebook-insert-cell-below ein:notebook
+                                    (if markdown 'markdown 'code)
+                                    cell)))
+
+(defun ein:notebook-insert-cell-above (notebook type base-cell)
+  (let ((cell (ein:notebook-cell-from-type notebook type)))
+    (when cell
+      (cond
+       ((< (ein:notebook-ncells notebook) 2)
+        (ein:cell-enter-first cell))
+       (base-cell
+        (let ((prev-cell (ein:cell-prev base-cell)))
+          (if prev-cell
+              (ein:cell-insert-below prev-cell cell)
+            (ein:cell-enter-first cell))))
+       (t (error (concat "`base-cell' is `nil' but ncells > 1.  "
+                         "There is something wrong..."))))
+      (ein:cell-goto cell)
+      (setf (ein:$notebook-dirty notebook) t))
+    cell))
+
+(defun ein:notebook-insert-cell-above-command (&optional markdown)
+  "Insert cell above.  Insert markdown cell instead of code cell
+when the prefix argument is given."
+  (interactive "P")
+  (let ((cell (ein:notebook-get-current-cell)))
+    (ein:notebook-insert-cell-above ein:notebook
                                     (if markdown 'markdown 'code)
                                     cell)))
 
@@ -602,6 +628,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
+    (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
