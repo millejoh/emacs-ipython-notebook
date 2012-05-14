@@ -60,14 +60,6 @@
 (defun ein:log-level-name-to-int (name)
   (cdr (assq name ein:log-level-def)))
 
-(defmacro ein:log-with-buffer (buffer &rest body)
-  (declare (indent 1))
-  `(with-current-buffer ,buffer
-     (setq buffer-read-only t)
-     (save-excursion
-       (let ((inhibit-read-only t))
-         ,@body))))
-
 (defun ein:log-wrapper (level func)
   (setq level (ein:log-level-name-to-int level))
   (when (<= level ein:log-level)
@@ -78,10 +70,10 @@
                (> (length msg) ein:log-max-string))
           (setq msg (substring msg 0 ein:log-max-string)))
       (when ein:log-buffer
-        (ein:log-with-buffer ein:log-buffer
+        (ein:with-read-only-buffer ein:log-buffer
           (goto-char (point-max))
           (insert msg "\n")))
-      (ein:log-with-buffer (get-buffer-create ein:log-all-buffer-name)
+      (ein:with-read-only-buffer (get-buffer-create ein:log-all-buffer-name)
         (goto-char (point-max))
         (insert msg (format " @%S" orig-buffer) "\n"))
       (when (<= level ein:log-message-level)

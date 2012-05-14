@@ -55,6 +55,14 @@ INITVALUE and DOCSTRING are passed to `defvar'."
      (make-variable-buffer-local ',name)
      (put ',name 'permanent-local t)))
 
+(defmacro ein:with-read-only-buffer (buffer &rest body)
+  (declare (indent 1))
+  `(with-current-buffer ,buffer
+     (setq buffer-read-only t)
+     (save-excursion
+       (let ((inhibit-read-only t))
+         ,@body))))
+
 
 ;;; URL utils
 
