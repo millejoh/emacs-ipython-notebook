@@ -585,6 +585,11 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
 
 (defun ein:notebook-choose-mode ()
+  "Return usable (defined) notebook mode."
+  ;; So try to load extra modules here.
+  (when (require 'mumamo nil t)
+    (require 'ein-mumamo))
+  ;; Return first matched mode
   (loop for mode in ein:notebook-modes
         if (functionp mode)
         return mode))

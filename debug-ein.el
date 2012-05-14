@@ -29,9 +29,9 @@
 (require 'ein)
 (setq debug-on-error t)
 (setq websocket-debug t)
+(ein:notebooklist-open)
 (ein:log-set-level 'debug)
 (ein:log-set-message-level 'verbose)
-(ein:notebooklist-open)
 
 (require 'markdown-mode nil t)
 (require 'rst nil t)

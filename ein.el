@@ -25,9 +25,8 @@
 
 ;;; Code:
 
-(require 'ein-notebooklist)
-(when (require 'mumamo nil t)
-  (require 'ein-mumamo))
+(autoload 'ein:notebooklist-open "ein-notebooklist"
+  "Open notebook list buffer." t)
 (provide 'ein)
 
 ;;; ein.el ends here

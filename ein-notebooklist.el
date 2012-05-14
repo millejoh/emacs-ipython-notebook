@@ -64,6 +64,7 @@
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
+;;;###autoload
 (defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
   (interactive
