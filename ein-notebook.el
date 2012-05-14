@@ -294,7 +294,8 @@ when the prefix argument is given."
     (let ((type (ein:case-equal (oref cell :cell-type)
                   (("code") "markdown")
                   (("markdown") "code"))))
-      (ein:cell-convert-inplace cell type))))
+      (ein:cell-convert-inplace cell type)
+      (ein:cell-goto cell))))
 
 
 ;;; Cell selection.
