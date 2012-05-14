@@ -30,20 +30,20 @@
 (require 'ein-utils)
 
 (defun ein:pager-new (name)
-  (get-buffer-create name))
+  name)
 
 (defun ein:pager-clear (pager)
-  (ein:with-read-only-buffer pager
+  (ein:with-read-only-buffer (get-buffer-create pager)
     (erase-buffer)))
 
 (defun ein:pager-expand (pager)
-  (pop-to-buffer pager)
+  (pop-to-buffer (get-buffer-create pager))
   (goto-char (point-min))
   (unless font-lock-mode
     (font-lock-mode)))
 
 (defun ein:pager-append-text (pager text)
-  (ein:with-read-only-buffer pager
+  (ein:with-read-only-buffer (get-buffer-create pager)
     (insert (ansi-color-apply text))))
 
 (provide 'ein-pager)
