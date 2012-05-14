@@ -657,6 +657,9 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
 
+
+;;; Console integration
+
 (defvar ein:notebook-console-security-dir ""
   "Security directory setting.
 
