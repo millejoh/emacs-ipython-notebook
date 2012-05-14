@@ -120,7 +120,9 @@
     (loop for k in '(:read-only :ewoc)
           do (set-slot-value new k (slot-value cell k)))
     ;; copy input
-    (oset new :input (ein:cell-get-text cell))
+    (oset new :input (if (ein:cell-active-p cell)
+                         (ein:cell-get-text cell)
+                       (oref cell :input)))
     ;; copy output when the new cell has it
     (when (memq :output (oref new :element-names))
       (oset new :outputs (mapcar 'identity (oref cell :outputs))))
@@ -336,6 +338,16 @@ A specific node can be specified using optional ARGS."
       (goto-char beg)
       (delete-region beg end)
       (insert text))))
+
+(defmethod ein:cell-save-text ((cell ein:basecell))
+  (oset cell :input (ein:cell-get-text cell)))
+
+(defmethod ein:cell-deactivate ((cell ein:basecell))
+  (oset cell :element nil)
+  cell)
+
+(defmethod ein:cell-active-p ((cell ein:basecell))
+  (oref cell :element))
 
 (defun ein:cell-running-set (cell running)
   ;; FIXME: change the appearance of the cell

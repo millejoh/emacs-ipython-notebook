@@ -36,6 +36,7 @@
 (require 'ein-cell)
 (require 'ein-pager)
 (require 'ein-events)
+(require 'ein-kill-ring)
 
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
@@ -236,8 +237,26 @@ is `nil', BODY is executed with any cell types."
   (ein:notebook-with-cell nil
     (ein:notebook-delete-cell ein:notebook cell)))
 
-(defun ein:notebook-insert-cell-below (notebook type base-cell)
-  (let ((cell (ein:notebook-cell-from-type notebook type)))
+(defun ein:notebook-kill-cell-command ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:cell-save-text cell)
+    (ein:notebook-delete-cell ein:notebook cell)
+    (ein:kill-new (ein:cell-deactivate cell))))
+
+(defun ein:notebook-yank-cell-command (&optional arg)
+  (interactive "*P")
+  (ein:notebook-with-cell nil
+    (let* ((killed (ein:current-kill (cond
+                                      ((listp arg) 0)
+                                      ((eq arg '-) -2)
+                                      (t (1- arg)))))
+           (clone (ein:cell-copy killed)))
+      (ein:notebook-insert-cell-below ein:notebook clone cell))))
+
+(defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
+  (let ((cell (if (ein:basecell-child-p type-or-cell) type-or-cell
+                (ein:notebook-cell-from-type notebook type-or-cell))))
     (when cell
       (cond
        ((= (ein:notebook-ncells notebook) 0)
@@ -629,6 +648,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
+    (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
+    (define-key map "\C-c\C-y" 'ein:notebook-yank-cell-command)
     (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
