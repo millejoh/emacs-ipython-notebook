@@ -629,8 +629,7 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
 
-(defvar ein:notebook-console-security-dir
-  "~/.config/ipython/profile_nbserver/security/"
+(defvar ein:notebook-console-security-dir ""
   "Security directory setting.
 
 Following type is accepted:
@@ -644,36 +643,44 @@ alist    : An alist whose element is \"(URL-OR-PORT . DIR)\".
 function : Called with an argument URL-OR-PORT (integer or string).
            You can have complex setting using this.")
 
+(defvar ein:notebook-console-args "--profile nbserver"
+  "Additional argument when using console.
+Example: \"--ssh HOSTNAME\"
+
+Types same as `ein:notebook-console-security-dir' are accepted.")
+
 (defun ein:notebook-console-security-dir (notebook)
-  (let ((dir ein:notebook-console-security-dir))
-    (file-name-as-directory
-     (expand-file-name
-      (cond
-       ((stringp dir) dir)
-       ((functionp dir) (funcall dir (ein:$notebook-url-or-port notebook)))
-       ((listp dir)
-        (or (assoc-default (ein:$notebook-url-or-port notebook) dir)
-            (assoc-default 'default dir)))
-       (t (error "Unsupported type of `ein:notebook-console-security-dir': %s"
-                 (type-of ein:notebook-console-security-dir))))))))
+  (let ((dir (ein:choose-setting 'ein:notebook-console-security-dir
+                                 (ein:$notebook-url-or-port notebook))))
+    (if (equal dir "")
+        dir
+    (file-name-as-directory (expand-file-name dir)))))
+
+(defun ein:notebook-console-args (notebook)
+  (ein:choose-setting 'ein:notebook-console-args
+                      (ein:$notebook-url-or-port notebook)))
 
 (defun ein:notebook-console-open ()
   "Open IPython console.
-To use this function, `ein:notebook-console-security-dir' must be set
+To use this function, `ein:notebook-console-security-dir' and
+`ein:notebook-console-args' must be set properly.
 This function requires Fabian Gallina's python.el for now:
 https://github.com/fgallina/python.el"
+  ;; FIXME: use %connect_info to get connection file, then I can get
+  ;; rid of `ein:notebook-console-security-dir'.
   (interactive)
   (unless ein:notebook (error "Not in notebook buffer!"))
   (if (fboundp 'python-shell-switch-to-shell)
       (progn
         (let* ((dir (ein:notebook-console-security-dir ein:notebook))
+               (kid (ein:$kernel-kernel-id
+                     (ein:$notebook-kernel ein:notebook)))
+               (ipy (executable-find "ipython"))
+               (args (ein:notebook-console-args ein:notebook))
                (python-shell-setup-codes nil)
                (python-shell-interpreter
-                (format "python %s console --existing %skernel-%s.json"
-                        (executable-find "ipython")
-                        dir
-                        (ein:$kernel-kernel-id
-                         (ein:$notebook-kernel ein:notebook)))))
+                (format "python %s console --existing %skernel-%s.json %s"
+                        ipy dir kid args)))
           (funcall 'python-shell-switch-to-shell)))
     (ein:log 'warn "python.el is not loaded!")))
 

@@ -156,6 +156,18 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
+(defun ein:choose-setting (symbol value)
+  "Choose setting in stored in SYMBOL based on VALUE.
+The value of SYMBOL can be string, alist or function."
+  (let ((setting (eval symbol)))
+    (cond
+     ((stringp setting) setting)
+     ((functionp setting) (funcall setting value))
+     ((listp setting)
+      (or (assoc-default value setting)
+          (assoc-default 'default setting)))
+     (t (error "Unsupported type of `%s': %s" symbol (type-of setting))))))
+
 (defmacro ein:setf-default (place val)
   "Set VAL to PLACE using `setf' if the value of PLACE is `nil'."
   `(unless ,place
