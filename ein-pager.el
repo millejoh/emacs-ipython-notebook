@@ -27,13 +27,13 @@
 
 (require 'ansi-color)
 
-(require 'ein-log)
+(require 'ein-utils)
 
 (defun ein:pager-new (name)
   (get-buffer-create name))
 
 (defun ein:pager-clear (pager)
-  (with-current-buffer pager
+  (ein:with-read-only-buffer pager
     (erase-buffer)))
 
 (defun ein:pager-expand (pager)
@@ -43,9 +43,8 @@
     (font-lock-mode)))
 
 (defun ein:pager-append-text (pager text)
-  (with-current-buffer pager
-    (save-excursion
-      (insert (ansi-color-apply text)))))
+  (ein:with-read-only-buffer pager
+    (insert (ansi-color-apply text))))
 
 (provide 'ein-pager)
 
