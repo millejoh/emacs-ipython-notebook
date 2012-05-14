@@ -174,6 +174,7 @@ is `nil', BODY is executed with any cell types."
       (ein:log-setup (ein:$notebook-notebook-id notebook))
       (setq ein:notebook notebook)
       (ein:notebook-render)
+      (set-buffer-modified-p nil)
       (pop-to-buffer (current-buffer)))))
 
 (defun ein:notebook-render ()
