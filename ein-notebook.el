@@ -37,7 +37,7 @@
 (require 'ein-pager)
 (require 'ein-events)
 
-(defvar ein:notebook-pager-buffer-name-template "*ein: %s/%s/pager*")
+(defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 
