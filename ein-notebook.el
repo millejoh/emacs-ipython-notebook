@@ -244,6 +244,11 @@ is `nil', BODY is executed with any cell types."
     (ein:notebook-delete-cell ein:notebook cell)
     (ein:kill-new (ein:cell-deactivate cell))))
 
+(defun ein:notebook-copy-cell-command ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
+
 (defun ein:notebook-yank-cell-command (&optional arg)
   (interactive "*P")
   (ein:notebook-with-cell nil
@@ -649,6 +654,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
+    (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
     (define-key map "\C-c\C-y" 'ein:notebook-yank-cell-command)
     (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
