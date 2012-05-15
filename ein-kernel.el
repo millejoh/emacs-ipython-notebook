@@ -101,7 +101,9 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
-    (let ((url (concat (ein:$kernel-kernel-url kernel) "/restart")))
+    (let ((url (ein:url (ein:$kernel-url-or-port kernel)
+                        (ein:$kernel-kernel-url kernel)
+                        "restart")))
       (url-retrieve
        url
        (lambda (status kernel callback cbargs)
