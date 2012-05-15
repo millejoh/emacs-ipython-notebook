@@ -707,14 +707,14 @@ Example: \"--ssh HOSTNAME\"
 
 Types same as `ein:notebook-console-security-dir' are accepted.")
 
-(defun ein:notebook-console-security-dir (notebook)
+(defun ein:notebook-console-security-dir-get (notebook)
   (let ((dir (ein:choose-setting 'ein:notebook-console-security-dir
                                  (ein:$notebook-url-or-port notebook))))
     (if (equal dir "")
         dir
     (file-name-as-directory (expand-file-name dir)))))
 
-(defun ein:notebook-console-args (notebook)
+(defun ein:notebook-console-args-get (notebook)
   (ein:choose-setting 'ein:notebook-console-args
                       (ein:$notebook-url-or-port notebook)))
 
@@ -730,11 +730,11 @@ https://github.com/fgallina/python.el"
   (unless ein:notebook (error "Not in notebook buffer!"))
   (if (fboundp 'python-shell-switch-to-shell)
       (progn
-        (let* ((dir (ein:notebook-console-security-dir ein:notebook))
+        (let* ((dir (ein:notebook-console-security-dir-get ein:notebook))
                (kid (ein:$kernel-kernel-id
                      (ein:$notebook-kernel ein:notebook)))
                (ipy (executable-find "ipython"))
-               (args (ein:notebook-console-args ein:notebook))
+               (args (ein:notebook-console-args-get ein:notebook))
                (python-shell-setup-codes nil)
                (python-shell-interpreter
                 (format "python %s console --existing %skernel-%s.json %s"
