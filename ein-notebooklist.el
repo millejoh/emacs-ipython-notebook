@@ -48,12 +48,6 @@
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
 
-(defvar ein:notebook-keymap
-  (let ((map (copy-keymap widget-keymap)))
-    (define-key map "g" 'ein:notebooklist-reload)
-    map))
-
-
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
 
@@ -189,7 +183,11 @@ Notebook list data is passed via the buffer local variable
 (define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
   "IPython notebook list mode.")
 
-(setq ein:notebooklist-mode-map ein:notebook-keymap)
+(setq
+ ein:notebooklist-mode-map
+ (let ((map (copy-keymap widget-keymap)))
+   (define-key map "g" 'ein:notebooklist-reload)
+   map))
 
 (provide 'ein-notebooklist)
 
