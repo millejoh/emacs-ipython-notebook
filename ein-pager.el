@@ -45,10 +45,26 @@
     (insert (ansi-color-apply text))
     (ein:pager-mode)))
 
+;; FIXME: this should be automatically called when opening pager.
+(defun ein:pager-goto-docstring-bset-loc ()
+  "Goto the best location of the documentation."
+  (interactive)
+  (goto-char (point-min))
+  (search-forward-regexp "^Docstring:")
+  (beginning-of-line 0)
+  (recenter 0))
+
 (define-derived-mode ein:pager-mode fundamental-mode "ein:pager"
   "IPython notebook pager mode."
   (view-mode)
   (font-lock-mode))
+
+(setq
+ ein:pager-mode-map
+  (let ((map (copy-keymap widget-keymap)))
+    (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
+   map))
+
 
 (provide 'ein-pager)
 
