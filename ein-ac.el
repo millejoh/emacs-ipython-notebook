@@ -35,6 +35,13 @@
     table)
   "Adapted from `python-dotty-syntax-table'.")
 
+(defvar ein:ac-direct-matches nil
+  "Variable to store completion candidates for `auto-completion'.")
+
+(ac-define-source ein-direct
+  '((candidates . ein:ac-direct-matches)
+    (symbol . "s")))
+
 (defun ein:completer-finish-completing-ac (matched-text matches)
   "Invoke completion using `auto-complete'.
 Only the argument MATCHES is used.  MATCHED-TEXT is for
@@ -42,10 +49,9 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; I don't need to check if the point is at right position, as in
   ;; `ein:completer-finish-completing-default' because `auto-complete'
   ;; checks it anyway.
+  (setq ein:ac-direct-matches matches)  ; let-binding won't work
   (with-syntax-table ein:ac-dotty-syntax-table
-    (auto-complete
-     `(((candidates . ',matches)
-        (symbol . "s"))))))
+    (auto-complete '(ac-source-ein-direct))))
 
 (provide 'ein-ac)
 
