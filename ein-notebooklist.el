@@ -180,8 +180,16 @@ Notebook list data is passed via the buffer local variable
                    "Delete")
                   (widget-insert " : " name)
                   (widget-insert "\n")))
-  (use-local-map ein:notebook-keymap)
+  (ein:notebooklist-mode)
   (widget-setup))
+
+
+;;; Notebook list mode
+
+(define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
+  "IPython notebook list mode.")
+
+(setq ein:notebooklist-mode-map ein:notebook-keymap)
 
 (provide 'ein-notebooklist)
 
