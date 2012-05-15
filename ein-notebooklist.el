@@ -183,10 +183,15 @@ Notebook list data is passed via the buffer local variable
 (define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
   "IPython notebook list mode.")
 
+(defun ein:notebooklist-prev-item () (interactive) (move-beginning-of-line 0))
+(defun ein:notebooklist-next-item () (interactive) (move-beginning-of-line 2))
+
 (setq
  ein:notebooklist-mode-map
  (let ((map (copy-keymap widget-keymap)))
    (define-key map "g" 'ein:notebooklist-reload)
+   (define-key map "p" 'ein:notebooklist-prev-item)
+   (define-key map "n" 'ein:notebooklist-next-item)
    map))
 
 (provide 'ein-notebooklist)
