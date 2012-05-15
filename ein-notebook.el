@@ -235,19 +235,22 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-delete-cell-command ()
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:notebook-delete-cell ein:notebook cell)))
+    (ein:notebook-delete-cell ein:notebook cell)
+    (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-kill-cell-command ()
   (interactive)
   (ein:notebook-with-cell nil
     (ein:cell-save-text cell)
     (ein:notebook-delete-cell ein:notebook cell)
-    (ein:kill-new (ein:cell-deactivate cell))))
+    (ein:kill-new (ein:cell-deactivate cell))
+    (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-copy-cell-command ()
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
+    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))
+    (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-yank-cell-command (&optional arg)
   (interactive "*P")
@@ -257,7 +260,8 @@ is `nil', BODY is executed with any cell types."
                                       ((eq arg '-) -2)
                                       (t (1- arg)))))
            (clone (ein:cell-copy killed)))
-      (ein:notebook-insert-cell-below ein:notebook clone cell))))
+      (ein:notebook-insert-cell-below ein:notebook clone cell)
+      (ein:cell-goto clone))))
 
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
   (let ((cell (if (ein:basecell-child-p type-or-cell) type-or-cell
@@ -282,9 +286,10 @@ when the prefix argument is given."
     ;; Do not use `ein:notebook-with-cell'.  When there is no cell,
     ;; This command should add the first cell.  So this clause must be
     ;; executed even if `cell' is `nil'.
-    (ein:notebook-insert-cell-below ein:notebook
-                                    (if markdown 'markdown 'code)
-                                    cell)))
+    (ein:cell-goto
+     (ein:notebook-insert-cell-below ein:notebook
+                                     (if markdown 'markdown 'code)
+                                     cell))))
 
 (defun ein:notebook-insert-cell-above (notebook type base-cell)
   (let ((cell (ein:notebook-cell-from-type notebook type)))
@@ -308,9 +313,10 @@ when the prefix argument is given."
 when the prefix argument is given."
   (interactive "P")
   (let ((cell (ein:notebook-get-current-cell)))
-    (ein:notebook-insert-cell-above ein:notebook
-                                    (if markdown 'markdown 'code)
-                                    cell)))
+    (ein:cell-goto
+     (ein:notebook-insert-cell-above ein:notebook
+                                     (if markdown 'markdown 'code)
+                                     cell))))
 
 (defun ein:notebook-toggle-cell-type ()
   (interactive)
