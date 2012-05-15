@@ -40,4 +40,22 @@
       (insert (substitute-command-keys "\\{ein:notebook-mode-map}"))
       (rst-shift-region beg (point) 1))))
 
+(defvar ein:source-dir (file-name-directory load-file-name))
+
+(defun ein:load-files (&optional regex dir)
+  (let* ((dir (or dir ein:source-dir))
+         (regex (or regex ".+"))
+         (files (and
+                 (file-accessible-directory-p dir)
+                 (directory-files dir 'full regex))))
+    (mapc #'load files)))
+
+(defun ein:dev-reload ()
+  "Reload ein-*.el modules."
+  (interactive)
+  (ein:load-files "^ein-.*\\.el$"))
+
+
+(provide 'ein-dev)
+
 ;;; ein-dev.el ends here
