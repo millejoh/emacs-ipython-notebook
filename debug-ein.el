@@ -26,6 +26,7 @@
 ;;; Code:
 
 (add-to-list 'load-path (file-name-directory load-file-name))
+(eval-when-compile (require 'ein-notebooklist))
 (require 'ein)
 (setq debug-on-error t)
 (setq websocket-debug t)
