@@ -38,13 +38,12 @@
 
 (defun ein:pager-expand (pager)
   (pop-to-buffer (get-buffer-create pager))
-  (goto-char (point-min))
-  (unless font-lock-mode
-    (font-lock-mode)))
+  (goto-char (point-min)))
 
 (defun ein:pager-append-text (pager text)
   (ein:with-read-only-buffer (get-buffer-create pager)
-    (insert (ansi-color-apply text))))
+    (insert (ansi-color-apply text))
+    (font-lock-mode)))
 
 (provide 'ein-pager)
 
