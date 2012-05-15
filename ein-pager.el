@@ -43,7 +43,12 @@
 (defun ein:pager-append-text (pager text)
   (ein:with-read-only-buffer (get-buffer-create pager)
     (insert (ansi-color-apply text))
-    (font-lock-mode)))
+    (ein:pager-mode)))
+
+(define-derived-mode ein:pager-mode fundamental-mode "ein:pager"
+  "IPython notebook pager mode."
+  (view-mode)
+  (font-lock-mode))
 
 (provide 'ein-pager)
 
