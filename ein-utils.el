@@ -173,6 +173,9 @@ The value of SYMBOL can be string, alist or function."
   `(unless ,place
      (setf ,place ,val)))
 
+(defun ein:eval-if-bound (symbol)
+  (if (boundp symbol) (eval symbol)))
+
 (defun ein:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
 NOTE: This function creates new list."

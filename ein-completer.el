@@ -25,11 +25,27 @@
 
 ;;; Code:
 
+(require 'ein-utils)
+
+(defun ein:completer-choose ()
+  (when (require 'auto-complete nil t)
+    (require 'ein-ac))
+  (cond
+   ((and (ein:eval-if-bound 'auto-complete-mode)
+         (fboundp 'ein:completer-finish-completing-ac))
+    #'ein:completer-finish-completing-ac)
+   (t
+    #'ein:completer-finish-completing-default)))
+
 (defun ein:completer-beginning (matched-text)
   (save-excursion
     (re-search-backward (concat matched-text "\\="))))
 
 (defun ein:completer-finish-completing (matched-text matches)
+  (let ((completer (ein:completer-choose)))
+    (funcall completer matched-text matches)))
+
+(defun ein:completer-finish-completing-default (matched-text matches)
   (let* ((end (point))
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
