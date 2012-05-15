@@ -686,7 +686,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
   (not (and (ein:$notebook-p ein:notebook)
-            (ein:$notebook-dirty ein:notebook)
+            (or (ein:$notebook-dirty ein:notebook)
+                (buffer-modified-p))
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
