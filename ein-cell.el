@@ -360,17 +360,6 @@ A specific node can be specified using optional ARGS."
     (ewoc-invalidate (oref cell :ewoc)
                      (ein:cell-element-get cell :prompt))))
 
-(defun ein:cell-finish-completing (cell matched-text matches)
-  (let* ((end (point))
-         (beg (save-excursion
-                (re-search-backward (concat matched-text "\\="))))
-         (word (if (and beg matches)
-                   (completing-read "Complete: " matches
-                                    nil nil matched-text))))
-    (when word
-      (delete-region beg end)
-      (insert word))))
-
 (defun ein:cell-finish-tooltip (cell content)
   ;; FIXME: implement!
   (ein:log 'info "`ein:cell-finish-tooltip' is not implemented!"))
