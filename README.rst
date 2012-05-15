@@ -39,6 +39,7 @@ More to come/ideas:
 * Popup help
 * Better pager (history, syntax highlighting, ...)
 * Better messages/event handling/UI
+* Highlight latex maths in markdown text
 * Auto-save
 * Local auto-backup
 * VCS integration
