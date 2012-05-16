@@ -171,6 +171,13 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
+(defun ein:get-value (obj)
+  "Get value from obj if it is a variable or function."
+  (cond
+   ((not (symbolp obj)) obj)
+   ((boundp obj) (eval obj))
+   ((fboundp obj) (funcall obj))))
+
 (defun ein:choose-setting (symbol value)
   "Choose setting in stored in SYMBOL based on VALUE.
 The value of SYMBOL can be string, alist or function."
@@ -179,8 +186,8 @@ The value of SYMBOL can be string, alist or function."
      ((stringp setting) setting)
      ((functionp setting) (funcall setting value))
      ((listp setting)
-      (or (assoc-default value setting)
-          (assoc-default 'default setting)))
+      (ein:get-value (or (assoc-default value setting)
+                         (assoc-default 'default setting))))
      (t (error "Unsupported type of `%s': %s" symbol (type-of setting))))))
 
 (defmacro ein:setf-default (place val)
