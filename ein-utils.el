@@ -63,6 +63,13 @@ INITVALUE and DOCSTRING are passed to `defvar'."
        (let ((inhibit-read-only t))
          ,@body))))
 
+(defvar ein:dotty-syntax-table
+  (let ((table (make-syntax-table c-mode-syntax-table)))
+    (modify-syntax-entry ?. "w" table)
+    (modify-syntax-entry ?_ "w" table)
+    table)
+  "Adapted from `python-dotty-syntax-table'.")
+
 
 ;;; URL utils
 

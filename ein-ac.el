@@ -28,6 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'auto-complete)
 
+(require 'ein-utils)
 (eval-when-compile (require 'ein-notebook)
                    (require 'ein-mumamo))
 
@@ -36,13 +37,6 @@
 
 (defvar ein:ac-max-cache 1000
   "Maximum number of cache to store.")
-
-(defvar ein:ac-dotty-syntax-table
-  (let ((table (make-syntax-table c-mode-syntax-table)))
-    (modify-syntax-entry ?. "w" table)
-    (modify-syntax-entry ?_ "w" table)
-    table)
-  "Adapted from `python-dotty-syntax-table'.")
 
 (defvar ein:ac-cache-matches nil)
 
@@ -68,7 +62,7 @@ compatibility with `ein:completer-finish-completing-default'."
   (setq ein:ac-direct-matches matches)  ; let-binding won't work
   (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
   (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
-  (with-syntax-table ein:ac-dotty-syntax-table
+  (with-syntax-table ein:dotty-syntax-table
     (auto-complete '(ac-source-ein-direct))))
 
 (defun ein:ac-clear-cache ()
@@ -81,7 +75,7 @@ compatibility with `ein:completer-finish-completing-default'."
   "Monkey patch `auto-complete' internal function to enable
 dotty completion."
   (if ein:notebook
-      (with-syntax-table ein:ac-dotty-syntax-table
+      (with-syntax-table ein:dotty-syntax-table
         ad-do-it)
     ad-do-it))
 
