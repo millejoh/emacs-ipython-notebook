@@ -506,6 +506,24 @@ when the prefix argument is given."
         (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
       (setf (ein:@notebook dirty) t))))
 
+(defun ein:notebook-request-tool-tip (notebook cell func)
+  (let ((msg-id (ein:kernel-object-info-request
+                 (ein:$notebook-kernel notebook) func)))
+    (when msg-id
+      (puthash msg-id (oref cell :cell-id)
+               (ein:$notebook-msg-cell-map notebook)))))
+
+(defun ein:notebook-request-tool-tip-command ()
+  (interactive)
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:kernel-if-ready (ein:@notebook kernel)
+      (let ((func (save-excursion
+                    (unless (looking-at "(")
+                      (search-backward "(" (point-at-bol) t))
+                    (with-syntax-table ein:dotty-syntax-table
+                      (thing-at-point 'word)))))
+        (ein:notebook-request-tool-tip ein:notebook cell func)))))
+
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
                                      line-string rel-pos)))
@@ -668,6 +686,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
+    (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-command)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)

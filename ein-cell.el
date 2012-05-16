@@ -362,7 +362,21 @@ A specific node can be specified using optional ARGS."
 
 (defun ein:cell-finish-tooltip (cell content)
   ;; FIXME: implement!
-  (ein:log 'info "`ein:cell-finish-tooltip' is not implemented!"))
+  (let* ((defstring (or (plist-get content :call_def)
+                        (plist-get content :init_definition)
+                        (plist-get content :definition)))
+         (docstring (or (plist-get content :call_docstring)
+                        (plist-get content :init_docstring)
+                        (plist-get content :docstring)
+                        "<empty docstring>"))
+         (name (plist-get content :name))
+         (tooltip (format "%s\n%s\n%s" name defstring docstring)))
+    (ein:log 'debug "EIN:CELL-FINISH-TOOLTIP")
+    (ein:log 'debug "tooltip: %s" tooltip)
+    (cond
+     ((fboundp 'popup-tip)
+      (funcall 'popup-tip tooltip))
+     (t (message "%s" defstring)))))
 
 (defun ein:cell-goto (cell)
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))

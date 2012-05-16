@@ -218,9 +218,11 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-object-info-request (kernel objname)
+  "Send object info request of OBJNAME to KERNEL and return
+`msg-id' or `nil' when OBJNAME is `nil'."
   (assert (ein:kernel-ready-p kernel))
   (when objname
-    (let* ((content (list :oname (format "%S" objname)))
+    (let* ((content (list :oname (format "%s" objname)))
            (msg (ein:kernel-get-msg kernel "object_info_request" content)))
       (ein:websocket-send
        (ein:$kernel-shell-channel kernel)
