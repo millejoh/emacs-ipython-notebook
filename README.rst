@@ -129,6 +129,7 @@ Keybinds
    C-c C-b         ein:notebook-insert-cell-below-command
    C-c C-c         ein:notebook-execute-current-cell
    C-c C-d         ein:notebook-delete-cell-command
+   C-c C-f         ein:notebook-request-tool-tip-command
    C-c TAB         ein:notebook-complete-cell-command
    C-c C-k         ein:notebook-kill-cell-command
    C-c C-n         ein:notebook-goto-next-cell
