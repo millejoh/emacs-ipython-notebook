@@ -361,7 +361,6 @@ A specific node can be specified using optional ARGS."
                      (ein:cell-element-get cell :prompt))))
 
 (defun ein:cell-finish-tooltip (cell content)
-  ;; FIXME: implement!
   (let* ((defstring (or (plist-get content :call_def)
                         (plist-get content :init_definition)
                         (plist-get content :definition)))
