@@ -350,6 +350,18 @@ when the prefix argument is given."
       (ein:log 'warn "No previous cell"))))
 
 
+;;; Cell collapsing and output clearing
+
+(defun ein:notebook-toggle-output (notebook cell)
+  (ein:cell-toggle-output cell)
+  (setf (ein:$notebook-dirty notebook) t))
+
+(defun ein:notebook-toggle-output-command ()
+  (interactive)
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:notebook-toggle-output ein:notebook cell)))
+
+
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
@@ -677,6 +689,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
+    (define-key map "\C-c\C-e" 'ein:notebook-toggle-output-command)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
     (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)

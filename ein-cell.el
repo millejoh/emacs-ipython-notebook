@@ -69,6 +69,7 @@
                         ;;        make this slot typed.
                         ;; :type integer
                         )
+   (collapsed :initarg :collapsed :initform nil :type boolean)
    (running :initarg :running :initform nil :type boolean)))
 
 (defclass ein:textcell (ein:basecell)
@@ -107,6 +108,9 @@
   (ein:oset-if-empty cell :input (plist-get data :input))
   (ein:aif (plist-get data :prompt_number)
       (ein:oset-if-empty cell :input-prompt-number it))
+  (ein:oset-if-empty cell :collapsed
+                     (let ((v (plist-get data :collapsed)))
+                       (if (eql v json-false) nil v)))
   cell)
 
 (defmethod ein:cell-init ((cell ein:textcell) data)
@@ -292,14 +296,15 @@ A specific node can be specified using optional ARGS."
 (defvar ein:cell-output-dynamic nil)
 
 (defun ein:cell-insert-output (index cell)
-  (let ((out (nth index (oref cell :outputs)))
-        (dynamic ein:cell-output-dynamic))
-    (ein:case-equal (plist-get out :output_type)
-      (("pyout")        (ein:cell-append-pyout        cell out dynamic))
-      (("pyerr")        (ein:cell-append-pyerr        cell out))
-      (("display_data") (ein:cell-append-display-data cell out dynamic))
-      (("stream")       (ein:cell-append-stream       cell out))))
-  (ein:insert-read-only "\n"))
+  (unless (oref cell :collapsed)
+    (let ((out (nth index (oref cell :outputs)))
+          (dynamic ein:cell-output-dynamic))
+      (ein:case-equal (plist-get out :output_type)
+        (("pyout")        (ein:cell-append-pyout        cell out dynamic))
+        (("pyerr")        (ein:cell-append-pyerr        cell out))
+        (("display_data") (ein:cell-append-display-data cell out dynamic))
+        (("stream")       (ein:cell-append-stream       cell out))))
+    (ein:insert-read-only "\n")))
 
 (defun ein:cell-insert-footer ()
   (ein:insert-read-only "\n"))
@@ -352,6 +357,13 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-running-set (cell running)
   ;; FIXME: change the appearance of the cell
   (oset cell :running running))
+
+(defmethod ein:cell-toggle-output ((cell ein:codecell))
+  "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
+  (oset cell :collapsed (not (oref cell :collapsed)))
+  (apply #'ewoc-invalidate
+         (oref cell :ewoc)
+         (ein:cell-element-get cell :output)))
 
 (defun ein:cell-set-input-prompt (cell &optional number)
   (oset cell :input-prompt-number number)
@@ -527,8 +539,7 @@ A specific node can be specified using optional ARGS."
           `((prompt_number . ,it)))
     (outputs . ,(apply #'vector (oref cell :outputs)))
     (language . "python")
-    ;; FIXME: implement `collapsed'
-    (collapsed . ,json-false)))
+    (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
 (defmethod ein:cell-to-json ((cell ein:textcell))
   `((cell_type . ,(oref cell :cell-type))
