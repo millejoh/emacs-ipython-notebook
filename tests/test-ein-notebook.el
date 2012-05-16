@@ -96,6 +96,17 @@
     (ein:notebook-insert-cell-above-command)
     (should (equal (ein:notebook-ncells ein:notebook) 3))))
 
+(ert-deftest ein:notebook-delete-cell-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (loop repeat 3
+          do (ein:notebook-insert-cell-above-command))
+    (should (equal (ein:notebook-ncells ein:notebook) 3))
+    (loop repeat 3
+          do (ein:notebook-delete-cell-command))
+    (should (equal (ein:notebook-ncells ein:notebook) 0))))
+
+
+;; Misc unit tests
 
 (ert-deftest ein:notebook-test-notebook-name-simple ()
   (should-not (ein:notebook-test-notebook-name nil))
