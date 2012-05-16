@@ -296,7 +296,11 @@ A specific node can be specified using optional ARGS."
 (defvar ein:cell-output-dynamic nil)
 
 (defun ein:cell-insert-output (index cell)
-  (unless (oref cell :collapsed)
+  (if (oref cell :collapsed)
+      (progn
+        (ein:insert-read-only ".")
+        (when (= (1+ index) (ein:cell-num-outputs cell))
+          (ein:insert-read-only "\n")))
     (let ((out (nth index (oref cell :outputs)))
           (dynamic ein:cell-output-dynamic))
       (ein:case-equal (plist-get out :output_type)
