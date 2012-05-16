@@ -45,6 +45,11 @@
        nil
        (ein:notebook-new "DUMMY-URL" notebook-id)))))
 
+(defun eintest:notebook-make-data (cells &optional name)
+  (unless name (setq name "Dummy Name"))
+  `((metadata . ((name . ,name)))
+    (name . ,name)
+    (worksheets . [((cells . ,(apply #'vector cells)))])))
 
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
@@ -64,6 +69,15 @@
           (should (equal (plist-get o1 :output_type) "pyout"))
           (should (equal (plist-get o1 :prompt_number) 1))
           (should (equal (plist-get o1 :text) "2")))))))
+
+(ert-deftest ein:notebook-from-json-empty ()
+  (with-current-buffer (eintest:notebook-from-json
+                        (json-encode (eintest:notebook-make-data nil))
+                        "NOTEBOOK-ID")
+    (should (ein:$notebook-p ein:notebook))
+    (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
+    (should (equal (ein:notebook-ncells ein:notebook) 0))))
 
 
 (ert-deftest ein:notebook-test-notebook-name-simple ()
