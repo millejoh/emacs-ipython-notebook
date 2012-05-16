@@ -79,6 +79,24 @@
     (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
     (should (equal (ein:notebook-ncells ein:notebook) 0))))
 
+(ert-deftest ein:notebook-insert-cell-below-command-simple ()
+  (with-current-buffer (eintest:notebook-from-json
+                        (json-encode (eintest:notebook-make-data nil))
+                        "NOTEBOOK-ID")
+    (ein:notebook-insert-cell-below-command)
+    (ein:notebook-insert-cell-below-command)
+    (ein:notebook-insert-cell-below-command)
+    (should (equal (ein:notebook-ncells ein:notebook) 3))))
+
+(ert-deftest ein:notebook-insert-cell-above-command-simple ()
+  (with-current-buffer (eintest:notebook-from-json
+                        (json-encode (eintest:notebook-make-data nil))
+                        "NOTEBOOK-ID")
+    (ein:notebook-insert-cell-above-command)
+    (ein:notebook-insert-cell-above-command)
+    (ein:notebook-insert-cell-above-command)
+    (should (equal (ein:notebook-ncells ein:notebook) 3))))
+
 
 (ert-deftest ein:notebook-test-notebook-name-simple ()
   (should-not (ein:notebook-test-notebook-name nil))
