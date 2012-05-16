@@ -362,12 +362,16 @@ A specific node can be specified using optional ARGS."
   ;; FIXME: change the appearance of the cell
   (oset cell :running running))
 
-(defmethod ein:cell-toggle-output ((cell ein:codecell))
-  "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
-  (oset cell :collapsed (not (oref cell :collapsed)))
+(defmethod ein:cell-set-collapsed ((cell ein:codecell) collapsed)
+  "Set `:collapsed' slot of CELL and invalidate output ewoc nodes."
+  (oset cell :collapsed collapsed)
   (apply #'ewoc-invalidate
          (oref cell :ewoc)
          (ein:cell-element-get cell :output)))
+
+(defmethod ein:cell-toggle-output ((cell ein:codecell))
+  "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
+  (ein:cell-set-collapsed cell (not (oref cell :collapsed))))
 
 (defun ein:cell-set-input-prompt (cell &optional number)
   (oset cell :input-prompt-number number)

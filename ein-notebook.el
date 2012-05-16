@@ -361,6 +361,17 @@ when the prefix argument is given."
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:notebook-toggle-output ein:notebook cell)))
 
+(defun ein:notebook-set-collapsed-all (notebook collapsed)
+  (mapc (lambda (c)
+          (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
+        (ein:notebook-get-cells notebook))
+  (setf (ein:$notebook-dirty notebook) t))
+
+(defun ein:notebook-set-collapsed-all-command (&optional show)
+  "Hide all cell output.  When prefix is given, show all cell output."
+  (interactive "P")
+  (ein:notebook-set-collapsed-all ein:notebook (not show)))
+
 
 ;;; Kernel related things
 
@@ -690,6 +701,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map "\C-c\C-e" 'ein:notebook-toggle-output-command)
+    (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
     (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
