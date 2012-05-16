@@ -38,6 +38,13 @@
 (require 'markdown-mode nil t)
 (require 'rst nil t)
 
+(declare-function ein:ac-config "ein-ac")
+(declare-function global-auto-complete-mode "auto-complete")
+(when (featurep 'auto-complete)
+  (global-auto-complete-mode t)
+  (require 'ein-ac)
+  (ein:ac-config t))
+
 (defadvice backtrace (around eintest-short-backtrace activate)
   "A hack for shorten backtrace.
 
