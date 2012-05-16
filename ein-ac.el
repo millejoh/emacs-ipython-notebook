@@ -34,6 +34,9 @@
 (defvar ein:ac-sources (default-value 'ac-sources)
   "Extra `ac-sources' used in notebook.")
 
+(defvar ein:ac-max-cache 1000
+  "Maximum number of cache to store.")
+
 (defvar ein:ac-dotty-syntax-table
   (let ((table (make-syntax-table c-mode-syntax-table)))
     (modify-syntax-entry ?. "w" table)
@@ -64,10 +67,14 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; checks it anyway.
   (setq ein:ac-direct-matches matches)  ; let-binding won't work
   (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
+  (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
   (with-syntax-table ein:ac-dotty-syntax-table
     (auto-complete '(ac-source-ein-direct))))
 
-;; FIXME: add a cleanup function to limit `ein:ac-cache-matches'.
+(defun ein:ac-clear-cache ()
+  (setq ein:ac-cache-matches
+        (setcdr (nthcdr (1- ein:ac-max-cache)
+                        (delete-dups ein:ac-cache-matches)) nil)))
 
 (defadvice ac-prefix
   (around ein:ac-always-dotty (requires ignore-list))
