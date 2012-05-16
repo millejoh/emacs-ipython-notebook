@@ -30,12 +30,12 @@ get full power of IPython Notebook.  EIN aims at making notebook
 Other features:
 
 * Inline images
+* Auto/manual-completion
 * Syntax highlighting in each cell types (Python/Markdown)
 * Help browser (opens when executing ``function?``)
 
 More to come/ideas:
 
-* Auto-completion using `auto-complete.el`_
 * Popup help
 * Better pager (history, syntax highlighting, ...)
 * Better messages/event handling/UI
@@ -43,8 +43,6 @@ More to come/ideas:
 * Auto-save
 * Local auto-backup
 * VCS integration
-
-.. _auto-complete.el: http://cx4a.org/software/auto-complete/
 
 
 Requirements
@@ -60,6 +58,7 @@ Requirements
   It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
   ``ein:notebook-console-open`` command.
+* (optional) `auto-complete.el`_
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
@@ -74,6 +73,7 @@ and EIEIO.  EIN is currently tested in Emacs 24.1.
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
+.. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
 
 
@@ -93,6 +93,20 @@ Usage
 
 .. _`IPython notebook server`:
    http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
+
+
+Subpackages
+-----------
+
+Enable auto-complete::
+
+   (require 'ein-ac)
+   (ein:ac-config)
+   ;; (ein:ac-config t)  ; to enable "superpack" (a little bit hacky)
+
+Enable `smartrep.el`_::
+
+   (require 'ein-smartrep)
 
 
 Keybinds
