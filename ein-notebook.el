@@ -263,6 +263,8 @@ is `nil', BODY is executed with any cell types."
                                     ((eq arg '-) -2)
                                     (t (1- arg)))))
          (clone (ein:cell-copy killed)))
+    ;; Cell can be from another buffer, so reset `ewoc'.
+    (oset clone :ewoc (ein:$notebook-ewoc ein:notebook))
     (ein:notebook-insert-cell-below ein:notebook clone cell)
     (ein:cell-goto clone)))
 

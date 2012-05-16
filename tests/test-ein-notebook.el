@@ -52,10 +52,10 @@
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
 
-(defun eintest:notebook-make-empty ()
+(defun eintest:notebook-make-empty (&optional name)
   "Make empty notebook and return its buffer."
   (eintest:notebook-from-json
-   (json-encode (eintest:notebook-make-data nil))))
+   (json-encode (eintest:notebook-make-data nil name))))
 
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
@@ -140,6 +140,20 @@
       (loop repeat 3
             do (ein:notebook-yank-cell-command))
       (should (equal (ein:notebook-ncells ein:notebook) 3)))))
+
+(ert-deftest ein:notebook-yank-cell-command-two-buffers ()
+  (let (ein:kill-ring ein:kill-ring-yank-pointer)
+    (with-current-buffer (eintest:notebook-make-empty "NB1")
+      (ein:notebook-insert-cell-above-command)
+      (should (equal (ein:notebook-ncells ein:notebook) 1))
+      (ein:notebook-kill-cell-command)
+      (should (equal (ein:notebook-ncells ein:notebook) 0))
+      (flet ((y-or-n-p (&rest ignore) t))
+        ;; FIXME: are there anyway to skip confirmation?
+        (kill-buffer)))
+    (with-current-buffer (eintest:notebook-make-empty "NB2")
+      (ein:notebook-yank-cell-command)
+      (should (equal (ein:notebook-ncells ein:notebook) 1)))))
 
 (ert-deftest ein:notebook-toggle-cell-type-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
