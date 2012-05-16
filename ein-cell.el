@@ -370,7 +370,8 @@ A specific node can be specified using optional ARGS."
                         (plist-get content :docstring)
                         "<empty docstring>"))
          (name (plist-get content :name))
-         (tooltip (format "%s\n%s\n%s" name defstring docstring)))
+         (tooltip (ansi-color-apply
+                   (format "%s\n%s\n%s" name defstring docstring))))
     (ein:log 'debug "EIN:CELL-FINISH-TOOLTIP")
     (ein:log 'debug "tooltip: %s" tooltip)
     (cond
