@@ -127,6 +127,20 @@
       (should (equal (ein:notebook-ncells ein:notebook) 3))
       (should (equal (length ein:kill-ring) 3)))))
 
+(ert-deftest ein:notebook-yank-cell-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let (ein:kill-ring ein:kill-ring-yank-pointer)
+      (loop repeat 3
+            do (ein:notebook-insert-cell-above-command))
+      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (loop repeat 3
+            do (ein:notebook-kill-cell-command))
+      (should (equal (ein:notebook-ncells ein:notebook) 0))
+      (should (equal (length ein:kill-ring) 3))
+      (loop repeat 3
+            do (ein:notebook-yank-cell-command))
+      (should (equal (ein:notebook-ncells ein:notebook) 3)))))
+
 
 ;; Misc unit tests
 

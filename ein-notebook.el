@@ -255,14 +255,16 @@ is `nil', BODY is executed with any cell types."
 
 (defun ein:notebook-yank-cell-command (&optional arg)
   (interactive "*P")
-  (ein:notebook-with-cell nil
-    (let* ((killed (ein:current-kill (cond
-                                      ((listp arg) 0)
-                                      ((eq arg '-) -2)
-                                      (t (1- arg)))))
-           (clone (ein:cell-copy killed)))
-      (ein:notebook-insert-cell-below ein:notebook clone cell)
-      (ein:cell-goto clone))))
+  ;; Do not use `ein:notebook-with-cell'.
+  ;; `ein:notebook-insert-cell-below' handles empty cell.
+  (let* ((cell (ein:notebook-get-current-cell))
+         (killed (ein:current-kill (cond
+                                    ((listp arg) 0)
+                                    ((eq arg '-) -2)
+                                    (t (1- arg)))))
+         (clone (ein:cell-copy killed)))
+    (ein:notebook-insert-cell-below ein:notebook clone cell)
+    (ein:cell-goto clone)))
 
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
   (let ((cell (if (ein:basecell-child-p type-or-cell) type-or-cell
