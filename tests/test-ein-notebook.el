@@ -150,6 +150,19 @@
     (ein:notebook-toggle-cell-type)
     (should (ein:codecell-p (ein:notebook-get-current-cell)))))
 
+(ert-deftest ein:notebook-goto-next-cell-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (loop for i downfrom 2 to 0
+          do (ein:notebook-insert-cell-above-command)
+          do (insert (format "Cell %s" i)))
+    (should (equal (ein:notebook-ncells ein:notebook) 3))
+    ;; (message "%s" (buffer-string))
+    (loop for i from 0 below 2
+          do (beginning-of-line) ; This is required, I need to check why
+          do (should (looking-at (format "Cell %s" i)))
+          do (ein:notebook-goto-next-cell)
+          do (should (looking-at (format "Cell %s" (1+ i)))))))
+
 
 ;; Misc unit tests
 
