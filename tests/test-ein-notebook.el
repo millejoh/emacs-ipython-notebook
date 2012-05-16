@@ -141,6 +141,15 @@
             do (ein:notebook-yank-cell-command))
       (should (equal (ein:notebook-ncells ein:notebook) 3)))))
 
+(ert-deftest ein:notebook-toggle-cell-type-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-above-command)
+    (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    (ein:notebook-toggle-cell-type)
+    (should (ein:markdowncell-p (ein:notebook-get-current-cell)))
+    (ein:notebook-toggle-cell-type)
+    (should (ein:codecell-p (ein:notebook-get-current-cell)))))
+
 
 ;; Misc unit tests
 
