@@ -28,6 +28,9 @@
 (eval-when-compile (require 'cl))
 (require 'auto-complete)
 
+(eval-when-compile (require 'ein-notebook)
+                   (require 'ein-mumamo))
+
 (defvar ein:ac-sources (default-value 'ac-sources)
   "Extra `ac-sources' used in notebook.")
 
@@ -90,14 +93,22 @@ This function monkey patches `ac-prefix' to make \".\" as a part of word."
   ;; sources.
   (setq ac-sources (append '(ac-source-ein-cached) ein:ac-sources)))
 
+(defun ein:ac-setup-maybe ()            ; [#hook]_
+  (and ein:notebook
+       (eql major-mode ein:mumamo-codecell-mode)
+       (ein:ac-setup)))
+
 (defun ein:ac-config (&optional superpack)
   "Install auto-complete-mode for notebook modes.
 Specifying non-`nil' to SUPERPACK enables dotty auto completion
 \(see `ein:ac-superpack')."
-  (add-hook 'ein:notebook-mumamo-mode-hook 'ein:ac-setup)
+  (add-hook 'after-change-major-mode-hook 'ein:ac-setup-maybe) ; [#hook]_
   (add-hook 'ein:notebook-plain-mode 'ein:ac-setup)
   (when superpack
     (ein:ac-superpack)))
+;; .. [#hook] Setting `ein:notebook-mumamo-mode-hook' does not work
+;;    because `ac-sources' in `ein:notebook-mumamo-mode'-enabled
+;;    buffer is *chunk local*, rather than buffer local.
 
 (provide 'ein-ac)
 
