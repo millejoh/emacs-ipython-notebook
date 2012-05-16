@@ -84,6 +84,10 @@ This function monkey patches `ac-prefix' to make \".\" as a part of word."
 
 (defun ein:ac-setup ()
   "Call this function from mode hook (see `ein:ac-config')."
+  ;; Note that `ac-source-ein-cached' can still be useful even if
+  ;; `ein:ac-always-dotty' advice is not enabled.  So add this source
+  ;; anyway.  Also note that this source must come at the head of the
+  ;; sources.
   (setq ac-sources (append '(ac-source-ein-cached) ein:ac-sources)))
 
 (defun ein:ac-config (&optional superpack)
