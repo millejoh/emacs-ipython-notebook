@@ -62,11 +62,9 @@
 (defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
   (interactive
-   (list (completing-read "URL or port number: "
+   (list (completing-read "URL or port number (hit TAB to complete): "
                           (mapcar (lambda (x) (format "%s" x))
-                                  ein:url-or-port)
-                          nil nil
-                          (format "%s" (car ein:url-or-port)))))
+                                  ein:url-or-port))))
   (unless url-or-port (setq url-or-port (or (car ein:url-or-port) 8888)))
   (when (and (stringp url-or-port)
              (string-match "^[0-9]+$" url-or-port))
