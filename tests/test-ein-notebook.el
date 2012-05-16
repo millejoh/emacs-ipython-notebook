@@ -3,6 +3,69 @@
 
 (require 'ein-notebook)
 
+
+(defvar eintest:notebook-data-simple-json
+  "{
+ \"metadata\": {
+  \"name\": \"Untitled0\"
+ },
+ \"name\": \"Untitled0\",
+ \"nbformat\": 2,
+ \"worksheets\": [
+  {
+   \"cells\": [
+    {
+     \"cell_type\": \"code\",
+     \"collapsed\": false,
+     \"input\": \"1 + 1\",
+     \"language\": \"python\",
+     \"outputs\": [
+      {
+       \"output_type\": \"pyout\",
+       \"prompt_number\": 1,
+       \"text\": \"2\"
+      }
+     ],
+     \"prompt_number\": 1
+    }
+   ]
+  }
+ ]
+}
+")
+
+
+(defun eintest:notebook-from-json (json-string notebook-id)
+  (with-temp-buffer
+    (erase-buffer)
+    (insert json-string)
+    (flet ((pop-to-buffer (buf) buf)
+           (ein:notebook-start-kernel ()))
+      (ein:notebook-url-retrieve-callback
+       nil
+       (ein:notebook-new "DUMMY-URL" notebook-id)))))
+
+
+(ert-deftest ein:notebook-from-json-simple ()
+  (with-current-buffer (eintest:notebook-from-json
+                        eintest:notebook-data-simple-json
+                        "NOTEBOOK-ID")
+    (should (ein:$notebook-p ein:notebook))
+    (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0"))
+    (should (equal (ein:notebook-ncells ein:notebook) 1))
+    (let ((cell (car (ein:notebook-get-cells ein:notebook))))
+      (should (ein:codecell-p cell))
+      (should (equal (oref cell :input) "1 + 1"))
+      (should (equal (oref cell :input-prompt-number) 1))
+      (let ((outputs (oref cell :outputs)))
+        (should (equal (length outputs) 1))
+        (let ((o1 (car outputs)))
+          (should (equal (plist-get o1 :output_type) "pyout"))
+          (should (equal (plist-get o1 :prompt_number) 1))
+          (should (equal (plist-get o1 :text) "2")))))))
+
+
 (ert-deftest ein:notebook-test-notebook-name-simple ()
   (should-not (ein:notebook-test-notebook-name nil))
   (should-not (ein:notebook-test-notebook-name ""))
