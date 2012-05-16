@@ -31,12 +31,12 @@ Other features:
 
 * Inline images
 * Auto/manual-completion
+* Popup (tooltip) help
 * Syntax highlighting in each cell types (Python/Markdown)
 * Help browser (opens when executing ``function?``)
 
 More to come/ideas:
 
-* Popup help
 * Better pager (history, syntax highlighting, ...)
 * Better messages/event handling/UI
 * Highlight latex maths in markdown text
