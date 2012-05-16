@@ -45,6 +45,18 @@
   (require 'ein-ac)
   (ein:ac-config t))
 
+
+;; Suppress this warning when using mumamo:
+;; Warning: `font-lock-syntactic-keywords' is an obsolete variable (as of 24.1);
+;;     use `syntax-propertize-function' instead.
+;; See: http://stackoverflow.com/a/5470584/727827
+(when (and (equal emacs-major-version 24)
+           (equal emacs-minor-version 1))
+  (eval-after-load "bytecomp"
+    '(add-to-list 'byte-compile-not-obsolete-vars
+                  'font-lock-syntactic-keywords)))
+
+
 (defadvice backtrace (around eintest-short-backtrace activate)
   "A hack for shorten backtrace.
 
