@@ -116,6 +116,17 @@
             do (should (equal (length ein:kill-ring) i))
             do (should (equal (ein:notebook-ncells ein:notebook) (- 3 i)))))))
 
+(ert-deftest ein:notebook-copy-cell-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let (ein:kill-ring ein:kill-ring-yank-pointer)
+      (loop repeat 3
+            do (ein:notebook-insert-cell-above-command))
+      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (loop repeat 3
+            do (ein:notebook-copy-cell-command))
+      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (should (equal (length ein:kill-ring) 3)))))
+
 
 ;; Misc unit tests
 
