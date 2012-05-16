@@ -375,6 +375,8 @@ A specific node can be specified using optional ARGS."
     (ein:log 'debug "EIN:CELL-FINISH-TOOLTIP")
     (ein:log 'debug "tooltip: %s" tooltip)
     (cond
+     ((and window-system (fboundp 'pos-tip-show))
+      (funcall 'pos-tip-show tooltip))
      ((fboundp 'popup-tip)
       (funcall 'popup-tip tooltip))
      (t (message "%s" defstring)))))
