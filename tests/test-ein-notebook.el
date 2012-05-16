@@ -52,6 +52,11 @@
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
 
+(defun eintest:notebook-make-empty ()
+  "Make empty notebook and return its buffer."
+  (eintest:notebook-from-json
+   (json-encode (eintest:notebook-make-data nil))))
+
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
                         eintest:notebook-data-simple-json)
@@ -71,24 +76,21 @@
           (should (equal (plist-get o1 :text) "2")))))))
 
 (ert-deftest ein:notebook-from-json-empty ()
-  (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil)))
+  (with-current-buffer (eintest:notebook-make-empty)
     (should (ein:$notebook-p ein:notebook))
     (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
     (should (equal (ein:notebook-ncells ein:notebook) 0))))
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
-  (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil)))
+  (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
     (should (equal (ein:notebook-ncells ein:notebook) 3))))
 
 (ert-deftest ein:notebook-insert-cell-above-command-simple ()
-  (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil)))
+  (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
