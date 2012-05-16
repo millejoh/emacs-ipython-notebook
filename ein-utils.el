@@ -28,7 +28,8 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 
-(defvar ein:default-port 8888)
+(defvar ein:url-or-port '(8888)
+  "List of possible url-or-port values.")
 
 
 (defmacro ein:aif (test-form then-form &rest else-forms)
