@@ -517,11 +517,7 @@ when the prefix argument is given."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:@notebook kernel)
-      (let ((func (save-excursion
-                    (unless (looking-at "(")
-                      (search-backward "(" (point-at-bol) t))
-                    (with-syntax-table ein:dotty-syntax-table
-                      (thing-at-point 'word)))))
+      (let ((func (ein:object-at-point)))
         (ein:notebook-request-tool-tip ein:notebook cell func)))))
 
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)

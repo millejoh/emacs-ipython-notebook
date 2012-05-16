@@ -70,6 +70,14 @@ INITVALUE and DOCSTRING are passed to `defvar'."
     table)
   "Adapted from `python-dotty-syntax-table'.")
 
+(defun ein:object-at-point ()
+  "Return dotty.words.at.point, just before previous opening parenthesis."
+  (save-excursion
+    (unless (looking-at "(")
+      (search-backward "(" (point-at-bol) t))
+    (with-syntax-table ein:dotty-syntax-table
+      (thing-at-point 'word))))
+
 
 ;;; URL utils
 
