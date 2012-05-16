@@ -102,7 +102,8 @@ Enable auto-complete::
 
    (require 'ein-ac)
    (ein:ac-config)
-   ;; (ein:ac-config t)  ; to enable "superpack" (a little bit hacky)
+   ;; Or, to enable "superpack" (a little bit hacky improvements):
+   ;; (ein:ac-config t)
 
 Enable `smartrep.el`_::
 
