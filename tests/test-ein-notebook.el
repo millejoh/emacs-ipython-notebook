@@ -35,7 +35,8 @@
 ")
 
 
-(defun eintest:notebook-from-json (json-string notebook-id)
+(defun eintest:notebook-from-json (json-string &optional notebook-id)
+  (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
   (with-temp-buffer
     (erase-buffer)
     (insert json-string)
@@ -53,8 +54,7 @@
 
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
-                        eintest:notebook-data-simple-json
-                        "NOTEBOOK-ID")
+                        eintest:notebook-data-simple-json)
     (should (ein:$notebook-p ein:notebook))
     (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0"))
@@ -72,8 +72,7 @@
 
 (ert-deftest ein:notebook-from-json-empty ()
   (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil))
-                        "NOTEBOOK-ID")
+                        (json-encode (eintest:notebook-make-data nil)))
     (should (ein:$notebook-p ein:notebook))
     (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
@@ -81,8 +80,7 @@
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
   (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil))
-                        "NOTEBOOK-ID")
+                        (json-encode (eintest:notebook-make-data nil)))
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
@@ -90,8 +88,7 @@
 
 (ert-deftest ein:notebook-insert-cell-above-command-simple ()
   (with-current-buffer (eintest:notebook-from-json
-                        (json-encode (eintest:notebook-make-data nil))
-                        "NOTEBOOK-ID")
+                        (json-encode (eintest:notebook-make-data nil)))
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
