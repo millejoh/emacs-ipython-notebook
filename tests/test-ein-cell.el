@@ -94,6 +94,42 @@
     (should (ein:codecell-p new))
     (should (equal (oref new :input) input))))
 
+(ert-deftest ein:cell-copy-code ()
+  (let* ((input-prompt-number 111)
+         (output-prompt-number 222)
+         (input (ein:join-str "\n" '("first input" "second input")))
+         (output-0 (list :output_type "pyout"
+                         :prompt_number output-prompt-number
+                         :text (list "first output"
+                                     "second output")))
+         (data (eintest:cell-json-data-code
+                input-prompt-number input (list output-0)))
+         (dummy-ewoc (ewoc-create 'dummy))
+         (old (eintest:cell-from-json data :ewoc dummy-ewoc))
+         (new (ein:cell-copy old)))
+    (should (ein:codecell-p old))
+    (should (ein:codecell-p new))
+    (should-not (equal (oref old :cell-id)
+                       (oref new :cell-id)))
+    (should (equal (oref old :input) input))
+    (should (equal (oref new :input) input))))
+
+(ert-deftest ein:cell-copy-text-types ()
+  (loop for cell-type in '("text" "html" "markdown" "rst")
+        for cell-p = (intern (format "ein:%scell-p" cell-type))
+        do
+        (let* ((input (ein:join-str "\n" '("first input" "second input")))
+               (data (list :cell_type cell-type :source input))
+               (dummy-ewoc (ewoc-create 'dummy))
+               (old (eintest:cell-from-json data :ewoc dummy-ewoc))
+               (new (ein:cell-copy old)))
+          (should (funcall cell-p old))
+          (should (funcall cell-p new))
+          (should-not (equal (oref old :cell-id)
+                       (oref new :cell-id)))
+          (should (equal (oref old :input) input))
+          (should (equal (oref new :input) input)))))
+
 
 ;;; ein:cell-element-get
 
