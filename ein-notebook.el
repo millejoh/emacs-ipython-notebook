@@ -522,17 +522,22 @@ when the prefix argument is given."
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
 
+(defun ein:notebook-execute-cell (notebook cell)
+  "Execute code cell CELL in NOTEBOOK."
+  (ein:cell-clear-output cell t t t)
+  (ein:cell-set-input-prompt cell "*")
+  (ein:cell-running-set cell t)
+  (let* ((code (ein:cell-get-text cell))
+         (msg-id (ein:kernel-execute (ein:$notebook-kernel notebook) code)))
+    (puthash msg-id (oref cell :cell-id)
+             (ein:$notebook-msg-cell-map notebook))))
+
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:@notebook kernel)
-      (ein:cell-clear-output cell t t t)
-      (ein:cell-set-input-prompt cell "*")
-      (ein:cell-running-set cell t)
-      (let* ((code (ein:cell-get-text cell))
-             (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
-        (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
+      (ein:notebook-execute-cell ein:notebook cell)
       (setf (ein:@notebook dirty) t)
       cell)))
 
@@ -544,6 +549,15 @@ when the prefix argument is given."
       (ein:aif (ein:cell-next cell)
           (ein:cell-goto it)
         (ein:notebook-insert-cell-below ein:notebook 'code cell)))))
+
+(defun ein:notebook-execute-all-cell ()
+  "Execute all cells in the current notebook buffer."
+  (interactive)
+  (if ein:notebook
+    (loop for cell in (ein:notebook-get-cells ein:notebook)
+          when (ein:codecell-p cell)
+          do (ein:notebook-execute-cell ein:notebook cell))
+    (ein:log 'error "Not in notebook buffer!")))
 
 (defun ein:notebook-request-tool-tip (notebook cell func)
   (let ((msg-id (ein:kernel-object-info-request
