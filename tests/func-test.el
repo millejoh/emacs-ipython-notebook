@@ -57,9 +57,36 @@
       (ein:notebook-insert-cell-below-command)
       (insert "a = 100\na")
       (let ((cell (ein:notebook-execute-current-cell)))
-        (eintest:wait-until (lambda ()
-                              (> (ein:cell-num-outputs cell) 0))))
+        (eintest:wait-until (lambda () (not (oref cell :running)))))
       ;; (message "%s" (buffer-string))
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
-        (should (search-forward-regexp "100" nil t))))))
+        (should (search-forward "100" nil t))))))
+
+(ert-deftest ein:notebook-execute-current-cell-pyout-image ()
+  (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+    (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                                             (ein:kernel-ready-p it))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-insert-cell-below-command)
+      (insert (ein:join-str "\n" '("import pylab"
+                                   "pylab.plot([1,2,3])")))
+      (let ((cell (ein:notebook-execute-current-cell)))
+        (eintest:wait-until (lambda () (not (oref cell :running)))))
+      (save-excursion
+        (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
+        (should (search-forward-regexp
+                 "<matplotlib\\.lines\\.Line2D at .*>" nil t))))))
+
+(ert-deftest ein:notebook-execute-current-cell-stream ()
+  (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+    (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                                             (ein:kernel-ready-p it))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-insert-cell-below-command)
+      (insert "print 'Hello'")
+      (let ((cell (ein:notebook-execute-current-cell)))
+        (eintest:wait-until (lambda () (not (oref cell :running)))))
+      (save-excursion
+        (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
+        (should (search-forward-regexp "^Hello$" nil t))))))
