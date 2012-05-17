@@ -335,6 +335,19 @@ when the prefix argument is given."
       (ein:cell-convert-inplace cell type)
       (ein:cell-goto cell))))
 
+(defun ein:notebook-split-cell-at-point ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    ;; FIXME: should I inhibit undo?
+    (let* ((end (ein:cell-input-pos-max cell))
+           (pos (point))
+           (tail (buffer-substring pos end))
+           (new (ein:notebook-insert-cell-below ein:notebook
+                                                (oref cell :cell-type)
+                                                cell)))
+      (delete-region pos end)
+      (ein:cell-set-text new tail))))
+
 
 ;;; Cell selection.
 
@@ -755,6 +768,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
+    (define-key map "\C-c\C-s" 'ein:notebook-split-cell-at-point)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
     (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-command)

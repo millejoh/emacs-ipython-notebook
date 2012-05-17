@@ -327,13 +327,22 @@ A specific node can be specified using optional ARGS."
 (defun ein:cell-from-ewoc-node (ewoc-node)
   (ein:aand ewoc-node (ewoc-data it) (ein:$node-data it)))
 
+(defmethod ein:cell-input-pos-min ((cell ein:basecell))
+  (let* ((ewoc (oref cell :ewoc))
+         (input-node (ein:cell-element-get cell :input)))
+    ;; 1+ for skipping newline
+    (1+ (ewoc-location input-node))))
+
+(defmethod ein:cell-input-pos-max ((cell ein:basecell))
+  (let* ((ewoc (oref cell :ewoc))
+         (input-node (ein:cell-element-get cell :input)))
+    ;; 1- for skipping newline
+    (1- (ewoc-location (ewoc-next ewoc input-node)))))
+
 (defun ein:cell-get-text (cell)
   "Grab text in the input area of the cell at point."
-  (let* ((ewoc (oref cell :ewoc))
-         (input-node (ein:cell-element-get cell :input))
-         ;; 1+/1- is for skipping newline
-         (beg (1+ (ewoc-location input-node)))
-         (end (1- (ewoc-location (ewoc-next ewoc input-node)))))
+  (let* ((beg (ein:cell-input-pos-min cell))
+         (end (ein:cell-input-pos-max cell)))
     (buffer-substring beg end)))
 
 (defun ein:cell-set-text (cell text)

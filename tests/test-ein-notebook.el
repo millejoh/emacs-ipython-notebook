@@ -169,6 +169,23 @@
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
     (should (looking-at "some text"))))
 
+(ert-deftest ein:notebook-split-cell-at-point-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-above-command)
+    (insert "some\ntext")
+    (search-backward "text")
+    ;; do it
+    (ein:notebook-split-cell-at-point)
+    ;; check the "tail" cell
+    (let ((cell (ein:notebook-get-current-cell)))
+      (ein:cell-goto cell)
+      (should (equal (ein:cell-get-text cell) "text")))
+    ;; check the "head" cell
+    (ein:notebook-goto-prev-cell)
+    (let ((cell (ein:notebook-get-current-cell)))
+      (ein:cell-goto cell)
+      (should (equal (ein:cell-get-text cell) "some\n")))))
+
 (ert-deftest ein:notebook-goto-next-cell-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (loop for i downfrom 2 to 0
