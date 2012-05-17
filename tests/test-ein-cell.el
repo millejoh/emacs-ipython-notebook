@@ -14,7 +14,7 @@
         :collapsed json-false
         :prompt_number prompt-number))
 
-(defun eintest:cell-from-json (data &optional args)
+(defun eintest:cell-from-json (data &rest args)
   (let ((cell (apply #'ein:cell-from-json data args)))
     (should-not (ein:cell-active-p cell))
     cell))
@@ -63,6 +63,36 @@
          (cell (eintest:cell-from-json data)))
     (should (ein:rstcell-p cell))
     (should (equal (oref cell :input) input))))
+
+
+;;; ein:cell-convert/copy
+
+(ert-deftest ein:cell-convert-code-to-markdown ()
+  (let* ((input-prompt-number 111)
+         (output-prompt-number 222)
+         (input (ein:join-str "\n" '("first input" "second input")))
+         (output-0 (list :output_type "pyout"
+                         :prompt_number output-prompt-number
+                         :text (list "first output"
+                                     "second output")))
+         (data (eintest:cell-json-data-code
+                input-prompt-number input (list output-0)))
+         (dummy-ewoc (ewoc-create 'dummy))
+         (old (eintest:cell-from-json data :ewoc dummy-ewoc))
+         (new (ein:cell-convert old "markdown")))
+    (should (ein:codecell-p old))
+    (should (ein:markdowncell-p new))
+    (should (equal (oref new :input) input))))
+
+(ert-deftest ein:cell-convert-markdown-to-code ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (dummy-ewoc (ewoc-create 'dummy))
+         (data (list :cell_type "markdown" :source input))
+         (old (eintest:cell-from-json data :ewoc dummy-ewoc))
+         (new (ein:cell-convert old "code")))
+    (should (ein:markdowncell-p old))
+    (should (ein:codecell-p new))
+    (should (equal (oref new :input) input))))
 
 
 ;;; ein:cell-element-get
