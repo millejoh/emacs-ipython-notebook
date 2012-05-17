@@ -279,9 +279,14 @@ the time of execution."
     (ein:notebook-insert-cell-below ein:notebook clone cell)
     (ein:cell-goto clone)))
 
+(defun ein:notebook-maybe-new-cell (notebook type-or-cell)
+  "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
+  (if (ein:basecell-child-p type-or-cell)
+      type-or-cell
+    (ein:notebook-cell-from-type notebook type-or-cell)))
+
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
-  (let ((cell (if (ein:basecell-child-p type-or-cell) type-or-cell
-                (ein:notebook-cell-from-type notebook type-or-cell))))
+  (let ((cell (ein:notebook-maybe-new-cell notebook type-or-cell)))
     (when cell
       (cond
        ((= (ein:notebook-ncells notebook) 0)
@@ -307,8 +312,8 @@ when the prefix argument is given."
                                      (if markdown 'markdown 'code)
                                      cell))))
 
-(defun ein:notebook-insert-cell-above (notebook type base-cell)
-  (let ((cell (ein:notebook-cell-from-type notebook type)))
+(defun ein:notebook-insert-cell-above (notebook type-or-cell base-cell)
+  (let ((cell (ein:notebook-maybe-new-cell notebook type-or-cell)))
     (when cell
       (cond
        ((< (ein:notebook-ncells notebook) 2)
@@ -372,6 +377,33 @@ when the prefix argument is given."
     (ein:aif (ein:cell-prev cell)
         (ein:cell-goto it)
       (ein:log 'warn "No previous cell"))))
+
+
+;;; Cell movement
+
+(defun ein:notebook-move-cell (notebook cell up)
+  (ein:aif (if up (ein:cell-prev cell) (ein:cell-next cell))
+      (let ((inhibit-read-only t)
+            (pivot-cell it))
+        (ein:cell-save-text cell)
+        (ein:notebook-delete-cell ein:notebook cell)
+        (funcall (if up
+                     #'ein:notebook-insert-cell-above
+                   #'ein:notebook-insert-cell-below)
+                 notebook cell pivot-cell)
+        (ein:cell-goto cell)
+        (setf (ein:$notebook-dirty notebook) t))
+    (ein:log 'warn "No %s cell" (if up "previous" "next"))))
+
+(defun ein:notebook-move-cell-up-command ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:notebook-move-cell ein:notebook cell t)))
+
+(defun ein:notebook-move-cell-down-command ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (ein:notebook-move-cell ein:notebook cell nil)))
 
 
 ;;; Cell collapsing and output clearing
@@ -779,6 +811,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-s" 'ein:notebook-split-cell-at-point)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
+    (define-key map (kbd "\C-c <up>") 'ein:notebook-move-cell-up-command)
+    (define-key map (kbd "\C-c <down>") 'ein:notebook-move-cell-down-command)
     (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-command)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)

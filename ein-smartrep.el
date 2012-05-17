@@ -39,6 +39,8 @@
       ("C-b" . ein:notebook-insert-cell-below-command)
       ("C-n" . ein:notebook-goto-next-cell)
       ("C-p" . ein:notebook-goto-prev-cell)
+      ("<up>" . ein:notebook-move-cell-up-command)
+      ("<down>" . ein:notebook-move-cell-down-command)
       )))
 
 (provide 'ein-smartrep)

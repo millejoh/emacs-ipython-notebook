@@ -217,6 +217,35 @@
           do (ein:notebook-goto-prev-cell)
           do (should (looking-at (format "Cell %s" (1- i)))))))
 
+(ert-deftest ein:notebook-move-cell-up-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (loop for i from 0 below 3
+          do (ein:notebook-insert-cell-below-command)
+          do (insert (format "Cell %s" i)))
+    (beginning-of-line)
+    (should (looking-at "Cell 2"))
+    (loop repeat 2
+          do (ein:notebook-move-cell-up-command))
+    ;; (message "%s" (buffer-string))
+    (beginning-of-line)
+    (should (looking-at "Cell 2"))
+    (should (search-forward "Cell 0" nil t))
+    (should (search-forward "Cell 1" nil t))
+    (should-not (search-forward "Cell 2" nil t))))
+
+(ert-deftest ein:notebook-move-cell-down-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (loop for i from 0 below 3
+          do (ein:notebook-insert-cell-above-command)
+          do (insert (format "Cell %s" i)))
+    (loop repeat 2
+          do (ein:notebook-move-cell-down-command))
+    (beginning-of-line)
+    (should (looking-at "Cell 2"))
+    (should (search-backward "Cell 0" nil t))
+    (should (search-backward "Cell 1" nil t))
+    (should-not (search-backward "Cell 2" nil t))))
+
 (ert-deftest ein:notebook-execute-current-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
