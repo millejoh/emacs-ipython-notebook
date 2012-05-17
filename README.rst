@@ -125,14 +125,18 @@ Keybinds
 
    C-c             Prefix Command
    C-x             Prefix Command
+   ESC             Prefix Command
 
    C-x C-s         ein:notebook-save-notebook-command
    C-x C-w         ein:notebook-rename-command
+
+   M-RET           ein:notebook-execute-current-cell-and-goto-next
 
    C-c C-a         ein:notebook-insert-cell-above-command
    C-c C-b         ein:notebook-insert-cell-below-command
    C-c C-c         ein:notebook-execute-current-cell
    C-c C-d         ein:notebook-delete-cell-command
+   C-c C-e         ein:notebook-toggle-output-command
    C-c C-f         ein:notebook-request-tool-tip-command
    C-c TAB         ein:notebook-complete-cell-command
    C-c C-k         ein:notebook-kill-cell-command
@@ -141,7 +145,9 @@ Keybinds
    C-c C-p         ein:notebook-goto-prev-cell
    C-c C-q         ein:notebook-kernel-kill-command
    C-c C-r         ein:notebook-render
+   C-c C-s         ein:notebook-split-cell-at-point
    C-c C-t         ein:notebook-toggle-cell-type
+   C-c C-v         ein:notebook-set-collapsed-all-command
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
