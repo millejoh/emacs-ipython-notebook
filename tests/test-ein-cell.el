@@ -3,6 +3,66 @@
 
 (require 'ein-cell)
 
+
+;;; ein:cell-from-json
+
+(defun eintest:cell-from-json (data &optional args)
+  (let ((cell (apply #'ein:cell-from-json data args)))
+    (should-not (ein:cell-active-p cell))
+    cell))
+
+(ert-deftest ein:cell-from-json-code ()
+  (let* ((input-prompt-number 111)
+         (output-prompt-number 222)
+         (input (ein:join-str "\n" '("first input" "second input")))
+         (output-0 (list :output_type "pyout"
+                         :prompt_number output-prompt-number
+                         :text (list "first output"
+                                     "second output")))
+         (data (list :cell_type "code"
+                     :input input
+                     :language "python"
+                     :outputs (list output-0)
+                     :collapsed json-false
+                     :prompt_number input-prompt-number))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:codecell-p cell))
+    (should (equal (oref cell :input-prompt-number) input-prompt-number))
+    (should (equal (oref cell :input) input))
+    (should (equal (car (oref cell :outputs)) output-0))
+    (should (equal (oref cell :collapsed) nil))))
+
+(ert-deftest ein:cell-from-json-text ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (data (list :cell_type "text" :source input))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:textcell-p cell))
+    (should (equal (oref cell :input) input))))
+
+(ert-deftest ein:cell-from-json-html ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (data (list :cell_type "html" :source input))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:htmlcell-p cell))
+    (should (equal (oref cell :input) input))))
+
+(ert-deftest ein:cell-from-json-markdown ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (data (list :cell_type "markdown" :source input))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:markdowncell-p cell))
+    (should (equal (oref cell :input) input))))
+
+(ert-deftest ein:cell-from-json-rst ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (data (list :cell_type "rst" :source input))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:rstcell-p cell))
+    (should (equal (oref cell :input) input))))
+
+
+;;; ein:cell-element-get
+
 (ert-deftest ein:cell-element-get-basecell ()
   (let ((cell (ein:basecell "Cell")))
     ;; it's not supported
