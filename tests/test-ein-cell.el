@@ -6,6 +6,14 @@
 
 ;;; ein:cell-from-json
 
+(defun eintest:cell-json-data-code (prompt-number input &optional outputs)
+  (list :cell_type "code"
+        :input input
+        :language "python"
+        :outputs outputs
+        :collapsed json-false
+        :prompt_number prompt-number))
+
 (defun eintest:cell-from-json (data &optional args)
   (let ((cell (apply #'ein:cell-from-json data args)))
     (should-not (ein:cell-active-p cell))
@@ -19,12 +27,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (list :cell_type "code"
-                     :input input
-                     :language "python"
-                     :outputs (list output-0)
-                     :collapsed json-false
-                     :prompt_number input-prompt-number))
+         (data (eintest:cell-json-data-code
+                input-prompt-number input (list output-0)))
          (cell (eintest:cell-from-json data)))
     (should (ein:codecell-p cell))
     (should (equal (oref cell :input-prompt-number) input-prompt-number))
