@@ -45,6 +45,11 @@
   (require 'ein-ac)
   (ein:ac-config t))
 
+(declare-function ein:smartrep-config "ein-smartrep")
+(when (featurep 'smartrep)
+  (require 'ein-smartrep)
+  (ein:smartrep-config))
+
 
 ;; Suppress this warning when using mumamo:
 ;; Warning: `font-lock-syntactic-keywords' is an obsolete variable (as of 24.1);

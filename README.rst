@@ -59,10 +59,12 @@ Requirements
   Fabian Gallina's `python.el`_ is required to use
   ``ein:notebook-console-open`` command.
 * (optional) `auto-complete.el`_
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
-  You need to require subpackage (``(require 'ein-smartrep)``) to enable
+  You need to configure subpackage ``ein-smartrep`` to enable
   this feature.
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC
@@ -108,6 +110,7 @@ Enable auto-complete::
 Enable `smartrep.el`_::
 
    (require 'ein-smartrep)
+   (ein:smartrep-config)
 
 
 Keybinds

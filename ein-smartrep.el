@@ -28,16 +28,18 @@
 (require 'smartrep)
 (require 'ein-notebook)
 
-(smartrep-define-key
-    ein:notebook-mode-map
-    "C-c"
-  '(("C-t" . ein:notebook-toggle-cell-type)
-    ("C-d" . ein:notebook-delete-cell-command)
-    ("C-a" . ein:notebook-insert-cell-above-command)
-    ("C-b" . ein:notebook-insert-cell-below-command)
-    ("C-n" . ein:notebook-goto-next-cell)
-    ("C-p" . ein:notebook-goto-prev-cell)
-    ))
+(defun ein:smartrep-config ()
+  (interactive)
+  (smartrep-define-key
+      ein:notebook-mode-map
+      "C-c"
+    '(("C-t" . ein:notebook-toggle-cell-type)
+      ("C-d" . ein:notebook-delete-cell-command)
+      ("C-a" . ein:notebook-insert-cell-above-command)
+      ("C-b" . ein:notebook-insert-cell-below-command)
+      ("C-n" . ein:notebook-goto-next-cell)
+      ("C-p" . ein:notebook-goto-prev-cell)
+      )))
 
 (provide 'ein-smartrep)
 
