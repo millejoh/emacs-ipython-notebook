@@ -50,11 +50,18 @@
                  (directory-files dir 'full regex))))
     (mapc #'load files)))
 
+(eval-when-compile
+  (defvar ein:notebook-mode-map)
+  (defvar ein:notebook-plain-mode-map)
+  (defvar ein:notebook-mumamo-mode-map))
+
 (defun ein:dev-reload ()
   "Reload ein-*.el modules."
   (interactive)
-  (ein:load-files "^ein-.*\\.el$"))
-
+  (ein:load-files "^ein-.*\\.el$")
+  ;; reset some variables
+  (setq ein:notebook-plain-mode-map ein:notebook-mode-map)
+  (setq ein:notebook-mumamo-mode-map ein:notebook-mode-map))
 
 (provide 'ein-dev)
 
