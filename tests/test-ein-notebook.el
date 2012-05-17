@@ -1,6 +1,11 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
+(when load-file-name
+  (add-to-list 'load-path
+               (concat (file-name-directory load-file-name) "mocker")))
+(require 'mocker)
+
 (require 'ein-notebook)
 
 
@@ -211,6 +216,53 @@
           do (should (looking-at (format "Cell %s" i)))
           do (ein:notebook-goto-prev-cell)
           do (should (looking-at (format "Cell %s" (1- i)))))))
+
+(ert-deftest ein:notebook-execute-current-cell ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (let ((text "print 'Hello World'")
+          (cell (ein:notebook-get-current-cell))
+          (msg-id "DUMMY-MSG-ID"))
+      (setf (ein:$notebook-kernel ein:notebook) "DUMMY-KERNEL")
+      (insert text)
+      (mocker-let ((ein:kernel-execute
+                    (notebook text)
+                    ((:input (list (ein:$notebook-kernel ein:notebook) text)
+                             :output msg-id)))
+                   (ein:kernel-ready-p
+                    (kernel)
+                    ((:input (list (ein:$notebook-kernel ein:notebook))
+                             :output t))))
+        (ein:notebook-execute-current-cell))
+      (should (equal (gethash msg-id
+                              (ein:$notebook-msg-cell-map ein:notebook))
+                     (oref cell :cell-id)))
+      (save-excursion
+        (goto-char (point-min))
+        (should-not (search-forward "In [1]:" nil t)))
+      (let* ((payload nil)
+             (content (list :execution_count 1 :payload payload))
+             (packet (list :msg_type "execute_reply"
+                           :parent_header (list :msg_id msg-id)
+                           :content content)))
+        (ein:notebook-handle-shell-reply ein:notebook (json-encode packet)))
+      (should (= (oref cell :input-prompt-number) 1))
+      (save-excursion
+        (goto-char (point-min))
+        (should (search-forward "In [1]:" nil t)))
+      (let* ((content (list :data "'Hello World'"
+                            :name "stdout"))
+             (packet (list :msg_type "stream"
+                           :parent_header (list :msg_id msg-id)
+                           :content content)))
+        (ein:notebook-handle-iopub-reply ein:notebook (json-encode packet)))
+      (should (= (ein:cell-num-outputs cell) 1))
+      (save-excursion
+        (goto-char (point-min))
+        (should (search-forward "In [1]:" nil t))
+        (should (search-forward "print 'Hello World'" nil t))
+        (should (search-forward "Hello World" nil t)) ; stream output
+        (should-not (search-forward "Hello World" nil t))))))
 
 
 ;; Misc unit tests

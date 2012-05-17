@@ -1,0 +1,3 @@
+[submodule "tests/mocker"]
+	path = tests/mocker
+	url = https://github.com/sigma/mocker.el.git
