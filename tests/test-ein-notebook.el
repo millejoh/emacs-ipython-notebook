@@ -158,11 +158,16 @@
 (ert-deftest ein:notebook-toggle-cell-type-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
+    (insert "some text")
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    ;; toggle to markdown
     (ein:notebook-toggle-cell-type)
     (should (ein:markdowncell-p (ein:notebook-get-current-cell)))
+    (should (looking-at "some text"))
+    ;; toggle to code
     (ein:notebook-toggle-cell-type)
-    (should (ein:codecell-p (ein:notebook-get-current-cell)))))
+    (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    (should (looking-at "some text"))))
 
 (ert-deftest ein:notebook-goto-next-cell-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
