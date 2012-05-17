@@ -42,6 +42,9 @@
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
+(defvar ein:notebook-save-retry-max 1
+  "Maximum retries for notebook saving.")
+
 
 (defstruct ein:$notebook
   "Hold notebook variables.
@@ -609,7 +612,7 @@ when the prefix argument is given."
                             (ein:notebook-get-cells notebook)))))])
     (metadata . ,(ein:$notebook-metadata notebook))))
 
-(defun ein:notebook-save-notebook (notebook)
+(defun ein:notebook-save-notebook (notebook retry)
   (let ((data (ein:notebook-to-json notebook)))
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
@@ -624,13 +627,13 @@ when the prefix argument is given."
       (url-retrieve
        url
        #'ein:notebook-save-notebook-callback
-       (list notebook)))))
+       (list notebook retry)))))
 
 (defun ein:notebook-save-notebook-command ()
   (interactive)
-  (ein:notebook-save-notebook ein:notebook))
+  (ein:notebook-save-notebook ein:notebook 0))
 
-(defun ein:notebook-save-notebook-callback (status notebook)
+(defun ein:notebook-save-notebook-callback (status notebook retry)
   (declare (special url-http-response-status
                     url-http-method))
   (ein:log 'debug "SAVE-NOTEBOOK-CALLBACK nodtebook-id = %S, status = %S"
@@ -655,8 +658,14 @@ when the prefix argument is given."
         ;; here and fail when 204 is not returned.
         (if (eq response 204)
             (ein:notebook-save-notebook-success notebook status)
-          (ein:notebook-save-notebook-error notebook status)
-          (ein:log 'debug "Status code (=%s) is not 204." response))))))
+          (if (< retry ein:notebook-save-retry-max)
+              (progn
+                (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
+                (ein:notebook-save-notebook notebook (1+ retry)))
+            (ein:notebook-save-notebook-error notebook status)
+            (ein:log 'info
+              "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
+              response ein:notebook-save-retry-max)))))))
 
 (defun ein:notebook-save-notebook-success (notebook status)
   (setf (ein:$notebook-dirty notebook))
@@ -675,7 +684,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                       (ein:$notebook-notebook-name ein:notebook))))
   (ein:notebook-set-notebook-name ein:notebook name)
   (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
-  (ein:notebook-save-notebook ein:notebook))
+  (ein:notebook-save-notebook ein:notebook 0))
 
 
 ;;; Notebook mode
