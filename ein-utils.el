@@ -33,14 +33,14 @@
 
 
 (defmacro ein:aif (test-form then-form &rest else-forms)
-  "Anaphoric IF."
+  "Anaphoric IF.  Adapted from `e2wm:aif'."
   (declare (debug (form form &rest form)))
   `(let ((it ,test-form))
      (if it ,then-form ,@else-forms)))
 (put 'ein:aif 'lisp-indent-function 2)
 
 (defmacro ein:aand (test &rest rest)
-  "Anaphoric AND."
+  "Anaphoric AND.  Adapted from `e2wm:aand'."
   (declare (debug (form &rest form)))
   `(let ((it ,test))
      (if it ,(if rest (macroexpand-all `(ein:aand ,@rest)) 'it))))
