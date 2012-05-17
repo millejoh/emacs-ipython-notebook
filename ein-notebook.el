@@ -386,6 +386,18 @@ when the prefix argument is given."
                       #'ein:notebook-kernel-started
                       (list ein:notebook))))
 
+(defun ein:notebook-restart-kernel (notebook)
+  (ein:kernel-restart (ein:$notebook-kernel notebook)
+                      #'ein:notebook-kernel-started
+                      (list ein:notebook)))
+
+(defun ein:notebook-restart-kernel-command ()
+  (interactive)
+  (if ein:notebook
+      (when (y-or-n-p "Really restart kernel? ")
+        (ein:notebook-restart-kernel ein:notebook))
+    (ein:log 'error "Not in notebook buffer!")))
+
 (defun ein:notebook-kernel-started (notebook)
   (let* ((kernel (ein:$notebook-kernel notebook))
          (shell-channel (ein:$kernel-shell-channel kernel))
