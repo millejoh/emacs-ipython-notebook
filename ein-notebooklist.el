@@ -193,6 +193,7 @@ Notebook list data is passed via the buffer local variable
    (define-key map "g" 'ein:notebooklist-reload)
    (define-key map "p" 'ein:notebooklist-prev-item)
    (define-key map "n" 'ein:notebooklist-next-item)
+   (define-key map "q" 'bury-buffer)
    map))
 
 (provide 'ein-notebooklist)
