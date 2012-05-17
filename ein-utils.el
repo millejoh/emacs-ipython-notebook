@@ -153,6 +153,9 @@ See: http://api.jquery.com/jQuery.ajax/"
 (defun ein:join-str (sep strings)
   (mapconcat 'identity strings sep))
 
+(defun ein:join-path (paths)
+  (mapconcat 'file-name-as-directory paths ""))
+
 (defmacro ein:case-equal (str &rest clauses)
   "Similar to `case' but comparison is done by `equal'.
 Adapted from twittering-mode.el's `case-string'."

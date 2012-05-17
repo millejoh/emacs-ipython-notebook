@@ -75,7 +75,8 @@
        #'ein:notebooklist-url-retrieve-callback
      (lambda (&rest args)
        (pop-to-buffer (apply #'ein:notebooklist-url-retrieve-callback args))))
-   (list url-or-port)))
+   (list url-or-port))
+  (ein:notebooklist-get-buffer url-or-port))
 
 (defun ein:notebooklist-url-retrieve-callback (status url-or-port)
   "Called via `ein:notebooklist-open'."

@@ -152,6 +152,10 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-get-buffer (notebook)
   (get-buffer-create (ein:notebook-get-buffer-name notebook)))
 
+(defun ein:notebook-buffer (notebook)
+  "Return the buffer that is associated with NOTEBOOK."
+  (ewoc-buffer (ein:$notebook-ewoc notebook)))
+
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-id notebook)))
@@ -160,12 +164,16 @@ is `nil', BODY is executed with any cell types."
   (ein:url url-or-port "notebooks" notebook-id))
 
 (defun ein:notebook-open (url-or-port notebook-id)
+  "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
+Return `ein:$notebook' instance.  Notebook may not be ready at
+the time of execution."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
     (url-retrieve url
                   #'ein:notebook-url-retrieve-callback
-                  (list notebook))))
+                  (list notebook))
+    notebook))
 
 (defun ein:notebook-url-retrieve-callback (status notebook)
   (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
