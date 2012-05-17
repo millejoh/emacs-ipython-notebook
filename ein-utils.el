@@ -122,14 +122,17 @@ See: http://api.jquery.com/jQuery.ajax/"
   (ein:with-json-setting
    (json-read-from-string string)))
 
+
+;;;
 
 (defun ein:propertize-read-only (string)
   (propertize string 'read-only t 'front-sticky t))
 
-
 (defun ein:insert-read-only (string)
   (insert (ein:propertize-read-only string)))
 
+
+;;; String manipulation
 
 (defun ein:trim (string &optional regexp)
   (ein:trim-left (ein:trim-right string regexp) regexp))
@@ -165,6 +168,9 @@ Adapted from twittering-mode.el's `case-string'."
 		't)
 	     ,@body)))
        clauses)))
+
+
+;;
 
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."
@@ -209,6 +215,9 @@ NOTE: This function creates new list."
         for i from 0
         when (not (memq i indices))
         collect l))
+
+
+;; utils.js compatible
 
 (defun ein:utils-uuid ()
   "Return string with random (version 4) UUID.
