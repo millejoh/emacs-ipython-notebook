@@ -11,12 +11,17 @@
 (defvar eintest:port 8889)
 
 (defun eintest:wait-until (predicate &optional predargs max-count)
+  "Wait until PREDICATE function returns non-`nil'.
+PREDARGS is argument list for the PREDICATE function.
+Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (unless (setq max-count 50))
-  (loop repeat max-count
-        when (apply predicate predargs)
-        return nil
-        do (sit-for 0.05)
-        do (sleep-for 0.05)))
+  (unless (loop repeat max-count
+                when (apply predicate predargs)
+                return t
+                ;; borrowed from `deferred:sync!':
+                do (sit-for 0.05)
+                do (sleep-for 0.05))
+    (error "Timeout")))
 
 (defun eintest:get-notebook-by-name (url-or-port notebook-name)
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
