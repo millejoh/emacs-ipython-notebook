@@ -48,3 +48,18 @@
                                              (ein:kernel-ready-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0")))))
+
+(ert-deftest ein:notebook-execute-current-cell-simple ()
+  (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+    (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                                             (ein:kernel-ready-p it))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-insert-cell-below-command)
+      (insert "a = 100\na")
+      (let ((cell (ein:notebook-execute-current-cell)))
+        (eintest:wait-until (lambda ()
+                              (> (ein:cell-num-outputs cell) 0))))
+      ;; (message "%s" (buffer-string))
+      (save-excursion
+        (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
+        (should (search-forward-regexp "100" nil t))))))
