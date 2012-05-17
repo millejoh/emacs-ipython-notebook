@@ -97,11 +97,12 @@
   (interactive)
   (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist) t))
 
-(defun ein:notebooklist-new-notebook ()
+(defun ein:notebooklist-new-notebook (&optional url-or-port)
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
+  (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
   (url-retrieve
-   (ein:notebooklist-new-url (ein:$notebooklist-url-or-port ein:notebooklist))
+   (ein:notebooklist-new-url url-or-port)
    (lambda (s buffer)
      ;; To support opening notebook buffer from here will need parsing
      ;; HTML file.  Let's just reload notebook list buffer.
