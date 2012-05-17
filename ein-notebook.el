@@ -523,9 +523,8 @@ when the prefix argument is given."
     (when (ein:basecell-child-p cell) cell)))
 
 (defun ein:notebook-execute-current-cell ()
+  "Execute cell at point."
   (interactive)
-  ;; FIXME: implement `add_new' and `terminal' option like
-  ;; `Notebook.execute_selected_cell'.
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:@notebook kernel)
       (ein:cell-clear-output cell t t t)
@@ -534,7 +533,17 @@ when the prefix argument is given."
       (let* ((code (ein:cell-get-text cell))
              (msg-id (ein:kernel-execute (ein:@notebook kernel) code)))
         (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map)))
-      (setf (ein:@notebook dirty) t))))
+      (setf (ein:@notebook dirty) t)
+      cell)))
+
+(defun ein:notebook-execute-current-cell-and-goto-next ()
+  "Execute cell at point and move to the next cell, or insert if none."
+  (interactive)
+  (let ((cell (ein:notebook-execute-current-cell)))
+    (when cell
+      (ein:aif (ein:cell-next cell)
+          (ein:cell-goto it)
+        (ein:notebook-insert-cell-below ein:notebook 'code cell)))))
 
 (defun ein:notebook-request-tool-tip (notebook cell func)
   (let ((msg-id (ein:kernel-object-info-request
@@ -709,6 +718,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
+    (define-key map (kbd "M-RET")
+      'ein:notebook-execute-current-cell-and-goto-next)
     (define-key map "\C-c\C-e" 'ein:notebook-toggle-output-command)
     (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
