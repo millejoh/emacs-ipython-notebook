@@ -129,7 +129,6 @@ is `nil', BODY is executed with any cell types."
                          :url-or-port url-or-port
                          :notebook-id notebook-id
                          :msg-cell-map (make-hash-table :test 'equal)
-                         :nbformat 2
                          args)))
     notebook))
 
@@ -139,6 +138,7 @@ is `nil', BODY is executed with any cell types."
   (let* ((metadata (plist-get data :metadata))
          (notebook-name (plist-get metadata :name)))
     (setf (ein:$notebook-metadata notebook) metadata)
+    (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
     (setf (ein:$notebook-notebook-name notebook) notebook-name))
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
