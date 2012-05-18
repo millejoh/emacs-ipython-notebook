@@ -50,18 +50,12 @@
                  (directory-files dir 'full regex))))
     (mapc #'load files)))
 
-(eval-when-compile
-  (defvar ein:notebook-mode-map)
-  (defvar ein:notebook-plain-mode-map)
-  (defvar ein:notebook-mumamo-mode-map))
-
 (defun ein:dev-reload ()
   "Reload ein-*.el modules."
   (interactive)
-  (ein:load-files "^ein-.*\\.el$")
-  ;; "Sync" variables.
-  (setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
-  (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map)))
+  (makunbound 'ein:notebook-mode-map)   ; so defvar works.
+  (load "ein-notebook")  ; ... but make sure it will be defined first.
+  (ein:load-files "^ein-.*\\.el$"))
 
 (provide 'ein-dev)
 
