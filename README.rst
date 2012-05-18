@@ -140,7 +140,7 @@ Keybinds
    C-c C-f         ein:notebook-request-tool-tip-or-help-command
    C-c TAB         ein:notebook-complete-cell-command
    C-c C-k         ein:notebook-kill-cell-command
-   C-c C-l         ein:notebook-clear-all-output-command
+   C-c C-l         ein:notebook-clear-output-command
    C-c C-n         ein:notebook-goto-next-input-command
    C-c C-o         ein:notebook-console-open
    C-c C-p         ein:notebook-goto-prev-input-command
@@ -151,6 +151,7 @@ Keybinds
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
+   C-c C-S-l       ein:notebook-clear-all-output-command
    C-c <down>      ein:notebook-move-cell-down-command
    C-c <up>        ein:notebook-move-cell-up-command
 
