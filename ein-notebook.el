@@ -167,11 +167,14 @@ is `nil', BODY is executed with any cell types."
 
 (defun ein:notebook-open (url-or-port notebook-id)
   "Open notebook."
-  (ein:aif (gethash (list url-or-port notebook-id) ein:notebook-opened-map)
-      (with-current-buffer it
-        (pop-to-buffer (current-buffer))
-        ein:notebook)
-    (ein:notebook-request-open url-or-port notebook-id)))
+  (let* ((key (list url-or-port notebook-id))
+         (buffer (gethash key ein:notebook-opened-map)))
+    (if (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (pop-to-buffer (current-buffer))
+          ein:notebook)
+      (remhash key ein:notebook-opened-map)
+      (ein:notebook-request-open url-or-port notebook-id))))
 
 (defun ein:notebook-request-open (url-or-port notebook-id)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
