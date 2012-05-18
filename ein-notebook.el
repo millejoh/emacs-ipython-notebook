@@ -454,9 +454,18 @@ when the prefix argument is given."
   (interactive "P")
   (ein:notebook-set-collapsed-all ein:notebook (not show)))
 
-(defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
-  "clear output from all cells.
+(defun ein:notebook-clear-output-command (&optional preserve-input-prompt)
+  "Clear output from the current cell at point.
 Do not clear input prompt when the prefix argument is given."
+  (interactive "P")
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:cell-clear-output cell t t t)
+    (unless preserve-input-prompt
+      (ein:cell-set-input-prompt cell))))
+
+(defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
+  "Clear output from all cells.
+Do not clear input prompts when the prefix argument is given."
   (interactive "P")
   (if ein:notebook
     (loop for cell in (ein:notebook-get-cells ein:notebook)
@@ -855,7 +864,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
       'ein:notebook-execute-current-cell-and-goto-next)
     (define-key map "\C-c\C-e" 'ein:notebook-toggle-output-command)
     (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
-    (define-key map "\C-c\C-l" 'ein:notebook-clear-all-output-command)
+    (define-key map "\C-c\C-l" 'ein:notebook-clear-output-command)
+    (define-key map (kbd "C-c C-S-l") 'ein:notebook-clear-all-output-command)
     (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
     (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
