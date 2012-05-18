@@ -385,7 +385,7 @@ when the prefix argument is given."
          (path (ein:$node-path ewoc-data))
          (element (nth 1 path)))
     (ein:aif
-        (if (memql element (if up '(input output footer) '(prompt)))
+        (if (memql element (if up '(output footer) '(prompt)))
             cell
           (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))
         (ein:cell-goto it)
