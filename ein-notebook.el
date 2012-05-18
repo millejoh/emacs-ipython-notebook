@@ -45,6 +45,8 @@
 (defvar ein:notebook-save-retry-max 1
   "Maximum retries for notebook saving.")
 
+(defvar ein:notebook-opened-map (make-hash-table :test 'equal)
+  "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook buffer.")
 
 (defstruct ein:$notebook
   "Hold notebook variables.
@@ -164,6 +166,14 @@ is `nil', BODY is executed with any cell types."
   (ein:url url-or-port "notebooks" notebook-id))
 
 (defun ein:notebook-open (url-or-port notebook-id)
+  "Open notebook."
+  (ein:aif (gethash (list url-or-port notebook-id) ein:notebook-opened-map)
+      (with-current-buffer it
+        (pop-to-buffer (current-buffer))
+        ein:notebook)
+    (ein:notebook-request-open url-or-port notebook-id)))
+
+(defun ein:notebook-request-open (url-or-port notebook-id)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
 Return `ein:$notebook' instance.  Notebook may not be ready at
 the time of execution."
@@ -188,6 +198,9 @@ the time of execution."
       (setq ein:notebook notebook)
       (ein:notebook-render)
       (set-buffer-modified-p nil)
+      (puthash (list (ein:$notebook-url-or-port ein:notebook) notebook-id)
+               (current-buffer)
+               ein:notebook-opened-map)
       (pop-to-buffer (current-buffer)))))
 
 (defun ein:notebook-render ()
