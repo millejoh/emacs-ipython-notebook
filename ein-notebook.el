@@ -675,6 +675,12 @@ when the prefix argument is given."
           (ein:notebook-execute-code
            ein:notebook cell (format "%s?" func)))))))
 
+(defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
+  (interactive "P")
+  (if pager
+      (ein:notebook-request-help-command)
+    (ein:notebook-request-tool-tip-command)))
+
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
                                      line-string rel-pos)))
@@ -849,7 +855,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-input-command)
     (define-key map (kbd "\C-c <up>") 'ein:notebook-move-cell-up-command)
     (define-key map (kbd "\C-c <down>") 'ein:notebook-move-cell-down-command)
-    (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-command)
+    (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
     (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
