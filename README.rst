@@ -137,14 +137,14 @@ Keybinds
    C-c C-c         ein:notebook-execute-current-cell
    C-c C-d         ein:notebook-delete-cell-command
    C-c C-e         ein:notebook-toggle-output-command
-   C-c C-f         ein:notebook-request-tool-tip-command
+   C-c C-f         ein:notebook-request-tool-tip-or-help-command
    C-c TAB         ein:notebook-complete-cell-command
    C-c C-k         ein:notebook-kill-cell-command
-   C-c C-n         ein:notebook-goto-next-cell
+   C-c C-l         ein:notebook-clear-all-output-command
+   C-c C-n         ein:notebook-goto-next-input-command
    C-c C-o         ein:notebook-console-open
-   C-c C-p         ein:notebook-goto-prev-cell
+   C-c C-p         ein:notebook-goto-prev-input-command
    C-c C-q         ein:notebook-kernel-kill-command
-   C-c C-r         ein:notebook-render
    C-c C-s         ein:notebook-split-cell-at-point
    C-c C-t         ein:notebook-toggle-cell-type
    C-c C-v         ein:notebook-set-collapsed-all-command
