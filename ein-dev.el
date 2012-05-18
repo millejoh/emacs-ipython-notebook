@@ -59,9 +59,9 @@
   "Reload ein-*.el modules."
   (interactive)
   (ein:load-files "^ein-.*\\.el$")
-  ;; reset some variables
-  (setq ein:notebook-plain-mode-map ein:notebook-mode-map)
-  (setq ein:notebook-mumamo-mode-map ein:notebook-mode-map))
+  ;; "Sync" variables.
+  (setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
+  (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map)))
 
 (provide 'ein-dev)
 

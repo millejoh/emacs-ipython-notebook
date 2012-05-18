@@ -48,7 +48,8 @@
     ein:mumamo-chunk-rstcell
     )))
 
-(setq ein:notebook-mumamo-mode-map ein:notebook-mode-map)
+;; "Sync" `ein:notebook-mumamo-mode-map' with `ein:notebook-mode-map'.
+(setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
 
 (defmacro ein:mumamo-define-chunk (name)
   (let ((funcname (intern (format "ein:mumamo-chunk-%s" name)))

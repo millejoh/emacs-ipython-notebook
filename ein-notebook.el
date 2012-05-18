@@ -891,7 +891,10 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   "IPython notebook command without fancy coloring."
   (font-lock-mode))
 
-(setq ein:notebook-plain-mode-map ein:notebook-mode-map)
+;; "Sync" `ein:notebook-plain-mode-map' with `ein:notebook-mode-map'.
+;; This way, `ein:notebook-plain-mode-map' automatically changes when
+;; `ein:notebook-mode-map' is changed.
+(setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
 
 (defun ein:notebook-ask-before-kill ()
   "Return `nil' to prevent killing the notebook buffer.
