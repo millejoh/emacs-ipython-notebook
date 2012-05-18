@@ -151,6 +151,8 @@ Keybinds
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
+   C-c <down>      ein:notebook-move-cell-down-command
+   C-c <up>        ein:notebook-move-cell-up-command
 
    C-c M-w         ein:notebook-copy-cell-command
 
