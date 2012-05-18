@@ -209,7 +209,6 @@ the time of execution."
 
 ;;; Cell indexing, retrieval, etc.
 
-
 (defun ein:notebook-cell-from-json (notebook data &rest args)
   (apply #'ein:cell-from-json
          data :ewoc (ein:$notebook-ewoc notebook) args))
