@@ -805,7 +805,6 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 
 (defvar ein:notebook-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-r" 'ein:notebook-render)
     (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
     (define-key map (kbd "M-RET")
       'ein:notebook-execute-current-cell-and-goto-next)
