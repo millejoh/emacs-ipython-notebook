@@ -364,19 +364,30 @@ when the prefix argument is given."
 
 ;;; Cell selection.
 
-(defun ein:notebook-goto-next-cell ()
-  (interactive)
-  (ein:notebook-with-cell nil
-    (ein:aif (ein:cell-next cell)
+(defun ein:notebook-goto-input (ewoc-node up)
+  (let* ((ewoc-data (ewoc-data ewoc-node))
+         (cell (ein:$node-data ewoc-data))
+         (path (ein:$node-path ewoc-data))
+         (element (nth 1 path)))
+    (ein:aif
+        (if (memql element (if up '(input output footer) '(prompt)))
+            cell
+          (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))
         (ein:cell-goto it)
-      (ein:log 'warn "No next cell"))))
+      (ein:log 'warn "No %s input!" (if up "previous" "next")))))
 
-(defun ein:notebook-goto-prev-cell ()
+(defun ein:notebook-goto-input-in-notebook-buffer (up)
+  (ein:aif (ein:notebook-get-current-ewoc-node)
+      (ein:notebook-goto-input it up)
+    (ein:log 'warn "Not in notebook buffer!")))
+
+(defun ein:notebook-goto-next-input-command ()
   (interactive)
-  (ein:notebook-with-cell nil
-    (ein:aif (ein:cell-prev cell)
-        (ein:cell-goto it)
-      (ein:log 'warn "No previous cell"))))
+  (ein:notebook-goto-input-in-notebook-buffer nil))
+
+(defun ein:notebook-goto-prev-input-command ()
+  (interactive)
+  (ein:notebook-goto-input-in-notebook-buffer t))
 
 
 ;;; Cell movement
@@ -809,8 +820,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
     (define-key map "\C-c\C-s" 'ein:notebook-split-cell-at-point)
-    (define-key map "\C-c\C-n" 'ein:notebook-goto-next-cell)
-    (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-cell)
+    (define-key map "\C-c\C-n" 'ein:notebook-goto-next-input-command)
+    (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-input-command)
     (define-key map (kbd "\C-c <up>") 'ein:notebook-move-cell-up-command)
     (define-key map (kbd "\C-c <down>") 'ein:notebook-move-cell-down-command)
     (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-command)

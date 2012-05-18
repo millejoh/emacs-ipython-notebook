@@ -186,12 +186,12 @@
       (ein:cell-goto cell)
       (should (equal (ein:cell-get-text cell) "text")))
     ;; check the "head" cell
-    (ein:notebook-goto-prev-cell)
+    (ein:notebook-goto-prev-input-command)
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
       (should (equal (ein:cell-get-text cell) "some\n")))))
 
-(ert-deftest ein:notebook-goto-next-cell-simple ()
+(ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (loop for i downfrom 2 to 0
           do (ein:notebook-insert-cell-above-command)
@@ -201,10 +201,10 @@
     (loop for i from 0 below 2
           do (beginning-of-line) ; This is required, I need to check why
           do (should (looking-at (format "Cell %s" i)))
-          do (ein:notebook-goto-next-cell)
+          do (ein:notebook-goto-next-input-command)
           do (should (looking-at (format "Cell %s" (1+ i)))))))
 
-(ert-deftest ein:notebook-goto-prev-cell-simple ()
+(ert-deftest ein:notebook-goto-prev-input-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (loop for i from 0 below 3
           do (ein:notebook-insert-cell-below-command)
@@ -214,7 +214,7 @@
     (loop for i downfrom 2 to 1
           do (beginning-of-line) ; This is required, I need to check why
           do (should (looking-at (format "Cell %s" i)))
-          do (ein:notebook-goto-prev-cell)
+          do (ein:notebook-goto-prev-input-command)
           do (should (looking-at (format "Cell %s" (1- i)))))))
 
 (ert-deftest ein:notebook-move-cell-up-command-simple ()
