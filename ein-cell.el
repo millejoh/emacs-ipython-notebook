@@ -21,6 +21,11 @@
 
 ;;; Commentary:
 
+;;  Implementation note.  Current implementation of cell has redundant
+;;  and not-guaranteed-to-be consistent information: `element' and
+;;  `ein:$node'.  This part must be moved to ein-node.el module to
+;;  make it well capsuled.
+
 ;; IPython has cell.js, codecell.js and textcell.js.
 ;; But let's start with one file.
 
