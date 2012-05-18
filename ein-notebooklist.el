@@ -97,6 +97,19 @@
   (interactive)
   (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist) t))
 
+(defun ein:notebooklist-get-data-in-body-tag (key)
+  "Very ad-hoc parser to get data in body tag."
+  (ignore-errors
+    (save-excursion
+      (goto-char (point-min))
+      (search-forward "<body")
+      (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
+      (match-string 1))))
+
+(defun ein:notebooklist-open-notebook (nbist notebook-id &optional name)
+  (message "Open notebook %s." (or name notebook-id))
+  (ein:notebook-open (ein:$notebooklist-url-or-port nbist) notebook-id))
+
 (defun ein:notebooklist-new-notebook (&optional url-or-port)
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
@@ -104,11 +117,16 @@
   (url-retrieve
    (ein:notebooklist-new-url url-or-port)
    (lambda (s buffer)
-     ;; To support opening notebook buffer from here will need parsing
-     ;; HTML file.  Let's just reload notebook list buffer.
-     (with-current-buffer buffer
-       (ein:notebooklist-reload)
-       (message "Creating a new notebook... Done.")))
+     (let ((notebook-id
+            (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
+       (kill-buffer (current-buffer))
+       (message "Creating a new notebook... Done.")
+       (with-current-buffer buffer
+         (if notebook-id
+             (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
+           (message (concat "Oops. EIN failed to open new notebook. "
+                            "Please find it in the notebook list."))
+           (ein:notebooklist-reload)))))
    (list (current-buffer))))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
@@ -159,11 +177,8 @@ Notebook list data is passed via the buffer local variable
                    :notify (lexical-let ((name name)
                                          (notebook-id notebook-id))
                              (lambda (&rest ignore)
-                               (message "Open notebook %s." name)
-                               (ein:notebook-open
-                                (ein:$notebooklist-url-or-port
-                                 ein:notebooklist)
-                                notebook-id)))
+                               (ein:notebooklist-open-notebook
+                                ein:notebooklist notebook-id name)))
                    "Open")
                   (widget-insert " ")
                   (widget-create
