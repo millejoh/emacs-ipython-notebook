@@ -34,7 +34,8 @@
 (defvar ein:mumamo-textcell-mode 'text-mode)
 (defvar ein:mumamo-htmlcell-mode 'html-mode)
 (defvar ein:mumamo-markdowncell-mode 'markdown-mode)
-(defvar ein:mumamo-rstcell-mode 'rst-mode)
+(defvar ein:mumamo-rawcell-mode 'rst-mode)
+(defvar ein:mumamo-headingcell-mode 'text-mode)
 (defvar ein:mumamo-fallback-mode 'text-mode)
 
 (define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
@@ -48,7 +49,8 @@
     ein:mumamo-chunk-textcell
     ein:mumamo-chunk-htmlcell
     ein:mumamo-chunk-markdowncell
-    ein:mumamo-chunk-rstcell
+    ein:mumamo-chunk-rawcell
+    ein:mumamo-chunk-headingcell
     )))
 
 ;; "Sync" `ein:notebook-mumamo-mode-map' with `ein:notebook-mode-map'.
@@ -78,7 +80,8 @@
 (ein:mumamo-define-chunk textcell)
 (ein:mumamo-define-chunk htmlcell)
 (ein:mumamo-define-chunk markdowncell)
-(ein:mumamo-define-chunk rstcell)
+(ein:mumamo-define-chunk rawcell)
+(ein:mumamo-define-chunk headingcell)
 
 (defun ein:mumamo-find-edge (pos max end cell-p)
   "Helper function for `ein:mumamo-chunk-codecell'.
