@@ -388,6 +388,22 @@ argument \(C-u)."
               (delete-char 1)))))
       (ein:cell-set-text new tail))))
 
+(defun ein:notebook-merge-cell-command (&optional prev)
+  "Merge next cell into current cell.
+If prefix is given, merge current cell into previous cell."
+  (interactive "P")
+  (ein:notebook-with-cell nil
+    (when prev
+      (setq cell (ein:cell-prev cell))
+      (ein:cell-goto cell))
+    (let* ((next-cell (ein:cell-next cell))
+           (tail (ein:cell-get-text next-cell))
+           (buffer-undo-list t))        ; disable undo recording
+      (ein:notebook-delete-cell ein:notebook next-cell)
+      (save-excursion
+        (goto-char (1- (ein:cell-location cell :input t)))
+        (insert "\n" tail)))))
+
 
 ;;; Cell selection.
 
@@ -886,6 +902,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
     (define-key map "\C-c\C-s" 'ein:notebook-split-cell-at-point)
+    (define-key map "\C-c\C-m" 'ein:notebook-merge-cell-command)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-input-command)
     (define-key map "\C-c\C-p" 'ein:notebook-goto-prev-input-command)
     (define-key map (kbd "C-c <up>") 'ein:notebook-move-cell-up-command)

@@ -141,6 +141,7 @@ Keybinds
    C-c TAB         ein:notebook-complete-cell-command
    C-c C-k         ein:notebook-kill-cell-command
    C-c C-l         ein:notebook-clear-output-command
+   C-c RET         ein:notebook-merge-cell-command
    C-c C-n         ein:notebook-goto-next-input-command
    C-c C-o         ein:notebook-console-open
    C-c C-p         ein:notebook-goto-prev-input-command
