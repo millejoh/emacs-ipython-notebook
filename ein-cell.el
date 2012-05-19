@@ -87,8 +87,12 @@
 (defclass ein:markdowncell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "markdown")))
 
-(defclass ein:rstcell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "rst")))
+(defclass ein:rawcell (ein:textcell)
+  ((cell-type :initarg :cell-type :initform "raw")))
+
+(defclass ein:headingcell (ein:textcell)
+  ((cell-type :initarg :cell-type :initform "heading")
+   (level :initarg :level :initform 1)))
 
 
 ;;; Cell factory
@@ -99,7 +103,8 @@
     (("text") 'ein:textcell)
     (("html") 'ein:htmlcell)
     (("markdown") 'ein:markdowncell)
-    (("rst") 'ein:rstcell)))
+    (("raw") 'ein:rawcell)
+    (("heading") 'ein:headingcell)))
 
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) "Cell" args))
@@ -121,6 +126,12 @@
 (defmethod ein:cell-init ((cell ein:textcell) data)
   (ein:aif (plist-get data :source)
       (oset cell :input it))
+  cell)
+
+(defmethod ein:cell-init ((cell ein:headingcell) data)
+  (call-next-method)
+  (ein:aif (plist-get data :level)
+      (oset cell :level it))
   cell)
 
 (defmethod ein:cell-convert ((cell ein:basecell) type)
@@ -291,6 +302,10 @@ A specific node can be specified using optional ARGS."
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
    (format "In [%s]:" (oref cell :cell-type))))
+
+(defmethod ein:cell-insert-prompt ((cell ein:headingcell))
+  (ein:insert-read-only
+   (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))))
 
 (defun ein:cell-insert-input (cell)
   ;; Newlines must allow insertion before/after its position.
@@ -586,6 +601,10 @@ If END is non-`nil', return the location of next element."
 (defmethod ein:cell-to-json ((cell ein:textcell))
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
+
+(defmethod ein:cell-to-json ((cell ein:headingcell))
+  (let ((json (call-next-method)))
+    (append json `((level . ,(oref cell :level))))))
 
 (defun ein:cell-next (cell)
   "Return next cell of the given CELL or nil if CELL is the last one."
