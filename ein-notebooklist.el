@@ -30,6 +30,7 @@
 
 (require 'ein-utils)
 (require 'ein-notebook)
+(require 'ein-subpackages)
 
 (defstruct ein:$notebooklist
   "Hold notebooklist variables.
@@ -66,6 +67,7 @@
                           (mapcar (lambda (x) (format "%s" x))
                                   ein:url-or-port))))
   (unless url-or-port (setq url-or-port (or (car ein:url-or-port) 8888)))
+  (ein:subpackages-load)
   (when (and (stringp url-or-port)
              (string-match "^[0-9]+$" url-or-port))
     (setq url-or-port (string-to-number url-or-port)))

@@ -43,6 +43,14 @@
       ("<down>" . ein:notebook-move-cell-down-command)
       )))
 
+
+(defvar ein:smartrep-config-once-called nil)
+
+(defun ein:smartrep-config-once ()
+  (unless ein:smartrep-config-once-called
+    (setq ein:smartrep-config-once-called t)
+    (ein:smartrep-config)))
+
 (provide 'ein-smartrep)
 
 ;;; ein-smartrep.el ends here

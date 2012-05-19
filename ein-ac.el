@@ -111,6 +111,14 @@ Specifying non-`nil' to SUPERPACK enables dotty auto completion
 ;;    because `ac-sources' in `ein:notebook-mumamo-mode'-enabled
 ;;    buffer is *chunk local*, rather than buffer local.
 
+
+(defvar ein:ac-config-once-called nil)
+
+(defun ein:ac-config-once (&optional superpack)
+  (unless ein:ac-config-once-called
+    (setq ein:ac-config-once-called t)
+    (ein:ac-config superpack)))
+
 (provide 'ein-ac)
 
 ;;; ein-ac.el ends here

@@ -100,17 +100,15 @@ Usage
 Subpackages
 -----------
 
-Enable auto-complete::
+Enable `auto-complete.el`_::
 
-   (require 'ein-ac)
-   (ein:ac-config)
+   (setq ein:use-auto-complete t)
    ;; Or, to enable "superpack" (a little bit hacky improvements):
-   ;; (ein:ac-config t)
+   ;; (setq ein:use-auto-complete-superpack t)
 
 Enable `smartrep.el`_::
 
-   (require 'ein-smartrep)
-   (ein:smartrep-config)
+   (setq ein:use-smartrep t)
 
 
 Keybinds
