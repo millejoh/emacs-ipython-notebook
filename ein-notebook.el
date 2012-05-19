@@ -363,8 +363,11 @@ when the prefix argument is given."
       (ein:cell-convert-inplace cell type)
       (ein:cell-goto cell))))
 
-(defun ein:notebook-split-cell-at-point ()
-  (interactive)
+(defun ein:notebook-split-cell-at-point (&optional no-trim)
+  "Split cell at current position. Newlines at the splitting
+point will be removed. This can be omitted by giving a prefix
+argument \(C-u)."
+  (interactive "P")
   (ein:notebook-with-cell nil
     ;; FIXME: should I inhibit undo?
     (let* ((end (ein:cell-input-pos-max cell))
@@ -374,6 +377,14 @@ when the prefix argument is given."
                                                 (oref cell :cell-type)
                                                 cell)))
       (delete-region pos end)
+      (unless no-trim
+        (ein:trim-left tail "\n")
+        (save-excursion
+          (goto-char pos)
+          (ignore-errors
+            (while t
+              (search-backward-regexp "\n\\=")
+              (delete-char 1)))))
       (ein:cell-set-text new tail))))
 
 

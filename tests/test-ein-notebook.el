@@ -189,7 +189,7 @@
     (ein:notebook-goto-prev-input-command)
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
-      (should (equal (ein:cell-get-text cell) "some\n")))))
+      (should (equal (ein:cell-get-text cell) "some")))))
 
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
