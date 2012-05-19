@@ -395,6 +395,7 @@ If prefix is given, merge current cell into previous cell."
   (ein:notebook-with-cell nil
     (when prev
       (setq cell (ein:cell-prev cell))
+      (unless cell (error "No previous cell"))
       (ein:cell-goto cell))
     (let* ((next-cell (ein:cell-next cell))
            (tail (ein:cell-get-text next-cell))
