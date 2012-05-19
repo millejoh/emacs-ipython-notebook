@@ -917,6 +917,14 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 ;; `ein:notebook-mode-map' is changed.
 (setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
 
+(defun ein:notebook-open-in-browser ()
+  "Open current notebook in web browser."
+  (interactive)
+  (let ((url (ein:url (ein:$notebook-url-or-port ein:notebook)
+                      (ein:$notebook-notebook-id ein:notebook))))
+    (message "Opening %s in browser" url)
+    (browse-url url)))
+
 (defun ein:notebook-ask-before-kill ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
