@@ -42,6 +42,8 @@
 (defvar ein:log-level 30)
 (defvar ein:log-message-level 20)
 
+(defvar ein:log-print-level 1 "`print-level' for `ein:log'")
+(defvar ein:log-print-length 10 "`print-length' for `ein:log'")
 (defvar ein:log-max-string 1000)
 
 
@@ -64,6 +66,8 @@
   (setq level (ein:log-level-name-to-int level))
   (when (<= level ein:log-level)
     (let* ((levname (ein:log-level-int-to-name level))
+           (print-level ein:log-print-level)
+           (print-length ein:log-print-length)
            (msg (format "[%s] %s"  levname (funcall func)))
            (orig-buffer (current-buffer)))
       (if (and ein:log-max-string
