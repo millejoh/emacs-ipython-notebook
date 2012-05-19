@@ -625,6 +625,7 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-convert-mime-types (json data)
   (loop for (prop . mime) in '((:text       . :text/plain)
                                (:html       . :text/html)
+                               (:svg        . :image/svg+xml)
                                (:png        . :image/png)
                                (:jpeg       . :image/jpeg)
                                (:latex      . :text/latex)
