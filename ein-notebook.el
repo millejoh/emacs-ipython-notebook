@@ -939,7 +939,7 @@ Called via `kill-buffer-query-functions'."
 
 ;;; Console integration
 
-(defvar ein:notebook-console-security-dir ""
+(defcustom ein:notebook-console-security-dir ""
   "Security directory setting.
 
 Following type is accepted:
@@ -951,13 +951,41 @@ alist    : An alist whose element is \"(URL-OR-PORT . DIR)\".
            other key does not much.  Normally you should have this
            entry.
 function : Called with an argument URL-OR-PORT (integer or string).
-           You can have complex setting using this.")
+           You can have complex setting using this."
+  :type '(choice
+          (string :tag "Security directory"
+                  "~/.config/ipython/profile_nbserver/security/")
+          (alist :tag "Security directory mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (string :tag "Security directory"))
+          (function :tag "Security directory getter"
+                    (lambda (url-or-port)
+                      (format "~/.config/ipython/profile_%s/security/"
+                              url-or-port))))
+  :group 'ein)
 
-(defvar ein:notebook-console-args "--profile nbserver"
+(defcustom ein:notebook-console-args "--profile nbserver"
   "Additional argument when using console.
-Example: \"--ssh HOSTNAME\"
 
-Types same as `ein:notebook-console-security-dir' are accepted.")
+Example: \"--ssh HOSTNAME\"
+Types same as `ein:notebook-console-security-dir' are accepted."
+  :type '(choice
+          (string :tag "Arguments to IPython"
+                  "--profile nbserver --ssh HOSTNAME")
+          (alist :tag "Arguments mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (string :tag "Arguments to IPython"
+                                     "--profile nbserver --ssh HOSTNAME"))
+          (function :tag "Additional arguments getter"
+                    (lambda (url-or-port)
+                      (format "--ssh %s" url-or-port))))
+  :group 'ein)
 
 (defun ein:notebook-console-security-dir-get (notebook)
   (let ((dir (ein:choose-setting 'ein:notebook-console-security-dir
