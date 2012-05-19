@@ -929,15 +929,36 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (message "Opening %s in browser" url)
     (browse-url url)))
 
-(defun ein:notebook-ask-before-kill ()
+(defun ein:notebook-modified-p (&optional buffer)
+  (with-current-buffer (or buffer (current-buffer))
+    (and (ein:$notebook-p ein:notebook)
+         (or (ein:$notebook-dirty ein:notebook)
+             (buffer-modified-p)))))
+
+(defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
-  (not (and (ein:$notebook-p ein:notebook)
-            (or (ein:$notebook-dirty ein:notebook)
-                (buffer-modified-p))
+  (not (and (ein:notebook-modified-p)
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
-(add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
+(add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
+
+(defun ein:notebook-ask-before-kill-emacs ()
+  "Return `nil' to prevent killing Emacs when unsaved notebook exists.
+Called via `kill-emacs-query-functions'."
+  (let (unsaved)
+    (maphash
+     (lambda (key buffer)
+       (when (ein:notebook-modified-p buffer)
+         (push buffer unsaved)))
+     ein:notebook-opened-map)
+    (if (null unsaved)
+        t
+      (not (y-or-n-p
+            (format "You have %s unsaved notebook(s). Discard changes?"
+                    (length unsaved)))))))
+
+(add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
