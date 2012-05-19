@@ -37,10 +37,13 @@
 (defvar ein:mumamo-rstcell-mode 'rst-mode)
 (defvar ein:mumamo-fallback-mode 'text-mode)
 
+(define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
+  "Background mode for `ein:notebook-mumamo-mode'."
+  (font-lock-mode))
 
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
   "IPython notebook mode."
-  ("IPython notebook familiy" ein:notebook-plain-mode
+  ("IPython notebook familiy" ein:notebook-bg-mode
    (ein:mumamo-chunk-codecell
     ein:mumamo-chunk-textcell
     ein:mumamo-chunk-htmlcell
