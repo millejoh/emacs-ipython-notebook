@@ -246,7 +246,7 @@ A specific node can be specified using optional ARGS."
                    collect (funcall make-node 'output i))
      :footer (funcall make-node 'footer))))
 
-(defun ein:cell-enter-last (cell)
+(defmethod ein:cell-enter-last ((cell ein:basecell))
   (let* ((ewoc (oref cell :ewoc))
          ;; Use `cell' as data for ewoc.  Use the whole cell data even
          ;; if it is not used, to access it from the notebook buffer.
@@ -260,7 +260,7 @@ A specific node can be specified using optional ARGS."
     (oset cell :element element)
     cell))
 
-(defun ein:cell-enter-first (cell)
+(defmethod ein:cell-enter-first ((cell ein:basecell))
   (let* ((ewoc (oref cell :ewoc))
          (node nil)
          (make-node
@@ -275,7 +275,7 @@ A specific node can be specified using optional ARGS."
     (oset cell :element element)
     cell))
 
-(defun ein:cell-insert-below (base-cell other-cell)
+(defmethod ein:cell-insert-below ((base-cell ein:basecell) other-cell)
   (let* ((ewoc (oref base-cell :ewoc))
          (node (ein:cell-element-get base-cell :footer))
          (make-node
@@ -307,7 +307,7 @@ A specific node can be specified using optional ARGS."
   (ein:insert-read-only
    (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))))
 
-(defun ein:cell-insert-input (cell)
+(defmethod ein:cell-insert-input ((cell ein:basecell))
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
           (or (ein:oref-safe cell :input) "")
@@ -359,13 +359,13 @@ A specific node can be specified using optional ARGS."
     ;; 1- for skipping newline
     (1- (ewoc-location (ewoc-next ewoc input-node)))))
 
-(defun ein:cell-get-text (cell)
+(defmethod ein:cell-get-text ((cell ein:basecell))
   "Grab text in the input area of the cell at point."
   (let* ((beg (ein:cell-input-pos-min cell))
          (end (ein:cell-input-pos-max cell)))
     (buffer-substring beg end)))
 
-(defun ein:cell-set-text (cell text)
+(defmethod ein:cell-set-text ((cell ein:basecell) text)
   (let* ((input-node (ein:cell-element-get cell :input))
          (ewoc (oref cell :ewoc))
            ;; 1+/1- is for skipping newline
@@ -387,7 +387,7 @@ A specific node can be specified using optional ARGS."
 (defmethod ein:cell-active-p ((cell ein:basecell))
   (oref cell :element))
 
-(defun ein:cell-running-set (cell running)
+(defmethod ein:cell-running-set ((cell ein:codecell) running)
   ;; FIXME: change the appearance of the cell
   (oset cell :running running))
 
@@ -402,7 +402,7 @@ A specific node can be specified using optional ARGS."
   "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (ein:cell-set-collapsed cell (not (oref cell :collapsed))))
 
-(defun ein:cell-set-input-prompt (cell &optional number)
+(defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
   (oset cell :input-prompt-number number)
   (let ((inhibit-read-only t)
         (buffer-undo-list t))           ; disable undo recording
@@ -430,7 +430,7 @@ A specific node can be specified using optional ARGS."
      (t (when (stringp defstring)
           (message (ein:trim (ansi-color-apply defstring))))))))
 
-(defun ein:cell-goto (cell)
+(defmethod ein:cell-goto ((cell ein:basecell))
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
   ;; Skip the newline
   (forward-char))
@@ -457,7 +457,7 @@ If END is non-`nil', return the location of next element."
 
 ;; Data manipulation
 
-(defun ein:cell-clear-output (cell stdout stderr other)
+(defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
   ;; codecell.js in IPytohn implements it using timeout and callback.
   ;; As it is unclear why timeout is needed, just clear output
   ;; instantaneously for now.
@@ -509,7 +509,7 @@ If END is non-`nil', return the location of next element."
      (list 'ouput-stream 'ouput-subarea
            (intern (format "ouput-%s" (plist-get json :stream)))))))
 
-(defun ein:cell-append-output (cell json dynamic)
+(defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
   ;; (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (oset cell :outputs
@@ -528,18 +528,18 @@ If END is non-`nil', return the location of next element."
     (plist-put element :output
                (append (plist-get element :output) (list ewoc-node)))))
 
-(defun ein:cell-append-pyout (cell json dynamic)
+(defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
   (ein:insert-read-only (format "Out [%s]:\n"
                                 (or (plist-get json :prompt_number) " ")))
   (ein:cell-append-mime-type json dynamic))
 
-(defun ein:cell-append-pyerr (cell json)
+(defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
         (plist-get json :traceback)))
 
-(defun ein:cell-append-stream (cell json)
+(defmethod ein:cell-append-stream ((cell ein:codecell) json)
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
   ;; FIXME: IPython codecell.js does something more complex than this.
@@ -561,7 +561,7 @@ If END is non-`nil', return the location of next element."
   ;;     (ein:insert-read-only (plist-get json :text))))
   )
 
-(defun ein:cell-append-display-data (cell json dynamic)
+(defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
   (ein:cell-append-mime-type json dynamic))
 
 (defun ein:cell-append-mime-type (json dynamic)
@@ -606,7 +606,7 @@ If END is non-`nil', return the location of next element."
   (let ((json (call-next-method)))
     (append json `((level . ,(oref cell :level))))))
 
-(defun ein:cell-next (cell)
+(defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
   (ein:aif (ewoc-next (oref cell :ewoc)
                       (ein:cell-element-get cell :footer))
@@ -614,7 +614,7 @@ If END is non-`nil', return the location of next element."
         (when (ein:basecell-child-p cell)
           cell))))
 
-(defun ein:cell-prev (cell)
+(defmethod ein:cell-prev ((cell ein:basecell))
   "Return previous cell of the given CELL or nil if CELL is the first one."
   (ein:aif (ewoc-prev (oref cell :ewoc)
                       (ein:cell-element-get cell :prompt))
