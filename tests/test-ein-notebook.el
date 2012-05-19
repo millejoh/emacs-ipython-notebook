@@ -208,6 +208,26 @@
   (eintest:notebook-split-cell-at-point
    "some\ntext" "\ntext" "some" "\ntext" t))
 
+(ert-deftest ein:notebook-merge-cell-command-simple ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-above-command)
+    (insert "Cell 1")
+    (ein:notebook-insert-cell-above-command)
+    (insert "Cell 0")
+    (ein:notebook-merge-cell-command)
+    (ein:cell-goto (ein:notebook-get-current-cell))
+    (should (looking-at "Cell 0\nCell 1"))))
+
+(ert-deftest ein:notebook-merge-cell-command-prev ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (insert "Cell 0")
+    (ein:notebook-insert-cell-below-command)
+    (insert "Cell 1")
+    (ein:notebook-merge-cell-command t)
+    (ein:cell-goto (ein:notebook-get-current-cell))
+    (should (looking-at "Cell 0\nCell 1"))))
+
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (loop for i downfrom 2 to 0
