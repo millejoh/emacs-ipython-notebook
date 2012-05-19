@@ -57,11 +57,18 @@
     (should (ein:markdowncell-p cell))
     (should (equal (oref cell :input) input))))
 
-(ert-deftest ein:cell-from-json-rst ()
+(ert-deftest ein:cell-from-json-raw ()
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
-         (data (list :cell_type "rst" :source input))
+         (data (list :cell_type "raw" :source input))
          (cell (eintest:cell-from-json data)))
-    (should (ein:rstcell-p cell))
+    (should (ein:rawcell-p cell))
+    (should (equal (oref cell :input) input))))
+
+(ert-deftest ein:cell-from-json-heading ()
+  (let* ((input (ein:join-str "\n" '("first input" "second input")))
+         (data (list :cell_type "heading" :source input))
+         (cell (eintest:cell-from-json data)))
+    (should (ein:headingcell-p cell))
     (should (equal (oref cell :input) input))))
 
 
@@ -115,7 +122,7 @@
     (should (equal (oref new :input) input))))
 
 (ert-deftest ein:cell-copy-text-types ()
-  (loop for cell-type in '("text" "html" "markdown" "rst")
+  (loop for cell-type in '("text" "html" "markdown" "raw" "heading")
         for cell-p = (intern (format "ein:%scell-p" cell-type))
         do
         (let* ((input (ein:join-str "\n" '("first input" "second input")))

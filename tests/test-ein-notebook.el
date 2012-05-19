@@ -153,7 +153,8 @@
       (should (equal (ein:notebook-ncells ein:notebook) 1))
       (ein:notebook-kill-cell-command)
       (should (equal (ein:notebook-ncells ein:notebook) 0))
-      (flet ((y-or-n-p (&rest ignore) t))
+      (flet ((y-or-n-p (&rest ignore) t)
+             (ein:notebook-del (&rest ignore)))
         ;; FIXME: are there anyway to skip confirmation?
         (kill-buffer)))
     (with-current-buffer (eintest:notebook-make-empty "NB2")
