@@ -412,7 +412,8 @@ A specific node can be specified using optional ARGS."
       (funcall 'pos-tip-show tooltip))
      ((fboundp 'popup-tip)
       (funcall 'popup-tip tooltip))
-     (t (message "%s" defstring)))))
+     (t (when (stringp defstring)
+          (message (ein:trim (ansi-color-apply defstring))))))))
 
 (defun ein:cell-goto (cell)
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
