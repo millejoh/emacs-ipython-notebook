@@ -378,7 +378,7 @@ argument \(C-u)."
                                                 cell)))
       (delete-region pos end)
       (unless no-trim
-        (ein:trim-left tail "\n")
+        (setq tail (ein:trim-left tail "\n"))
         (save-excursion
           (goto-char pos)
           (ignore-errors

@@ -174,22 +174,39 @@
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
     (should (looking-at "some text"))))
 
-(ert-deftest ein:notebook-split-cell-at-point-simple ()
+(defun eintest:notebook-split-cell-at-point
+  (insert-text search-text head-text tail-text &optional no-trim)
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
-    (insert "some\ntext")
-    (search-backward "text")
+    (insert insert-text)
+    (search-backward search-text)
     ;; do it
-    (ein:notebook-split-cell-at-point)
+    (ein:notebook-split-cell-at-point no-trim)
     ;; check the "tail" cell
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
-      (should (equal (ein:cell-get-text cell) "text")))
+      (should (equal (ein:cell-get-text cell) tail-text)))
     ;; check the "head" cell
     (ein:notebook-goto-prev-input-command)
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
-      (should (equal (ein:cell-get-text cell) "some")))))
+      (should (equal (ein:cell-get-text cell) head-text)))))
+
+(ert-deftest ein:notebook-split-cell-at-point-before-newline ()
+  (eintest:notebook-split-cell-at-point
+   "some\ntext" "text" "some" "text"))
+
+(ert-deftest ein:notebook-split-cell-at-point-after-newline ()
+  (eintest:notebook-split-cell-at-point
+   "some\ntext" "\ntext" "some" "text"))
+
+(ert-deftest ein:notebook-split-cell-at-point-before-newline-no-trim ()
+  (eintest:notebook-split-cell-at-point
+   "some\ntext" "text" "some\n" "text" t))
+
+(ert-deftest ein:notebook-split-cell-at-point-after-newline-no-trim ()
+  (eintest:notebook-split-cell-at-point
+   "some\ntext" "\ntext" "some" "\ntext" t))
 
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
