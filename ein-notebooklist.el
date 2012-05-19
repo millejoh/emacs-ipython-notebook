@@ -170,6 +170,13 @@ Notebook list data is passed via the buffer local variable
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-reload))
    "Reload List")
+  (widget-insert " ")
+  (widget-create
+   'link
+   :notify (lambda (&rest ignore)
+             (browse-url
+              (ein:url (ein:$notebooklist-url-or-port ein:notebooklist))))
+   "Open In Browser")
   (widget-insert "\n")
   (loop for note in (ein:$notebooklist-data ein:notebooklist)
         for name = (plist-get note :name)
