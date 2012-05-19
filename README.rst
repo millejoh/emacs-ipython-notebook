@@ -48,7 +48,8 @@ More to come/ideas:
 Requirements
 ============
 
-* IPython_ **0.12.1**: EIN won't work with older versions.
+* IPython_ **0.12.1** (or developmental version):
+  EIN won't work with older versions.
 * `websocket.el`_
 * (optional) mumamo_:
   It will be automatically loaded when it is on the path.
