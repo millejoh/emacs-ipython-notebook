@@ -101,18 +101,6 @@
 (ein:deflocal ein:notebook nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
-;; FIMXE: Using buffer local variable directly is not good design.
-;;        Remove ein:@notebook macro later
-(defmacro ein:@notebook (slot)
-  "Quick access to buffer local notebook attributes \(slot of `ein:$notebook').
-
-The following two lines are equivalent:
-  (ein:@notebook SLOT)
-  (ein:$notebook-SLOT ein:notebook)
-Note that SLOT should not be quoted."
-  (let ((accessor (intern (format "ein:$notebook-%s" slot))))
-    `(,accessor ein:notebook)))
-
 (defmacro ein:notebook-with-cell (cell-p &rest body)
   "Execute BODY if in cell with a dynamically bound variable `cell'.
 When CELL-P is non-`nil', it is called with the current cell object
@@ -210,11 +198,11 @@ the time of execution."
   "(Re-)Render the notebook."
   (interactive)
   (assert ein:notebook)  ; make sure in a notebook buffer
-  (ein:notebook-from-json ein:notebook (ein:@notebook data))
+  (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
   (ein:notebook-start-kernel)
-  (ein:log 'info "Notebook %s is ready" (ein:@notebook notebook-id)))
+  (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-id ein:notebook)))
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
@@ -508,10 +496,10 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
-  (let ((kernel (ein:kernel-new (ein:@notebook url-or-port))))
-    (setf (ein:@notebook kernel) kernel)
+  (let ((kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook))))
+    (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernel-start kernel
-                      (ein:@notebook notebook-id)
+                      (ein:$notebook-notebook-id ein:notebook)
                       #'ein:notebook-kernel-started
                       (list ein:notebook))))
 
@@ -655,7 +643,7 @@ Do not clear input prompts when the prefix argument is given."
                                   (funcall cell-p
                                            (ein:cell-from-ewoc-node ewoc-node))
                                 t))))
-          (setq ewoc-node (ewoc-next (ein:@notebook ewoc) ewoc-node)))
+          (setq ewoc-node (ewoc-next (ein:$notebook-ewoc ein:notebook) ewoc-node)))
         ewoc-node)))
 
 (defun ein:notebook-get-current-cell (&optional pos)
@@ -679,9 +667,9 @@ Do not clear input prompts when the prefix argument is given."
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:@notebook kernel)
+    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (ein:notebook-execute-cell ein:notebook cell)
-      (setf (ein:@notebook dirty) t)
+      (setf (ein:$notebook-dirty ein:notebook) t)
       cell)))
 
 (defun ein:notebook-execute-current-cell-and-goto-next ()
@@ -712,7 +700,7 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-request-tool-tip-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:@notebook kernel)
+    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (let ((func (ein:object-at-point)))
         (ein:notebook-request-tool-tip ein:notebook cell func)))))
 
@@ -734,12 +722,12 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
                                      line-string rel-pos)))
-    (puthash msg-id (oref cell :cell-id) (ein:@notebook msg-cell-map))))
+    (puthash msg-id (oref cell :cell-id) (ein:$notebook-msg-cell-map ein:notebook))))
 
 (defun ein:notebook-complete-cell-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:@notebook kernel)
+    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (ein:notebook-complete-cell ein:notebook
                                   cell
                                   (thing-at-point 'line)
