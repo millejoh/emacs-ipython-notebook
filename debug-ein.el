@@ -77,14 +77,16 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (interactive)
   (pop-to-buffer
    (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-shell-channel (ein:@notebook kernel))))))
+    (ein:$websocket-ws (ein:$kernel-shell-channel
+                        (ein:$notebook-kernel ein:notebook))))))
 
 (defun eintest-pop-to-debug-iopub ()
   "Open iopub challen websocket log buffer."
   (interactive)
   (pop-to-buffer
    (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-iopub-channel (ein:@notebook kernel))))))
+    (ein:$websocket-ws (ein:$kernel-iopub-channel
+                        (ein:$notebook-kernel ein:notebook))))))
 
 (defun eintest-notebook-plain-mode ()
   "Use `ein:notebook-plain-mode'."
