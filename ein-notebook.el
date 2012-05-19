@@ -202,7 +202,8 @@ the time of execution."
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
   (ein:notebook-start-kernel)
-  (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-id ein:notebook)))
+  (ein:log 'info "Notebook %s is ready"
+           (ein:$notebook-notebook-name ein:notebook)))
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
@@ -643,7 +644,8 @@ Do not clear input prompts when the prefix argument is given."
                                   (funcall cell-p
                                            (ein:cell-from-ewoc-node ewoc-node))
                                 t))))
-          (setq ewoc-node (ewoc-next (ein:$notebook-ewoc ein:notebook) ewoc-node)))
+          (setq ewoc-node (ewoc-next (ein:$notebook-ewoc ein:notebook)
+                                     ewoc-node)))
         ewoc-node)))
 
 (defun ein:notebook-get-current-cell (&optional pos)
@@ -722,7 +724,8 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
   (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
                                      line-string rel-pos)))
-    (puthash msg-id (oref cell :cell-id) (ein:$notebook-msg-cell-map ein:notebook))))
+    (puthash msg-id (oref cell :cell-id)
+             (ein:$notebook-msg-cell-map notebook))))
 
 (defun ein:notebook-complete-cell-command ()
   (interactive)
