@@ -68,6 +68,11 @@ FIXME: document other slots."
    :session-id (ein:utils-uuid)))
 
 
+(defun ein:kernel-del (kernel)
+  "Destructor for `ein:$kernel'."
+  (ein:kernel-stop-channels kernel))
+
+
 (defun ein:kernel-get-msg (kernel msg-type content)
   (list
    :header (list

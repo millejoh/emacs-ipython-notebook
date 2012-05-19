@@ -134,6 +134,10 @@ is `nil', BODY is executed with any cell types."
                  (ein:$notebook-url-or-port notebook)
                  (ein:$notebook-notebook-name notebook)))))
 
+(defun ein:notebook-del (notebook)
+  "Destructor for `ein:$notebook'."
+  (ein:kernel-del (ein:$notebook-kernel notebook)))
+
 (defun ein:notebook-get-buffer-name (notebook)
   (format ein:notebook-buffer-name-template
           (ein:$notebook-url-or-port notebook)
@@ -934,6 +938,17 @@ Called via `kill-buffer-query-functions'."
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill)
+
+(defun ein:notebook-kill-buffer-callback ()
+  "Call notebook destructor.  This function is called via `kill-buffer-hook'."
+  (when (ein:$notebook-p ein:notebook)
+    (ein:notebook-del ein:notebook)))
+
+(defun ein:notebook-setup-kill-buffer-hook ()
+  "Add \"notebook destructor\" to `kill-buffer-hook'."
+  (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback))
+
+(add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 
 
 ;;; Console integration

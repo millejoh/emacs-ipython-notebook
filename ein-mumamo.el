@@ -51,6 +51,8 @@
 ;; "Sync" `ein:notebook-mumamo-mode-map' with `ein:notebook-mode-map'.
 (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
 
+(add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
+
 (defmacro ein:mumamo-define-chunk (name)
   (let ((funcname (intern (format "ein:mumamo-chunk-%s" name)))
         (mode (intern (format "ein:mumamo-%s-mode" name)))
