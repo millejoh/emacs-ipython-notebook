@@ -28,8 +28,19 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 
-(defvar ein:url-or-port '(8888)
-  "List of possible url-or-port values.")
+(defgroup ein nil
+  "IPython notebook client in Emacs"
+  :group 'applications
+  :prefix "ein:")
+
+(defcustom ein:url-or-port '(8888)
+  "List of default url-or-port values.
+This will be used for completion. So put your IPython servers.
+You can connect to servers not in this list \(but you will need
+to type every time)."
+  :type '(repeat (choice (integer :tag "Port number" 8888)
+                         (string :tag "URL" "http://127.0.0.1:8888")))
+  :group 'ein)
 
 
 (defmacro ein:aif (test-form then-form &rest else-forms)
