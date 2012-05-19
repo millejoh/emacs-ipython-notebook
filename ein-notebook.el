@@ -301,6 +301,7 @@ the time of execution."
     (ein:notebook-cell-from-type notebook type-or-cell)))
 
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
+  "Insert a cell just after BASE-CELL and return the new cell."
   (let ((cell (ein:notebook-maybe-new-cell notebook type-or-cell)))
     (when cell
       (cond

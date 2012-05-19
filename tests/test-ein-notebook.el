@@ -353,3 +353,6 @@
          '(lambda (x) (should (equal x "DUMMY-URL-OR-PORT")) "/dir/"))
         (notebook (ein:notebook-new "DUMMY-URL-OR-PORT" "DUMMY-NOTEBOOK-ID")))
     (should (equal (ein:notebook-console-security-dir-get notebook) "/dir/"))))
+
+
+(provide 'test-ein-notebook)

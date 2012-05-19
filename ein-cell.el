@@ -419,6 +419,25 @@ A specific node can be specified using optional ARGS."
   ;; Skip the newline
   (forward-char))
 
+(defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
+  "Return the starting location of CELL.
+ELM is a name (keyword) of element in the `:element-names' slot of CELL.
+If END is non-`nil', return the location of next element."
+  (unless elm (setq elm :prompt))
+  (let ((element (oref cell :element)))
+    (when end
+      (setq elm (case elm
+                  (:prompt :input)
+                  (:input :after-input)
+                  (:output :after-output)))
+      (unless elm
+        (setq cell (ein:cell-next cell))
+        (setq elm :prompt)))
+    (if cell
+        (ewoc-location (ein:cell-element-get cell elm))
+      (assert end)
+      (point-max))))
+
 
 ;; Data manipulation
 
