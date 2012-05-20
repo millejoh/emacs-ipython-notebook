@@ -56,7 +56,7 @@ The new cell is bound to a variable `cell'."
                    (1+ (point))))))
 
 
-;; Cell outputs
+;; Insert pyout
 
 (ert-deftest ein:cell-insert-output-pyout-text ()
   (eintest:with-one-cell
@@ -150,6 +150,33 @@ some input
 Out \\[222\\]:
 some output text
 "))))
+
+
+;; Insert pyerr
+
+(ert-deftest ein:cell-insert-output-pyerr-simple ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :outputs (list (list :output_type "pyerr"
+                                  :traceback '("some traceback 1"
+                                               "some traceback 2")))
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+some traceback 1
+some traceback 2
+"))))
+
+
+;; Insert display_data
+
+
+;; Insert stream
 
 (ert-deftest ein:cell-insert-output-stream-simple-stdout ()
   (eintest:with-one-cell
