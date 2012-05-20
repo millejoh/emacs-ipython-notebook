@@ -931,10 +931,12 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (browse-url url)))
 
 (defun ein:notebook-modified-p (&optional buffer)
-  (with-current-buffer (or buffer (current-buffer))
-    (and (ein:$notebook-p ein:notebook)
-         (or (ein:$notebook-dirty ein:notebook)
-             (buffer-modified-p)))))
+  (unless (setq buffer (current-buffer)))
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (and (ein:$notebook-p ein:notebook)
+           (or (ein:$notebook-dirty ein:notebook)
+               (buffer-modified-p))))))
 
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
