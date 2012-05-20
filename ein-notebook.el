@@ -931,7 +931,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
     (browse-url url)))
 
 (defun ein:notebook-modified-p (&optional buffer)
-  (unless (setq buffer (current-buffer)))
+  (unless buffer (setq buffer (current-buffer)))
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (and (ein:$notebook-p ein:notebook)
@@ -957,9 +957,9 @@ Called via `kill-emacs-query-functions'."
      ein:notebook-opened-map)
     (if (null unsaved)
         t
-      (not (y-or-n-p
-            (format "You have %s unsaved notebook(s). Discard changes?"
-                    (length unsaved)))))))
+      (y-or-n-p
+       (format "You have %s unsaved notebook(s). Discard changes?"
+               (length unsaved))))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 

@@ -57,10 +57,13 @@
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
 
-(defun eintest:notebook-make-empty (&optional name)
+(defun eintest:notebook-make-empty (&optional name notebook-id)
   "Make empty notebook and return its buffer."
   (eintest:notebook-from-json
-   (json-encode (eintest:notebook-make-data nil name))))
+   (json-encode (eintest:notebook-make-data nil name)) notebook-id))
+
+(defun eintest:notebook-enable-mode (buffer)
+  (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
 
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
@@ -330,6 +333,30 @@
         (should (search-forward "print 'Hello World'" nil t))
         (should (search-forward "Hello World" nil t)) ; stream output
         (should-not (search-forward "Hello World" nil t))))))
+
+(ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
+  (let ((ein:notebook-opened-map (make-hash-table :test 'equal)))
+    (should (ein:notebook-ask-before-kill-emacs))
+    (with-current-buffer
+        (eintest:notebook-enable-mode
+         (eintest:notebook-make-empty "Modified Notebook" "NOTEBOOK-ID-1"))
+      (ein:notebook-insert-cell-below-command)
+      (should (ein:notebook-modified-p)))
+    (with-current-buffer
+        (eintest:notebook-enable-mode
+         (eintest:notebook-make-empty "Unmodified Notebook" "NOTEBOOK-ID-2"))
+      (should-not (ein:notebook-modified-p)))
+    (flet ((y-or-n-p (&rest ignore) t)
+           (ein:notebook-del (&rest ignore)))
+      (kill-buffer
+       (eintest:notebook-enable-mode
+        (eintest:notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
+    (should (= (hash-table-count ein:notebook-opened-map) 3))
+    (mocker-let ((y-or-n-p
+                  (prompt)
+                  ((:input '("You have 1 unsaved notebook(s). Discard changes?")
+                           :output t))))
+      (should (ein:notebook-ask-before-kill-emacs)))))
 
 
 ;; Misc unit tests
