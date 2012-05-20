@@ -356,7 +356,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
             (if (equal (plist-get last-out :stream) "stderr")
-                (ein:cell-append-text "\n" 'face 'ein:cell-output-stderr)
+                (ein:cell-append-text "\n"
+                                      'font-lock-face 'ein:cell-output-stderr)
               (ein:insert-read-only "\n")))))
       ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
@@ -374,7 +375,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (let ((last-out (car (last (oref cell :outputs)))))
     (when (equal (plist-get last-out :output_type) "stream")
       (if (equal (plist-get last-out :stream) "stderr")
-          (ein:cell-append-text "\n" 'face 'ein:cell-output-stderr)
+          (ein:cell-append-text "\n" 'font-lock-face 'ein:cell-output-stderr)
         (ein:insert-read-only "\n"))))
   (call-next-method))
 
@@ -598,7 +599,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (plist-put json :stream "stdout"))
   (if (equal (plist-get json :stream) "stderr")
       (ein:cell-append-text (plist-get json :text)
-                          'face 'ein:cell-output-stderr)
+                          'font-lock-face 'ein:cell-output-stderr)
     (ein:cell-append-text (plist-get json :text)))
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
