@@ -163,8 +163,7 @@ some stderr 1
                :stream "stdout"
                :text "some stdout 2"))
    "\
-some stdout 1
-some stdout 2
+some stdout 1some stdout 2
 "))
 
 (ert-deftest ein:cell-insert-output-stream-flushed-stdout-and-stderr ()

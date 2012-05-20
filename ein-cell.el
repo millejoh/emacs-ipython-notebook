@@ -329,6 +329,22 @@ Called from ewoc pretty printer via `ein:cell-pp'."
           (ein:insert-read-only "\n")))
     (let ((out (nth index (oref cell :outputs)))
           (dynamic ein:cell-output-dynamic))
+      ;; Handle newline for stream.
+      ;; In IPython JS, it is handled in `append_stream' because JS
+      ;; does not need to care about newline (DOM does it for JS).
+      ;; FIXME: Maybe I should abstract ewoc in some way and get rid
+      ;;        of this.
+      (let ((last-out (and (> index 0)
+                           (nth (1- index) (oref cell :outputs)))))
+        ;; Check if the last output is from the same stream.
+        ;; If so, do *NOT* insert newline, otherwise insert newline.
+        (when last-out
+          (unless (and (equal (plist-get out      :output_type) "stream")
+                       (equal (plist-get last-out :output_type) "stream")
+                       (equal (plist-get out      :stream)
+                              (plist-get last-out :stream)))
+            (ein:insert-read-only "\n"))))
+      ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
         (("pyout")        (ein:cell-append-pyout        cell out dynamic))
         (("pyerr")        (ein:cell-append-pyerr        cell out))
@@ -557,22 +573,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  ;; FIXME: IPython codecell.js does something more complex than this.
-  ;; It append to the output of the same type (output-stout/output-stderr)
-  ;; if it already exists.  Maybe stream should be handled in that way
-  ;; but do it in simple way for now.
   (ein:cell-append-text (plist-get json :text))
-  ;; NOTE: codecell.js append text without adding newline, like this:
-  ;;       "...find('pre').append(text)".  But it looks like jQuery's
-  ;;       `.append' adds newline automatically.
-  (ein:insert-read-only "\n")
-
-  ;; This can be used when implementing output-to-the-same-type handling:
-  ;; (let ((last (last (ein:cell-element-get cell :output))))
-  ;;   (when (and last
-  ;;              (equal (plist-get last :output_type) "stream")
-  ;;              (equal (plist-get json :stream) (plist-get last :stream)))
-  ;;     (ein:insert-read-only (plist-get json :text))))
+  ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
+  ;; So do not insert newline here.
   )
 
 (defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
