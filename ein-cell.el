@@ -47,7 +47,7 @@
      :background "PeachPuff")
     (((class color) (background dark))
      :background "#8c5353"))
-  "Face for stderr cell ouput"
+  "Face for stderr cell output"
   :group 'ein)
 
 
@@ -541,14 +541,14 @@ If END is non-`nil', return the location of next element."
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
     (("pyout")
-     '(ouput-subarea))
+     '(output-subarea))
     (("pyerr")
-     '(ouput-subarea))
+     '(output-subarea))
     (("display_data")
-     '(ouput-subarea))
+     '(output-subarea))
     (("stream")
-     (list 'ouput-stream 'ouput-subarea
-           (intern (format "ouput-%s" (plist-get json :stream)))))))
+     (list 'output-stream 'output-subarea
+           (intern (format "output-%s" (plist-get json :stream)))))))
 
 (defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
   ;; (ein:cell-expand cell)
