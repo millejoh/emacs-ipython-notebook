@@ -150,3 +150,91 @@ some input
 Out \\[222\\]:
 some output text
 "))))
+
+(ert-deftest ein:cell-insert-output-stream-simple-stdout ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :outputs (list (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 1"))
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+some stdout 1
+"))))
+
+(ert-deftest ein:cell-insert-output-stream-stdout-stderr ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :outputs (list (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 1")
+                            (list :output_type "stream"
+                                  :stream "stderr"
+                                  :text "some stderr 1"))
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+some stdout 1
+some stderr 1
+"))))
+
+(ert-deftest ein:cell-insert-output-stream-flushed-stdout ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :outputs (list (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 1")
+                            (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 2"))
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+some stdout 1
+some stdout 2
+"))))
+
+(ert-deftest ein:cell-insert-output-stream-flushed-stdout-and-stderr ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :outputs (list (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 1")
+                            (list :output_type "stream"
+                                  :stream "stderr"
+                                  :text "some stderr 1")
+                            (list :output_type "stream"
+                                  :stream "stdout"
+                                  :text "some stdout 2")
+                            (list :output_type "stream"
+                                  :stream "stderr"
+                                  :text "some stderr 2"))
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+some stdout 1
+some stderr 1
+some stdout 2
+some stderr 2
+"))))
