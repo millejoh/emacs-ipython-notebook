@@ -329,17 +329,18 @@ Called from ewoc pretty printer via `ein:cell-pp'."
           (ein:insert-read-only "\n")))
     (let ((out (nth index (oref cell :outputs)))
           (dynamic ein:cell-output-dynamic))
-      ;; Handle newline for stream.
+      ;; Handle newline for previous stream output.
       ;; In IPython JS, it is handled in `append_stream' because JS
       ;; does not need to care about newline (DOM does it for JS).
       ;; FIXME: Maybe I should abstract ewoc in some way and get rid
       ;;        of this.
       (let ((last-out (and (> index 0)
                            (nth (1- index) (oref cell :outputs)))))
-        ;; Check if the last output is from the same stream.
-        ;; If so, do *NOT* insert newline, otherwise insert newline.
+        ;; If previous output is stream type, consider adding newline
         (when (and last-out
                    (equal (plist-get last-out :output_type) "stream"))
+          ;; Check if the last output is from the same stream.
+          ;; If so, do *NOT* insert newline, otherwise insert newline.
           (unless (and (equal (plist-get out :output_type) "stream")
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
