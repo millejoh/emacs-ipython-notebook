@@ -8,6 +8,8 @@
 
 (require 'ein-notebook)
 
+
+;; Test utils
 
 (defvar eintest:notebook-data-simple-json
   "{
@@ -65,6 +67,9 @@
 (defun eintest:notebook-enable-mode (buffer)
   (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
 
+
+;; from-json
+
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
                         eintest:notebook-data-simple-json)
@@ -89,6 +94,9 @@
     (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
     (should (equal (ein:notebook-ncells ein:notebook) 0))))
+
+
+;; Notebook commands
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
@@ -287,6 +295,9 @@
     (should (search-backward "Cell 1" nil t))
     (should-not (search-backward "Cell 2" nil t))))
 
+
+;; Kernel related things
+
 (ert-deftest ein:notebook-execute-current-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
@@ -333,6 +344,9 @@
         (should (search-forward "print 'Hello World'" nil t))
         (should (search-forward "Hello World" nil t)) ; stream output
         (should-not (search-forward "Hello World" nil t))))))
+
+
+;; Notebook mode
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
   (let ((ein:notebook-opened-map (make-hash-table :test 'equal)))
