@@ -536,12 +536,16 @@ If END is non-`nil', return the location of next element."
                (append (plist-get element :output) (list ewoc-node)))))
 
 (defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
+  "Insert pyout type output in the buffer.
+Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:insert-read-only (format "Out [%s]:\n"
                                 (or (plist-get json :prompt_number) " ")))
   (ein:cell-append-mime-type json dynamic)
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
+  "Insert pyerr type output in the buffer.
+Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
@@ -549,6 +553,8 @@ If END is non-`nil', return the location of next element."
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-stream ((cell ein:codecell) json)
+  "Insert stream type output in the buffer.
+Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
   ;; FIXME: IPython codecell.js does something more complex than this.
@@ -570,6 +576,8 @@ If END is non-`nil', return the location of next element."
   )
 
 (defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
+  "Insert display-data type output in the buffer.
+Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-append-mime-type json dynamic)
   (ein:insert-read-only "\n"))
 
