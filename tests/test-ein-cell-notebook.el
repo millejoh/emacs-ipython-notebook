@@ -73,48 +73,58 @@ some input
 %s" regexp)))))
 
 (defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data
-  (name output regexp)
+  (name regexps outputs)
   (declare (indent defun))
   (let ((test-pyout
          (intern (format "ein:cell-insert-output-pyout-%s" name)))
         (test-display-data
          (intern (format "ein:cell-insert-output-display-data-%s" name)))
-        (output-pyout (append '(:output_type "pyout" :prompt_number 222)
-                              output))
-        (output-display-data (append '(:output_type "display_data")
-                                     output))
-        (regexp-pyout (concat "Out \\[222\\]:\n" regexp))
-        (regexp-display-data regexp))
+        (outputs-pyout
+         (loop for i from 1
+               for x in outputs
+               collect
+               (append x (list :output_type "pyout" :prompt_number i))))
+        (outputs-display-data
+         (mapcar (lambda (x) (append '(:output_type "display_data") x))
+                 outputs))
+        (regexp-pyout
+         (ein:join-str
+          ""
+          (loop for i from 1
+                for x in regexps
+                collect (format "Out \\[%s\\]:\n%s\n" i x))))
+        (regexp-display-data
+         (concat (ein:join-str "\n" regexps) "\n")))
     `(progn
        (ert-deftest ,test-pyout ()
-         (eintest:cell-insert-output (list ',output-pyout)
+         (eintest:cell-insert-output ',outputs-pyout
                                      ,regexp-pyout))
        (ert-deftest ,test-display-data ()
-         (eintest:cell-insert-output (list ',output-display-data)
+         (eintest:cell-insert-output ',outputs-display-data
                                      ,regexp-display-data)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
-  text (:text "some output") "some output\n")
+  text ("some output") ((:text "some output")))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   latex
-  (:text "some output text" :latex "some output \\LaTeX")
-  "some output \\\\LaTeX\n")
+  ("some output \\\\LaTeX")
+  ((:text "some output text" :latex "some output \\LaTeX")))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   svg
-  (:text "some output text" :svg eintest:example-svg)
-  " \n")
+  (" ")
+  ((:text "some output text" :svg eintest:example-svg)))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
-  (:text "some output text" :html "<b>not shown</b>")
-  "some output text\n")
+  ("some output text")
+  ((:text "some output text" :html "<b>not shown</b>")))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   javascript
-  (:text "some output text" :javascript "$.do.something()")
-  "some output text\n")
+  ("some output text")
+  ((:text "some output text" :javascript "$.do.something()")))
 
 
 ;; Insert pyerr
