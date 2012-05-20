@@ -58,119 +58,85 @@ The new cell is bound to a variable `cell'."
 
 ;; Insert pyout
 
-(ert-deftest ein:cell-insert-output-pyout-text ()
+(defun eintest:cell-insert-output (outputs regexp)
   (eintest:with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
-             :outputs (list (list :output_type "pyout"
-                                  :prompt_number 222
-                                  :text "some output"))
+             :outputs outputs
              :input "some input"
              :prompt_number 111)
        :ewoc (ein:$notebook-ewoc ein:notebook))
     (goto-char (ein:cell-location cell))
-    (should (looking-at "\
+    (should (looking-at (format "\
 In \\[111\\]:
 some input
+%s" regexp)))))
+
+(ert-deftest ein:cell-insert-output-pyout-text ()
+  (eintest:cell-insert-output
+   (list (list :output_type "pyout"
+               :prompt_number 222
+               :text "some output"))
+   "\
 Out \\[222\\]:
 some output
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-pyout-latex ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "pyout"
-                                  :prompt_number 222
-                                  :text "some output text"
-                                  :latex "some output \\LaTeX"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "pyout"
+               :prompt_number 222
+               :text "some output text"
+               :latex "some output \\LaTeX"))
+   "\
 Out \\[222\\]:
 some output \\\\LaTeX
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-pyout-svg ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "pyout"
-                                  :prompt_number 222
-                                  :text "some output text"
-                                  :svg eintest:example-svg))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "pyout"
+               :prompt_number 222
+               :text "some output text"
+               :svg eintest:example-svg))
+   "\
 Out \\[222\\]:
- \n"))))
+ \n"))
 
 (ert-deftest ein:cell-insert-output-pyout-html ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "pyout"
-                                  :prompt_number 222
-                                  :text "some output text"
-                                  :html "<b>not shown</b>"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "pyout"
+               :prompt_number 222
+               :text "some output text"
+               :html "<b>not shown</b>"))
+   "\
 Out \\[222\\]:
 some output text
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-pyout-javascript ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "pyout"
-                                  :prompt_number 222
-                                  :text "some output text"
-                                  :javascript "$.do.something()"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "pyout"
+               :prompt_number 222
+               :text "some output text"
+               :javascript "$.do.something()"))
+   "\
 Out \\[222\\]:
 some output text
-"))))
+"))
 
 
 ;; Insert pyerr
 
 (ert-deftest ein:cell-insert-output-pyerr-simple ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "pyerr"
-                                  :traceback '("some traceback 1"
-                                               "some traceback 2")))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "pyerr"
+               :traceback '("some traceback 1"
+                            "some traceback 2")))
+   "\
 some traceback 1
 some traceback 2
-"))))
+"))
 
 
 ;; Insert display_data
@@ -179,89 +145,57 @@ some traceback 2
 ;; Insert stream
 
 (ert-deftest ein:cell-insert-output-stream-simple-stdout ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 1"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 1"))
+   "\
 some stdout 1
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-stream-stdout-stderr ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 1")
-                            (list :output_type "stream"
-                                  :stream "stderr"
-                                  :text "some stderr 1"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 1")
+         (list :output_type "stream"
+               :stream "stderr"
+               :text "some stderr 1"))
+   "\
 some stdout 1
 some stderr 1
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-stream-flushed-stdout ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 1")
-                            (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 2"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 1")
+         (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 2"))
+   "\
 some stdout 1
 some stdout 2
-"))))
+"))
 
 (ert-deftest ein:cell-insert-output-stream-flushed-stdout-and-stderr ()
-  (eintest:with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs (list (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 1")
-                            (list :output_type "stream"
-                                  :stream "stderr"
-                                  :text "some stderr 1")
-                            (list :output_type "stream"
-                                  :stream "stdout"
-                                  :text "some stdout 2")
-                            (list :output_type "stream"
-                                  :stream "stderr"
-                                  :text "some stderr 2"))
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:notebook))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at "\
-In \\[111\\]:
-some input
+  (eintest:cell-insert-output
+   (list (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 1")
+         (list :output_type "stream"
+               :stream "stderr"
+               :text "some stderr 1")
+         (list :output_type "stream"
+               :stream "stdout"
+               :text "some stdout 2")
+         (list :output_type "stream"
+               :stream "stderr"
+               :text "some stderr 2"))
+   "\
 some stdout 1
 some stderr 1
 some stdout 2
 some stderr 2
-"))))
+"))
