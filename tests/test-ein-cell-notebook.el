@@ -126,6 +126,24 @@ some input
   ("some output text")
   ((:text "some output text" :javascript "$.do.something()")))
 
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  text-two
+  ("first output text" "second output text")
+  ((:text "first output text") (:text "second output text")))
+
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  text-javascript
+  ("first output text" "second output text")
+  ((:text "first output text")
+   (:text "second output text" :javascript "$.do.something()")))
+
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  text-latex-svg
+  ("first output text" "second output \\\\LaTeX" " ")
+  ((:text "first output text")
+   (:text "some output text" :latex "second output \\LaTeX")
+   (:text "some output text" :svg eintest:example-svg)))
+
 
 ;; Insert pyerr
 
