@@ -295,6 +295,8 @@ A specific node can be specified using optional ARGS."
     (footer (ein:cell-insert-footer))))
 
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
+  "Insert prompt of the CELL in the buffer.
+Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))))
@@ -308,6 +310,8 @@ A specific node can be specified using optional ARGS."
    (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))))
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))
+  "Insert input of the CELL in the buffer.
+Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
           (or (ein:oref-safe cell :input) "")
@@ -316,6 +320,8 @@ A specific node can be specified using optional ARGS."
 (defvar ein:cell-output-dynamic nil)
 
 (defun ein:cell-insert-output (index cell)
+  "Insert INDEX-th output of the CELL in the buffer.
+Called from ewoc pretty printer via `ein:cell-pp'."
   (if (oref cell :collapsed)
       (progn
         (ein:insert-read-only ".")
@@ -330,6 +336,8 @@ A specific node can be specified using optional ARGS."
         (("stream")       (ein:cell-append-stream       cell out))))))
 
 (defun ein:cell-insert-footer ()
+  "Insert footer (just a new line) of the CELL in the buffer.
+Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
 
 
