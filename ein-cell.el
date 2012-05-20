@@ -355,10 +355,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
           (unless (and (equal (plist-get out :output_type) "stream")
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
-            (if (equal (plist-get last-out :stream) "stderr")
-                (ein:cell-append-text "\n"
-                                      'font-lock-face 'ein:cell-output-stderr)
-              (ein:insert-read-only "\n")))))
+            (ein:cell-append-stream-text-fontified "\n" last-out))))
       ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
         (("pyout")        (ein:cell-append-pyout        cell out dynamic))
@@ -374,9 +371,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 (defmethod ein:cell-insert-footer ((cell ein:codecell))
   (let ((last-out (car (last (oref cell :outputs)))))
     (when (equal (plist-get last-out :output_type) "stream")
-      (if (equal (plist-get last-out :stream) "stderr")
-          (ein:cell-append-text "\n" 'font-lock-face 'ein:cell-output-stderr)
-        (ein:insert-read-only "\n"))))
+      (ein:cell-append-stream-text-fontified "\n" last-out)))
   (call-next-method))
 
 
@@ -597,13 +592,16 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  (if (equal (plist-get json :stream) "stderr")
-      (ein:cell-append-text (plist-get json :text)
-                          'font-lock-face 'ein:cell-output-stderr)
-    (ein:cell-append-text (plist-get json :text)))
+  (ein:cell-append-stream-text-fontified (plist-get json :text) json)
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
   )
+
+(defun ein:cell-append-stream-text-fontified (text json)
+  "Insert TEXT with font properties defined by JSON data."
+  (if (equal (plist-get json :stream) "stderr")
+      (ein:cell-append-text text 'font-lock-face 'ein:cell-output-stderr)
+    (ein:cell-append-text text)))
 
 (defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
   "Insert display-data type output in the buffer.
