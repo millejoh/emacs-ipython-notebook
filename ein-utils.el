@@ -136,11 +136,11 @@ See: http://api.jquery.com/jQuery.ajax/"
 
 ;;;
 
-(defun ein:propertize-read-only (string)
-  (propertize string 'read-only t 'front-sticky t))
+(defun ein:propertize-read-only (string &rest properties)
+  (apply #'propertize string 'read-only t 'front-sticky t properties))
 
-(defun ein:insert-read-only (string)
-  (insert (ein:propertize-read-only string)))
+(defun ein:insert-read-only (string &rest properties)
+  (insert (apply #'ein:propertize-read-only string properties)))
 
 
 ;;; String manipulation

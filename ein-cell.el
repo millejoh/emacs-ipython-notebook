@@ -40,6 +40,17 @@
 (require 'ein-node)
 
 
+;;; Faces
+
+(defface ein:cell-output-stderr
+  '((((class color) (background light))
+     :background "PeachPuff")
+    (((class color) (background dark))
+     :background "#8c5353"))
+  "Face for stderr cell ouput"
+  :group 'ein)
+
+
 ;;; EIEIO related utils
 
 (defmacro ein:oset-if-empty (obj slot value)
@@ -51,7 +62,7 @@
      (oref ,obj ,slot)))
 
 
-:;; Cell classes
+;;; Cell classes
 
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
@@ -344,7 +355,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
           (unless (and (equal (plist-get out :output_type) "stream")
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
-            (ein:insert-read-only "\n"))))
+            (if (equal (plist-get last-out :stream) "stderr")
+                (ein:cell-append-text "\n" 'face 'ein:cell-output-stderr)
+              (ein:insert-read-only "\n")))))
       ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
         (("pyout")        (ein:cell-append-pyout        cell out dynamic))
@@ -358,9 +371,11 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-insert-footer ((cell ein:codecell))
-  (when (ein:aand (car (last (oref cell :outputs)))
-                  (equal (plist-get it :output_type) "stream"))
-    (ein:insert-read-only "\n"))
+  (let ((last-out (car (last (oref cell :outputs)))))
+    (when (equal (plist-get last-out :output_type) "stream")
+      (if (equal (plist-get last-out :stream) "stderr")
+          (ein:cell-append-text "\n" 'face 'ein:cell-output-stderr)
+        (ein:insert-read-only "\n"))))
   (call-next-method))
 
 
@@ -581,7 +596,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  (ein:cell-append-text (plist-get json :text))
+  (if (equal (plist-get json :stream) "stderr")
+      (ein:cell-append-text (plist-get json :text)
+                          'face 'ein:cell-output-stderr)
+    (ein:cell-append-text (plist-get json :text)))
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
   )
@@ -615,10 +633,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      ((png jpeg)
       (insert-image (create-image (base64-decode-string value) key t))))))
 
-(defun ein:cell-append-text (data)
+(defun ein:cell-append-text (data &rest properties)
   ;; FIXME: implement HTML special escaping
   ;; escape ANSI & HTML specials in plaintext:
-  (ein:insert-read-only (ansi-color-apply data)))
+  (apply #'ein:insert-read-only (ansi-color-apply data) properties))
 
 (defmethod ein:cell-to-json ((cell ein:codecell))
   "Return json-ready alist."
