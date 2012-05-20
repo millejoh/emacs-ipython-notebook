@@ -327,8 +327,7 @@ A specific node can be specified using optional ARGS."
         (("pyout")        (ein:cell-append-pyout        cell out dynamic))
         (("pyerr")        (ein:cell-append-pyerr        cell out))
         (("display_data") (ein:cell-append-display-data cell out dynamic))
-        (("stream")       (ein:cell-append-stream       cell out))))
-    (ein:insert-read-only "\n")))
+        (("stream")       (ein:cell-append-stream       cell out))))))
 
 (defun ein:cell-insert-footer ()
   (ein:insert-read-only "\n"))
@@ -531,13 +530,15 @@ If END is non-`nil', return the location of next element."
 (defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
   (ein:insert-read-only (format "Out [%s]:\n"
                                 (or (plist-get json :prompt_number) " ")))
-  (ein:cell-append-mime-type json dynamic))
+  (ein:cell-append-mime-type json dynamic)
+  (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
-        (plist-get json :traceback)))
+        (plist-get json :traceback))
+  (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-stream ((cell ein:codecell) json)
   (unless (plist-get json :stream)
@@ -549,9 +550,8 @@ If END is non-`nil', return the location of next element."
   (ein:cell-append-text (plist-get json :text))
   ;; NOTE: codecell.js append text without adding newline, like this:
   ;;       "...find('pre').append(text)".  But it looks like jQuery's
-  ;;       `.append' adds newline automatically.  As newline will be
-  ;;       appended in `ein:cell-insert-output', do nothing about
-  ;;       newline here is correct.
+  ;;       `.append' adds newline automatically.
+  (ein:insert-read-only "\n")
 
   ;; This can be used when implementing output-to-the-same-type handling:
   ;; (let ((last (last (ein:cell-element-get cell :output))))
@@ -562,7 +562,8 @@ If END is non-`nil', return the location of next element."
   )
 
 (defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
-  (ein:cell-append-mime-type json dynamic))
+  (ein:cell-append-mime-type json dynamic)
+  (ein:insert-read-only "\n"))
 
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
