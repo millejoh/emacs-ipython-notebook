@@ -42,6 +42,16 @@
 
 ;;; Faces
 
+(defface ein:cell-input-prompt
+  '((t :inherit header-line))
+  "Face for cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-output-prompt
+  '((t :inherit header-line))
+  "Face for cell output prompt"
+  :group 'ein)
+
 (defface ein:cell-output-stderr
   '((((class color) (background light))
      :background "PeachPuff")
@@ -310,15 +320,18 @@ A specific node can be specified using optional ARGS."
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))))
+   (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))
+   'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (format "In [%s]:" (oref cell :cell-type))))
+   (format "In [%s]:" (oref cell :cell-type))
+   'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
-   (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))))
+   (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))
+   'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
@@ -573,8 +586,10 @@ If END is non-`nil', return the location of next element."
 (defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
   "Insert pyout type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:insert-read-only (format "Out [%s]:\n"
-                                (or (plist-get json :prompt_number) " ")))
+  (ein:insert-read-only (format "Out [%s]:"
+                                (or (plist-get json :prompt_number) " "))
+                        'font-lock-face 'ein:cell-output-prompt)
+  (ein:insert-read-only "\n")
   (ein:cell-append-mime-type json dynamic)
   (ein:insert-read-only "\n"))
 
