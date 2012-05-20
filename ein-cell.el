@@ -566,16 +566,20 @@ If END is non-`nil', return the location of next element."
 
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(javascript svg png jpeg text html latex)
+   for key in '(svg png jpeg latex text html javascript)
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
    return
    (case key
+     ;; NOTE: Normally `javascript' and `html' will not be inserted as
+     ;; they come out after `text'.  Maybe it is better to inform user
+     ;; when one of them is inserted.
      (javascript
       (when dynamic
         (ein:log 'info (concat "ein:cell-append-mime-type does not support "
-                               "dynamic javascript. got: %s") value)))
+                               "dynamic javascript. got: %s") value))
+      (ein:insert-read-only (plist-get json type)))
      ((html latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
