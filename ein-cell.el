@@ -338,9 +338,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                            (nth (1- index) (oref cell :outputs)))))
         ;; Check if the last output is from the same stream.
         ;; If so, do *NOT* insert newline, otherwise insert newline.
-        (when last-out
-          (unless (and (equal (plist-get out      :output_type) "stream")
-                       (equal (plist-get last-out :output_type) "stream")
+        (when (and last-out
+                   (equal (plist-get last-out :output_type) "stream"))
+          (unless (and (equal (plist-get out :output_type) "stream")
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
             (ein:insert-read-only "\n"))))
