@@ -56,7 +56,7 @@ The new cell is bound to a variable `cell'."
                    (1+ (point))))))
 
 
-;; Insert pyout
+;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
   (eintest:with-one-cell
@@ -72,58 +72,49 @@ In \\[111\\]:
 some input
 %s" regexp)))))
 
-(ert-deftest ein:cell-insert-output-pyout-text ()
-  (eintest:cell-insert-output
-   (list (list :output_type "pyout"
-               :prompt_number 222
-               :text "some output"))
-   "\
-Out \\[222\\]:
-some output
-"))
+(defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data
+  (name output regexp)
+  (declare (indent defun))
+  (let ((test-pyout
+         (intern (format "ein:cell-insert-output-pyout-%s" name)))
+        (test-display-data
+         (intern (format "ein:cell-insert-output-display-data-%s" name)))
+        (output-pyout (append '(:output_type "pyout" :prompt_number 222)
+                              output))
+        (output-display-data (append '(:output_type "display_data")
+                                     output))
+        (regexp-pyout (concat "Out \\[222\\]:\n" regexp))
+        (regexp-display-data regexp))
+    `(progn
+       (ert-deftest ,test-pyout ()
+         (eintest:cell-insert-output (list ',output-pyout)
+                                     ,regexp-pyout))
+       (ert-deftest ,test-display-data ()
+         (eintest:cell-insert-output (list ',output-display-data)
+                                     ,regexp-display-data)))))
 
-(ert-deftest ein:cell-insert-output-pyout-latex ()
-  (eintest:cell-insert-output
-   (list (list :output_type "pyout"
-               :prompt_number 222
-               :text "some output text"
-               :latex "some output \\LaTeX"))
-   "\
-Out \\[222\\]:
-some output \\\\LaTeX
-"))
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  text (:text "some output") "some output\n")
 
-(ert-deftest ein:cell-insert-output-pyout-svg ()
-  (eintest:cell-insert-output
-   (list (list :output_type "pyout"
-               :prompt_number 222
-               :text "some output text"
-               :svg eintest:example-svg))
-   "\
-Out \\[222\\]:
- \n"))
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  latex
+  (:text "some output text" :latex "some output \\LaTeX")
+  "some output \\\\LaTeX\n")
 
-(ert-deftest ein:cell-insert-output-pyout-html ()
-  (eintest:cell-insert-output
-   (list (list :output_type "pyout"
-               :prompt_number 222
-               :text "some output text"
-               :html "<b>not shown</b>"))
-   "\
-Out \\[222\\]:
-some output text
-"))
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  svg
+  (:text "some output text" :svg eintest:example-svg)
+  " \n")
 
-(ert-deftest ein:cell-insert-output-pyout-javascript ()
-  (eintest:cell-insert-output
-   (list (list :output_type "pyout"
-               :prompt_number 222
-               :text "some output text"
-               :javascript "$.do.something()"))
-   "\
-Out \\[222\\]:
-some output text
-"))
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  html
+  (:text "some output text" :html "<b>not shown</b>")
+  "some output text\n")
+
+(eintest:gene-test-cell-insert-output-pyout-and-display-data
+  javascript
+  (:text "some output text" :javascript "$.do.something()")
+  "some output text\n")
 
 
 ;; Insert pyerr
@@ -137,9 +128,6 @@ some output text
 some traceback 1
 some traceback 2
 "))
-
-
-;; Insert display_data
 
 
 ;; Insert stream
