@@ -292,7 +292,7 @@ A specific node can be specified using optional ARGS."
     (prompt (ein:cell-insert-prompt data))
     (input  (ein:cell-insert-input data))
     (output (ein:cell-insert-output (cadr path) data))
-    (footer (ein:cell-insert-footer))))
+    (footer (ein:cell-insert-footer data))))
 
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
@@ -351,10 +351,16 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (("display_data") (ein:cell-append-display-data cell out dynamic))
         (("stream")       (ein:cell-append-stream       cell out))))))
 
-(defun ein:cell-insert-footer ()
+(defmethod ein:cell-insert-footer ((cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
+
+(defmethod ein:cell-insert-footer ((cell ein:codecell))
+  (when (ein:aand (car (last (oref cell :outputs)))
+                  (equal (plist-get it :output_type) "stream"))
+    (ein:insert-read-only "\n"))
+  (call-next-method))
 
 
 (defun ein:cell-node-p (node &optional element-name)
@@ -549,7 +555,8 @@ If END is non-`nil', return the location of next element."
          (ewoc-node (ewoc-enter-after ewoc last-node data))
          (element (oref cell :element)))
     (plist-put element :output
-               (append (plist-get element :output) (list ewoc-node)))))
+               (append (plist-get element :output) (list ewoc-node)))
+    (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
 (defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
   "Insert pyout type output in the buffer.
