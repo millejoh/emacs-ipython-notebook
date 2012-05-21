@@ -47,6 +47,14 @@
   "Face for cell input prompt"
   :group 'ein)
 
+(defface ein:cell-input-area
+  '((((class color) (background light))
+     :background "honeydew1")
+    (((class color) (background dark))
+     :background "#2b2b2b"))
+  "Face for cell input area"
+  :group 'ein)
+
 (defface ein:cell-output-prompt
   '((t :inherit header-line))
   "Face for cell output prompt"
@@ -338,8 +346,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-          (or (ein:oref-safe cell :input) "")
-          (propertize "\n" 'read-only t)))
+          (propertize (or (ein:oref-safe cell :input) "")
+                      'font-lock-face 'ein:cell-input-area)
+          (propertize "\n" 'read-only t 'font-lock-face 'ein:cell-input-area)))
 
 (defvar ein:cell-output-dynamic nil)
 
