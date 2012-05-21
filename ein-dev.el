@@ -95,10 +95,15 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (interactive)
   (setq ein:notebook-modes '(ein:notebook-plain-mode)))
 
+(defun ein:dev-notebook-python-mode ()
+  "Use `ein:notebook-python-mode'."
+  (interactive)
+  (setq ein:notebook-modes '(ein:notebook-python-mode)))
+
 (defun ein:dev-notebook-mumamo-mode ()
   "Use `ein:notebook-mumamo-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode)))
+  (setq ein:notebook-modes '(ein:notebook-mumamo-mode)))
 
 (provide 'ein-dev)
 
