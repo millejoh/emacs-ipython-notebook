@@ -347,8 +347,20 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newlines must allow insertion before/after its position.
   (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
           (propertize (or (ein:oref-safe cell :input) "")
-                      'font-lock-face 'ein:cell-input-area)
-          (propertize "\n" 'read-only t 'font-lock-face 'ein:cell-input-area)))
+                      'font-lock-face 'ein:cell-input-area
+                      'insert-in-front-hooks
+                      '(ein:cell-input-area-insert-in-front-callback))
+          (propertize "\n" 'read-only t
+                      'font-lock-face 'ein:cell-input-area
+                      'insert-in-front-hooks
+                      '(ein:cell-input-area-insert-in-front-callback))))
+
+(defun ein:cell-input-area-insert-in-front-callback (start end)
+  (put-text-property start end
+                     'font-lock-face 'ein:cell-input-area)
+  (put-text-property start end
+                      'insert-in-front-hooks
+                      '(ein:cell-input-area-insert-in-front-callback)))
 
 (defvar ein:cell-output-dynamic nil)
 
