@@ -51,6 +51,15 @@
   (require 'ein-smartrep)
   (ein:smartrep-config))
 
+(custom-set-faces
+   ;; Turn off background color for mumamo major chunk, to see
+   ;; highlighting of prompt and stderr.
+   '(mumamo-background-chunk-major
+     ((((class color) (min-colors 88) (background dark)) nil)))
+   ;; '(mumamo-background-chunk-submode1
+   ;;   ((((class color) (min-colors 88) (background dark)) nil)))
+   )
+
 
 ;; Suppress this warning when using mumamo:
 ;; Warning: `font-lock-syntactic-keywords' is an obsolete variable (as of 24.1);
