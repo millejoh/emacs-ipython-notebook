@@ -195,6 +195,11 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
+(defun ein:filter (predicate sequence)
+  (loop for item in sequence
+        when (funcall predicate item)
+        collect item))
+
 (defun ein:get-value (obj)
   "Get value from obj if it is a variable or function."
   (cond

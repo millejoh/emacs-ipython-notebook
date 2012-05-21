@@ -205,6 +205,7 @@ the time of execution."
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
+  (setq header-line-format ein:header-line-format)
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -773,7 +774,7 @@ Do not clear input prompts when the prefix argument is given."
     ;; This is for putting read-only text properties to the newlines.
     (setf (ein:$notebook-ewoc notebook)
           (ewoc-create 'ein:notebook-pp
-                       (ein:propertize-read-only "IPython notebook\n\n")
+                       (ein:propertize-read-only "\n")
                        nil t))
     (mapc (lambda (cell-data)
             (ein:cell-enter-last
