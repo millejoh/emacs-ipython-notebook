@@ -872,8 +872,16 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   '(ein:notebook-mumamo-mode ein:notebook-python-mode ein:notebook-plain-mode)
   "Notebook modes to use \(in order of preference).
 
-To avoid using MuMaMo when it is installed:
+When the notebook is opened, mode in this value is checked one by one
+and the first usable mode is used.  By default, MuMaMo is used when
+it is installed.  If not, a simple mode derived from `python-mode' is
+used.
+
+Examples:
+* To avoid using MuMaMo even when it is installed:
   (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
+* Do not use `python-mode'.  Use plain mode when MuMaMo is not installed:
+  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
 "
   :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
                          (const :tag "Only Python" ein:notebook-python-mode)
