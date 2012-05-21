@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'rst)
+(require 'ein-notebook)
 
 (defun ein:dev-insert-notebook-mode-map ()
   "Insert mode-map into rst document.  For README.rst."
@@ -56,6 +57,48 @@
   (makunbound 'ein:notebook-mode-map)   ; so defvar works.
   (load "ein-notebook")  ; ... but make sure it will be defined first.
   (ein:load-files "^ein-.*\\.el$"))
+
+(defadvice backtrace (around ein:dev-short-backtrace)
+  "A hack to shorten backtrace.
+
+As code cells hold base64-encoded image data, backtrace tends to
+be VERY long.  So I am setting `print-level' to *1*.  Note that
+setting it globally via `setq' does not work because the value
+for debugger is hard-coded.  See `debugger-setup-buffer'."
+  (let ((print-level 1))
+    ad-do-it))
+
+(defun ein:dev-patch-backtrace ()
+  "Monkey patch `backtrace' function to make it shorter."
+  (interactive)
+  (ad-enable-advice 'backtrace 'around 'ein:dev-short-backtrace)
+  (ad-activate 'backtrace))
+
+(defun ein:dev-pop-to-debug-shell ()
+  "Open shell channel websocket log buffer."
+  (interactive)
+  (pop-to-buffer
+   (websocket-get-debug-buffer-create
+    (ein:$websocket-ws (ein:$kernel-shell-channel
+                        (ein:$notebook-kernel ein:notebook))))))
+
+(defun ein:dev-pop-to-debug-iopub ()
+  "Open iopub channel websocket log buffer."
+  (interactive)
+  (pop-to-buffer
+   (websocket-get-debug-buffer-create
+    (ein:$websocket-ws (ein:$kernel-iopub-channel
+                        (ein:$notebook-kernel ein:notebook))))))
+
+(defun ein:dev-notebook-plain-mode ()
+  "Use `ein:notebook-plain-mode'."
+  (interactive)
+  (setq ein:notebook-modes '(ein:notebook-plain-mode)))
+
+(defun ein:dev-notebook-mumamo-mode ()
+  "Use `ein:notebook-mumamo-mode'."
+  (interactive)
+  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode)))
 
 (provide 'ein-dev)
 

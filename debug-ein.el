@@ -34,6 +34,7 @@
 (ein:notebooklist-open)
 (ein:log-set-level 'debug)
 (ein:log-set-message-level 'verbose)
+(ein:dev-patch-backtrace)
 
 (require 'markdown-mode nil t)
 (require 'rst nil t)
@@ -60,42 +61,5 @@
   (eval-after-load "bytecomp"
     '(add-to-list 'byte-compile-not-obsolete-vars
                   'font-lock-syntactic-keywords)))
-
-
-(defadvice backtrace (around eintest-short-backtrace activate)
-  "A hack for shorten backtrace.
-
-As code cells hold base64-encoded image data, backtrace tends to
-be VERY long.  So I am setting `print-level' to *1*.  Note that
-setting it globally via `setq' does not work because the value
-for debugger is hard-coded.  See `debugger-setup-buffer'."
-  (let ((print-level 1))
-    ad-do-it))
-
-(defun eintest-pop-to-debug-shell ()
-  "Open shell challen websocket log buffer."
-  (interactive)
-  (pop-to-buffer
-   (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-shell-channel
-                        (ein:$notebook-kernel ein:notebook))))))
-
-(defun eintest-pop-to-debug-iopub ()
-  "Open iopub challen websocket log buffer."
-  (interactive)
-  (pop-to-buffer
-   (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-iopub-channel
-                        (ein:$notebook-kernel ein:notebook))))))
-
-(defun eintest-notebook-plain-mode ()
-  "Use `ein:notebook-plain-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-plain-mode)))
-
-(defun eintest-notebook-mumamo-mode ()
-  "Use `ein:notebook-mumamo-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode)))
 
 ;;; debug-ein.el ends here
