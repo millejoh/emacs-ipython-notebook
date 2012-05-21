@@ -104,7 +104,18 @@
                         ;; :type integer
                         )
    (collapsed :initarg :collapsed :initform nil :type boolean)
-   (running :initarg :running :initform nil :type boolean)))
+   (running :initarg :running :initform nil :type boolean)
+   (dynamic :initarg :dynamic :initform nil :type boolean
+            :documentation "\
+Whether cell output is evaluated dynamically or not.
+
+Only Emacs lisp type output data will be affected by this
+slot (Javascript will not be evaluated).  This value must be set
+to `t' when executing cell.  See `ein:notebook-execute-cell'.
+In the implantation of IPython web client it is passed around via
+argument, but since it is difficult to pass argument to EWOC
+pretty printer, `ein:codecell' instance holds this setting in a
+slot.")))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
@@ -355,8 +366,6 @@ Called from ewoc pretty printer via `ein:cell-pp'."
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t))))
 
-(defvar ein:cell-output-dynamic nil)
-
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
@@ -365,8 +374,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (ein:insert-read-only ".")
         (when (= (1+ index) (ein:cell-num-outputs cell))
           (ein:insert-read-only "\n")))
-    (let ((out (nth index (oref cell :outputs)))
-          (dynamic ein:cell-output-dynamic))
+    (let ((out (nth index (oref cell :outputs))))
       ;; Handle newline for previous stream output.
       ;; In IPython JS, it is handled in `append_stream' because JS
       ;; does not need to care about newline (DOM does it for JS).
@@ -385,9 +393,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
             (ein:cell-append-stream-text-fontified "\n" last-out))))
       ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
-        (("pyout")        (ein:cell-append-pyout        cell out dynamic))
+        (("pyout")        (ein:cell-append-pyout        cell out))
         (("pyerr")        (ein:cell-append-pyerr        cell out))
-        (("display_data") (ein:cell-append-display-data cell out dynamic))
+        (("display_data") (ein:cell-append-display-data cell out))
         (("stream")       (ein:cell-append-stream       cell out))))))
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
@@ -597,14 +605,14 @@ If END is non-`nil', return the location of next element."
                (append (plist-get element :output) (list ewoc-node)))
     (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
-(defmethod ein:cell-append-pyout ((cell ein:codecell) json dynamic)
+(defmethod ein:cell-append-pyout ((cell ein:codecell) json)
   "Insert pyout type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:insert-read-only (format "Out [%s]:"
                                 (or (plist-get json :prompt_number) " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
-  (ein:cell-append-mime-type json dynamic)
+  (ein:cell-append-mime-type json (oref cell :dynamic))
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
@@ -632,10 +640,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:cell-append-text text 'font-lock-face 'ein:cell-output-stderr)
     (ein:cell-append-text text)))
 
-(defmethod ein:cell-append-display-data ((cell ein:codecell) json dynamic)
+(defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json dynamic)
+  (ein:cell-append-mime-type json (oref cell :dynamic))
   (ein:insert-read-only "\n"))
 
 (defun ein:cell-append-mime-type (json dynamic)
@@ -655,8 +663,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                "dynamic javascript. got: %s") value))
       (ein:insert-read-only (plist-get json type)))
      (emacs-lisp
-      (ein:insert-read-only
-       (format "%S" (eval (read (plist-get json type))))))
+      (when dynamic
+        (ein:insert-read-only
+         (format "%S" (eval (read (plist-get json type)))))))
      ((html latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg

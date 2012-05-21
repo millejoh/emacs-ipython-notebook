@@ -670,6 +670,7 @@ Do not clear input prompts when the prefix argument is given."
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
   (ein:cell-running-set cell t)
+  (oset cell :dynamic t)
   (ein:notebook-execute-code notebook cell (ein:cell-get-text cell)))
 
 (defun ein:notebook-execute-current-cell ()
