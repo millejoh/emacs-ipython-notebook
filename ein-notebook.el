@@ -868,8 +868,12 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 
 ;;; Notebook mode
 
-(defvar ein:notebook-modes
-  '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
+(defcustom ein:notebook-modes
+  '(ein:notebook-mumamo-mode ein:notebook-plain-mode)
+  "Notebook modes to use \(in order of preference)."
+  :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
+                         (const :tag "Plain" ein:notebook-plain-mode)))
+  :group 'ein)
 
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
