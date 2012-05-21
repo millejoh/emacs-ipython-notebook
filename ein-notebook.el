@@ -532,7 +532,12 @@ Do not clear input prompts when the prefix argument is given."
       (setf (ein:$websocket-onmessage iopub-channel)
             (lambda (packet)
               (ein:notebook-handle-iopub-reply notebook packet)))))
-  (ein:log 'info "IPython kernel is started"))
+  ;; ein:events stores information in buffer local variable, so I need
+  ;; to change buffer:
+  (with-current-buffer (ein:notebook-buffer notebook)
+    ;; Clear out previous (possibly dead) status:
+    (ein:events-trigger 'status_idle.Kernel)
+    (ein:log 'info "IPython kernel is started")))
 
 (defun ein:notebook-handle-shell-reply (notebook packet)
   (destructuring-bind
@@ -593,17 +598,14 @@ Do not clear input prompts when the prefix argument is given."
               (ein:events-trigger 'status_busy.Kernel))
              (("idle")
               (ein:events-trigger 'status_idle.Kernel))
-             (("dead"))
-             (ein:notebook-handle-status-dead notebook)))
+             (("dead")
+              (ein:kernel-stop-channels (ein:$notebook-kernel notebook))
+              (ein:events-trigger 'status_dead.Kernel))))
           (("clear_output")
            (ein:cell-clear-output cell
                                   (plist-get content :stdout)
                                   (plist-get content :stderr)
                                   (plist-get content :other))))))))
-
-(defun ein:notebook-handle-status-dead (notebook)
-  ;; FIXME: do something more useful
-  (ein:log 'info "The kernel has died."))
 
 (defun ein:notebook-handle-output (notebook cell msg-type content)
   (let* ((json (list :output_type msg-type)))

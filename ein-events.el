@@ -66,12 +66,13 @@ See also `ein:ac-setup-maybe'."
 (defun ein:events-header-message-kernel ()
   (case ein:events-status-kernel
     (status_idle.Kernel nil)
-    (status_busy.Kernel "Kernel is busy...")))
+    (status_busy.Kernel "Kernel is busy...")
+    (status_dead.Kernel "Kernel is dead. Need restart.")))
 
 (defun ein:events-trigger (event)
   (ein:log 'debug "Event: %s" event)
   (case event
-    ((status_busy.Kernel status_idle.Kernel)
+    ((status_busy.Kernel status_idle.Kernel status_dead.Kernel)
      (setq ein:events-status-kernel event))
     ((notebook_saving.Notebook
       notebook_saved.Notebook
