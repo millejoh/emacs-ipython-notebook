@@ -30,13 +30,41 @@
 
 (require 'ein-notebook)
 
-(defvar ein:mumamo-codecell-mode 'python-mode)
-(defvar ein:mumamo-textcell-mode 'text-mode)
-(defvar ein:mumamo-htmlcell-mode 'html-mode)
-(defvar ein:mumamo-markdowncell-mode 'markdown-mode)
-(defvar ein:mumamo-rawcell-mode 'rst-mode)
-(defvar ein:mumamo-headingcell-mode 'text-mode)
-(defvar ein:mumamo-fallback-mode 'text-mode)
+(defcustom ein:mumamo-codecell-mode 'python-mode
+  "Major Mode for Code Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-textcell-mode 'text-mode
+  "Major Mode for Text Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-htmlcell-mode 'html-mode
+  "Major Mode for HTML Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-markdowncell-mode 'markdown-mode
+  "Major Mode for Markdown Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-rawcell-mode 'rst-mode
+  "Major Mode for Raw Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-headingcell-mode 'text-mode
+  "Major Mode for Heading Cell."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
+(defcustom ein:mumamo-fallback-mode 'text-mode
+  "Fallback Major Mode."
+  :type '(symbol :tag "Major Mode")
+  :group 'ein)
+
 
 (define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
   "Background mode for `ein:notebook-mumamo-mode'."
