@@ -869,9 +869,14 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 ;;; Notebook mode
 
 (defcustom ein:notebook-modes
-  '(ein:notebook-mumamo-mode ein:notebook-plain-mode)
-  "Notebook modes to use \(in order of preference)."
+  '(ein:notebook-mumamo-mode ein:notebook-python-mode ein:notebook-plain-mode)
+  "Notebook modes to use \(in order of preference).
+
+To avoid using MuMaMo when it is installed:
+  (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
+"
   :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
+                         (const :tag "Only Python" ein:notebook-python-mode)
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
 
@@ -923,10 +928,15 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
+(define-derived-mode ein:notebook-python-mode python-mode "ein:python"
+  "Use `python-mode' for whole notebook buffer.")
+
 ;; "Sync" `ein:notebook-plain-mode-map' with `ein:notebook-mode-map'.
 ;; This way, `ein:notebook-plain-mode-map' automatically changes when
 ;; `ein:notebook-mode-map' is changed.
 (setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
+
+(setcdr ein:notebook-python-mode-map (cdr ein:notebook-mode-map))
 
 (defun ein:notebook-open-in-browser ()
   "Open current notebook in web browser."
