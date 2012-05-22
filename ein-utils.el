@@ -224,6 +224,12 @@ The value of SYMBOL can be string, alist or function."
   `(unless ,place
      (setf ,place ,val)))
 
+(defun ein:funcall-packed (func-arg &rest args)
+  "Call \"packed\" function.
+FUNC-ARG is a `cons' of the form: (FUNC ARG).
+FUNC is called as (apply FUNC ARG ARGS)."
+  (apply (car func-arg) (cdr func-arg) args))
+
 (defun ein:eval-if-bound (symbol)
   (if (boundp symbol) (eval symbol)))
 
