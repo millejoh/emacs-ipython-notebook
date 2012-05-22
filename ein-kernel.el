@@ -391,7 +391,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 ;; Reply handlers.
 
 (defun ein:kernel-get-callbacks-for-msg (kernel msg-id)
-  (gethash (ein:$kernel-msg-callbacks kernel) msg-id))
+  (gethash msg-id (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel-set-callbacks-for-msg (kernel msg-id callbacks)
   (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
