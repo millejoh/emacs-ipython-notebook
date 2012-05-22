@@ -79,27 +79,29 @@ Use the variable returned by this function instead."
 
 (defun ein:events-header-message-notebook ()
   (case (oref ein:@events :status-notebook)
-    (notebook_saving.Notebook "Saving Notebook...")
-    (notebook_saved.Notebook "Notebook is saved")
-    (notebook_save_failed.Notebook "Failed to save Notebook!")))
+    (notebook_saving "Saving Notebook...")
+    (notebook_saved "Notebook is saved")
+    (notebook_save_failed "Failed to save Notebook!")))
 
 (defun ein:events-header-message-kernel ()
   (case (oref ein:@events :status-kernel)
-    (status_idle.Kernel nil)
-    (status_busy.Kernel "Kernel is busy...")
-    (status_dead.Kernel "Kernel is dead. Need restart.")))
+    (status_idle nil)
+    (status_busy "Kernel is busy...")
+    (status_dead "Kernel is dead. Need restart.")))
 
 (defun ein:events-trigger (events event-type)
-  (ein:log 'debug "Event: %s" event-type)
-  (case event-type
-    ((status_busy.Kernel status_idle.Kernel status_dead.Kernel)
-     (oset events :status-kernel event-type))
-    ((notebook_saving.Notebook
-      notebook_saved.Notebook
-      notebook_save_failed.Notebook)
-     (oset events :status-notebook event-type))
+  "Trigger EVENT-TYPE and let event handler EVENTS handle that event.
+EVENT-TYPE is a cons like \(notebook_saved . Notebook), which is
+a direct translation of \"notebook_saved.Notebook\" from the
+IPython notebook client JS."
+  (ein:log 'debug "Event: %S" event-type)
+  (case (cdr event-type)
+    (Kernel
+     (oset events :status-kernel (car event-type)))
+    (Notebook
+     (oset events :status-notebook (car event-type)))
     (t
-     (ein:log 'info "Unknown event: %s" event-type))))
+     (ein:log 'info "Unknown event: %S" event-type))))
 
 (provide 'ein-events)
 
