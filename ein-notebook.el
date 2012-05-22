@@ -120,7 +120,6 @@ is `nil', BODY is executed with any cell types."
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
                          :notebook-id notebook-id
-                         :msg-cell-map (make-hash-table :test 'equal)
                          args)))
     notebook))
 
