@@ -300,11 +300,11 @@ CLEAR-OUTPUT-CALLBACK   `clear_output'    `content'              [#clear]_
 For example, the EXECUTE-REPLY-CALLBACK is called as:
   (`funcall' FUNCTION ARGUMENT CONTENT)
 
-.. [#output] one of `stream', `display_data', `pyout', `pyerr'
+.. [#output]  One of `stream', `display_data', `pyout', `pyerr'.
 .. [#output2] The argument MSG-ID for the FUNCTION is `keyword'.
               (e.g., `:stream')
-.. [#clear]_ content object has `stdout', `stderr' and `other'
-             fields that are booleans.
+.. [#clear]_  Content object has `stdout', `stderr' and `other'
+              fields that are booleans.
 
 `execute_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#execute
