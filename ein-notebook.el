@@ -248,7 +248,7 @@ the time of execution."
          data :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-cell-from-type (notebook type &rest args)
-  (when (equal type "code")
+  (when (eql type 'code)
     (setq args (plist-put args :kernel (ein:$notebook-kernel notebook))))
   (apply #'ein:cell-from-type
          (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
