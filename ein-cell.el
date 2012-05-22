@@ -726,13 +726,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-running-set cell t)
   (oset cell :dynamic t)
   (let* ((kernel (oref cell :kernel))
-         (output-area (oref cell :output-area))
          (callbacks
           (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
                 :output        (cons #'ein:cell--handle-output        cell)
                 :clear_output  (cons #'ein:cell--handle-clear-output  cell)
                 :cell cell)))
-    (ein:kernel-execute kernel callbacks :silent nil)))
+    (ein:kernel-execute kernel
+                        (ein:cell-get-text cell)
+                        callbacks
+                        :silent nil)))
 
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
