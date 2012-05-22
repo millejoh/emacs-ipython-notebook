@@ -98,6 +98,7 @@
 
 (defclass ein:codecell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "code")
+   (kernel :initarg :kernel :type ein:$kernel)
    (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
                         ;; FIXME: "*" should be treated some how to
