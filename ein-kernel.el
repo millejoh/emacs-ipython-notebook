@@ -292,15 +292,17 @@ first ARGUMENT in a `cons':
 Call signature of the callbacks:
 
 Callback                `msg_type'        Extra arguments        Notes
-----------------------  ----------------  ---------------------  ----------
+----------------------  ----------------  ---------------------  ------------
 EXECUTE-REPLY-CALLBACK  `execute_reply'   `content'
-OUTPUT-CALLBACK         [#output]_        `msg_type' `content'
+OUTPUT-CALLBACK         [#output]_        `msg_type' `content'   [#output2]_
 CLEAR-OUTPUT-CALLBACK   `clear_output'    `content'              [#clear]_
 
 For example, the EXECUTE-REPLY-CALLBACK is called as:
   (`funcall' FUNCTION ARGUMENT CONTENT)
 
 .. [#output] one of `stream', `display_data', `pyout', `pyerr'
+.. [#output2] The argument MSG-ID for the FUNCTION is `keyword'.
+              (e.g., `:stream')
 .. [#clear]_ content object has `stdout', `stderr' and `other'
              fields that are booleans.
 
@@ -309,7 +311,9 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#execute
 Output type messages is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
 
-The CELL value may be use for the `set_next_input' payload."
+The CELL value may be use for the `set_next_input' payload.
+
+See `ein:kernel--handle-shell-reply' for how the callbacks are called."
   (assert (ein:kernel-ready-p kernel))
   (let* ((content (list
                    :code code
