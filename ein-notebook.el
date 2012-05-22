@@ -536,30 +536,6 @@ Do not clear input prompts when the prefix argument is given."
         (ein:notebook-restart-kernel ein:notebook))
     (ein:log 'error "Not in notebook buffer!")))
 
-(defun ein:notebook-handle-shell-reply (notebook packet)
-  (destructuring-bind
-      (&key header content parent_header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let ((msg_type (plist-get header :msg_type))
-          (cell (ein:notebook-cell-for-msg
-                 notebook
-                 (plist-get parent_header :msg_id))))
-      (cond
-       ((equal msg_type "execute_reply")
-        (ein:cell-set-input-prompt cell (plist-get content :execution_count))
-        (ein:cell-running-set cell nil)
-        (setf (ein:$notebook-dirty notebook) t))
-       ((equal msg_type "complete_reply")
-        (ein:completer-finish-completing (plist-get content :matched_text)
-                                         (plist-get content :matches)))
-       ((equal msg_type "object_info_reply")
-        (when (plist-get content :found)
-          (ein:cell-finish-tooltip cell content)))
-       (t (ein:log 'info "unknown reply: %s" msg_type)))
-      (when (plist-member content :payload)
-        (ein:notebook-handle-payload notebook cell
-                                     (plist-get content :payload))))))
-
 
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
   (ein:aand ein:notebook (ein:$notebook-ewoc it) (ewoc-locate it pos)))
@@ -624,11 +600,11 @@ Do not clear input prompts when the prefix argument is given."
     (ein:log 'error "Not in notebook buffer!")))
 
 (defun ein:notebook-request-tool-tip (notebook cell func)
-  (let ((msg-id (ein:kernel-object-info-request
-                 (ein:$notebook-kernel notebook) func)))
-    (when msg-id
-      (puthash msg-id (oref cell :cell-id)
-               (ein:$notebook-msg-cell-map notebook)))))
+  (let ((kernel (ein:$notebook-kernel notebook))
+        (callbacks
+         (list :object_info_reply
+               (cons #'ein:cell-finish-tooltip cell))))
+    (ein:kernel-object-info-request kernel func callbacks)))
 
 (defun ein:notebook-request-tool-tip-command ()
   (interactive)
@@ -653,10 +629,11 @@ Do not clear input prompts when the prefix argument is given."
     (ein:notebook-request-tool-tip-command)))
 
 (defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
-  (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
-                                     line-string rel-pos)))
-    (puthash msg-id (oref cell :cell-id)
-             (ein:$notebook-msg-cell-map notebook))))
+  (let ((kernel (ein:$notebook-kernel notebook))
+        (callbacks
+         (list :complete_reply
+               (cons #'ein:completer-finish-completing nil))))
+    (ein:kernel-complete kernel line-string rel-pos callbacks)))
 
 (defun ein:notebook-complete-cell-command ()
   (interactive)

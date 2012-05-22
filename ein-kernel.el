@@ -403,8 +403,9 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (callbacks (ein:kernel-get-callbacks-for-msg
                        kernel (plist-get parent_header :msg_id)))
            (cb (plist-get callbacks msg-type)))
-      (when cb
-        (ein:funcall-packed cb content))
+      (if cb
+          (ein:funcall-packed cb content)
+        (ein:log 'debug "unknown reply: %s" msg-type))
       (ein:aif (plist-get content :payload)
           (ein:kernel--handle-payload kernel (plist-get callbacks :cell) it)))))
 
