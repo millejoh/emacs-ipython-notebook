@@ -754,16 +754,16 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content)
   (let* ((json (list :output_type msg-type)))
-    (case msg-type
-      (:stream
+    (ein:case-equal msg-type
+      (("stream")
        (plist-put json :text (plist-get content :data))
        (plist-put json :stream (plist-get content :name)))
-      ((:display_data :pyout)
-       (when (eql msg-type :pyout)
+      (("display_data" "pyout")
+       (when (equal msg-type "pyout")
          (plist-put json :prompt_number (plist-get content :execution_count)))
        (setq json (ein:output-area-convert-mime-types
                    json (plist-get content :data))))
-      (:pyerr
+      (("pyerr")
        (plist-put json :ename (plist-get content :ename))
        (plist-put json :evalue (plist-get content :evalue))
        (plist-put json :traceback (plist-get content :traceback))))

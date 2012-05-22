@@ -302,8 +302,7 @@ For example, the EXECUTE-REPLY-CALLBACK is called as:
   (`funcall' FUNCTION ARGUMENT CONTENT)
 
 .. [#output]  One of `stream', `display_data', `pyout', `pyerr'.
-.. [#output2] The argument MSG-ID for the FUNCTION is `keyword'.
-              (e.g., `:stream')
+.. [#output2] The argument MSG-ID for the FUNCTION is a string.
 .. [#clear]_  Content object has `stdout', `stderr' and `other'
               fields that are booleans.
 
@@ -400,10 +399,10 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
   (destructuring-bind
       (&key header content parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
-    (let* ((msg-type (intern (format ":%s" (plist-get header :msg_type))))
+    (let* ((msg-type (plist-get header :msg_type))
            (msg-id (plist-get parent_header :msg_id))
            (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
-           (cb (plist-get callbacks msg-type)))
+           (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
       (if cb
           (ein:funcall-packed cb content)
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
@@ -429,18 +428,18 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
   (destructuring-bind
       (&key content parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
-    (let* ((msg-type (intern (format ":%s" (plist-get header :msg_type))))
+    (let* ((msg-type (plist-get header :msg_type))
            (callbacks (ein:kernel-get-callbacks-for-msg
                        kernel (plist-get parent_header :msg_id)))
            (events (ein:$kernel-events kernel)))
       (ein:log 'debug "HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
-      (if (and (not (eql msg-type :status)) (null callbacks))
+      (if (and (not (equal msg-type "status")) (null callbacks))
           (ein:log 'verbose "Got message not from this kernel.")
-        (case msg-type
-          ((:stream :display_data :pyout :pyerr)
+        (ein:case-equal msg-type
+          (("stream" "display_data" "pyout" "pyerr")
            (ein:aif (plist-get callbacks :output)
                (ein:funcall-packed it msg-type content)))
-          (:status
+          (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
               (ein:events-trigger events '(status_busy . Kernel)))
@@ -449,7 +448,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
              (("dead")
               (ein:kernel-stop-channels kernel)
               (ein:events-trigger events '(status_dead . Kernel)))))
-          (:clear_output
+          (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
                (ein:funcall-packed it content))))))))
 
