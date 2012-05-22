@@ -104,7 +104,8 @@ FIXME: document other slots."
 
 
 (defun ein:kernel-restart (kernel)
-  (ein:events-trigger (ein:$kernel-events kernel) 'status_restarting.Kernel)
+  (ein:events-trigger (ein:$kernel-events kernel)
+                      '(status_restarting . Kernel))
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
