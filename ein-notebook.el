@@ -541,9 +541,10 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-handle-shell-reply (notebook packet)
   (destructuring-bind
-      (&key header content msg_type parent_header &allow-other-keys)
+      (&key header content parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
-    (let ((cell (ein:notebook-cell-for-msg
+    (let ((msg_type (plist-get header :msg_type))
+          (cell (ein:notebook-cell-for-msg
                  notebook
                  (plist-get parent_header :msg_id))))
       (cond
