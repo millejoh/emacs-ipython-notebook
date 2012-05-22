@@ -28,9 +28,26 @@
 (require 'ansi-color)
 
 (require 'ein-utils)
+(require 'ein-events)
 
-(defun ein:pager-new (name)
+(defun ein:pager-new (name events)
+  ;; currently pager = name.
+  (ein:pager-bind-events name events)
   name)
+
+(defun ein:pager-bind-events (pager events)
+  "Bind events related to PAGER to the event handler EVENTS."
+  (ein:events-on events
+                 '(open_with_text . Pager)
+                 #'ein:pager--open-with-text
+                 pager))
+
+(defun ein:pager--open-with-text (pager data)
+  (let ((text (plist-get :text data)))
+    (unless (equal (ein:trim text) "")
+      (ein:pager-clear pager)
+      (ein:pager-expand pager)
+      (ein:pager-append-text pager text))))
 
 (defun ein:pager-clear (pager)
   (ein:with-read-only-buffer (get-buffer-create pager)
