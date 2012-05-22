@@ -523,7 +523,8 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-start-kernel ()
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook)
-                                 base-url)))
+                                 base-url
+                                 (ein:$notebook-events ein:notebook))))
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernel-start kernel
                       (ein:$notebook-notebook-id ein:notebook))
