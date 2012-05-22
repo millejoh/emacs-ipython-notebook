@@ -30,7 +30,6 @@
 
 (require 'ein-log)
 (require 'ein-utils)
-(eval-when-compile (defvar ein:notebook))
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 
@@ -49,9 +48,8 @@
 As `header-line-format' is buffer local variable, it must be set
 for each chunk when in
 See also `ein:ac-setup-maybe'."
-  (and ein:notebook
-       (and (boundp 'mumamo-multi-major-mode)
-            (eval 'mumamo-multi-major-mode))
+  (and (ein:eval-if-bound 'ein:notebook)
+       (ein:eval-if-bound 'mumamo-multi-major-mode)
        (setq header-line-format ein:header-line-format)))
 (add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
 
