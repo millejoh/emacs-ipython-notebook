@@ -269,7 +269,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
       msg-id)))
 
 
-(defun* ein:kernel-execute (kernel code callbacks
+(defun* ein:kernel-execute (kernel code &optional callbacks
                                    &key
                                    (silent t)
                                    (user-variables [])
@@ -400,12 +400,13 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
       (&key header content parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let* ((msg-type (intern (format ":%s" (plist-get header :msg_type))))
-           (callbacks (ein:kernel-get-callbacks-for-msg
-                       kernel (plist-get parent_header :msg_id)))
+           (msg-id (plist-get parent_header :msg_id))
+           (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
            (cb (plist-get callbacks msg-type)))
       (if cb
           (ein:funcall-packed cb content)
-        (ein:log 'debug "unknown reply: %s" msg-type))
+        (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
+                 msg-type msg-id))
       (ein:aif (plist-get content :payload)
           (ein:kernel--handle-payload kernel (plist-get callbacks :cell) it)))))
 
