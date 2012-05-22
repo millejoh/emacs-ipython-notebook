@@ -249,6 +249,8 @@ the time of execution."
          data :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-cell-from-type (notebook type &rest args)
+  (when (equal type "code")
+    (setq args (plist-put args :kernel (ein:$notebook-kernel notebook))))
   (apply #'ein:cell-from-type
          (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
 
@@ -524,7 +526,10 @@ Do not clear input prompts when the prefix argument is given."
                                  base-url)))
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id ein:notebook))))
+                      (ein:$notebook-notebook-id ein:notebook))
+    (loop for cell in (ein:notebook-get-cells ein:notebook)
+          do (when (ein:codecell-p cell)
+               (ein:cell-set-kernel cell kernel)))))
 
 (defun ein:notebook-restart-kernel (notebook)
   (ein:kernel-restart (ein:$notebook-kernel notebook)))
