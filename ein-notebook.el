@@ -84,7 +84,10 @@
   Notebook name.
 
 `ein:$notebook-nbformat' : integer
-  Notebook file format version."
+  Notebook file format version.
+
+`ein:$notebook-events' : `ein:$events'
+  Event handler instance."
   url-or-port
   notebook-id
   data
@@ -96,6 +99,7 @@
   metadata
   notebook-name
   nbformat
+  events
   )
 
 (ein:deflocal ein:notebook nil
@@ -205,7 +209,8 @@ the time of execution."
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
-  (setq header-line-format ein:header-line-format)
+  (setf (ein:$notebook-events ein:notebook)
+        (ein:events-setup (current-buffer)))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -532,12 +537,9 @@ Do not clear input prompts when the prefix argument is given."
       (setf (ein:$websocket-onmessage iopub-channel)
             (lambda (packet)
               (ein:notebook-handle-iopub-reply notebook packet)))))
-  ;; ein:events stores information in buffer local variable, so I need
-  ;; to change buffer:
-  (with-current-buffer (ein:notebook-buffer notebook)
-    ;; Clear out previous (possibly dead) status:
-    (ein:events-trigger 'status_idle.Kernel)
-    (ein:log 'info "IPython kernel is started")))
+  ;; Clear out previous (possibly dead) status:
+  (ein:events-trigger (ein:$notebook-events notebook) '(status_idle . Kernel))
+  (ein:log 'info "IPython kernel is started"))
 
 (defun ein:notebook-handle-shell-reply (notebook packet)
   (destructuring-bind
@@ -587,7 +589,8 @@ Do not clear input prompts when the prefix argument is given."
     (let ((msg_type (plist-get header :msg_type)) ; not parent_header
           (cell (ein:notebook-cell-for-msg
                  notebook
-                 (plist-get parent_header :msg_id))))
+                 (plist-get parent_header :msg_id)))
+          (events (ein:$notebook-events notebook)))
       (if (and (not (equal msg_type "status")) (null cell))
           (ein:log 'verbose "Got message not from this notebook.")
         (ein:log 'debug "handle-iopub-reply: msg_type = %s" msg_type)
@@ -597,12 +600,12 @@ Do not clear input prompts when the prefix argument is given."
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
-              (ein:events-trigger 'status_busy.Kernel))
+              (ein:events-trigger events '(status_busy . Kernel)))
              (("idle")
-              (ein:events-trigger 'status_idle.Kernel))
+              (ein:events-trigger events '(status_idle . Kernel)))
              (("dead")
               (ein:kernel-stop-channels (ein:$notebook-kernel notebook))
-              (ein:events-trigger 'status_dead.Kernel))))
+              (ein:events-trigger events '(status_dead . Kernel)))))
           (("clear_output")
            (ein:cell-clear-output cell
                                   (plist-get content :stdout)
@@ -801,7 +804,8 @@ Do not clear input prompts when the prefix argument is given."
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
-    (ein:events-trigger 'notebook_saving.Notebook)
+    (ein:events-trigger (ein:$notebook-events notebook)
+                        '(notebook_saving . Notebook))
     (let ((url (ein:url-no-cache (ein:notebook-url notebook)))
           (url-request-method "PUT")
           (url-request-extra-headers '(("Content-Type" . "application/json")))
@@ -854,10 +858,12 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-save-notebook-success (notebook status)
   (setf (ein:$notebook-dirty notebook))
   (set-buffer-modified-p nil)
-  (ein:events-trigger 'notebook_saved.Notebook))
+  (ein:events-trigger (ein:$notebook-events notebook)
+                      '(notebook_saved . Notebook)))
 
 (defun ein:notebook-save-notebook-error (notebook status)
-  (ein:events-trigger 'notebook_save_failed.Notebook))
+  (ein:events-trigger (ein:$notebook-events notebook)
+                      '(notebook_save_failed . Notebook)))
 
 (defun ein:notebook-rename-command (name)
   "Rename current notebook and save it immediately.
