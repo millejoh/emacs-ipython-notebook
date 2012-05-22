@@ -560,23 +560,6 @@ Do not clear input prompts when the prefix argument is given."
         (ein:notebook-handle-payload notebook cell
                                      (plist-get content :payload))))))
 
-(defun ein:notebook-handle-payload (notebook cell payload)
-  (loop for p in payload
-        for text = (plist-get p :text)
-        for source = (plist-get p :source)
-        if (equal source "IPython.zmq.page.page")
-        when (not (equal (ein:trim text) ""))
-        do (let ((pager (ein:$notebook-pager notebook)))
-             (ein:pager-clear pager)
-             (ein:pager-expand pager)
-             (ein:pager-append-text pager text))
-        else if
-        (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
-        do (let ((new-cell (ein:notebook-insert-cell-below
-                            notebook 'code cell)))
-             (ein:cell-set-text new-cell text)
-             (setf (ein:$notebook-dirty notebook) t))))
-
 
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
   (ein:aand ein:notebook (ein:$notebook-ewoc it) (ewoc-locate it pos)))
