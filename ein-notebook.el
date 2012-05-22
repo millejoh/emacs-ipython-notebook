@@ -565,25 +565,15 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
 
-(defun ein:notebook-execute-code (notebook cell code)
-  (let* ((msg-id (ein:kernel-execute (ein:$notebook-kernel notebook) code)))
-    (puthash msg-id (oref cell :cell-id)
-             (ein:$notebook-msg-cell-map notebook))))
-
-(defun ein:notebook-execute-cell (notebook cell)
-  "Execute code cell CELL in NOTEBOOK."
-  (ein:cell-clear-output cell t t t)
-  (ein:cell-set-input-prompt cell "*")
-  (ein:cell-running-set cell t)
-  (oset cell :dynamic t)
-  (ein:notebook-execute-code notebook cell (ein:cell-get-text cell)))
+(defun ein:notebook-execute-code (notebook code)
+  (ein:kernel-execute (ein:$notebook-kernel notebook) code))
 
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:notebook-execute-cell ein:notebook cell)
+      (ein:cell-execute cell)
       (setf (ein:$notebook-dirty ein:notebook) t)
       cell)))
 
@@ -602,7 +592,7 @@ Do not clear input prompts when the prefix argument is given."
   (if ein:notebook
     (loop for cell in (ein:notebook-get-cells ein:notebook)
           when (ein:codecell-p cell)
-          do (ein:notebook-execute-cell ein:notebook cell))
+          do (ein:cell-execute cell))
     (ein:log 'error "Not in notebook buffer!")))
 
 (defun ein:notebook-request-tool-tip (notebook cell func)
@@ -625,8 +615,7 @@ Do not clear input prompts when the prefix argument is given."
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (let ((func (ein:object-at-point)))
         (when func
-          (ein:notebook-execute-code
-           ein:notebook cell (format "%s?" func)))))))
+          (ein:notebook-execute-code ein:notebook (format "%s?" func)))))))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   (interactive "P")
