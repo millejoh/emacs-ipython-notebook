@@ -49,9 +49,14 @@
     (insert json-string)
     (flet ((pop-to-buffer (buf) buf)
            (ein:notebook-start-kernel ()))
-      (ein:notebook-url-retrieve-callback
-       nil
-       (ein:notebook-new "DUMMY-URL" notebook-id)))))
+      (with-current-buffer (ein:notebook-url-retrieve-callback
+                            nil
+                            (ein:notebook-new "DUMMY-URL" notebook-id))
+        (let ((events (ein:events-setup (current-buffer))))
+          (setf (ein:$notebook-events ein:notebook) events)
+          (setf (ein:$notebook-kernel ein:notebook)
+                (ein:kernel-new 8888 "/kernels" events)))
+        (current-buffer)))))
 
 (defun eintest:notebook-make-data (cells &optional name)
   (unless name (setq name "Dummy Name"))
