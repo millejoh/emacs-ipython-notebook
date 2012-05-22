@@ -577,32 +577,6 @@ Do not clear input prompts when the prefix argument is given."
              (ein:cell-set-text new-cell text)
              (setf (ein:$notebook-dirty notebook) t))))
 
-(defun ein:notebook-handle-iopub-reply (notebook packet)
-  (destructuring-bind
-      (&key content parent_header header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let ((msg_type (plist-get header :msg_type)) ; not parent_header
-          (cell (ein:notebook-cell-for-msg
-                 notebook
-                 (plist-get parent_header :msg_id)))
-          (events (ein:$notebook-events notebook)))
-      (if (and (not (equal msg_type "status")) (null cell))
-          (ein:log 'verbose "Got message not from this notebook.")
-        (ein:log 'debug "handle-iopub-reply: msg_type = %s" msg_type)
-        (ein:case-equal msg_type
-          (("stream" "display_data" "pyout" "pyerr")
-           (ein:notebook-handle-output notebook cell msg_type content))
-          (("status")
-           (ein:case-equal (plist-get content :execution_state)
-             (("busy")
-              (ein:events-trigger events '(status_busy . Kernel)))
-             (("idle")
-              (ein:events-trigger events '(status_idle . Kernel)))
-             (("dead")
-              (ein:kernel-stop-channels (ein:$notebook-kernel notebook))
-              (ein:events-trigger events '(status_dead . Kernel)))))
-          )))))
-
 
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
   (ein:aand ein:notebook (ein:$notebook-ewoc it) (ewoc-locate it pos)))
