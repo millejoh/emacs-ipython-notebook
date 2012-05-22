@@ -54,11 +54,6 @@ FIXME: document other slots."
   session-id
   msg-callbacks)
 
-(defvar ein:base-kernel-url "/")
-;; Currently there is no way to know this setting.  Maybe I should ask
-;; IPython developers for an API to get this from notebook server.
-
-
 
 ;;; Initialization and connection.
 

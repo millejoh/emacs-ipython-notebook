@@ -39,6 +39,10 @@
 (require 'ein-events)
 (require 'ein-kill-ring)
 
+(defvar ein:base-kernel-url "/")
+;; Currently there is no way to know this setting.  Maybe I should ask
+;; IPython developers for an API to get this from notebook server.
+
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
@@ -74,9 +78,6 @@
 `ein:$notebook-dirty' : boolean
   Set to `t' if notebook has unsaved changes.  Otherwise `nil'.
 
-`ein:$notebook-msg-cell-map' : hash
-  Hash to hold map from msg-id to cell-id.
-
 `ein:$notebook-metadata' : plist
   Notebook meta data (e.g., notebook name).
 
@@ -95,7 +96,6 @@
   kernel
   pager
   dirty
-  msg-cell-map
   metadata
   notebook-name
   nbformat
@@ -131,12 +131,7 @@ is `nil', BODY is executed with any cell types."
          (notebook-name (plist-get metadata :name)))
     (setf (ein:$notebook-metadata notebook) metadata)
     (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
-    (setf (ein:$notebook-notebook-name notebook) notebook-name))
-  (setf (ein:$notebook-pager notebook)
-        (ein:pager-new
-         (format ein:notebook-pager-buffer-name-template
-                 (ein:$notebook-url-or-port notebook)
-                 (ein:$notebook-notebook-name notebook)))))
+    (setf (ein:$notebook-notebook-name notebook) notebook-name)))
 
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
@@ -209,8 +204,8 @@ the time of execution."
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
-  (setf (ein:$notebook-events ein:notebook)
-        (ein:events-setup (current-buffer)))
+  (ein:notebook-bind-events ein:notebook
+                            (ein:events-setup (current-buffer)))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -220,6 +215,31 @@ the time of execution."
         (data (ein:$node-data ewoc-data)))
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
+
+
+;;; Initialization.
+
+(defun ein:notebook-bind-events (notebook events)
+  "Bind events related to PAGER to the event handler EVENTS."
+  (setf (ein:$notebook-events ein:notebook) events)
+  (ein:events-on events
+                 '(set_next_input . Cell) ; it's Notebook in JS
+                 #'ein:notebook--set-next-input
+                 notebook)
+  ;; Bind events for sub components:
+  (setf (ein:$notebook-pager notebook)
+        (ein:pager-new
+         (format ein:notebook-pager-buffer-name-template
+                 (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-name notebook))
+         (ein:$notebook-events notebook))))
+
+(defun ein:notebook--set-next-input (notebook data)
+  (let* ((cell (plist-get data :cell))
+         (text (plist-get data :text))
+         (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
+    (ein:cell-set-text new-cell text)
+    (setf (ein:$notebook-dirty notebook) t)))
 
 
 ;;; Cell indexing, retrieval, etc.
@@ -236,14 +256,6 @@ the time of execution."
   (let* ((ewoc (ein:$notebook-ewoc notebook))
          (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
     (mapcar #'ein:$node-data nodes)))
-
-(defun ein:notebook-cell-for-msg (notebook msg-id)
-  (let* ((msg-cell-map (ein:$notebook-msg-cell-map notebook))
-         (cell-id (gethash msg-id msg-cell-map)))
-    (when cell-id
-      (loop for cell in (ein:notebook-get-cells notebook)
-            when (equal (oref cell :cell-id) cell-id)
-            return cell))))
 
 (defun ein:notebook-ncells (notebook)
   (length (ein:notebook-get-cells notebook)))
@@ -507,17 +519,15 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
-  (let ((kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook))))
+  (let* ((base-url (concat ein:base-kernel-url "kernels"))
+         (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook)
+                                 base-url)))
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id ein:notebook)
-                      #'ein:notebook-kernel-started
-                      (list ein:notebook))))
+                      (ein:$notebook-notebook-id ein:notebook))))
 
 (defun ein:notebook-restart-kernel (notebook)
-  (ein:kernel-restart (ein:$notebook-kernel notebook)
-                      #'ein:notebook-kernel-started
-                      (list ein:notebook)))
+  (ein:kernel-restart (ein:$notebook-kernel notebook)))
 
 (defun ein:notebook-restart-kernel-command ()
   (interactive)
@@ -525,21 +535,6 @@ Do not clear input prompts when the prefix argument is given."
       (when (y-or-n-p "Really restart kernel? ")
         (ein:notebook-restart-kernel ein:notebook))
     (ein:log 'error "Not in notebook buffer!")))
-
-(defun ein:notebook-kernel-started (notebook)
-  (let* ((kernel (ein:$notebook-kernel notebook))
-         (shell-channel (ein:$kernel-shell-channel kernel))
-         (iopub-channel (ein:$kernel-iopub-channel kernel)))
-    (lexical-let ((notebook notebook))
-      (setf (ein:$websocket-onmessage shell-channel)
-            (lambda (packet)
-              (ein:notebook-handle-shell-reply notebook packet)))
-      (setf (ein:$websocket-onmessage iopub-channel)
-            (lambda (packet)
-              (ein:notebook-handle-iopub-reply notebook packet)))))
-  ;; Clear out previous (possibly dead) status:
-  (ein:events-trigger (ein:$notebook-events notebook) '(status_idle . Kernel))
-  (ein:log 'info "IPython kernel is started"))
 
 (defun ein:notebook-handle-shell-reply (notebook packet)
   (destructuring-bind
