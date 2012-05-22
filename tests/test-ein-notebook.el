@@ -323,7 +323,7 @@
         (should-not (search-forward "In [1]:" nil t)))
       (let* ((payload nil)
              (content (list :execution_count 1 :payload payload))
-             (packet (list :msg_type "execute_reply"
+             (packet (list :header (list :msg_type "execute_reply")
                            :parent_header (list :msg_id msg-id)
                            :content content)))
         (ein:notebook-handle-shell-reply ein:notebook (json-encode packet)))
@@ -333,7 +333,7 @@
         (should (search-forward "In [1]:" nil t)))
       (let* ((content (list :data "'Hello World'"
                             :name "stdout"))
-             (packet (list :msg_type "stream"
+             (packet (list :header (list :msg_type "stream")
                            :parent_header (list :msg_id msg-id)
                            :content content)))
         (ein:notebook-handle-iopub-reply ein:notebook (json-encode packet)))
