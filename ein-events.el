@@ -95,16 +95,17 @@ EVENT-TYPE is a cons like \(notebook_saved . Notebook), which is
 a direct translation of \"notebook_saved.Notebook\" from the
 IPython notebook client JS."
   (ein:log 'debug "Event: %S" event-type)
-  (ein:aif (gethash event-type (oref events :callbacks))
-      (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it))
-  ;; FIXME! the following must be put together in the event frame work.
-  (case (cdr event-type)
-    (Kernel
-     (oset events :status-kernel (car event-type)))
-    (Notebook
-     (oset events :status-notebook (car event-type)))
-    (t
-     (ein:log 'info "Unknown event: %S" event-type))))
+  (with-current-buffer (oref events :buffer)
+    (ein:aif (gethash event-type (oref events :callbacks))
+        (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it))
+    ;; FIXME! the following must be put together in the event frame work.
+    (case (cdr event-type)
+      (Kernel
+       (oset events :status-kernel (car event-type)))
+      (Notebook
+       (oset events :status-notebook (car event-type)))
+      (t
+       (ein:log 'info "Unknown event: %S" event-type)))))
 
 
 (defmethod ein:events-on ((events ein:events) event-type
