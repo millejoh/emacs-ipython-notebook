@@ -98,6 +98,10 @@
       (ein:connect-request-help-command)
     (ein:connect-request-tool-tip-command)))
 
+(defun ein:connect-complete-command ()
+  (interactive)
+  (ein:notebook-complete-at-point (ein:connect-get-notebook)))
+
 (defun ein:connect-pop-to-notebook ()
   (interactive)
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
@@ -107,6 +111,7 @@
     (define-key map "\C-c\C-c" 'ein:connect-eval-buffer)
     (define-key map "\C-c\C-r" 'ein:connect-eval-region)
     (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
+    (define-key map "\C-c\C-i" 'ein:connect-complete-command)
     (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
     map))
 

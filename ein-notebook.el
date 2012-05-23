@@ -625,21 +625,21 @@ Do not clear input prompts when the prefix argument is given."
       (ein:notebook-request-help-command)
     (ein:notebook-request-tool-tip-command)))
 
-(defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
+(defun ein:notebook-complete-at-point (notebook)
   (let ((kernel (ein:$notebook-kernel notebook))
         (callbacks
          (list :complete_reply
                (cons #'ein:completer-finish-completing nil))))
-    (ein:kernel-complete kernel line-string rel-pos callbacks)))
+    (ein:kernel-complete kernel
+                         (thing-at-point 'line)
+                         (current-column)
+                         callbacks)))
 
 (defun ein:notebook-complete-cell-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:notebook-complete-cell ein:notebook
-                                  cell
-                                  (thing-at-point 'line)
-                                  (current-column)))))
+      (ein:notebook-complete-at-point ein:notebook))))
 
 (defun ein:notebook-kernel-interrupt-command ()
   (interactive)
