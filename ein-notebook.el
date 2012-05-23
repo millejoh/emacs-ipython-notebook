@@ -287,8 +287,7 @@ the time of execution."
 (defun ein:notebook-copy-cell-command ()
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))
-    (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
+    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
 
 (defun ein:notebook-yank-cell-command (&optional arg)
   (interactive "*P")
