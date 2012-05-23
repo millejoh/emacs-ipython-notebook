@@ -163,7 +163,6 @@ is `nil', BODY is executed with any cell types."
         (with-current-buffer buffer
           (pop-to-buffer (current-buffer))
           ein:notebook)
-      (remhash key ein:notebook-opened-map)
       (ein:notebook-request-open url-or-port notebook-id))))
 
 (defun ein:notebook-request-open (url-or-port notebook-id)
