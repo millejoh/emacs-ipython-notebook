@@ -76,7 +76,7 @@
 (defun ein:connect-eval-region (start end)
   (interactive "r")
   (let ((kernel (ein:connect-get-kernel))
-        (code (buffer-substring start end)))
+        (code (ein:trim-indent (buffer-substring start end))))
     (ein:kernel-execute kernel code nil :silent t)))
 
 (defun ein:connect-request-tool-tip-command ()
