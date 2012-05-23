@@ -21,7 +21,12 @@
 
 ;;; Commentary:
 
-;;
+;; FIXME: There is a problem when connected notebook is closed.
+;;        This can be fixed in some ways:
+;; * Turn off ein:connect when the command that uses kernel is invoked
+;;   but corresponding notebook was closed already.
+;; * Connect directly to ein:kernel and make its destructor to care
+;;   about connecting buffers.
 
 ;;; Code:
 
