@@ -95,3 +95,19 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (save-excursion
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
+
+(ert-deftest ein:notebook-request-help ()
+  (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+    (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                                             (ein:kernel-ready-p it))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-insert-cell-below-command)
+      (let ((pager-name (ein:$notebook-pager ein:notebook)))
+        (ein:aif (get-buffer pager-name)
+            (kill-buffer it))
+        (insert "file")
+        (ein:notebook-request-help-command)
+        ;; Pager buffer will be created when got the response
+        (eintest:wait-until (lambda () (get-buffer pager-name)))
+        (with-current-buffer (get-buffer pager-name)
+          (should (search-forward "Docstring:\nfile")))))))
