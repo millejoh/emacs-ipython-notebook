@@ -247,7 +247,11 @@ the time of execution."
          data :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-cell-from-type (notebook type &rest args)
-  (when (eql type 'code)
+  ;; FIXME: unify type of TYPE to symbol or string.
+  (when (or (eql type 'code)
+            ;; TYPE can be a string.
+            ;; e.g. `ein:notebook-split-cell-at-point'
+            (equal type "code"))
     (setq args (plist-put args :kernel (ein:$notebook-kernel notebook))))
   (apply #'ein:cell-from-type
          (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
