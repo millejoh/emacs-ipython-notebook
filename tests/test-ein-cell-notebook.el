@@ -56,6 +56,47 @@ The new cell is bound to a variable `cell'."
                    (1+ (point))))))
 
 
+;; from-json
+
+(ert-deftest eintest:cell-input-prompt-number ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :input "some input"
+             :prompt_number 111)
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[111\\]:
+some input
+"))))
+
+(ert-deftest eintest:cell-input-prompt-star ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :input "some input"
+             :prompt_number "*")
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[\\*\\]:
+some input
+"))))
+
+(ert-deftest eintest:cell-input-prompt-empty ()
+  (eintest:with-one-cell
+      (ein:cell-from-json
+       (list :cell_type "code"
+             :input "some input")
+       :ewoc (ein:$notebook-ewoc ein:notebook))
+    (goto-char (ein:cell-location cell))
+    (should (looking-at "\
+In \\[ \\]:
+some input
+"))))
+
+
 ;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
