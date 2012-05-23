@@ -247,12 +247,8 @@ the time of execution."
          data :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-cell-from-type (notebook type &rest args)
+  ;; Note: TYPE can be a string.
   ;; FIXME: unify type of TYPE to symbol or string.
-  (when (or (eql type 'code)
-            ;; TYPE can be a string.
-            ;; e.g. `ein:notebook-split-cell-at-point'
-            (equal type "code"))
-    (setq args (plist-put args :kernel (ein:$notebook-kernel notebook))))
   (apply #'ein:cell-from-type
          (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
 
@@ -311,9 +307,14 @@ the time of execution."
 
 (defun ein:notebook-maybe-new-cell (notebook type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
-  (if (ein:basecell-child-p type-or-cell)
-      type-or-cell
-    (ein:notebook-cell-from-type notebook type-or-cell)))
+  (let ((cell (if (ein:basecell-child-p type-or-cell)
+                  type-or-cell
+                (ein:notebook-cell-from-type notebook type-or-cell))))
+    ;; When newly created or copied, kernel is not attached or not the
+    ;; kernel of this notebook.  So reset it here.
+    (when (ein:codecell-p cell)
+      (oset cell :kernel (ein:$notebook-kernel notebook)))
+    cell))
 
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
   "Insert a cell just after BASE-CELL and return the new cell."

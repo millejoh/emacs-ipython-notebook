@@ -160,7 +160,10 @@
       (should (equal (length ein:kill-ring) 3))
       (loop repeat 3
             do (ein:notebook-yank-cell-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3)))))
+      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (loop for cell in (ein:notebook-get-cells ein:notebook)
+            do (should (ein:codecell-p cell))
+            do (should (slot-boundp cell :kernel))))))
 
 (ert-deftest ein:notebook-yank-cell-command-two-buffers ()
   (let (ein:kill-ring ein:kill-ring-yank-pointer)
