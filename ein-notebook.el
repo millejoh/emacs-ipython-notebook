@@ -767,7 +767,9 @@ Do not clear input prompts when the prefix argument is given."
 NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
    (list (read-string "Rename notebook: "
-                      (ein:$notebook-notebook-name ein:notebook))))
+                      (let ((name (ein:$notebook-notebook-name ein:notebook)))
+                        (unless (string-match "Untitled[0-9]+" name)
+                          name)))))
   (ein:notebook-set-notebook-name ein:notebook name)
   (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
   (ein:notebook-save-notebook ein:notebook 0))
