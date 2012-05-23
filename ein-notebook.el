@@ -564,9 +564,6 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
 
-(defun ein:notebook-execute-code (notebook code)
-  (ein:kernel-execute (ein:$notebook-kernel notebook) code))
-
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
   (interactive)
@@ -614,7 +611,12 @@ Do not clear input prompts when the prefix argument is given."
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (let ((func (ein:object-at-point)))
         (when func
-          (ein:notebook-execute-code ein:notebook (format "%s?" func)))))))
+          (ein:kernel-execute (ein:$notebook-kernel ein:notebook)
+                              (format "%s?" func) ; = code
+                              nil                 ; = callbacks
+                              ;; It looks like that magic command does
+                              ;; not work in silent mode.
+                              :silent nil))))))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   (interactive "P")
