@@ -573,7 +573,11 @@ If END is non-`nil', return the location of next element."
           (plist-put element :output new-ouptut))
         ;; remove cleared outputs from internal data
         (oset cell :outputs
-              (ein:remove-by-index (oref cell :outputs) indices))))))
+              (ein:remove-by-index (oref cell :outputs) indices))))
+    ;; Footer may have extra (possibly colored) newline due to the
+    ;; last output type.  So invalidate it here.
+    ;; See `ein:cell-insert-footer' (for codecell).
+    (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
