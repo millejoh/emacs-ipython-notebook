@@ -635,7 +635,7 @@ Do not clear input prompts when the prefix argument is given."
                          (current-column)
                          callbacks)))
 
-(defun ein:notebook-complete-cell-command ()
+(defun ein:notebook-complete-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
@@ -825,7 +825,7 @@ Examples:
     (define-key map (kbd "C-c <up>") 'ein:notebook-move-cell-up-command)
     (define-key map (kbd "C-c <down>") 'ein:notebook-move-cell-down-command)
     (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
-    (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
+    (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
     (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
