@@ -74,7 +74,7 @@ compatibility with `ein:completer-finish-completing-default'."
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
 dotty completion."
-  (if ein:notebook
+  (if (or ein:notebook (ein:eval-if-bound 'ein:@connect))
       (with-syntax-table ein:dotty-syntax-table
         ad-do-it)
     ad-do-it))

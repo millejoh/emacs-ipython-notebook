@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'eieio)
+(eval-when-compile (require 'auto-complete nil t))
 
 (require 'ein-notebook)
 
@@ -58,6 +59,8 @@
   (let* ((notebook (buffer-local-value 'ein:notebook
                                        (get-buffer buffer-or-name)))
          (connection (ein:connect-setup notebook (current-buffer))))
+    (when (ein:eval-if-bound 'ac-sources)
+      (push 'ac-source-ein-cached ac-sources))
     (ein:connect-mode)
     (message "Connected to %s"
              (ein:$notebook-notebook-name notebook))
