@@ -202,12 +202,16 @@
     ;; check the "tail" cell
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
-      (should (equal (ein:cell-get-text cell) tail-text)))
+      (should (equal (ein:cell-get-text cell) tail-text))
+      (should (ein:codecell-p cell))
+      (should (slot-boundp cell :kernel)))
     ;; check the "head" cell
     (ein:notebook-goto-prev-input-command)
     (let ((cell (ein:notebook-get-current-cell)))
       (ein:cell-goto cell)
-      (should (equal (ein:cell-get-text cell) head-text)))))
+      (should (equal (ein:cell-get-text cell) head-text))
+      (should (ein:codecell-p cell))
+      (should (slot-boundp cell :kernel)))))
 
 (ert-deftest ein:notebook-split-cell-at-point-before-newline ()
   (eintest:notebook-split-cell-at-point
