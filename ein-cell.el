@@ -52,7 +52,7 @@
   '((((class color) (background light))
      :background "honeydew1")
     (((class color) (background dark))
-     :background "#2b2b2b"))
+     :background "#383838"))
   "Face for cell input area"
   :group 'ein)
 
