@@ -101,10 +101,11 @@
    (kernel :initarg :kernel :type ein:$kernel)
    (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
-                        ;; FIXME: "*" should be treated some how to
-                        ;;        make this slot typed.
-                        ;; :type integer
-                        )
+                        :documentation "\
+Integer or \"*\" (running state).
+Implementation note:
+Typed `:input-prompt-number' becomes a problem when reading a
+notebook that saved "*".  So don't add `:type'!")
    (collapsed :initarg :collapsed :initform nil :type boolean)
    (running :initarg :running :initform nil :type boolean)
    (dynamic :initarg :dynamic :initform nil :type boolean
