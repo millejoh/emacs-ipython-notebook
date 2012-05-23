@@ -605,18 +605,20 @@ Do not clear input prompts when the prefix argument is given."
       (let ((func (ein:object-at-point)))
         (ein:notebook-request-tool-tip ein:notebook cell func)))))
 
+(defun ein:notebook-request-help (notebook)
+  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
+    (let ((func (ein:object-at-point)))
+      (when func
+        (ein:kernel-execute (ein:$notebook-kernel notebook)
+                            (format "%s?" func) ; = code
+                            nil                 ; = callbacks
+                            ;; It looks like that magic command does
+                            ;; not work in silent mode.
+                            :silent nil)))))
+
 (defun ein:notebook-request-help-command ()
   (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (let ((func (ein:object-at-point)))
-        (when func
-          (ein:kernel-execute (ein:$notebook-kernel ein:notebook)
-                              (format "%s?" func) ; = code
-                              nil                 ; = callbacks
-                              ;; It looks like that magic command does
-                              ;; not work in silent mode.
-                              :silent nil))))))
+  (ein:notebook-request-help ein:notebook))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   (interactive "P")
