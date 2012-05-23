@@ -416,9 +416,9 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         for text = (plist-get p :text)
         for source = (plist-get p :source)
         if (equal source "IPython.zmq.page.page")
-        when (not (equal (ein:trim text) ""))
-        do (ein:events-trigger
-            events '(open_with_text . Pager) (list :text text))
+        do (when (not (equal (ein:trim text) ""))
+             (ein:events-trigger
+              events '(open_with_text . Pager) (list :text text)))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
         do (ein:events-trigger
