@@ -49,6 +49,7 @@
     ein:@connect))
 
 (defun ein:connect-to-notebook (buffer-or-name)
+  "Connect any buffer to notebook and its kernel."
   (interactive
    (list
     (completing-read

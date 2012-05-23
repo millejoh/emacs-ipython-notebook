@@ -27,6 +27,10 @@
 
 (autoload 'ein:notebooklist-open "ein-notebooklist"
   "Open notebook list buffer." t)
+
+(autoload 'ein:connect-to-notebook "ein-connect"
+  "Connect any buffer to notebook and its kernel." t)
+
 (provide 'ein)
 
 ;;; ein.el ends here
