@@ -161,6 +161,24 @@ See: http://api.jquery.com/jQuery.ajax/"
       (replace-match "" t t string)
     string))
 
+(defun ein:trim-indent (string)
+  "Strip uniform amount of indentation from lines in STRING."
+  (let* ((lines (split-string string "\n"))
+         (indent
+          (let ((lens
+                 (loop for line in lines
+                       for stripped = (ein:trim-left line)
+                       unless (equal stripped "")
+                       collect (- (length line) (length stripped)))))
+            (if lens (apply #'ein:min lens) 0)))
+         (trimmed
+          (loop for line in lines
+                if (> (length line) indent)
+                collect (ein:trim-right (substring line indent))
+                else
+                collect line)))
+    (ein:join-str "\n" trimmed)))
+
 (defun ein:join-str (sep strings)
   (mapconcat 'identity strings sep))
 
@@ -240,6 +258,10 @@ NOTE: This function creates new list."
         for i from 0
         when (not (memq i indices))
         collect l))
+
+(defun ein:min (x &rest xs)
+  (loop for y in xs if (< y x) do (setq x y))
+  x)
 
 
 ;; utils.js compatible
