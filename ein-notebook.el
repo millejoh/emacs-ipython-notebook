@@ -872,15 +872,22 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
+(defun ein:notebook-opened-buffers ()
+  "Return list of opened buffers.
+This function also cleans up closed buffers stores in
+`ein:notebook-opened-map'."
+  (let (buffers)
+    (maphash (lambda (k b) (if (buffer-live-p b)
+                               (push b buffers)
+                             (remhash k ein:notebook-opened-map)))
+             ein:notebook-opened-map)
+    buffers))
+
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
-  (let (unsaved)
-    (maphash
-     (lambda (key buffer)
-       (when (ein:notebook-modified-p buffer)
-         (push buffer unsaved)))
-     ein:notebook-opened-map)
+  (let ((unsaved (ein:filter #'ein:notebook-modified-p
+                             (ein:notebook-opened-buffers))))
     (if (null unsaved)
         t
       (y-or-n-p

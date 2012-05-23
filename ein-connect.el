@@ -48,10 +48,7 @@
    (list
     (completing-read
      "Select notebook: "
-     (let (buffers)
-       (maphash (lambda (k b) (push (buffer-name b) buffers))
-                ein:notebook-opened-map)
-       buffers))))
+     (mapcar #'buffer-name (ein:notebook-opened-buffers)))))
   (let* ((notebook (buffer-local-value 'ein:notebook
                                        (get-buffer buffer-or-name)))
          (connection (ein:connect-setup notebook (current-buffer))))
