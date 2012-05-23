@@ -49,9 +49,14 @@
     (insert json-string)
     (flet ((pop-to-buffer (buf) buf)
            (ein:notebook-start-kernel ()))
-      (ein:notebook-url-retrieve-callback
-       nil
-       (ein:notebook-new "DUMMY-URL" notebook-id)))))
+      (with-current-buffer (ein:notebook-url-retrieve-callback
+                            nil
+                            (ein:notebook-new "DUMMY-URL" notebook-id))
+        (let ((events (ein:events-setup (current-buffer))))
+          (setf (ein:$notebook-events ein:notebook) events)
+          (setf (ein:$notebook-kernel ein:notebook)
+                (ein:kernel-new 8888 "/kernels" events)))
+        (current-buffer)))))
 
 (defun eintest:notebook-make-data (cells &optional name)
   (unless name (setq name "Dummy Name"))
@@ -301,23 +306,27 @@
 (ert-deftest ein:notebook-execute-current-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
-    (let ((text "print 'Hello World'")
-          (cell (ein:notebook-get-current-cell))
-          (msg-id "DUMMY-MSG-ID"))
-      (setf (ein:$notebook-kernel ein:notebook) "DUMMY-KERNEL")
+    (let* ((text "print 'Hello World'")
+           (cell (ein:notebook-get-current-cell))
+           (kernel (ein:$notebook-kernel ein:notebook))
+           (msg-id "DUMMY-MSG-ID")
+           (callbacks
+            (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
+                  :output        (cons #'ein:cell--handle-output        cell)
+                  :clear_output  (cons #'ein:cell--handle-clear-output  cell)
+                  :cell cell)))
+      (should (ein:$kernel-p kernel))
+      (should (ein:codecell-p cell))
+      (should (ein:$kernel-p (oref cell :kernel)))
       (insert text)
       (mocker-let ((ein:kernel-execute
-                    (notebook text)
-                    ((:input (list (ein:$notebook-kernel ein:notebook) text)
-                             :output msg-id)))
+                    (kernel code callbacks :silent silent)
+                    ((:input (list kernel text callbacks :silent nil))))
                    (ein:kernel-ready-p
                     (kernel)
-                    ((:input (list (ein:$notebook-kernel ein:notebook))
-                             :output t))))
+                    ((:input (list kernel) :output t))))
         (ein:notebook-execute-current-cell))
-      (should (equal (gethash msg-id
-                              (ein:$notebook-msg-cell-map ein:notebook))
-                     (oref cell :cell-id)))
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
       (save-excursion
         (goto-char (point-min))
         (should-not (search-forward "In [1]:" nil t)))
@@ -326,7 +335,7 @@
              (packet (list :header (list :msg_type "execute_reply")
                            :parent_header (list :msg_id msg-id)
                            :content content)))
-        (ein:notebook-handle-shell-reply ein:notebook (json-encode packet)))
+        (ein:kernel--handle-shell-reply kernel (json-encode packet)))
       (should (= (oref cell :input-prompt-number) 1))
       (save-excursion
         (goto-char (point-min))
@@ -336,7 +345,7 @@
              (packet (list :header (list :msg_type "stream")
                            :parent_header (list :msg_id msg-id)
                            :content content)))
-        (ein:notebook-handle-iopub-reply ein:notebook (json-encode packet)))
+        (ein:kernel--handle-iopub-reply kernel (json-encode packet)))
       (should (= (ein:cell-num-outputs cell) 1))
       (save-excursion
         (goto-char (point-min))

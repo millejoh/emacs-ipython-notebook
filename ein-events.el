@@ -30,7 +30,6 @@
 
 (require 'ein-log)
 (require 'ein-utils)
-(eval-when-compile (defvar ein:notebook))
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 
@@ -49,9 +48,8 @@
 As `header-line-format' is buffer local variable, it must be set
 for each chunk when in
 See also `ein:ac-setup-maybe'."
-  (and ein:notebook
-       (and (boundp 'mumamo-multi-major-mode)
-            (eval 'mumamo-multi-major-mode))
+  (and (ein:eval-if-bound 'ein:notebook)
+       (ein:eval-if-bound 'mumamo-multi-major-mode)
        (setq header-line-format ein:header-line-format)))
 (add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
 
@@ -63,6 +61,8 @@ See also `ein:ac-setup-maybe'."
 
 (defclass ein:events ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
+   (callbacks :initarg :callbacks :type hash-table
+              :initform (make-hash-table :test 'equal))
    (status-notebook :initarg :status-notebook :initform nil :type symbol)
    (status-kernel :initarg :status-kernel :initform nil :type symbol))
   "Event handler class.")
@@ -89,19 +89,41 @@ Use the variable returned by this function instead."
     (status_busy "Kernel is busy...")
     (status_dead "Kernel is dead. Need restart.")))
 
-(defun ein:events-trigger (events event-type)
+(defun ein:events-trigger (events event-type &optional data)
   "Trigger EVENT-TYPE and let event handler EVENTS handle that event.
 EVENT-TYPE is a cons like \(notebook_saved . Notebook), which is
 a direct translation of \"notebook_saved.Notebook\" from the
 IPython notebook client JS."
   (ein:log 'debug "Event: %S" event-type)
-  (case (cdr event-type)
-    (Kernel
-     (oset events :status-kernel (car event-type)))
-    (Notebook
-     (oset events :status-notebook (car event-type)))
-    (t
-     (ein:log 'info "Unknown event: %S" event-type))))
+  (with-current-buffer (oref events :buffer)
+    (ein:aif (gethash event-type (oref events :callbacks))
+        (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it))
+    ;; FIXME! the following must be put together in the event frame work.
+    (case (cdr event-type)
+      (Kernel
+       (oset events :status-kernel (car event-type)))
+      (Notebook
+       (oset events :status-notebook (car event-type)))
+      (t
+       (ein:log 'info "Unknown event: %S" event-type)))))
+
+
+(defmethod ein:events-on ((events ein:events) event-type
+                          callback &optional arg)
+  "Set event trigger hook.
+
+When EVENT-TYPE is triggered on the event handler EVENTS,
+CALLBACK is called.  CALLBACK must take two arguments:
+ARG as the first argument and DATA, which is passed via
+`ein:events-trigger', as the second."
+  (assert (and (consp event-type)
+               (symbolp (car event-type))
+               (symbolp (cdr event-type))))
+  (let* ((table (oref events :callbacks))
+         (cbs (gethash event-type table)))
+    (push (cons callback arg) cbs)
+    (puthash event-type cbs table)))
+
 
 (provide 'ein-events)
 

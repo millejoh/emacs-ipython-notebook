@@ -30,6 +30,7 @@
 (require 'ein-log)
 (require 'ein-utils)
 (require 'ein-websocket)
+(require 'ein-events)
 (require 'url)
 
 
@@ -41,6 +42,7 @@
 
 FIXME: document other slots."
   url-or-port
+  events
   kernel-id
   shell-channel
   iopub-channel
@@ -49,23 +51,24 @@ FIXME: document other slots."
   ws-url
   running
   username
-  session-id)
+  session-id
+  msg-callbacks)
 
-(defvar ein:base-kernel-url "/")
-;; Currently there is no way to know this setting.  Maybe I should ask
-;; IPython developers for an API to get this from notebook server.
+
+;;; Initialization and connection.
 
-
-(defun ein:kernel-new (url-or-port)
+(defun ein:kernel-new (url-or-port base-url events)
   (make-ein:$kernel
    :url-or-port url-or-port
+   :events events
    :kernel-id nil
    :shell-channel nil
    :iopub-channel nil
-   :base-url (concat ein:base-kernel-url "kernels")
+   :base-url base-url
    :running nil
    :username "username"
-   :session-id (ein:utils-uuid)))
+   :session-id (ein:utils-uuid)
+   :msg-callbacks (make-hash-table :test 'equal)))
 
 
 (defun ein:kernel-del (kernel)
@@ -73,7 +76,7 @@ FIXME: document other slots."
   (ein:kernel-stop-channels kernel))
 
 
-(defun ein:kernel-get-msg (kernel msg-type content)
+(defun ein:kernel--get-msg (kernel msg-type content)
   (list
    :header (list
             :msg_id (ein:utils-uuid)
@@ -84,9 +87,8 @@ FIXME: document other slots."
    :parent_header (make-hash-table)))
 
 
-(defun ein:kernel-start (kernel notebook-id callback &optional cbargs)
-  "Start kernel of the notebook whose id is NOTEBOOK-ID.
-CALLBACK is called after kernel is started with optional argument CBARGS."
+(defun ein:kernel-start (kernel notebook-id)
+  "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
     (let* ((qs (format "notebook=%s" notebook-id))
            (url (concat (ein:url (ein:$kernel-url-or-port kernel)
@@ -95,14 +97,15 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
            (url-request-method "POST"))
       (url-retrieve
        url
-       (lambda (status kernel callback cbargs)
-         (ein:kernel--handle-start-kernel kernel (ein:json-read) callback
-                                          cbargs)
+       (lambda (status kernel)
+         (ein:kernel--kernel-started kernel (ein:json-read))
          (kill-buffer (current-buffer)))
-       (list kernel callback cbargs)))))
+       (list kernel)))))
 
 
-(defun ein:kernel-restart (kernel callback &optional cbargs)
+(defun ein:kernel-restart (kernel)
+  (ein:events-trigger (ein:$kernel-events kernel)
+                      '(status_restarting . Kernel))
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
@@ -112,14 +115,14 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
           (url-request-method "POST"))
       (url-retrieve
        url
-       (lambda (status kernel callback cbargs)
-         (ein:kernel--handle-start-kernel kernel (ein:json-read) callback
-                                          cbargs)
+       (lambda (status kernel)
+         (ein:kernel--kernel-started kernel (ein:json-read))
          (kill-buffer (current-buffer)))
-       (list kernel callback cbargs)))))
+       (list kernel)))))
 
 
-(defun ein:kernel--handle-start-kernel (kernel json callback &optional cbargs)
+(defun ein:kernel--kernel-started (kernel json)
+  (ein:log 'info "Kernel started: %s" (plist-get json :kernel_id))
   (setf (ein:$kernel-running kernel) t)
   (setf (ein:$kernel-kernel-id kernel) (plist-get json :kernel_id))
   (setf (ein:$kernel-ws-url kernel) (plist-get json :ws_url))
@@ -127,7 +130,16 @@ CALLBACK is called after kernel is started with optional argument CBARGS."
         (concat (ein:$kernel-base-url kernel) "/"
                 (ein:$kernel-kernel-id kernel)))
   (ein:kernel-start-channels kernel)
-  (apply callback cbargs))
+  (let ((shell-channel (ein:$kernel-shell-channel kernel))
+        (iopub-channel (ein:$kernel-iopub-channel kernel)))
+    ;; FIXME: get rid of lexical-let
+    (lexical-let ((kernel kernel))
+      (setf (ein:$websocket-onmessage shell-channel)
+            (lambda (packet)
+              (ein:kernel--handle-shell-reply kernel packet)))
+      (setf (ein:$websocket-onmessage iopub-channel)
+            (lambda (packet)
+              (ein:kernel--handle-iopub-reply kernel packet))))))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
@@ -222,46 +234,129 @@ The kernel will no longer be responsive.")))
        (progn ,@body)
      (ein:log 'warn "Kernel is not ready yet!")))
 
+
+;;; Main public methods
 
-(defun ein:kernel-object-info-request (kernel objname)
-  "Send object info request of OBJNAME to KERNEL and return
-`msg-id' or `nil' when OBJNAME is `nil'."
+;; NOTE: The argument CALLBACKS for the following functions is almost
+;;       same as the JS implementation in IPython.  However, as Emacs
+;;       lisp does not support closure, value is "packed" using
+;;       `cons': `car' is the actual callback function and `cdr' is
+;;       its first argument.  It's like using `cons' instead of
+;;       `$.proxy'.
+
+(defun ein:kernel-object-info-request (kernel objname callbacks)
+  "Send object info request of OBJNAME to KERNEL.
+
+When calling this method pass a CALLBACKS structure of the form:
+
+    (:object_info_reply (FUNCTION . ARGUMENT))
+
+The FUNCTION will be passed the ARGUMENT as the first argument
+and the `content' object of the `object_into_reply' message as
+the second argument.
+
+`object_into_reply' message is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
+"
   (assert (ein:kernel-ready-p kernel))
   (when objname
     (let* ((content (list :oname (format "%s" objname)))
-           (msg (ein:kernel-get-msg kernel "object_info_request" content)))
+           (msg (ein:kernel--get-msg kernel "object_info_request" content))
+           (msg-id (plist-get (plist-get msg :header) :msg_id)))
       (ein:websocket-send
        (ein:$kernel-shell-channel kernel)
        (json-encode msg))
-      (plist-get (plist-get msg :header) :msg_id))))
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      msg-id)))
 
 
-(defun ein:kernel-execute (kernel code)
+(defun* ein:kernel-execute (kernel code &optional callbacks
+                                   &key
+                                   (silent t)
+                                   (user-variables [])
+                                   (user-expressions (make-hash-table))
+                                   (allow-stdin json-false))
+  "Execute CODE on KERNEL.
+
+When calling this method pass a CALLBACKS structure of the form:
+
+  (:execute_reply EXECUTE-REPLY-CALLBACK
+   :output        OUTPUT-CALLBACK
+   :clear_output  CLEAR-OUTPUT-CALLBACK
+   :cell          CELL)
+
+Objects end with -CALLBACK above must pack a FUNCTION and its
+first ARGUMENT in a `cons':
+
+  (FUNCTION . ARGUMENT)
+
+Call signature of the callbacks:
+
+Callback                `msg_type'        Extra arguments        Notes
+----------------------  ----------------  ---------------------  ------------
+EXECUTE-REPLY-CALLBACK  `execute_reply'   `content'
+OUTPUT-CALLBACK         [#output]_        `msg_type' `content'   [#output2]_
+CLEAR-OUTPUT-CALLBACK   `clear_output'    `content'              [#clear]_
+
+For example, the EXECUTE-REPLY-CALLBACK is called as:
+  (`funcall' FUNCTION ARGUMENT CONTENT)
+
+.. [#output]  One of `stream', `display_data', `pyout', `pyerr'.
+.. [#output2] The argument MSG-ID for the FUNCTION is a string.
+.. [#clear]_  Content object has `stdout', `stderr' and `other'
+              fields that are booleans.
+
+`execute_reply' message is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#execute
+Output type messages is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
+
+The CELL value may be use for the `set_next_input' payload.
+
+See `ein:kernel--handle-shell-reply' for how the callbacks are called."
   (assert (ein:kernel-ready-p kernel))
   (let* ((content (list
                    :code code
-                   :silent json-false
-                   :user_variables []
-                   :user_expressions (make-hash-table)
-                   :allow_stdin json-false))
-         (msg (ein:kernel-get-msg kernel "execute_request" content)))
+                   :silent (or silent json-false)
+                   :user_variables user-variables
+                   :user_expressions user-expressions
+                   :allow_stdin allow-stdin))
+         (msg (ein:kernel--get-msg kernel "execute_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send
      (ein:$kernel-shell-channel kernel)
      (json-encode msg))
-    (plist-get (plist-get msg :header) :msg_id)))
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    msg-id))
 
 
-(defun ein:kernel-complete (kernel line cursor-pos)
+(defun ein:kernel-complete (kernel line cursor-pos callbacks)
+  "Complete code at CURSOR-POS in a string LINE on KERNEL.
+
+CURSOR-POS is the position in the string LINE, not in the buffer.
+
+When calling this method pass a CALLBACKS structure of the form:
+
+    (:complete_reply (FUNCTION . ARGUMENT))
+
+The FUNCTION will be passed the ARGUMENT as the first argument and
+the `content' object of the `complete_reply' message as the second.
+
+`complete_reply' message is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#complete
+"
   (assert (ein:kernel-ready-p kernel))
   (let* ((content (list
                    :text ""
                    :line line
                    :cursor_pos cursor-pos))
-         (msg (ein:kernel-get-msg kernel "complete_request" content)))
+         (msg (ein:kernel--get-msg kernel "complete_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send
      (ein:$kernel-shell-channel kernel)
      (json-encode msg))
-    (plist-get (plist-get msg :header) :msg_id)))
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    msg-id))
 
 
 (defun ein:kernel-interrupt (kernel)
@@ -291,6 +386,71 @@ The kernel will no longer be responsive.")))
          (ein:log 'info "Notebook kernel is killed")
          (kill-buffer (current-buffer)))))))
 
+
+;; Reply handlers.
+
+(defun ein:kernel-get-callbacks-for-msg (kernel msg-id)
+  (gethash msg-id (ein:$kernel-msg-callbacks kernel)))
+
+(defun ein:kernel-set-callbacks-for-msg (kernel msg-id callbacks)
+  (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
+
+(defun ein:kernel--handle-shell-reply (kernel packet)
+  (destructuring-bind
+      (&key header content parent_header &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (msg-id (plist-get parent_header :msg_id))
+           (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
+           (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
+      (if cb
+          (ein:funcall-packed cb content)
+        (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
+                 msg-type msg-id))
+      (ein:aif (plist-get content :payload)
+          (ein:kernel--handle-payload kernel (plist-get callbacks :cell) it)))))
+
+(defun ein:kernel--handle-payload (kernel cell payload)
+  (loop with events = (ein:$kernel-events kernel)
+        for p in payload
+        for text = (plist-get p :text)
+        for source = (plist-get p :source)
+        if (equal source "IPython.zmq.page.page")
+        when (not (equal (ein:trim text) ""))
+        do (ein:events-trigger
+            events '(open_with_text . Pager) (list :text text))
+        else if
+        (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
+        do (ein:events-trigger
+            events '(set_next_input . Cell) (list :cell cell :text text))))
+
+(defun ein:kernel--handle-iopub-reply (kernel packet)
+  (destructuring-bind
+      (&key content parent_header header &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (callbacks (ein:kernel-get-callbacks-for-msg
+                       kernel (plist-get parent_header :msg_id)))
+           (events (ein:$kernel-events kernel)))
+      (ein:log 'debug "HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
+      (if (and (not (equal msg-type "status")) (null callbacks))
+          (ein:log 'verbose "Got message not from this kernel.")
+        (ein:case-equal msg-type
+          (("stream" "display_data" "pyout" "pyerr")
+           (ein:aif (plist-get callbacks :output)
+               (ein:funcall-packed it msg-type content)))
+          (("status")
+           (ein:case-equal (plist-get content :execution_state)
+             (("busy")
+              (ein:events-trigger events '(status_busy . Kernel)))
+             (("idle")
+              (ein:events-trigger events '(status_idle . Kernel)))
+             (("dead")
+              (ein:kernel-stop-channels kernel)
+              (ein:events-trigger events '(status_dead . Kernel)))))
+          (("clear_output")
+           (ein:aif (plist-get callbacks :clear_output)
+               (ein:funcall-packed it content))))))))
 
 (provide 'ein-kernel)
 

@@ -41,8 +41,10 @@
   (save-excursion
     (re-search-backward (concat matched-text "\\="))))
 
-(defun ein:completer-finish-completing (matched-text matches)
-  (let ((completer (ein:completer-choose)))
+(defun ein:completer-finish-completing (_dummy_ content)
+  (let ((matched-text (plist-get content :matched_text))
+        (matches (plist-get content :matches))
+        (completer (ein:completer-choose)))
     (funcall completer matched-text matches)))
 
 (defun ein:completer-finish-completing-default (matched-text matches)

@@ -39,6 +39,10 @@
 (require 'ein-events)
 (require 'ein-kill-ring)
 
+(defvar ein:base-kernel-url "/")
+;; Currently there is no way to know this setting.  Maybe I should ask
+;; IPython developers for an API to get this from notebook server.
+
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
@@ -74,9 +78,6 @@
 `ein:$notebook-dirty' : boolean
   Set to `t' if notebook has unsaved changes.  Otherwise `nil'.
 
-`ein:$notebook-msg-cell-map' : hash
-  Hash to hold map from msg-id to cell-id.
-
 `ein:$notebook-metadata' : plist
   Notebook meta data (e.g., notebook name).
 
@@ -95,7 +96,6 @@
   kernel
   pager
   dirty
-  msg-cell-map
   metadata
   notebook-name
   nbformat
@@ -120,7 +120,6 @@ is `nil', BODY is executed with any cell types."
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
                          :notebook-id notebook-id
-                         :msg-cell-map (make-hash-table :test 'equal)
                          args)))
     notebook))
 
@@ -131,12 +130,7 @@ is `nil', BODY is executed with any cell types."
          (notebook-name (plist-get metadata :name)))
     (setf (ein:$notebook-metadata notebook) metadata)
     (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
-    (setf (ein:$notebook-notebook-name notebook) notebook-name))
-  (setf (ein:$notebook-pager notebook)
-        (ein:pager-new
-         (format ein:notebook-pager-buffer-name-template
-                 (ein:$notebook-url-or-port notebook)
-                 (ein:$notebook-notebook-name notebook)))))
+    (setf (ein:$notebook-notebook-name notebook) notebook-name)))
 
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
@@ -169,7 +163,6 @@ is `nil', BODY is executed with any cell types."
         (with-current-buffer buffer
           (pop-to-buffer (current-buffer))
           ein:notebook)
-      (remhash key ein:notebook-opened-map)
       (ein:notebook-request-open url-or-port notebook-id))))
 
 (defun ein:notebook-request-open (url-or-port notebook-id)
@@ -209,8 +202,8 @@ the time of execution."
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
-  (setf (ein:$notebook-events ein:notebook)
-        (ein:events-setup (current-buffer)))
+  (ein:notebook-bind-events ein:notebook
+                            (ein:events-setup (current-buffer)))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -222,6 +215,31 @@ the time of execution."
       (cell (ein:cell-pp (cdr path) data)))))
 
 
+;;; Initialization.
+
+(defun ein:notebook-bind-events (notebook events)
+  "Bind events related to PAGER to the event handler EVENTS."
+  (setf (ein:$notebook-events ein:notebook) events)
+  (ein:events-on events
+                 '(set_next_input . Cell) ; it's Notebook in JS
+                 #'ein:notebook--set-next-input
+                 notebook)
+  ;; Bind events for sub components:
+  (setf (ein:$notebook-pager notebook)
+        (ein:pager-new
+         (format ein:notebook-pager-buffer-name-template
+                 (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-name notebook))
+         (ein:$notebook-events notebook))))
+
+(defun ein:notebook--set-next-input (notebook data)
+  (let* ((cell (plist-get data :cell))
+         (text (plist-get data :text))
+         (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
+    (ein:cell-set-text new-cell text)
+    (setf (ein:$notebook-dirty notebook) t)))
+
+
 ;;; Cell indexing, retrieval, etc.
 
 (defun ein:notebook-cell-from-json (notebook data &rest args)
@@ -229,6 +247,8 @@ the time of execution."
          data :ewoc (ein:$notebook-ewoc notebook) args))
 
 (defun ein:notebook-cell-from-type (notebook type &rest args)
+  (when (eql type 'code)
+    (setq args (plist-put args :kernel (ein:$notebook-kernel notebook))))
   (apply #'ein:cell-from-type
          (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
 
@@ -236,14 +256,6 @@ the time of execution."
   (let* ((ewoc (ein:$notebook-ewoc notebook))
          (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
     (mapcar #'ein:$node-data nodes)))
-
-(defun ein:notebook-cell-for-msg (notebook msg-id)
-  (let* ((msg-cell-map (ein:$notebook-msg-cell-map notebook))
-         (cell-id (gethash msg-id msg-cell-map)))
-    (when cell-id
-      (loop for cell in (ein:notebook-get-cells notebook)
-            when (equal (oref cell :cell-id) cell-id)
-            return cell))))
 
 (defun ein:notebook-ncells (notebook)
   (length (ein:notebook-get-cells notebook)))
@@ -507,17 +519,19 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
-  (let ((kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook))))
+  (let* ((base-url (concat ein:base-kernel-url "kernels"))
+         (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook)
+                                 base-url
+                                 (ein:$notebook-events ein:notebook))))
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id ein:notebook)
-                      #'ein:notebook-kernel-started
-                      (list ein:notebook))))
+                      (ein:$notebook-notebook-id ein:notebook))
+    (loop for cell in (ein:notebook-get-cells ein:notebook)
+          do (when (ein:codecell-p cell)
+               (ein:cell-set-kernel cell kernel)))))
 
 (defun ein:notebook-restart-kernel (notebook)
-  (ein:kernel-restart (ein:$notebook-kernel notebook)
-                      #'ein:notebook-kernel-started
-                      (list ein:notebook)))
+  (ein:kernel-restart (ein:$notebook-kernel notebook)))
 
 (defun ein:notebook-restart-kernel-command ()
   (interactive)
@@ -525,124 +539,6 @@ Do not clear input prompts when the prefix argument is given."
       (when (y-or-n-p "Really restart kernel? ")
         (ein:notebook-restart-kernel ein:notebook))
     (ein:log 'error "Not in notebook buffer!")))
-
-(defun ein:notebook-kernel-started (notebook)
-  (let* ((kernel (ein:$notebook-kernel notebook))
-         (shell-channel (ein:$kernel-shell-channel kernel))
-         (iopub-channel (ein:$kernel-iopub-channel kernel)))
-    (lexical-let ((notebook notebook))
-      (setf (ein:$websocket-onmessage shell-channel)
-            (lambda (packet)
-              (ein:notebook-handle-shell-reply notebook packet)))
-      (setf (ein:$websocket-onmessage iopub-channel)
-            (lambda (packet)
-              (ein:notebook-handle-iopub-reply notebook packet)))))
-  ;; Clear out previous (possibly dead) status:
-  (ein:events-trigger (ein:$notebook-events notebook) '(status_idle . Kernel))
-  (ein:log 'info "IPython kernel is started"))
-
-(defun ein:notebook-handle-shell-reply (notebook packet)
-  (destructuring-bind
-      (&key header content parent_header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let ((msg_type (plist-get header :msg_type))
-          (cell (ein:notebook-cell-for-msg
-                 notebook
-                 (plist-get parent_header :msg_id))))
-      (cond
-       ((equal msg_type "execute_reply")
-        (ein:cell-set-input-prompt cell (plist-get content :execution_count))
-        (ein:cell-running-set cell nil)
-        (setf (ein:$notebook-dirty notebook) t))
-       ((equal msg_type "complete_reply")
-        (ein:completer-finish-completing (plist-get content :matched_text)
-                                         (plist-get content :matches)))
-       ((equal msg_type "object_info_reply")
-        (when (plist-get content :found)
-          (ein:cell-finish-tooltip cell content)))
-       (t (ein:log 'info "unknown reply: %s" msg_type)))
-      (when (plist-member content :payload)
-        (ein:notebook-handle-payload notebook cell
-                                     (plist-get content :payload))))))
-
-(defun ein:notebook-handle-payload (notebook cell payload)
-  (loop for p in payload
-        for text = (plist-get p :text)
-        for source = (plist-get p :source)
-        if (equal source "IPython.zmq.page.page")
-        when (not (equal (ein:trim text) ""))
-        do (let ((pager (ein:$notebook-pager notebook)))
-             (ein:pager-clear pager)
-             (ein:pager-expand pager)
-             (ein:pager-append-text pager text))
-        else if
-        (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
-        do (let ((new-cell (ein:notebook-insert-cell-below
-                            notebook 'code cell)))
-             (ein:cell-set-text new-cell text)
-             (setf (ein:$notebook-dirty notebook) t))))
-
-(defun ein:notebook-handle-iopub-reply (notebook packet)
-  (destructuring-bind
-      (&key content parent_header header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let ((msg_type (plist-get header :msg_type)) ; not parent_header
-          (cell (ein:notebook-cell-for-msg
-                 notebook
-                 (plist-get parent_header :msg_id)))
-          (events (ein:$notebook-events notebook)))
-      (if (and (not (equal msg_type "status")) (null cell))
-          (ein:log 'verbose "Got message not from this notebook.")
-        (ein:log 'debug "handle-iopub-reply: msg_type = %s" msg_type)
-        (ein:case-equal msg_type
-          (("stream" "display_data" "pyout" "pyerr")
-           (ein:notebook-handle-output notebook cell msg_type content))
-          (("status")
-           (ein:case-equal (plist-get content :execution_state)
-             (("busy")
-              (ein:events-trigger events '(status_busy . Kernel)))
-             (("idle")
-              (ein:events-trigger events '(status_idle . Kernel)))
-             (("dead")
-              (ein:kernel-stop-channels (ein:$notebook-kernel notebook))
-              (ein:events-trigger events '(status_dead . Kernel)))))
-          (("clear_output")
-           (ein:cell-clear-output cell
-                                  (plist-get content :stdout)
-                                  (plist-get content :stderr)
-                                  (plist-get content :other))))))))
-
-(defun ein:notebook-handle-output (notebook cell msg-type content)
-  (let* ((json (list :output_type msg-type)))
-    (ein:case-equal msg-type
-      (("stream")
-       (plist-put json :text (plist-get content :data))
-       (plist-put json :stream (plist-get content :name)))
-      (("display_data" "pyout")
-       (when (equal msg-type "pyout")
-         (plist-put json :prompt_number (plist-get content :execution_count)))
-       (setq json (ein:notebook-convert-mime-types
-                   json (plist-get content :data))))
-      (("pyerr")
-       (plist-put json :ename (plist-get content :ename))
-       (plist-put json :evalue (plist-get content :evalue))
-       (plist-put json :traceback (plist-get content :traceback))))
-    (ein:cell-append-output cell json t)
-    (setf (ein:$notebook-dirty notebook) t)))
-
-(defun ein:notebook-convert-mime-types (json data)
-  (loop for (prop . mime) in '((:text       . :text/plain)
-                               (:html       . :text/html)
-                               (:svg        . :image/svg+xml)
-                               (:png        . :image/png)
-                               (:jpeg       . :image/jpeg)
-                               (:latex      . :text/latex)
-                               (:json       . :application/json)
-                               (:javascript . :application/javascript)
-                               (:emacs-lisp . :application/emacs-lisp))
-        when (plist-member data mime)
-        do (plist-put json prop (plist-get data mime)))
-  json)
 
 
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
@@ -667,25 +563,12 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
 
-(defun ein:notebook-execute-code (notebook cell code)
-  (let* ((msg-id (ein:kernel-execute (ein:$notebook-kernel notebook) code)))
-    (puthash msg-id (oref cell :cell-id)
-             (ein:$notebook-msg-cell-map notebook))))
-
-(defun ein:notebook-execute-cell (notebook cell)
-  "Execute code cell CELL in NOTEBOOK."
-  (ein:cell-clear-output cell t t t)
-  (ein:cell-set-input-prompt cell "*")
-  (ein:cell-running-set cell t)
-  (oset cell :dynamic t)
-  (ein:notebook-execute-code notebook cell (ein:cell-get-text cell)))
-
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:notebook-execute-cell ein:notebook cell)
+      (ein:cell-execute cell)
       (setf (ein:$notebook-dirty ein:notebook) t)
       cell)))
 
@@ -704,15 +587,15 @@ Do not clear input prompts when the prefix argument is given."
   (if ein:notebook
     (loop for cell in (ein:notebook-get-cells ein:notebook)
           when (ein:codecell-p cell)
-          do (ein:notebook-execute-cell ein:notebook cell))
+          do (ein:cell-execute cell))
     (ein:log 'error "Not in notebook buffer!")))
 
 (defun ein:notebook-request-tool-tip (notebook cell func)
-  (let ((msg-id (ein:kernel-object-info-request
-                 (ein:$notebook-kernel notebook) func)))
-    (when msg-id
-      (puthash msg-id (oref cell :cell-id)
-               (ein:$notebook-msg-cell-map notebook)))))
+  (let ((kernel (ein:$notebook-kernel notebook))
+        (callbacks
+         (list :object_info_reply
+               (cons #'ein:cell-finish-tooltip cell))))
+    (ein:kernel-object-info-request kernel func callbacks)))
 
 (defun ein:notebook-request-tool-tip-command ()
   (interactive)
@@ -721,14 +604,20 @@ Do not clear input prompts when the prefix argument is given."
       (let ((func (ein:object-at-point)))
         (ein:notebook-request-tool-tip ein:notebook cell func)))))
 
+(defun ein:notebook-request-help (notebook)
+  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
+    (let ((func (ein:object-at-point)))
+      (when func
+        (ein:kernel-execute (ein:$notebook-kernel notebook)
+                            (format "%s?" func) ; = code
+                            nil                 ; = callbacks
+                            ;; It looks like that magic command does
+                            ;; not work in silent mode.
+                            :silent nil)))))
+
 (defun ein:notebook-request-help-command ()
   (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (let ((func (ein:object-at-point)))
-        (when func
-          (ein:notebook-execute-code
-           ein:notebook cell (format "%s?" func)))))))
+  (ein:notebook-request-help ein:notebook))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   (interactive "P")
@@ -736,20 +625,21 @@ Do not clear input prompts when the prefix argument is given."
       (ein:notebook-request-help-command)
     (ein:notebook-request-tool-tip-command)))
 
-(defun ein:notebook-complete-cell (notebook cell line-string rel-pos)
-  (let ((msg-id (ein:kernel-complete (ein:$notebook-kernel notebook)
-                                     line-string rel-pos)))
-    (puthash msg-id (oref cell :cell-id)
-             (ein:$notebook-msg-cell-map notebook))))
+(defun ein:notebook-complete-at-point (notebook)
+  (let ((kernel (ein:$notebook-kernel notebook))
+        (callbacks
+         (list :complete_reply
+               (cons #'ein:completer-finish-completing nil))))
+    (ein:kernel-complete kernel
+                         (thing-at-point 'line)
+                         (current-column)
+                         callbacks)))
 
-(defun ein:notebook-complete-cell-command ()
+(defun ein:notebook-complete-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:notebook-complete-cell ein:notebook
-                                  cell
-                                  (thing-at-point 'line)
-                                  (current-column)))))
+      (ein:notebook-complete-at-point ein:notebook))))
 
 (defun ein:notebook-kernel-interrupt-command ()
   (interactive)
@@ -935,7 +825,7 @@ Examples:
     (define-key map (kbd "C-c <up>") 'ein:notebook-move-cell-up-command)
     (define-key map (kbd "C-c <down>") 'ein:notebook-move-cell-down-command)
     (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
-    (define-key map "\C-c\C-i" 'ein:notebook-complete-cell-command)
+    (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
     (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
@@ -982,15 +872,22 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
+(defun ein:notebook-opened-buffers ()
+  "Return list of opened buffers.
+This function also cleans up closed buffers stores in
+`ein:notebook-opened-map'."
+  (let (buffers)
+    (maphash (lambda (k b) (if (buffer-live-p b)
+                               (push b buffers)
+                             (remhash k ein:notebook-opened-map)))
+             ein:notebook-opened-map)
+    buffers))
+
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
-  (let (unsaved)
-    (maphash
-     (lambda (key buffer)
-       (when (ein:notebook-modified-p buffer)
-         (push buffer unsaved)))
-     ein:notebook-opened-map)
+  (let ((unsaved (ein:filter #'ein:notebook-modified-p
+                             (ein:notebook-opened-buffers))))
     (if (null unsaved)
         t
       (y-or-n-p

@@ -34,3 +34,49 @@
   (should (equal (ein:trim-right "a") "a"))
   (should (equal (ein:trim-right "  a  ") "  a"))
   (should (equal (ein:trim-right "\na\n") "\na")))
+
+(ert-deftest ein:trim-indent-empty ()
+  (should (equal (ein:trim-indent "") "")))
+
+(ert-deftest ein:trim-indent-one-line ()
+  (should (equal (ein:trim-indent "one line") "one line")))
+
+(ert-deftest ein:trim-indent-one-newline ()
+  (should (equal (ein:trim-indent "one line\n") "one line\n")))
+
+(ert-deftest ein:trim-indent-multi-lines-no-trim ()
+  (let ((original "\
+def func():
+    pass
+")
+        (trimmed "\
+def func():
+    pass
+"))
+    (should (equal (ein:trim-indent original) trimmed))))
+
+(ert-deftest ein:trim-indent-multi-lines-one-trim ()
+  (let ((original "\
+    def func():
+        pass
+")
+        (trimmed "\
+def func():
+    pass
+"))
+    (should (equal (ein:trim-indent original) trimmed))))
+
+(ert-deftest ein:trim-indent-multi-lines-with-empty-lines ()
+  (let ((original "\
+
+    def func():
+        pass
+
+")
+        (trimmed "\
+
+def func():
+    pass
+
+"))
+    (should (equal (ein:trim-indent original) trimmed))))

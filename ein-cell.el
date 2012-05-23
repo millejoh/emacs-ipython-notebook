@@ -38,6 +38,7 @@
 (require 'ein-log)
 (require 'ein-utils)
 (require 'ein-node)
+(require 'ein-kernel)
 
 
 ;;; Faces
@@ -97,6 +98,7 @@
 
 (defclass ein:codecell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "code")
+   (kernel :initarg :kernel :type ein:$kernel)
    (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
                         ;; FIXME: "*" should be treated some how to
@@ -664,8 +666,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:insert-read-only (plist-get json type)))
      (emacs-lisp
       (when dynamic
-        (ein:insert-read-only
-         (format "%S" (eval (read (plist-get json type)))))))
+        (ein:cell-safe-read-eval-insert (plist-get json type))))
      ((html latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
@@ -677,6 +678,17 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   ;; FIXME: implement HTML special escaping
   ;; escape ANSI & HTML specials in plaintext:
   (apply #'ein:insert-read-only (ansi-color-apply data) properties))
+
+(defun ein:cell-safe-read-eval-insert (text)
+  (ein:insert-read-only
+   (condition-case err
+       (save-excursion
+         ;; given code can be `pop-to-buffer' or something.
+         (format "%S" (eval (read text))))
+     (error
+      (ein:log 'warn "Got an error while executing: '%s'"
+               text)
+      (format "Error: %S" err)))))
 
 (defmethod ein:cell-to-json ((cell ein:codecell))
   "Return json-ready alist."
@@ -711,6 +723,85 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (let ((cell (ein:$node-data (ewoc-data it))))
         (when (ein:basecell-child-p cell)
           cell))))
+
+
+;;; Kernel related calls.
+
+(defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
+  (oset cell :kernel kernel))
+
+
+(defmethod ein:cell-execute ((cell ein:codecell))
+  (ein:cell-clear-output cell t t t)
+  (ein:cell-set-input-prompt cell "*")
+  (ein:cell-running-set cell t)
+  (oset cell :dynamic t)
+  (let* ((kernel (oref cell :kernel))
+         (callbacks
+          (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
+                :output        (cons #'ein:cell--handle-output        cell)
+                :clear_output  (cons #'ein:cell--handle-clear-output  cell)
+                :cell cell)))
+    (ein:kernel-execute kernel
+                        (ein:cell-get-text cell)
+                        callbacks
+                        :silent nil)))
+
+
+(defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
+  (ein:cell-set-input-prompt cell (plist-get content :execution_count))
+  (ein:cell-running-set cell nil)
+  ;; (oset cell :dirty t)
+  )
+
+
+
+;;; Output area
+
+;; These function should go to ein-output-area.el.  But as cell and
+;; EWOC is connected in complicated way, I will leave them in
+;; ein-cell.el.
+
+(defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content)
+  (let* ((json (list :output_type msg-type)))
+    (ein:case-equal msg-type
+      (("stream")
+       (plist-put json :text (plist-get content :data))
+       (plist-put json :stream (plist-get content :name)))
+      (("display_data" "pyout")
+       (when (equal msg-type "pyout")
+         (plist-put json :prompt_number (plist-get content :execution_count)))
+       (setq json (ein:output-area-convert-mime-types
+                   json (plist-get content :data))))
+      (("pyerr")
+       (plist-put json :ename (plist-get content :ename))
+       (plist-put json :evalue (plist-get content :evalue))
+       (plist-put json :traceback (plist-get content :traceback))))
+    (ein:cell-append-output cell json t)
+    ;; (oset cell :dirty t)
+    ))
+
+
+(defun ein:output-area-convert-mime-types (json data)
+  (loop for (prop . mime) in '((:text       . :text/plain)
+                               (:html       . :text/html)
+                               (:svg        . :image/svg+xml)
+                               (:png        . :image/png)
+                               (:jpeg       . :image/jpeg)
+                               (:latex      . :text/latex)
+                               (:json       . :application/json)
+                               (:javascript . :application/javascript)
+                               (:emacs-lisp . :application/emacs-lisp))
+        when (plist-member data mime)
+        do (plist-put json prop (plist-get data mime)))
+  json)
+
+
+(defmethod ein:cell--handle-clear-output ((cell ein:codecell) content)
+  (ein:cell-clear-output cell
+                         (plist-get content :stdout)
+                         (plist-get content :stderr)
+                         (plist-get content :other)))
 
 (provide 'ein-cell)
 
