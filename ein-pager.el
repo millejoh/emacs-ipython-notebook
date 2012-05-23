@@ -43,7 +43,7 @@
                  pager))
 
 (defun ein:pager--open-with-text (pager data)
-  (let ((text (plist-get :text data)))
+  (let ((text (plist-get data :text)))
     (unless (equal (ein:trim text) "")
       (ein:pager-clear pager)
       (ein:pager-expand pager)
