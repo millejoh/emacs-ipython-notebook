@@ -750,12 +750,14 @@ Do not clear input prompts when the prefix argument is given."
               response ein:notebook-save-retry-max)))))))
 
 (defun ein:notebook-save-notebook-success (notebook status)
-  (setf (ein:$notebook-dirty notebook))
+  (ein:log 'info "Notebook is saved.")
+  (setf (ein:$notebook-dirty notebook) nil)
   (set-buffer-modified-p nil)
   (ein:events-trigger (ein:$notebook-events notebook)
                       '(notebook_saved . Notebook)))
 
 (defun ein:notebook-save-notebook-error (notebook status)
+  (ein:log 'info "Failed to save notebook!")
   (ein:events-trigger (ein:$notebook-events notebook)
                       '(notebook_save_failed . Notebook)))
 
