@@ -96,6 +96,18 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
 
+(ert-deftest ein:notebook-execute-current-cell-question ()
+  (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+    (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                                             (ein:kernel-ready-p it))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-insert-cell-below-command)
+      (insert "range?")
+      (let ((cell (ein:notebook-execute-current-cell)))
+        (eintest:wait-until (lambda () (not (oref cell :running)))))
+      (with-current-buffer (get-buffer (ein:$notebook-pager ein:notebook))
+        (should (search-forward "Docstring:\nrange"))))))
+
 (ert-deftest ein:notebook-request-help ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
     (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
