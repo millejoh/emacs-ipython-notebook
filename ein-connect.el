@@ -87,9 +87,15 @@
         ;; FIXME: refactor `ein:notebook-request-tool-tip'
         (ein:notebook-request-tool-tip notebook nil func)))))
 
-(defun ein:notebook-request-help-command ()
+(defun ein:connect-request-help-command ()
   (interactive)
   (ein:notebook-request-help (ein:connect-get-notebook)))
+
+(defun ein:connect-request-tool-tip-or-help-command (&optional pager)
+  (interactive "P")
+  (if pager
+      (ein:connect-request-help-command)
+    (ein:connect-request-tool-tip-command)))
 
 (defun ein:connect-pop-to-notebook ()
   (interactive)
@@ -99,6 +105,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-c" 'ein:connect-eval-buffer)
     (define-key map "\C-c\C-r" 'ein:connect-eval-region)
+    (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
     (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
     map))
 
