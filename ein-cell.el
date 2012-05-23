@@ -666,8 +666,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:insert-read-only (plist-get json type)))
      (emacs-lisp
       (when dynamic
-        (ein:insert-read-only
-         (format "%S" (eval (read (plist-get json type)))))))
+        (ein:cell-safe-read-eval-insert (plist-get json type))))
      ((html latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
@@ -679,6 +678,17 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   ;; FIXME: implement HTML special escaping
   ;; escape ANSI & HTML specials in plaintext:
   (apply #'ein:insert-read-only (ansi-color-apply data) properties))
+
+(defun ein:cell-safe-read-eval-insert (text)
+  (ein:insert-read-only
+   (condition-case err
+       (save-excursion
+         ;; given code can be `pop-to-buffer' or something.
+         (format "%S" (eval (read text))))
+     (error
+      (ein:log 'warn "Got an error while executing: '%s'"
+               text)
+      (format "Error: %S" err)))))
 
 (defmethod ein:cell-to-json ((cell ein:codecell))
   "Return json-ready alist."
