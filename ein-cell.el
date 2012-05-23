@@ -100,7 +100,11 @@
   ((cell-type :initarg :cell-type :initform "code")
    (kernel :initarg :kernel :type ein:$kernel)
    (element-names :initform (:prompt :input :output :footer))
-   (input-prompt-number :initarg :input-prompt-number :type integer)
+   (input-prompt-number :initarg :input-prompt-number
+                        ;; FIXME: "*" should be treated some how to
+                        ;;        make this slot typed.
+                        ;; :type integer
+                        )
    (collapsed :initarg :collapsed :initform nil :type boolean)
    (running :initarg :running :initform nil :type boolean)
    (dynamic :initarg :dynamic :initform nil :type boolean
@@ -337,9 +341,7 @@ A specific node can be specified using optional ARGS."
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (format "In [%s]:" (or (if (oref cell :running) "*")
-                          (ein:oref-safe cell :input-prompt-number)
-                          " "))
+   (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
@@ -479,9 +481,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:cell-set-collapsed cell (not (oref cell :collapsed))))
 
 (defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
-  (if number
-      (oset cell :input-prompt-number number)
-    (slot-makeunbound cell :input-prompt-number))
+  (oset cell :input-prompt-number number)
   (let ((inhibit-read-only t)
         (buffer-undo-list t))           ; disable undo recording
     (ewoc-invalidate (oref cell :ewoc)
@@ -737,8 +737,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (defmethod ein:cell-execute ((cell ein:codecell))
   (ein:cell-clear-output cell t t t)
+  (ein:cell-set-input-prompt cell "*")
   (ein:cell-running-set cell t)
-  (ein:cell-set-input-prompt cell)
   (oset cell :dynamic t)
   (let* ((kernel (oref cell :kernel))
          (callbacks
@@ -753,8 +753,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
-  (ein:cell-running-set cell nil)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
+  (ein:cell-running-set cell nil)
   ;; (oset cell :dirty t)
   )
 
