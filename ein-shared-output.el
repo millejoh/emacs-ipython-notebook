@@ -47,6 +47,8 @@
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
 
+(defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code)
+  (ein:cell-execute-internal cell kernel code))
 
 (defun ein:shared-output-get-buffer ()
   "Get the shared output buffer."

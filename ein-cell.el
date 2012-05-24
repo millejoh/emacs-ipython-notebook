@@ -737,21 +737,23 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 
 (defmethod ein:cell-execute ((cell ein:codecell))
+  (ein:cell-execute-internal cell
+                             (oref cell :kernel)
+                             (ein:cell-get-text cell)
+                             :silent nil))
+
+(defmethod ein:cell-execute-internal ((cell ein:codecell)
+                                      kernel code &rest args)
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
   (ein:cell-running-set cell t)
   (oset cell :dynamic t)
-  (let* ((kernel (oref cell :kernel))
-         (callbacks
+  (let* ((callbacks
           (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
                 :output        (cons #'ein:cell--handle-output        cell)
                 :clear_output  (cons #'ein:cell--handle-clear-output  cell)
                 :cell cell)))
-    (ein:kernel-execute kernel
-                        (ein:cell-get-text cell)
-                        callbacks
-                        :silent nil)))
-
+    (apply #'ein:kernel-execute kernel code callbacks args)))
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))

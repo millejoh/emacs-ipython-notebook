@@ -34,6 +34,7 @@
 (eval-when-compile (require 'auto-complete nil t))
 
 (require 'ein-notebook)
+(require 'ein-shared-output)
 
 
 (ein:deflocal ein:@connect nil
@@ -78,9 +79,10 @@
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
-  (let ((kernel (ein:connect-get-kernel))
+  (let ((cell (ein:shared-output-get-cell))
+        (kernel (ein:connect-get-kernel))
         (code (ein:trim-indent (buffer-substring start end))))
-    (ein:kernel-execute kernel code nil :silent t)))
+    (ein:cell-execute cell kernel code)))
 
 (defun ein:connect-request-tool-tip-command ()
   (interactive)
