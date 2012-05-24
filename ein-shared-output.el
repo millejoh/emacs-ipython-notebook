@@ -50,6 +50,11 @@
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code)
   (ein:cell-execute-internal cell kernel code))
 
+(defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
+                                    msg-type content)
+  (ein:log 'info "Got output '%s' in the shared buffer." msg-type)
+  (call-next-method))
+
 (defun ein:shared-output-get-buffer ()
   "Get the shared output buffer."
   (get-buffer-create ein:shared-output-buffer-name))
