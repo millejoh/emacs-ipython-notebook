@@ -75,10 +75,15 @@
 
 (defun ein:connect-eval-buffer ()
   (interactive)
-  (ein:connect-eval-region (point-min) (point-max)))
+  (ein:connect-eval-region-internal (point-min) (point-max))
+  (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
+  (ein:connect-eval-region-internal start end)
+  (ein:log 'info "Selected region is sent to the kernel."))
+
+(defun ein:connect-eval-region-internal (start end)
   (let ((cell (ein:shared-output-get-cell))
         (kernel (ein:connect-get-kernel))
         (code (ein:trim-indent (buffer-substring start end))))
