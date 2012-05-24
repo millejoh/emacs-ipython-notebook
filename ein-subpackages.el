@@ -25,6 +25,10 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'ein-ac)
+                   (require 'ein-smartrep))
+
+
 (defcustom ein:use-auto-complete nil
   "Set to `t' to use preset auto-complete configuration."
   :type 'boolean
@@ -45,9 +49,6 @@
   :type 'boolean
   :group 'ein)
 
-(declare-function ein:ac-config-once "ein-ac")
-(declare-function ein:smartrep-config-once "ein-smartrep")
-
 (defun ein:subpackages-load ()
   "Load sub-packages depending on configurations."
   (when (or ein:use-auto-complete
@@ -59,6 +60,13 @@
     (ein:smartrep-config-once))
   (when ein:load-dev
     (require 'ein-dev)))
+
+(defun ein:subpackages-reload ()
+  "Reload sub-packages."
+  (interactive)
+  (setq ein:ac-config-once-called nil)
+  (setq ein:smartrep-config-once-called nil)
+  (ein:subpackages-load))
 
 (provide 'ein-subpackages)
 

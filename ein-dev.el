@@ -56,7 +56,8 @@
   (interactive)
   (makunbound 'ein:notebook-mode-map)   ; so defvar works.
   (load "ein-notebook")  ; ... but make sure it will be defined first.
-  (ein:load-files "^ein-.*\\.el$"))
+  (ein:load-files "^ein-.*\\.el$")
+  (ein:subpackages-reload))
 
 (defadvice backtrace (around ein:dev-short-backtrace)
   "A hack to shorten backtrace.
