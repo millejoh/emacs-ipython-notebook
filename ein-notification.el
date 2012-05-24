@@ -29,6 +29,7 @@
 (require 'eieio)
 
 (require 'ein-utils)
+(require 'ein-events)
 
 
 ;; Class and variable
@@ -36,22 +37,100 @@
 (ein:deflocal ein:@notification nil
   "Buffer local variable to hold an instance of `ein:notification'.")
 
+(defvar ein:header-line-format '(:eval (ein:header-line)))
+;; Note: can't put this below of `ein:notification-setup'...
+
 (defclass ein:notification-status ()
   ((status :initarg :status :initform nil :type symbol)
-   (message :initarg :message :initform "" :type string))
+   (message :initarg :message :initform "" :type string)
+   (s2m :initarg :s2m))
   "Hold status and it's string representation (message).")
 
 (defclass ein:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
    (notebook
     :initarg :notebook
-    :initform (ein:notification-status "NotebookStatus")
+    :initform
+    (ein:notification-status
+     "NotebookStatus"
+     :s2m
+     '(((notebook_saving      . Notebook) . "Saving Notebook...")
+       ((notebook_saved       . Notebook) . "Notebook is saved")
+       ((notebook_save_failed . Notebook) . "Failed to save Notebook!")))
     :type ein:notification-status)
    (kernel
     :initarg :kernel
-    :initform (ein:notification-status "KernelStatus")
+    :initform
+    (ein:notification-status
+     "KernelStatus"
+     :s2m
+     '(((status_idle . Kernel) . nil)
+       ((status_busy . Kernel) . "Kernel is busy...")
+       ((status_dead . Kernel) . "Kernel is dead. Need restart.")))
     :type ein:notification-status))
   "Notification widget for Notebook.")
+
+(defmethod ein:notification-status-set ((ns (ein:notification-status)) status)
+  (let* ((message (cdr (assoc status (oref ns :s2m)))))
+    (oset ns :status status)
+    (oset ns :message message)))
+
+(defmethod ein:notification-bind-events ((notification (ein:notification))
+                                         events)
+  "Bind a callback to events of the event handler EVENTS which
+just set the status \(= event-type):
+    \(ein:notification-status-set NS EVENT-TYPE)
+where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
+  (loop for ns in (list (oref notification :kernel)
+                        (oref notification :notebook))
+        for statuses in '(((status_idle . Kernel)
+                           (status_busy . Kernel)
+                           (status_dead . Kernel))
+                          ((notebook_saving      . Notebook)
+                           (notebook_saved       . Notebook)
+                           (notebook_save_failed . Notebook)))
+        do (loop for st in statuses
+                 do (ein:events-on st   ; = event-type
+                                   #'ein:notification--callback
+                                   (cons ns st)))))
+
+(defun ein:notification--callback (packed data)
+  (let ((ns (car packed))
+        (status (cdr packed)))
+    (ein:notification-status-set ns status)))
+
+(defun ein:notification-setup (buffer)
+  "Setup a new notification widget in the BUFFER.
+This function saves the new notification widget instance in the
+local variable of the BUFFER"
+  (with-current-buffer buffer
+    (setq ein:@notification
+          (ein:notification "NotificationWidget" :buffer buffer))
+    (setq header-line-format ein:header-line-format)
+    ein:@notification))
+
+
+;;; Header line
+
+(defun ein:header-line ()
+  (format
+   "IP[y]: %s"
+   (ein:join-str
+    " | "
+    (ein:filter
+     'identity
+     (list (oref (oref ein:@notification :notebook) :message)
+           (oref (oref ein:@notification :kernel) :message))))))
+
+(defun ein:header-line-setup-maybe ()
+  "Setup `header-line-format' for mumamo.
+As `header-line-format' is buffer local variable, it must be set
+for each chunk when in
+See also `ein:ac-setup-maybe'."
+  (and (ein:eval-if-bound 'ein:notebook)
+       (ein:eval-if-bound 'mumamo-multi-major-mode)
+       (setq header-line-format ein:header-line-format)))
+(add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
 
 (provide 'ein-notification)
 
