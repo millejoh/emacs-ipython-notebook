@@ -31,6 +31,7 @@
 (require 'ein-log)
 (require 'ein-utils)
 
+;; FIXME: header-line stuff must be moved to the notification widget module.
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 
 (defun ein:header-line ()
@@ -56,6 +57,8 @@ See also `ein:ac-setup-maybe'."
 
 ;;; Events handling class
 
+;; FIXME: After moving header-line stuff to the notification widget,
+;; this buffer local variable will not be needed.
 (ein:deflocal ein:@events nil
   "Buffer local variable to hold an instance of `ein:events'.")
 
@@ -67,6 +70,7 @@ See also `ein:ac-setup-maybe'."
    (status-kernel :initarg :status-kernel :initform nil :type symbol))
   "Event handler class.")
 
+;; FIXME: This function must be moved to the notification widget.
 (defun ein:events-setup (buffer)
   "Make a new event handler instance and setup local variable in the BUFFER.
 The newly created instance is returned by this function.  Event
