@@ -83,12 +83,7 @@ just set the status \(= event-type):
 where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
   (loop for ns in (list (oref notification :kernel)
                         (oref notification :notebook))
-        for statuses in '(((status_idle . Kernel)
-                           (status_busy . Kernel)
-                           (status_dead . Kernel))
-                          ((notebook_saving      . Notebook)
-                           (notebook_saved       . Notebook)
-                           (notebook_save_failed . Notebook)))
+        for statuses = (mapcar #'car (oref ns :s2m))
         do (loop for st in statuses
                  do (ein:events-on events
                                    st   ; = event-type
