@@ -32,6 +32,9 @@
 
 (require 'ein-cell)
 
+
+;;; Classes and variables
+
 (defclass ein:shared-output-cell (ein:codecell)
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
@@ -47,6 +50,9 @@
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
 
+
+;;; Cell related
+
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code)
   (ein:cell-execute-internal cell kernel code))
 
@@ -54,6 +60,9 @@
                                     msg-type content)
   (ein:log 'info "Got output '%s' in the shared buffer." msg-type)
   (call-next-method))
+
+
+;;; Main
 
 (defun ein:shared-output-get-buffer ()
   "Get the shared output buffer."
