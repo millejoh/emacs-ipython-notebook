@@ -92,6 +92,12 @@
         (get-buffer-create (format ein:log-buffer-name-template name)))
   (ein:log 'verbose "Start logging."))
 
+(defun ein:log-del ()
+  "Kill buffer `ein:log-buffer'."
+  ;; FIXME: Maybe add `ein:debug' option for not killing buffer?
+  (when (bufferp ein:log-buffer)
+    (kill-buffer ein:log-buffer)))
+
 (defun ein:log-pop-to-buffer ()
   (interactive)
   (if ein:log-buffer
