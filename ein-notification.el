@@ -41,8 +41,8 @@
 ;; Note: can't put this below of `ein:notification-setup'...
 
 (defclass ein:notification-status ()
-  ((status :initarg :status :initform nil :type symbol)
-   (message :initarg :message :initform "" :type string)
+  ((status :initarg :status :initform nil)
+   (message :initarg :message :initform nil)
    (s2m :initarg :s2m))
   "Hold status and it's string representation (message).")
 
@@ -70,12 +70,12 @@
     :type ein:notification-status))
   "Notification widget for Notebook.")
 
-(defmethod ein:notification-status-set ((ns (ein:notification-status)) status)
+(defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (oref ns :s2m)))))
     (oset ns :status status)
     (oset ns :message message)))
 
-(defmethod ein:notification-bind-events ((notification (ein:notification))
+(defmethod ein:notification-bind-events ((notification ein:notification)
                                          events)
   "Bind a callback to events of the event handler EVENTS which
 just set the status \(= event-type):
