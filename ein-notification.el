@@ -90,7 +90,8 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                            (notebook_saved       . Notebook)
                            (notebook_save_failed . Notebook)))
         do (loop for st in statuses
-                 do (ein:events-on st   ; = event-type
+                 do (ein:events-on events
+                                   st   ; = event-type
                                    #'ein:notification--callback
                                    (cons ns st)))))
 
