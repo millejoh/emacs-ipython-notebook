@@ -95,6 +95,8 @@ EVENT-TYPE is a cons like \(notebook_saved . Notebook), which is
 a direct translation of \"notebook_saved.Notebook\" from the
 IPython notebook client JS."
   (ein:log 'debug "Event: %S" event-type)
+  ;; Ensure that event is handled in the related buffer.
+  ;; This helps logging by `ein:log' (and maybe EWOC?).
   (with-current-buffer (oref events :buffer)
     (ein:aif (gethash event-type (oref events :callbacks))
         (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it))
