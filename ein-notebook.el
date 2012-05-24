@@ -39,6 +39,38 @@
 (require 'ein-events)
 (require 'ein-kill-ring)
 
+
+;;; Configuration
+
+(defcustom ein:notebook-discard-output-on-save 'no
+  "Configure if the output part of the cell should be saved or not.
+
+`no'     (symbol) : Save output. This is the default.
+`yes'    (symbol) : Always discard output.
+a function        : This function takes no value and executed on
+                    the notebook buffer.  Return `t' to discard
+                    all output and return `nil' to save.
+
+Note that using function needs EIN lisp API, which is not defined
+yet.  So be careful when using EIN functions.  They may change."
+  :type '(choice (const :tag "No" 'no)
+                 (const :tag "Yes" 'yes)
+                 ;; FIXME: this must be go to the customize UI after
+                 ;; clarifying the notebook lisp API.
+                 ;; (function :tag "Predicate" (lambda () t))
+                 )
+  :group 'ein)
+
+(defun ein:notebook-discard-output-p ()
+  "Return non-`nil' if the output must be discarded, otherwise save."
+  (case ein:notebook-discard-output-on-save
+    (no nil)
+    (yes t)
+    (t (funcall ein:notebook-discard-output-on-save))))
+
+
+;;; Class and variable
+
 (defvar ein:base-kernel-url "/")
 ;; Currently there is no way to know this setting.  Maybe I should ask
 ;; IPython developers for an API to get this from notebook server.
@@ -688,12 +720,11 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  `((worksheets
-     . [((cells
-          . ,(apply #'vector
-                    (mapcar #'ein:cell-to-json
-                            (ein:notebook-get-cells notebook)))))])
-    (metadata . ,(ein:$notebook-metadata notebook))))
+  (let* ((discard (ein:notebook-discard-output-p))
+         (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
+                        (ein:notebook-get-cells notebook))))
+    `((worksheets . [((cells . ,(apply #'vector cells)))])
+      (metadata . ,(ein:$notebook-metadata notebook)))))
 
 (defun ein:notebook-save-notebook (notebook retry)
   (let ((data (ein:notebook-to-json notebook)))

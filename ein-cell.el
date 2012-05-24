@@ -695,13 +695,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                text)
       (format "Error: %S" err)))))
 
-(defmethod ein:cell-to-json ((cell ein:codecell))
+(defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
     ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
           `((prompt_number . ,it)))
-    (outputs . ,(apply #'vector (oref cell :outputs)))
+    (outputs . ,(if discard-output [] (apply #'vector (oref cell :outputs))))
     (language . "python")
     (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
