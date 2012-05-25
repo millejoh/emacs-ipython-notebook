@@ -79,6 +79,12 @@
 
 ;; ein:cell-to-json
 
+(defun eintest:cell-to-json (cell input)
+  (mocker-let ((ein:cell-get-text
+                (cell)
+                ((:input (list cell) :output input))))
+    (ein:cell-to-json cell)))
+
 (ert-deftest ein:cell-to-json-code ()
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
@@ -90,10 +96,7 @@
          (data (eintest:cell-json-data-code
                 input-prompt-number input (list output-0)))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
     (should (equal (cdr (assq 'cell_type alist)) "code"))
     (should (equal (cdr (assq 'outputs alist)) `[,output-0]))
@@ -104,10 +107,7 @@
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
          (data (list :cell_type "text" :source input))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'cell_type alist)) "text"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))))
 
@@ -115,10 +115,7 @@
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
          (data (list :cell_type "html" :source input))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'cell_type alist)) "html"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))))
 
@@ -126,10 +123,7 @@
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
          (data (list :cell_type "markdown" :source input))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'cell_type alist)) "markdown"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))))
 
@@ -137,10 +131,7 @@
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
          (data (list :cell_type "raw" :source input))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'cell_type alist)) "raw"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))))
 
@@ -148,10 +139,7 @@
   (let* ((input (ein:join-str "\n" '("first input" "second input")))
          (data (list :cell_type "heading" :source input))
          (cell (eintest:cell-from-json data))
-         (alist (mocker-let ((ein:cell-get-text
-                              (cell)
-                              ((:input (list cell) :output input))))
-                  (ein:cell-to-json cell))))
+         (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'cell_type alist)) "heading"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))
     (should (equal (cdr (assq 'level alist)) 1))))
