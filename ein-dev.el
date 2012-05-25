@@ -27,6 +27,7 @@
 
 (require 'rst)
 (require 'ein-notebook)
+(require 'ein-subpackages)
 
 (defun ein:dev-insert-notebook-mode-map ()
   "Insert mode-map into rst document.  For README.rst."
