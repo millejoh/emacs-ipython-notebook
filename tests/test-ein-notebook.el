@@ -126,6 +126,20 @@
           do (ein:notebook-delete-cell-command))
     (should (equal (ein:notebook-ncells ein:notebook) 0))))
 
+(ert-deftest ein:notebook-delete-cell-command-no-undo ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-above-command)
+    (insert "some text")
+    (should (equal (buffer-string) "
+In [ ]:
+some text
+
+"))
+    (ein:notebook-kill-cell-command)
+    (should (equal (buffer-string) "\n"))
+    (should-error (undo))               ; should be ignore-error?
+    (should (equal (buffer-string) "\n"))))
+
 (ert-deftest ein:notebook-kill-cell-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)

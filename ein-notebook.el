@@ -307,7 +307,8 @@ the time of execution."
 ;; Insertion and deletion of cells
 
 (defun ein:notebook-delete-cell (notebook cell)
-  (let ((inhibit-read-only t))
+  (let ((inhibit-read-only t)
+        (buffer-undo-list t))        ; disable undo recording
     (apply #'ewoc-delete
            (ein:$notebook-ewoc notebook)
            (ein:cell-all-element cell)))
