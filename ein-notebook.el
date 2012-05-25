@@ -740,11 +740,12 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (let* ((discard (ein:notebook-discard-output-p notebook))
-         (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
-                        (ein:notebook-get-cells notebook))))
-    `((worksheets . [((cells . ,(apply #'vector cells)))])
-      (metadata . ,(ein:$notebook-metadata notebook)))))
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (let* ((discard (ein:notebook-discard-output-p notebook))
+           (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
+                          (ein:notebook-get-cells notebook))))
+      `((worksheets . [((cells . ,(apply #'vector cells)))])
+        (metadata . ,(ein:$notebook-metadata notebook))))))
 
 (defun ein:notebook-save-notebook (notebook retry)
   (let ((data (ein:notebook-to-json notebook)))
@@ -794,7 +795,8 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
-  (set-buffer-modified-p nil)
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (set-buffer-modified-p nil))
   (ein:events-trigger (ein:$notebook-events notebook)
                       '(notebook_saved . Notebook)))
 
