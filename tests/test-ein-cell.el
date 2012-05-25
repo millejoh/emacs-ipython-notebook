@@ -79,11 +79,11 @@
 
 ;; ein:cell-to-json
 
-(defun eintest:cell-to-json (cell input)
+(defun eintest:cell-to-json (cell input &optional discard-output)
   (mocker-let ((ein:cell-get-text
                 (cell)
                 ((:input (list cell) :output input))))
-    (ein:cell-to-json cell)))
+    (ein:cell-to-json cell discard-output)))
 
 (ert-deftest ein:cell-to-json-code ()
   (let* ((input-prompt-number 111)
@@ -100,6 +100,24 @@
     (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
     (should (equal (cdr (assq 'cell_type alist)) "code"))
     (should (equal (cdr (assq 'outputs alist)) `[,output-0]))
+    (should (equal (cdr (assq 'language alist)) "python"))
+    (should (equal (cdr (assq 'collapsed alist)) json-false))))
+
+(ert-deftest ein:cell-to-json-code-discard-output ()
+  (let* ((input-prompt-number 111)
+         (output-prompt-number 222)
+         (input (ein:join-str "\n" '("first input" "second input")))
+         (output-0 (list :output_type "pyout"
+                         :prompt_number output-prompt-number
+                         :text (list "first output"
+                                     "second output")))
+         (data (eintest:cell-json-data-code
+                input-prompt-number input (list output-0)))
+         (cell (eintest:cell-from-json data))
+         (alist (eintest:cell-to-json cell input t)))
+    (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
+    (should (equal (cdr (assq 'cell_type alist)) "code"))
+    (should (equal (cdr (assq 'outputs alist)) []))
     (should (equal (cdr (assq 'language alist)) "python"))
     (should (equal (cdr (assq 'collapsed alist)) json-false))))
 
