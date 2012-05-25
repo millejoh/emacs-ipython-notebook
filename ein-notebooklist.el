@@ -92,6 +92,7 @@
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :data data))
       (ein:notebooklist-render)
+      (goto-char (point-min))
       (current-buffer))))
 
 (defun ein:notebooklist-reload ()
