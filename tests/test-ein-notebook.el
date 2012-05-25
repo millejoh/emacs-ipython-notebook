@@ -52,7 +52,7 @@
       (with-current-buffer (ein:notebook-url-retrieve-callback
                             nil
                             (ein:notebook-new "DUMMY-URL" notebook-id))
-        (let ((events (ein:events-setup (current-buffer))))
+        (let ((events (ein:events-new (current-buffer))))
           (setf (ein:$notebook-events ein:notebook) events)
           (setf (ein:$notebook-kernel ein:notebook)
                 (ein:kernel-new 8888 "/kernels" events)))

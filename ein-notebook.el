@@ -37,6 +37,7 @@
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
+(require 'ein-notification)
 (require 'ein-kill-ring)
 
 (defvar ein:base-kernel-url "/")
@@ -88,7 +89,10 @@
   Notebook file format version.
 
 `ein:$notebook-events' : `ein:$events'
-  Event handler instance."
+  Event handler instance.
+
+`ein:$notebook-notification' : `ein:notification'
+  Notification widget."
   url-or-port
   notebook-id
   data
@@ -100,6 +104,7 @@
   notebook-name
   nbformat
   events
+  notification
   )
 
 (ein:deflocal ein:notebook nil
@@ -204,8 +209,9 @@ the time of execution."
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
   (ein:notebook-mode)
-  (ein:notebook-bind-events ein:notebook
-                            (ein:events-setup (current-buffer)))
+  (setf (ein:$notebook-notification ein:notebook)
+        (ein:notification-setup (current-buffer)))
+  (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -227,6 +233,8 @@ the time of execution."
                  #'ein:notebook--set-next-input
                  notebook)
   ;; Bind events for sub components:
+  (ein:notification-bind-events (ein:$notebook-notification ein:notebook)
+                                events)
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
          (format ein:notebook-pager-buffer-name-template

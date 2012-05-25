@@ -31,67 +31,18 @@
 (require 'ein-log)
 (require 'ein-utils)
 
-;; FIXME: header-line stuff must be moved to the notification widget module.
-(defvar ein:header-line-format '(:eval (ein:header-line)))
-
-(defun ein:header-line ()
-  (format
-   "IP[y]: %s"
-   (ein:join-str
-    " | "
-    (ein:filter
-     'identity
-     (list (ein:events-header-message-notebook)
-           (ein:events-header-message-kernel))))))
-
-(defun ein:header-line-setup-maybe ()
-  "Setup `header-line-format' for mumamo.
-As `header-line-format' is buffer local variable, it must be set
-for each chunk when in
-See also `ein:ac-setup-maybe'."
-  (and (ein:eval-if-bound 'ein:notebook)
-       (ein:eval-if-bound 'mumamo-multi-major-mode)
-       (setq header-line-format ein:header-line-format)))
-(add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
-
 
 ;;; Events handling class
-
-;; FIXME: After moving header-line stuff to the notification widget,
-;; this buffer local variable will not be needed.
-(ein:deflocal ein:@events nil
-  "Buffer local variable to hold an instance of `ein:events'.")
 
 (defclass ein:events ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
    (callbacks :initarg :callbacks :type hash-table
-              :initform (make-hash-table :test 'equal))
-   (status-notebook :initarg :status-notebook :initform nil :type symbol)
-   (status-kernel :initarg :status-kernel :initform nil :type symbol))
+              :initform (make-hash-table :test 'equal)))
   "Event handler class.")
 
-;; FIXME: This function must be moved to the notification widget.
-(defun ein:events-setup (buffer)
-  "Make a new event handler instance and setup local variable in the BUFFER.
-The newly created instance is returned by this function.  Event
-handler user must *not* use the buffer local variable directly.
-Use the variable returned by this function instead."
-  (with-current-buffer buffer
-    (setq ein:@events (ein:events "Events" :buffer buffer))
-    (setq header-line-format ein:header-line-format)
-    ein:@events))
-
-(defun ein:events-header-message-notebook ()
-  (case (oref ein:@events :status-notebook)
-    (notebook_saving "Saving Notebook...")
-    (notebook_saved "Notebook is saved")
-    (notebook_save_failed "Failed to save Notebook!")))
-
-(defun ein:events-header-message-kernel ()
-  (case (oref ein:@events :status-kernel)
-    (status_idle nil)
-    (status_busy "Kernel is busy...")
-    (status_dead "Kernel is dead. Need restart.")))
+(defun ein:events-new (buffer)
+  "Return a new event handler instance."
+  (ein:events "Events" :buffer buffer))
 
 (defun ein:events-trigger (events event-type &optional data)
   "Trigger EVENT-TYPE and let event handler EVENTS handle that event.
@@ -103,15 +54,8 @@ IPython notebook client JS."
   ;; This helps logging by `ein:log' (and maybe EWOC?).
   (with-current-buffer (oref events :buffer)
     (ein:aif (gethash event-type (oref events :callbacks))
-        (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it))
-    ;; FIXME! the following must be put together in the event frame work.
-    (case (cdr event-type)
-      (Kernel
-       (oset events :status-kernel (car event-type)))
-      (Notebook
-       (oset events :status-notebook (car event-type)))
-      (t
-       (ein:log 'info "Unknown event: %S" event-type)))))
+        (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it)
+      (ein:log 'info "Unknown event: %S" event-type))))
 
 
 (defmethod ein:events-on ((events ein:events) event-type
