@@ -327,7 +327,7 @@
       (should (ein:$kernel-p (oref cell :kernel)))
       (insert text)
       (mocker-let ((ein:kernel-execute
-                    (kernel code callbacks :silent silent)
+                    (kernel code callbacks kwd-silent silent)
                     ((:input (list kernel text callbacks :silent nil))))
                    (ein:kernel-ready-p
                     (kernel)
