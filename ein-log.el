@@ -92,16 +92,23 @@
         (get-buffer-create (format ein:log-buffer-name-template name)))
   (ein:log 'verbose "Start logging."))
 
+;; FIXME: this variable must go to somewhere more central
+(defvar ein:debug nil
+  "Set to non-`nil' to raise errors instead of suppressing it.
+Change the behavior of `ein:log-ignore-errors'.")
+
 (defmacro ein:log-ignore-errors (&rest body)
   "Execute BODY; if an error occurs, log the error and return nil.
 Otherwise, return result of last form in BODY."
   (declare (debug t) (indent 0))
-  `(condition-case err
+  `(if ein:debug
        (progn ,@body)
-     (error
-      (ein:log 'debug "Error: %S" err)
-      (ein:log 'error (error-message-string err))
-      nil)))
+     (condition-case err
+         (progn ,@body)
+       (error
+        (ein:log 'debug "Error: %S" err)
+        (ein:log 'error (error-message-string err))
+        nil))))
 
 (defun ein:log-del ()
   "Kill buffer `ein:log-buffer'."
