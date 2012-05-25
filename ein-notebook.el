@@ -956,6 +956,20 @@ Called via `kill-emacs-query-functions'."
 
 (add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 
+(defun ein:notebook-kill-all-buffers ()
+  (interactive)
+  (let ((buffers (ein:notebook-opened-buffers)))
+    (if buffers
+        (if (y-or-n-p
+             (format (concat "You have %s unsaved notebook(s). "
+                             "Really kill all of them?")
+                     (length buffers)))
+            (progn (ein:log 'info "Killing all notebook buffers...")
+                   (mapc #'kill-buffer buffers)
+                   (ein:log 'info "Killing all notebook buffers... Done!"))
+          (ein:log 'info "Canceled to kill all notebooks."))
+      (ein:log 'info "No opened notebooks."))))
+
 
 ;;; Console integration
 
