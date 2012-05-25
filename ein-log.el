@@ -92,6 +92,17 @@
         (get-buffer-create (format ein:log-buffer-name-template name)))
   (ein:log 'verbose "Start logging."))
 
+(defmacro ein:log-ignore-errors (&rest body)
+  "Execute BODY; if an error occurs, log the error and return nil.
+Otherwise, return result of last form in BODY."
+  (declare (debug t) (indent 0))
+  `(condition-case err
+       (progn ,@body)
+     (error
+      (ein:log 'debug "Error: %S" err)
+      (ein:log 'error (error-message-string err))
+      nil)))
+
 (defun ein:log-del ()
   "Kill buffer `ein:log-buffer'."
   ;; FIXME: Maybe add `ein:debug' option for not killing buffer?

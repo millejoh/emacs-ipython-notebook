@@ -171,9 +171,10 @@ is `nil', BODY is executed with any cell types."
 
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (ein:log-del))
-  (ein:kernel-del (ein:$notebook-kernel notebook)))
+  (ein:log-ignore-errors
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:log-del))
+    (ein:kernel-del (ein:$notebook-kernel notebook))))
 
 (defun ein:notebook-get-buffer-name (notebook)
   (format ein:notebook-buffer-name-template
