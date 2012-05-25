@@ -21,7 +21,14 @@
 
 ;;; Commentary:
 
-;;
+;; * Coding rule about current buffer.
+;; A lot of notebook and cell functions touches to current buffer and
+;; it is not ideal to wrap all these functions by `with-current-buffer'.
+;; Therefore, when the function takes `notebook' to the first argument
+;; ("method" function), it is always assumed that the current buffer
+;; is the notebook buffer.  **However**, functions called as callback
+;; (via `url-retrieve', for example) must protect themselves by
+;; calling from unknown buffer.
 
 ;;; Code:
 
@@ -740,12 +747,11 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (let* ((discard (ein:notebook-discard-output-p notebook))
-           (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
-                          (ein:notebook-get-cells notebook))))
-      `((worksheets . [((cells . ,(apply #'vector cells)))])
-        (metadata . ,(ein:$notebook-metadata notebook))))))
+  (let* ((discard (ein:notebook-discard-output-p notebook))
+         (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
+                        (ein:notebook-get-cells notebook))))
+    `((worksheets . [((cells . ,(apply #'vector cells)))])
+      (metadata . ,(ein:$notebook-metadata notebook)))))
 
 (defun ein:notebook-save-notebook (notebook retry)
   (let ((data (ein:notebook-to-json notebook)))
@@ -783,14 +789,15 @@ Do not clear input prompts when the prefix argument is given."
   (unless (eq url-http-response-status 204)
     (let ((notebook (car nb-retry))
           (retry (cdr nb-retry)))
-      (if (< retry ein:notebook-save-retry-max)
-          (progn
-            (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
-            (ein:notebook-save-notebook notebook (1+ retry)))
-        (ein:notebook-save-notebook-error notebook :status status)
-        (ein:log 'info
-          "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
-          url-http-response-status ein:notebook-save-retry-max)))))
+      (with-current-buffer (ein:notebook-buffer notebook)
+        (if (< retry ein:notebook-save-retry-max)
+            (progn
+              (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
+              (ein:notebook-save-notebook notebook (1+ retry)))
+          (ein:notebook-save-notebook-error notebook :status status)
+          (ein:log 'info
+            "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
+            url-http-response-status ein:notebook-save-retry-max))))))
 
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
