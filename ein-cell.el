@@ -705,11 +705,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (language . "python")
     (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
-(defmethod ein:cell-to-json ((cell ein:textcell))
+(defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
-(defmethod ein:cell-to-json ((cell ein:headingcell))
+(defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))
     (append json `((level . ,(oref cell :level))))))
 
