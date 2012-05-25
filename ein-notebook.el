@@ -315,6 +315,14 @@ the time of execution."
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-delete-cell-command ()
+  "Delete a cell.  \(WARNING: no undo!)
+This command has no key binding because there is no way to undo
+deletion.  Use kill to play on the safe side.
+
+If you really want use this command, you can do something like this:
+  \(define-key ein:notebook-mode-map \"\\C-c\\C-d\"
+              'ein:notebook-delete-cell-command)
+But be careful!"
   (interactive)
   (ein:notebook-with-cell nil
     (ein:notebook-delete-cell ein:notebook cell)
@@ -862,7 +870,6 @@ Examples:
     (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
     (define-key map "\C-c\C-l" 'ein:notebook-clear-output-command)
     (define-key map (kbd "C-c C-S-l") 'ein:notebook-clear-all-output-command)
-    (define-key map "\C-c\C-d" 'ein:notebook-delete-cell-command)
     (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
     (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
     (define-key map "\C-c\C-y" 'ein:notebook-yank-cell-command)
