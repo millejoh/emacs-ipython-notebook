@@ -36,7 +36,7 @@
          (events (ein:events "EventsTest"
                              :buffer (get-buffer-create "*dummy buffer*"))))
     (ein:notification-bind-events notification events)
-    (should (= (hash-table-count (oref events :callbacks)) 6))
+    (should (= (hash-table-count (oref events :callbacks)) 7))
     (should (equal (oref kernel :status) nil))
     (loop for et in (mapcar #'car (oref kernel :s2m))
           do (ein:events-trigger events et)

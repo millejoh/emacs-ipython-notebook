@@ -88,12 +88,34 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  do (ein:events-on events
                                    st   ; = event-type
                                    #'ein:notification--callback
-                                   (cons ns st)))))
+                                   (cons ns st))))
+  (ein:events-on events
+                 '(status_restarting . Kernel)
+                 #'ein:notification--fadeout-callback
+                 (list (oref notification :kernel)
+                       "Restarting kernel..."
+                       '(status_restarting . Kernel)
+                       '(status_idle . Kernel))))
 
 (defun ein:notification--callback (packed data)
   (let ((ns (car packed))
         (status (cdr packed)))
     (ein:notification-status-set ns status)))
+
+(defun ein:notification--fadeout-callback (packed data)
+  (let ((ns (nth 0 packed))
+        (message (nth 1 packed))
+        (status (nth 2 packed))
+        (next (nth 3 packed)))
+    (oset ns :status status)
+    (oset ns :message message)
+    (apply #'run-at-time
+           1 nil
+           (lambda (ns message status next)
+             (when (equal (oref ns :status) status)
+               (ein:notification-status-set ns next)
+               (force-mode-line-update)))
+           packed)))
 
 (defun ein:notification-setup (buffer)
   "Setup a new notification widget in the BUFFER.
