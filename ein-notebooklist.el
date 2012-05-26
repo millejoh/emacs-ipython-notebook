@@ -125,20 +125,19 @@
   (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
   (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
-   :success
-   (cons (lambda (buffer &rest ignore)
-           (let ((notebook-id
-                  (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
-             (message "Creating a new notebook... Done.")
-             (with-current-buffer buffer
-               (if notebook-id
-                   (ein:notebooklist-open-notebook ein:notebooklist
-                                                   notebook-id)
-                 (message (concat "Oops. EIN failed to open new notebook. "
-                                  "Please find it in the notebook list."))
-                 (ein:notebooklist-reload)))))
-         (current-buffer))
+   :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))
    :timeout 5000))
+
+(defun ein:notebooklist-new-notebook-callback (buffer &rest ignore)
+  (let ((notebook-id
+         (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
+    (message "Creating a new notebook... Done.")
+    (with-current-buffer buffer
+      (if notebook-id
+          (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
+        (message (concat "Oops. EIN failed to open new notebook. "
+                         "Please find it in the notebook list."))
+        (ein:notebooklist-reload)))))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
