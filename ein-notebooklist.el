@@ -80,6 +80,7 @@
     (ein:query-ajax
      (ein:notebooklist-url url-or-port)
      :cache nil
+     :data-type #'ein:json-read
      :success (cons success url-or-port)
      :timeout 5000))
   (ein:notebooklist-get-buffer url-or-port))
@@ -87,19 +88,19 @@
 (defun* ein:notebooklist-url-retrieve-callback (url-or-port
                                                 &key
                                                 status
+                                                data
                                                 &allow-other-keys)
   "Called via `ein:notebooklist-open'."
   (ein:aif (plist-get status :error)
       (error "Failed to connect to server '%s'.  Got: %S"
              (ein:url url-or-port) it))
-  (let ((data (ein:json-read)))
-    (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-      (setq ein:notebooklist
-            (make-ein:$notebooklist :url-or-port url-or-port
-                                    :data data))
-      (ein:notebooklist-render)
-      (goto-char (point-min))
-      (current-buffer))))
+  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+    (setq ein:notebooklist
+          (make-ein:$notebooklist :url-or-port url-or-port
+                                  :data data))
+    (ein:notebooklist-render)
+    (goto-char (point-min))
+    (current-buffer)))
 
 (defun ein:notebooklist-reload ()
   "Reload current Notebook list."
@@ -125,12 +126,15 @@
   (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
   (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
+   :data-type (lambda ()
+                (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
    :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))
    :timeout 5000))
 
-(defun ein:notebooklist-new-notebook-callback (buffer &rest ignore)
-  (let ((notebook-id
-         (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
+(defun* ein:notebooklist-new-notebook-callback (buffer &key
+                                                       data
+                                                       &allow-other-keys)
+  (let ((notebook-id data))
     (message "Creating a new notebook... Done.")
     (with-current-buffer buffer
       (if notebook-id

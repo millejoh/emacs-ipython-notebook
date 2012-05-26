@@ -47,6 +47,7 @@
                             (cache t)
                             (type "GET")
                             (data nil)
+                            (data-type nil)
                             (headers nil)
                             (success nil)
                             (error nil)
@@ -57,6 +58,7 @@
 :CACHE       (nil/t) : append time-stamp to URL so the URL is always loaded.
 :TYPE       (string) : sets `url-request-method'
 :DATA       (string) : sets `url-request-data'
+:DATA-TYPE  (symbol) : a function that reads current buffer and return data
 :HEADERS     (alist) : sets `url-request-extra-headers'
 :SUCCESS      (cons) : called on success
 :ERROR        (cons) : called on error
@@ -70,22 +72,23 @@ cdr is its first ARGUMENT.  It is analogous of `$.proxy'.  Call
 signature is like this:
     \(FUNCTION ARGUMENT [other callback specific arguments])
 
-The second note is that the callback FUNCTION must be defined
+Also note that the callback FUNCTION must be defined
 using `defun*' with `&key' and `&allow-other-keys' to ignore
 missing/extra arguments as some callback (namely :ERROR) changes
 arguments to be passed, depending on situation.
-
-Finally, note that callback FUNCTION is executed on the process
-buffer, meaning that response data is on the current buffer when
-the FUNCTION is called.  There is no `:data' argument for
-FUNCTION so it must be fetched from the buffer.
 
 * :ERROR callback
 
 :SYMBOL-STATUS (`error'/`timeout') : analogous of `textStatus'
 :STATUS                     (list) : see `url-retrieve'
+:RESPONSE-STATUS                   : = `url-http-response-status'
 
-The :SUCCESS callback also takes the :STATUS argument.
+* :SUCCESS callback
+
+This callback takes :DATA (object), which is a data object parsed
+by :DATA-TYPE.  If :DATA-TYPE is not specified, this is nil.
+The :SUCCESS callback also takes the :STATUS and :RESPONSE-STATUS
+argument.
 
 * :STATUS-CODE callback
 
@@ -113,34 +116,38 @@ is not guaranteed to be the process buffer.
 
 (defun* ein:query-ajax-callback (status &key
                                         (headers nil)
+                                        (data-type nil)
                                         (success nil)
                                         (error nil)
                                         (timeout nil)
                                         (status-code nil)
                                         &allow-other-keys)
   (declare (special url-http-response-status))
-  (let ((buffer (current-buffer))
-        (status-code-callback
-         (cdr (assq url-http-response-status status-code))))
-    (unwind-protect
-        (progn
-          (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
-          (ein:log 'debug "status = %S" status)
-          (ein:log 'debug "url-http-response-status = %s"
-                   url-http-response-status)
-          (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
-          (ein:log 'debug "Executing success/error callback.")
-          (apply #'ein:safe-funcall-packed
-                 (if (plist-get status :error)
-                     (list error :symbol-status 'error :status status)
-                   (list success :status status)))
+  (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
+  (ein:log 'debug "status = %S" status)
+  (ein:log 'debug "url-http-response-status = %s" url-http-response-status)
+  (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
-          (ein:log 'debug "Executing status-code callback.")
-          (ein:safe-funcall-packed status-code-callback))
-      (ein:with-live-buffer buffer
-        (ein:query-ajax-cancel-timer))
-      (kill-buffer buffer))))
+  (ein:query-ajax-cancel-timer)
+  (let* ((buffer (current-buffer)) ; `data-type' could change buffer...
+         (response-status url-http-response-status)
+         (status-code-callback (cdr (assq response-status status-code)))
+         (status-error (plist-get status :error))
+         (data (if (and data-type (not status-error))
+                   (unwind-protect
+                       (funcall data-type)
+                     (kill-buffer buffer)))))
+
+    (ein:log 'debug "Executing success/error callback.")
+    (apply #'ein:safe-funcall-packed
+           (if (plist-get status :error)
+               (list error :symbol-status 'error :status status :data data)
+             (list success :status status :data data)))
+
+    (ein:log 'debug "Executing status-code callback.")
+    (ein:safe-funcall-packed status-code-callback
+                             :status status :data data)))
 
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)

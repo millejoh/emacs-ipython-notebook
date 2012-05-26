@@ -780,13 +780,13 @@ Do not clear input prompts when the prefix argument is given."
 (defun* ein:notebook-save-notebook-workaround (nb-retry &rest args
                                                         &key
                                                         status
+                                                        response-status
                                                         &allow-other-keys)
-  (declare (special url-http-response-status))
   ;; IPython server returns 204 only when the notebook URL is
   ;; accessed via PUT or DELETE.  As it seems Emacs failed to
   ;; choose PUT method every two times, let's check the response
   ;; here and fail when 204 is not returned.
-  (unless (eq url-http-response-status 204)
+  (unless (eq response-status 204)
     (let ((notebook (car nb-retry))
           (retry (cdr nb-retry)))
       (with-current-buffer (ein:notebook-buffer notebook)
@@ -797,7 +797,7 @@ Do not clear input prompts when the prefix argument is given."
           (ein:notebook-save-notebook-error notebook :status status)
           (ein:log 'info
             "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
-            url-http-response-status ein:notebook-save-retry-max))))))
+            response-status ein:notebook-save-retry-max))))))
 
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
