@@ -107,8 +107,7 @@ The :SUCCESS callback also takes the :STATUS argument.
                                         (timeout nil)
                                         (status-code nil)
                                         &allow-other-keys)
-  (declare (special url-http-response-status
-                    url-http-method))
+  (declare (special url-http-response-status))
   (unwind-protect
       (progn
         (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
