@@ -25,8 +25,11 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'ein-ac)
-                   (require 'ein-smartrep))
+(eval-when-compile (defvar ein:ac-config-once-called)
+                   (defvar ein:smartrep-config-once-called))
+
+(declare-function ein:ac-config-once "ein-ac")
+(declare-function ein:smartrep-config-once "ein-smartrep")
 
 
 (defcustom ein:use-auto-complete nil
