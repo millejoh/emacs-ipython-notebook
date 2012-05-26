@@ -146,19 +146,17 @@
 
 (defun ein:notebooklist-delete-notebook (notebook-id name)
   (message "Deleting notebook %s..." name)
-  (let ((url (ein:url-no-cache
-              (ein:notebook-url-from-url-and-id
-               (ein:$notebooklist-url-or-port ein:notebooklist)
-               notebook-id)))
-        (url-request-method "DELETE"))
-    (url-retrieve
-     url
-     (lambda (s buffer name)
-       (kill-buffer (current-buffer))
-       (message "Deleting notebook %s... Done." name)
-       (with-current-buffer buffer
-         (ein:notebooklist-reload)))
-     (list (current-buffer) name))))
+  (ein:query-ajax
+   (ein:notebook-url-from-url-and-id
+    (ein:$notebooklist-url-or-port ein:notebooklist)
+    notebook-id)
+   :cache nil
+   :type "DELETE"
+   :success (cons (lambda (packed &rest ignore)
+                    (message "Deleting notebook %s... Done." (cdr packed))
+                    (with-current-buffer (car packed)
+                      (ein:notebooklist-reload)))
+                  (cons (current-buffer) name))))
 
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
