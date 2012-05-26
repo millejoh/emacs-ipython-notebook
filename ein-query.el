@@ -94,9 +94,10 @@ The :SUCCESS callback also takes the :STATUS argument.
       (ein:log 'debug "Start timer: timeout=%s ms" timeout)
       (with-current-buffer buffer
         (setq ein:query-ajax-timer
-              (run-at-time (/ timeout 1000.0) nil
-                           #'ein:query-ajax-timeout-callback
-                           (cons buffer settings)))))
+              (apply #'run-at-time
+                     (/ timeout 1000.0) nil
+                     #'ein:query-ajax-timeout-callback
+                     (cons buffer settings)))))
     buffer))
 
 (defun* ein:query-ajax-callback (status &key
@@ -127,7 +128,7 @@ The :SUCCESS callback also takes the :STATUS argument.
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
-  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK")
+  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
   (with-current-buffer buffer
     (ein:safe-funcall-packed error :symbol-status 'timeout))
   (let ((proc (process-buffer buffer)))
