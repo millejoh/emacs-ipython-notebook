@@ -71,16 +71,23 @@
   (when (and (stringp url-or-port)
              (string-match "^[0-9]+$" url-or-port))
     (setq url-or-port (string-to-number url-or-port)))
-  (url-retrieve
-   (ein:notebooklist-url url-or-port)
-   (if no-popup
-       #'ein:notebooklist-url-retrieve-callback
-     (lambda (&rest args)
-       (pop-to-buffer (apply #'ein:notebooklist-url-retrieve-callback args))))
-   (list url-or-port))
+  (let ((success
+         (if no-popup
+             #'ein:notebooklist-url-retrieve-callback
+           (lambda (&rest args)
+             (pop-to-buffer
+              (apply #'ein:notebooklist-url-retrieve-callback args))))))
+    (ein:query-ajax
+     (ein:notebooklist-url url-or-port)
+     :cache nil
+     :success (cons success url-or-port)
+     :timeout 5000))
   (ein:notebooklist-get-buffer url-or-port))
 
-(defun ein:notebooklist-url-retrieve-callback (status url-or-port)
+(defun* ein:notebooklist-url-retrieve-callback (url-or-port
+                                                &key
+                                                status
+                                                &allow-other-keys)
   "Called via `ein:notebooklist-open'."
   (ein:aif (plist-get status :error)
       (error "Failed to connect to server '%s'.  Got: %S"
