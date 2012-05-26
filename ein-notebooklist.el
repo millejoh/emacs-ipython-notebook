@@ -71,29 +71,36 @@
   (when (and (stringp url-or-port)
              (string-match "^[0-9]+$" url-or-port))
     (setq url-or-port (string-to-number url-or-port)))
-  (url-retrieve
-   (ein:notebooklist-url url-or-port)
-   (if no-popup
-       #'ein:notebooklist-url-retrieve-callback
-     (lambda (&rest args)
-       (pop-to-buffer (apply #'ein:notebooklist-url-retrieve-callback args))))
-   (list url-or-port))
+  (let ((success
+         (if no-popup
+             #'ein:notebooklist-url-retrieve-callback
+           (lambda (&rest args)
+             (pop-to-buffer
+              (apply #'ein:notebooklist-url-retrieve-callback args))))))
+    (ein:query-ajax
+     (ein:notebooklist-url url-or-port)
+     :cache nil
+     :parser #'ein:json-read
+     :success (cons success url-or-port)
+     :timeout 5000))
   (ein:notebooklist-get-buffer url-or-port))
 
-(defun ein:notebooklist-url-retrieve-callback (status url-or-port)
+(defun* ein:notebooklist-url-retrieve-callback (url-or-port
+                                                &key
+                                                status
+                                                data
+                                                &allow-other-keys)
   "Called via `ein:notebooklist-open'."
   (ein:aif (plist-get status :error)
       (error "Failed to connect to server '%s'.  Got: %S"
              (ein:url url-or-port) it))
-  (let ((data (ein:json-read)))
-    (kill-buffer (current-buffer))
-    (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-      (setq ein:notebooklist
-            (make-ein:$notebooklist :url-or-port url-or-port
-                                    :data data))
-      (ein:notebooklist-render)
-      (goto-char (point-min))
-      (current-buffer))))
+  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+    (setq ein:notebooklist
+          (make-ein:$notebooklist :url-or-port url-or-port
+                                  :data data))
+    (ein:notebooklist-render)
+    (goto-char (point-min))
+    (current-buffer)))
 
 (defun ein:notebooklist-reload ()
   "Reload current Notebook list."
@@ -117,20 +124,24 @@
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
   (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
-  (url-retrieve
+  (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
-   (lambda (s buffer)
-     (let ((notebook-id
-            (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
-       (kill-buffer (current-buffer))
-       (message "Creating a new notebook... Done.")
-       (with-current-buffer buffer
-         (if notebook-id
-             (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
-           (message (concat "Oops. EIN failed to open new notebook. "
-                            "Please find it in the notebook list."))
-           (ein:notebooklist-reload)))))
-   (list (current-buffer))))
+   :parser (lambda ()
+             (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
+   :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))
+   :timeout 5000))
+
+(defun* ein:notebooklist-new-notebook-callback (buffer &key
+                                                       data
+                                                       &allow-other-keys)
+  (let ((notebook-id data))
+    (message "Creating a new notebook... Done.")
+    (with-current-buffer buffer
+      (if notebook-id
+          (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
+        (message (concat "Oops. EIN failed to open new notebook. "
+                         "Please find it in the notebook list."))
+        (ein:notebooklist-reload)))))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
@@ -138,19 +149,17 @@
 
 (defun ein:notebooklist-delete-notebook (notebook-id name)
   (message "Deleting notebook %s..." name)
-  (let ((url (ein:url-no-cache
-              (ein:notebook-url-from-url-and-id
-               (ein:$notebooklist-url-or-port ein:notebooklist)
-               notebook-id)))
-        (url-request-method "DELETE"))
-    (url-retrieve
-     url
-     (lambda (s buffer name)
-       (kill-buffer (current-buffer))
-       (message "Deleting notebook %s... Done." name)
-       (with-current-buffer buffer
-         (ein:notebooklist-reload)))
-     (list (current-buffer) name))))
+  (ein:query-ajax
+   (ein:notebook-url-from-url-and-id
+    (ein:$notebooklist-url-or-port ein:notebooklist)
+    notebook-id)
+   :cache nil
+   :type "DELETE"
+   :success (cons (lambda (packed &rest ignore)
+                    (message "Deleting notebook %s... Done." (cdr packed))
+                    (with-current-buffer (car packed)
+                      (ein:notebooklist-reload)))
+                  (cons (current-buffer) name))))
 
 (defun ein:notebooklist-render ()
   "Render notebook list widget.

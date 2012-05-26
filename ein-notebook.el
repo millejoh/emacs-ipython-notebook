@@ -21,7 +21,14 @@
 
 ;;; Commentary:
 
-;;
+;; * Coding rule about current buffer.
+;; A lot of notebook and cell functions touches to current buffer and
+;; it is not ideal to wrap all these functions by `with-current-buffer'.
+;; Therefore, when the function takes `notebook' to the first argument
+;; ("method" function), it is always assumed that the current buffer
+;; is the notebook buffer.  **However**, functions called as callback
+;; (via `url-retrieve', for example) must protect themselves by
+;; calling from unknown buffer.
 
 ;;; Code:
 
@@ -39,6 +46,7 @@
 (require 'ein-events)
 (require 'ein-notification)
 (require 'ein-kill-ring)
+(require 'ein-query)
 
 
 ;;; Configuration
@@ -62,12 +70,13 @@ yet.  So be careful when using EIN functions.  They may change."
                  )
   :group 'ein)
 
-(defun ein:notebook-discard-output-p ()
+(defun ein:notebook-discard-output-p (notebook)
   "Return non-`nil' if the output must be discarded, otherwise save."
   (case ein:notebook-discard-output-on-save
     (no nil)
     (yes t)
-    (t (funcall ein:notebook-discard-output-on-save))))
+    (t (with-current-buffer (ein:notebook-buffer notebook)
+         (funcall ein:notebook-discard-output-on-save)))))
 
 
 ;;; Class and variable
@@ -212,18 +221,18 @@ the time of execution."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
-    (url-retrieve url
-                  #'ein:notebook-url-retrieve-callback
-                  (list notebook))
+    (ein:query-ajax
+     url
+     :parser #'ein:json-read
+     :success (cons #'ein:notebook-request-open-callback notebook))
     notebook))
 
-(defun ein:notebook-url-retrieve-callback (status notebook)
+(defun* ein:notebook-request-open-callback (notebook &key status data
+                                                     &allow-other-keys)
   (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
            (ein:$notebook-notebook-id notebook)
            status)
-  (let ((data (ein:json-read))
-        (notebook-id (ein:$notebook-notebook-id notebook)))
-    (kill-buffer (current-buffer))
+  (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-init notebook data)
     (with-current-buffer (ein:notebook-get-buffer notebook)
       (ein:log-setup (ein:$notebook-notebook-id notebook))
@@ -738,7 +747,7 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (let* ((discard (ein:notebook-discard-output-p))
+  (let* ((discard (ein:notebook-discard-output-p notebook))
          (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
                         (ein:notebook-get-cells notebook))))
     `((worksheets . [((cells . ,(apply #'vector cells)))])
@@ -751,63 +760,54 @@ Do not clear input prompts when the prefix argument is given."
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger (ein:$notebook-events notebook)
                         '(notebook_saving . Notebook))
-    (let ((url (ein:url-no-cache (ein:notebook-url notebook)))
-          (url-request-method "PUT")
-          (url-request-extra-headers '(("Content-Type" . "application/json")))
-          (url-request-data (json-encode data)))
-      (ein:log 'debug "URL-RETRIEVE url = %s" url)
-      (ein:log 'debug "URL-REQUEST-DATA = %s" url-request-data)
-      (url-retrieve
-       url
-       #'ein:notebook-save-notebook-callback
-       (list notebook retry)))))
+    (ein:query-ajax
+     (ein:notebook-url notebook)
+     :type "PUT"
+     :headers '(("Content-Type" . "application/json"))
+     :cache nil
+     :data (json-encode data)
+     :error (cons #'ein:notebook-save-notebook-error notebook)
+     :success (cons #'ein:notebook-save-notebook-workaround
+                    (cons notebook retry))
+     :status-code
+     `((204 . ,(cons #'ein:notebook-save-notebook-success notebook)))
+     :timeout 5000)))
 
 (defun ein:notebook-save-notebook-command ()
   (interactive)
   (ein:notebook-save-notebook ein:notebook 0))
 
-(defun ein:notebook-save-notebook-callback (status notebook retry)
-  (declare (special url-http-response-status
-                    url-http-method))
-  (ein:log 'debug "SAVE-NOTEBOOK-CALLBACK nodtebook-id = %S, status = %S"
-           (ein:$notebook-notebook-id notebook)
-           status)
-  (ein:log 'debug "url-http-response-status = %s" url-http-response-status)
-  (ein:log 'debug "url-request-method = %s" url-request-method)
-  (ein:log 'debug "url-http-method = %s" (when (boundp 'url-http-method)
-                                           url-http-method))
-  (ein:log 'debug "(buffer-string) = \n%s" (buffer-string))
-  (let ((response url-http-response-status))
-    ;; ^-- "save" local variable before killing buffer.
-    (kill-buffer (current-buffer))
-    (with-current-buffer (ewoc-buffer (ein:$notebook-ewoc notebook))
-      (ein:aif (plist-get status :error)
-          (progn
-            (ein:log 'debug "ERROR CODE = %S" it)
-            (ein:notebook-save-notebook-error notebook status))
-        ;; IPython server returns 204 only when the notebook URL is
-        ;; accessed via PUT or DELETE.  As it seems Emacs failed to
-        ;; choose PUT method every two times, let's check the response
-        ;; here and fail when 204 is not returned.
-        (if (eq response 204)
-            (ein:notebook-save-notebook-success notebook status)
-          (if (< retry ein:notebook-save-retry-max)
-              (progn
-                (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
-                (ein:notebook-save-notebook notebook (1+ retry)))
-            (ein:notebook-save-notebook-error notebook status)
-            (ein:log 'info
-              "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
-              response ein:notebook-save-retry-max)))))))
+(defun* ein:notebook-save-notebook-workaround (nb-retry &rest args
+                                                        &key
+                                                        status
+                                                        response-status
+                                                        &allow-other-keys)
+  ;; IPython server returns 204 only when the notebook URL is
+  ;; accessed via PUT or DELETE.  As it seems Emacs failed to
+  ;; choose PUT method every two times, let's check the response
+  ;; here and fail when 204 is not returned.
+  (unless (eq response-status 204)
+    (let ((notebook (car nb-retry))
+          (retry (cdr nb-retry)))
+      (with-current-buffer (ein:notebook-buffer notebook)
+        (if (< retry ein:notebook-save-retry-max)
+            (progn
+              (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
+              (ein:notebook-save-notebook notebook (1+ retry)))
+          (ein:notebook-save-notebook-error notebook :status status)
+          (ein:log 'info
+            "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
+            response-status ein:notebook-save-retry-max))))))
 
-(defun ein:notebook-save-notebook-success (notebook status)
+(defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
-  (set-buffer-modified-p nil)
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (set-buffer-modified-p nil))
   (ein:events-trigger (ein:$notebook-events notebook)
                       '(notebook_saved . Notebook)))
 
-(defun ein:notebook-save-notebook-error (notebook status)
+(defun ein:notebook-save-notebook-error (notebook &rest ignore)
   (ein:log 'info "Failed to save notebook!")
   (ein:events-trigger (ein:$notebook-events notebook)
                       '(notebook_save_failed . Notebook)))

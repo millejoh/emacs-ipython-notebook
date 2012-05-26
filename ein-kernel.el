@@ -31,7 +31,7 @@
 (require 'ein-utils)
 (require 'ein-websocket)
 (require 'ein-events)
-(require 'url)
+(require 'ein-query)
 
 
 (defstruct ein:$kernel
@@ -90,17 +90,14 @@ FIXME: document other slots."
 (defun ein:kernel-start (kernel notebook-id)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
-    (let* ((qs (format "notebook=%s" notebook-id))
-           (url (concat (ein:url (ein:$kernel-url-or-port kernel)
-                                 (ein:$kernel-base-url kernel))
-                        "?" qs))
-           (url-request-method "POST"))
-      (url-retrieve
-       url
-       (lambda (status kernel)
-         (ein:kernel--kernel-started kernel (ein:json-read))
-         (kill-buffer (current-buffer)))
-       (list kernel)))))
+    (ein:query-ajax
+     (concat (ein:url (ein:$kernel-url-or-port kernel)
+                      (ein:$kernel-base-url kernel))
+             "?" (format "notebook=%s" notebook-id))
+     :type "POST"
+     :parser #'ein:json-read
+     :success (cons #'ein:kernel--kernel-started kernel)
+     :timeout 5000)))
 
 
 (defun ein:kernel-restart (kernel)
@@ -109,23 +106,21 @@ FIXME: document other slots."
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
-    (let ((url (ein:url (ein:$kernel-url-or-port kernel)
-                        (ein:$kernel-kernel-url kernel)
-                        "restart"))
-          (url-request-method "POST"))
-      (url-retrieve
-       url
-       (lambda (status kernel)
-         (ein:kernel--kernel-started kernel (ein:json-read))
-         (kill-buffer (current-buffer)))
-       (list kernel)))))
+    (ein:query-ajax
+     (ein:url (ein:$kernel-url-or-port kernel)
+              (ein:$kernel-kernel-url kernel)
+              "restart")
+     :type "POST"
+     :parser #'ein:json-read
+     :success (cons #'ein:kernel--kernel-started kernel)
+     :timeout 5000)))
 
 
-(defun ein:kernel--kernel-started (kernel json)
-  (ein:log 'info "Kernel started: %s" (plist-get json :kernel_id))
+(defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
+  (ein:log 'info "Kernel started: %s" (plist-get data :kernel_id))
   (setf (ein:$kernel-running kernel) t)
-  (setf (ein:$kernel-kernel-id kernel) (plist-get json :kernel_id))
-  (setf (ein:$kernel-ws-url kernel) (plist-get json :ws_url))
+  (setf (ein:$kernel-kernel-id kernel) (plist-get data :kernel_id))
+  (setf (ein:$kernel-ws-url kernel) (plist-get data :ws_url))
   (setf (ein:$kernel-kernel-url kernel)
         (concat (ein:$kernel-base-url kernel) "/"
                 (ein:$kernel-kernel-id kernel)))
@@ -362,29 +357,29 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel-interrupt (kernel)
   (when (ein:$kernel-running kernel)
     (ein:log 'info "Interrupting kernel")
-    (let ((url (ein:url (ein:$kernel-url-or-port kernel)
-                        (ein:$kernel-kernel-url kernel)
-                        "interrupt"))
-          (url-request-method "POST"))
-    (url-retrieve
-     url
-     (lambda (s)
-       (ein:log 'info "Sent interruption command.")
-       (kill-buffer (current-buffer)))))))
+    (ein:query-ajax
+     (ein:url (ein:$kernel-url-or-port kernel)
+              (ein:$kernel-kernel-url kernel)
+              "interrupt")
+     :type "POST"
+     :success (cons (lambda (&rest ignore)
+                      (ein:log 'info "Sent interruption command."))
+                    nil)
+     :timeout 5000)))
 
 
 (defun ein:kernel-kill (kernel)
   (when (ein:$kernel-running kernel)
     (setf (ein:$kernel-running kernel) nil)
-    (let ((url-request-method "DELETE")
-          (url (ein:url-no-cache
-                (ein:url (ein:$kernel-url-or-port kernel)
-                         (ein:$kernel-kernel-url kernel)))))
-      (url-retrieve
-       url
-       (lambda (s)
-         (ein:log 'info "Notebook kernel is killed")
-         (kill-buffer (current-buffer)))))))
+    (ein:query-ajax
+     (ein:url (ein:$kernel-url-or-port kernel)
+              (ein:$kernel-kernel-url kernel))
+     :cache nil
+     :type "DELETE"
+     :success (cons (lambda (&rest ignore)
+                      (ein:log 'info "Notebook kernel is killed"))
+                    nil)
+     :timeout 5000)))
 
 
 ;; Reply handlers.

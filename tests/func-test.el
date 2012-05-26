@@ -2,6 +2,7 @@
 (require 'ert)
 
 (require 'ein-notebooklist)
+(require 'wid-edit)
 
 ;; Execute `eintest:dz-ipython-start' before starting the following
 ;; test to setup server.
@@ -39,13 +40,26 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (let ((notebook (eintest:get-notebook-by-name url-or-port "Untitled0")))
     (if notebook
         notebook
-      (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+      (with-current-buffer (ein:notebooklist-open url-or-port t)
         (setq ein:notebooklist nil)
         (eintest:wait-until (lambda () ein:notebooklist))
-        (setq ein:notebooklist nil)
         (ein:notebooklist-new-notebook url-or-port)
-        (eintest:wait-until (lambda () ein:notebooklist)))
+        (eintest:wait-until
+         (lambda () (eintest:get-notebook-by-name url-or-port "Untitled0"))))
       (eintest:get-notebook-by-name url-or-port "Untitled0"))))
+
+(defun eintest:delete-notebook-by-name (url-or-port notebook-name)
+  (with-current-buffer (ein:notebooklist-open url-or-port nil)
+    (eintest:wait-until (lambda () ein:notebooklist))
+    (save-excursion
+      (goto-char (point-min))
+      (search-forward notebook-name)
+      (move-beginning-of-line 1)
+      (search-forward "Delete")
+      (flet ((y-or-n-p (ignore) t))
+        (widget-button-press (point))))
+    (setq ein:notebooklist nil)
+    (eintest:wait-until (lambda () ein:notebooklist))))
 
 (ert-deftest eintest:get-untitled0-or-create ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
@@ -53,6 +67,16 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                                              (ein:kernel-ready-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0")))))
+
+(ert-deftest eintest:delete-untitled0 ()
+  (loop
+   repeat 2
+   do (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
+        (eintest:wait-until
+         (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                              (ein:kernel-ready-p it)))))
+   do (eintest:delete-notebook-by-name eintest:port "Untitled0")
+   do (should-not (eintest:get-notebook-by-name eintest:port "Untitled0"))))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
