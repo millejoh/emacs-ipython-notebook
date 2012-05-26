@@ -46,12 +46,11 @@
   (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
   (with-temp-buffer
     (erase-buffer)
-    (insert json-string)
     (flet ((pop-to-buffer (buf) buf)
            (ein:notebook-start-kernel ()))
-      (with-current-buffer (ein:notebook-url-retrieve-callback
-                            nil
-                            (ein:notebook-new "DUMMY-URL" notebook-id))
+      (with-current-buffer (ein:notebook-request-open-callback
+                            (ein:notebook-new "DUMMY-URL" notebook-id)
+                            :data (ein:json-read-from-string json-string))
         (let ((events (ein:events-new (current-buffer))))
           (setf (ein:$notebook-events ein:notebook) events)
           (setf (ein:$notebook-kernel ein:notebook)
