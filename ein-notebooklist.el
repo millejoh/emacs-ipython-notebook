@@ -123,20 +123,23 @@
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
   (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
-  (url-retrieve
+  (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
-   (lambda (s buffer)
-     (let ((notebook-id
-            (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
-       (kill-buffer (current-buffer))
-       (message "Creating a new notebook... Done.")
-       (with-current-buffer buffer
-         (if notebook-id
-             (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
-           (message (concat "Oops. EIN failed to open new notebook. "
-                            "Please find it in the notebook list."))
-           (ein:notebooklist-reload)))))
-   (list (current-buffer))))
+   :success
+   (cons (lambda (buffer &rest ignore)
+           (let ((notebook-id
+                  (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
+             (kill-buffer (current-buffer))
+             (message "Creating a new notebook... Done.")
+             (with-current-buffer buffer
+               (if notebook-id
+                   (ein:notebooklist-open-notebook ein:notebooklist
+                                                   notebook-id)
+                 (message (concat "Oops. EIN failed to open new notebook. "
+                                  "Please find it in the notebook list."))
+                 (ein:notebooklist-reload)))))
+         (current-buffer))
+   :timeout 5000))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
