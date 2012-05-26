@@ -35,6 +35,11 @@
   (when packed
     (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
 
+(defmacro ein:with-live-buffer (buffer &rest body)
+  "Execute BODY if BUFFER is alive."
+  (declare (indent 1) (debug t))
+  `(when (buffer-live-p ,buffer) (with-current-buffer ,buffer ,@body)))
+
 (ein:deflocal ein:query-ajax-timer nil)
 
 (defun* ein:query-ajax (url &rest settings
@@ -108,34 +113,38 @@ The :SUCCESS callback also takes the :STATUS argument.
                                         (status-code nil)
                                         &allow-other-keys)
   (declare (special url-http-response-status))
-  (unwind-protect
-      (progn
-        (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
-        (ein:log 'debug "status = %S" status)
-        (ein:log 'debug "url-http-response-status = %s"
-                 url-http-response-status)
-        (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
+  (let ((buffer (current-buffer)))
+    (unwind-protect
+        (progn
+          (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
+          (ein:log 'debug "status = %S" status)
+          (ein:log 'debug "url-http-response-status = %s"
+                   url-http-response-status)
+          (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
-        (save-current-buffer
-          (apply #'ein:safe-funcall-packed
-                 (if (plist-get status :error)
-                     (list error :symbol-status 'error :status status)
-                   (list success :status status))))
-        (save-current-buffer
-          (ein:aif (assq url-http-response-status status-code)
-              (ein:safe-funcall-packed (cdr it)))))
-    (ein:query-ajax-cancel-timer)
-    (kill-buffer)))
+          (ein:with-live-buffer buffer
+            (ein:log 'debug "Executing success/error callback.")
+            (apply #'ein:safe-funcall-packed
+                   (if (plist-get status :error)
+                       (list error :symbol-status 'error :status status)
+                     (list success :status status))))
+          (ein:with-live-buffer buffer
+            (ein:log 'debug "Executing status-code callback.")
+            (ein:aif (assq url-http-response-status status-code)
+                (ein:safe-funcall-packed (cdr it)))))
+      (ein:with-live-buffer buffer
+        (ein:query-ajax-cancel-timer))
+      (kill-buffer buffer))))
 
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
-  (with-current-buffer buffer
-    (ein:safe-funcall-packed error :symbol-status 'timeout))
-  (let ((proc (process-buffer buffer)))
-    (kill-process proc)
-    (kill-buffer buffer)))
+  (ein:with-live-buffer buffer
+    (ein:safe-funcall-packed error :symbol-status 'timeout)
+    (let ((proc (process-buffer buffer)))
+      (kill-process proc)
+      (kill-buffer buffer))))
 
 (defun ein:query-ajax-cancel-timer ()
   (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
