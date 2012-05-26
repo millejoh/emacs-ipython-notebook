@@ -34,11 +34,14 @@
       ein:notebook-mode-map
       "C-c"
     '(("C-t" . ein:notebook-toggle-cell-type)
-      ("C-d" . ein:notebook-delete-cell-command)
+      ("C-l" . ein:notebook-clear-output-command)
+      ("C-k" . ein:notebook-kill-cell-command)
+      ("C-y" . ein:notebook-yank-cell-command)
       ("C-a" . ein:notebook-insert-cell-above-command)
       ("C-b" . ein:notebook-insert-cell-below-command)
       ("C-n" . ein:notebook-goto-next-input-command)
       ("C-p" . ein:notebook-goto-prev-input-command)
+      ("C-m" . ein:notebook-merge-cell-command)
       ("<up>" . ein:notebook-move-cell-up-command)
       ("<down>" . ein:notebook-move-cell-down-command)
       )))
