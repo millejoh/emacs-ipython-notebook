@@ -106,21 +106,20 @@ The :SUCCESS callback also takes the :STATUS argument.
                                         (timeout nil)
                                         (status-code nil)
                                         &allow-other-keys)
-  (declare (special url-http-response-status
-                    url-http-method))
   (unwind-protect
       (progn
         (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
         (ein:log 'debug "status = %S" status)
         (ein:log 'debug "url-http-response-status = %s"
-                 url-http-response-status)
+                 (ein:eval-if-bound 'url-http-response-status))
         (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
         (apply #'ein:safe-funcall-packed
                (if (plist-get status :error)
                    (list error :symbol-status 'error :status status)
                  (list success :status status)))
-        (ein:aif (assq url-http-response-status status-code)
+        (ein:aif (assq (ein:eval-if-bound 'url-http-response-status)
+                       status-code)
             (ein:safe-funcall-packed (cdr it))))
     (ein:query-ajax-cancel-timer)
     (kill-buffer)))
