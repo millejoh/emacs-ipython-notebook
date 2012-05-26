@@ -144,6 +144,7 @@ is killed immediately after the execution of this function.
                    (unwind-protect
                        (funcall parser)
                      (kill-buffer buffer)))))
+    (ein:log 'debug "data = %s" data)
 
     (ein:log 'debug "Executing success/error callback.")
     (apply #'ein:safe-funcall-packed

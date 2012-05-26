@@ -221,18 +221,18 @@ the time of execution."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
-    (url-retrieve url
-                  #'ein:notebook-url-retrieve-callback
-                  (list notebook))
+    (ein:query-ajax
+     url
+     :parser #'ein:json-read
+     :success (cons #'ein:notebook-request-open-callback notebook))
     notebook))
 
-(defun ein:notebook-url-retrieve-callback (status notebook)
+(defun* ein:notebook-request-open-callback (notebook &key status data
+                                                     &allow-other-keys)
   (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
            (ein:$notebook-notebook-id notebook)
            status)
-  (let ((data (ein:json-read))
-        (notebook-id (ein:$notebook-notebook-id notebook)))
-    (kill-buffer (current-buffer))
+  (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-init notebook data)
     (with-current-buffer (ein:notebook-get-buffer notebook)
       (ein:log-setup (ein:$notebook-notebook-id notebook))
