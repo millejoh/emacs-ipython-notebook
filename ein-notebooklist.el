@@ -129,7 +129,6 @@
    (cons (lambda (buffer &rest ignore)
            (let ((notebook-id
                   (ein:notebooklist-get-data-in-body-tag "data-notebook-id")))
-             (kill-buffer (current-buffer))
              (message "Creating a new notebook... Done.")
              (with-current-buffer buffer
                (if notebook-id
