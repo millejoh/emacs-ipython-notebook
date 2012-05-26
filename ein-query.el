@@ -148,9 +148,11 @@ is killed immediately after the execution of this function.
 
     (ein:log 'debug "Executing success/error callback.")
     (apply #'ein:safe-funcall-packed
-           (if (plist-get status :error)
-               (list error :symbol-status 'error :status status :data data)
-             (list success :status status :data data)))
+           (append (if (plist-get status :error)
+                       (list error :symbol-status 'error)
+                     (list success))
+                   (list :status status :data data
+                         :response-status response-status)))
 
     (ein:log 'debug "Executing status-code callback.")
     (ein:safe-funcall-packed status-code-callback
