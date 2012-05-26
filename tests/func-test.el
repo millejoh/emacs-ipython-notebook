@@ -39,12 +39,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (let ((notebook (eintest:get-notebook-by-name url-or-port "Untitled0")))
     (if notebook
         notebook
-      (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+      (with-current-buffer (ein:notebooklist-open url-or-port t)
         (setq ein:notebooklist nil)
         (eintest:wait-until (lambda () ein:notebooklist))
-        (setq ein:notebooklist nil)
         (ein:notebooklist-new-notebook url-or-port)
-        (eintest:wait-until (lambda () ein:notebooklist)))
+        (eintest:wait-until
+         (lambda () (eintest:get-notebook-by-name url-or-port "Untitled0"))))
       (eintest:get-notebook-by-name url-or-port "Untitled0"))))
 
 (ert-deftest eintest:get-untitled0-or-create ()
