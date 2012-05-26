@@ -35,6 +35,8 @@
   (when packed
     (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
 
+(ein:deflocal ein:query-ajax-timer nil)
+
 (defun* ein:query-ajax (url &rest settings
                             &key
                             (cache t)
@@ -81,6 +83,7 @@ FUNCTION so it must be fetched from the buffer.
 The :SUCCESS callback also takes the :STATUS argument.
 
 * See also: http://api.jquery.com/jQuery.ajax/"
+  (ein:log 'debug "EIN:QUERY-AJAX")
   (unless cache
     (setq url (ein:url-no-cache url)))
   (let* ((url-request-extra-headers headers)
@@ -88,9 +91,12 @@ The :SUCCESS callback also takes the :STATUS argument.
          (url-request-data data)
          (buffer (url-retrieve url #'ein:query-ajax-callback settings)))
     (when timeout
-      (run-at-time (/ timeout 1000.0) nil
-                   #'ein:query-ajax-timeout-callback
-                   (cons buffer settings)))
+      (ein:log 'debug "Start timer: timeout=%s ms" timeout)
+      (with-current-buffer buffer
+        (setq ein:query-ajax-timer
+              (run-at-time (/ timeout 1000.0) nil
+                           #'ein:query-ajax-timeout-callback
+                           (cons buffer settings)))))
     buffer))
 
 (defun* ein:query-ajax-callback (status &key
@@ -116,16 +122,23 @@ The :SUCCESS callback also takes the :STATUS argument.
                  (list success :status status)))
         (ein:aif (assq url-http-response-status status-code)
             (ein:safe-funcall-packed (cdr it))))
+    (ein:query-ajax-cancel-timer)
     (kill-buffer)))
 
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
+  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK")
   (with-current-buffer buffer
     (ein:safe-funcall-packed error :symbol-status 'timeout))
   (let ((proc (process-buffer buffer)))
     (kill-process proc)
     (kill-buffer buffer)))
+
+(defun ein:query-ajax-cancel-timer ()
+  (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
+  (when ein:query-ajax-timer
+    (cancel-timer ein:query-ajax-timer)))
 
 (provide 'ein-query)
 
