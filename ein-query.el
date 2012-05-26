@@ -137,7 +137,8 @@ The :SUCCESS callback also takes the :STATUS argument.
 (defun ein:query-ajax-cancel-timer ()
   (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
   (when ein:query-ajax-timer
-    (cancel-timer ein:query-ajax-timer)))
+    (cancel-timer ein:query-ajax-timer)
+    (setq ein:query-ajax-timer nil)))
 
 (provide 'ein-query)
 
