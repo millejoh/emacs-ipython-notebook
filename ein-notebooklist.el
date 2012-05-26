@@ -93,7 +93,6 @@
       (error "Failed to connect to server '%s'.  Got: %S"
              (ein:url url-or-port) it))
   (let ((data (ein:json-read)))
-    (kill-buffer (current-buffer))
     (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
       (setq ein:notebooklist
             (make-ein:$notebooklist :url-or-port url-or-port
