@@ -87,6 +87,12 @@ FUNCTION so it must be fetched from the buffer.
 
 The :SUCCESS callback also takes the :STATUS argument.
 
+* :STATUS-CODE callback
+
+Each value of this alist is a callback which is similar to :ERROR
+or :SUCCESS callback.  However, current buffer of this callback
+is not guaranteed to be the process buffer.
+
 * See also: http://api.jquery.com/jQuery.ajax/"
   (ein:log 'debug "EIN:QUERY-AJAX")
   (unless cache
@@ -113,7 +119,9 @@ The :SUCCESS callback also takes the :STATUS argument.
                                         (status-code nil)
                                         &allow-other-keys)
   (declare (special url-http-response-status))
-  (let ((buffer (current-buffer)))
+  (let ((buffer (current-buffer))
+        (status-code-callback
+         (cdr (assq url-http-response-status status-code))))
     (unwind-protect
         (progn
           (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
@@ -122,16 +130,14 @@ The :SUCCESS callback also takes the :STATUS argument.
                    url-http-response-status)
           (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
-          (ein:with-live-buffer buffer
-            (ein:log 'debug "Executing success/error callback.")
-            (apply #'ein:safe-funcall-packed
-                   (if (plist-get status :error)
-                       (list error :symbol-status 'error :status status)
-                     (list success :status status))))
-          (ein:with-live-buffer buffer
-            (ein:log 'debug "Executing status-code callback.")
-            (ein:aif (assq url-http-response-status status-code)
-                (ein:safe-funcall-packed (cdr it)))))
+          (ein:log 'debug "Executing success/error callback.")
+          (apply #'ein:safe-funcall-packed
+                 (if (plist-get status :error)
+                     (list error :symbol-status 'error :status status)
+                   (list success :status status)))
+
+          (ein:log 'debug "Executing status-code callback.")
+          (ein:safe-funcall-packed status-code-callback))
       (ein:with-live-buffer buffer
         (ein:query-ajax-cancel-timer))
       (kill-buffer buffer))))
