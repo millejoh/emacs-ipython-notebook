@@ -121,7 +121,8 @@ The :SUCCESS callback also takes the :STATUS argument.
           (apply #'ein:safe-funcall-packed
                  (if (plist-get status :error)
                      (list error :symbol-status 'error :status status)
-                   (list success :status status)))
+                   (list success :status status))))
+        (save-current-buffer
           (ein:aif (assq url-http-response-status status-code)
               (ein:safe-funcall-packed (cdr it)))))
     (ein:query-ajax-cancel-timer)
