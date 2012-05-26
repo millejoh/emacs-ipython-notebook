@@ -47,7 +47,7 @@
                             (cache t)
                             (type "GET")
                             (data nil)
-                            (data-type nil)
+                            (parser nil)
                             (headers nil)
                             (success nil)
                             (error nil)
@@ -58,7 +58,7 @@
 :CACHE       (nil/t) : append time-stamp to URL so the URL is always loaded.
 :TYPE       (string) : sets `url-request-method'
 :DATA       (string) : sets `url-request-data'
-:DATA-TYPE  (symbol) : a function that reads current buffer and return data
+:PARSER     (symbol) : a function that reads current buffer and return data
 :HEADERS     (alist) : sets `url-request-extra-headers'
 :SUCCESS      (cons) : called on success
 :ERROR        (cons) : called on error
@@ -86,7 +86,7 @@ arguments to be passed, depending on situation.
 * :SUCCESS callback
 
 This callback takes :DATA (object), which is a data object parsed
-by :DATA-TYPE.  If :DATA-TYPE is not specified, this is nil.
+by :PARSER.  If :PARSER is not specified, this is nil.
 The :SUCCESS callback also takes the :STATUS and :RESPONSE-STATUS
 argument.
 
@@ -95,6 +95,12 @@ argument.
 Each value of this alist is a callback which is similar to :ERROR
 or :SUCCESS callback.  However, current buffer of this callback
 is not guaranteed to be the process buffer.
+
+* :PARSER function
+
+This is analogous to the `dataType' argument of `$.ajax'.
+Only this function can accuses to the process buffer, which
+is killed immediately after the execution of this function.
 
 * See also: http://api.jquery.com/jQuery.ajax/"
   (ein:log 'debug "EIN:QUERY-AJAX")
@@ -116,7 +122,7 @@ is not guaranteed to be the process buffer.
 
 (defun* ein:query-ajax-callback (status &key
                                         (headers nil)
-                                        (data-type nil)
+                                        (parser nil)
                                         (success nil)
                                         (error nil)
                                         (timeout nil)
@@ -130,13 +136,13 @@ is not guaranteed to be the process buffer.
   (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
   (ein:query-ajax-cancel-timer)
-  (let* ((buffer (current-buffer)) ; `data-type' could change buffer...
+  (let* ((buffer (current-buffer)) ; `parser' could change buffer...
          (response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
          (status-error (plist-get status :error))
-         (data (if (and data-type (not status-error))
+         (data (if (and parser (not status-error))
                    (unwind-protect
-                       (funcall data-type)
+                       (funcall parser)
                      (kill-buffer buffer)))))
 
     (ein:log 'debug "Executing success/error callback.")

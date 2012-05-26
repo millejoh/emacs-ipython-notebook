@@ -80,7 +80,7 @@
     (ein:query-ajax
      (ein:notebooklist-url url-or-port)
      :cache nil
-     :data-type #'ein:json-read
+     :parser #'ein:json-read
      :success (cons success url-or-port)
      :timeout 5000))
   (ein:notebooklist-get-buffer url-or-port))
@@ -126,8 +126,8 @@
   (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
   (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
-   :data-type (lambda ()
-                (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
+   :parser (lambda ()
+             (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
    :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))
    :timeout 5000))
 
