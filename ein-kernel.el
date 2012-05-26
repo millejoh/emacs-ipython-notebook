@@ -96,8 +96,7 @@ FIXME: document other slots."
              "?" (format "notebook=%s" notebook-id))
      :type "POST"
      :parser #'ein:json-read
-     :success (cons #'ein:kernel--kernel-started kernel)
-     :timeout 5000)))
+     :success (cons #'ein:kernel--kernel-started kernel))))
 
 
 (defun ein:kernel-restart (kernel)
@@ -112,8 +111,7 @@ FIXME: document other slots."
               "restart")
      :type "POST"
      :parser #'ein:json-read
-     :success (cons #'ein:kernel--kernel-started kernel)
-     :timeout 5000)))
+     :success (cons #'ein:kernel--kernel-started kernel))))
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
@@ -364,8 +362,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
      :type "POST"
      :success (cons (lambda (&rest ignore)
                       (ein:log 'info "Sent interruption command."))
-                    nil)
-     :timeout 5000)))
+                    nil))))
 
 
 (defun ein:kernel-kill (kernel)
@@ -378,8 +375,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
      :type "DELETE"
      :success (cons (lambda (&rest ignore)
                       (ein:log 'info "Notebook kernel is killed"))
-                    nil)
-     :timeout 5000)))
+                    nil))))
 
 
 ;; Reply handlers.

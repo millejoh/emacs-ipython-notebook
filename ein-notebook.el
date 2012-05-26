@@ -770,8 +770,7 @@ Do not clear input prompts when the prefix argument is given."
      :success (cons #'ein:notebook-save-notebook-workaround
                     (cons notebook retry))
      :status-code
-     `((204 . ,(cons #'ein:notebook-save-notebook-success notebook)))
-     :timeout 5000)))
+     `((204 . ,(cons #'ein:notebook-save-notebook-success notebook))))))
 
 (defun ein:notebook-save-notebook-command ()
   (interactive)

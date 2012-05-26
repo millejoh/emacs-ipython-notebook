@@ -40,6 +40,13 @@
   (declare (indent 1) (debug t))
   `(when (buffer-live-p ,buffer) (with-current-buffer ,buffer ,@body)))
 
+
+(defcustom ein:query-timeout 5000
+  "Default query timeout."
+  :type '(choice (integer :tag "Timeout [ms]" 5000)
+                 (const :tag "No timeout" nil))
+  :group 'ein)
+
 (ein:deflocal ein:query-ajax-timer nil)
 
 (defun* ein:query-ajax (url &rest settings
@@ -110,6 +117,7 @@ is killed immediately after the execution of this function.
          (url-request-method type)
          (url-request-data data)
          (buffer (url-retrieve url #'ein:query-ajax-callback settings)))
+    (unless timeout (setq timeout ein:query-timeout))
     (when timeout
       (ein:log 'debug "Start timer: timeout=%s ms" timeout)
       (with-current-buffer buffer

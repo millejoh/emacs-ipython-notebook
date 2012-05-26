@@ -81,8 +81,7 @@
      (ein:notebooklist-url url-or-port)
      :cache nil
      :parser #'ein:json-read
-     :success (cons success url-or-port)
-     :timeout 5000))
+     :success (cons success url-or-port)))
   (ein:notebooklist-get-buffer url-or-port))
 
 (defun* ein:notebooklist-url-retrieve-callback (url-or-port
@@ -128,8 +127,7 @@
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
-   :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))
-   :timeout 5000))
+   :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))))
 
 (defun* ein:notebooklist-new-notebook-callback (buffer &key
                                                        data
