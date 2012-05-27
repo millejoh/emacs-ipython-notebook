@@ -489,25 +489,30 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                      (ein:cell-element-get cell :prompt))))
 
 (defun ein:cell-finish-tooltip (cell content)
+  ;; See: Tooltip.prototype._show (tooltip.js)
   (let* ((defstring (or (plist-get content :call_def)
                         (plist-get content :init_definition)
                         (plist-get content :definition)))
          (docstring (or (plist-get content :call_docstring)
                         (plist-get content :init_docstring)
                         (plist-get content :docstring)
-                        "<empty docstring>"))
+                        ;; "<empty docstring>"
+                        ))
          (name (plist-get content :name))
-         (tooltip (ansi-color-apply
-                   (format "%s\n%s\n%s" name defstring docstring))))
+         (tooltip
+          (ein:aif (ein:filter 'identity (list defstring docstring))
+              (ansi-color-apply (ein:join-str "\n" it)))))
     (ein:log 'debug "EIN:CELL-FINISH-TOOLTIP")
     (ein:log 'debug "tooltip: %s" tooltip)
-    (cond
-     ((and window-system (fboundp 'pos-tip-show))
-      (funcall 'pos-tip-show tooltip))
-     ((fboundp 'popup-tip)
-      (funcall 'popup-tip tooltip))
-     (t (when (stringp defstring)
-          (message (ein:trim (ansi-color-apply defstring))))))))
+    (if tooltip
+        (cond
+         ((and window-system (fboundp 'pos-tip-show))
+          (funcall 'pos-tip-show tooltip))
+         ((fboundp 'popup-tip)
+          (funcall 'popup-tip tooltip))
+         (t (when (stringp defstring)
+              (message (ein:trim (ansi-color-apply defstring))))))
+      (ein:log 'info "no info for %s" name))))
 
 (defmethod ein:cell-goto ((cell ein:basecell))
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
