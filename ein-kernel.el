@@ -446,30 +446,37 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 ;;; Utility functions
 
+(defun ein:kernel-request-stream (kernel code func &optional args)
+  (ein:kernel-execute
+   kernel
+   code
+   (list :output (cons (lambda (packed msg-type content)
+                         (let ((func (car packed))
+                               (args (cdr packed)))
+                           (when (equal msg-type "stream")
+                             (ein:aif (plist-get content :data)
+                                 (apply func it args)))))
+                       (cons func args)))))
+
 (defun ein:kernel-sync-directory (kernel buffer)
   "Sync `default-directory' of BUFFER with cwd of KERNEL.
 When no such directory exists, `default-directory' will not be changed."
   (ein:log 'info "Syncing directory of %s with kernel..." buffer)
-  (ein:kernel-execute
+  (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (list
-    :output
-    (cons
-     (lambda (buf msg-type content)
-       (when (equal msg-type "stream")
-         (ein:aif (plist-get content :data)
-             (with-current-buffer buf
-               (if (file-accessible-directory-p it)
-                   (progn
-                     (setq default-directory it)
-                     (ein:log 'info
-                       "Syncing directory of %s with kernel...DONE (%s)"
-                       buf it))
-                 (ein:log 'info
-                   "Syncing directory of %s with kernel...FAILED (no dir: %s)"
-                   buf it))))))
-     buffer))))
+   (lambda (path buffer)
+     (with-current-buffer buffer
+       (if (file-accessible-directory-p path)
+           (progn
+             (setq default-directory path)
+             (ein:log 'info
+               "Syncing directory of %s with kernel...DONE (%s)"
+               buffer path))
+         (ein:log 'info
+           "Syncing directory of %s with kernel...FAILED (no dir: %s)"
+           buffer path))))
+   (list buffer)))
 
 (provide 'ein-kernel)
 
