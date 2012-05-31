@@ -53,6 +53,7 @@ FIXME: document other slots."
   username
   session-id
   msg-callbacks
+  after-start-hook
   kernelinfo)
 
 
@@ -202,10 +203,25 @@ The kernel will no longer be responsive.")))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))
+            with ready = '(:shell nil :iopub nil)
+            for ready-key in '(:shell :iopub)
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
-                     (lexical-let ((channel c))
-                       (lambda () (ein:kernel-send-cookie channel))))
+                     (lexical-let ((channel c)
+                                   (ready ready)
+                                   (ready-key ready-key)
+                                   (kernel kernel))
+                       (lambda ()
+                         (ein:kernel-send-cookie channel)
+                         ;; run `ein:$kernel-after-start-hook' if both
+                         ;; channels are ready.
+                         (plist-put ready ready-key t)
+                         (ein:log 'debug
+                             "via EIN:$WEBSOCKET-ONOPEN: ready=%S key=%S"
+                             ready ready-key)
+                         (if (and (plist-get ready :shell)
+                                  (plist-get ready :iopub))
+                             (ein:kernel-run-after-start-hook kernel)))))
             do (setf (ein:$websocket-onclose c)
                      #'ein:kernel--ws-closed-callback))
 
@@ -220,6 +236,12 @@ The kernel will no longer be responsive.")))
 
 ;; NOTE: `onclose-arg' can be accessed as:
 ;; (nth 1 (ein:$websocket-onclose-args (ein:$kernel-shell-channel (ein:$notebook-kernel ein:notebook))))
+
+
+(defun ein:kernel-run-after-start-hook (kernel)
+  (ein:log 'debug "EIN:KERNEL-RUN-AFTER-START-HOOK")
+  (mapc #'ein:funcall-packed
+        (ein:$kernel-after-start-hook kernel)))
 
 
 (defun ein:kernel-stop-channels (kernel)
@@ -498,6 +520,16 @@ When no such directory exists, `default-directory' will not be changed."
 
 (defun ein:kernelinfo-init (kernelinfo buffer)
   (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
+
+(defun ein:kernelinfo-set-after-start-hook (kernel)
+  "Add `ein:kernelinfo-update-all' to `ein:$kernel-after-start-hook'."
+  (push (cons #'ein:kernelinfo-update-all kernel)
+        (ein:$kernel-after-start-hook kernel)))
+
+(defun ein:kernelinfo-update-all (kernel)
+  (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
+  (ein:kernelinfo-update-ccwd kernel)
+  (ein:kernelinfo-update-hostname kernel))
 
 (defun ein:kernelinfo-update-ccwd (kernel)
   (ein:kernel-request-stream

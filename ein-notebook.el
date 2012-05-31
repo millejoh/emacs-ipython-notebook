@@ -590,6 +590,7 @@ Do not clear input prompts when the prefix argument is given."
                                  (ein:$notebook-events ein:notebook))))
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernelinfo-init (ein:$kernel-kernelinfo kernel) (current-buffer))
+    (ein:kernelinfo-set-after-start-hook kernel)
     (ein:kernel-start kernel
                       (ein:$notebook-notebook-id ein:notebook))
     (loop for cell in (ein:notebook-get-cells ein:notebook)
