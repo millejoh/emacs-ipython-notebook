@@ -79,9 +79,9 @@
     ;; Pseudo onopen callback.  Until websocket.el supports it.
     (run-at-time 1 nil
                  (lambda (ws)
+                   (setf (ein:$websocket-readyState ws) 'open)
                    (ein:aif (ein:$websocket-onopen ws)
-                       (apply it (ein:$websocket-onopen-args ws)))
-                   (setf (ein:$websocket-readyState ws) 'open))
+                       (apply it (ein:$websocket-onopen-args ws))))
                  websocket)
     websocket))
 

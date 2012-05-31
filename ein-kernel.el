@@ -528,6 +528,8 @@ When no such directory exists, `default-directory' will not be changed."
 
 (defun ein:kernelinfo-update-all (kernel)
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
+  (ein:log 'debug "(ein:kernel-ready-p kernel) = %S"
+           (ein:kernel-ready-p kernel))
   (ein:kernelinfo-update-ccwd kernel)
   (ein:kernelinfo-update-hostname kernel))
 
