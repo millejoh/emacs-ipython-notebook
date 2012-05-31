@@ -496,6 +496,9 @@ When no such directory exists, `default-directory' will not be changed."
            buffer path))))
    (list buffer)))
 
+(defun ein:kernelinfo-init (kernelinfo buffer)
+  (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
+
 (defun ein:kernelinfo-update-ccwd (kernel)
   (ein:kernel-request-stream
    kernel
