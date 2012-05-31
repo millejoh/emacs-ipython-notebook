@@ -29,12 +29,12 @@
 (eval-when-compile (require 'ein-notebooklist))
 (require 'ein)
 (require 'ein-dev)
-(setq debug-on-error t)
-(setq websocket-debug t)
+
+(ein:dev-start-debug)
 (ein:notebooklist-open)
-(ein:log-set-level 'debug)
-(ein:log-set-message-level 'verbose)
-(ein:dev-patch-backtrace)
+
+
+;;; Extra stuff
 
 (require 'markdown-mode nil t)
 (require 'rst nil t)
