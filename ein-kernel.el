@@ -52,7 +52,24 @@ FIXME: document other slots."
   running
   username
   session-id
-  msg-callbacks)
+  msg-callbacks
+  kernelinfo)
+
+
+(defstruct ein:$kernelinfo
+  "Info related (but unimportant) to kernel
+
+`ein:$kernelinfo-buffer'
+  Notebook buffer that the kernel associated with.
+
+`ein:$kernelinfo-hostname'
+  Host name of the machine where the kernel is running on.
+
+`ein:$kernelinfo-ccwd'
+  cached CWD (last time checked CWD)."
+  buffer
+  hostname
+  ccwd)
 
 
 ;;; Initialization and connection.
@@ -68,7 +85,8 @@ FIXME: document other slots."
    :running nil
    :username "username"
    :session-id (ein:utils-uuid)
-   :msg-callbacks (make-hash-table :test 'equal)))
+   :msg-callbacks (make-hash-table :test 'equal)
+   :kernelinfo (make-ein:$kernelinfo)))
 
 
 (defun ein:kernel-del (kernel)
@@ -477,6 +495,28 @@ When no such directory exists, `default-directory' will not be changed."
            "Syncing directory of %s with kernel...FAILED (no dir: %s)"
            buffer path))))
    (list buffer)))
+
+(defun ein:kernelinfo-update-ccwd (kernel)
+  (ein:kernel-request-stream
+   kernel
+   "__import__('sys').stdout.write(__import__('os').getcwd())"
+   (lambda (cwd kernelinfo buffer)
+     (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
+     ;; sync buffer's `default-directory' with CWD
+     (when (buffer-live-p buffer)
+       (with-current-buffer buffer
+         (when (file-accessible-directory-p cwd)
+           (setq default-directory cwd)))))
+   (let ((kernelinfo (ein:$kernel-kernelinfo kernel)))
+     (list kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
+
+(defun ein:kernelinfo-update-hostname (kernel)
+  (ein:kernel-request-stream
+   kernel
+   "__import__('sys').stdout.write(__import__('os').uname()[1])"
+   (lambda (hostname kernelinfo)
+     (setf (ein:$kernelinfo-hostname kernelinfo) hostname))
+   (list (ein:$kernel-kernelinfo kernel))))
 
 (provide 'ein-kernel)
 
