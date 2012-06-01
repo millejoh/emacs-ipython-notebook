@@ -29,7 +29,6 @@
 (require 'websocket)
 
 (require 'ein-utils)
-(require 'ein-log)
 
 
 (defstruct ein:$websocket
@@ -76,11 +75,18 @@
                      (apply it (ein:$websocket-onopen-args websocket)))))
              :on-message
              (lambda (ws frame)
-               (ein:websocket-filter (websocket-client-data ws)
-                                     (websocket-frame-payload frame)))
+               (let ((websocket (websocket-client-data ws))
+                     (packet (websocket-frame-payload frame)))
+                 (ein:aif (ein:$websocket-onmessage websocket)
+                     (when packet
+                       (apply it packet
+                              (ein:$websocket-onmessage-args websocket))))))
              :on-close
              (lambda (ws)
-               (ein:websocket-onclose (websocket-client-data ws))))))
+               (let ((websocket (websocket-client-data ws)))
+                 (ein:aif (ein:$websocket-onclose websocket)
+                     (apply it websocket
+                            (ein:$websocket-onclose-args websocket))))))))
     (setf (websocket-client-data ws) websocket)
     (setf (ein:$websocket-ws websocket) ws)
     websocket))
@@ -97,17 +103,6 @@
 (defun ein:websocket-close (websocket)
   (setf (ein:$websocket-closed-by-client websocket) t)
   (websocket-close (ein:$websocket-ws websocket)))
-
-
-(defun ein:websocket-filter (websocket packet)
-  (ein:aif (ein:$websocket-onmessage websocket)
-      (when packet
-        (apply it packet (ein:$websocket-onmessage-args websocket)))))
-
-
-(defun ein:websocket-onclose (websocket)
-  (ein:aif (ein:$websocket-onclose websocket)
-      (apply it websocket (ein:$websocket-onclose-args websocket))))
 
 
 (provide 'ein-websocket)
