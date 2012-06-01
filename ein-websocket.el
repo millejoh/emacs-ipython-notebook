@@ -69,20 +69,24 @@
                     :onopen onopen
                     :onmessage-args onmessage-args
                     :onclose-args onclose-args
-                    :onopen-args onopen-args)))
-    (setf (ein:$websocket-ws websocket)
-          (lexical-let ((websocket websocket))
-            (websocket-open
+                    :onopen-args onopen-args))
+        (ws (websocket-open
              url
-             (lambda (packet) (ein:websocket-filter websocket packet))
-             (lambda () (ein:websocket-onclose websocket)))))
-    ;; Pseudo onopen callback.  Until websocket.el supports it.
-    (run-at-time 1 nil
-                 (lambda (ws)
-                   (ein:aif (ein:$websocket-onopen ws)
-                       (apply it (ein:$websocket-onopen-args ws)))
-                   (setf (ein:$websocket-readyState ws) 'open))
-                 websocket)
+             :on-open
+             (lambda (ws)
+               (let ((websocket (websocket-client-data ws)))
+                 (ein:aif (ein:$websocket-onopen websocket)
+                     (apply it (ein:$websocket-onopen-args websocket)))
+                 (setf (ein:$websocket-readyState websocket) 'open)))
+             :on-message
+             (lambda (ws frame)
+               (ein:websocket-filter (websocket-client-data ws)
+                                     (websocket-frame-payload frame)))
+             :on-close
+             (lambda (ws)
+               (ein:websocket-onclose (websocket-client-data ws))))))
+    (setf (websocket-client-data ws) websocket)
+    (setf (ein:$websocket-ws websocket) ws)
     websocket))
 
 
@@ -91,7 +95,7 @@
 
 
 (defun ein:websocket-send (websocket text)
-  (websocket-send (ein:$websocket-ws websocket) text))
+  (websocket-send-text (ein:$websocket-ws websocket) text))
 
 
 (defun ein:websocket-close (websocket)
@@ -102,25 +106,6 @@
 (defun ein:websocket-filter (websocket packet)
   (let ((onmessage (ein:$websocket-onmessage websocket)))
     (when onmessage
-      ;; Workaround.  Make onmessage function little bit robust when
-      ;; websocket.el failed to ignore handshake.
-      ;; See: https://github.com/ahyatt/emacs-websocket/issues/8
-      ;; Note that this workaround only works for JSON based
-      ;; communication, which is OK for using with IPython.
-      (unless (string-prefix-p "{" packet)
-        (let ((start-point (string-match "\0{" packet))
-              lost)
-          (if start-point
-              (progn
-                (setq packet (substring packet (1+ start-point)))
-                (setq lost (substring packet 0 (1- start-point))))
-            (setq lost packet)
-            (setq packet nil))
-          (ein:log 'verbose
-            (concat "I am sorry, you may have lost message from kernel. "
-                    "Notebook data is safe."))
-          (ein:log 'debug "Discarded data: %s" lost)))
-      ;; Do not call callback when you lost all data
       (when packet
         (apply onmessage packet (ein:$websocket-onmessage-args websocket))))))
 
