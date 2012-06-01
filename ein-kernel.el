@@ -543,7 +543,7 @@ When no such directory exists, `default-directory' will not be changed."
      (when (buffer-live-p buffer)
        (with-current-buffer buffer
          (when (file-accessible-directory-p cwd)
-           (setq default-directory cwd)))))
+           (setq default-directory (file-name-as-directory cwd))))))
    (let ((kernelinfo (ein:$kernel-kernelinfo kernel)))
      (list kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
 
