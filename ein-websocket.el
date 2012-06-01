@@ -104,10 +104,9 @@
 
 
 (defun ein:websocket-filter (websocket packet)
-  (let ((onmessage (ein:$websocket-onmessage websocket)))
-    (when onmessage
+  (ein:aif (ein:$websocket-onmessage websocket)
       (when packet
-        (apply onmessage packet (ein:$websocket-onmessage-args websocket))))))
+        (apply it packet (ein:$websocket-onmessage-args websocket)))))
 
 
 (defun ein:websocket-onclose (websocket)
