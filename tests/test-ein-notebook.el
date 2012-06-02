@@ -197,6 +197,7 @@ some text
     (ein:notebook-insert-cell-above-command)
     (insert "some text")
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    (should (slot-boundp (ein:notebook-get-current-cell) :kernel))
     ;; toggle to markdown
     (ein:notebook-toggle-cell-type)
     (should (ein:markdowncell-p (ein:notebook-get-current-cell)))
@@ -204,6 +205,7 @@ some text
     ;; toggle to code
     (ein:notebook-toggle-cell-type)
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    (should (slot-boundp (ein:notebook-get-current-cell) :kernel))
     (should (looking-at "some text"))))
 
 (defun eintest:notebook-split-cell-at-point

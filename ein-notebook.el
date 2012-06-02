@@ -444,8 +444,10 @@ when the prefix argument is given."
                        (("markdown") "raw")
                        (("raw") "heading")
                        (("heading") "code"))))))
-      (ein:cell-convert-inplace cell type)
-      (ein:cell-goto cell))))
+      (let ((new (ein:cell-convert-inplace cell type)))
+        (when (ein:codecell-p new)
+          (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+        (ein:cell-goto new)))))
 
 (defun ein:notebook-change-cell-type ()
   (interactive)
@@ -462,9 +464,11 @@ when the prefix argument is given."
                    (t "heading")))
            (level (when (equal type "heading")
                     (string-to-number (char-to-string key)))))
-      (ein:cell-convert-inplace cell type)
-      (when level
-        (ein:cell-change-level cell type)))))
+      (let ((new (ein:cell-convert-inplace cell type)))
+        (when (ein:codecell-p new)
+          (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+        (when level
+          (ein:cell-change-level new type))))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
