@@ -47,6 +47,7 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 (require 'ein-query)
+(require 'ein-shared-output)
 
 
 ;;; Configuration
@@ -740,6 +741,16 @@ Do not clear input prompts when the prefix argument is given."
   (when (y-or-n-p "Really kill kernel?")
     (ein:kernel-kill (ein:$notebook-kernel ein:notebook))))
 
+;; misc kernel related
+
+(defun ein:notebook-eval-string (code)
+  (interactive "sIP[y]: ")
+  (let ((cell (ein:shared-output-get-cell))
+        (kernel (ein:$notebook-kernel ein:notebook))
+        (code (ein:trim-indent code)))
+    (ein:cell-execute cell kernel code))
+  (ein:log 'info "Code \"%s\" is sent to the kernel." code))
+
 ;; Followings are kernel related, but EIN specific
 
 (defun ein:notebook-sync-directory (notebook)
@@ -922,6 +933,7 @@ Examples:
     (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
     (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
+    (define-key map (kbd "C-:") 'ein:notebook-eval-string)
     (define-key map "\C-c\C-o" 'ein:notebook-console-open)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
