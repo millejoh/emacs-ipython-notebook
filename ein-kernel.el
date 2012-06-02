@@ -54,6 +54,7 @@ FIXME: document other slots."
   session-id
   msg-callbacks
   after-start-hook
+  after-execute-hook
   kernelinfo)
 
 
@@ -360,6 +361,9 @@ See `ein:kernel--handle-shell-reply' for how the callbacks are called."
      (ein:$kernel-shell-channel kernel)
      (json-encode msg))
     (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    (unless silent
+      (mapc #'ein:funcall-packed
+            (ein:$kernel-after-execute-hook kernel)))
     msg-id))
 
 
@@ -521,10 +525,12 @@ When no such directory exists, `default-directory' will not be changed."
 (defun ein:kernelinfo-init (kernelinfo buffer)
   (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
 
-(defun ein:kernelinfo-set-after-start-hook (kernel)
-  "Add `ein:kernelinfo-update-all' to `ein:$kernel-after-start-hook'."
+(defun ein:kernelinfo-setup-hooks (kernel)
+  "Add `ein:kernelinfo-update-*' to `ein:$kernel-after-*-hook'."
   (push (cons #'ein:kernelinfo-update-all kernel)
-        (ein:$kernel-after-start-hook kernel)))
+        (ein:$kernel-after-start-hook kernel))
+  (push (cons #'ein:kernelinfo-update-ccwd kernel)
+        (ein:$kernel-after-execute-hook kernel)))
 
 (defun ein:kernelinfo-update-all (kernel)
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
