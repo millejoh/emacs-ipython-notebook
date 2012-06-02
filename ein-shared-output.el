@@ -54,7 +54,7 @@
 ;;; Cell related
 
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code)
-  (ein:cell-execute-internal cell kernel code))
+  (ein:cell-execute-internal cell kernel code :silent nil))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
                                     msg-type content)
