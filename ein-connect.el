@@ -75,18 +75,23 @@
 
 (defun ein:connect-eval-buffer ()
   (interactive)
-  (ein:connect-eval-region-internal (point-min) (point-max))
+  (ein:connect-eval-string-internal (buffer-string))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
-  (ein:connect-eval-region-internal start end)
+  (ein:connect-eval-string-internal (buffer-substring start end))
   (ein:log 'info "Selected region is sent to the kernel."))
 
-(defun ein:connect-eval-region-internal (start end)
+(defun ein:connect-eval-string (code)
+  (interactive "sIP[y]: ")
+  (ein:connect-eval-string-internal code)
+  (ein:log 'info "Code \"%s\" is sent to the kernel." code))
+
+(defun ein:connect-eval-string-internal (code)
   (let ((cell (ein:shared-output-get-cell))
         (kernel (ein:connect-get-kernel))
-        (code (ein:trim-indent (buffer-substring start end))))
+        (code (ein:trim-indent code)))
     (ein:cell-execute cell kernel code)))
 
 (defun ein:connect-request-tool-tip-command ()
@@ -120,6 +125,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-c" 'ein:connect-eval-buffer)
     (define-key map "\C-c\C-r" 'ein:connect-eval-region)
+    (define-key map (kbd "C-:") 'ein:connect-eval-string)
     (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
     (define-key map "\C-c\C-i" 'ein:connect-complete-command)
     (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
