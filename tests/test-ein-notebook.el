@@ -58,6 +58,7 @@
 (defun eintest:notebook-make-data (cells &optional name)
   (unless name (setq name "Dummy Name"))
   `((metadata . ((name . ,name)))
+    (nbformat . 2)
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
 
