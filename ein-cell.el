@@ -224,6 +224,15 @@ slot.")))
             do (ewoc-invalidate ewoc en)))
     new))
 
+(defmethod ein:cell-change-level ((cell ein:headingcell) level)
+  (let ((inhibit-read-only t)
+        (buffer-undo-list t))         ; disable undo recording
+    (oset cell :level level)
+    ;; draw ewoc node
+    (loop with ewoc = (oref cell :ewoc)
+          for en in (ein:cell-all-element cell)
+          do (ewoc-invalidate ewoc en))))
+
 
 ;;; Getter/setter
 

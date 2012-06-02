@@ -446,6 +446,25 @@ when the prefix argument is given."
       (ein:cell-convert-inplace cell type)
       (ein:cell-goto cell))))
 
+(defun ein:notebook-change-cell-type ()
+  (interactive)
+  (ein:notebook-with-cell nil
+    (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
+                      (2 "cm")
+                      (3 "cmr123456")))
+           (key (ein:ask-choice-char
+                 (format "Cell type [%s]: " choices) choices))
+           (type (case key
+                   (?c "code")
+                   (?m "markdown")
+                   (?r "raw")
+                   (t "heading")))
+           (level (when (equal type "heading")
+                    (string-to-number (char-to-string key)))))
+      (ein:cell-convert-inplace cell type)
+      (when level
+        (ein:cell-change-level cell type)))))
+
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
 point will be removed. This can be omitted by giving a prefix
@@ -891,6 +910,7 @@ Examples:
     (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
     (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
     (define-key map "\C-c\C-t" 'ein:notebook-toggle-cell-type)
+    (define-key map "\C-c\C-u" 'ein:notebook-change-cell-type)
     (define-key map "\C-c\C-s" 'ein:notebook-split-cell-at-point)
     (define-key map "\C-c\C-m" 'ein:notebook-merge-cell-command)
     (define-key map "\C-c\C-n" 'ein:notebook-goto-next-input-command)

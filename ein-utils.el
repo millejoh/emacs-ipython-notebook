@@ -263,6 +263,30 @@ NOTE: This function creates new list."
   (loop for y in xs if (< y x) do (setq x y))
   x)
 
+(defun ein:ask-choice-char (prompt choices)
+  "Show PROMPT and read one of acceptable key specified as CHOICES."
+  (let ((char-list (loop for i from 0 below (length choices)
+                         collect (elt choices i)))
+        (answer 'recenter))
+    (while
+        (let ((key
+               (let ((cursor-in-echo-area t))
+                 (read-key (propertize (if (eq answer 'recenter)
+                                           prompt
+                                         (concat "Please choose answer from"
+                                                 (format " %s.  " choices)
+                                                 prompt))
+                                       'face 'minibuffer-prompt)))))
+          (setq answer (lookup-key query-replace-map (vector key) t))
+          (cond
+           ((memq key char-list) (setq answer key) nil)
+           ((eq answer 'recenter) (recenter) t)
+           ((memq answer '(exit-prefix quit)) (signal 'quit nil) t)
+           (t t)))
+      (ding)
+      (discard-input))
+    answer))
+
 
 ;; utils.js compatible
 
