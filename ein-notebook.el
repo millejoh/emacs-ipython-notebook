@@ -434,9 +434,15 @@ when the prefix argument is given."
 (defun ein:notebook-toggle-cell-type ()
   (interactive)
   (ein:notebook-with-cell nil
-    (let ((type (ein:case-equal (oref cell :cell-type)
-                  (("code") "markdown")
-                  (("markdown") "code"))))
+    (let ((type (case (ein:$notebook-nbformat ein:notebook)
+                  (2 (ein:case-equal (oref cell :cell-type)
+                       (("code") "markdown")
+                       (("markdown") "code")))
+                  (3 (ein:case-equal (oref cell :cell-type)
+                       (("code") "markdown")
+                       (("markdown") "raw")
+                       (("raw") "heading")
+                       (("heading") "code"))))))
       (ein:cell-convert-inplace cell type)
       (ein:cell-goto cell))))
 
