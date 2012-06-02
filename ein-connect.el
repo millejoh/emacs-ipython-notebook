@@ -132,7 +132,9 @@
     map))
 
 (define-minor-mode ein:connect-mode
-  "Minor mode for communicating with IPython notebook."
+  "Minor mode for communicating with IPython notebook.
+
+\\{ein:connect-mode-map}"
   :lighter " ein:c"
   :keymap ein:connect-mode-map
   :group 'ein)
