@@ -347,12 +347,12 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (format "In [%s]:" (oref cell :cell-type))
+   (format "%s:" (oref cell :cell-type))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
-   (format "In [%s %s]:" (oref cell :cell-type) (oref cell :level))
+   (format "h%s:" (oref cell :level))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))
