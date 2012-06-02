@@ -52,7 +52,25 @@ FIXME: document other slots."
   running
   username
   session-id
-  msg-callbacks)
+  msg-callbacks
+  after-start-hook
+  kernelinfo)
+
+
+(defstruct ein:$kernelinfo
+  "Info related (but unimportant) to kernel
+
+`ein:$kernelinfo-buffer'
+  Notebook buffer that the kernel associated with.
+
+`ein:$kernelinfo-hostname'
+  Host name of the machine where the kernel is running on.
+
+`ein:$kernelinfo-ccwd'
+  cached CWD (last time checked CWD)."
+  buffer
+  hostname
+  ccwd)
 
 
 ;;; Initialization and connection.
@@ -68,7 +86,8 @@ FIXME: document other slots."
    :running nil
    :username "username"
    :session-id (ein:utils-uuid)
-   :msg-callbacks (make-hash-table :test 'equal)))
+   :msg-callbacks (make-hash-table :test 'equal)
+   :kernelinfo (make-ein:$kernelinfo)))
 
 
 (defun ein:kernel-del (kernel)
@@ -184,10 +203,25 @@ The kernel will no longer be responsive.")))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))
+            with ready = '(:shell nil :iopub nil)
+            for ready-key in '(:shell :iopub)
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
-                     (lexical-let ((channel c))
-                       (lambda () (ein:kernel-send-cookie channel))))
+                     (lexical-let ((channel c)
+                                   (ready ready)
+                                   (ready-key ready-key)
+                                   (kernel kernel))
+                       (lambda ()
+                         (ein:kernel-send-cookie channel)
+                         ;; run `ein:$kernel-after-start-hook' if both
+                         ;; channels are ready.
+                         (plist-put ready ready-key t)
+                         (ein:log 'debug
+                             "via EIN:$WEBSOCKET-ONOPEN: ready=%S key=%S"
+                             ready ready-key)
+                         (if (and (plist-get ready :shell)
+                                  (plist-get ready :iopub))
+                             (ein:kernel-run-after-start-hook kernel)))))
             do (setf (ein:$websocket-onclose c)
                      #'ein:kernel--ws-closed-callback))
 
@@ -202,6 +236,12 @@ The kernel will no longer be responsive.")))
 
 ;; NOTE: `onclose-arg' can be accessed as:
 ;; (nth 1 (ein:$websocket-onclose-args (ein:$kernel-shell-channel (ein:$notebook-kernel ein:notebook))))
+
+
+(defun ein:kernel-run-after-start-hook (kernel)
+  (ein:log 'debug "EIN:KERNEL-RUN-AFTER-START-HOOK")
+  (mapc #'ein:funcall-packed
+        (ein:$kernel-after-start-hook kernel)))
 
 
 (defun ein:kernel-stop-channels (kernel)
@@ -477,6 +517,43 @@ When no such directory exists, `default-directory' will not be changed."
            "Syncing directory of %s with kernel...FAILED (no dir: %s)"
            buffer path))))
    (list buffer)))
+
+(defun ein:kernelinfo-init (kernelinfo buffer)
+  (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
+
+(defun ein:kernelinfo-set-after-start-hook (kernel)
+  "Add `ein:kernelinfo-update-all' to `ein:$kernel-after-start-hook'."
+  (push (cons #'ein:kernelinfo-update-all kernel)
+        (ein:$kernel-after-start-hook kernel)))
+
+(defun ein:kernelinfo-update-all (kernel)
+  (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
+  (ein:log 'debug "(ein:kernel-ready-p kernel) = %S"
+           (ein:kernel-ready-p kernel))
+  (ein:kernelinfo-update-ccwd kernel)
+  (ein:kernelinfo-update-hostname kernel))
+
+(defun ein:kernelinfo-update-ccwd (kernel)
+  (ein:kernel-request-stream
+   kernel
+   "__import__('sys').stdout.write(__import__('os').getcwd())"
+   (lambda (cwd kernelinfo buffer)
+     (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
+     ;; sync buffer's `default-directory' with CWD
+     (when (buffer-live-p buffer)
+       (with-current-buffer buffer
+         (when (file-accessible-directory-p cwd)
+           (setq default-directory (file-name-as-directory cwd))))))
+   (let ((kernelinfo (ein:$kernel-kernelinfo kernel)))
+     (list kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
+
+(defun ein:kernelinfo-update-hostname (kernel)
+  (ein:kernel-request-stream
+   kernel
+   "__import__('sys').stdout.write(__import__('os').uname()[1])"
+   (lambda (hostname kernelinfo)
+     (setf (ein:$kernelinfo-hostname kernelinfo) hostname))
+   (list (ein:$kernel-kernelinfo kernel))))
 
 (provide 'ein-kernel)
 

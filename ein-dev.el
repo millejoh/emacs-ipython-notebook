@@ -77,6 +77,30 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (ad-enable-advice 'backtrace 'around 'ein:dev-short-backtrace)
   (ad-activate 'backtrace))
 
+(defun ein:dev-depatch-backtrace ()
+  "Undo `ein:dev-patch-backtrace'."
+  (interactive)
+  (ad-deactivate 'backtrace)
+  (ad-disable-advice 'backtrace 'around 'ein:dev-short-backtrace)
+  ;; In case it has other advices.
+  (ad-activate 'backtrace))
+
+(defun ein:dev-start-debug ()
+  (interactive)
+  (setq debug-on-error t)
+  (setq websocket-debug t)
+  (ein:log-set-level 'debug)
+  (ein:log-set-message-level 'verbose)
+  (ein:dev-patch-backtrace))
+
+(defun ein:dev-stop-debug ()
+  (interactive)
+  (setq debug-on-error nil)
+  (setq websocket-debug nil)
+  (ein:log-set-level 'verbose)
+  (ein:log-set-message-level 'info)
+  (ein:dev-patch-backtrace))
+
 (defun ein:dev-pop-to-debug-shell ()
   "Open shell channel websocket log buffer."
   (interactive)
