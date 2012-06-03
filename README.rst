@@ -1,6 +1,6 @@
-========================
- Emacs IPython Notebook
-========================
+===================================
+ Emacs IPython Notebook (and more)
+===================================
 
 .. warning:: This is **very** early version.
              Make sure you have backup!
@@ -15,19 +15,25 @@ Screenshot
 Features
 ========
 
+Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
+client and integrated REPL (like SLIME_).
+
+.. _SLIME: http://common-lisp.net/project/slime/
+
+Highlighted features:
+
 * Copy/paste cells, even to/from different notebooks.
 * Console integration: You can easily connect to kernel via console
   application.  This enables you to start debugging in the same
   kernel.
+* IPython kernel can be "connected" to any buffers.  This enables you
+  to evaluate buffer/region using same kernel as notebook.  Notebook
+  goodies such as tooltip help, help browser and code completion are
+  available in these buffers.
+* Jump to definition (go to the definition by hitting ``M-.`` over an
+  object).
 
-These features are currently not in the native IPython notebook, so
-use Emacs IPython Notebook client (EIN) if you want them!  Of course,
-EIN does not (and won't) implement rich object representation as
-native IPython Notebook web client, and you should use browser also to
-get full power of IPython Notebook.  EIN aims at making notebook
-*editing* more effective.
-
-Other features:
+Other notebook features:
 
 * Inline images
 * Auto/manual-completion
@@ -35,14 +41,16 @@ Other features:
 * Syntax highlighting in each cell types (Python/Markdown)
 * Help browser (opens when executing ``function?``)
 
-More to come/ideas:
 
-* Better pager (history, syntax highlighting, ...)
-* Better messages/event handling/UI
-* Highlight latex maths in markdown text
-* Auto-save
-* Local auto-backup
-* VCS integration
+Quick try
+=========
+
+This is a quick and clean way to try EIN separately from your Emacs
+setting.  If you want to try EIN but think preparing all the
+requirements is too much, try this!::
+
+   git clone git://github.com/tkf/zeroein.git
+   zeroein/zeroein.py
 
 
 Requirements
@@ -112,10 +120,10 @@ Enable `smartrep.el`_::
    (setq ein:use-smartrep t)
 
 
-Keybinds
---------
+Keybinds - Notebook
+-------------------
 
-.. (ein:dev-insert-notebook-mode-map)
+.. (ein:dev-insert-mode-map "\\{ein:notebook-mode-map}")
 
 ::
 
@@ -125,19 +133,20 @@ Keybinds
    C-c             Prefix Command
    C-x             Prefix Command
    ESC             Prefix Command
+   C-:             ein:notebook-eval-string
 
    C-x C-s         ein:notebook-save-notebook-command
    C-x C-w         ein:notebook-rename-command
 
    M-RET           ein:notebook-execute-current-cell-and-goto-next
+   M-.             ein:pytools-jump-to-source-command
 
    C-c C-a         ein:notebook-insert-cell-above-command
    C-c C-b         ein:notebook-insert-cell-below-command
    C-c C-c         ein:notebook-execute-current-cell
-   C-c C-d         ein:notebook-delete-cell-command
    C-c C-e         ein:notebook-toggle-output-command
    C-c C-f         ein:notebook-request-tool-tip-or-help-command
-   C-c TAB         ein:notebook-complete-cell-command
+   C-c TAB         ein:notebook-complete-command
    C-c C-k         ein:notebook-kill-cell-command
    C-c C-l         ein:notebook-clear-output-command
    C-c RET         ein:notebook-merge-cell-command
@@ -148,6 +157,7 @@ Keybinds
    C-c C-r         ein:notebook-restart-kernel-command
    C-c C-s         ein:notebook-split-cell-at-point
    C-c C-t         ein:notebook-toggle-cell-type
+   C-c C-u         ein:notebook-change-cell-type
    C-c C-v         ein:notebook-set-collapsed-all-command
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
@@ -157,6 +167,36 @@ Keybinds
    C-c <up>        ein:notebook-move-cell-up-command
 
    C-c M-w         ein:notebook-copy-cell-command
+
+.. // KEYS END //
+
+
+Keybinds - Connect
+------------------
+
+In Python (or any other) buffer, you can connect to any open notebook
+by ``M-x ein:connect-to-notebook`` then choose appropriate notebook.
+After connecting to the notebook (and hence its kernel), the following
+commands are available.
+
+.. (ein:dev-insert-mode-map "\\{ein:connect-mode-map}")
+
+::
+
+   key             binding
+   ---             -------
+
+   C-c             Prefix Command
+   ESC             Prefix Command
+   C-:             ein:connect-eval-string
+
+   M-.             ein:pytools-jump-to-source-command
+
+   C-c C-c         ein:connect-eval-buffer
+   C-c C-f         ein:connect-request-tool-tip-or-help-command
+   C-c TAB         ein:connect-complete-command
+   C-c C-r         ein:connect-eval-region
+   C-c C-z         ein:connect-pop-to-notebook
 
 .. // KEYS END //
 

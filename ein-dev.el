@@ -29,7 +29,7 @@
 (require 'ein-notebook)
 (require 'ein-subpackages)
 
-(defun ein:dev-insert-notebook-mode-map ()
+(defun ein:dev-insert-mode-map (map-string)
   "Insert mode-map into rst document.  For README.rst."
   (save-excursion
     (insert "\n\n::\n\n")
@@ -39,7 +39,7 @@
       (delete-region beg (point))
       (insert "\n")
       (goto-char beg)
-      (insert (substitute-command-keys "\\{ein:notebook-mode-map}"))
+      (insert (substitute-command-keys map-string))
       (rst-shift-region beg (point) 1))))
 
 (defun ein:load-files (&optional regex dir)
