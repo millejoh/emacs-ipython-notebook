@@ -42,8 +42,6 @@
       (insert (substitute-command-keys "\\{ein:notebook-mode-map}"))
       (rst-shift-region beg (point) 1))))
 
-(defvar ein:source-dir (file-name-directory load-file-name))
-
 (defun ein:load-files (&optional regex dir)
   (let* ((dir (or dir ein:source-dir))
          (regex (or regex ".+"))

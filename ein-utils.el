@@ -42,6 +42,8 @@ to type every time)."
                          (string :tag "URL" "http://127.0.0.1:8888")))
   :group 'ein)
 
+(defvar ein:source-dir (file-name-directory load-file-name))
+
 
 (defmacro ein:aif (test-form then-form &rest else-forms)
   "Anaphoric IF.  Adapted from `e2wm:aif'."

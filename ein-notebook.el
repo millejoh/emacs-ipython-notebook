@@ -48,6 +48,7 @@
 (require 'ein-kill-ring)
 (require 'ein-query)
 (require 'ein-shared-output)
+(require 'ein-pytools)
 
 
 ;;; Configuration
@@ -621,6 +622,7 @@ Do not clear input prompts when the prefix argument is given."
     (setf (ein:$notebook-kernel ein:notebook) kernel)
     (ein:kernelinfo-init (ein:$kernel-kernelinfo kernel) (current-buffer))
     (ein:kernelinfo-setup-hooks kernel)
+    (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel
                       (ein:$notebook-notebook-id ein:notebook))
     (loop for cell in (ein:notebook-get-cells ein:notebook)
@@ -943,6 +945,7 @@ Examples:
     (define-key map "\C-c\C-o" 'ein:notebook-console-open)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
+    (define-key map "\M-." 'ein:pytools-jump-to-source-command)
     map))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
