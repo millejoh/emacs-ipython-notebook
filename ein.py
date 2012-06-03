@@ -25,6 +25,8 @@ def find_source(name):
     """Given an object as string, `name`, print its place in source code."""
     from IPython.core.interactiveshell import InteractiveShell
     inst = InteractiveShell.instance()
-    (filename, lineno, use_temp) = inst._find_edit_target(name, {}, [])
-    print filename
-    print lineno
+    ret = inst._find_edit_target(name, {}, [])
+    if ret:
+        (filename, lineno, use_temp) = ret
+        print filename
+        print lineno
