@@ -283,6 +283,8 @@ the time of execution."
                          (plist-get data :value)))
                  notebook)
   ;; Bind events for sub components:
+  (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
+        (ein:notebook-get-cells notebook))
   (ein:notification-bind-events (ein:$notebook-notification ein:notebook)
                                 events)
   (setf (ein:$notebook-pager notebook)
