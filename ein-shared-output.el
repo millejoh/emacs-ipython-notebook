@@ -81,13 +81,20 @@
              (ewoc (ewoc-create 'ein:notebook-pp
                                 (ein:propertize-read-only "\n")
                                 nil t))
+             (events (ein:events-new (current-buffer)))
              (cell (ein:shared-output-cell "SharedOutputCell"
-                                           :ewoc ewoc)))
+                                           :ewoc ewoc
+                                           :events events)))
         (erase-buffer)
+        (ein:shared-output-bind-events events)
         (setq ein:@shared-output
               (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell))
         (ein:cell-enter-last cell))
       ein:@shared-output)))
+
+(defun ein:shared-output-bind-events (events)
+  (ein:events-on events '(set_dirty . Notebook)
+                 (lambda (&rest ignore))))
 
 (defun ein:shared-output-get-cell ()
   "Get the singleton shared output cell.
