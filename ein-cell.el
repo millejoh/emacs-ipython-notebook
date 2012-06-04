@@ -774,8 +774,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
-  ;; (oset cell :dirty t)
-  )
+  (ein:events-trigger
+   (oref cell :events) '(set_dirty . Notebook) '(:value t)))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
   (ein:events-trigger

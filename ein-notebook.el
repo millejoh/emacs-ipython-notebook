@@ -276,6 +276,12 @@ the time of execution."
                  '(set_next_input . Cell) ; it's Notebook in JS
                  #'ein:notebook--set-next-input
                  notebook)
+  (ein:events-on events
+                 '(set_dirty . Notebook)
+                 (lambda (notebook data)
+                   (setf (ein:$notebook-dirty notebook)
+                         (plist-get data :value)))
+                 notebook)
   ;; Bind events for sub components:
   (ein:notification-bind-events (ein:$notebook-notification ein:notebook)
                                 events)
