@@ -317,7 +317,7 @@ When calling this method pass a CALLBACKS structure of the form:
   (:execute_reply EXECUTE-REPLY-CALLBACK
    :output        OUTPUT-CALLBACK
    :clear_output  CLEAR-OUTPUT-CALLBACK
-   :cell          CELL)
+   :set_next_input SET-NEXT-INPUT)
 
 Objects end with -CALLBACK above must pack a FUNCTION and its
 first ARGUMENT in a `cons':
@@ -345,7 +345,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#execute
 Output type messages is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
 
-The CELL value may be use for the `set_next_input' payload.
+The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
 
 See `ein:kernel--handle-shell-reply' for how the callbacks are called."
   (assert (ein:kernel-ready-p kernel))
@@ -443,9 +443,9 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
                  msg-type msg-id))
       (ein:aif (plist-get content :payload)
-          (ein:kernel--handle-payload kernel (plist-get callbacks :cell) it)))))
+          (ein:kernel--handle-payload kernel callbacks it)))))
 
-(defun ein:kernel--handle-payload (kernel cell payload)
+(defun ein:kernel--handle-payload (kernel callbacks payload)
   (loop with events = (ein:$kernel-events kernel)
         for p in payload
         for text = (plist-get p :text)
@@ -456,8 +456,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               events '(open_with_text . Pager) (list :text text)))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
-        do (ein:events-trigger
-            events '(set_next_input . Cell) (list :cell cell :text text))))
+        do (ein:aif (plist-get callbacks :set_next_input)
+               (ein:funcall-packed it text))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (destructuring-bind

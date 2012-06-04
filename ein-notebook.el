@@ -304,7 +304,10 @@ the time of execution."
   ;; Note: TYPE can be a string.
   ;; FIXME: unify type of TYPE to symbol or string.
   (apply #'ein:cell-from-type
-         (format "%s" type) :ewoc (ein:$notebook-ewoc notebook) args))
+         (format "%s" type)
+         :ewoc (ein:$notebook-ewoc notebook)
+         :events (ein:$notebook-events notebook)
+         args))
 
 (defun ein:notebook-get-cells (notebook)
   (let* ((ewoc (ein:$notebook-ewoc notebook))

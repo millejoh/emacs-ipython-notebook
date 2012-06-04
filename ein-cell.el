@@ -93,6 +93,7 @@
    (input :initarg :input :type string
     :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
+   (events :initarg :events :type ein:events)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
   "Notebook cell base class")
 
@@ -766,7 +767,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
           (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
                 :output        (cons #'ein:cell--handle-output        cell)
                 :clear_output  (cons #'ein:cell--handle-clear-output  cell)
-                :cell cell)))
+                :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
     (apply #'ein:kernel-execute kernel code callbacks args)))
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
@@ -774,6 +775,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-running-set cell nil)
   ;; (oset cell :dirty t)
   )
+
+(defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
+  (ein:events-trigger
+   (oref cell :events) '(set_next_input . Cell) (list :cell cell :text text)))
 
 
 
