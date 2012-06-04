@@ -764,10 +764,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-running-set cell t)
   (oset cell :dynamic t)
   (let* ((callbacks
-          (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
-                :output        (cons #'ein:cell--handle-output        cell)
-                :clear_output  (cons #'ein:cell--handle-clear-output  cell)
-                :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
+          (list
+           :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
+           :output         (cons #'ein:cell--handle-output         cell)
+           :clear_output   (cons #'ein:cell--handle-clear-output   cell)
+           :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
     (apply #'ein:kernel-execute kernel code callbacks args)))
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)

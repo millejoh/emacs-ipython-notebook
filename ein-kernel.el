@@ -314,9 +314,9 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 
 When calling this method pass a CALLBACKS structure of the form:
 
-  (:execute_reply EXECUTE-REPLY-CALLBACK
-   :output        OUTPUT-CALLBACK
-   :clear_output  CLEAR-OUTPUT-CALLBACK
+  (:execute_reply  EXECUTE-REPLY-CALLBACK
+   :output         OUTPUT-CALLBACK
+   :clear_output   CLEAR-OUTPUT-CALLBACK
    :set_next_input SET-NEXT-INPUT)
 
 Objects end with -CALLBACK above must pack a FUNCTION and its

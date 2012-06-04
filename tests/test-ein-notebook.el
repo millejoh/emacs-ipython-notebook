@@ -332,10 +332,11 @@ some text
            (kernel (ein:$notebook-kernel ein:notebook))
            (msg-id "DUMMY-MSG-ID")
            (callbacks
-            (list :execute_reply (cons #'ein:cell--handle-execute-reply cell)
-                  :output        (cons #'ein:cell--handle-output        cell)
-                  :clear_output  (cons #'ein:cell--handle-clear-output  cell)
-                  :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
+            (list
+             :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
+             :output         (cons #'ein:cell--handle-output         cell)
+             :clear_output   (cons #'ein:cell--handle-clear-output   cell)
+             :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
       (should (ein:$kernel-p kernel))
       (should (ein:codecell-p cell))
       (should (ein:$kernel-p (oref cell :kernel)))
