@@ -456,8 +456,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               events '(open_with_text . Pager) (list :text text)))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
-        do (ein:aif (plist-get callbacks :set_next_input)
-               (ein:funcall-packed it text))))
+        do (let ((cb (plist-get callbacks :set_next_input)))
+             (when cb (ein:funcall-packed cb text)))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (destructuring-bind
