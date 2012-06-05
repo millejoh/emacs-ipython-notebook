@@ -48,6 +48,9 @@
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
+(defvar ein:notebooklist-list nil
+  "A list of opened `ein:$notebooklist'.")
+
 
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
@@ -97,6 +100,7 @@
     (setq ein:notebooklist
           (make-ein:$notebooklist :url-or-port url-or-port
                                   :data data))
+    (add-to-list 'ein:notebooklist-list ein:notebooklist)
     (ein:notebooklist-render)
     (goto-char (point-min))
     (current-buffer)))
@@ -211,6 +215,35 @@ Notebook list data is passed via the buffer local variable
                   (widget-insert "\n")))
   (ein:notebooklist-mode)
   (widget-setup))
+
+(defun ein:notebooklist-open-notebook-global (nbpath)
+  "Choose notebook from all opened notebook list and open it."
+  (interactive
+   (list (completing-read
+          "Open notebook [URL-OR-PORT/NAME]: "
+          (apply #'append
+                 (loop for nblist in ein:notebooklist-list
+                       for url-or-port = (ein:$notebooklist-url-or-port nblist)
+                       collect
+                       (loop for note in (ein:$notebooklist-data nblist)
+                             collect (format "%s/%s"
+                                             url-or-port
+                                             (plist-get note :name))))))))
+  (let* ((path (split-string nbpath "/"))
+         (url-or-port (car path))
+         (name (cadr path)))
+    (when (and (stringp url-or-port)
+               (string-match "^[0-9]+$" url-or-port))
+      (setq url-or-port (string-to-number url-or-port)))
+    (let ((notebook-id
+           (loop for nblist in ein:notebooklist-list
+                 if (loop for note in (ein:$notebooklist-data nblist)
+                          when (equal (plist-get note :name) name)
+                          return (plist-get note :notebook_id))
+                 return it)))
+      (if notebook-id
+          (ein:notebook-open url-or-port notebook-id)
+        (message "Notebook '%s' not found" nbpath)))))
 
 
 ;;; Notebook list mode
