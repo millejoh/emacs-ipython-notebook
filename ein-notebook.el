@@ -387,6 +387,7 @@ But be careful!"
     ;; kernel of this notebook.  So reset it here.
     (when (ein:codecell-p cell)
       (oset cell :kernel (ein:$notebook-kernel notebook)))
+    (oset cell :events (ein:$notebook-events notebook))
     cell))
 
 (defun ein:notebook-insert-cell-below (notebook type-or-cell base-cell)
