@@ -990,10 +990,17 @@ Examples:
            (or (ein:$notebook-dirty ein:notebook)
                (buffer-modified-p))))))
 
+(defcustom ein:notebook-kill-buffer-ask t
+  "Whether EIN should ask before killing unsaved notebook buffer."
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil))
+  :group 'ein)
+
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
-  (not (and (ein:notebook-modified-p)
+  (not (and ein:notebook-kill-buffer-ask
+            (ein:notebook-modified-p)
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
@@ -1016,9 +1023,15 @@ Called via `kill-emacs-query-functions'."
                              (ein:notebook-opened-buffers))))
     (if (null unsaved)
         t
-      (y-or-n-p
-       (format "You have %s unsaved notebook(s). Discard changes?"
-               (length unsaved))))))
+      (let ((answer
+             (y-or-n-p
+              (format "You have %s unsaved notebook(s). Discard changes?"
+                      (length unsaved)))))
+        ;; kill all unsaved buffers forcefully
+        (when answer
+          (let ((ein:notebook-kill-buffer-ask nil))
+            (mapc #'kill-buffer unsaved)))
+        answer))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 
