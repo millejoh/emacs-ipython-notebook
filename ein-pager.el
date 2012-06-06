@@ -38,7 +38,7 @@
 (defun ein:pager-bind-events (pager events)
   "Bind events related to PAGER to the event handler EVENTS."
   (ein:events-on events
-                 '(open_with_text . Pager)
+                 'open_with_text.Pager
                  #'ein:pager--open-with-text
                  pager))
 

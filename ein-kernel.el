@@ -121,7 +121,7 @@ FIXME: document other slots."
 
 (defun ein:kernel-restart (kernel)
   (ein:events-trigger (ein:$kernel-events kernel)
-                      '(status_restarting . Kernel))
+                      'status_restarting.Kernel)
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
@@ -453,7 +453,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         if (equal source "IPython.zmq.page.page")
         do (when (not (equal (ein:trim text) ""))
              (ein:events-trigger
-              events '(open_with_text . Pager) (list :text text)))
+              events 'open_with_text.Pager (list :text text)))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
         do (let ((cb (plist-get callbacks :set_next_input)))
@@ -477,12 +477,12 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
-              (ein:events-trigger events '(status_busy . Kernel)))
+              (ein:events-trigger events 'status_busy.Kernel))
              (("idle")
-              (ein:events-trigger events '(status_idle . Kernel)))
+              (ein:events-trigger events 'status_idle.Kernel))
              (("dead")
               (ein:kernel-stop-channels kernel)
-              (ein:events-trigger events '(status_dead . Kernel)))))
+              (ein:events-trigger events 'status_dead.Kernel))))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
                (ein:funcall-packed it content))))))))

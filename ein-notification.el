@@ -54,9 +54,9 @@
     (ein:notification-status
      "NotebookStatus"
      :s2m
-     '(((notebook_saving      . Notebook) . "Saving Notebook...")
-       ((notebook_saved       . Notebook) . "Notebook is saved")
-       ((notebook_save_failed . Notebook) . "Failed to save Notebook!")))
+     '((notebook_saving.Notebook       . "Saving Notebook...")
+       (notebook_saved.Notebook        . "Notebook is saved")
+       (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
     :type ein:notification-status)
    (kernel
     :initarg :kernel
@@ -64,9 +64,9 @@
     (ein:notification-status
      "KernelStatus"
      :s2m
-     '(((status_idle . Kernel) . nil)
-       ((status_busy . Kernel) . "Kernel is busy...")
-       ((status_dead . Kernel) . "Kernel is dead. Need restart.")))
+     '((status_idle.Kernel . nil)
+       (status_busy.Kernel . "Kernel is busy...")
+       (status_dead.Kernel . "Kernel is dead. Need restart.")))
     :type ein:notification-status))
   "Notification widget for Notebook.")
 
@@ -90,12 +90,12 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                                    #'ein:notification--callback
                                    (cons ns st))))
   (ein:events-on events
-                 '(status_restarting . Kernel)
+                 'status_restarting.Kernel
                  #'ein:notification--fadeout-callback
                  (list (oref notification :kernel)
                        "Restarting kernel..."
-                       '(status_restarting . Kernel)
-                       '(status_idle . Kernel))))
+                       'status_restarting.Kernel
+                       'status_idle.Kernel)))
 
 (defun ein:notification--callback (packed data)
   (let ((ns (car packed))
