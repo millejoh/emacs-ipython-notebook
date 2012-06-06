@@ -204,25 +204,16 @@ The kernel will no longer be responsive.")))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))
-            with ready = (list :shell nil :iopub nil)
-            for ready-key in '(:shell :iopub)
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
                      (lexical-let ((channel c)
-                                   (ready ready)
-                                   (ready-key ready-key)
                                    (kernel kernel))
                        (lambda ()
                          (ein:kernel-send-cookie channel)
                          ;; run `ein:$kernel-after-start-hook' if both
                          ;; channels are ready.
-                         (plist-put ready ready-key t)
-                         (ein:log 'debug
-                             "via EIN:$WEBSOCKET-ONOPEN: ready=%S key=%S"
-                             ready ready-key)
-                         (if (and (plist-get ready :shell)
-                                  (plist-get ready :iopub))
-                             (ein:kernel-run-after-start-hook kernel)))))
+                         (when (ein:kernel-ready-p kernel)
+                           (ein:kernel-run-after-start-hook kernel)))))
             do (setf (ein:$websocket-onclose c)
                      #'ein:kernel--ws-closed-callback))
 
