@@ -175,7 +175,8 @@ some text
       (should (equal (ein:notebook-ncells ein:notebook) 3))
       (loop for cell in (ein:notebook-get-cells ein:notebook)
             do (should (ein:codecell-p cell))
-            do (should (slot-boundp cell :kernel))))))
+            do (should (slot-boundp cell :kernel))
+            do (should (slot-boundp cell :events))))))
 
 (ert-deftest ein:notebook-yank-cell-command-two-buffers ()
   (let (ein:kill-ring ein:kill-ring-yank-pointer)
