@@ -257,8 +257,9 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-ready-p (kernel)
-  (and (ein:websocket-open-p (ein:$kernel-shell-channel kernel))
-       (ein:websocket-open-p (ein:$kernel-iopub-channel kernel))))
+  (and
+   (ein:aand (ein:$kernel-shell-channel kernel) (ein:websocket-open-p it))
+   (ein:aand (ein:$kernel-iopub-channel kernel) (ein:websocket-open-p it))))
 
 
 (defmacro ein:kernel-if-ready (kernel &rest body)
