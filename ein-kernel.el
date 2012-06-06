@@ -267,7 +267,7 @@ The kernel will no longer be responsive.")))
   (declare (indent 1))
   `(if (ein:kernel-ready-p ,kernel)
        (progn ,@body)
-     (ein:log 'warn "Kernel is not ready yet!")))
+     (ein:log 'warn "Kernel is not ready yet! (or closed already.)")))
 
 
 ;;; Main public methods
@@ -293,7 +293,7 @@ the second argument.
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (when objname
     (let* ((content (list :oname (format "%s" objname)))
            (msg (ein:kernel--get-msg kernel "object_info_request" content))
@@ -349,7 +349,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pu
 The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
 
 See `ein:kernel--handle-shell-reply' for how the callbacks are called."
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
                    :silent (or silent json-false)
@@ -383,7 +383,7 @@ the `content' object of the `complete_reply' message as the second.
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :text ""
                    :line line
