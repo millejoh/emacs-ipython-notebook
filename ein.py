@@ -21,11 +21,27 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-def find_source(name):
-    """Given an object as string, `name`, print its place in source code."""
+def _find_edit_target_012(*args, **kwds):
     from IPython.core.interactiveshell import InteractiveShell
     inst = InteractiveShell.instance()
-    ret = inst._find_edit_target(name, {}, [])
+    return inst._find_edit_target(*args, **kwds)
+
+
+def _find_edit_target_013(*args, **kwds):
+    from IPython.core.interactiveshell import InteractiveShell
+    inst = InteractiveShell.instance()
+    return CodeMagics._find_edit_target(inst, *args, **kwds)
+
+try:
+    from IPython.core.magics import CodeMagics
+    _find_edit_target = _find_edit_target_013
+except ImportError:
+    _find_edit_target = _find_edit_target_012
+
+
+def find_source(name):
+    """Given an object as string, `name`, print its place in source code."""
+    ret = _find_edit_target(name, {}, [])
     if ret:
         (filename, lineno, use_temp) = ret
         print filename
