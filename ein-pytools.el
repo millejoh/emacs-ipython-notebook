@@ -60,7 +60,9 @@
        (ein:case-equal msg-type
          (("stream")
           (ein:aif (plist-get content :data)
-              (if (string-match "^WARNING: .*" it)
+              (if (or (string-match "^WARNING: .*" it)
+                      (string-match
+                       "^Traceback (most recent call last):\n" it))
                   (ein:log 'info
                     "Jumping to the source of %s...Not found" object)
                 (let* ((filename-lineno (split-string it "\n"))
