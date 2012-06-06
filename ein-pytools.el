@@ -50,21 +50,32 @@
 
 (defun ein:pytools-jump-to-source (kernel object)
   (ein:log 'info "Jumping to the source of %s..." object)
-  (ein:kernel-request-stream
+  (ein:kernel-execute
    kernel
    (format "__import__('ein').find_source('%s')" object)
-   (lambda (string object)
-     (if (string-match "^WARNING: .*" string)
-         (ein:log 'info "Jumping to the source of %s...Not found" object)
-       (let* ((filename-lineno (split-string string "\n"))
-                (filename (car filename-lineno))
-                (lineno (string-to-number (cadr filename-lineno))))
-           (unless (equal filename "")
-             (find-file-other-window filename)
-             (goto-char (point-min))
-             (forward-line (1- lineno))
-             (ein:log 'info "Jumping to the source of %s...Done" object)))))
-   (list object)))
+   (list
+    :output
+    (cons
+     (lambda (object msg-type content)
+       (ein:case-equal msg-type
+         (("stream")
+          (ein:aif (plist-get content :data)
+              (if (string-match "^WARNING: .*" it)
+                  (ein:log 'info
+                    "Jumping to the source of %s...Not found" object)
+                (let* ((filename-lineno (split-string it "\n"))
+                       (filename (car filename-lineno))
+                       (lineno (string-to-number (cadr filename-lineno))))
+                  (unless (equal filename "")
+                    (find-file-other-window filename)
+                    (goto-char (point-min))
+                    (forward-line (1- lineno))
+                    (ein:log 'info
+                      "Jumping to the source of %s...Done" object))))))
+         (("pyerr")
+          (ein:log 'info
+            "Jumping to the source of %s...Not found" object))))
+     object))))
 
 (defun ein:pytools-jump-to-source-command ()
   (interactive)

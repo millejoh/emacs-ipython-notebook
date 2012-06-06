@@ -46,3 +46,5 @@ def find_source(name):
         (filename, lineno, use_temp) = ret
         print filename
         print lineno
+    else:
+        raise RuntimeError("Source code for {0} cannot be found".format(name))
