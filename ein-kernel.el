@@ -469,7 +469,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (events (ein:$kernel-events kernel)))
       (ein:log 'debug "HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
       (if (and (not (equal msg-type "status")) (null callbacks))
-          (ein:log 'verbose "Got message not from this kernel.")
+          (ein:log 'verbose "Got message not from this notebook.")
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr")
            (ein:aif (plist-get callbacks :output)
