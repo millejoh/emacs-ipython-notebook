@@ -204,7 +204,7 @@ The kernel will no longer be responsive.")))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))
-            with ready = '(:shell nil :iopub nil)
+            with ready = (list :shell nil :iopub nil)
             for ready-key in '(:shell :iopub)
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
