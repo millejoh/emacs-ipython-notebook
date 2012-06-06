@@ -97,7 +97,7 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (setq websocket-debug nil)
   (ein:log-set-level 'verbose)
   (ein:log-set-message-level 'info)
-  (ein:dev-patch-backtrace))
+  (ein:dev-depatch-backtrace))
 
 (defun ein:dev-pop-to-debug-shell ()
   "Open shell channel websocket log buffer."
