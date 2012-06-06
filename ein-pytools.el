@@ -62,7 +62,8 @@
           (ein:aif (plist-get content :data)
               (if (or (string-match "^WARNING: .*" it)
                       (string-match
-                       "^Traceback (most recent call last):\n" it))
+                       "^Traceback (most recent call last):\n" it)
+                      (string-match "^.*<ipython-input-[^>\n]+>\n" it))
                   (ein:log 'info
                     "Jumping to the source of %s...Not found" object)
                 (let* ((filename-lineno (split-string it "\n"))
