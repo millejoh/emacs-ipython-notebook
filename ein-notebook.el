@@ -49,6 +49,7 @@
 (require 'ein-query)
 (require 'ein-shared-output)
 (require 'ein-pytools)
+(require 'ein-traceback)
 
 
 ;;; Configuration
@@ -88,6 +89,7 @@ yet.  So be careful when using EIN functions.  They may change."
 ;; IPython developers for an API to get this from notebook server.
 
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
+(defvar ein:notebook-tb-buffer-name-template "*ein:tb %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (defvar ein:notebook-save-retry-max 1
@@ -135,7 +137,10 @@ yet.  So be careful when using EIN functions.  They may change."
   Event handler instance.
 
 `ein:$notebook-notification' : `ein:notification'
-  Notification widget."
+  Notification widget.
+
+`ein:$notebook-traceback' : `ein:traceback'
+  Traceback viewer."
   url-or-port
   notebook-id
   data
@@ -148,6 +153,7 @@ yet.  So be careful when using EIN functions.  They may change."
   nbformat
   events
   notification
+  traceback
   )
 
 (ein:deflocal ein:notebook nil
@@ -256,6 +262,7 @@ the time of execution."
   (setf (ein:$notebook-notification ein:notebook)
         (ein:notification-setup (current-buffer)))
   (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
+  (ein:notebook-setup-traceback ein:notebook)
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -300,6 +307,13 @@ the time of execution."
          (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
     (ein:cell-set-text new-cell text)
     (setf (ein:$notebook-dirty notebook) t)))
+
+(defun ein:notebook-setup-traceback (notebook)
+  (setf (ein:$notebook-traceback notebook)
+        (ein:tb-new
+         (format ein:notebook-tb-buffer-name-template
+                 (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-name notebook)))))
 
 
 ;;; Cell indexing, retrieval, etc.
