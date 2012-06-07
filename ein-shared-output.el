@@ -93,7 +93,7 @@
       ein:@shared-output)))
 
 (defun ein:shared-output-bind-events (events)
-  (ein:events-on events '(set_dirty . Notebook)
+  (ein:events-on events 'set_dirty.Notebook
                  (lambda (&rest ignore))))
 
 (defun ein:shared-output-get-cell ()

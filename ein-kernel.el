@@ -121,7 +121,7 @@ FIXME: document other slots."
 
 (defun ein:kernel-restart (kernel)
   (ein:events-trigger (ein:$kernel-events kernel)
-                      '(status_restarting . Kernel))
+                      'status_restarting.Kernel)
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
@@ -204,25 +204,16 @@ The kernel will no longer be responsive.")))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))
-            with ready = '(:shell nil :iopub nil)
-            for ready-key in '(:shell :iopub)
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
                      (lexical-let ((channel c)
-                                   (ready ready)
-                                   (ready-key ready-key)
                                    (kernel kernel))
                        (lambda ()
                          (ein:kernel-send-cookie channel)
                          ;; run `ein:$kernel-after-start-hook' if both
                          ;; channels are ready.
-                         (plist-put ready ready-key t)
-                         (ein:log 'debug
-                             "via EIN:$WEBSOCKET-ONOPEN: ready=%S key=%S"
-                             ready ready-key)
-                         (if (and (plist-get ready :shell)
-                                  (plist-get ready :iopub))
-                             (ein:kernel-run-after-start-hook kernel)))))
+                         (when (ein:kernel-ready-p kernel)
+                           (ein:kernel-run-after-start-hook kernel)))))
             do (setf (ein:$websocket-onclose c)
                      #'ein:kernel--ws-closed-callback))
 
@@ -257,8 +248,9 @@ The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-ready-p (kernel)
-  (and (ein:websocket-open-p (ein:$kernel-shell-channel kernel))
-       (ein:websocket-open-p (ein:$kernel-iopub-channel kernel))))
+  (and
+   (ein:aand (ein:$kernel-shell-channel kernel) (ein:websocket-open-p it))
+   (ein:aand (ein:$kernel-iopub-channel kernel) (ein:websocket-open-p it))))
 
 
 (defmacro ein:kernel-if-ready (kernel &rest body)
@@ -266,7 +258,7 @@ The kernel will no longer be responsive.")))
   (declare (indent 1))
   `(if (ein:kernel-ready-p ,kernel)
        (progn ,@body)
-     (ein:log 'warn "Kernel is not ready yet!")))
+     (ein:log 'warn "Kernel is not ready yet! (or closed already.)")))
 
 
 ;;; Main public methods
@@ -292,7 +284,7 @@ the second argument.
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (when objname
     (let* ((content (list :oname (format "%s" objname)))
            (msg (ein:kernel--get-msg kernel "object_info_request" content))
@@ -348,7 +340,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pu
 The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
 
 See `ein:kernel--handle-shell-reply' for how the callbacks are called."
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
                    :silent (or silent json-false)
@@ -382,7 +374,7 @@ the `content' object of the `complete_reply' message as the second.
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
-  (assert (ein:kernel-ready-p kernel))
+  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :text ""
                    :line line
@@ -453,7 +445,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         if (equal source "IPython.zmq.page.page")
         do (when (not (equal (ein:trim text) ""))
              (ein:events-trigger
-              events '(open_with_text . Pager) (list :text text)))
+              events 'open_with_text.Pager (list :text text)))
         else if
         (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
         do (let ((cb (plist-get callbacks :set_next_input)))
@@ -469,7 +461,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (events (ein:$kernel-events kernel)))
       (ein:log 'debug "HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
       (if (and (not (equal msg-type "status")) (null callbacks))
-          (ein:log 'verbose "Got message not from this kernel.")
+          (ein:log 'verbose "Got message not from this notebook.")
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr")
            (ein:aif (plist-get callbacks :output)
@@ -477,12 +469,12 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
-              (ein:events-trigger events '(status_busy . Kernel)))
+              (ein:events-trigger events 'status_busy.Kernel))
              (("idle")
-              (ein:events-trigger events '(status_idle . Kernel)))
+              (ein:events-trigger events 'status_idle.Kernel))
              (("dead")
               (ein:kernel-stop-channels kernel)
-              (ein:events-trigger events '(status_dead . Kernel)))))
+              (ein:events-trigger events 'status_dead.Kernel))))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
                (ein:funcall-packed it content))))))))

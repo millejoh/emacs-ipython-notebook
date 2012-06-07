@@ -273,11 +273,11 @@ the time of execution."
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events ein:notebook) events)
   (ein:events-on events
-                 '(set_next_input . Cell) ; it's Notebook in JS
+                 'set_next_input.Notebook
                  #'ein:notebook--set-next-input
                  notebook)
   (ein:events-on events
-                 '(set_dirty . Notebook)
+                 'set_dirty.Notebook
                  (lambda (notebook data)
                    (setf (ein:$notebook-dirty notebook)
                          (plist-get data :value)))
@@ -825,7 +825,7 @@ Do not clear input prompts when the prefix argument is given."
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger (ein:$notebook-events notebook)
-                        '(notebook_saving . Notebook))
+                        'notebook_saving.Notebook)
     (ein:query-ajax
      (ein:notebook-url notebook)
      :type "PUT"
@@ -870,12 +870,12 @@ Do not clear input prompts when the prefix argument is given."
   (with-current-buffer (ein:notebook-buffer notebook)
     (set-buffer-modified-p nil))
   (ein:events-trigger (ein:$notebook-events notebook)
-                      '(notebook_saved . Notebook)))
+                      'notebook_saved.Notebook))
 
 (defun ein:notebook-save-notebook-error (notebook &rest ignore)
   (ein:log 'info "Failed to save notebook!")
   (ein:events-trigger (ein:$notebook-events notebook)
-                      '(notebook_save_failed . Notebook)))
+                      'notebook_save_failed.Notebook))
 
 (defun ein:notebook-rename-command (name)
   "Rename current notebook and save it immediately.
@@ -990,10 +990,17 @@ Examples:
            (or (ein:$notebook-dirty ein:notebook)
                (buffer-modified-p))))))
 
+(defcustom ein:notebook-kill-buffer-ask t
+  "Whether EIN should ask before killing unsaved notebook buffer."
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil))
+  :group 'ein)
+
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
-  (not (and (ein:notebook-modified-p)
+  (not (and ein:notebook-kill-buffer-ask
+            (ein:notebook-modified-p)
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
@@ -1016,9 +1023,15 @@ Called via `kill-emacs-query-functions'."
                              (ein:notebook-opened-buffers))))
     (if (null unsaved)
         t
-      (y-or-n-p
-       (format "You have %s unsaved notebook(s). Discard changes?"
-               (length unsaved))))))
+      (let ((answer
+             (y-or-n-p
+              (format "You have %s unsaved notebook(s). Discard changes?"
+                      (length unsaved)))))
+        ;; kill all unsaved buffers forcefully
+        (when answer
+          (let ((ein:notebook-kill-buffer-ask nil))
+            (mapc #'kill-buffer unsaved)))
+        answer))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 

@@ -37,7 +37,7 @@
 (defclass ein:events ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
    (callbacks :initarg :callbacks :type hash-table
-              :initform (make-hash-table :test 'equal)))
+              :initform (make-hash-table :test 'eq)))
   "Event handler class.")
 
 (defun ein:events-new (buffer)
@@ -45,10 +45,7 @@
   (ein:events "Events" :buffer buffer))
 
 (defun ein:events-trigger (events event-type &optional data)
-  "Trigger EVENT-TYPE and let event handler EVENTS handle that event.
-EVENT-TYPE is a cons like \(notebook_saved . Notebook), which is
-a direct translation of \"notebook_saved.Notebook\" from the
-IPython notebook client JS."
+  "Trigger EVENT-TYPE and let event handler EVENTS handle that event."
   (ein:log 'debug "Event: %S" event-type)
   ;; Ensure that event is handled in the related buffer.
   ;; This helps logging by `ein:log' (and maybe EWOC?).
@@ -66,9 +63,7 @@ When EVENT-TYPE is triggered on the event handler EVENTS,
 CALLBACK is called.  CALLBACK must take two arguments:
 ARG as the first argument and DATA, which is passed via
 `ein:events-trigger', as the second."
-  (assert (and (consp event-type)
-               (symbolp (car event-type))
-               (symbolp (cdr event-type))))
+  (assert (symbolp event-type))
   (let* ((table (oref events :callbacks))
          (cbs (gethash event-type table)))
     (push (cons callback arg) cbs)
