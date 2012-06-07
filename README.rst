@@ -159,6 +159,7 @@ Keybinds - Notebook
    C-c C-t         ein:notebook-toggle-cell-type
    C-c C-u         ein:notebook-change-cell-type
    C-c C-v         ein:notebook-set-collapsed-all-command
+   C-c C-x         ein:notebook-view-traceback
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
