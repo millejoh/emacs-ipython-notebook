@@ -70,6 +70,39 @@
   (ein:tb-render traceback tb-data)
   (pop-to-buffer (ein:tb-get-buffer traceback)))
 
+(defmethod ein:tb-file-path-at-point ((traceback ein:traceback))
+  (let* ((ewoc (oref ein:@traceback :ewoc))
+         (ewoc-node (ewoc-locate ewoc))
+         (beg (ewoc-location ewoc-node))
+         (end (ewoc-location (ewoc-next ewoc ewoc-node)))
+         (file-tail (next-single-property-change beg 'font-lock-face nil end))
+         (file (when file-tail
+                 (buffer-substring-no-properties beg file-tail))))
+    (if (string-match "\\.pyc$" file)
+        (concat (file-name-sans-extension file) ".py")
+      file)))
+
+(defmethod ein:tb-file-lineno-at-point ((traceback ein:traceback))
+  (let* ((ewoc (oref ein:@traceback :ewoc))
+         (ewoc-node (ewoc-locate ewoc))
+         (beg (ewoc-location ewoc-node))
+         (end (ewoc-location (ewoc-next ewoc ewoc-node))))
+    (when (save-excursion
+            (goto-char beg)
+            (search-forward-regexp "^[-]+> \\([0-9]+\\)" end t))
+      (string-to-number (match-string 1)))))
+
+(defmethod ein:tb-jump-to-source-at-point ((traceback ein:traceback))
+  (let ((file (ein:tb-file-path-at-point traceback))
+        (lineno (ein:tb-file-lineno-at-point traceback)))
+    (assert (file-exists-p file) nil "File %s does not exit." file)
+    (pop-to-buffer (find-file-noselect file))
+    (goto-char (point-min))
+    (forward-line (1- lineno))))
+
+(defun ein:tb-jump-to-source-at-point-command ()
+  (interactive)
+  (ein:tb-jump-to-source-at-point ein:@traceback))
 
 
 ;;; ein:traceback-mode
@@ -86,6 +119,7 @@
   (font-lock-mode))
 
 (let ((map ein:traceback-mode-map))
+  (define-key map (kbd "RET") 'ein:tb-jump-to-source-at-point-command)
   (define-key map "p" 'ein:tb-prev-item)
   (define-key map "n" 'ein:tb-next-item)
   (define-key map "q" 'bury-buffer))
