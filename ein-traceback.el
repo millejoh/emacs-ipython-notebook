@@ -74,7 +74,7 @@
   (let* ((ewoc (oref ein:@traceback :ewoc))
          (ewoc-node (ewoc-locate ewoc))
          (beg (ewoc-location ewoc-node))
-         (end (ewoc-location (ewoc-next ewoc ewoc-node)))
+         (end (ein:aand (ewoc-next ewoc ewoc-node) (ewoc-location it)))
          (file-tail (next-single-property-change beg 'font-lock-face nil end))
          (file (when file-tail
                  (buffer-substring-no-properties beg file-tail))))
@@ -86,7 +86,7 @@
   (let* ((ewoc (oref ein:@traceback :ewoc))
          (ewoc-node (ewoc-locate ewoc))
          (beg (ewoc-location ewoc-node))
-         (end (ewoc-location (ewoc-next ewoc ewoc-node))))
+         (end (ein:aand (ewoc-next ewoc ewoc-node) (ewoc-location it))))
     (when (save-excursion
             (goto-char beg)
             (search-forward-regexp "^[-]+> \\([0-9]+\\)" end t))
