@@ -95,17 +95,24 @@
             (search-forward-regexp "^[-]+> \\([0-9]+\\)" end t))
       (string-to-number (match-string 1)))))
 
-(defmethod ein:tb-jump-to-source-at-point ((traceback ein:traceback))
+(defmethod ein:tb-jump-to-source-at-point ((traceback ein:traceback)
+                                           &optional select)
   (let ((file (ein:tb-file-path-at-point traceback))
         (lineno (ein:tb-file-lineno-at-point traceback)))
     (assert (file-exists-p file) nil "File %s does not exit." file)
-    (pop-to-buffer (find-file-noselect file))
-    (goto-char (point-min))
-    (forward-line (1- lineno))))
+    (let ((buf (find-file-noselect file))
+          (scroll (lambda ()
+                    (goto-char (point-min))
+                    (forward-line (1- lineno)))))
+      (if select
+          (progn (pop-to-buffer buf)
+                 (funcall scroll))
+        (with-selected-window (display-buffer buf)
+          (funcall scroll))))))
 
-(defun ein:tb-jump-to-source-at-point-command ()
-  (interactive)
-  (ein:tb-jump-to-source-at-point ein:@traceback))
+(defun ein:tb-jump-to-source-at-point-command (&optional select)
+  (interactive "P")
+  (ein:tb-jump-to-source-at-point ein:@traceback select))
 
 
 ;;; ein:traceback-mode
