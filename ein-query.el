@@ -172,8 +172,8 @@ is killed immediately after the execution of this function.
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
   (ein:with-live-buffer buffer
     (ein:safe-funcall-packed error :symbol-status 'timeout)
-    (let ((proc (process-buffer buffer)))
-      (kill-process proc)
+    (let ((proc (get-buffer-process buffer)))
+      (delete-process proc)
       (kill-buffer buffer))))
 
 (defun ein:query-ajax-cancel-timer ()
