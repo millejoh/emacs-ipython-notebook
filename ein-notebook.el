@@ -638,6 +638,19 @@ Do not clear input prompts when the prefix argument is given."
     (ein:log 'error "Not in notebook buffer!")))
 
 
+;;; Traceback
+
+(defun ein:notebook-view-traceback ()
+  (interactive)
+  (ein:notebook-with-cell #'ein:codecell-p
+    (let ((tb-data
+           (loop for out in (oref cell :outputs)
+                 when (equal (plist-get out :output_type) "pyerr")
+                 return (plist-get out :traceback))))
+      (when tb-data
+        (ein:tb-popup (ein:$notebook-traceback ein:notebook) tb-data)))))
+
+
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
