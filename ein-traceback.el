@@ -64,11 +64,31 @@
       (oset traceback :ewoc ewoc)
       (oset traceback :tb-data tb-data)
       (mapc (lambda (data) (ewoc-enter-last ewoc data)) tb-data))
-    (font-lock-mode)))
+    (ein:traceback-mode)))
 
 (defmethod ein:tb-popup ((traceback ein:traceback) tb-data)
   (ein:tb-render traceback tb-data)
   (pop-to-buffer (ein:tb-get-buffer traceback)))
+
+
+
+;;; ein:traceback-mode
+
+(defun ein:tb-prev-item ()
+  (interactive)
+  (ewoc-goto-prev (oref ein:@traceback :ewoc) 1))
+
+(defun ein:tb-next-item ()
+  (interactive)
+  (ewoc-goto-next (oref ein:@traceback :ewoc) 1))
+
+(define-derived-mode ein:traceback-mode fundamental-mode "ein:tb"
+  (font-lock-mode))
+
+(let ((map ein:traceback-mode-map))
+  (define-key map "p" 'ein:tb-prev-item)
+  (define-key map "n" 'ein:tb-next-item)
+  (define-key map "q" 'bury-buffer))
 
 (provide 'ein-traceback)
 
