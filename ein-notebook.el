@@ -647,8 +647,9 @@ Do not clear input prompts when the prefix argument is given."
            (loop for out in (oref cell :outputs)
                  when (equal (plist-get out :output_type) "pyerr")
                  return (plist-get out :traceback))))
-      (when tb-data
-        (ein:tb-popup (ein:$notebook-traceback ein:notebook) tb-data)))))
+      (if tb-data
+          (ein:tb-popup (ein:$notebook-traceback ein:notebook) tb-data)
+        (ein:log 'info "No Traceback found for the current cell.")))))
 
 
 ;;; Kernel related things
