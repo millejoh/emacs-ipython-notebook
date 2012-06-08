@@ -256,7 +256,7 @@ See `ein:notebook-open' for more information."
         (cbargs (nth 2 packed)))
     (apply #'ein:notebook-request-open-callback notebook args)
     (when callback
-      (apply callback t cbargs))))
+      (apply callback notebook t cbargs))))
 
 (defun* ein:notebook-request-open-callback (notebook &key status data
                                                      &allow-other-keys)
