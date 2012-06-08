@@ -36,6 +36,8 @@
 (require 'ein-notebook)
 (require 'ein-shared-output)
 
+
+;;; Variable/class
 
 (defcustom ein:connect-run-options "-n"
   "Default %run option for `ein:connect-run-buffer'."
@@ -54,6 +56,9 @@
     (setq ein:@connect
           (ein:$connect "Connect" :notebook notebook :buffer buffer))
     ein:@connect))
+
+
+;;; Methods
 
 (defun ein:connect-to-notebook (buffer-or-name)
   "Connect any buffer to notebook and its kernel."
@@ -150,6 +155,9 @@ Variable `ein:connect-run-options' sets the default option."
 (defun ein:connect-pop-to-notebook ()
   (interactive)
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
+
+
+;;; ein:connect-mode
 
 (defvar ein:connect-mode-map
   (let ((map (make-sparse-keymap)))
