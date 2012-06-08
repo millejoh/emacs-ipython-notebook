@@ -28,6 +28,7 @@
 (eval-when-compile (require 'cl))
 
 (require 'ein-kernel)
+(require 'ein-shared-output)
 
 (eval-when-compile (defvar ein:notebook)
                    (defvar ein:@connect))
@@ -116,6 +117,18 @@
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect
                                   (ein:pytools-get-notebook-buffer)))))
+
+(defun ein:pytools-eval-string-internal (code &optional popup)
+  (require 'ein-connect)
+  (let ((cell (ein:shared-output-get-cell))
+        (kernel (ein:pytools-get-kernel))
+        (code (ein:trim-indent code)))
+    (ein:cell-execute cell kernel code popup)))
+
+(defun ein:pytools-whos ()
+  "Execute %whos magic command and popup the result."
+  (interactive)
+  (ein:pytools-eval-string-internal "%whos" t))
 
 (provide 'ein-pytools)
 

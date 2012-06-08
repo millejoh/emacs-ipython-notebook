@@ -38,6 +38,7 @@
 (defclass ein:shared-output-cell (ein:codecell)
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
+   (popup :initarg :popup :initform nil :type boolean)
    )
   "A singleton cell to show output from non-notebook buffers.")
 
@@ -53,12 +54,16 @@
 
 ;;; Cell related
 
-(defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code)
+(defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
+                             &optional popup)
+  (oset cell :popup popup)
   (ein:cell-execute-internal cell kernel code :silent nil))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
                                     msg-type content)
   (ein:log 'info "Got output '%s' in the shared buffer." msg-type)
+  (when (oref cell :popup)
+    (pop-to-buffer (ein:shared-output-get-buffer)))
   (call-next-method))
 
 
