@@ -37,11 +37,39 @@
 (require 'ein-shared-output)
 
 
+;;; Utils
+
+(defun ein:maybe-save-buffer (option)
+  "Conditionally save current buffer.
+Return `t' if the buffer is unmodified or `nil' otherwise.
+If the buffer is modified, buffer is saved depending on the value
+of OPTION:
+  ask  : Ask whether the buffer should be saved.
+  yes  : Save buffer always.
+  no   : Do not save buffer."
+  (if (not (buffer-modified-p))
+      t
+    (case option
+      (ask (when (y-or-n-p "Save buffer? ")
+             (save-buffer)
+             t))
+      (yes (save-buffer)
+           t)
+      (t nil))))
+
+
 ;;; Variable/class
 
 (defcustom ein:connect-run-options "-n"
   "Default %run option for `ein:connect-run-buffer'."
   :type '(string :tag "Option" "-n -i -t -d")
+  :group 'ein)
+
+(defcustom ein:connect-save-before-run 'yes
+  "Whether the buffer should be saved before `ein:connect-run-buffer'."
+  :type '(choice (const :tag "Always save buffer" yes)
+                 (const :tag "Always do not save buffer" no)
+                 (const :tag "Ask" ask))
   :group 'ein)
 
 (ein:deflocal ein:@connect nil
@@ -100,9 +128,11 @@ Variable `ein:connect-run-options' sets the default option."
                                                ein:connect-run-options)
                        ein:connect-run-options))
              (cmd (format "%%run %s %s" option it)))
-        (save-buffer)
-        (ein:connect-eval-string-internal cmd)
-        (ein:log 'info "Command sent to the kernel: %s" cmd))
+        (if (ein:maybe-save-buffer ein:connect-save-before-run)
+            (progn
+              (ein:connect-eval-string-internal cmd)
+              (ein:log 'info "Command sent to the kernel: %s" cmd))
+          (ein:log 'info "Buffer must be saved before %%run.")))
     (error (concat "This buffer has no associated file.  "
                    "Use `ein:connect-eval-buffer' instead."))))
 
