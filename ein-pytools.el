@@ -32,12 +32,29 @@
 (eval-when-compile (defvar ein:notebook)
                    (defvar ein:@connect))
 (declare-function ein:$notebook-kernel "ein-notebook")
+(declare-function ein:notebook-buffer "ein-notebook")
 (declare-function ein:connect-get-kernel "ein-connect")
+(declare-function ein:connect-get-notebook "ein-connect")
+(declare-function ein:connect-to-notebook "ein-connect")
+
+(defcustom ein:propagate-connect t
+  "Set to `t' to connect to the notebook after jumping to a buffer."
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil))
+  :group 'ein)
 
 (defun ein:pytools-get-kernel ()
   (cond
    (ein:notebook (ein:$notebook-kernel ein:notebook))
    (ein:@connect (ein:connect-get-kernel))))
+
+(defun ein:pytools-get-notebook ()
+  (cond
+   (ein:notebook ein:notebook)
+   (ein:@connect (ein:connect-get-notebook))))
+
+(defun ein:pytools-get-notebook-buffer ()
+  (ein:notebook-buffer (ein:pytools-get-notebook)))
 
 (defun ein:pytools-setup-hooks (kernel)
   (push (cons #'ein:pytools-add-sys-path kernel)
@@ -48,7 +65,8 @@
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
 
-(defun ein:pytools-jump-to-source (kernel object other-window)
+(defun ein:pytools-jump-to-source (kernel object &optional
+                                          other-window notebook-buffer)
   (ein:log 'info "Jumping to the source of %s..." object)
   (ein:kernel-execute
    kernel
@@ -58,7 +76,8 @@
     (cons
      (lambda (packed msg-type content)
        (let ((object (nth 0 packed))
-             (other-window (nth 1 packed)))
+             (other-window (nth 1 packed))
+             (notebook-buffer (nth 2 packed)))
          (ein:case-equal msg-type
            (("stream")
             (ein:aif (plist-get content :data)
@@ -78,20 +97,25 @@
                                filename)
                       (goto-char (point-min))
                       (forward-line (1- lineno))
+                      (when (and notebook-buffer (not ein:@connect))
+                        (ein:connect-to-notebook notebook-buffer))
                       (ein:log 'info
                         "Jumping to the source of %s...Done" object))))))
            (("pyerr")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
-     (list object other-window)))))
+     (list object other-window notebook-buffer)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   (interactive "P")
+  (require 'ein-connect)
   (let ((kernel (ein:pytools-get-kernel))
         (object (ein:object-at-point)))
     (assert (ein:kernel-ready-p kernel) nil "Kernel is not ready.")
     (assert object nil "Object at point not found.")
-    (ein:pytools-jump-to-source kernel object other-window)))
+    (ein:pytools-jump-to-source kernel object other-window
+                                (when ein:propagate-connect
+                                  (ein:pytools-get-notebook-buffer)))))
 
 (provide 'ein-pytools)
 
