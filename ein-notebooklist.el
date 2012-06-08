@@ -119,9 +119,9 @@
       (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
       (match-string 1))))
 
-(defun ein:notebooklist-open-notebook (nbist notebook-id &optional name)
+(defun ein:notebooklist-open-notebook (nblist notebook-id &optional name)
   (message "Open notebook %s." (or name notebook-id))
-  (ein:notebook-open (ein:$notebooklist-url-or-port nbist) notebook-id))
+  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id))
 
 (defun ein:notebooklist-new-notebook (&optional url-or-port)
   "Ask server to create a new notebook and update the notebook list buffer."
