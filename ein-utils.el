@@ -85,12 +85,20 @@ INITVALUE and DOCSTRING are passed to `defvar'."
   "Adapted from `python-dotty-syntax-table'.")
 
 (defun ein:object-at-point ()
-  "Return dotty.words.at.point, just before previous opening parenthesis."
+  "Return dotty.words.at.point.
+When object is not found at the point, return the object just
+before previous opening parenthesis."
+  ;; For auto popup tooltip (or something like eldoc), probably it is
+  ;; better to return function (any word before "(").  I should write
+  ;; another function or add option to this function when the auto
+  ;; popup tooltip is implemented.
   (save-excursion
-    (unless (looking-at "(")
-      (search-backward "(" (point-at-bol) t))
     (with-syntax-table ein:dotty-syntax-table
-      (thing-at-point 'word))))
+      (ein:aif (thing-at-point 'word)
+          it
+        (unless (looking-at "(")
+          (search-backward "(" (point-at-bol) t))
+        (thing-at-point 'word)))))
 
 
 ;;; URL utils
