@@ -138,7 +138,8 @@
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
    :success (cons #'ein:notebooklist-new-notebook-callback
-                  (list (current-buffer) callback cbargs))))
+                  (list (ein:notebooklist-get-buffer url-or-port)
+                        callback cbargs))))
 
 (defun* ein:notebooklist-new-notebook-callback (packed &key
                                                        data
@@ -166,6 +167,19 @@
      (with-current-buffer (ein:notebook-buffer notebook)
        (ein:notebook-rename-command name)))
    (list name)))
+
+(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
+  "Template of notebook name.
+This value is used from `ein:notebooklist-new-scratch-notebook'."
+  :type '(string :tag "Format string")
+  :group 'ein)
+
+(defun ein:notebooklist-new-scratch-notebook ()
+  "Open a notebook to try random thing."
+  (interactive)
+  (ein:notebooklist-new-notebook-with-name
+   (format-time-string ein:scratch-notebook-name-template (current-time))
+   (car ein:url-or-port)))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
