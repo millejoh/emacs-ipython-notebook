@@ -47,7 +47,8 @@
 (defun ein:pytools-get-kernel ()
   (cond
    (ein:notebook (ein:$notebook-kernel ein:notebook))
-   (ein:@connect (ein:connect-get-kernel))))
+   (ein:@connect (ein:connect-get-kernel))
+   ((eq major-mode 'ein:shared-output-mode) (ein:shared-output-get-kernel))))
 
 (defun ein:pytools-get-notebook ()
   (cond
@@ -55,7 +56,7 @@
    (ein:@connect (ein:connect-get-notebook))))
 
 (defun ein:pytools-get-notebook-buffer ()
-  (ein:notebook-buffer (ein:pytools-get-notebook)))
+  (ein:aand (ein:pytools-get-notebook) (ein:notebook-buffer it)))
 
 (defun ein:pytools-setup-hooks (kernel)
   (push (cons #'ein:pytools-add-sys-path kernel)

@@ -57,6 +57,7 @@
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
                              &optional popup)
   (oset cell :popup popup)
+  (oset cell :kernel kernel)
   (ein:cell-execute-internal cell kernel code :silent nil))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
@@ -95,6 +96,7 @@
         (setq ein:@shared-output
               (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell))
         (ein:cell-enter-last cell))
+      (ein:shared-output-mode)
       ein:@shared-output)))
 
 (defun ein:shared-output-bind-events (events)
@@ -106,10 +108,26 @@
 Create a cell if the buffer has none."
   (oref (ein:shared-output-get-or-create) :cell))
 
+(defun ein:shared-output-get-kernel ()
+  (let ((cell (ein:shared-output-get-cell)))
+    (when (slot-boundp cell :kernel)
+      (oref cell :kernel))))
+
 (defun ein:shared-output-pop-to-buffer ()
   (interactive)
   (ein:shared-output-get-or-create)
   (pop-to-buffer (ein:shared-output-get-buffer)))
+
+
+;;; ein:shared-output-mode
+
+(define-derived-mode ein:shared-output-mode fundamental-mode "ein:so"
+  "Shared output mode."
+  (font-lock-mode))
+
+(let ((map ein:shared-output-mode-map))
+  (define-key map "\M-." 'ein:pytools-jump-to-source-command))
+
 
 (provide 'ein-shared-output)
 
