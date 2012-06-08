@@ -212,28 +212,51 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-url-from-url-and-id (url-or-port notebook-id)
   (ein:url url-or-port "notebooks" notebook-id))
 
-(defun ein:notebook-open (url-or-port notebook-id)
-  "Open notebook."
+(defun ein:notebook-open (url-or-port notebook-id &optional callback cbargs)
+  "Open notebook of NOTEBOOK-ID in the server URL-OR-PORT.
+Opened notebook instance is returned.  Note that notebook might not be
+ready at the time when this function is executed.
+
+After the notebook is opened, CALLBACK is called as
+  \(apply CALLBACK notebook CREATED CBARGS)
+where the second argument CREATED indicates whether the notebook
+is newly created or not."
   (let* ((key (list url-or-port notebook-id))
          (buffer (gethash key ein:notebook-opened-map)))
     (if (buffer-live-p buffer)
         (with-current-buffer buffer
           (pop-to-buffer (current-buffer))
+          (when callback
+            (apply callback ein:notebook nil cbargs))
           ein:notebook)
-      (ein:notebook-request-open url-or-port notebook-id))))
+      (ein:notebook-request-open url-or-port notebook-id callback cbargs))))
 
-(defun ein:notebook-request-open (url-or-port notebook-id)
+(defun ein:notebook-request-open (url-or-port notebook-id
+                                              &optional callback cbargs)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
 Return `ein:$notebook' instance.  Notebook may not be ready at
-the time of execution."
+the time of execution.
+
+CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
+argument `t' indicates that the notebook is newly opened.
+See `ein:notebook-open' for more information."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
     (ein:query-ajax
      url
      :parser #'ein:json-read
-     :success (cons #'ein:notebook-request-open-callback notebook))
+     :success (cons #'ein:notebook-request-open-callback-with-callback
+                    (list notebook callback cbargs)))
     notebook))
+
+(defun ein:notebook-request-open-callback-with-callback (packed &rest args)
+  (let ((notebook (nth 0 packed))
+        (callback (nth 1 packed))
+        (cbargs (nth 2 packed)))
+    (apply #'ein:notebook-request-open-callback notebook args)
+    (when callback
+      (apply callback t cbargs))))
 
 (defun* ein:notebook-request-open-callback (notebook &key status data
                                                      &allow-other-keys)
