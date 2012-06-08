@@ -1057,6 +1057,11 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
+(defun ein:notebook-force-kill-buffers (buffers)
+  "Kill notebook BUFFERS without confirmation."
+  (let ((ein:notebook-kill-buffer-ask nil))
+    (mapc #'kill-buffer buffers)))
+
 (defun ein:notebook-opened-buffers ()
   "Return list of opened buffers.
 This function also cleans up closed buffers stores in
@@ -1081,8 +1086,7 @@ Called via `kill-emacs-query-functions'."
                       (length unsaved)))))
         ;; kill all unsaved buffers forcefully
         (when answer
-          (let ((ein:notebook-kill-buffer-ask nil))
-            (mapc #'kill-buffer unsaved)))
+          (ein:notebook-force-kill-buffers unsaved))
         answer))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
@@ -1107,7 +1111,7 @@ Called via `kill-emacs-query-functions'."
                              "Really kill all of them?")
                      (length buffers)))
             (progn (ein:log 'info "Killing all notebook buffers...")
-                   (mapc #'kill-buffer buffers)
+                   (ein:notebook-force-kill-buffers buffers)
                    (ein:log 'info "Killing all notebook buffers... Done!"))
           (ein:log 'info "Canceled to kill all notebooks."))
       (ein:log 'info "No opened notebooks."))))
