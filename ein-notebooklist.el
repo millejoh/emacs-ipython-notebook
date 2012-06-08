@@ -62,21 +62,24 @@
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
+(defun ein:notebooklist-ask-url-or-port ()
+  (let* ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
+                                   ein:url-or-port))
+         (url-or-port
+          (completing-read "URL or port number (hit TAB to complete): "
+                           url-or-port-list
+                           nil nil nil nil
+                           (car url-or-port-list))))
+    (if (string-match "^[0-9]+$" url-or-port)
+        (string-to-number url-or-port)
+      url-or-port)))
+
 ;;;###autoload
 (defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
-  (interactive
-   (list (let ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
-                                         ein:url-or-port)))
-           (completing-read "URL or port number (hit TAB to complete): "
-                            url-or-port-list
-                            nil nil nil nil
-                            (car url-or-port-list)))))
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless url-or-port (setq url-or-port (or (car ein:url-or-port) 8888)))
   (ein:subpackages-load)
-  (when (and (stringp url-or-port)
-             (string-match "^[0-9]+$" url-or-port))
-    (setq url-or-port (string-to-number url-or-port)))
   (let ((success
          (if no-popup
              #'ein:notebooklist-url-retrieve-callback
@@ -131,6 +134,7 @@
 
 (defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and update the notebook list buffer."
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
   (message "Creating a new notebook...")
   (unless url-or-port
     (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
