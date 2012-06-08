@@ -37,6 +37,11 @@
 (require 'ein-shared-output)
 
 
+(defcustom ein:connect-run-options "-n"
+  "Default %run option for `ein:connect-run-buffer'."
+  :type '(string :tag "Option" "-n -i -t -d")
+  :group 'ein)
+
 (ein:deflocal ein:@connect nil
   "Buffer local variable to store an instance of `ein:$connect'")
 
@@ -77,6 +82,31 @@
   (interactive)
   (ein:connect-eval-string-internal (buffer-string))
   (ein:log 'info "Whole buffer is sent to the kernel."))
+
+(defun ein:connect-run-buffer (&optional ask-option)
+  "Run buffer using %run.  Ask for option if the prefix (C-u) is given.
+Variable `ein:connect-run-options' sets the default option."
+  (interactive "P")
+  ;; FIXME: this should be more intelligent than just `buffer-file-name'
+  ;;        to support connecting IPython over ssh.
+  (ein:aif (buffer-file-name)
+      (let* ((option (if ask-option
+                         (read-from-minibuffer "Option for %run: "
+                                               ein:connect-run-options)
+                       ein:connect-run-options))
+             (cmd (format "%%run %s %s" option it)))
+        (save-buffer)
+        (ein:connect-eval-string-internal cmd)
+        (ein:log 'info "Command sent to the kernel: %s" cmd))
+    (error (concat "This buffer has no associated file.  "
+                   "Use `ein:connect-eval-buffer' instead."))))
+
+(defun ein:connect-run-or-eval-buffer (&optional eval)
+  "Run buffer with %run or eval whole buffer if the prefix (C-u) is given."
+  (interactive "P")
+  (if eval
+      (ein:connect-eval-buffer)
+    (ein:connect-run-buffer)))
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
@@ -123,7 +153,7 @@
 
 (defvar ein:connect-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-c" 'ein:connect-eval-buffer)
+    (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
     (define-key map "\C-c\C-r" 'ein:connect-eval-region)
     (define-key map (kbd "C-:") 'ein:connect-eval-string)
     (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
