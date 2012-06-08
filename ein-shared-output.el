@@ -96,6 +96,7 @@
         (setq ein:@shared-output
               (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell))
         (ein:cell-enter-last cell))
+      (setq buffer-read-only t)
       (ein:shared-output-mode)
       ein:@shared-output)))
 
