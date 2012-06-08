@@ -126,7 +126,8 @@
 (defun ein:notebooklist-new-notebook (&optional url-or-port)
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
-  (unless (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
+  (unless url-or-port
+    (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
   (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
