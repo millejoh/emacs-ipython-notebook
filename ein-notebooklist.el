@@ -103,6 +103,7 @@
     (add-to-list 'ein:notebooklist-list ein:notebooklist)
     (ein:notebooklist-render)
     (goto-char (point-min))
+    (message "Opened notebook list at %s" url-or-port)
     (current-buffer)))
 
 (defun ein:notebooklist-reload ()
@@ -293,6 +294,7 @@ Notebook list data is passed via the buffer local variable
 (setq
  ein:notebooklist-mode-map
  (let ((map (copy-keymap widget-keymap)))
+   (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
    (define-key map "g" 'ein:notebooklist-reload)
    (define-key map "p" 'ein:notebooklist-prev-item)
    (define-key map "n" 'ein:notebooklist-next-item)
