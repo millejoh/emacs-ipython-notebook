@@ -64,17 +64,18 @@
                                     msg-type content)
   (ein:log 'info "Got output '%s' in the shared buffer." msg-type)
   (when (oref cell :popup)
-    (pop-to-buffer (ein:shared-output-get-buffer)))
+    (pop-to-buffer (ein:shared-output-create-buffer)))
   (call-next-method))
 
 
 ;;; Main
 
-(defun ein:shared-output-get-buffer ()
-  "Get the shared output buffer."
+(defun ein:shared-output-create-buffer ()
+  "Get or create the shared output buffer."
   (get-buffer-create ein:shared-output-buffer-name))
 
 (defun ein:shared-output-buffer ()
+  "Get the buffer associated with `ein:@shared-output'."
   (ewoc-buffer (oref ein:@shared-output :ewoc)))
 
 (defun ein:shared-output-healthy-p ()
@@ -84,7 +85,7 @@
 (defun ein:shared-output-get-or-create ()
   (if (ein:shared-output-healthy-p)
       ein:@shared-output
-    (with-current-buffer (ein:shared-output-get-buffer)
+    (with-current-buffer (ein:shared-output-create-buffer)
       ;; FIXME: This is a duplication of `ein:notebook-from-json'.
       ;;        Must be merged.
       (let* ((inhibit-read-only t)
@@ -124,7 +125,7 @@ Create a cell if the buffer has none."
 (defun ein:shared-output-pop-to-buffer ()
   (interactive)
   (ein:shared-output-get-or-create)
-  (pop-to-buffer (ein:shared-output-get-buffer)))
+  (pop-to-buffer (ein:shared-output-create-buffer)))
 
 
 ;;; ein:shared-output-mode
