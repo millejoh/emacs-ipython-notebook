@@ -48,7 +48,7 @@
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
 
-(defun ein:pytools-jump-to-source (kernel object)
+(defun ein:pytools-jump-to-source (kernel object other-window)
   (ein:log 'info "Jumping to the source of %s..." object)
   (ein:kernel-execute
    kernel
@@ -56,37 +56,42 @@
    (list
     :output
     (cons
-     (lambda (object msg-type content)
-       (ein:case-equal msg-type
-         (("stream")
-          (ein:aif (plist-get content :data)
-              (if (or (string-match "^WARNING: .*" it)
-                      (string-match
-                       "^Traceback (most recent call last):\n" it)
-                      (string-match "^.*<ipython-input-[^>\n]+>\n" it))
-                  (ein:log 'info
-                    "Jumping to the source of %s...Not found" object)
-                (let* ((filename-lineno (split-string it "\n"))
-                       (filename (car filename-lineno))
-                       (lineno (string-to-number (cadr filename-lineno))))
-                  (unless (equal filename "")
-                    (find-file-other-window filename)
-                    (goto-char (point-min))
-                    (forward-line (1- lineno))
+     (lambda (packed msg-type content)
+       (let ((object (nth 0 packed))
+             (other-window (nth 1 packed)))
+         (ein:case-equal msg-type
+           (("stream")
+            (ein:aif (plist-get content :data)
+                (if (or (string-match "^WARNING: .*" it)
+                        (string-match
+                         "^Traceback (most recent call last):\n" it)
+                        (string-match "^.*<ipython-input-[^>\n]+>\n" it))
                     (ein:log 'info
-                      "Jumping to the source of %s...Done" object))))))
-         (("pyerr")
-          (ein:log 'info
-            "Jumping to the source of %s...Not found" object))))
-     object))))
+                      "Jumping to the source of %s...Not found" object)
+                  (let* ((filename-lineno (split-string it "\n"))
+                         (filename (car filename-lineno))
+                         (lineno (string-to-number (cadr filename-lineno))))
+                    (unless (equal filename "")
+                      (funcall (if other-window
+                                   #'find-file-other-window
+                                 #'find-file)
+                               filename)
+                      (goto-char (point-min))
+                      (forward-line (1- lineno))
+                      (ein:log 'info
+                        "Jumping to the source of %s...Done" object))))))
+           (("pyerr")
+            (ein:log 'info
+              "Jumping to the source of %s...Not found" object)))))
+     (list object other-window)))))
 
-(defun ein:pytools-jump-to-source-command ()
-  (interactive)
+(defun ein:pytools-jump-to-source-command (&optional other-window)
+  (interactive "P")
   (let ((kernel (ein:pytools-get-kernel))
         (object (ein:object-at-point)))
     (assert (ein:kernel-ready-p kernel) nil "Kernel is not ready.")
     (assert object nil "Object at point not found.")
-    (ein:pytools-jump-to-source kernel object)))
+    (ein:pytools-jump-to-source kernel object other-window)))
 
 (provide 'ein-pytools)
 
