@@ -119,32 +119,53 @@
       (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
       (match-string 1))))
 
-(defun ein:notebooklist-open-notebook (nblist notebook-id &optional name)
+(defun ein:notebooklist-open-notebook (nblist notebook-id &optional name
+                                              callback cbargs)
   (message "Open notebook %s." (or name notebook-id))
-  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id))
+  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
+                     callback cbargs))
 
-(defun ein:notebooklist-new-notebook (&optional url-or-port)
+(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and update the notebook list buffer."
   (message "Creating a new notebook...")
   (unless url-or-port
     (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
+  (assert url-or-port nil
+          (concat "URL-OR-PORT is not given and the current buffer "
+                  "is not the notebook list buffer."))
   (ein:query-ajax
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
-   :success (cons #'ein:notebooklist-new-notebook-callback (current-buffer))))
+   :success (cons #'ein:notebooklist-new-notebook-callback
+                  (list (current-buffer) callback cbargs))))
 
-(defun* ein:notebooklist-new-notebook-callback (buffer &key
+(defun* ein:notebooklist-new-notebook-callback (packed &key
                                                        data
                                                        &allow-other-keys)
-  (let ((notebook-id data))
+  (let ((notebook-id data)
+        (buffer (nth 0 packed))
+        (callback (nth 1 packed))
+        (cbargs (nth 2 packed)))
     (message "Creating a new notebook... Done.")
     (with-current-buffer buffer
       (if notebook-id
-          (ein:notebooklist-open-notebook ein:notebooklist notebook-id)
+          (ein:notebooklist-open-notebook ein:notebooklist notebook-id nil
+                                          callback cbargs)
         (message (concat "Oops. EIN failed to open new notebook. "
                          "Please find it in the notebook list."))
         (ein:notebooklist-reload)))))
+
+(defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
+  "Open new notebook and rename the notebook."
+  (interactive "sNotebook name: ")
+  (ein:notebooklist-new-notebook
+   url-or-port
+   (lambda (notebook created name)
+     (assert created)
+     (with-current-buffer (ein:notebook-buffer notebook)
+       (ein:notebook-rename-command name)))
+   (list name)))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
