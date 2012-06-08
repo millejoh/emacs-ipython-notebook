@@ -74,8 +74,15 @@
   "Get the shared output buffer."
   (get-buffer-create ein:shared-output-buffer-name))
 
+(defun ein:shared-output-buffer ()
+  (ewoc-buffer (oref ein:@shared-output :ewoc)))
+
+(defun ein:shared-output-healthy-p ()
+  (and (ein:$shared-output-p ein:@shared-output)
+       (buffer-live-p (ein:shared-output-buffer))))
+
 (defun ein:shared-output-get-or-create ()
-  (if ein:@shared-output
+  (if (ein:shared-output-healthy-p)
       ein:@shared-output
     (with-current-buffer (ein:shared-output-get-buffer)
       ;; FIXME: This is a duplication of `ein:notebook-from-json'.
