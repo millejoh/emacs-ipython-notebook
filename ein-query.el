@@ -57,6 +57,15 @@
 
 ;;; Functions
 
+(defun* ein:query-default-error-callback (url &key symbol-status
+                                              &allow-other-keys)
+  (ein:log 'error
+    "Error (%s) while connecting to %s.  Please retry."
+    symbol-status url))
+
+(defun ein:query-get-default-error-callback (url)
+  (cons #'ein:query-default-error-callback url))
+
 (defun* ein:query-ajax (url &rest settings
                             &key
                             (cache t)
@@ -121,6 +130,9 @@ is killed immediately after the execution of this function.
   (ein:log 'debug "EIN:QUERY-AJAX")
   (unless cache
     (setq url (ein:url-no-cache url)))
+  (unless error
+    (setq error (ein:query-get-default-error-callback url))
+    (plist-put settings :error error))
   (let* ((url-request-extra-headers headers)
          (url-request-method type)
          (url-request-data data)
