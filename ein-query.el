@@ -31,6 +31,9 @@
 (require 'ein-utils)
 (require 'ein-log)
 
+
+;;; Utils
+
 (defun ein:safe-funcall-packed (packed &rest args)
   (when packed
     (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
@@ -40,6 +43,8 @@
   (declare (indent 1) (debug t))
   `(when (buffer-live-p ,buffer) (with-current-buffer ,buffer ,@body)))
 
+
+;;; Variables
 
 (defcustom ein:query-timeout 5000
   "Default query timeout."
@@ -48,6 +53,9 @@
   :group 'ein)
 
 (ein:deflocal ein:query-ajax-timer nil)
+
+
+;;; Functions
 
 (defun* ein:query-ajax (url &rest settings
                             &key
