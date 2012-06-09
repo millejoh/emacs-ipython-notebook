@@ -1211,22 +1211,21 @@ https://github.com/fgallina/python.el"
   (interactive)
   (unless ein:notebook (error "Not in notebook buffer!"))
   (if (fboundp 'python-shell-switch-to-shell)
-      (progn
-        (let* ((dir (ein:notebook-console-security-dir-get ein:notebook))
-               (kid (ein:$kernel-kernel-id
-                     (ein:$notebook-kernel ein:notebook)))
-               (ipy (ein:notebook-console-executable-get ein:notebook))
-               (args (ein:notebook-console-args-get ein:notebook))
-               (python-shell-setup-codes nil)
-               (python-shell-interpreter
-                (format "python %s console --existing %skernel-%s.json %s"
-                        ipy dir kid args))
-               ;; python.el makes dedicated process when
-               ;; `buffer-file-name' has some value.
-               (buffer-file-name (buffer-name)))
-          ;; Automatically answer y to the question "Make dedicated process?"
-          (flet ((y-or-n-p (prompt) t))
-            (funcall 'python-shell-switch-to-shell))))
+      (let* ((dir (ein:notebook-console-security-dir-get ein:notebook))
+             (kid (ein:$kernel-kernel-id
+                   (ein:$notebook-kernel ein:notebook)))
+             (ipy (ein:notebook-console-executable-get ein:notebook))
+             (args (ein:notebook-console-args-get ein:notebook))
+             (python-shell-setup-codes nil)
+             (python-shell-interpreter
+              (format "python %s console --existing %skernel-%s.json %s"
+                      ipy dir kid args))
+             ;; python.el makes dedicated process when
+             ;; `buffer-file-name' has some value.
+             (buffer-file-name (buffer-name)))
+        ;; Automatically answer y to the question "Make dedicated process?"
+        (flet ((y-or-n-p (prompt) t))
+          (funcall 'python-shell-switch-to-shell)))
     (ein:log 'warn "python.el is not loaded!")))
 
 (provide 'ein-notebook)
