@@ -94,9 +94,9 @@
                                   it)
                     (ein:log 'info
                       "Jumping to the source of %s...Not found" object)
-                  (let* ((filename-lineno (split-string it "\n"))
-                         (filename (car filename-lineno))
-                         (lineno (string-to-number (cadr filename-lineno))))
+                  (destructuring-bind (filename &optional lineno &rest ignore)
+                      (split-string it "\n")
+                    (setq lineno (string-to-number lineno))
                     (funcall (if other-window
                                  #'find-file-other-window
                                #'find-file)
