@@ -132,7 +132,9 @@
   (ein:pytools-eval-string-internal "%whos" t))
 
 (defun ein:pytools-hierarchy (&optional ask)
-  "Draw inheritance graph of the class at point."
+  "Draw inheritance graph of the class at point.
+hierarchymagic extension is needed to be installed.
+see: https://github.com/tkf/ipython-hierarchymagic"
   (interactive "P")
   (let ((object (ein:object-at-point)))
     (when ask
