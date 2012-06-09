@@ -1220,8 +1220,13 @@ https://github.com/fgallina/python.el"
                (python-shell-setup-codes nil)
                (python-shell-interpreter
                 (format "python %s console --existing %skernel-%s.json %s"
-                        ipy dir kid args)))
-          (funcall 'python-shell-switch-to-shell)))
+                        ipy dir kid args))
+               ;; python.el makes dedicated process when
+               ;; `buffer-file-name' has some value.
+               (buffer-file-name (buffer-name)))
+          ;; Automatically answer y to the question "Make dedicated process?"
+          (flet ((y-or-n-p (prompt) t))
+            (funcall 'python-shell-switch-to-shell))))
     (ein:log 'warn "python.el is not loaded!")))
 
 (provide 'ein-notebook)
