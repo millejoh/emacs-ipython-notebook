@@ -1147,6 +1147,24 @@ function : Called with an argument URL-OR-PORT (integer or string).
                               url-or-port))))
   :group 'ein)
 
+(defcustom ein:notebook-console-executable (executable-find "ipython")
+  "IPython executable used for console.
+
+Example: \"/user/bin/ipython\"
+Types same as `ein:notebook-console-security-dir' are accepted."
+  :type '(choice
+          (string :tag "IPython executable" "/user/bin/ipython")
+          (alist :tag "IPython executable mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (string :tag "IPython executable"
+                                     "/user/bin/ipython"))
+          (function :tag "IPython executable getter"
+                    (lambda (url-or-port) (executable-find "ipython"))))
+  :group 'ein)
+
 (defcustom ein:notebook-console-args "--profile nbserver"
   "Additional argument when using console.
 
@@ -1174,6 +1192,10 @@ Types same as `ein:notebook-console-security-dir' are accepted."
         dir
     (file-name-as-directory (expand-file-name dir)))))
 
+(defun ein:notebook-console-executable-get (notebook)
+  (ein:choose-setting 'ein:notebook-console-executable
+                      (ein:$notebook-url-or-port notebook)))
+
 (defun ein:notebook-console-args-get (notebook)
   (ein:choose-setting 'ein:notebook-console-args
                       (ein:$notebook-url-or-port notebook)))
@@ -1193,7 +1215,7 @@ https://github.com/fgallina/python.el"
         (let* ((dir (ein:notebook-console-security-dir-get ein:notebook))
                (kid (ein:$kernel-kernel-id
                      (ein:$notebook-kernel ein:notebook)))
-               (ipy (executable-find "ipython"))
+               (ipy (ein:notebook-console-executable-get ein:notebook))
                (args (ein:notebook-console-args-get ein:notebook))
                (python-shell-setup-codes nil)
                (python-shell-interpreter
