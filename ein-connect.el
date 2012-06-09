@@ -60,9 +60,9 @@ of OPTION:
 
 ;;; Variable/class
 
-(defcustom ein:connect-run-options "-n"
-  "Default %run option for `ein:connect-run-buffer'."
-  :type '(string :tag "Option" "-n -i -t -d")
+(defcustom ein:connect-run-command "%run -n"
+  "%run command used for `ein:connect-run-buffer'."
+  :type '(string :tag "Command" "%run -n -i -t -d")
   :group 'ein)
 
 (defcustom ein:connect-save-before-run 'yes
@@ -116,18 +116,18 @@ of OPTION:
   (ein:connect-eval-string-internal (buffer-string))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
-(defun ein:connect-run-buffer (&optional ask-option)
+(defun ein:connect-run-buffer (&optional ask-command)
   "Run buffer using %run.  Ask for option if the prefix (C-u) is given.
 Variable `ein:connect-run-options' sets the default option."
   (interactive "P")
   ;; FIXME: this should be more intelligent than just `buffer-file-name'
   ;;        to support connecting IPython over ssh.
   (ein:aif (buffer-file-name)
-      (let* ((option (if ask-option
-                         (read-from-minibuffer "Option for %run: "
-                                               ein:connect-run-options)
-                       ein:connect-run-options))
-             (cmd (format "%%run %s %s" option it)))
+      (let* ((command (if ask-command
+                          (read-from-minibuffer "Command: "
+                                                ein:connect-run-command)
+                        ein:connect-run-command))
+             (cmd (format "%s %s" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
               (ein:connect-eval-string-internal cmd)
