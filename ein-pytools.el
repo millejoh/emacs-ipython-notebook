@@ -86,23 +86,23 @@
                 (if (or (string-match "^WARNING: .*" it)
                         (string-match
                          "^Traceback (most recent call last):\n" it)
-                        (string-match "^.*<ipython-input-[^>\n]+>\n" it))
+                        (string-match "^.*<ipython-input-[^>\n]+>\n" it)
+                        (string-match "^\n" it))
                     (ein:log 'info
                       "Jumping to the source of %s...Not found" object)
                   (let* ((filename-lineno (split-string it "\n"))
                          (filename (car filename-lineno))
                          (lineno (string-to-number (cadr filename-lineno))))
-                    (unless (equal filename "")
-                      (funcall (if other-window
-                                   #'find-file-other-window
-                                 #'find-file)
-                               filename)
-                      (goto-char (point-min))
-                      (forward-line (1- lineno))
-                      (when (and notebook-buffer (not ein:@connect))
-                        (ein:connect-to-notebook notebook-buffer))
-                      (ein:log 'info
-                        "Jumping to the source of %s...Done" object))))))
+                    (funcall (if other-window
+                                 #'find-file-other-window
+                               #'find-file)
+                             filename)
+                    (goto-char (point-min))
+                    (forward-line (1- lineno))
+                    (when (and notebook-buffer (not ein:@connect))
+                      (ein:connect-to-notebook notebook-buffer))
+                    (ein:log 'info
+                      "Jumping to the source of %s...Done" object)))))
            (("pyerr")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
