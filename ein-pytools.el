@@ -67,6 +67,13 @@
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
 
+(defvar ein:pytools-jump-to-source-not-found-regexp
+  (ein:join-str "\\|"
+                (list "^WARNING: .*"
+                      "^Traceback (most recent call last):\n"
+                      "^.*<ipython-input-[^>\n]+>\n"
+                      "^\n")))
+
 (defun ein:pytools-jump-to-source (kernel object &optional
                                           other-window notebook-buffer)
   (ein:log 'info "Jumping to the source of %s..." object)
@@ -83,11 +90,8 @@
          (ein:case-equal msg-type
            (("stream")
             (ein:aif (plist-get content :data)
-                (if (or (string-match "^WARNING: .*" it)
-                        (string-match
-                         "^Traceback (most recent call last):\n" it)
-                        (string-match "^.*<ipython-input-[^>\n]+>\n" it)
-                        (string-match "^\n" it))
+                (if (string-match ein:pytools-jump-to-source-not-found-regexp
+                                  it)
                     (ein:log 'info
                       "Jumping to the source of %s...Not found" object)
                   (let* ((filename-lineno (split-string it "\n"))
