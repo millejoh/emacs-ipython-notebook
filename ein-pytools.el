@@ -38,6 +38,13 @@
 (declare-function ein:connect-get-notebook "ein-connect")
 (declare-function ein:connect-to-notebook "ein-connect")
 
+(defun ein:goto-file (filename lineno &optional other-window)
+  "Jump to file FILEAME at line LINENO.
+If OTHER-WINDOW is non-`nil', open the file in the other window."
+  (funcall (if other-window #'find-file-other-window #'find-file) filename)
+  (goto-char (point-min))
+  (forward-line (1- lineno)))
+
 (defcustom ein:propagate-connect t
   "Set to `t' to connect to the notebook after jumping to a buffer."
   :type '(choice (const :tag "Yes" t)
@@ -97,12 +104,7 @@
                   (destructuring-bind (filename &optional lineno &rest ignore)
                       (split-string it "\n")
                     (setq lineno (string-to-number lineno))
-                    (funcall (if other-window
-                                 #'find-file-other-window
-                               #'find-file)
-                             filename)
-                    (goto-char (point-min))
-                    (forward-line (1- lineno))
+                    (ein:goto-file filename lineno other-window)
                     (when (and notebook-buffer (not ein:@connect))
                       (ein:connect-to-notebook notebook-buffer))
                     (ein:log 'info
