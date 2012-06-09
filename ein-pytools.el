@@ -131,6 +131,16 @@
   (interactive)
   (ein:pytools-eval-string-internal "%whos" t))
 
+(defun ein:pytools-hierarchy (&optional ask)
+  "Draw inheritance graph of the class at point."
+  (interactive "P")
+  (let ((object (ein:object-at-point)))
+    (when ask
+      (setq object (read-from-minibuffer "class or object: " object)))
+    (assert (and object (not (equal object "")))
+            nil "Object at point not found.")
+    (ein:pytools-eval-string-internal (format "%%hierarchy %s" object) t)))
+
 (provide 'ein-pytools)
 
 ;;; ein-pytools.el ends here
