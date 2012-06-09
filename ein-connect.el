@@ -62,8 +62,21 @@ of OPTION:
 
 (defcustom ein:connect-run-command "%run -n"
   "%run command used for `ein:connect-run-buffer'."
-  :type '(string :tag "Command" "%run -n -i -t -d")
+  :type '(choice
+          (string :tag "command" "%run")
+          (alist :tag "command mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (string :tag "command" "%run"))
+          (function :tag "command getter"
+                    (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
+
+(defun ein:connect-run-command-get ()
+  (ein:choose-setting 'ein:connect-run-command
+                      (ein:$notebook-url-or-port (ein:connect-get-notebook))))
 
 (defcustom ein:connect-save-before-run 'yes
   "Whether the buffer should be saved before `ein:connect-run-buffer'."
@@ -123,10 +136,10 @@ Variable `ein:connect-run-options' sets the default option."
   ;; FIXME: this should be more intelligent than just `buffer-file-name'
   ;;        to support connecting IPython over ssh.
   (ein:aif (buffer-file-name)
-      (let* ((command (if ask-command
-                          (read-from-minibuffer "Command: "
-                                                ein:connect-run-command)
-                        ein:connect-run-command))
+      (let* ((default-command (ein:connect-run-command-get))
+             (command (if ask-command
+                          (read-from-minibuffer "Command: " default-command)
+                        default-command))
              (cmd (format "%s %s" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
