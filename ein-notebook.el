@@ -1010,6 +1010,7 @@ Examples:
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
     (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
     (define-key map "\M-." 'ein:pytools-jump-to-source-command)
+    (define-key map "\M-," 'ein:pytools-jump-back-command)
     map))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"

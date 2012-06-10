@@ -211,6 +211,7 @@ Variable `ein:connect-run-options' sets the default option."
     (define-key map "\C-c\C-i" 'ein:connect-complete-command)
     (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
     (define-key map "\M-." 'ein:pytools-jump-to-source-command)
+    (define-key map "\M-," 'ein:pytools-jump-back-command)
     map))
 
 (define-minor-mode ein:connect-mode

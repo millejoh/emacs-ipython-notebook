@@ -45,6 +45,11 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   (goto-char (point-min))
   (forward-line (1- lineno)))
 
+(defun ein:goto-marker (marker &optional other-window)
+  (funcall (if other-window #'pop-to-buffer #'switch-to-buffer)
+           (marker-buffer marker))
+  (goto-char marker))
+
 (defcustom ein:propagate-connect t
   "Set to `t' to connect to the notebook after jumping to a buffer."
   :type '(choice (const :tag "Yes" t)
@@ -74,6 +79,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
 
+(defvar ein:pytools-jump-stack nil)
+
 (defvar ein:pytools-jump-to-source-not-found-regexp
   (ein:join-str "\\|"
                 (list "^WARNING: .*"
@@ -84,6 +91,11 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 (defun ein:pytools-jump-to-source (kernel object &optional
                                           other-window notebook-buffer)
   (ein:log 'info "Jumping to the source of %s..." object)
+  (let ((last (car ein:pytools-jump-stack)))
+    (if (ein:aand last (eql (current-buffer) (marker-buffer it)))
+        (unless (equal (point) (marker-position last))
+          (push (point-marker) ein:pytools-jump-stack))
+      (setq ein:pytools-jump-stack (list (point-marker)))))
   (ein:kernel-execute
    kernel
    (format "__import__('ein').find_source('%s')" object)
@@ -107,6 +119,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                     (ein:goto-file filename lineno other-window)
                     (when (and notebook-buffer (not ein:@connect))
                       (ein:connect-to-notebook notebook-buffer))
+                    (push (point-marker) ein:pytools-jump-stack)
                     (ein:log 'info
                       "Jumping to the source of %s...Done" object)))))
            (("pyerr")
@@ -124,6 +137,15 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect
                                   (ein:pytools-get-notebook-buffer)))))
+
+(defun ein:pytools-jump-back-command (&optional other-window)
+  (interactive "P")
+  (when (ein:aand (car ein:pytools-jump-stack)
+                  (equal (point) (marker-position it)))
+    (setq ein:pytools-jump-stack (cdr ein:pytools-jump-stack)))
+  (ein:aif (car ein:pytools-jump-stack)
+      (ein:goto-marker it other-window)
+    (ein:log 'info "Nothing on stack.")))
 
 (defun ein:pytools-eval-string-internal (code &optional popup)
   (require 'ein-connect)
