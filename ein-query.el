@@ -146,6 +146,7 @@ is killed immediately after the execution of this function.
                      (/ timeout 1000.0) nil
                      #'ein:query-ajax-timeout-callback
                      (cons buffer settings)))))
+    (set-process-query-on-exit-flag (get-buffer-process buffer) nil)
     buffer))
 
 (defun* ein:query-ajax-callback (status &key
