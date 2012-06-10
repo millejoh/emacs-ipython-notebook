@@ -830,6 +830,20 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                          (plist-get content :stderr)
                          (plist-get content :other)))
 
+
+;;; Misc.
+
+(defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
+  "Return `t' if given cell has image output, `nil' otherwise."
+  (loop for out in (oref cell :outputs)
+        when (or (plist-member out :svg)
+                 (plist-member out :png)
+                 (plist-member out :jpeg))
+        return t))
+
+(defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
+  nil)
+
 (provide 'ein-cell)
 
 ;;; ein-cell.el ends here

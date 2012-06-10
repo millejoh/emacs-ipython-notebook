@@ -59,9 +59,11 @@
 
 `no'     (symbol) : Save output. This is the default.
 `yes'    (symbol) : Always discard output.
-a function        : This function takes no value and executed on
-                    the notebook buffer.  Return `t' to discard
-                    all output and return `nil' to save.
+a function        : This function takes two arguments, notebook
+                    and cell.  Return `t' to discard output and
+                    return `nil' to save.
+                    If you don't want to save image output, use
+                    `ein:notebook-cell-has-image-output-p'.
 
 Note that using function needs EIN lisp API, which is not defined
 yet.  So be careful when using EIN functions.  They may change."
@@ -73,13 +75,15 @@ yet.  So be careful when using EIN functions.  They may change."
                  )
   :group 'ein)
 
-(defun ein:notebook-discard-output-p (notebook)
+(defun ein:notebook-cell-has-image-output-p (-ignore- cell)
+  (ein:cell-has-image-ouput-p cell))
+
+(defun ein:notebook-discard-output-p (notebook cell)
   "Return non-`nil' if the output must be discarded, otherwise save."
   (case ein:notebook-discard-output-on-save
     (no nil)
     (yes t)
-    (t (with-current-buffer (ein:notebook-buffer notebook)
-         (funcall ein:notebook-discard-output-on-save)))))
+    (t (funcall ein:notebook-discard-output-on-save notebook cell))))
 
 
 ;;; Class and variable
@@ -864,9 +868,10 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (let* ((discard (ein:notebook-discard-output-p notebook))
-         (cells (mapcar (lambda (c) (ein:cell-to-json c discard))
-                        (ein:notebook-get-cells notebook))))
+  (let ((cells (mapcar (lambda (c)
+                         (ein:cell-to-json
+                          c (ein:notebook-discard-output-p notebook c)))
+                       (ein:notebook-get-cells notebook))))
     `((worksheets . [((cells . ,(apply #'vector cells)))])
       (metadata . ,(ein:$notebook-metadata notebook)))))
 
