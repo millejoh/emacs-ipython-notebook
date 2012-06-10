@@ -139,6 +139,7 @@ Keybinds - Notebook
    C-x C-w         ein:notebook-rename-command
 
    M-RET           ein:notebook-execute-current-cell-and-goto-next
+   M-,             ein:pytools-jump-back-command
    M-.             ein:pytools-jump-to-source-command
 
    C-c C-a         ein:notebook-insert-cell-above-command
@@ -191,9 +192,10 @@ commands are available.
    ESC             Prefix Command
    C-:             ein:connect-eval-string
 
+   M-,             ein:pytools-jump-back-command
    M-.             ein:pytools-jump-to-source-command
 
-   C-c C-c         ein:connect-eval-buffer
+   C-c C-c         ein:connect-run-or-eval-buffer
    C-c C-f         ein:connect-request-tool-tip-or-help-command
    C-c TAB         ein:connect-complete-command
    C-c C-r         ein:connect-eval-region
