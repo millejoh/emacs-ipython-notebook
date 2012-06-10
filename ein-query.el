@@ -172,7 +172,8 @@ is killed immediately after the execution of this function.
          (data (if (and parser (not status-error))
                    (unwind-protect
                        (funcall parser)
-                     (kill-buffer buffer)))))
+                     (kill-buffer buffer))
+                 (kill-buffer buffer))))
     (ein:log 'debug "data = %s" data)
 
     (ein:log 'debug "Executing success/error callback.")
