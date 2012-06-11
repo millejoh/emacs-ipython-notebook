@@ -128,6 +128,8 @@
 (define-derived-mode ein:traceback-mode fundamental-mode "ein:tb"
   (font-lock-mode))
 
+(add-hook 'ein:traceback-mode-hook 'ein:truncate-lines-on)
+
 (let ((map ein:traceback-mode-map))
   (define-key map (kbd "RET") 'ein:tb-jump-to-source-at-point-command)
   (define-key map "p" 'ein:tb-prev-item)
