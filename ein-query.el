@@ -47,7 +47,7 @@
 ;;; Variables
 
 (defcustom ein:query-timeout 5000
-  "Default query timeout."
+  "Default query timeout for HTTP access in millisecond."
   :type '(choice (integer :tag "Timeout [ms]" 5000)
                  (const :tag "No timeout" nil))
   :group 'ein)

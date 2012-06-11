@@ -17,7 +17,7 @@ Highlighted features:
 * IPython kernel can be "connected" to any buffers.  This enables you
   to evaluate buffer/region using same kernel as notebook.  Notebook
   goodies such as tooltip help, help browser and code completion are
-  available in these buffers.
+  available in these buffers. [#]_
 * Jump to definition (go to the definition by hitting ``M-.`` over an
   object).
 
@@ -26,11 +26,13 @@ Other notebook features:
 * Inline images
 * Auto/manual-completion
 * Popup (tooltip) help
-* Syntax highlighting in each cell types (Python/Markdown)
+* Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
 
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
+.. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
+
 
 Keybinds
 --------
@@ -52,6 +54,8 @@ Notebook
 The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
+
+.. el:function:: ein:notebook-delete-cell-command
 
 Connected buffer
 ^^^^^^^^^^^^^^^^

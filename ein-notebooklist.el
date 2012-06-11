@@ -133,7 +133,7 @@
                      callback cbargs))
 
 (defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
-  "Ask server to create a new notebook and update the notebook list buffer."
+  "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (message "Creating a new notebook...")
   (unless url-or-port

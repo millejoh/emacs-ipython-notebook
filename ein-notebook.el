@@ -384,10 +384,11 @@ See `ein:notebook-open' for more information."
 This command has no key binding because there is no way to undo
 deletion.  Use kill to play on the safe side.
 
-If you really want use this command, you can do something like this:
+If you really want use this command, you can do something like this
+\(but be careful when using it!)::
+
   \(define-key ein:notebook-mode-map \"\\C-c\\C-d\"
-              'ein:notebook-delete-cell-command)
-But be careful!"
+              'ein:notebook-delete-cell-command)"
   (interactive)
   (ein:notebook-with-cell nil
     (ein:notebook-delete-cell ein:notebook cell)
@@ -395,7 +396,7 @@ But be careful!"
 
 (defun ein:notebook-kill-cell-command ()
   "Kill (\"cut\") the cell at point.
-Note the kill-ring for cells is not shared with the default
+Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cell nil
