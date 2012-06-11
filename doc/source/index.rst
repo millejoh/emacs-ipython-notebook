@@ -16,6 +16,12 @@ Connected buffer
 
 .. el:keymap:: ein:connect-mode-map
 
+Other useful commands:
+
+.. el:function:: ein:connect-to-notebook
+.. el:function:: ein:connect-eval-buffer
+.. el:function:: ein:connect-run-buffer
+
 Traceback viewer
 ^^^^^^^^^^^^^^^^
 

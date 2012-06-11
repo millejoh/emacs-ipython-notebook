@@ -57,13 +57,15 @@
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
-`no'     (symbol) : Save output. This is the default.
-`yes'    (symbol) : Always discard output.
-a function        : This function takes two arguments, notebook
-                    and cell.  Return `t' to discard output and
-                    return `nil' to save.
-                    If you don't want to save image output, use
-                    `ein:notebook-cell-has-image-output-p'.
+`no' : symbol
+    Save output. This is the default.
+`yes' : symbol
+    Always discard output.
+a function
+    This function takes two arguments, notebook and cell.  Return
+    `t' to discard output and return `nil' to save.  For example,
+    if you don't want to save image output but other kind of
+    output, use `ein:notebook-cell-has-image-output-p'.
 
 Note that using function needs EIN lisp API, which is not defined
 yet.  So be careful when using EIN functions.  They may change."
@@ -959,6 +961,7 @@ it is installed.  If not, a simple mode derived from `python-mode' is
 used.
 
 Examples:
+
 * To avoid using MuMaMo even when it is installed:
   (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
 * Do not use `python-mode'.  Use plain mode when MuMaMo is not installed:
@@ -1128,16 +1131,20 @@ Called via `kill-emacs-query-functions'."
 (defcustom ein:notebook-console-security-dir ""
   "Security directory setting.
 
-Following type is accepted:
-string   : Use this value as a path to security directory.
-           Handy when you have only one IPython server.
-alist    : An alist whose element is \"(URL-OR-PORT . DIR)\".
-           Key (URL-OR-PORT) can be string (URL), integer (port), or
-           `default' (symbol).  The value of `default' is used when
-           other key does not much.  Normally you should have this
-           entry.
-function : Called with an argument URL-OR-PORT (integer or string).
-           You can have complex setting using this."
+Following types are valid:
+
+string
+    Use this value as a path to security directory.
+    Handy when you have only one IPython server.
+alist
+    An alist whose element is \"(URL-OR-PORT . DIR)\".
+    Key (URL-OR-PORT) can be string (URL), integer (port), or
+    `default' (symbol).  The value of `default' is used when
+    other key does not much.  Normally you should have this
+    entry.
+function
+    Called with an argument URL-OR-PORT (integer or string).
+    You can have complex setting using this."
   :type '(choice
           (string :tag "Security directory"
                   "~/.config/ipython/profile_nbserver/security/")
@@ -1156,8 +1163,8 @@ function : Called with an argument URL-OR-PORT (integer or string).
 (defcustom ein:notebook-console-executable (executable-find "ipython")
   "IPython executable used for console.
 
-Example: \"/user/bin/ipython\"
-Types same as `ein:notebook-console-security-dir' are accepted."
+Example: ``\"/user/bin/ipython\"``.
+Types same as `ein:notebook-console-security-dir' are valid."
   :type '(choice
           (string :tag "IPython executable" "/user/bin/ipython")
           (alist :tag "IPython executable mapping"
@@ -1174,8 +1181,8 @@ Types same as `ein:notebook-console-security-dir' are accepted."
 (defcustom ein:notebook-console-args "--profile nbserver"
   "Additional argument when using console.
 
-Example: \"--ssh HOSTNAME\"
-Types same as `ein:notebook-console-security-dir' are accepted."
+Example: ``\"--ssh HOSTNAME\"``.
+Types same as `ein:notebook-console-security-dir' are valid."
   :type '(choice
           (string :tag "Arguments to IPython"
                   "--profile nbserver --ssh HOSTNAME")
@@ -1210,8 +1217,10 @@ Types same as `ein:notebook-console-security-dir' are accepted."
   "Open IPython console.
 To use this function, `ein:notebook-console-security-dir' and
 `ein:notebook-console-args' must be set properly.
-This function requires Fabian Gallina's python.el for now:
-https://github.com/fgallina/python.el"
+This function requires `Fabian Gallina's python.el`_ for now;
+It should be possible to support python-mode.el.  Patches are welcome!
+
+.. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el"
   ;; FIXME: use %connect_info to get connection file, then I can get
   ;; rid of `ein:notebook-console-security-dir'.
   (interactive)

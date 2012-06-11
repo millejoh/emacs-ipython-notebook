@@ -61,7 +61,8 @@ of OPTION:
 ;;; Variable/class
 
 (defcustom ein:connect-run-command "%run -n"
-  "%run command used for `ein:connect-run-buffer'."
+  "``%run`` magic command used for `ein:connect-run-buffer'.
+Types same as `ein:notebook-console-security-dir' are valid."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
@@ -125,13 +126,15 @@ of OPTION:
   (ein:$notebook-kernel (ein:connect-get-notebook)))
 
 (defun ein:connect-eval-buffer ()
+  "Evaluate the whole buffer.  Note that this will run the code
+inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
   (ein:connect-eval-string-internal (buffer-string))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
-  "Run buffer using %run.  Ask for option if the prefix (C-u) is given.
-Variable `ein:connect-run-options' sets the default option."
+  "Run buffer using ``%run``.  Ask for command if the prefix ``C-u`` is given.
+Variable `ein:connect-run-command' sets the default command."
   (interactive "P")
   ;; FIXME: this should be more intelligent than just `buffer-file-name'
   ;;        to support connecting IPython over ssh.
@@ -150,7 +153,11 @@ Variable `ein:connect-run-options' sets the default option."
                    "Use `ein:connect-eval-buffer' instead."))))
 
 (defun ein:connect-run-or-eval-buffer (&optional eval)
-  "Run buffer with %run or eval whole buffer if the prefix (C-u) is given."
+  "Run buffer using the ``%run`` magic command or eval whole
+buffer if the prefix ``C-u`` is given.
+Variable `ein:connect-run-command' sets the command to run.
+You can change the command and/or set the options.
+See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (interactive "P")
   (if eval
       (ein:connect-eval-buffer)
