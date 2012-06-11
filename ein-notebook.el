@@ -394,6 +394,9 @@ But be careful!"
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-kill-cell-command ()
+  "Kill (\"cut\") the cell at point.
+Note the kill-ring for cells is not shared with the default
+kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cell nil
     (ein:cell-save-text cell)
@@ -402,11 +405,14 @@ But be careful!"
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-copy-cell-command ()
+  "Copy the cell at point.  (Put the current cell into the kill-ring.)"
   (interactive)
   (ein:notebook-with-cell nil
     (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
 
 (defun ein:notebook-yank-cell-command (&optional arg)
+  "Insert (\"paste\") the latest killed cell.
+Prefixes are act same as the normal `yank' command."
   (interactive "*P")
   ;; Do not use `ein:notebook-with-cell'.
   ;; `ein:notebook-insert-cell-below' handles empty cell.
@@ -489,6 +495,9 @@ when the prefix argument is given."
                                      cell))))
 
 (defun ein:notebook-toggle-cell-type ()
+  "Toggle the cell type of the cell at point.
+Use `ein:notebook-change-cell-type' to change the cell type
+directly."
   (interactive)
   (ein:notebook-with-cell nil
     (let ((type (case (ein:$notebook-nbformat ein:notebook)
@@ -506,6 +515,8 @@ when the prefix argument is given."
         (ein:cell-goto new)))))
 
 (defun ein:notebook-change-cell-type ()
+  "Change the cell type of the current cell.
+Prompt will appear in the minibuffer."
   (interactive)
   (ein:notebook-with-cell nil
     (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
@@ -630,6 +641,8 @@ If prefix is given, merge current cell into previous cell."
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-toggle-output-command ()
+  "Toggle the visibility of the output of the cell at point.
+This does not alter the actual data stored in the cell."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:notebook-toggle-output ein:notebook cell)))
@@ -670,6 +683,7 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Traceback
 
 (defun ein:notebook-view-traceback ()
+  "Open traceback viewer for the traceback at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (let ((tb-data
@@ -702,6 +716,7 @@ Do not clear input prompts when the prefix argument is given."
   (ein:kernel-restart (ein:$notebook-kernel notebook)))
 
 (defun ein:notebook-restart-kernel-command ()
+  "Send request to the server to restart kernel."
   (interactive)
   (if ein:notebook
       (when (y-or-n-p "Really restart kernel? ")
@@ -788,6 +803,9 @@ Do not clear input prompts when the prefix argument is given."
   (ein:notebook-request-help ein:notebook))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
+  "Show the help for the object at point using tooltip.
+When the prefix argument ``C-u`` is given, open the help in the
+pager buffer."
   (interactive "P")
   (if pager
       (ein:notebook-request-help-command)
@@ -810,6 +828,8 @@ Do not clear input prompts when the prefix argument is given."
       (ein:notebook-complete-at-point ein:notebook))))
 
 (defun ein:notebook-kernel-interrupt-command ()
+  "Interrupt the kernel.
+This is equivalent to do ``C-c`` in the console program."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:notebook)))
 
@@ -821,6 +841,11 @@ Do not clear input prompts when the prefix argument is given."
 ;; misc kernel related
 
 (defun ein:notebook-eval-string (code)
+  "Evaluate a code.  Prompt will appear asking the code to run.
+This is handy when you want to execute something quickly without
+making a cell.  If the code outputs something, it will go to the
+shared output buffer.  You can open the buffer by the command
+`ein:shared-output-pop-to-buffer'."
   (interactive "sIP[y]: ")
   (let ((cell (ein:shared-output-get-cell))
         (kernel (ein:$notebook-kernel ein:notebook))
@@ -897,6 +922,7 @@ Do not clear input prompts when the prefix argument is given."
      `((204 . ,(cons #'ein:notebook-save-notebook-success notebook))))))
 
 (defun ein:notebook-save-notebook-command ()
+  "Save the notebook."
   (interactive)
   (ein:notebook-save-notebook ein:notebook 0))
 

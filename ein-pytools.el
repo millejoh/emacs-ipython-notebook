@@ -128,6 +128,9 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
      (list object other-window notebook-buffer)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
+  "Jump to the source code of the object at point.
+When the prefix argument ``C-u`` is given, open the source code
+in the other window."
   (interactive "P")
   (require 'ein-connect)
   (let ((kernel (ein:pytools-get-kernel))
@@ -139,6 +142,9 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                                   (ein:pytools-get-notebook-buffer)))))
 
 (defun ein:pytools-jump-back-command (&optional other-window)
+  "Go back to the point where `ein:pytools-jump-to-source-command'
+is executed last time.  When the prefix argument ``C-u`` is
+given, open the last point in the other window."
   (interactive "P")
   (when (ein:aand (car ein:pytools-jump-stack)
                   (equal (point) (marker-position it)))
@@ -155,14 +161,15 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     (ein:cell-execute cell kernel code popup)))
 
 (defun ein:pytools-whos ()
-  "Execute %whos magic command and popup the result."
+  "Execute ``%whos`` magic command and popup the result."
   (interactive)
   (ein:pytools-eval-string-internal "%whos" t))
 
 (defun ein:pytools-hierarchy (&optional ask)
   "Draw inheritance graph of the class at point.
-hierarchymagic extension is needed to be installed.
-see: https://github.com/tkf/ipython-hierarchymagic"
+hierarchymagic_ extension is needed to be installed.
+
+.. _hierarchymagic: https://github.com/tkf/ipython-hierarchymagic"
   (interactive "P")
   (let ((object (ein:object-at-point)))
     (when ask

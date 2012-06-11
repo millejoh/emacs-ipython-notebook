@@ -71,6 +71,13 @@ Other useful commands:
 .. el:function:: ein:connect-eval-buffer
 .. el:function:: ein:connect-run-buffer
 
+Shared output buffer
+^^^^^^^^^^^^^^^^^^^^
+
+.. el:function:: ein:shared-output-pop-to-buffer
+
+.. el:keymap:: ein:shared-output-mode-map
+
 Traceback viewer
 ^^^^^^^^^^^^^^^^
 
@@ -79,6 +86,15 @@ Traceback viewer by the command :el:symbol:`ein:notebook-view-traceback`.
 In the Traceback viewer, following keybinds are available.
 
 .. el:keymap:: ein:traceback-mode-map
+
+PyTools
+^^^^^^^
+
+These commands can be used in the notebook buffer and the connected
+buffer.
+
+.. el:function:: ein:pytools-whos
+.. el:function:: ein:pytools-hierarchy
 
 
 Customization
