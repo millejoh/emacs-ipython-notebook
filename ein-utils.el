@@ -297,6 +297,11 @@ NOTE: This function creates new list."
       (discard-input))
     answer))
 
+
+(defun ein:truncate-lines-on ()
+  "Set `truncate-lines' on (set it to `t')."
+  (setq truncate-lines t))
+
 
 ;; utils.js compatible
 

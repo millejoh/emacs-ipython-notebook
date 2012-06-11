@@ -140,10 +140,6 @@ Create a cell if the buffer has none."
 
 (add-hook 'ein:shared-output-mode-hook 'ein:truncate-lines-on)
 
-(defun ein:truncate-lines-on ()
-  "Set `truncate-lines' on (set it to `t')."
-  (setq truncate-lines t))
-
 
 (provide 'ein-shared-output)
 
