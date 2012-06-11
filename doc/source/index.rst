@@ -3,6 +3,24 @@ Welcome to Emacs IPython Notebook's documentation!
 
 .. el:package:: ein
 
+Keybinds
+--------
+
+Notebook
+^^^^^^^^
+
+.. el:keymap:: ein:notebook-mode-map
+
+Connected buffer
+^^^^^^^^^^^^^^^^
+
+.. el:keymap:: ein:connect-mode-map
+
+Traceback viewer
+^^^^^^^^^^^^^^^^
+
+.. el:keymap:: ein:traceback-mode-map
+
 Commands
 --------
 
@@ -10,7 +28,6 @@ Commands
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
 .. el:function:: ein:notebooklist-new-scratch-notebook
-
 
 Customization
 -------------
