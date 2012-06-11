@@ -3,6 +3,35 @@ Welcome to Emacs IPython Notebook's documentation!
 
 .. el:package:: ein
 
+Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
+client and integrated REPL (like SLIME_).
+
+.. _SLIME: http://common-lisp.net/project/slime/
+
+Highlighted features:
+
+* Copy/paste cells, even to/from different notebooks.
+* Console integration: You can easily connect to kernel via console
+  application.  This enables you to start debugging in the same
+  kernel.  It is even possible to connect console over ssh [#]_.
+* IPython kernel can be "connected" to any buffers.  This enables you
+  to evaluate buffer/region using same kernel as notebook.  Notebook
+  goodies such as tooltip help, help browser and code completion are
+  available in these buffers.
+* Jump to definition (go to the definition by hitting ``M-.`` over an
+  object).
+
+Other notebook features:
+
+* Inline images
+* Auto/manual-completion
+* Popup (tooltip) help
+* Syntax highlighting in each cell types (Python/Markdown)
+* Help browser (opens when executing ``function?``)
+* Traceback viewer
+
+.. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
+
 Keybinds
 --------
 
