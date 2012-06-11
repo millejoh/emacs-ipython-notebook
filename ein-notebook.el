@@ -962,9 +962,12 @@ used.
 
 Examples:
 
-* To avoid using MuMaMo even when it is installed:
+Avoid using MuMaMo even when it is installed::
+
   (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
-* Do not use `python-mode'.  Use plain mode when MuMaMo is not installed:
+
+Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
+
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
 "
   :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
