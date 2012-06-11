@@ -144,7 +144,7 @@ See: http://api.jquery.com/jQuery.ajax/"
    (json-read-from-string string)))
 
 
-;;;
+;;; Text property
 
 (defun ein:propertize-read-only (string &rest properties)
   (apply #'propertize string 'read-only t 'front-sticky t properties))
@@ -212,7 +212,7 @@ Adapted from twittering-mode.el's `case-string'."
        clauses)))
 
 
-;;
+;;; Misc
 
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."
@@ -303,7 +303,7 @@ NOTE: This function creates new list."
   (setq truncate-lines t))
 
 
-;; utils.js compatible
+;;; utils.js compatible
 
 (defun ein:utils-uuid ()
   "Return string with random (version 4) UUID.
