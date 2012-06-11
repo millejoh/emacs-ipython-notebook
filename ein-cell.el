@@ -655,10 +655,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
-        (let ((tb (plist-get json :traceback)))
-          (ein:aif ein:cell-traceback-level
+        (let ((tb (plist-get json :traceback))
+              (level ein:cell-traceback-level))
+          (if (and level (> (- (length tb) 2) level))
               (cons "\nTruncated Traceback (Use C-c C-x to view full TB):"
-                    (last tb (1+ it)))
+                    (last tb (1+ level)))
             tb)))
   (ein:insert-read-only "\n"))
 
