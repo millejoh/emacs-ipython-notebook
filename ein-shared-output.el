@@ -123,6 +123,7 @@ Create a cell if the buffer has none."
       (oref cell :kernel))))
 
 (defun ein:shared-output-pop-to-buffer ()
+  "Open shared output buffer."
   (interactive)
   (ein:shared-output-get-or-create)
   (pop-to-buffer (ein:shared-output-create-buffer)))

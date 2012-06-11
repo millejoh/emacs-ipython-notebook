@@ -1,3 +1,6 @@
 [submodule "tests/mocker"]
 	path = tests/mocker
 	url = https://github.com/sigma/mocker.el.git
+[submodule "doc/eldomain"]
+	path = doc/eldomain
+	url = git://github.com/tkf/sphinx-eldomain.git

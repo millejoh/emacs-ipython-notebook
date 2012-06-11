@@ -57,13 +57,15 @@
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
-`no'     (symbol) : Save output. This is the default.
-`yes'    (symbol) : Always discard output.
-a function        : This function takes two arguments, notebook
-                    and cell.  Return `t' to discard output and
-                    return `nil' to save.
-                    If you don't want to save image output, use
-                    `ein:notebook-cell-has-image-output-p'.
+`no' : symbol
+    Save output. This is the default.
+`yes' : symbol
+    Always discard output.
+a function
+    This function takes two arguments, notebook and cell.  Return
+    `t' to discard output and return `nil' to save.  For example,
+    if you don't want to save image output but other kind of
+    output, use `ein:notebook-cell-has-image-output-p'.
 
 Note that using function needs EIN lisp API, which is not defined
 yet.  So be careful when using EIN functions.  They may change."
@@ -392,6 +394,9 @@ But be careful!"
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-kill-cell-command ()
+  "Kill (\"cut\") the cell at point.
+Note the kill-ring for cells is not shared with the default
+kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cell nil
     (ein:cell-save-text cell)
@@ -400,11 +405,14 @@ But be careful!"
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-copy-cell-command ()
+  "Copy the cell at point.  (Put the current cell into the kill-ring.)"
   (interactive)
   (ein:notebook-with-cell nil
     (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
 
 (defun ein:notebook-yank-cell-command (&optional arg)
+  "Insert (\"paste\") the latest killed cell.
+Prefixes are act same as the normal `yank' command."
   (interactive "*P")
   ;; Do not use `ein:notebook-with-cell'.
   ;; `ein:notebook-insert-cell-below' handles empty cell.
@@ -487,6 +495,9 @@ when the prefix argument is given."
                                      cell))))
 
 (defun ein:notebook-toggle-cell-type ()
+  "Toggle the cell type of the cell at point.
+Use `ein:notebook-change-cell-type' to change the cell type
+directly."
   (interactive)
   (ein:notebook-with-cell nil
     (let ((type (case (ein:$notebook-nbformat ein:notebook)
@@ -504,6 +515,8 @@ when the prefix argument is given."
         (ein:cell-goto new)))))
 
 (defun ein:notebook-change-cell-type ()
+  "Change the cell type of the current cell.
+Prompt will appear in the minibuffer."
   (interactive)
   (ein:notebook-with-cell nil
     (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
@@ -628,6 +641,8 @@ If prefix is given, merge current cell into previous cell."
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-toggle-output-command ()
+  "Toggle the visibility of the output of the cell at point.
+This does not alter the actual data stored in the cell."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:notebook-toggle-output ein:notebook cell)))
@@ -668,6 +683,7 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Traceback
 
 (defun ein:notebook-view-traceback ()
+  "Open traceback viewer for the traceback at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (let ((tb-data
@@ -700,6 +716,7 @@ Do not clear input prompts when the prefix argument is given."
   (ein:kernel-restart (ein:$notebook-kernel notebook)))
 
 (defun ein:notebook-restart-kernel-command ()
+  "Send request to the server to restart kernel."
   (interactive)
   (if ein:notebook
       (when (y-or-n-p "Really restart kernel? ")
@@ -786,6 +803,9 @@ Do not clear input prompts when the prefix argument is given."
   (ein:notebook-request-help ein:notebook))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
+  "Show the help for the object at point using tooltip.
+When the prefix argument ``C-u`` is given, open the help in the
+pager buffer."
   (interactive "P")
   (if pager
       (ein:notebook-request-help-command)
@@ -808,6 +828,8 @@ Do not clear input prompts when the prefix argument is given."
       (ein:notebook-complete-at-point ein:notebook))))
 
 (defun ein:notebook-kernel-interrupt-command ()
+  "Interrupt the kernel.
+This is equivalent to do ``C-c`` in the console program."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:notebook)))
 
@@ -819,6 +841,11 @@ Do not clear input prompts when the prefix argument is given."
 ;; misc kernel related
 
 (defun ein:notebook-eval-string (code)
+  "Evaluate a code.  Prompt will appear asking the code to run.
+This is handy when you want to execute something quickly without
+making a cell.  If the code outputs something, it will go to the
+shared output buffer.  You can open the buffer by the command
+`ein:shared-output-pop-to-buffer'."
   (interactive "sIP[y]: ")
   (let ((cell (ein:shared-output-get-cell))
         (kernel (ein:$notebook-kernel ein:notebook))
@@ -895,6 +922,7 @@ Do not clear input prompts when the prefix argument is given."
      `((204 . ,(cons #'ein:notebook-save-notebook-success notebook))))))
 
 (defun ein:notebook-save-notebook-command ()
+  "Save the notebook."
   (interactive)
   (ein:notebook-save-notebook ein:notebook 0))
 
@@ -959,9 +987,13 @@ it is installed.  If not, a simple mode derived from `python-mode' is
 used.
 
 Examples:
-* To avoid using MuMaMo even when it is installed:
+
+Avoid using MuMaMo even when it is installed::
+
   (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
-* Do not use `python-mode'.  Use plain mode when MuMaMo is not installed:
+
+Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
+
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
 "
   :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
@@ -1128,16 +1160,20 @@ Called via `kill-emacs-query-functions'."
 (defcustom ein:notebook-console-security-dir ""
   "Security directory setting.
 
-Following type is accepted:
-string   : Use this value as a path to security directory.
-           Handy when you have only one IPython server.
-alist    : An alist whose element is \"(URL-OR-PORT . DIR)\".
-           Key (URL-OR-PORT) can be string (URL), integer (port), or
-           `default' (symbol).  The value of `default' is used when
-           other key does not much.  Normally you should have this
-           entry.
-function : Called with an argument URL-OR-PORT (integer or string).
-           You can have complex setting using this."
+Following types are valid:
+
+string
+    Use this value as a path to security directory.
+    Handy when you have only one IPython server.
+alist
+    An alist whose element is \"(URL-OR-PORT . DIR)\".
+    Key (URL-OR-PORT) can be string (URL), integer (port), or
+    `default' (symbol).  The value of `default' is used when
+    other key does not much.  Normally you should have this
+    entry.
+function
+    Called with an argument URL-OR-PORT (integer or string).
+    You can have complex setting using this."
   :type '(choice
           (string :tag "Security directory"
                   "~/.config/ipython/profile_nbserver/security/")
@@ -1156,8 +1192,8 @@ function : Called with an argument URL-OR-PORT (integer or string).
 (defcustom ein:notebook-console-executable (executable-find "ipython")
   "IPython executable used for console.
 
-Example: \"/user/bin/ipython\"
-Types same as `ein:notebook-console-security-dir' are accepted."
+Example: ``\"/user/bin/ipython\"``.
+Types same as `ein:notebook-console-security-dir' are valid."
   :type '(choice
           (string :tag "IPython executable" "/user/bin/ipython")
           (alist :tag "IPython executable mapping"
@@ -1174,8 +1210,8 @@ Types same as `ein:notebook-console-security-dir' are accepted."
 (defcustom ein:notebook-console-args "--profile nbserver"
   "Additional argument when using console.
 
-Example: \"--ssh HOSTNAME\"
-Types same as `ein:notebook-console-security-dir' are accepted."
+Example: ``\"--ssh HOSTNAME\"``.
+Types same as `ein:notebook-console-security-dir' are valid."
   :type '(choice
           (string :tag "Arguments to IPython"
                   "--profile nbserver --ssh HOSTNAME")
@@ -1210,8 +1246,10 @@ Types same as `ein:notebook-console-security-dir' are accepted."
   "Open IPython console.
 To use this function, `ein:notebook-console-security-dir' and
 `ein:notebook-console-args' must be set properly.
-This function requires Fabian Gallina's python.el for now:
-https://github.com/fgallina/python.el"
+This function requires `Fabian Gallina's python.el`_ for now;
+It should be possible to support python-mode.el.  Patches are welcome!
+
+.. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el"
   ;; FIXME: use %connect_info to get connection file, then I can get
   ;; rid of `ein:notebook-console-security-dir'.
   (interactive)

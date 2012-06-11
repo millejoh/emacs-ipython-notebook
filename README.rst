@@ -25,7 +25,7 @@ Highlighted features:
 * Copy/paste cells, even to/from different notebooks.
 * Console integration: You can easily connect to kernel via console
   application.  This enables you to start debugging in the same
-  kernel.
+  kernel.  It is even possible to connect console over ssh.
 * IPython kernel can be "connected" to any buffers.  This enables you
   to evaluate buffer/region using same kernel as notebook.  Notebook
   goodies such as tooltip help, help browser and code completion are
@@ -40,6 +40,7 @@ Other notebook features:
 * Popup (tooltip) help
 * Syntax highlighting in each cell types (Python/Markdown)
 * Help browser (opens when executing ``function?``)
+* Traceback viewer
 
 
 Quick try
