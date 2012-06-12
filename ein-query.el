@@ -54,6 +54,9 @@
 
 (ein:deflocal ein:query-ajax-timer nil)
 
+(ein:deflocal ein:query-ajax-timeout nil
+  "Buffer local variable which is set to `t' by the timeout callback.")
+
 
 ;;; Functions
 
@@ -179,21 +182,23 @@ is killed immediately after the execution of this function.
     (ein:log 'debug "Executing success/error callback.")
     (apply #'ein:safe-funcall-packed
            (append (if (plist-get status :error)
-                       (list error :symbol-status 'error)
+                       (list error :symbol-status
+                             (if ein:query-ajax-timeout 'timeout 'error))
                      (list success))
                    (list :status status :data data
                          :response-status response-status)))
 
-    (ein:log 'debug "Executing status-code callback.")
-    (ein:safe-funcall-packed status-code-callback
-                             :status status :data data)))
+    (unless ein:query-ajax-timeout
+      (ein:log 'debug "Executing status-code callback.")
+      (ein:safe-funcall-packed status-code-callback
+                               :status status :data data))))
 
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
   (ein:with-live-buffer buffer
-    (ein:safe-funcall-packed error :symbol-status 'timeout)
+    (setq ein:query-ajax-timeout t)
     (let ((proc (get-buffer-process buffer)))
       (delete-process proc)
       ;; It seems that `delete-process' resets `process-query-on-exit-flag'.
