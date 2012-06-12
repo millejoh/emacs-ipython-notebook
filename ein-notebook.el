@@ -427,6 +427,13 @@ kill-ring of Emacs (kill-ring for texts)."
     (mapc (lambda (c) (ein:kill-new (ein:cell-deactivate (ein:cell-copy c))))
           cells)))
 
+(defun ein:notebook-insert-clone-below (notebook cell pivot)
+  (let ((clone (ein:cell-copy cell)))
+    ;; Cell can be from another buffer, so reset `ewoc'.
+    (oset clone :ewoc (ein:$notebook-ewoc notebook))
+    (ein:notebook-insert-cell-below notebook clone pivot)
+    clone))
+
 (defun ein:notebook-yank-cell-command (&optional arg)
   "Insert (\"paste\") the latest killed cell.
 Prefixes are act same as the normal `yank' command."
@@ -437,15 +444,11 @@ Prefixes are act same as the normal `yank' command."
          (killed (ein:current-kill (cond
                                     ((listp arg) 0)
                                     ((eq arg '-) -2)
-                                    (t (1- arg)))))
-         (clones (mapcar #'ein:cell-copy killed)))
-    ;; Cell can be from another buffer, so reset `ewoc'.
-    (mapc (lambda (c) (oset c :ewoc (ein:$notebook-ewoc ein:notebook))) clones)
-    (loop for c in clones
+                                    (t (1- arg))))))
+    (loop for c in killed
           with last = cell
-          do (ein:notebook-insert-cell-below ein:notebook c last)
-          do (setq last c))
-    (ein:cell-goto (car (last clones)))))
+          do (setq last (ein:notebook-insert-clone-below ein:notebook c last))
+          finally (ein:cell-goto last))))
 
 (defun ein:notebook-maybe-new-cell (notebook type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
