@@ -86,19 +86,24 @@ INITVALUE and DOCSTRING are passed to `defvar'."
 
 (defun ein:object-at-point ()
   "Return dotty.words.at.point.
+When region is active, text in region is returned after trimmed
+white spaces, newlines and dots.
 When object is not found at the point, return the object just
 before previous opening parenthesis."
   ;; For auto popup tooltip (or something like eldoc), probably it is
   ;; better to return function (any word before "(").  I should write
   ;; another function or add option to this function when the auto
   ;; popup tooltip is implemented.
-  (save-excursion
-    (with-syntax-table ein:dotty-syntax-table
-      (ein:aif (thing-at-point 'word)
-          it
-        (unless (looking-at "(")
-          (search-backward "(" (point-at-bol) t))
-        (thing-at-point 'word)))))
+  (if (region-active-p)
+      (ein:trim (buffer-substring (region-beginning) (region-end))
+                "\\s-\\|\n\\|\\.")
+    (save-excursion
+      (with-syntax-table ein:dotty-syntax-table
+        (ein:aif (thing-at-point 'word)
+            it
+          (unless (looking-at "(")
+            (search-backward "(" (point-at-bol) t))
+          (thing-at-point 'word))))))
 
 
 ;;; URL utils
