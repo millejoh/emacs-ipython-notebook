@@ -130,7 +130,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
 When the prefix argument ``C-u`` is given, open the source code
-in the other window."
+in the other window.  You can explicitly specify the object by
+selecting it."
   (interactive "P")
   (require 'ein-connect)
   (let ((kernel (ein:pytools-get-kernel))
@@ -168,6 +169,7 @@ given, open the last point in the other window."
 (defun ein:pytools-hierarchy (&optional ask)
   "Draw inheritance graph of the class at point.
 hierarchymagic_ extension is needed to be installed.
+You can explicitly specify the object by selecting it.
 
 .. _hierarchymagic: https://github.com/tkf/ipython-hierarchymagic"
   (interactive "P")

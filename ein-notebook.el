@@ -806,7 +806,7 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   "Show the help for the object at point using tooltip.
 When the prefix argument ``C-u`` is given, open the help in the
-pager buffer."
+pager buffer.  You can explicitly specify the object by selecting it."
   (interactive "P")
   (if pager
       (ein:notebook-request-help-command)
