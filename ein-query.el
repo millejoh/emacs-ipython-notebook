@@ -183,10 +183,11 @@ is killed immediately after the execution of this function.
                        (funcall parser))
                  (kill-buffer buffer))))
     (ein:log 'debug "data = %s" data)
+    (ein:log 'debug "timeout = %s" timeout)
 
     (ein:log 'debug "Executing success/error callback.")
     (apply #'ein:safe-funcall-packed
-           (append (if (plist-get status :error)
+           (append (if (or (plist-get status :error) timeout)
                        (list error :symbol-status
                              (if timeout 'timeout 'error))
                      (list success))
