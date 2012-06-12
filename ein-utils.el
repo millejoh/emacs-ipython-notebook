@@ -233,6 +233,22 @@ Adapted from twittering-mode.el's `case-string'."
         when (funcall predicate item)
         collect item))
 
+(defun ein:clip-list (list first last)
+  "Return elements in region of the LIST specified by FIRST and LAST element.
+
+Example::
+
+    (ein:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
+  (loop for elem in list
+        with clipped
+        with in-region-p = nil
+        when (eq elem first)
+        do (setq in-region-p t)
+        when in-region-p
+        do (push elem clipped)
+        when (eq elem last)
+        return (reverse clipped)))
+
 (defun ein:get-value (obj)
   "Get value from obj if it is a variable or function."
   (cond

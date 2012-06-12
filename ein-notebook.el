@@ -176,6 +176,14 @@ is `nil', BODY is executed with any cell types."
          (progn ,@body)
        (ein:log 'warn "Not in cell"))))
 
+(defmacro ein:notebook-with-cells-in-region (&rest body)
+  "Similar to `ein:notebook-with-cell' but sets a list of cells to `cells'."
+  (declare (indent 0))
+  `(let* ((cells (ein:notebook-get-cells-in-region-or-at-point)))
+     (if cells
+         (progn ,@body)
+       (ein:log 'warn "Not in cell"))))
+
 (defun ein:notebook-new (url-or-port notebook-id &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
@@ -394,22 +402,30 @@ If you really want use this command, you can do something like this
     (ein:notebook-delete-cell ein:notebook cell)
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
+(defun ein:notebook-kill-cells (notebook cells)
+  (when cells
+    (mapc (lambda (c)
+            (ein:cell-save-text c)
+            (ein:notebook-delete-cell notebook c)
+            (ein:cell-deactivate c))
+          cells)
+    (ein:kill-new cells)))
+
 (defun ein:notebook-kill-cell-command ()
   "Kill (\"cut\") the cell at point.
 Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts)."
   (interactive)
-  (ein:notebook-with-cell nil
-    (ein:cell-save-text cell)
-    (ein:notebook-delete-cell ein:notebook cell)
-    (ein:kill-new (ein:cell-deactivate cell))
+  (ein:notebook-with-cells-in-region
+    (ein:notebook-kill-cells ein:notebook cells)
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-copy-cell-command ()
   "Copy the cell at point.  (Put the current cell into the kill-ring.)"
   (interactive)
-  (ein:notebook-with-cell nil
-    (ein:kill-new (ein:cell-deactivate (ein:cell-copy cell)))))
+  (ein:notebook-with-cells-in-region
+    (mapc (lambda (c) (ein:kill-new (ein:cell-deactivate (ein:cell-copy c))))
+          cells)))
 
 (defun ein:notebook-yank-cell-command (&optional arg)
   "Insert (\"paste\") the latest killed cell.
@@ -422,11 +438,14 @@ Prefixes are act same as the normal `yank' command."
                                     ((listp arg) 0)
                                     ((eq arg '-) -2)
                                     (t (1- arg)))))
-         (clone (ein:cell-copy killed)))
+         (clones (mapcar #'ein:cell-copy killed)))
     ;; Cell can be from another buffer, so reset `ewoc'.
-    (oset clone :ewoc (ein:$notebook-ewoc ein:notebook))
-    (ein:notebook-insert-cell-below ein:notebook clone cell)
-    (ein:cell-goto clone)))
+    (mapc (lambda (c) (oset c :ewoc (ein:$notebook-ewoc ein:notebook))) clones)
+    (loop for c in clones
+          with last = cell
+          do (ein:notebook-insert-cell-below ein:notebook c last)
+          do (setq last c))
+    (ein:cell-goto (car (last clones)))))
 
 (defun ein:notebook-maybe-new-cell (notebook type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
@@ -746,6 +765,16 @@ Do not clear input prompts when the prefix argument is given."
   (let ((cell (ein:cell-from-ewoc-node
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))
+
+(defun ein:notebook-get-cells-in-region (beg end)
+  (ein:clip-list (ein:aand ein:notebook (ein:notebook-get-cells it))
+                 (ein:notebook-get-current-cell beg)
+                 (ein:notebook-get-current-cell end)))
+
+(defun ein:notebook-get-cells-in-region-or-at-point ()
+  (if (region-active-p)
+      (ein:notebook-get-cells-in-region (region-beginning) (region-end))
+    (list (ein:notebook-get-current-cell))))
 
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
