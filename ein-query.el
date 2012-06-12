@@ -168,11 +168,6 @@ is killed immediately after the execution of this function.
   (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
   (ein:query-ajax-cancel-timer)
-  ;; It seems that `delete-process' resets `process-query-on-exit-flag'.
-  ;; So, setting this flag must be placed here, just before killing buffer.
-  (ein:aif (get-buffer-process (current-buffer))
-      (progn (set-process-query-on-exit-flag it nil)
-             (ein:log 'debug "(set-process-query-on-exit-flag %S nil)" it)))
   (let* ((buffer (current-buffer)) ; `parser' could change buffer...
          (response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
