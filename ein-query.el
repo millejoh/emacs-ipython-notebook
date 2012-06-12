@@ -196,6 +196,9 @@ is killed immediately after the execution of this function.
     (ein:safe-funcall-packed error :symbol-status 'timeout)
     (let ((proc (get-buffer-process buffer)))
       (delete-process proc)
+      ;; It seems that `delete-process' resets `process-query-on-exit-flag'.
+      ;; So, setting this flag must be placed here.
+      (set-process-query-on-exit-flag proc nil)
       (kill-buffer buffer))))
 
 (defun ein:query-ajax-cancel-timer ()
