@@ -79,7 +79,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
          (lambda () (ein:aand (ein:$notebook-kernel notebook)
                               (ein:kernel-ready-p it)))))
    do (eintest:delete-notebook-by-name eintest:port "Untitled0")
-   do (should-not (eintest:get-notebook-by-name eintest:port "Untitled0"))))
+   do (let ((num-notebook
+             (length (eintest:get-notebook-by-name eintest:port "Untitled0"))))
+        (should (= num-notebook 0)))))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
