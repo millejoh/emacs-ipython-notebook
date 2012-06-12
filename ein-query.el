@@ -168,14 +168,17 @@ is killed immediately after the execution of this function.
   (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
   (ein:query-ajax-cancel-timer)
+  ;; It seems that `delete-process' resets `process-query-on-exit-flag'.
+  ;; So, setting this flag must be placed here, just before killing buffer.
+  (set-process-query-on-exit-flag (get-buffer-process (current-buffer)) nil)
   (let* ((buffer (current-buffer)) ; `parser' could change buffer...
          (response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
          (status-error (plist-get status :error))
-         (data (if (and parser (not status-error))
-                   (unwind-protect
-                       (funcall parser)
-                     (kill-buffer buffer))
+         (timeout ein:query-ajax-timeout)
+         (data (unwind-protect
+                   (if (and parser (not status-error))
+                       (funcall parser))
                  (kill-buffer buffer))))
     (ein:log 'debug "data = %s" data)
 
@@ -183,12 +186,12 @@ is killed immediately after the execution of this function.
     (apply #'ein:safe-funcall-packed
            (append (if (plist-get status :error)
                        (list error :symbol-status
-                             (if ein:query-ajax-timeout 'timeout 'error))
+                             (if timeout 'timeout 'error))
                      (list success))
                    (list :status status :data data
                          :response-status response-status)))
 
-    (unless ein:query-ajax-timeout
+    (unless timeout
       (ein:log 'debug "Executing status-code callback.")
       (ein:safe-funcall-packed status-code-callback
                                :status status :data data))))
@@ -200,11 +203,7 @@ is killed immediately after the execution of this function.
   (ein:with-live-buffer buffer
     (setq ein:query-ajax-timeout t)
     (let ((proc (get-buffer-process buffer)))
-      (delete-process proc)
-      ;; It seems that `delete-process' resets `process-query-on-exit-flag'.
-      ;; So, setting this flag must be placed here.
-      (set-process-query-on-exit-flag proc nil)
-      (kill-buffer buffer))))
+      (delete-process proc))))
 
 (defun ein:query-ajax-cancel-timer ()
   (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
