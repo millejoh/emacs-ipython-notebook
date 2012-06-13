@@ -418,12 +418,14 @@ kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cells-in-region
     (ein:notebook-kill-cells ein:notebook cells)
+    (deactivate-mark)
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-copy-cell-command ()
   "Copy the cell at point.  (Put the current cell into the kill-ring.)"
   (interactive)
   (ein:notebook-with-cells-in-region
+    (deactivate-mark)
     (ein:kill-new
      (mapcar (lambda (c) (ein:cell-deactivate (ein:cell-copy c))) cells))))
 
