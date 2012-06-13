@@ -131,6 +131,7 @@ Notebook
 .. el:variable:: ein:notebook-console-security-dir
 .. el:variable:: ein:notebook-console-executable
 .. el:variable:: ein:notebook-console-args
+.. el:variable:: ein:cell-traceback-level
 
 Connect
 ^^^^^^^

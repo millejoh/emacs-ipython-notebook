@@ -70,6 +70,18 @@
   :group 'ein)
 
 
+;;; Customization
+
+(defcustom ein:cell-traceback-level 1
+  "Number of traceback stack to show.
+Hidden tracebacks are not discarded.  You can always view them
+using the command `ein:notebook-view-traceback'."
+  :type '(choice (integer :tag "Number of stack to show" 1)
+                 (const :tag "Show all traceback" nil))
+  :group 'ein)
+
+
+
 ;;; EIEIO related utils
 
 (defmacro ein:oset-if-empty (obj slot value)
@@ -643,7 +655,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
-        (plist-get json :traceback))
+        (let ((tb (plist-get json :traceback))
+              (level ein:cell-traceback-level))
+          (if (and level (> (- (length tb) 2) level))
+              (cons "\nTruncated Traceback (Use C-c C-x to view full TB):"
+                    (last tb (1+ level)))
+            tb)))
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-append-stream ((cell ein:codecell) json)
