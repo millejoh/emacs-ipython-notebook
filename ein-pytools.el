@@ -57,12 +57,14 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   :group 'ein)
 
 (defun ein:pytools-get-kernel ()
+  (require 'ein-connect)
   (cond
    (ein:notebook (ein:$notebook-kernel ein:notebook))
    (ein:@connect (ein:connect-get-kernel))
    ((eq major-mode 'ein:shared-output-mode) (ein:shared-output-get-kernel))))
 
 (defun ein:pytools-get-notebook ()
+  (require 'ein-connect)
   (cond
    (ein:notebook ein:notebook)
    (ein:@connect (ein:connect-get-notebook))))
@@ -133,7 +135,6 @@ When the prefix argument ``C-u`` is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it."
   (interactive "P")
-  (require 'ein-connect)
   (let ((kernel (ein:pytools-get-kernel))
         (object (ein:object-at-point)))
     (assert (ein:kernel-ready-p kernel) nil "Kernel is not ready.")
@@ -155,7 +156,6 @@ given, open the last point in the other window."
     (ein:log 'info "Nothing on stack.")))
 
 (defun ein:pytools-eval-string-internal (code &optional popup)
-  (require 'ein-connect)
   (let ((cell (ein:shared-output-get-cell))
         (kernel (ein:pytools-get-kernel))
         (code (ein:trim-indent code)))
