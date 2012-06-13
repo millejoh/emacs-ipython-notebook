@@ -25,6 +25,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (error "Timeout")))
 
 (defun eintest:get-notebook-by-name (url-or-port notebook-name)
+  ;; Kill notebook list buffer here to make sure next
+  ;; `eintest:wait-until' works properly.
+  (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
     (eintest:wait-until (lambda () ein:notebooklist))
     (loop for note in (ein:$notebooklist-data ein:notebooklist)
@@ -76,7 +79,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
          (lambda () (ein:aand (ein:$notebook-kernel notebook)
                               (ein:kernel-ready-p it)))))
    do (eintest:delete-notebook-by-name eintest:port "Untitled0")
-   do (should-not (eintest:get-notebook-by-name eintest:port "Untitled0"))))
+   do (let ((num-notebook
+             (length (eintest:get-notebook-by-name eintest:port "Untitled0"))))
+        (should (= num-notebook 0)))))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
