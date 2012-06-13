@@ -424,8 +424,8 @@ kill-ring of Emacs (kill-ring for texts)."
   "Copy the cell at point.  (Put the current cell into the kill-ring.)"
   (interactive)
   (ein:notebook-with-cells-in-region
-    (mapc (lambda (c) (ein:kill-new (ein:cell-deactivate (ein:cell-copy c))))
-          cells)))
+    (ein:kill-new
+     (mapcar (lambda (c) (ein:cell-deactivate (ein:cell-copy c))) cells))))
 
 (defun ein:notebook-insert-clone-below (notebook cell pivot)
   (let ((clone (ein:cell-copy cell)))
