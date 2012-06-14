@@ -363,7 +363,12 @@ This is equivalent to do <tt class="docutils literal"><span class="pre">C-c</spa
 
 <dl class="keybind">
 <dt>
-<tt class="descname">C-c C-q</tt><tt class="descclassname"> ein:notebook-kernel-kill-command</tt></dt>
+<tt class="descname">C-c C-q</tt><tt class="descclassname"> ein:notebook-kill-kernel-then-close-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Kill kernel and then kill notebook buffer.
+It does not kill buffer if killing kernel fails.  To close
+notebook without killing kernel, just close the buffer as usual.</p>
+</dd></dd>
 </dl>
 
 <dl class="keybind">
