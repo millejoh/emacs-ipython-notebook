@@ -217,22 +217,3 @@ commands are available.
    C-c C-z         ein:connect-pop-to-notebook
 
 .. // KEYS END //
-
-
-Advanced
-========
-
-By telling IPython a little bit about Emacs Lisp, you can execute
-Emacs Lisp from IPython, just like you can execute Javascript in the
-web client.  See `emacslisp.py`_ for more details.::
-
-   In [1]:
-   %run PATH/TO/emacslisp.py
-
-   In [2]:
-   EmacsLisp('(+ 1 2 3)')
-   Out [2]:
-   6
-
-.. _`emacslisp.py`:
-  https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
