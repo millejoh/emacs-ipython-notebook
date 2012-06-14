@@ -169,7 +169,7 @@ Keybinds - Notebook
    C-c C-n         ein:notebook-goto-next-input-command
    C-c C-o         ein:notebook-console-open
    C-c C-p         ein:notebook-goto-prev-input-command
-   C-c C-q         ein:notebook-kernel-kill-command
+   C-c C-q         ein:notebook-kill-kernel-then-close-command
    C-c C-r         ein:notebook-restart-kernel-command
    C-c C-s         ein:notebook-split-cell-at-point
    C-c C-t         ein:notebook-toggle-cell-type
