@@ -1,0 +1,793 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Emacs IPython Notebook’s documentation! &mdash; Emacs IPython Notebook 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Emacs IPython Notebook 0 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="#">Emacs IPython Notebook 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-emacs-ipython-notebook-s-documentation">
+<h1>Welcome to Emacs IPython Notebook&#8217;s documentation!<a class="headerlink" href="#welcome-to-emacs-ipython-notebook-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
+client and integrated REPL (like <a class="reference external" href="http://common-lisp.net/project/slime/">SLIME</a>).</p>
+<p>Highlighted features:</p>
+<ul class="simple">
+<li>Copy/paste cells, even to/from different notebooks.</li>
+<li>Console integration: You can easily connect to kernel via console
+application.  This enables you to start debugging in the same
+kernel.  It is even possible to connect console over ssh <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</li>
+<li>IPython kernel can be &#8220;connected&#8221; to any buffers.  This enables you
+to evaluate buffer/region using same kernel as notebook.  Notebook
+goodies such as tooltip help, help browser and code completion are
+available in these buffers. <a class="footnote-reference" href="#id4" id="id2">[2]</a></li>
+<li>Jump to definition (go to the definition by hitting <tt class="docutils literal"><span class="pre">M-.</span></tt> over an
+object).</li>
+</ul>
+<p>Other notebook features:</p>
+<ul class="simple">
+<li>Inline images</li>
+<li>Auto/manual-completion</li>
+<li>Popup (tooltip) help</li>
+<li>Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)</li>
+<li>Help browser (opens when executing <tt class="docutils literal"><span class="pre">function?</span></tt>)</li>
+<li>Traceback viewer</li>
+</ul>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>You need to setup <a class="reference internal" href="#ein:notebook-console-args" title="ein:notebook-console-args"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-args</span></tt></a> properly</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Use the command <a class="reference internal" href="#ein:connect-to-notebook" title="ein:connect-to-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-notebook</span></tt></a>.</td></tr>
+</tbody>
+</table>
+<div class="section" id="keybinds">
+<h2>Keybinds<a class="headerlink" href="#keybinds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="notebook-list">
+<h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
+<p>You can start notebook by <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> and enter the
+port or URL of the IPython notebook server.</p>
+<dl class="function">
+<dt id="ein:notebooklist-open">
+<em class="property">function </em><big>(</big><tt class="descname">ein:notebooklist-open </tt><em>&amp;optional</em> <em>url-or-port</em> <em>no-popup</em><big>)</big><a class="headerlink" href="#ein:notebooklist-open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open notebook list buffer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-new-notebook">
+<em class="property">function </em><big>(</big><tt class="descname">ein:notebooklist-new-notebook </tt><em>&amp;optional</em> <em>url-or-port</em> <em>callback</em> <em>cbargs</em><big>)</big><a class="headerlink" href="#ein:notebooklist-new-notebook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ask server to create a new notebook and open it in a new buffer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-open-notebook-global">
+<em class="property">function </em><big>(</big><tt class="descname">ein:notebooklist-open-notebook-global </tt><em>nbpath</em><big>)</big><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choose notebook from all opened notebook list and open it.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-new-scratch-notebook">
+<em class="property">function </em><tt class="descname">ein:notebooklist-new-scratch-notebook</tt><a class="headerlink" href="#ein:notebooklist-new-scratch-notebook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a notebook to try random thing.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="notebook">
+<h3>Notebook<a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h3>
+<p>The following keybinds are available in notebook buffers.</p>
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-c</tt><tt class="descclassname"> ein:notebook-execute-current-cell</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Execute cell at point.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-e</tt><tt class="descclassname"> ein:notebook-toggle-output-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Toggle the visibility of the output of the cell at point.
+This does not alter the actual data stored in the cell.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-v</tt><tt class="descclassname"> ein:notebook-set-collapsed-all-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Hide all cell output.  When prefix is given, show all cell output.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-l</tt><tt class="descclassname"> ein:notebook-clear-output-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Clear output from the current cell at point.
+Do not clear input prompt when the prefix argument is given.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-S-l</tt><tt class="descclassname"> ein:notebook-clear-all-output-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Clear output from all cells.
+Do not clear input prompts when the prefix argument is given.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-k</tt><tt class="descclassname"> ein:notebook-kill-cell-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Kill (&#8220;cut&#8221;) the cell at point.
+Note that the kill-ring for cells is not shared with the default
+kill-ring of Emacs (kill-ring for texts).</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c M-w</tt><tt class="descclassname"> ein:notebook-copy-cell-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Copy the cell at point.  (Put the current cell into the kill-ring.)</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-y</tt><tt class="descclassname"> ein:notebook-yank-cell-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert (&#8220;paste&#8221;) the latest killed cell.
+Prefixes are act same as the normal <tt class="xref el el-symbol docutils literal"><span class="pre">yank</span></tt> command.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-a</tt><tt class="descclassname"> ein:notebook-insert-cell-above-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert cell above.  Insert markdown cell instead of code cell
+when the prefix argument is given.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-b</tt><tt class="descclassname"> ein:notebook-insert-cell-below-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert cell below.  Insert markdown cell instead of code cell
+when the prefix argument is given.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-t</tt><tt class="descclassname"> ein:notebook-toggle-cell-type</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Toggle the cell type of the cell at point.
+Use <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-change-cell-type</span></tt> to change the cell type
+directly.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-u</tt><tt class="descclassname"> ein:notebook-change-cell-type</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Change the cell type of the current cell.
+Prompt will appear in the minibuffer.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-s</tt><tt class="descclassname"> ein:notebook-split-cell-at-point</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Split cell at current position. Newlines at the splitting
+point will be removed. This can be omitted by giving a prefix
+argument (C-u).</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c RET</tt><tt class="descclassname"> ein:notebook-merge-cell-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Merge next cell into current cell.
+If prefix is given, merge current cell into previous cell.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-n</tt><tt class="descclassname"> ein:notebook-goto-next-input-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-p</tt><tt class="descclassname"> ein:notebook-goto-prev-input-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c &lt;up&gt;</tt><tt class="descclassname"> ein:notebook-move-cell-up-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c &lt;down&gt;</tt><tt class="descclassname"> ein:notebook-move-cell-down-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-f</tt><tt class="descclassname"> ein:notebook-request-tool-tip-or-help-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Show the help for the object at point using tooltip.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the help in the
+pager buffer.  You can explicitly specify the object by selecting it.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c TAB</tt><tt class="descclassname"> ein:notebook-complete-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-x</tt><tt class="descclassname"> ein:notebook-view-traceback</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open traceback viewer for the traceback at point.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-r</tt><tt class="descclassname"> ein:notebook-restart-kernel-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Send request to the server to restart kernel.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-z</tt><tt class="descclassname"> ein:notebook-kernel-interrupt-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Interrupt the kernel.
+This is equivalent to do <tt class="docutils literal"><span class="pre">C-c</span></tt> in the console program.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-q</tt><tt class="descclassname"> ein:notebook-kernel-kill-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-o</tt><tt class="descclassname"> ein:notebook-console-open</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open IPython console.
+To use this function, <a class="reference internal" href="#ein:notebook-console-security-dir" title="ein:notebook-console-security-dir"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-security-dir</span></tt></a> and
+<a class="reference internal" href="#ein:notebook-console-args" title="ein:notebook-console-args"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-args</span></tt></a> must be set properly.
+This function requires <a class="reference external" href="https://github.com/fgallina/python.el">Fabian Gallina&#8217;s python.el</a> for now;
+It should be possible to support python-mode.el.  Patches are welcome!</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-RET</tt><tt class="descclassname"> ein:notebook-execute-current-cell-and-goto-next</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Execute cell at point and move to the next cell, or insert if none.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-,</tt><tt class="descclassname"> ein:pytools-jump-back-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
+is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
+given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-:</tt><tt class="descclassname"> ein:notebook-eval-string</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Evaluate a code.  Prompt will appear asking the code to run.
+This is handy when you want to execute something quickly without
+making a cell.  If the code outputs something, it will go to the
+shared output buffer.  You can open the buffer by the command
+<a class="reference internal" href="#ein:shared-output-pop-to-buffer" title="ein:shared-output-pop-to-buffer"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:shared-output-pop-to-buffer</span></tt></a>.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-x C-s</tt><tt class="descclassname"> ein:notebook-save-notebook-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Save the notebook.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-x C-w</tt><tt class="descclassname"> ein:notebook-rename-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Rename current notebook and save it immediately.</p>
+<p>NAME is any non-empty string that does not contain &#8216;/&#8217; or &#8216;&#8217;.</p>
+</dd></dd>
+</dl>
+
+<dl class="function">
+<dt id="ein:notebook-delete-cell-command">
+<em class="property">function </em><tt class="descname">ein:notebook-delete-cell-command</tt><a class="headerlink" href="#ein:notebook-delete-cell-command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a cell.  (WARNING: no undo!)
+This command has no key binding because there is no way to undo
+deletion.  Use kill to play on the safe side.</p>
+<p>If you really want use this command, you can do something like this
+(but be careful when using it!):</p>
+<div class="highlight-python"><pre>(define-key ein:notebook-mode-map "\C-c\C-d"
+            'ein:notebook-delete-cell-command)</pre>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="connected-buffer">
+<h3>Connected buffer<a class="headerlink" href="#connected-buffer" title="Permalink to this headline">¶</a></h3>
+<p>You can connect any buffer (typically buffer opening Python file) to
+opened notebook and use the kernel of the notebook to execute the
+code, inspect objects, auto-complete code, jump to the other source,
+etc.  Once the buffer is connected to the notebook, minor mode
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-mode</span></tt> is enabled and the following keybinds
+are available.</p>
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-c</tt><tt class="descclassname"> ein:connect-run-or-eval-buffer</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Run buffer using the <tt class="docutils literal"><span class="pre">%run</span></tt> magic command or eval whole
+buffer if the prefix <tt class="docutils literal"><span class="pre">C-u</span></tt> is given.
+Variable <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-command</span></tt></a> sets the command to run.
+You can change the command and/or set the options.
+See also: <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></tt></a>, <a class="reference internal" href="#ein:connect-eval-buffer" title="ein:connect-eval-buffer"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-eval-buffer</span></tt></a>.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-r</tt><tt class="descclassname"> ein:connect-eval-region</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-f</tt><tt class="descclassname"> ein:connect-request-tool-tip-or-help-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c TAB</tt><tt class="descclassname"> ein:connect-complete-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-z</tt><tt class="descclassname"> ein:connect-pop-to-notebook</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-:</tt><tt class="descclassname"> ein:connect-eval-string</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-,</tt><tt class="descclassname"> ein:pytools-jump-back-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
+is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
+given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<p>Other useful commands:</p>
+<dl class="function">
+<dt id="ein:connect-to-notebook">
+<em class="property">function </em><big>(</big><tt class="descname">ein:connect-to-notebook </tt><em>buffer-or-name</em><big>)</big><a class="headerlink" href="#ein:connect-to-notebook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect any buffer to notebook and its kernel.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:connect-eval-buffer">
+<em class="property">function </em><tt class="descname">ein:connect-eval-buffer</tt><a class="headerlink" href="#ein:connect-eval-buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the whole buffer.  Note that this will run the code
+inside the <tt class="docutils literal"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></tt> block.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:connect-run-buffer">
+<em class="property">function </em><big>(</big><tt class="descname">ein:connect-run-buffer </tt><em>&amp;optional</em> <em>ask-command</em><big>)</big><a class="headerlink" href="#ein:connect-run-buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run buffer using <tt class="docutils literal"><span class="pre">%run</span></tt>.  Ask for command if the prefix <tt class="docutils literal"><span class="pre">C-u</span></tt> is given.
+Variable <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-command</span></tt></a> sets the default command.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="shared-output-buffer">
+<h3>Shared output buffer<a class="headerlink" href="#shared-output-buffer" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="ein:shared-output-pop-to-buffer">
+<em class="property">function </em><tt class="descname">ein:shared-output-pop-to-buffer</tt><a class="headerlink" href="#ein:shared-output-pop-to-buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open shared output buffer.</p>
+</dd></dl>
+
+<p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:shared-output-mode</span></tt>.</p>
+<dl class="keybind">
+<dt>
+<tt class="descname">M-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
+</div>
+<div class="section" id="traceback-viewer">
+<h3>Traceback viewer<a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
+<p>Traceback in notebook buffer is not easy to understand.  You can open
+Traceback viewer by the command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></tt>.
+In the Traceback viewer, following keybinds are available.</p>
+<p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:traceback-mode</span></tt>.</p>
+<dl class="keybind">
+<dt>
+<tt class="descname">RET</tt><tt class="descclassname"> ein:tb-jump-to-source-at-point-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">p</tt><tt class="descclassname"> ein:tb-prev-item</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">n</tt><tt class="descclassname"> ein:tb-next-item</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">q</tt><tt class="descclassname"> bury-buffer</tt></dt>
+</dl>
+
+</div>
+<div class="section" id="pytools">
+<h3>PyTools<a class="headerlink" href="#pytools" title="Permalink to this headline">¶</a></h3>
+<p>These commands can be used in the notebook buffer and the connected
+buffer.</p>
+<dl class="function">
+<dt id="ein:pytools-whos">
+<em class="property">function </em><tt class="descname">ein:pytools-whos</tt><a class="headerlink" href="#ein:pytools-whos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute <tt class="docutils literal"><span class="pre">%whos</span></tt> magic command and popup the result.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:pytools-hierarchy">
+<em class="property">function </em><big>(</big><tt class="descname">ein:pytools-hierarchy </tt><em>&amp;optional</em> <em>ask</em><big>)</big><a class="headerlink" href="#ein:pytools-hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw inheritance graph of the class at point.
+<a class="reference external" href="https://github.com/tkf/ipython-hierarchymagic">hierarchymagic</a> extension is needed to be installed.
+You can explicitly specify the object by selecting it.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="customization">
+<h2>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
+<p>You can customize EIN using the Emacs customization UI by typing
+<tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></tt>.
+All the configurable variables are listed below.</p>
+<div class="section" id="subpackages">
+<h3>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:use-auto-complete">
+<em class="property">variable </em><tt class="descname">ein:use-auto-complete</tt><a class="headerlink" href="#ein:use-auto-complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset auto-complete configuration.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:use-auto-complete-superpack">
+<em class="property">variable </em><tt class="descname">ein:use-auto-complete-superpack</tt><a class="headerlink" href="#ein:use-auto-complete-superpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset a little bit hacky auto-complete configuration.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:use-smartrep">
+<em class="property">variable </em><tt class="descname">ein:use-smartrep</tt><a class="headerlink" href="#ein:use-smartrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset smartrep configuration.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:load-dev">
+<em class="property">variable </em><tt class="descname">ein:load-dev</tt><a class="headerlink" href="#ein:load-dev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load development helper.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id5">
+<h3>Notebook list<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:url-or-port">
+<em class="property">variable </em><tt class="descname">ein:url-or-port</tt><a class="headerlink" href="#ein:url-or-port" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of default url-or-port values.
+This will be used for completion. So put your IPython servers.
+You can connect to servers not in this list (but you will need
+to type every time).</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:scratch-notebook-name-template">
+<em class="property">variable </em><tt class="descname">ein:scratch-notebook-name-template</tt><a class="headerlink" href="#ein:scratch-notebook-name-template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template of notebook name.
+This value is used from <a class="reference internal" href="#ein:notebooklist-new-scratch-notebook" title="ein:notebooklist-new-scratch-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></tt></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h3>Notebook<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:notebook-discard-output-on-save">
+<em class="property">variable </em><tt class="descname">ein:notebook-discard-output-on-save</tt><a class="headerlink" href="#ein:notebook-discard-output-on-save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure if the output part of the cell should be saved or not.</p>
+<dl class="docutils">
+<dt><tt class="xref el el-symbol docutils literal"><span class="pre">no</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Save output. This is the default.</dd>
+<dt><tt class="xref el el-symbol docutils literal"><span class="pre">yes</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Always discard output.</dd>
+<dt>a function</dt>
+<dd>This function takes two arguments, notebook and cell.  Return
+<tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to discard output and return <tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt> to save.  For example,
+if you don&#8217;t want to save image output but other kind of
+output, use <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-cell-has-image-output-p</span></tt>.</dd>
+</dl>
+<p>Note that using function needs EIN lisp API, which is not defined
+yet.  So be careful when using EIN functions.  They may change.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-modes">
+<em class="property">variable </em><tt class="descname">ein:notebook-modes</tt><a class="headerlink" href="#ein:notebook-modes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notebook modes to use (in order of preference).</p>
+<p>When the notebook is opened, mode in this value is checked one by one
+and the first usable mode is used.  By default, MuMaMo is used when
+it is installed.  If not, a simple mode derived from <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt> is
+used.</p>
+<p>Examples:</p>
+<p>Avoid using MuMaMo even when it is installed:</p>
+<div class="highlight-python"><pre>(setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))</pre>
+</div>
+<p>Do not use <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt>.  Use plain mode when MuMaMo is not installed:</p>
+<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))</pre>
+</div>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-kill-buffer-ask">
+<em class="property">variable </em><tt class="descname">ein:notebook-kill-buffer-ask</tt><a class="headerlink" href="#ein:notebook-kill-buffer-ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether EIN should ask before killing unsaved notebook buffer.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-console-security-dir">
+<em class="property">variable </em><tt class="descname">ein:notebook-console-security-dir</tt><a class="headerlink" href="#ein:notebook-console-security-dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Security directory setting.</p>
+<p>Following types are valid:</p>
+<dl class="docutils">
+<dt>string</dt>
+<dd>Use this value as a path to security directory.
+Handy when you have only one IPython server.</dd>
+<dt>alist</dt>
+<dd>An alist whose element is &#8220;(URL-OR-PORT . DIR)&#8221;.
+Key (URL-OR-PORT) can be string (URL), integer (port), or
+<tt class="xref el el-symbol docutils literal"><span class="pre">default</span></tt> (symbol).  The value of <tt class="xref el el-symbol docutils literal"><span class="pre">default</span></tt> is used when
+other key does not much.  Normally you should have this
+entry.</dd>
+<dt>function</dt>
+<dd>Called with an argument URL-OR-PORT (integer or string).
+You can have complex setting using this.</dd>
+</dl>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-console-executable">
+<em class="property">variable </em><tt class="descname">ein:notebook-console-executable</tt><a class="headerlink" href="#ein:notebook-console-executable" title="Permalink to this definition">¶</a></dt>
+<dd><p>IPython executable used for console.</p>
+<p>Example: <tt class="docutils literal"><span class="pre">&quot;/user/bin/ipython&quot;</span></tt>.
+Types same as <a class="reference internal" href="#ein:notebook-console-security-dir" title="ein:notebook-console-security-dir"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-security-dir</span></tt></a> are valid.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-console-args">
+<em class="property">variable </em><tt class="descname">ein:notebook-console-args</tt><a class="headerlink" href="#ein:notebook-console-args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional argument when using console.</p>
+<p>Example: <tt class="docutils literal"><span class="pre">&quot;--ssh</span> <span class="pre">HOSTNAME&quot;</span></tt>.
+Types same as <a class="reference internal" href="#ein:notebook-console-security-dir" title="ein:notebook-console-security-dir"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-security-dir</span></tt></a> are valid.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:cell-traceback-level">
+<em class="property">variable </em><tt class="descname">ein:cell-traceback-level</tt><a class="headerlink" href="#ein:cell-traceback-level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of traceback stack to show.
+Hidden tracebacks are not discarded.  You can always view them
+using the command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></tt>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="connect">
+<h3>Connect<a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:connect-run-command">
+<em class="property">variable </em><tt class="descname">ein:connect-run-command</tt><a class="headerlink" href="#ein:connect-run-command" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">%run</span></tt> magic command used for <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></tt></a>.
+Types same as <a class="reference internal" href="#ein:notebook-console-security-dir" title="ein:notebook-console-security-dir"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-security-dir</span></tt></a> are valid.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:connect-save-before-run">
+<em class="property">variable </em><tt class="descname">ein:connect-save-before-run</tt><a class="headerlink" href="#ein:connect-save-before-run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the buffer should be saved before <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:propagate-connect">
+<em class="property">variable </em><tt class="descname">ein:propagate-connect</tt><a class="headerlink" href="#ein:propagate-connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to connect to the notebook after jumping to a buffer.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="mumamo">
+<h3>MuMaMo<a class="headerlink" href="#mumamo" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:mumamo-codecell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-codecell-mode</tt><a class="headerlink" href="#ein:mumamo-codecell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for Code Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-textcell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-textcell-mode</tt><a class="headerlink" href="#ein:mumamo-textcell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for Text Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-htmlcell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-htmlcell-mode</tt><a class="headerlink" href="#ein:mumamo-htmlcell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for HTML Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-markdowncell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-markdowncell-mode</tt><a class="headerlink" href="#ein:mumamo-markdowncell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for Markdown Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-rawcell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-rawcell-mode</tt><a class="headerlink" href="#ein:mumamo-rawcell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for Raw Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-headingcell-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-headingcell-mode</tt><a class="headerlink" href="#ein:mumamo-headingcell-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Major Mode for Heading Cell.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:mumamo-fallback-mode">
+<em class="property">variable </em><tt class="descname">ein:mumamo-fallback-mode</tt><a class="headerlink" href="#ein:mumamo-fallback-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fallback Major Mode.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="misc">
+<h3>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:query-timeout">
+<em class="property">variable </em><tt class="descname">ein:query-timeout</tt><a class="headerlink" href="#ein:query-timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default query timeout for HTTP access in millisecond.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="#">Emacs IPython Notebook 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Takafumi Arakaki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
