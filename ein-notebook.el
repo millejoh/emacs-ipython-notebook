@@ -1009,6 +1009,19 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
   (ein:notebook-save-notebook ein:notebook 0))
 
+(defun ein:notebook-kill-kernel-then-close-command ()
+  "Kill kernel and then kill notebook buffer.
+It does not kill buffer if killing kernel fails.  To close
+notebook without killing kernel, just close the buffer as usual."
+  (interactive)
+  (when (ein:notebook-ask-before-kill-buffer)
+    (ein:kernel-kill
+     (ein:$notebook-kernel ein:notebook)
+     (lambda (notebook)
+       (let ((ein:notebook-kill-buffer-ask nil))
+         (kill-buffer (ein:notebook-buffer notebook))))
+     (list ein:notebook))))
+
 
 ;;; Notebook mode
 
@@ -1076,7 +1089,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
     (define-key map "\C-c\C-x" 'ein:notebook-view-traceback)
     (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
     (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
-    (define-key map "\C-c\C-q" 'ein:notebook-kernel-kill-command)
+    (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
     (define-key map (kbd "C-:") 'ein:notebook-eval-string)
     (define-key map "\C-c\C-o" 'ein:notebook-console-open)
     (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)

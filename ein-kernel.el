@@ -401,7 +401,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
                     nil))))
 
 
-(defun ein:kernel-kill (kernel)
+(defun ein:kernel-kill (kernel &optional callback cbargs)
   (when (ein:$kernel-running kernel)
     (setf (ein:$kernel-running kernel) nil)
     (ein:query-ajax
@@ -409,9 +409,12 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               (ein:$kernel-kernel-url kernel))
      :cache nil
      :type "DELETE"
-     :success (cons (lambda (&rest ignore)
-                      (ein:log 'info "Notebook kernel is killed"))
-                    nil))))
+     :success (cons (lambda (packed &rest ignore)
+                      (ein:log 'info "Notebook kernel is killed")
+                      (destructuring-bind (callback cbargs)
+                          packed
+                        (when callback (apply callback cbargs))))
+                    (list callback cbargs)))))
 
 
 ;; Reply handlers.
