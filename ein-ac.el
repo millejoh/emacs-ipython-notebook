@@ -35,8 +35,10 @@
 (defvar ein:ac-sources (default-value 'ac-sources)
   "Extra `ac-sources' used in notebook.")
 
-(defvar ein:ac-max-cache 1000
-  "Maximum number of cache to store.")
+(defcustom ein:ac-max-cache 1000
+  "Maximum number of cache to store."
+  :type 'integer
+  :group 'ein)
 
 (defvar ein:ac-cache-matches nil)
 

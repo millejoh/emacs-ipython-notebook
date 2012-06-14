@@ -90,8 +90,8 @@ Requirements
   You need to configure subpackage ``ein-smartrep`` to enable
   this feature.
 
-Also, EIN heavily relies on standard Emacs libraries including EWOC
-and EIEIO.  EIN is currently tested in Emacs 24.1.
+Also, EIN heavily relies on standard Emacs libraries including EWOC,
+EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 
 .. _IPython: http://ipython.org/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket

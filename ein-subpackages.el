@@ -33,12 +33,15 @@
 
 
 (defcustom ein:use-auto-complete nil
-  "Set to `t' to use preset auto-complete configuration."
+  "Set to `t' to use preset auto-complete configuration.
+Use `ein:use-auto-complete-superpack' when you need more powerful
+auto completion."
   :type 'boolean
   :group 'ein)
 
 (defcustom ein:use-auto-complete-superpack nil
-  "Set to `t' to use preset a little bit hacky auto-complete configuration."
+  "Set to `t' to use preset a little bit hacky auto-complete configuration.
+When this option is enabled, cached omni completion is available."
   :type 'boolean
   :group 'ein)
 

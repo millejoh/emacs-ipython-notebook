@@ -74,18 +74,18 @@ Requirements
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
-  ``ein:notebook-console-open`` command.
+  :el:symbol:`ein:notebook-console-open` command.
 * (optional) `auto-complete.el`_
-  You need to configure subpackage ``ein-ac`` to enable
+  You need to configure :el:symbol:`ein:use-auto-complete` to enable
   this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
-  You need to configure subpackage ``ein-smartrep`` to enable
+  You need to configure :el:symbol:`ein:use-smartrep` to enable
   this feature.
 
-Also, EIN heavily relies on standard Emacs libraries including EWOC
-and EIEIO.  EIN is currently tested in Emacs 24.1.
+Also, EIN heavily relies on standard Emacs libraries including EWOC,
+EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 
 .. _IPython: http://ipython.org/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
@@ -195,6 +195,7 @@ Subpackages
 
 .. el:variable:: ein:use-auto-complete
 .. el:variable:: ein:use-auto-complete-superpack
+.. el:variable:: ein:ac-max-cache
 .. el:variable:: ein:use-smartrep
 .. el:variable:: ein:load-dev
 
