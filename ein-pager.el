@@ -76,12 +76,11 @@
   (view-mode)
   (font-lock-mode))
 
-(setq
- ein:pager-mode-map
-  (let ((map (copy-keymap widget-keymap)))
-    (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
-   map))
+(setq ein:pager-mode-map (copy-keymap widget-keymap))
 
+(let ((map ein:pager-mode-map))
+  (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
+  map)
 
 (provide 'ein-pager)
 

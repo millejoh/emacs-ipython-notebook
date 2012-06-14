@@ -301,15 +301,15 @@ Notebook list data is passed via the buffer local variable
 (defun ein:notebooklist-prev-item () (interactive) (move-beginning-of-line 0))
 (defun ein:notebooklist-next-item () (interactive) (move-beginning-of-line 2))
 
-(setq
- ein:notebooklist-mode-map
- (let ((map (copy-keymap widget-keymap)))
-   (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
-   (define-key map "g" 'ein:notebooklist-reload)
-   (define-key map "p" 'ein:notebooklist-prev-item)
-   (define-key map "n" 'ein:notebooklist-next-item)
-   (define-key map "q" 'bury-buffer)
-   map))
+(setq ein:notebooklist-mode-map (copy-keymap widget-keymap))
+
+(let ((map ein:notebooklist-mode-map))
+  (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
+  (define-key map "g" 'ein:notebooklist-reload)
+  (define-key map "p" 'ein:notebooklist-prev-item)
+  (define-key map "n" 'ein:notebooklist-next-item)
+  (define-key map "q" 'bury-buffer)
+  map)
 
 (provide 'ein-notebooklist)
 

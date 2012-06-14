@@ -209,17 +209,18 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 ;;; ein:connect-mode
 
-(defvar ein:connect-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
-    (define-key map "\C-c\C-r" 'ein:connect-eval-region)
-    (define-key map (kbd "C-:") 'ein:connect-eval-string)
-    (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
-    (define-key map "\C-c\C-i" 'ein:connect-complete-command)
-    (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
-    (define-key map "\M-." 'ein:pytools-jump-to-source-command)
-    (define-key map "\M-," 'ein:pytools-jump-back-command)
-    map))
+(defvar ein:connect-mode-map (make-sparse-keymap))
+
+(let ((map ein:connect-mode-map))
+  (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
+  (define-key map "\C-c\C-r" 'ein:connect-eval-region)
+  (define-key map (kbd "C-:") 'ein:connect-eval-string)
+  (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
+  (define-key map "\C-c\C-i" 'ein:connect-complete-command)
+  (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
+  (define-key map "\M-." 'ein:pytools-jump-to-source-command)
+  (define-key map "\M-," 'ein:pytools-jump-back-command)
+  map)
 
 (define-minor-mode ein:connect-mode
   "Minor mode for communicating with IPython notebook.
