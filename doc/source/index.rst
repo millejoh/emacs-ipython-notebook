@@ -6,6 +6,9 @@ Welcome to Emacs IPython Notebook's documentation!
 Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
 client and integrated REPL (like SLIME_).
 
+.. _`Emacs IPython Notebook (EIN)`:
+  https://github.com/tkf/emacs-ipython-notebook
+
 .. _SLIME: http://common-lisp.net/project/slime/
 
 Highlighted features:
@@ -30,12 +33,91 @@ Other notebook features:
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
 
+Links:
+
+* `Repository at GitHub
+  <https://github.com/tkf/emacs-ipython-notebook>`_
+* `Issue Tracker at GitHub
+  <https://github.com/tkf/emacs-ipython-notebook/issues>`_
+* `Online Documentation
+  <http://tkf.github.com/emacs-ipython-notebook/>`_
+
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
 
 
-Keybinds
---------
+Quick try
+---------
+
+This is a quick and clean way to try EIN separately from your Emacs
+setting.  If you want to try EIN but think preparing all the
+requirements is too much, try this!::
+
+   git clone git://github.com/tkf/zeroein.git
+   zeroein/zeroein.py
+
+This will launch a new Emacs instance.  For more information, see::
+
+   zeroein/zeroein.py --help
+
+
+Requirements
+------------
+
+* IPython_ **0.12.1** (or developmental version):
+  EIN won't work with older versions.
+* `websocket.el`_
+* (optional) mumamo_:
+  It will be automatically loaded when it is on the path.
+  The official way to setup path is to load nXhtml_.
+* (optional) markdown-mode
+* (optional) python-mode:
+  It should work with either python.el or python-mode.el.
+  Fabian Gallina's `python.el`_ is required to use
+  ``ein:notebook-console-open`` command.
+* (optional) `auto-complete.el`_
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
+* (optional) `smartrep.el`_:
+  This package enables you to omit typing prefix keys (e.g.,
+  ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
+  You need to configure subpackage ``ein-smartrep`` to enable
+  this feature.
+
+Also, EIN heavily relies on standard Emacs libraries including EWOC
+and EIEIO.  EIN is currently tested in Emacs 24.1.
+
+.. _IPython: http://ipython.org/
+.. _websocket.el: https://github.com/ahyatt/emacs-websocket
+.. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
+.. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
+.. _python.el: https://github.com/fgallina/python.el
+.. _auto-complete.el: http://cx4a.org/software/auto-complete/
+.. _smartrep.el: https://github.com/myuhe/smartrep.el
+
+
+Usage
+-----
+
+
+1. Install module.
+   Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
+   load path.
+
+2. Require module::
+
+     (require 'ein)
+
+3. Start `IPython notebook server`_.
+
+4. Hit ``M-x ein:notebooklist-open`` to open notebook list.
+
+.. _`IPython notebook server`:
+   http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
+
+
+Commands/Keybinds
+-----------------
 
 Notebook list
 ^^^^^^^^^^^^^

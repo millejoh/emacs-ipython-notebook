@@ -42,6 +42,15 @@ Other notebook features:
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
 
+Links:
+
+* `Repository at GitHub
+  <https://github.com/tkf/emacs-ipython-notebook>`_
+* `Issue Tracker at GitHub
+  <https://github.com/tkf/emacs-ipython-notebook/issues>`_
+* `Online Documentation
+  <http://tkf.github.com/emacs-ipython-notebook/>`_
+
 
 Quick try
 =========
@@ -52,6 +61,10 @@ requirements is too much, try this!::
 
    git clone git://github.com/tkf/zeroein.git
    zeroein/zeroein.py
+
+This will launch a new Emacs instance.  For more information, see::
+
+   zeroein/zeroein.py --help
 
 
 Requirements
@@ -93,7 +106,8 @@ Usage
 =====
 
 1. Install module.
-   Put Emacs lisp ``ein*.el`` files in your load path.
+   Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
+   load path.
 
 2. Require module::
 
