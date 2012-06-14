@@ -111,18 +111,18 @@ The official way to setup path is to load <a class="reference external" href="ht
 <li>(optional) python-mode:
 It should work with either python.el or python-mode.el.
 Fabian Gallina&#8217;s <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> is required to use
-<tt class="docutils literal"><span class="pre">ein:notebook-console-open</span></tt> command.</li>
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-open</span></tt> command.</li>
 <li>(optional) <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>
-You need to configure subpackage <tt class="docutils literal"><span class="pre">ein-ac</span></tt> to enable
+You need to configure <a class="reference internal" href="#ein:use-auto-complete" title="ein:use-auto-complete"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></tt></a> to enable
 this feature.</li>
 <li>(optional) <a class="reference external" href="https://github.com/myuhe/smartrep.el">smartrep.el</a>:
 This package enables you to omit typing prefix keys (e.g.,
 <tt class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">...</span></tt> instead of <tt class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">...</span></tt>).
-You need to configure subpackage <tt class="docutils literal"><span class="pre">ein-smartrep</span></tt> to enable
+You need to configure <a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-smartrep</span></tt></a> to enable
 this feature.</li>
 </ul>
-<p>Also, EIN heavily relies on standard Emacs libraries including EWOC
-and EIEIO.  EIN is currently tested in Emacs 24.1.</p>
+<p>Also, EIN heavily relies on standard Emacs libraries including EWOC,
+EIEIO and json.el.  EIN is currently tested in Emacs 24.1.</p>
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
@@ -414,6 +414,26 @@ given, open the last point in the other window.</p>
 
 <dl class="keybind">
 <dt>
+<tt class="descname">&lt;C-up&gt;</tt><tt class="descclassname"> ein:notebook-goto-prev-input-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">&lt;C-down&gt;</tt><tt class="descclassname"> ein:notebook-goto-next-input-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">&lt;M-up&gt;</tt><tt class="descclassname"> ein:notebook-move-cell-up-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">&lt;M-down&gt;</tt><tt class="descclassname"> ein:notebook-move-cell-down-command</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">C-:</tt><tt class="descclassname"> ein:notebook-eval-string</tt></dt>
 </dt>
 <dd><dd class="first last"><p>Evaluate a code.  Prompt will appear asking the code to run.
@@ -621,19 +641,37 @@ All the configurable variables are listed below.</p>
 <dl class="variable">
 <dt id="ein:use-auto-complete">
 <em class="property">variable </em><tt class="descname">ein:use-auto-complete</tt><a class="headerlink" href="#ein:use-auto-complete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset auto-complete configuration.</p>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset auto-complete configuration.
+Use <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></tt></a> when you need more powerful
+auto completion.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:use-auto-complete-superpack">
 <em class="property">variable </em><tt class="descname">ein:use-auto-complete-superpack</tt><a class="headerlink" href="#ein:use-auto-complete-superpack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset a little bit hacky auto-complete configuration.</p>
+<dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset a little bit hacky auto-complete configuration.
+When this option is enabled, cached omni completion is available.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:ac-max-cache">
+<em class="property">variable </em><tt class="descname">ein:ac-max-cache</tt><a class="headerlink" href="#ein:ac-max-cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of cache to store.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:use-smartrep">
 <em class="property">variable </em><tt class="descname">ein:use-smartrep</tt><a class="headerlink" href="#ein:use-smartrep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set to <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to use preset smartrep configuration.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When used with MuMaMo (see <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-modes</span></tt></a>),
+keyboard macro which includes the keybinds defined by this
+preset configuration (see <tt class="xref el el-symbol docutils literal"><span class="pre">ein:smartrep-config</span></tt>) may start
+infinite loop (you need to stop it with C-g).  Please be
+careful using this option if you are a heavy keyboard macro
+user.  Using keyboard macro for other commands is fine.</p>
+</div>
 </dd></dl>
 
 <dl class="variable">
@@ -827,6 +865,21 @@ Types same as <a class="reference internal" href="#ein:notebook-console-security
 <dd><p>Default query timeout for HTTP access in millisecond.</p>
 </dd></dl>
 
+</div>
+</div>
+<div class="section" id="advanced">
+<h2>Advanced<a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
+<p>By telling IPython a little bit about Emacs Lisp, you can execute
+Emacs Lisp from IPython, just like you can execute Javascript in the
+web client.  See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py">emacslisp.py</a> for more details.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+<span class="o">%</span><span class="n">run</span> <span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">emacslisp</span><span class="o">.</span><span class="n">py</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+<span class="n">EmacsLisp</span><span class="p">(</span><span class="s">&#39;(+ 1 2 3)&#39;</span><span class="p">)</span>
+<span class="n">Out</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+<span class="mi">6</span>
+</pre></div>
 </div>
 </div>
 </div>
