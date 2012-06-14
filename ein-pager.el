@@ -76,7 +76,7 @@
   (view-mode)
   (font-lock-mode))
 
-(setq ein:pager-mode-map (copy-keymap widget-keymap))
+(setq ein:pager-mode-map (make-sparse-keymap))
 
 (let ((map ein:pager-mode-map))
   (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
