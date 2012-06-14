@@ -80,6 +80,7 @@
 
 (let ((map ein:pager-mode-map))
   (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
+  (define-key map "q" 'bury-buffer)
   map)
 
 (provide 'ein-pager)
