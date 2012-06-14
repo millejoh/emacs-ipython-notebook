@@ -67,6 +67,12 @@ object).</li>
 <li>Help browser (opens when executing <tt class="docutils literal"><span class="pre">function?</span></tt>)</li>
 <li>Traceback viewer</li>
 </ul>
+<p>Links:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook">Repository at GitHub</a></li>
+<li><a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues">Issue Tracker at GitHub</a></li>
+<li><a class="reference external" href="http://tkf.github.com/emacs-ipython-notebook/">Online Documentation</a></li>
+</ul>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -79,8 +85,64 @@ object).</li>
 <tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Use the command <a class="reference internal" href="#ein:connect-to-notebook" title="ein:connect-to-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-notebook</span></tt></a>.</td></tr>
 </tbody>
 </table>
-<div class="section" id="keybinds">
-<h2>Keybinds<a class="headerlink" href="#keybinds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="quick-try">
+<h2>Quick try<a class="headerlink" href="#quick-try" title="Permalink to this headline">¶</a></h2>
+<p>This is a quick and clean way to try EIN separately from your Emacs
+setting.  If you want to try EIN but think preparing all the
+requirements is too much, try this!:</p>
+<div class="highlight-python"><pre>git clone git://github.com/tkf/zeroein.git
+zeroein/zeroein.py</pre>
+</div>
+<p>This will launch a new Emacs instance.  For more information, see:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">zeroein</span><span class="o">/</span><span class="n">zeroein</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://ipython.org/">IPython</a> <strong>0.12.1</strong> (or developmental version):
+EIN won&#8217;t work with older versions.</li>
+<li><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a></li>
+<li>(optional) <a class="reference external" href="http://www.emacswiki.org/emacs/MuMaMo">mumamo</a>:
+It will be automatically loaded when it is on the path.
+The official way to setup path is to load <a class="reference external" href="http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html">nXhtml</a>.</li>
+<li>(optional) markdown-mode</li>
+<li>(optional) python-mode:
+It should work with either python.el or python-mode.el.
+Fabian Gallina&#8217;s <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> is required to use
+<tt class="docutils literal"><span class="pre">ein:notebook-console-open</span></tt> command.</li>
+<li>(optional) <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>
+You need to configure subpackage <tt class="docutils literal"><span class="pre">ein-ac</span></tt> to enable
+this feature.</li>
+<li>(optional) <a class="reference external" href="https://github.com/myuhe/smartrep.el">smartrep.el</a>:
+This package enables you to omit typing prefix keys (e.g.,
+<tt class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">...</span></tt> instead of <tt class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">...</span></tt>).
+You need to configure subpackage <tt class="docutils literal"><span class="pre">ein-smartrep</span></tt> to enable
+this feature.</li>
+</ul>
+<p>Also, EIN heavily relies on standard Emacs libraries including EWOC
+and EIEIO.  EIN is currently tested in Emacs 24.1.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Install module.
+Put Emacs lisp <tt class="docutils literal"><span class="pre">ein*.el</span></tt> files and Python file <tt class="docutils literal"><span class="pre">ein.py</span></tt> in your
+load path.</p>
+</li>
+<li><p class="first">Require module:</p>
+<div class="highlight-python"><pre>(require 'ein)</pre>
+</div>
+</li>
+<li><p class="first">Start <a class="reference external" href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html">IPython notebook server</a>.</p>
+</li>
+<li><p class="first">Hit <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> to open notebook list.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="commands-keybinds">
+<h2>Commands/Keybinds<a class="headerlink" href="#commands-keybinds" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="notebook-list">
 <h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
 <p>You can start notebook by <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> and enter the
@@ -707,8 +769,8 @@ Types same as <a class="reference internal" href="#ein:notebook-console-security
 </dd></dl>
 
 </div>
-<div class="section" id="mumamo">
-<h3>MuMaMo<a class="headerlink" href="#mumamo" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>MuMaMo<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:mumamo-codecell-mode">
 <em class="property">variable </em><tt class="descname">ein:mumamo-codecell-mode</tt><a class="headerlink" href="#ein:mumamo-codecell-mode" title="Permalink to this definition">¶</a></dt>
