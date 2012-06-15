@@ -67,7 +67,7 @@
                                    ein:url-or-port))
          (default (ein:aif (ein:pytools-get-notebook)
                       (format "%s" (ein:$notebook-url-or-port it))
-                    (car url-or-port-list)))
+                    (format "%s" (ein:default-url-or-port))))
          (url-or-port
           (completing-read "URL or port number (hit TAB to complete): "
                            url-or-port-list
@@ -81,7 +81,7 @@
 (defun ein:notebooklist-open (&optional url-or-port no-popup)
   "Open notebook list buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (unless url-or-port (setq url-or-port (or (car ein:url-or-port) 8888)))
+  (unless url-or-port (setq url-or-port (ein:default-url-or-port)))
   (ein:subpackages-load)
   (let ((success
          (if no-popup
@@ -190,7 +190,7 @@ This value is used from `ein:notebooklist-new-scratch-notebook'."
   (interactive)
   (ein:notebooklist-new-notebook-with-name
    (format-time-string ein:scratch-notebook-name-template (current-time))
-   (car ein:url-or-port)))
+   (ein:default-url-or-port)))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))

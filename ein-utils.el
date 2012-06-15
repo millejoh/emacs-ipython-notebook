@@ -42,6 +42,17 @@ to type every time)."
                          (string :tag "URL" "http://127.0.0.1:8888")))
   :group 'ein)
 
+(defcustom ein:default-url-or-port nil
+  "Default URL or port.  This should be your main IPython
+Notebook server."
+  :type '(choice (integer :tag "Port number" 8888)
+                 (string :tag "URL" "http://127.0.0.1:8888")
+                 (const :tag "First value of `ein:url-or-port'" nil))
+  :group 'ein)
+
+(defun ein:default-url-or-port ()
+  (or ein:default-url-or-port (car ein:url-or-port) 8888))
+
 (defvar ein:source-dir (file-name-directory load-file-name))
 
 
