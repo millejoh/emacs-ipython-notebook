@@ -65,9 +65,11 @@
 (defun ein:notebooklist-ask-url-or-port ()
   (let* ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
                                    ein:url-or-port))
-         (default (ein:aif (ein:pytools-get-notebook)
-                      (format "%s" (ein:$notebook-url-or-port it))
-                    (format "%s" (ein:default-url-or-port))))
+         (default (format "%s" (ein:aif (ein:pytools-get-notebook)
+                                   (ein:$notebook-url-or-port it)
+                                 (ein:aif ein:notebooklist
+                                     (ein:$notebooklist-url-or-port it)
+                                   (ein:default-url-or-port)))))
          (url-or-port
           (completing-read "URL or port number (hit TAB to complete): "
                            url-or-port-list
