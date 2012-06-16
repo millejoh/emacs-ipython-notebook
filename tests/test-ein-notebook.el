@@ -70,6 +70,27 @@
 (defun eintest:notebook-enable-mode (buffer)
   (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
 
+(defun eintest:kernel-fake-execute-reply (kernel msg-id execution-count)
+  (let* ((payload nil)
+         (content (list :execution_count 1 :payload payload))
+         (packet (list :header (list :msg_type "execute_reply")
+                       :parent_header (list :msg_id msg-id)
+                       :content content)))
+    (ein:kernel--handle-shell-reply kernel (json-encode packet))))
+
+(defun eintest:kernel-fake-stream (kernel msg-id data)
+  (let* ((content (list :data data
+                        :name "stdout"))
+         (packet (list :header (list :msg_type "stream")
+                       :parent_header (list :msg_id msg-id)
+                       :content content)))
+    (ein:kernel--handle-iopub-reply kernel (json-encode packet))))
+
+(defun eintest:search-forward-from (string start)
+  (save-excursion
+    (goto-char start)
+    (search-forward string nil t)))
+
 
 ;; from-json
 
@@ -332,15 +353,11 @@ some text
            (cell (ein:notebook-get-current-cell))
            (kernel (ein:$notebook-kernel ein:notebook))
            (msg-id "DUMMY-MSG-ID")
-           (callbacks
-            (list
-             :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
-             :output         (cons #'ein:cell--handle-output         cell)
-             :clear_output   (cons #'ein:cell--handle-clear-output   cell)
-             :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
+           (callbacks (ein:cell-make-callbacks cell)))
       (should (ein:$kernel-p kernel))
       (should (ein:codecell-p cell))
       (should (ein:$kernel-p (oref cell :kernel)))
+      ;; Execute
       (insert text)
       (mocker-let ((ein:kernel-execute
                     (kernel code callbacks kwd-silent silent)
@@ -350,25 +367,13 @@ some text
                     ((:input (list kernel) :output t))))
         (ein:notebook-execute-current-cell))
       (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-      (save-excursion
-        (goto-char (point-min))
-        (should-not (search-forward "In [1]:" nil t)))
-      (let* ((payload nil)
-             (content (list :execution_count 1 :payload payload))
-             (packet (list :header (list :msg_type "execute_reply")
-                           :parent_header (list :msg_id msg-id)
-                           :content content)))
-        (ein:kernel--handle-shell-reply kernel (json-encode packet)))
+      ;; Execute reply
+      (should-not (eintest:search-forward-from "In [1]:" (point-min)))
+      (eintest:kernel-fake-execute-reply kernel msg-id 1)
       (should (= (oref cell :input-prompt-number) 1))
-      (save-excursion
-        (goto-char (point-min))
-        (should (search-forward "In [1]:" nil t)))
-      (let* ((content (list :data "'Hello World'"
-                            :name "stdout"))
-             (packet (list :header (list :msg_type "stream")
-                           :parent_header (list :msg_id msg-id)
-                           :content content)))
-        (ein:kernel--handle-iopub-reply kernel (json-encode packet)))
+      (should (eintest:search-forward-from "In [1]:" (point-min)))
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id "'Hello World'")
       (should (= (ein:cell-num-outputs cell) 1))
       (save-excursion
         (goto-char (point-min))
