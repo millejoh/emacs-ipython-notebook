@@ -97,6 +97,11 @@ is not found."
     (when null-string
       (should-not (search-forward null-string nil t)))))
 
+(defun eintest:cell-check-output (cell regexp)
+  (save-excursion
+    (goto-char (ein:cell-location cell :after-input))
+    (should (looking-at-p (concat "\\=" regexp "\n")))))
+
 
 ;; from-json
 
@@ -408,8 +413,7 @@ some text
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
             (lambda ()
-              (eintest:check-search-forward-from
-               (point-min) (concat "\n" output-text) "Hello World"))))
+              (eintest:cell-check-output cell output-text))))
       (eintest:notebook-check-kernel-and-codecell kernel cell)
       ;; Execute
       (insert text)
@@ -441,8 +445,7 @@ some text
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
             (lambda ()
-              (eintest:check-search-forward-from
-               (point-min) (concat "\n" output-text) "Hello World"))))
+              (eintest:cell-check-output cell output-text))))
       (eintest:notebook-check-kernel-and-codecell kernel cell)
       ;; Execute
       (insert text)

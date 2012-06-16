@@ -543,7 +543,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
   "Return the starting location of CELL.
-ELM is a name (keyword) of element in the `:element-names' slot of CELL.
+ELM is a name (keyword) of element that `ein:cell-element-get'
+understands.  Note that you can't use `:output' since it returns
+a list.  Use `:after-input' instead.
 If END is non-`nil', return the location of next element."
   (unless elm (setq elm :prompt))
   (let ((element (oref cell :element)))
