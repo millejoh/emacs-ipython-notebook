@@ -389,6 +389,83 @@ some text
         (should-not (search-forward "Hello World" nil t))))))
 
 
+;; Notebook undo
+
+(ert-deftest ein:notebook-undo-after-execution ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (let* ((text "print 'Hello World'")
+           (output-text "Hello World\n")
+           (cell (ein:notebook-get-current-cell))
+           (kernel (ein:$notebook-kernel ein:notebook))
+           (msg-id "DUMMY-MSG-ID")
+           (callbacks (ein:cell-make-callbacks cell))
+           (check-output
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (should (search-forward (concat "\n" output-text) nil t))
+                (should-not (search-forward "Hello World" nil t))))))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
+      ;; Execute
+      (insert text)
+      (undo-boundary)
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id output-text)
+      (funcall check-output)
+      ;; Undo
+      (should (equal (ein:cell-get-text cell) text))
+      (undo)
+      (should (equal (ein:cell-get-text cell) ""))
+      ;; FIXME: Known bug. (it must succeed.)
+      (should-error (funcall check-output)))))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (ein:notebook-insert-cell-above-command)
+    (let* ((text "print 'Hello World\\n' * 10")
+           (next-text "something")
+           (output-text
+            (apply #'concat (loop repeat 10 collect "Hello World\n")))
+           (cell (ein:notebook-get-current-cell))
+           (next-cell (ein:cell-next cell))
+           (kernel (ein:$notebook-kernel ein:notebook))
+           (msg-id "DUMMY-MSG-ID")
+           (callbacks (ein:cell-make-callbacks cell))
+           (check-output
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (should (search-forward (concat "\n" output-text) nil t))
+                (should-not (search-forward "Hello World" nil t))))))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
+      ;; Execute
+      (insert text)
+      (undo-boundary)
+      (let ((pos (point)))
+        ;; Do not use `save-excursion' because it does not record undo.
+        (ein:notebook-goto-next-input-command)
+        (insert next-text)
+        (undo-boundary)
+        (goto-char pos))
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id output-text)
+      (funcall check-output)
+      ;; Undo
+      (should (equal (ein:cell-get-text cell) text))
+      (should (equal (ein:cell-get-text next-cell) next-text))
+      (undo)
+      (should (equal (ein:cell-get-text cell) text))
+      ;; FIXME: Known bug. (these two must succeed.)
+      (should-error (should (equal (ein:cell-get-text next-cell) "")))
+      (should-error (funcall check-output)))))
+
+
 ;; Notebook mode
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
