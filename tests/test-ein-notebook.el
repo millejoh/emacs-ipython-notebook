@@ -346,6 +346,16 @@ some text
 
 ;; Kernel related things
 
+(defun eintest:notebook-fake-execution (kernel text msg-id callbacks)
+  (mocker-let ((ein:kernel-execute
+                (kernel code callbacks kwd-silent silent)
+                ((:input (list kernel text callbacks :silent nil))))
+               (ein:kernel-ready-p
+                (kernel)
+                ((:input (list kernel) :output t))))
+    (ein:notebook-execute-current-cell))
+  (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))
+
 (ert-deftest ein:notebook-execute-current-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
@@ -359,14 +369,7 @@ some text
       (should (ein:$kernel-p (oref cell :kernel)))
       ;; Execute
       (insert text)
-      (mocker-let ((ein:kernel-execute
-                    (kernel code callbacks kwd-silent silent)
-                    ((:input (list kernel text callbacks :silent nil))))
-                   (ein:kernel-ready-p
-                    (kernel)
-                    ((:input (list kernel) :output t))))
-        (ein:notebook-execute-current-cell))
-      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
       ;; Execute reply
       (should-not (eintest:search-forward-from "In [1]:" (point-min)))
       (eintest:kernel-fake-execute-reply kernel msg-id 1)
