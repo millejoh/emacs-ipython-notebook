@@ -54,6 +54,34 @@
 
 ;;; Configuration
 
+(defcustom ein:notebook-enable-undo 'yes
+  "Configure undo in notebook buffers.
+
+`no' : symbol
+    Do not use undo in notebook buffers.  It is the safest option.
+`yes' : symbol
+    Enable undo in notebook buffers.  You can't undo after
+    modification of cell (execution, add, remove, etc.).  This
+    is default.
+`full' : symbol
+    Enable full undo in notebook buffers.  It is powerful but
+    sometime (typically after the cell specific commands) undo
+    mess up notebook buffer.  Use it on your own risk.  When the
+    buffer is messed up, you can just redo and continue editing,
+    or save it once and reopen it if you want to be careful.
+
+You need to reopen the notebook buffer to reflect the change of
+this value."
+  :type '(choice (const :tag "No" no)
+                 (const :tag "Yes" yes)
+                 (const :tag "Full" full))
+  :group 'ein)
+
+(defun ein:notebook-empty-undo-maybe ()
+  "Empty `buffer-undo-list' if `ein:notebook-enable-undo' is `yes'."
+  (when (eq ein:notebook-enable-undo 'yes)
+    (setq buffer-undo-list nil)))
+
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
@@ -295,6 +323,8 @@ See `ein:notebook-open' for more information."
   (assert ein:notebook)  ; make sure in a notebook buffer
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
+  (when (eq ein:notebook-enable-undo 'no)
+    (setq buffer-undo-list t))
   (ein:notebook-mode)
   (setf (ein:$notebook-notification ein:notebook)
         (ein:notification-setup (current-buffer)))
@@ -315,7 +345,8 @@ See `ein:notebook-open' for more information."
     ;;        and maybe adding more tests.  I will just let them be
     ;;        there since it is harmless.
     (case (car path)
-      (cell (ein:cell-pp (cdr path) data)))))
+      (cell (ein:cell-pp (cdr path) data))))
+  (ein:notebook-empty-undo-maybe))
 
 
 ;;; Initialization.
@@ -392,7 +423,8 @@ See `ein:notebook-open' for more information."
     (apply #'ewoc-delete
            (ein:$notebook-ewoc notebook)
            (ein:cell-all-element cell)))
-  (setf (ein:$notebook-dirty notebook) t))
+  (setf (ein:$notebook-dirty notebook) t)
+  (ein:notebook-empty-undo-maybe))
 
 (defun ein:notebook-delete-cell-command ()
   "Delete a cell.  \(WARNING: no undo!)
