@@ -109,8 +109,9 @@
       ein:@shared-output)))
 
 (defun ein:shared-output-bind-events (events)
-  (ein:events-on events 'set_dirty.Notebook
-                 (lambda (&rest ignore))))
+  "Add dummy event handlers."
+  (ein:events-on events 'set_dirty.Notebook (lambda (&rest ignore)))
+  (ein:events-on events 'maybe_reset_undo.Notebook (lambda (&rest ignore))))
 
 (defun ein:shared-output-get-cell ()
   "Get the singleton shared output cell.
