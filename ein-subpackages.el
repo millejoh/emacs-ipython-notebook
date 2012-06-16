@@ -49,11 +49,11 @@ When this option is enabled, cached omni completion is available."
   "Set to `t' to use preset smartrep configuration.
 
 .. warning:: When used with MuMaMo (see `ein:notebook-modes'),
-   keyboard macro which includes the keybinds defined by this
-   preset configuration (see `ein:smartrep-config') may start
-   infinite loop (you need to stop it with C-g).  Please be
-   careful using this option if you are a heavy keyboard macro
-   user.  Using keyboard macro for other commands is fine.
+   keyboard macro which uses EIN notebook commands that manipulate
+   cell (add/remove/move) may start infinite loop (you need to
+   stop it with ``C-g``).  Please be careful using this option if
+   you are a heavy keyboard macro user.  Using keyboard macro for
+   other commands is fine.
 
 .. (Comment) I guess this infinite loop happens because the three
    modules (kmacro.el, mumamo.el and smartrep.el) touches to
