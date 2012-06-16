@@ -379,13 +379,13 @@ some text
       (should (= (oref cell :input-prompt-number) 1))
       (should (eintest:search-forward-from "In [1]:" (point-min)))
       ;; Stream output
-      (eintest:kernel-fake-stream kernel msg-id "'Hello World'")
+      (eintest:kernel-fake-stream kernel msg-id "Hello World")
       (should (= (ein:cell-num-outputs cell) 1))
       (save-excursion
         (goto-char (point-min))
         (should (search-forward "In [1]:" nil t))
         (should (search-forward "print 'Hello World'" nil t))
-        (should (search-forward "Hello World" nil t)) ; stream output
+        (should (search-forward "\nHello World\n" nil t)) ; stream output
         (should-not (search-forward "Hello World" nil t))))))
 
 
