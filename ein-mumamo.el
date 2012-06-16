@@ -68,6 +68,7 @@
 
 (define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
   "Background mode for `ein:notebook-mumamo-mode'."
+  (setq font-lock-defaults '(nil t))
   (font-lock-mode))
 
 (define-mumamo-multi-major-mode ein:notebook-mumamo-mode
