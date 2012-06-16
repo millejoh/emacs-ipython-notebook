@@ -156,6 +156,8 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open-notebook-global
 .. el:function:: ein:notebooklist-new-scratch-notebook
 
+.. el:keymap:: ein:notebooklist-mode-map
+
 .. _notebook-commands:
 
 Notebook
