@@ -86,10 +86,16 @@
                        :content content)))
     (ein:kernel--handle-iopub-reply kernel (json-encode packet))))
 
-(defun eintest:search-forward-from (string start)
+(defun eintest:check-search-forward-from (start string &optional null-string)
+  "Search STRING from START and check it is found.
+When non-`nil' NULL-STRING is given, it is searched from the
+position where the search of the STRING ends and check that it
+is not found."
   (save-excursion
     (goto-char start)
-    (search-forward string nil t)))
+    (should (search-forward string nil t))
+    (when null-string
+      (should-not (search-forward null-string nil t)))))
 
 
 ;; from-json
@@ -374,10 +380,10 @@ some text
       (insert text)
       (eintest:notebook-fake-execution kernel text msg-id callbacks)
       ;; Execute reply
-      (should-not (eintest:search-forward-from "In [1]:" (point-min)))
+      (should-error (eintest:check-search-forward-from (point-min) "In [1]:"))
       (eintest:kernel-fake-execute-reply kernel msg-id 1)
       (should (= (oref cell :input-prompt-number) 1))
-      (should (eintest:search-forward-from "In [1]:" (point-min)))
+      (eintest:check-search-forward-from (point-min) "In [1]:")
       ;; Stream output
       (eintest:kernel-fake-stream kernel msg-id "Hello World")
       (should (= (ein:cell-num-outputs cell) 1))
@@ -402,10 +408,8 @@ some text
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
             (lambda ()
-              (save-excursion
-                (goto-char (point-min))
-                (should (search-forward (concat "\n" output-text) nil t))
-                (should-not (search-forward "Hello World" nil t))))))
+              (eintest:check-search-forward-from
+               (point-min) (concat "\n" output-text) "Hello World"))))
       (eintest:notebook-check-kernel-and-codecell kernel cell)
       ;; Execute
       (insert text)
@@ -437,10 +441,8 @@ some text
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
             (lambda ()
-              (save-excursion
-                (goto-char (point-min))
-                (should (search-forward (concat "\n" output-text) nil t))
-                (should-not (search-forward "Hello World" nil t))))))
+              (eintest:check-search-forward-from
+               (point-min) (concat "\n" output-text) "Hello World"))))
       (eintest:notebook-check-kernel-and-codecell kernel cell)
       ;; Execute
       (insert text)
