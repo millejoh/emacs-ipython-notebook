@@ -336,17 +336,9 @@ See `ein:notebook-open' for more information."
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
-        (data (ein:$node-data ewoc-data))
-        (inhibit-read-only t)
-        (buffer-undo-list t))         ; disable undo recording
-    ;; FIXME: Having `inhibit-read-only' and `buffer-undo-list' should
-    ;;        make some of the same statements in ein-notebook/cell.el
-    ;;        removable.  These must be removed after careful review
-    ;;        and maybe adding more tests.  I will just let them be
-    ;;        there since it is harmless.
+        (data (ein:$node-data ewoc-data)))
     (case (car path)
-      (cell (ein:cell-pp (cdr path) data))))
-  (ein:notebook-empty-undo-maybe))
+      (cell (ein:cell-pp (cdr path) data)))))
 
 
 ;;; Initialization.
@@ -514,6 +506,7 @@ Prefixes are act same as the normal `yank' command."
         (ein:cell-insert-below base-cell cell))
        (t (error (concat "`base-cell' is `nil' but ncells != 0.  "
                          "There is something wrong..."))))
+      (ein:notebook-empty-undo-maybe)
       (ein:cell-goto cell)
       (setf (ein:$notebook-dirty notebook) t))
     cell))
@@ -544,6 +537,7 @@ when the prefix argument is given."
             (ein:cell-enter-first cell))))
        (t (error (concat "`base-cell' is `nil' but ncells > 1.  "
                          "There is something wrong..."))))
+      (ein:notebook-empty-undo-maybe)
       (ein:cell-goto cell)
       (setf (ein:$notebook-dirty notebook) t))
     cell))
@@ -576,6 +570,7 @@ directly."
       (let ((new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+        (ein:notebook-empty-undo-maybe)
         (ein:cell-goto new)))))
 
 (defun ein:notebook-change-cell-type ()
@@ -599,7 +594,8 @@ Prompt will appear in the minibuffer."
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (when level
-          (ein:cell-change-level new type))))))
+          (ein:cell-change-level new type))
+        (ein:notebook-empty-undo-maybe)))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
@@ -702,6 +698,7 @@ If prefix is given, merge current cell into previous cell."
 
 (defun ein:notebook-toggle-output (notebook cell)
   (ein:cell-toggle-output cell)
+  (ein:notebook-empty-undo-maybe)
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-toggle-output-command ()
@@ -715,6 +712,7 @@ This does not alter the actual data stored in the cell."
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:notebook-get-cells notebook))
+  (ein:notebook-empty-undo-maybe)
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-set-collapsed-all-command (&optional show)
@@ -729,7 +727,8 @@ Do not clear input prompt when the prefix argument is given."
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:cell-clear-output cell t t t)
     (unless preserve-input-prompt
-      (ein:cell-set-input-prompt cell))))
+      (ein:cell-set-input-prompt cell))
+    (ein:notebook-empty-undo-maybe)))
 
 (defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
   "Clear output from all cells.
@@ -740,7 +739,8 @@ Do not clear input prompts when the prefix argument is given."
           do (when (ein:codecell-p cell)
                (ein:cell-clear-output cell t t t)
                (unless preserve-input-prompt
-                 (ein:cell-set-input-prompt cell))))
+                 (ein:cell-set-input-prompt cell))
+               (ein:notebook-empty-undo-maybe)))
     (ein:log 'error "Not in notebook buffer!")))
 
 

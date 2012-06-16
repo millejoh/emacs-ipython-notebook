@@ -402,7 +402,7 @@ some text
 
 ;; Notebook undo
 
-(ert-deftest ein:notebook-undo-after-execution-1-cell ()
+(defun eintest:notebook-undo-after-execution-1-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
     (let* ((text "print 'Hello World'")
@@ -425,12 +425,15 @@ some text
       (funcall check-output)
       ;; Undo
       (should (equal (ein:cell-get-text cell) text))
-      (undo)
-      (should (equal (ein:cell-get-text cell) ""))
-      ;; FIXME: Known bug. (it must succeed.)
-      (should-error (funcall check-output)))))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (should (equal (ein:cell-get-text cell) ""))
+        ;; FIXME: Known bug. (it must succeed.)
+        (should-error (funcall check-output))))))
 
-(ert-deftest ein:notebook-undo-after-execution-2-cells ()
+(defun eintest:notebook-undo-after-execution-2-cells ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-above-command)
@@ -464,11 +467,38 @@ some text
       ;; Undo
       (should (equal (ein:cell-get-text cell) text))
       (should (equal (ein:cell-get-text next-cell) next-text))
-      (undo)
-      (should (equal (ein:cell-get-text cell) text))
-      ;; FIXME: Known bug. (these two must succeed.)
-      (should-error (should (equal (ein:cell-get-text next-cell) "")))
-      (should-error (funcall check-output)))))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (should (equal (ein:cell-get-text cell) text))
+        ;; FIXME: Known bug. (these two must succeed.)
+        (should-error (should (equal (ein:cell-get-text next-cell) "")))
+        (should-error (funcall check-output))))))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/no ()
+  (let ((ein:notebook-enable-undo 'no))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/yes ()
+  (let ((ein:notebook-enable-undo 'yes))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/full ()
+  (let ((ein:notebook-enable-undo 'full))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/no ()
+  (let ((ein:notebook-enable-undo 'no))
+    (eintest:notebook-undo-after-execution-2-cells)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/yes ()
+  (let ((ein:notebook-enable-undo 'yes))
+    (eintest:notebook-undo-after-execution-2-cells)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/full ()
+  (let ((ein:notebook-enable-undo 'full))
+    (eintest:notebook-undo-after-execution-2-cells)))
 
 
 ;; Notebook mode
