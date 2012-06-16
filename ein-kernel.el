@@ -403,7 +403,6 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 (defun ein:kernel-kill (kernel &optional callback cbargs)
   (when (ein:$kernel-running kernel)
-    (setf (ein:$kernel-running kernel) nil)
     (ein:query-ajax
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel))
@@ -411,10 +410,11 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
      :type "DELETE"
      :success (cons (lambda (packed &rest ignore)
                       (ein:log 'info "Notebook kernel is killed")
-                      (destructuring-bind (callback cbargs)
+                      (destructuring-bind (kernel callback cbargs)
                           packed
+                        (setf (ein:$kernel-running kernel) nil)
                         (when callback (apply callback cbargs))))
-                    (list callback cbargs)))))
+                    (list kernel callback cbargs)))))
 
 
 ;; Reply handlers.
