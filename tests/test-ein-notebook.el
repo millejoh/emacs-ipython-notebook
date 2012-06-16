@@ -346,6 +346,11 @@ some text
 
 ;; Kernel related things
 
+(defun eintest:notebook-check-kernel-and-codecell (kernel cell)
+  (should (ein:$kernel-p kernel))
+  (should (ein:codecell-p cell))
+  (should (ein:$kernel-p (oref cell :kernel))))
+
 (defun eintest:notebook-fake-execution (kernel text msg-id callbacks)
   (mocker-let ((ein:kernel-execute
                 (kernel code callbacks kwd-silent silent)
@@ -364,9 +369,7 @@ some text
            (kernel (ein:$notebook-kernel ein:notebook))
            (msg-id "DUMMY-MSG-ID")
            (callbacks (ein:cell-make-callbacks cell)))
-      (should (ein:$kernel-p kernel))
-      (should (ein:codecell-p cell))
-      (should (ein:$kernel-p (oref cell :kernel)))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
       ;; Execute
       (insert text)
       (eintest:notebook-fake-execution kernel text msg-id callbacks)
