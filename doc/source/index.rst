@@ -208,6 +208,7 @@ Notebook list
 Notebook
 ^^^^^^^^
 
+.. el:variable:: ein:notebook-enable-undo
 .. el:variable:: ein:notebook-discard-output-on-save
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-kill-buffer-ask
