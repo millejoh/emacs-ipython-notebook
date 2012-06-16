@@ -306,7 +306,14 @@ See `ein:notebook-open' for more information."
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
-        (data (ein:$node-data ewoc-data)))
+        (data (ein:$node-data ewoc-data))
+        (inhibit-read-only t)
+        (buffer-undo-list t))         ; disable undo recording
+    ;; FIXME: Having `inhibit-read-only' and `buffer-undo-list' should
+    ;;        make some of the same statements in ein-notebook/cell.el
+    ;;        removable.  These must be removed after careful review
+    ;;        and maybe adding more tests.  I will just let them be
+    ;;        there since it is harmless.
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
 
