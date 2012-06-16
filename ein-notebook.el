@@ -356,6 +356,10 @@ See `ein:notebook-open' for more information."
                    (setf (ein:$notebook-dirty notebook)
                          (plist-get data :value)))
                  notebook)
+  (ein:events-on events
+                 'maybe_reset_undo.Notebook
+                 (lambda (&rest -ignore-)
+                   (ein:notebook-empty-undo-maybe)))
   ;; Bind events for sub components:
   (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
         (ein:notebook-get-cells notebook))

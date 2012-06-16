@@ -62,7 +62,9 @@
 When EVENT-TYPE is triggered on the event handler EVENTS,
 CALLBACK is called.  CALLBACK must take two arguments:
 ARG as the first argument and DATA, which is passed via
-`ein:events-trigger', as the second."
+`ein:events-trigger', as the second.  When calling the function,
+current buffer is set to the configured buffer.  `ein:events-new'
+is used to configure the buffer."
   (assert (symbolp event-type))
   (let* ((table (oref events :callbacks))
          (cbs (gethash event-type table)))

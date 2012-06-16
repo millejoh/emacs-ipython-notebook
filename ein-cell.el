@@ -794,12 +794,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
-  (ein:events-trigger
-   (oref cell :events) 'set_dirty.Notebook '(:value t)))
+  (let ((events (oref cell :events)))
+    (ein:events-trigger events 'set_dirty.Notebook '(:value t))
+    (ein:events-trigger events 'maybe_reset_undo.Notebook)))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
-  (ein:events-trigger
-   (oref cell :events) 'set_next_input.Notebook (list :cell cell :text text)))
+  (let ((events (oref cell :events)))
+    (ein:events-trigger events 'set_next_input.Notebook
+                        (list :cell cell :text text))
+    (ein:events-trigger events 'maybe_reset_undo.Notebook)))
 
 
 
@@ -826,7 +829,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
        (plist-put json :traceback (plist-get content :traceback))))
     (ein:cell-append-output cell json t)
     ;; (oset cell :dirty t)
-    ))
+    (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook)))
 
 
 (defun ein:output-area-convert-mime-types (json data)
@@ -848,7 +851,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-clear-output cell
                          (plist-get content :stdout)
                          (plist-get content :stderr)
-                         (plist-get content :other)))
+                         (plist-get content :other))
+  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook))
 
 
 ;;; Misc.

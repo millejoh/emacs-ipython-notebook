@@ -49,8 +49,7 @@
     (with-current-buffer (ein:notebook-request-open-callback
                           (ein:notebook-new "DUMMY-URL" notebook-id)
                           :data (ein:json-read-from-string json-string))
-      (let ((events (ein:events-new (current-buffer))))
-        (setf (ein:$notebook-events ein:notebook) events)
+      (let ((events (ein:$notebook-events ein:notebook)))
         (setf (ein:$notebook-kernel ein:notebook)
               (ein:kernel-new 8888 "/kernels" events)))
       (current-buffer))))
