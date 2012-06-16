@@ -397,7 +397,7 @@ some text
 
 ;; Notebook undo
 
-(ert-deftest ein:notebook-undo-after-execution ()
+(ert-deftest ein:notebook-undo-after-execution-1-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
     (let* ((text "print 'Hello World'")
