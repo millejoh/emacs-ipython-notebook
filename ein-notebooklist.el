@@ -71,7 +71,7 @@
                                      (ein:$notebooklist-url-or-port it)
                                    (ein:default-url-or-port)))))
          (url-or-port
-          (completing-read "URL or port number (hit TAB to complete): "
+          (completing-read (format "URL or port number (default %s): " default)
                            url-or-port-list
                            nil nil nil nil
                            default)))
