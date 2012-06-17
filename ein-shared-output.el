@@ -136,7 +136,8 @@ Create a cell if the buffer has none."
   (font-lock-mode))
 
 (let ((map ein:shared-output-mode-map))
-  (define-key map "\M-." 'ein:pytools-jump-to-source-command))
+  (define-key map "\M-."          'ein:pytools-jump-to-source-command)
+  (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command))
 
 (add-hook 'ein:shared-output-mode-hook 'ein:truncate-lines-on)
 

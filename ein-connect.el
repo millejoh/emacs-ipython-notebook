@@ -218,8 +218,10 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
-  (define-key map "\M-." 'ein:pytools-jump-to-source-command)
-  (define-key map "\M-," 'ein:pytools-jump-back-command)
+  (define-key map "\M-."          'ein:pytools-jump-to-source-command)
+  (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
+  (define-key map "\M-,"          'ein:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   map)
 
 (define-minor-mode ein:connect-mode
