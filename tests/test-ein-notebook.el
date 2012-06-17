@@ -401,6 +401,95 @@ some text
 
 ;; Notebook undo
 
+(defun eintest:notebook-undo-after-insert-above ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let ((text "some text"))
+      (ein:notebook-insert-cell-above-command)
+      (insert text)
+      (undo-boundary)
+      (ein:notebook-insert-cell-above-command)
+      (ein:notebook-goto-next-input-command)
+      (should (equal (ein:cell-get-text (ein:notebook-get-current-cell)) text))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        ;; FIXME: Known bug. (this must succeed.)
+        (should-error (should (equal (buffer-string) "
+In [ ]:
+
+
+In [ ]:
+
+
+")))))))
+
+(defun eintest:notebook-undo-after-split ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let ((line-1 "first line")
+          (line-2 "second line"))
+      (ein:notebook-insert-cell-below-command)
+      (insert line-1 "\n" line-2)
+      (undo-boundary)
+      (move-beginning-of-line 1)
+      (ein:notebook-split-cell-at-point)
+      (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
+                     line-2))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (should (equal (buffer-string) "
+In [ ]:
+
+
+In [ ]:
+
+
+"))))))
+
+(defun eintest:notebook-undo-after-merge ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let ((line-1 "first line")
+          (line-2 "second line"))
+      (ein:notebook-insert-cell-below-command)
+      (ein:notebook-insert-cell-below-command)
+      ;; Extra cell to avoid "Changes to be undone are outside visible
+      ;; portion of buffer" user-error:
+      (ein:notebook-insert-cell-below-command)
+      (goto-char (point-min))
+      (ein:notebook-goto-next-input-command)
+
+      (insert line-1)
+      (undo-boundary)
+
+      (ein:notebook-goto-next-input-command)
+      (insert line-2)
+      (undo-boundary)
+
+      (ein:notebook-goto-prev-input-command)
+      (ein:notebook-merge-cell-command)
+
+      (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
+                     (concat line-1 "\n" line-2)))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        ;; FIXME: Known bug. (it must succeed.) ... or maybe it should
+        ;; inhibit undo for `full' case here.
+        (should-error (should (equal (buffer-string) "
+In [ ]:
+first line
+
+In [ ]:
+
+
+In [ ]:
+
+
+")))))))
+
 (defun eintest:notebook-undo-after-execution-1-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
@@ -475,29 +564,30 @@ some text
         (should-error (should (equal (ein:cell-get-text next-cell) "")))
         (should-error (funcall check-output))))))
 
-(ert-deftest ein:notebook-undo-after-execution-1-cell/no ()
-  (let ((ein:notebook-enable-undo 'no))
-    (eintest:notebook-undo-after-execution-1-cell)))
+(defmacro eintest:notebook-undo-make-tests (name)
+  "Define three tests ein:NANE/no, ein:NANE/yes and ein:NANE/full
+from a function named eintest:NAME where `no'/`yes'/`full' is the
+value of `ein:notebook-enable-undo'."
+  (let ((func (intern (format "eintest:%s" name)))
+        (test/no (intern (format "ein:%s/no" name)))
+        (test/yes (intern (format "ein:%s/yes" name)))
+        (test/full (intern (format "ein:%s/full" name))))
+    `(progn
+       (ert-deftest ,test/no ()
+         (let ((ein:notebook-enable-undo 'no))
+           (,func)))
+       (ert-deftest ,test/yes ()
+         (let ((ein:notebook-enable-undo 'yes))
+           (,func)))
+       (ert-deftest ,test/full ()
+         (let ((ein:notebook-enable-undo 'full))
+           (,func))))))
 
-(ert-deftest ein:notebook-undo-after-execution-1-cell/yes ()
-  (let ((ein:notebook-enable-undo 'yes))
-    (eintest:notebook-undo-after-execution-1-cell)))
-
-(ert-deftest ein:notebook-undo-after-execution-1-cell/full ()
-  (let ((ein:notebook-enable-undo 'full))
-    (eintest:notebook-undo-after-execution-1-cell)))
-
-(ert-deftest ein:notebook-undo-after-execution-2-cells/no ()
-  (let ((ein:notebook-enable-undo 'no))
-    (eintest:notebook-undo-after-execution-2-cells)))
-
-(ert-deftest ein:notebook-undo-after-execution-2-cells/yes ()
-  (let ((ein:notebook-enable-undo 'yes))
-    (eintest:notebook-undo-after-execution-2-cells)))
-
-(ert-deftest ein:notebook-undo-after-execution-2-cells/full ()
-  (let ((ein:notebook-enable-undo 'full))
-    (eintest:notebook-undo-after-execution-2-cells)))
+(eintest:notebook-undo-make-tests notebook-undo-after-insert-above)
+(eintest:notebook-undo-make-tests notebook-undo-after-split)
+(eintest:notebook-undo-make-tests notebook-undo-after-merge)
+(eintest:notebook-undo-make-tests notebook-undo-after-execution-1-cell)
+(eintest:notebook-undo-make-tests notebook-undo-after-execution-2-cells)
 
 
 ;; Notebook mode
