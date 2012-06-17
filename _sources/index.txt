@@ -114,6 +114,24 @@ Manual install
 Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in
 a directory defined in your :el:symbol:`load-path`.
 
+You should byte compile EIN, especially when using MuMaMo, otherwise
+editing large notebook will be very slow.  You can use the following
+command to compile EIN.  If you don't specify all the optional
+packages, there will be compiler warning but that is OK as long as you
+don't use that optional package.
+
+.. sourcecode:: sh
+
+   emacs -Q -batch -L .          \  # don't forget the dot!
+       -L PATH/TO/websocket/     \
+       -L PATH/TO/nxhtml/util/   \  # optional (for MuMaMo)
+       -L PATH/TO/auto-complete/ \  # optional
+       -L PATH/TO/popup/         \  # optional (for auto-complete)
+       -L PATH/TO/fuzzy/         \  # optional (for auto-complete)
+       -L PATH/TO/smartrep/      \  # optional
+       -L PATH/TO/rst-mode/      \  # optional
+       -f batch-byte-compile *.el
+
 Setup
 ^^^^^
 

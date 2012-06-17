@@ -136,6 +136,22 @@ easily using it.  Emacs IPython Notebook is registered as package
 <h3>Manual install<a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
 <p>Put Emacs lisp <tt class="docutils literal"><span class="pre">ein*.el</span></tt> files and Python file <tt class="docutils literal"><span class="pre">ein.py</span></tt> in
 a directory defined in your <tt class="xref el el-symbol docutils literal"><span class="pre">load-path</span></tt>.</p>
+<p>You should byte compile EIN, especially when using MuMaMo, otherwise
+editing large notebook will be very slow.  You can use the following
+command to compile EIN.  If you don&#8217;t specify all the optional
+packages, there will be compiler warning but that is OK as long as you
+don&#8217;t use that optional package.</p>
+<div class="highlight-sh"><div class="highlight"><pre>emacs -Q -batch -L .          <span class="se">\ </span> <span class="c"># don&#39;t forget the dot!</span>
+    -L PATH/TO/websocket/     <span class="se">\</span>
+    -L PATH/TO/nxhtml/util/   <span class="se">\ </span> <span class="c"># optional (for MuMaMo)</span>
+    -L PATH/TO/auto-complete/ <span class="se">\ </span> <span class="c"># optional</span>
+    -L PATH/TO/popup/         <span class="se">\ </span> <span class="c"># optional (for auto-complete)</span>
+    -L PATH/TO/fuzzy/         <span class="se">\ </span> <span class="c"># optional (for auto-complete)</span>
+    -L PATH/TO/smartrep/      <span class="se">\ </span> <span class="c"># optional</span>
+    -L PATH/TO/rst-mode/      <span class="se">\ </span> <span class="c"># optional</span>
+    -f batch-byte-compile *.el
+</pre></div>
+</div>
 </div>
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
@@ -475,7 +491,8 @@ given, open the last point in the other window.</p>
 <dt>
 <tt class="descname">M-RET</tt><tt class="descclassname"> ein:notebook-execute-current-cell-and-goto-next</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Execute cell at point and move to the next cell, or insert if none.</p>
+<dd><dd class="first last"><p>Execute cell at point if it is a code cell and move to the
+next cell, or insert if none.</p>
 </dd></dd>
 </dl>
 
