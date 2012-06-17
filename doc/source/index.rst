@@ -210,6 +210,7 @@ PyTools
 These commands can be used in the notebook buffer and the connected
 buffer.
 
+.. el:function:: ein:pytools-doctest
 .. el:function:: ein:pytools-whos
 .. el:function:: ein:pytools-hierarchy
 
