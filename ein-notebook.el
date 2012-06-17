@@ -461,8 +461,11 @@ kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cells-in-region
     (deactivate-mark)
-    (ein:kill-new
-     (mapcar (lambda (c) (ein:cell-deactivate (ein:cell-copy c))) cells))))
+    (let ((cells (mapcar
+                  (lambda (c)
+                    (ein:cell-deactivate (ein:cell-copy c))) cells)))
+      (ein:log 'info "%s cells are copied." (length  cells))
+      (ein:kill-new cells))))
 
 (defun ein:notebook-insert-clone-below (notebook cell pivot)
   (let ((clone (ein:cell-copy cell)))
