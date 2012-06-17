@@ -454,8 +454,9 @@ In [ ]:
           (line-2 "second line"))
       (ein:notebook-insert-cell-below-command)
       (ein:notebook-insert-cell-below-command)
-      ;; Extra cell to avoid "Changes to be undone are outside visible
+      ;; Extra cells to avoid "Changes to be undone are outside visible
       ;; portion of buffer" user-error:
+      (ein:notebook-insert-cell-below-command)
       (ein:notebook-insert-cell-below-command)
       (goto-char (point-min))
       (ein:notebook-goto-next-input-command)
@@ -469,18 +470,33 @@ In [ ]:
 
       (ein:notebook-goto-prev-input-command)
       (ein:notebook-merge-cell-command)
+      (undo-boundary)
 
       (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
                      (concat line-1 "\n" line-2)))
-      (if (eq ein:notebook-enable-undo 'full)
-          (undo)
-        (should-error (undo)))
-      (when (eq ein:notebook-enable-undo 'full)
-        ;; FIXME: Known bug. (it must succeed.) ... or maybe it should
-        ;; inhibit undo for `full' case here.
-        (should-error (should (equal (buffer-string) "
+      (if (eq ein:notebook-enable-undo 'no)
+          (should-error (undo))
+        (undo)
+        (should (equal (buffer-string) "
 In [ ]:
 first line
+
+In [ ]:
+
+
+In [ ]:
+
+
+")))
+      (when (eq ein:notebook-enable-undo 'yes)
+        ;; FIXME: `undo' should work...
+        (should-error (undo-more 1)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (undo)
+        ;; FIXME: Known bug... What should the result be?
+        (should-error (should (equal (buffer-string) "
+In [ ]:
+
 
 In [ ]:
 

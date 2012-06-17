@@ -635,8 +635,7 @@ If prefix is given, merge current cell into previous cell."
       (unless cell (error "No previous cell"))
       (ein:cell-goto cell))
     (let* ((next-cell (ein:cell-next cell))
-           (tail (ein:cell-get-text next-cell))
-           (buffer-undo-list t))        ; disable undo recording
+           (tail (ein:cell-get-text next-cell)))
       (ein:notebook-delete-cell ein:notebook next-cell)
       (save-excursion
         (goto-char (1- (ein:cell-location cell :input t)))
