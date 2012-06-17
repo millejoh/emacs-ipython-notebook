@@ -161,6 +161,14 @@ given, open the last point in the other window."
         (code (ein:trim-indent code)))
     (ein:cell-execute cell kernel code popup)))
 
+(defun ein:pytools-doctest ()
+  "Do the doctest of the object at point."
+  (interactive)
+  (let ((object (ein:object-at-point)))
+    (ein:pytools-eval-string-internal
+     (format "__import__('ein').run_docstring_examples(%s)" object)
+     t)))
+
 (defun ein:pytools-whos ()
   "Execute ``%whos`` magic command and popup the result."
   (interactive)

@@ -48,3 +48,11 @@ def find_source(name):
         print lineno
     else:
         raise RuntimeError("Source code for {0} cannot be found".format(name))
+
+
+def run_docstring_examples(obj, verbose=True):
+    from IPython.core.interactiveshell import InteractiveShell
+    import doctest
+    inst = InteractiveShell.instance()
+    globs = inst.user_ns
+    return doctest.run_docstring_examples(obj, globs, verbose=verbose)
