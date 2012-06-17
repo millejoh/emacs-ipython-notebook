@@ -96,21 +96,45 @@ EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
 
 
+Install
+-------
+
+Using el-get
+^^^^^^^^^^^^
+
+If you use developmental version of `el-get`_, you can install it
+easily using it.  Emacs IPython Notebook is registered as package
+``ein``.
+
+.. _el-get: https://github.com/dimitri/el-get
+
+Manual install
+^^^^^^^^^^^^^^
+
+Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in
+a directory defined in your :el:symbol:`load-path`.
+
+Setup
+^^^^^
+
+Here is the minimal configuration.  See customization_ for more details.
+
+.. sourcecode:: cl
+
+   (require 'ein)
+
+
 Usage
 -----
 
+1. Start `IPython notebook server`_.
 
-1. Install module.
-   Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
-   load path.
+2. Hit ``M-x ein:notebooklist-open`` to open notebook list.  This will
+   open :ref:`notebook list <notebook-list-commands>` buffer.
 
-2. Require module::
-
-     (require 'ein)
-
-3. Start `IPython notebook server`_.
-
-4. Hit ``M-x ein:notebooklist-open`` to open notebook list.
+3. In the notebook list buffer, you can open notebooks by hitting
+   ``[Open]`` buttons.  See :ref:`notebook <notebook-commands>`
+   section for what you can do in the notebook buffer.
 
 .. _`IPython notebook server`:
    http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
@@ -118,6 +142,8 @@ Usage
 
 Commands/Keybinds
 -----------------
+
+.. _notebook-list-commands:
 
 Notebook list
 ^^^^^^^^^^^^^
@@ -129,6 +155,11 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
 .. el:function:: ein:notebooklist-new-scratch-notebook
+
+.. el:keymap:: ein:notebooklist-mode-map
+   :exclude: widget-button
+
+.. _notebook-commands:
 
 Notebook
 ^^^^^^^^
@@ -179,6 +210,7 @@ PyTools
 These commands can be used in the notebook buffer and the connected
 buffer.
 
+.. el:function:: ein:pytools-doctest
 .. el:function:: ein:pytools-whos
 .. el:function:: ein:pytools-hierarchy
 
@@ -203,11 +235,13 @@ Notebook list
 ^^^^^^^^^^^^^
 
 .. el:variable:: ein:url-or-port
+.. el:variable:: ein:default-url-or-port
 .. el:variable:: ein:scratch-notebook-name-template
 
 Notebook
 ^^^^^^^^
 
+.. el:variable:: ein:notebook-enable-undo
 .. el:variable:: ein:notebook-discard-output-on-save
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-kill-buffer-ask

@@ -124,27 +124,42 @@ this feature.</li>
 <p>Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested in Emacs 24.1.</p>
 </div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="using-el-get">
+<h3>Using el-get<a class="headerlink" href="#using-el-get" title="Permalink to this headline">¶</a></h3>
+<p>If you use developmental version of <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a>, you can install it
+easily using it.  Emacs IPython Notebook is registered as package
+<tt class="docutils literal"><span class="pre">ein</span></tt>.</p>
+</div>
+<div class="section" id="manual-install">
+<h3>Manual install<a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
+<p>Put Emacs lisp <tt class="docutils literal"><span class="pre">ein*.el</span></tt> files and Python file <tt class="docutils literal"><span class="pre">ein.py</span></tt> in
+a directory defined in your <tt class="xref el el-symbol docutils literal"><span class="pre">load-path</span></tt>.</p>
+</div>
+<div class="section" id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<p>Here is the minimal configuration.  See <a class="reference internal" href="#customization">customization</a> for more details.</p>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic">
-<li><p class="first">Install module.
-Put Emacs lisp <tt class="docutils literal"><span class="pre">ein*.el</span></tt> files and Python file <tt class="docutils literal"><span class="pre">ein.py</span></tt> in your
-load path.</p>
-</li>
-<li><p class="first">Require module:</p>
-<div class="highlight-python"><pre>(require 'ein)</pre>
-</div>
-</li>
-<li><p class="first">Start <a class="reference external" href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html">IPython notebook server</a>.</p>
-</li>
-<li><p class="first">Hit <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> to open notebook list.</p>
-</li>
+<ol class="arabic simple">
+<li>Start <a class="reference external" href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html">IPython notebook server</a>.</li>
+<li>Hit <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> to open notebook list.  This will
+open <a class="reference internal" href="#notebook-list-commands"><em>notebook list</em></a> buffer.</li>
+<li>In the notebook list buffer, you can open notebooks by hitting
+<tt class="docutils literal"><span class="pre">[Open]</span></tt> buttons.  See <a class="reference internal" href="#notebook-commands"><em>notebook</em></a>
+section for what you can do in the notebook buffer.</li>
 </ol>
 </div>
 <div class="section" id="commands-keybinds">
 <h2>Commands/Keybinds<a class="headerlink" href="#commands-keybinds" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="notebook-list">
-<h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
+<span id="notebook-list-commands"></span><h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
 <p>You can start notebook by <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> and enter the
 port or URL of the IPython notebook server.</p>
 <dl class="function">
@@ -171,9 +186,61 @@ port or URL of the IPython notebook server.</p>
 <dd><p>Open a notebook to try random thing.</p>
 </dd></dl>
 
+<p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-mode</span></tt>.</p>
+<dl class="keybind">
+<dt>
+<tt class="descname">TAB</tt><tt class="descclassname"> widget-forward</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-TAB</tt><tt class="descclassname"> widget-backward</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">&lt;S-tab&gt;</tt><tt class="descclassname"> widget-backward</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">&lt;backtab&gt;</tt><tt class="descclassname"> widget-backward</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-r</tt><tt class="descclassname"> ein:notebooklist-reload</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Reload current Notebook list.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">g</tt><tt class="descclassname"> ein:notebooklist-reload</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Reload current Notebook list.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">p</tt><tt class="descclassname"> ein:notebooklist-prev-item</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">n</tt><tt class="descclassname"> ein:notebooklist-next-item</tt></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">q</tt><tt class="descclassname"> bury-buffer</tt></dt>
+</dl>
+
 </div>
 <div class="section" id="notebook">
-<h3>Notebook<a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h3>
+<span id="notebook-commands"></span><h3>Notebook<a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h3>
 <p>The following keybinds are available in notebook buffers.</p>
 <dl class="keybind">
 <dt>
@@ -385,6 +452,27 @@ It should be possible to support python-mode.el.  Patches are welcome!</p>
 
 <dl class="keybind">
 <dt>
+<tt class="descname">C-c C-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-,</tt><tt class="descclassname"> ein:pytools-jump-back-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
+is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
+given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">M-RET</tt><tt class="descclassname"> ein:notebook-execute-current-cell-and-goto-next</tt></dt>
 </dt>
 <dd><dd class="first last"><p>Execute cell at point and move to the next cell, or insert if none.</p>
@@ -517,6 +605,27 @@ See also: <a class="reference internal" href="#ein:connect-run-buffer" title="ei
 
 <dl class="keybind">
 <dt>
+<tt class="descname">C-c C-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-,</tt><tt class="descclassname"> ein:pytools-jump-back-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
+is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
+given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">C-:</tt><tt class="descclassname"> ein:connect-eval-string</tt></dt>
 </dl>
 
@@ -583,6 +692,17 @@ selecting it.</p>
 </dd></dd>
 </dl>
 
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-.</tt><tt class="descclassname"> ein:pytools-jump-to-source-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Jump to the source code of the object at point.
+When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is given, open the source code
+in the other window.  You can explicitly specify the object by
+selecting it.</p>
+</dd></dd>
+</dl>
+
 </div>
 <div class="section" id="traceback-viewer">
 <h3>Traceback viewer<a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
@@ -615,6 +735,12 @@ In the Traceback viewer, following keybinds are available.</p>
 <h3>PyTools<a class="headerlink" href="#pytools" title="Permalink to this headline">¶</a></h3>
 <p>These commands can be used in the notebook buffer and the connected
 buffer.</p>
+<dl class="function">
+<dt id="ein:pytools-doctest">
+<em class="property">function </em><tt class="descname">ein:pytools-doctest</tt><a class="headerlink" href="#ein:pytools-doctest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do the doctest of the object at point.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="ein:pytools-whos">
 <em class="property">function </em><tt class="descname">ein:pytools-whos</tt><a class="headerlink" href="#ein:pytools-whos" title="Permalink to this definition">¶</a></dt>
@@ -666,11 +792,11 @@ When this option is enabled, cached omni completion is available.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">When used with MuMaMo (see <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-modes</span></tt></a>),
-keyboard macro which includes the keybinds defined by this
-preset configuration (see <tt class="xref el el-symbol docutils literal"><span class="pre">ein:smartrep-config</span></tt>) may start
-infinite loop (you need to stop it with C-g).  Please be
-careful using this option if you are a heavy keyboard macro
-user.  Using keyboard macro for other commands is fine.</p>
+keyboard macro which manipulates cell (add, remove, move,
+etc.) may start infinite loop (you need to stop it with
+<tt class="docutils literal"><span class="pre">C-g</span></tt>).  Please be careful using this option if you are a
+heavy keyboard macro user.  Using keyboard macro for other
+commands is fine.</p>
 </div>
 </dd></dl>
 
@@ -693,6 +819,13 @@ to type every time).</p>
 </dd></dl>
 
 <dl class="variable">
+<dt id="ein:default-url-or-port">
+<em class="property">variable </em><tt class="descname">ein:default-url-or-port</tt><a class="headerlink" href="#ein:default-url-or-port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default URL or port.  This should be your main IPython
+Notebook server.</p>
+</dd></dl>
+
+<dl class="variable">
 <dt id="ein:scratch-notebook-name-template">
 <em class="property">variable </em><tt class="descname">ein:scratch-notebook-name-template</tt><a class="headerlink" href="#ein:scratch-notebook-name-template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Template of notebook name.
@@ -702,6 +835,28 @@ This value is used from <a class="reference internal" href="#ein:notebooklist-ne
 </div>
 <div class="section" id="id6">
 <h3>Notebook<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:notebook-enable-undo">
+<em class="property">variable </em><tt class="descname">ein:notebook-enable-undo</tt><a class="headerlink" href="#ein:notebook-enable-undo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure undo in notebook buffers.</p>
+<dl class="docutils">
+<dt><tt class="xref el el-symbol docutils literal"><span class="pre">no</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Do not use undo in notebook buffers.  It is the safest option.</dd>
+<dt><tt class="xref el el-symbol docutils literal"><span class="pre">yes</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Enable undo in notebook buffers.  You can&#8217;t undo after
+modification of cell (execution, add, remove, etc.).  This
+is default.</dd>
+<dt><tt class="xref el el-symbol docutils literal"><span class="pre">full</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Enable full undo in notebook buffers.  It is powerful but
+sometime (typically after the cell specific commands) undo
+mess up notebook buffer.  Use it on your own risk.  When the
+buffer is messed up, you can just redo and continue editing,
+or save it once and reopen it if you want to be careful.</dd>
+</dl>
+<p>You need to reopen the notebook buffer to reflect the change of
+this value.</p>
+</dd></dl>
+
 <dl class="variable">
 <dt id="ein:notebook-discard-output-on-save">
 <em class="property">variable </em><tt class="descname">ein:notebook-discard-output-on-save</tt><a class="headerlink" href="#ein:notebook-discard-output-on-save" title="Permalink to this definition">¶</a></dt>
