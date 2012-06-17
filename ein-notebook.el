@@ -826,23 +826,28 @@ Do not clear input prompts when the prefix argument is given."
       (ein:notebook-get-cells-in-region (region-beginning) (region-end))
     (list (ein:notebook-get-current-cell))))
 
+(defun ein:notebook-execute-cell (notebook cell)
+  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
+    (ein:cell-execute cell)
+    (setf (ein:$notebook-dirty notebook) t)
+    cell))
+
 (defun ein:notebook-execute-current-cell ()
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:cell-execute cell)
-      (setf (ein:$notebook-dirty ein:notebook) t)
-      cell)))
+    (ein:notebook-execute-cell ein:notebook cell)))
 
 (defun ein:notebook-execute-current-cell-and-goto-next ()
-  "Execute cell at point and move to the next cell, or insert if none."
+  "Execute cell at point if it is a code cell and move to the
+next cell, or insert if none."
   (interactive)
-  (let ((cell (ein:notebook-execute-current-cell)))
-    (when cell
-      (ein:aif (ein:cell-next cell)
-          (ein:cell-goto it)
-        (ein:notebook-insert-cell-below ein:notebook 'code cell)))))
+  (ein:notebook-with-cell nil
+    (when (ein:codecell-p cell)
+      (ein:notebook-execute-cell ein:notebook cell))
+    (ein:aif (ein:cell-next cell)
+        (ein:cell-goto it)
+      (ein:notebook-insert-cell-below ein:notebook 'code cell))))
 
 (defun ein:notebook-execute-all-cell ()
   "Execute all cells in the current notebook buffer."
