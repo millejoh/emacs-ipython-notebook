@@ -1169,11 +1169,15 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 
 (setcdr ein:notebook-python-mode-map (cdr ein:notebook-mode-map))
 
-(defun ein:notebook-open-in-browser ()
-  "Open current notebook in web browser."
-  (interactive)
-  (let ((url (ein:url (ein:$notebook-url-or-port ein:notebook)
-                      (ein:$notebook-notebook-id ein:notebook))))
+(defun ein:notebook-open-in-browser (&optional print)
+  "Open current notebook in web browser.
+When the prefix argument (``C-u``) is given, print page is opened.
+Note that print page is not supported in IPython 0.12.1."
+  (interactive "P")
+  (let ((url (apply #'ein:url
+                    (ein:$notebook-url-or-port ein:notebook)
+                    (ein:$notebook-notebook-id ein:notebook)
+                    (if print (list "print")))))
     (message "Opening %s in browser" url)
     (browse-url url)))
 
