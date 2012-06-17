@@ -54,6 +54,34 @@
 
 ;;; Configuration
 
+(defcustom ein:notebook-enable-undo 'yes
+  "Configure undo in notebook buffers.
+
+`no' : symbol
+    Do not use undo in notebook buffers.  It is the safest option.
+`yes' : symbol
+    Enable undo in notebook buffers.  You can't undo after
+    modification of cell (execution, add, remove, etc.).  This
+    is default.
+`full' : symbol
+    Enable full undo in notebook buffers.  It is powerful but
+    sometime (typically after the cell specific commands) undo
+    mess up notebook buffer.  Use it on your own risk.  When the
+    buffer is messed up, you can just redo and continue editing,
+    or save it once and reopen it if you want to be careful.
+
+You need to reopen the notebook buffer to reflect the change of
+this value."
+  :type '(choice (const :tag "No" no)
+                 (const :tag "Yes" yes)
+                 (const :tag "Full" full))
+  :group 'ein)
+
+(defun ein:notebook-empty-undo-maybe ()
+  "Empty `buffer-undo-list' if `ein:notebook-enable-undo' is `yes'."
+  (when (eq ein:notebook-enable-undo 'yes)
+    (setq buffer-undo-list nil)))
+
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
@@ -295,6 +323,8 @@ See `ein:notebook-open' for more information."
   (assert ein:notebook)  ; make sure in a notebook buffer
   (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
   (setq buffer-undo-list nil)  ; clear undo history
+  (when (eq ein:notebook-enable-undo 'no)
+    (setq buffer-undo-list t))
   (ein:notebook-mode)
   (setf (ein:$notebook-notification ein:notebook)
         (ein:notification-setup (current-buffer)))
@@ -326,6 +356,10 @@ See `ein:notebook-open' for more information."
                    (setf (ein:$notebook-dirty notebook)
                          (plist-get data :value)))
                  notebook)
+  (ein:events-on events
+                 'maybe_reset_undo.Notebook
+                 (lambda (&rest -ignore-)
+                   (ein:notebook-empty-undo-maybe)))
   ;; Bind events for sub components:
   (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
         (ein:notebook-get-cells notebook))
@@ -385,7 +419,8 @@ See `ein:notebook-open' for more information."
     (apply #'ewoc-delete
            (ein:$notebook-ewoc notebook)
            (ein:cell-all-element cell)))
-  (setf (ein:$notebook-dirty notebook) t))
+  (setf (ein:$notebook-dirty notebook) t)
+  (ein:notebook-empty-undo-maybe))
 
 (defun ein:notebook-delete-cell-command ()
   "Delete a cell.  \(WARNING: no undo!)
@@ -475,6 +510,7 @@ Prefixes are act same as the normal `yank' command."
         (ein:cell-insert-below base-cell cell))
        (t (error (concat "`base-cell' is `nil' but ncells != 0.  "
                          "There is something wrong..."))))
+      (ein:notebook-empty-undo-maybe)
       (ein:cell-goto cell)
       (setf (ein:$notebook-dirty notebook) t))
     cell))
@@ -505,6 +541,7 @@ when the prefix argument is given."
             (ein:cell-enter-first cell))))
        (t (error (concat "`base-cell' is `nil' but ncells > 1.  "
                          "There is something wrong..."))))
+      (ein:notebook-empty-undo-maybe)
       (ein:cell-goto cell)
       (setf (ein:$notebook-dirty notebook) t))
     cell))
@@ -537,6 +574,7 @@ directly."
       (let ((new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+        (ein:notebook-empty-undo-maybe)
         (ein:cell-goto new)))))
 
 (defun ein:notebook-change-cell-type ()
@@ -560,7 +598,8 @@ Prompt will appear in the minibuffer."
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (when level
-          (ein:cell-change-level new type))))))
+          (ein:cell-change-level new type))
+        (ein:notebook-empty-undo-maybe)))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
@@ -663,6 +702,7 @@ If prefix is given, merge current cell into previous cell."
 
 (defun ein:notebook-toggle-output (notebook cell)
   (ein:cell-toggle-output cell)
+  (ein:notebook-empty-undo-maybe)
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-toggle-output-command ()
@@ -676,6 +716,7 @@ This does not alter the actual data stored in the cell."
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:notebook-get-cells notebook))
+  (ein:notebook-empty-undo-maybe)
   (setf (ein:$notebook-dirty notebook) t))
 
 (defun ein:notebook-set-collapsed-all-command (&optional show)
@@ -690,7 +731,8 @@ Do not clear input prompt when the prefix argument is given."
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:cell-clear-output cell t t t)
     (unless preserve-input-prompt
-      (ein:cell-set-input-prompt cell))))
+      (ein:cell-set-input-prompt cell))
+    (ein:notebook-empty-undo-maybe)))
 
 (defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
   "Clear output from all cells.
@@ -701,7 +743,8 @@ Do not clear input prompts when the prefix argument is given."
           do (when (ein:codecell-p cell)
                (ein:cell-clear-output cell t t t)
                (unless preserve-input-prompt
-                 (ein:cell-set-input-prompt cell))))
+                 (ein:cell-set-input-prompt cell))
+               (ein:notebook-empty-undo-maybe)))
     (ein:log 'error "Not in notebook buffer!")))
 
 

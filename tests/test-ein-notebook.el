@@ -49,8 +49,7 @@
     (with-current-buffer (ein:notebook-request-open-callback
                           (ein:notebook-new "DUMMY-URL" notebook-id)
                           :data (ein:json-read-from-string json-string))
-      (let ((events (ein:events-new (current-buffer))))
-        (setf (ein:$notebook-events ein:notebook) events)
+      (let ((events (ein:$notebook-events ein:notebook)))
         (setf (ein:$notebook-kernel ein:notebook)
               (ein:kernel-new 8888 "/kernels" events)))
       (current-buffer))))
@@ -69,6 +68,38 @@
 
 (defun eintest:notebook-enable-mode (buffer)
   (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
+
+(defun eintest:kernel-fake-execute-reply (kernel msg-id execution-count)
+  (let* ((payload nil)
+         (content (list :execution_count 1 :payload payload))
+         (packet (list :header (list :msg_type "execute_reply")
+                       :parent_header (list :msg_id msg-id)
+                       :content content)))
+    (ein:kernel--handle-shell-reply kernel (json-encode packet))))
+
+(defun eintest:kernel-fake-stream (kernel msg-id data)
+  (let* ((content (list :data data
+                        :name "stdout"))
+         (packet (list :header (list :msg_type "stream")
+                       :parent_header (list :msg_id msg-id)
+                       :content content)))
+    (ein:kernel--handle-iopub-reply kernel (json-encode packet))))
+
+(defun eintest:check-search-forward-from (start string &optional null-string)
+  "Search STRING from START and check it is found.
+When non-`nil' NULL-STRING is given, it is searched from the
+position where the search of the STRING ends and check that it
+is not found."
+  (save-excursion
+    (goto-char start)
+    (should (search-forward string nil t))
+    (when null-string
+      (should-not (search-forward null-string nil t)))))
+
+(defun eintest:cell-check-output (cell regexp)
+  (save-excursion
+    (goto-char (ein:cell-location cell :after-input))
+    (should (looking-at-p (concat "\\=" regexp "\n")))))
 
 
 ;; from-json
@@ -325,6 +356,21 @@ some text
 
 ;; Kernel related things
 
+(defun eintest:notebook-check-kernel-and-codecell (kernel cell)
+  (should (ein:$kernel-p kernel))
+  (should (ein:codecell-p cell))
+  (should (ein:$kernel-p (oref cell :kernel))))
+
+(defun eintest:notebook-fake-execution (kernel text msg-id callbacks)
+  (mocker-let ((ein:kernel-execute
+                (kernel code callbacks kwd-silent silent)
+                ((:input (list kernel text callbacks :silent nil))))
+               (ein:kernel-ready-p
+                (kernel)
+                ((:input (list kernel) :output t))))
+    (ein:notebook-execute-current-cell))
+  (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))
+
 (ert-deftest ein:notebook-execute-current-cell ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-below-command)
@@ -332,50 +378,126 @@ some text
            (cell (ein:notebook-get-current-cell))
            (kernel (ein:$notebook-kernel ein:notebook))
            (msg-id "DUMMY-MSG-ID")
-           (callbacks
-            (list
-             :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
-             :output         (cons #'ein:cell--handle-output         cell)
-             :clear_output   (cons #'ein:cell--handle-clear-output   cell)
-             :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
-      (should (ein:$kernel-p kernel))
-      (should (ein:codecell-p cell))
-      (should (ein:$kernel-p (oref cell :kernel)))
+           (callbacks (ein:cell-make-callbacks cell)))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
+      ;; Execute
       (insert text)
-      (mocker-let ((ein:kernel-execute
-                    (kernel code callbacks kwd-silent silent)
-                    ((:input (list kernel text callbacks :silent nil))))
-                   (ein:kernel-ready-p
-                    (kernel)
-                    ((:input (list kernel) :output t))))
-        (ein:notebook-execute-current-cell))
-      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-      (save-excursion
-        (goto-char (point-min))
-        (should-not (search-forward "In [1]:" nil t)))
-      (let* ((payload nil)
-             (content (list :execution_count 1 :payload payload))
-             (packet (list :header (list :msg_type "execute_reply")
-                           :parent_header (list :msg_id msg-id)
-                           :content content)))
-        (ein:kernel--handle-shell-reply kernel (json-encode packet)))
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
+      ;; Execute reply
+      (should-error (eintest:check-search-forward-from (point-min) "In [1]:"))
+      (eintest:kernel-fake-execute-reply kernel msg-id 1)
       (should (= (oref cell :input-prompt-number) 1))
-      (save-excursion
-        (goto-char (point-min))
-        (should (search-forward "In [1]:" nil t)))
-      (let* ((content (list :data "'Hello World'"
-                            :name "stdout"))
-             (packet (list :header (list :msg_type "stream")
-                           :parent_header (list :msg_id msg-id)
-                           :content content)))
-        (ein:kernel--handle-iopub-reply kernel (json-encode packet)))
+      (eintest:check-search-forward-from (point-min) "In [1]:")
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id "Hello World")
       (should (= (ein:cell-num-outputs cell) 1))
       (save-excursion
         (goto-char (point-min))
         (should (search-forward "In [1]:" nil t))
         (should (search-forward "print 'Hello World'" nil t))
-        (should (search-forward "Hello World" nil t)) ; stream output
+        (should (search-forward "\nHello World\n" nil t)) ; stream output
         (should-not (search-forward "Hello World" nil t))))))
+
+
+;; Notebook undo
+
+(defun eintest:notebook-undo-after-execution-1-cell ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (let* ((text "print 'Hello World'")
+           (output-text "Hello World\n")
+           (cell (ein:notebook-get-current-cell))
+           (kernel (ein:$notebook-kernel ein:notebook))
+           (msg-id "DUMMY-MSG-ID")
+           (callbacks (ein:cell-make-callbacks cell))
+           (check-output
+            (lambda ()
+              (eintest:cell-check-output cell output-text))))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
+      ;; Execute
+      (insert text)
+      (undo-boundary)
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id output-text)
+      (funcall check-output)
+      ;; Undo
+      (should (equal (ein:cell-get-text cell) text))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (should (equal (ein:cell-get-text cell) ""))
+        ;; FIXME: Known bug. (it must succeed.)
+        (should-error (funcall check-output))))))
+
+(defun eintest:notebook-undo-after-execution-2-cells ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-below-command)
+    (ein:notebook-insert-cell-above-command)
+    (let* ((text "print 'Hello World\\n' * 10")
+           (next-text "something")
+           (output-text
+            (apply #'concat (loop repeat 10 collect "Hello World\n")))
+           (cell (ein:notebook-get-current-cell))
+           (next-cell (ein:cell-next cell))
+           (kernel (ein:$notebook-kernel ein:notebook))
+           (msg-id "DUMMY-MSG-ID")
+           (callbacks (ein:cell-make-callbacks cell))
+           (check-output
+            (lambda ()
+              (eintest:cell-check-output cell output-text))))
+      (eintest:notebook-check-kernel-and-codecell kernel cell)
+      ;; Execute
+      (insert text)
+      (undo-boundary)
+      (let ((pos (point)))
+        ;; Do not use `save-excursion' because it does not record undo.
+        (ein:notebook-goto-next-input-command)
+        (insert next-text)
+        (undo-boundary)
+        (goto-char pos))
+      (eintest:notebook-fake-execution kernel text msg-id callbacks)
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      ;; Stream output
+      (eintest:kernel-fake-stream kernel msg-id output-text)
+      (funcall check-output)
+      ;; Undo
+      (should (equal (ein:cell-get-text cell) text))
+      (should (equal (ein:cell-get-text next-cell) next-text))
+      (if (eq ein:notebook-enable-undo 'full)
+          (undo)
+        (should-error (undo)))
+      (when (eq ein:notebook-enable-undo 'full)
+        (should (equal (ein:cell-get-text cell) text))
+        ;; FIXME: Known bug. (these two must succeed.)
+        (should-error (should (equal (ein:cell-get-text next-cell) "")))
+        (should-error (funcall check-output))))))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/no ()
+  (let ((ein:notebook-enable-undo 'no))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/yes ()
+  (let ((ein:notebook-enable-undo 'yes))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-1-cell/full ()
+  (let ((ein:notebook-enable-undo 'full))
+    (eintest:notebook-undo-after-execution-1-cell)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/no ()
+  (let ((ein:notebook-enable-undo 'no))
+    (eintest:notebook-undo-after-execution-2-cells)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/yes ()
+  (let ((ein:notebook-enable-undo 'yes))
+    (eintest:notebook-undo-after-execution-2-cells)))
+
+(ert-deftest ein:notebook-undo-after-execution-2-cells/full ()
+  (let ((ein:notebook-enable-undo 'full))
+    (eintest:notebook-undo-after-execution-2-cells)))
 
 
 ;; Notebook mode

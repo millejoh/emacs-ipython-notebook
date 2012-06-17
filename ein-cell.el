@@ -543,7 +543,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
   "Return the starting location of CELL.
-ELM is a name (keyword) of element in the `:element-names' slot of CELL.
+ELM is a name (keyword) of element that `ein:cell-element-get'
+understands.  Note that you can't use `:output' since it returns
+a list.  Use `:after-input' instead.
 If END is non-`nil', return the location of next element."
   (unless elm (setq elm :prompt))
   (let ((element (oref cell :element)))
@@ -780,23 +782,27 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-set-input-prompt cell "*")
   (ein:cell-running-set cell t)
   (oset cell :dynamic t)
-  (let* ((callbacks
-          (list
-           :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
-           :output         (cons #'ein:cell--handle-output         cell)
-           :clear_output   (cons #'ein:cell--handle-clear-output   cell)
-           :set_next_input (cons #'ein:cell--handle-set-next-input cell))))
-    (apply #'ein:kernel-execute kernel code callbacks args)))
+  (apply #'ein:kernel-execute kernel code (ein:cell-make-callbacks cell) args))
+
+(defmethod ein:cell-make-callbacks ((cell ein:codecell))
+  (list
+   :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
+   :output         (cons #'ein:cell--handle-output         cell)
+   :clear_output   (cons #'ein:cell--handle-clear-output   cell)
+   :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
-  (ein:events-trigger
-   (oref cell :events) 'set_dirty.Notebook '(:value t)))
+  (let ((events (oref cell :events)))
+    (ein:events-trigger events 'set_dirty.Notebook '(:value t))
+    (ein:events-trigger events 'maybe_reset_undo.Notebook)))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
-  (ein:events-trigger
-   (oref cell :events) 'set_next_input.Notebook (list :cell cell :text text)))
+  (let ((events (oref cell :events)))
+    (ein:events-trigger events 'set_next_input.Notebook
+                        (list :cell cell :text text))
+    (ein:events-trigger events 'maybe_reset_undo.Notebook)))
 
 
 
@@ -823,7 +829,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
        (plist-put json :traceback (plist-get content :traceback))))
     (ein:cell-append-output cell json t)
     ;; (oset cell :dirty t)
-    ))
+    (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook)))
 
 
 (defun ein:output-area-convert-mime-types (json data)
@@ -845,7 +851,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-clear-output cell
                          (plist-get content :stdout)
                          (plist-get content :stderr)
-                         (plist-get content :other)))
+                         (plist-get content :other))
+  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook))
 
 
 ;;; Misc.

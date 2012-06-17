@@ -2,8 +2,9 @@
  Emacs IPython Notebook (and more)
 ===================================
 
-.. warning:: This is **very** early version.
-             Make sure you have backup!
+.. note:: It is stable enough for my day to day work, but I can't
+          grantee the safety for your notebook data.  So please make
+          sure you have backup.
 
 Screenshot
 ==========
