@@ -234,6 +234,7 @@ Notebook list
 ^^^^^^^^^^^^^
 
 .. el:variable:: ein:url-or-port
+.. el:variable:: ein:default-url-or-port
 .. el:variable:: ein:scratch-notebook-name-template
 
 Notebook
