@@ -25,7 +25,7 @@
 
 ;;; Code:
 
-(require 'smartrep)
+(require 'smartrep nil t)
 (require 'ein-notebook)
 
 (defun ein:smartrep-config ()

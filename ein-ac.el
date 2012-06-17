@@ -26,7 +26,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'auto-complete)
+(require 'auto-complete nil t)
 
 (require 'ein-utils)
 (eval-when-compile (require 'ein-notebook)
