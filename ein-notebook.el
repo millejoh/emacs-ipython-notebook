@@ -1124,6 +1124,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-S-l") 'ein:notebook-clear-all-output-command)
   (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
   (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
+  (define-key map "\C-c\C-w" 'ein:notebook-copy-cell-command)
   (define-key map "\C-c\C-y" 'ein:notebook-yank-cell-command)
   (define-key map "\C-c\C-a" 'ein:notebook-insert-cell-above-command)
   (define-key map "\C-c\C-b" 'ein:notebook-insert-cell-below-command)
