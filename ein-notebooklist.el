@@ -167,8 +167,8 @@
           (ein:notebooklist-open-notebook ein:notebooklist notebook-id nil
                                           callback cbargs)
         (message (concat "Oops. EIN failed to open new notebook. "
-                         "Please find it in the notebook list."))
-        (ein:notebooklist-reload)))))
+                         "Please find it in the notebook list.")))
+      (ein:notebooklist-reload))))
 
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
   "Open new notebook and rename the notebook."
