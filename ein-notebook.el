@@ -115,6 +115,21 @@ yet.  So be careful when using EIN functions.  They may change."
     (yes t)
     (t (funcall ein:notebook-discard-output-on-save notebook cell))))
 
+;; As opening/saving notebook treats possibly huge data, define these
+;; timeouts separately:
+
+(defcustom ein:notebook-querty-timeout-open (* 60 1000) ; 1 min
+  "Query timeout for opening notebook."
+  :type '(choice (integer :tag "Timeout [ms]" 5000)
+                 (const :tag "No timeout" nil))
+  :group 'ein)
+
+(defcustom ein:notebook-querty-timeout-save (* 10 1000) ; 10 sec
+  "Query timeout for saving notebook."
+  :type '(choice (integer :tag "Timeout [ms]" 5000)
+                 (const :tag "No timeout" nil))
+  :group 'ein)
+
 
 ;;; Class and variable
 
@@ -288,6 +303,7 @@ See `ein:notebook-open' for more information."
     (ein:query-singleton-ajax
      (list 'notebook-open url-or-port notebook-id)
      url
+     :timeout ein:notebook-querty-timeout-open
      :parser #'ein:json-read
      :success (cons #'ein:notebook-request-open-callback-with-callback
                     (list notebook callback cbargs)))
@@ -1000,6 +1016,7 @@ shared output buffer.  You can open the buffer by the command
            (ein:$notebook-url-or-port notebook)
            (ein:$notebook-notebook-id notebook))
      (ein:notebook-url notebook)
+     :timeout ein:notebook-querty-timeout-save
      :type "PUT"
      :headers '(("Content-Type" . "application/json"))
      :cache nil
