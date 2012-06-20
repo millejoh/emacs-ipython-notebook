@@ -214,7 +214,7 @@ is killed immediately after the execution of this function.
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
-  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
+  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %S" buffer)
   (ein:with-live-buffer buffer
     (setq ein:query-ajax-canceled 'timeout)
     (let ((proc (get-buffer-process buffer)))
