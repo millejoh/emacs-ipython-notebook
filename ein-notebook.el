@@ -1045,10 +1045,13 @@ shared output buffer.  You can open the buffer by the command
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook))
 
-(defun ein:notebook-save-notebook-error (notebook &rest ignore)
-  (ein:log 'info "Failed to save notebook!")
-  (ein:events-trigger (ein:$notebook-events notebook)
-                      'notebook_save_failed.Notebook))
+(defun* ein:notebook-save-notebook-error (notebook &key symbol-status
+                                                   &allow-other-keys)
+  (if (eq symbol-status 'user-cancel)
+      (ein:log 'info "Cancel saving notebook.")
+    (ein:log 'info "Failed to save notebook!")
+    (ein:events-trigger (ein:$notebook-events notebook)
+                        'notebook_save_failed.Notebook)))
 
 (defun ein:notebook-rename-command (name)
   "Rename current notebook and save it immediately.
