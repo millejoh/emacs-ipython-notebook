@@ -212,6 +212,31 @@ is killed immediately after the execution of this function.
     (cancel-timer ein:query-ajax-timer)
     (setq ein:query-ajax-timer nil)))
 
+(defvar ein:query-running-process-table (make-hash-table :test 'equal))
+
+(defun ein:query-singleton-ajax (key &rest args)
+  "Cancel the old process if there is a process associated with
+KEY, then call `ein:query-ajax' with ARGS.  KEY is compared by
+`equal'."
+  (ein:query-gc-running-process-table)
+  (ein:aif (gethash key ein:query-running-process-table)
+      (ein:with-live-buffer it
+        (setq ein:query-ajax-canceled 'user-cancel)
+        (let ((proc (get-buffer-process it)))
+          ;; This will call `ein:query-ajax-callback'.
+          (delete-process proc))))
+  (let ((buffer (apply #'ein:query-ajax args)))
+    (puthash key buffer ein:query-running-process-table)
+    buffer))
+
+(defun ein:query-gc-running-process-table ()
+  "Garbage collect dead processes in `ein:query-running-process-table'."
+  (maphash
+   (lambda (key buffer)
+     (unless (buffer-live-p buffer)
+       (remhash key ein:query-running-process-table)))
+   ein:query-running-process-table))
+
 (provide 'ein-query)
 
 ;;; ein-query.el ends here
