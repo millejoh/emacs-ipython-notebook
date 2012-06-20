@@ -127,7 +127,7 @@ see `ein:query-timeout'."
                  (const :tag "No timeout" nil))
   :group 'ein)
 
-(defcustom ein:notebook-querty-timeout-save (* 10 1000) ; 10 sec
+(defcustom ein:notebook-querty-timeout-save (* 60 1000) ; 1 min
   "Query timeout for saving notebook.
 Similar to `ein:notebook-querty-timeout-open', but for saving
 notebook.  For global setting and more information, see
