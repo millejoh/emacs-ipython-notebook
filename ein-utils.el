@@ -334,6 +334,20 @@ NOTE: This function creates new list."
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
 
+(defun ein:byte-compile-ein ()
+  "Byte compile EIN files."
+  (interactive)
+  (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
+         (errors (ein:filter
+                  'identity
+                  (mapcar (lambda (f) (unless (byte-compile-file f) f))
+                          files))))
+    (ein:aif errors
+        (error "Got %s errors while compiling these files: %s"
+               (length errors)
+               (ein:join-str " " (mapcar #'file-name-nondirectory it))))
+    (message "Compiled %s files" (length files))))
+
 
 ;;; utils.js compatible
 
