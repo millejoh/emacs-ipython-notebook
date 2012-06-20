@@ -42,12 +42,14 @@
       (insert (substitute-command-keys map-string))
       (rst-shift-region beg (point) 1))))
 
-(defun ein:load-files (&optional regex dir)
+(defun ein:load-files (&optional regex dir ignore-compiled)
   (let* ((dir (or dir ein:source-dir))
          (regex (or regex ".+"))
          (files (and
                  (file-accessible-directory-p dir)
                  (directory-files dir 'full regex))))
+    (unless ignore-compiled
+      (setq files (mapcar #'file-name-sans-extension files)))
     (mapc #'load files)))
 
 (defun ein:dev-reload ()
