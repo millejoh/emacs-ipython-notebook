@@ -285,7 +285,8 @@ See `ein:notebook-open' for more information."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'notebook-open url-or-port notebook-id)
      url
      :parser #'ein:json-read
      :success (cons #'ein:notebook-request-open-callback-with-callback
@@ -994,7 +995,10 @@ shared output buffer.  You can open the buffer by the command
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'notebook-save
+           (ein:$notebook-url-or-port notebook)
+           (ein:$notebook-notebook-id notebook))
      (ein:notebook-url notebook)
      :type "PUT"
      :headers '(("Content-Type" . "application/json"))
