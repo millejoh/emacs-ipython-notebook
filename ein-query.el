@@ -54,8 +54,9 @@
 
 (ein:deflocal ein:query-ajax-timer nil)
 
-(ein:deflocal ein:query-ajax-timeout nil
-  "Buffer local variable which is set to `t' by the timeout callback.")
+(ein:deflocal ein:query-ajax-canceled nil
+  "Buffer local variable which is set to the reason for cancel (a symbol)
+when it is cancelled.")
 
 
 ;;; Functions
@@ -140,6 +141,7 @@ is killed immediately after the execution of this function.
          (url-request-method type)
          (url-request-data data)
          (buffer (url-retrieve url #'ein:query-ajax-callback settings)))
+    (ein:log 'debug "Start querying: %s" url)
     (unless timeout (setq timeout ein:query-timeout))
     (when timeout
       (ein:log 'debug "Start timer: timeout=%s ms" timeout)
@@ -172,24 +174,24 @@ is killed immediately after the execution of this function.
          (response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
          (status-error (plist-get status :error))
-         (timeout ein:query-ajax-timeout)
+         (canceled ein:query-ajax-canceled)
          (data (unwind-protect
                    (if (and parser (not status-error))
                        (funcall parser))
                  (kill-buffer buffer))))
     (ein:log 'debug "data = %s" data)
-    (ein:log 'debug "timeout = %s" timeout)
+    (ein:log 'debug "canceled = %s" canceled)
 
     (ein:log 'debug "Executing success/error callback.")
     (apply #'ein:safe-funcall-packed
-           (append (if (or (plist-get status :error) timeout)
+           (append (if (or (plist-get status :error) canceled)
                        (list error :symbol-status
-                             (if timeout 'timeout 'error))
+                             (or canceled 'error))
                      (list success))
                    (list :status status :data data
                          :response-status response-status)))
 
-    (unless timeout
+    (unless canceled
       (ein:log 'debug "Executing status-code callback.")
       (ein:safe-funcall-packed status-code-callback
                                :status status :data data))))
@@ -199,8 +201,9 @@ is killed immediately after the execution of this function.
                                                 &allow-other-keys)
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
   (ein:with-live-buffer buffer
-    (setq ein:query-ajax-timeout t)
+    (setq ein:query-ajax-canceled 'timeout)
     (let ((proc (get-buffer-process buffer)))
+      ;; This will call `ein:query-ajax-callback'.
       (delete-process proc))))
 
 (defun ein:query-ajax-cancel-timer ()
