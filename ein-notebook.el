@@ -1352,6 +1352,11 @@ Types same as `ein:notebook-console-security-dir' are valid."
   (ein:choose-setting 'ein:notebook-console-args
                       (ein:$notebook-url-or-port notebook)))
 
+;; `Fabian Gallina's python.el`_
+(declare-function run-python "python")
+(declare-function python-shell-parse-command "python")
+(declare-function python-shell-switch-to-shell "python")
+
 (defun ein:notebook-console-open ()
   "Open IPython console.
 To use this function, `ein:notebook-console-security-dir' and
@@ -1370,6 +1375,7 @@ It should be possible to support python-mode.el.  Patches are welcome!
                    (ein:$notebook-kernel ein:notebook)))
              (ipy (ein:notebook-console-executable-get ein:notebook))
              (args (ein:notebook-console-args-get ein:notebook))
+             ;; python.el settings:
              (python-shell-setup-codes nil)
              (python-shell-interpreter
               (format "python %s console --existing %skernel-%s.json %s"
@@ -1377,9 +1383,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
              ;; python.el makes dedicated process when
              ;; `buffer-file-name' has some value.
              (buffer-file-name (buffer-name)))
-        ;; Automatically answer y to the question "Make dedicated process?"
-        (flet ((y-or-n-p (prompt) t))
-          (funcall 'python-shell-switch-to-shell)))
+        (run-python t (python-shell-parse-command))
+        (python-shell-switch-to-shell))
     (ein:log 'warn "python.el is not loaded!")))
 
 (provide 'ein-notebook)
