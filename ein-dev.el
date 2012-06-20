@@ -83,6 +83,15 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   ;; In case it has other advices.
   (ad-activate 'backtrace))
 
+(defun ein:dev-show-debug-setting ()
+  "Show variables related to EIN debugging."
+  (interactive)
+  (message (concat "debug-on-error=%s websocket-debug=%s ein:debug=%s "
+                   "ein:log-level=%s ein:log-message-level=%s")
+           debug-on-error websocket-debug ein:debug
+           (ein:log-level-int-to-name ein:log-level)
+           (ein:log-level-int-to-name ein:log-message-level)))
+
 (defun ein:dev-start-debug ()
   (interactive)
   (setq debug-on-error t)
@@ -90,7 +99,8 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (setq ein:debug t)
   (ein:log-set-level 'debug)
   (ein:log-set-message-level 'verbose)
-  (ein:dev-patch-backtrace))
+  (ein:dev-patch-backtrace)
+  (ein:dev-show-debug-setting))
 
 (defun ein:dev-stop-debug ()
   (interactive)
@@ -99,7 +109,8 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (setq ein:debug nil)
   (ein:log-set-level 'verbose)
   (ein:log-set-message-level 'info)
-  (ein:dev-depatch-backtrace))
+  (ein:dev-depatch-backtrace)
+  (ein:dev-show-debug-setting))
 
 (defun ein:dev-pop-to-debug-shell ()
   "Open shell channel websocket log buffer."
