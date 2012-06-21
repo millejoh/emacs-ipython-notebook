@@ -69,6 +69,12 @@
   "Face for stderr cell output"
   :group 'ein)
 
+(defface ein:pos-tip-face
+  '((t (:background "khaki1" :foreground "black")))
+  "Face for tooltip when using pos-tip backend."
+  ;; Adapted from `popup-tip-face.'
+  :group 'ein)
+
 
 ;;; Customization
 
@@ -510,6 +516,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (ewoc-invalidate (oref cell :ewoc)
                      (ein:cell-element-get cell :prompt))))
 
+(declare-function pos-tip-show "pos-tip")
+
 (defun ein:cell-finish-tooltip (cell content)
   ;; See: Tooltip.prototype._show (tooltip.js)
   (let* ((defstring (or (plist-get content :call_def)
@@ -528,8 +536,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (ein:log 'debug "tooltip: %s" tooltip)
     (if tooltip
         (cond
-         ((and window-system (fboundp 'pos-tip-show))
-          (funcall 'pos-tip-show tooltip))
+         ((and window-system (featurep 'pos-tip))
+          (pos-tip-show tooltip 'ein:pos-tip-face nil nil 0))
          ((fboundp 'popup-tip)
           (funcall 'popup-tip tooltip))
          (t (when (stringp defstring)
