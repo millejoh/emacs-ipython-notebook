@@ -46,8 +46,24 @@
 
 ;;; Variables
 
-(defcustom ein:query-timeout 5000
-  "Default query timeout for HTTP access in millisecond."
+(defcustom ein:query-timeout 1000
+  "Default query timeout for HTTP access in millisecond.
+
+Setting this to `nil' means no timeout.
+
+If you do the same operation before the timeout, old operation
+will be canceled \(see also `ein:query-singleton-ajax').
+
+.. note:: This value exists because it looks like `url-retrieve'
+   occasionally fails to finish \(start?) querying.  Timeout is
+   used to let user notice that their operation is not finished.
+   It also prevent opening a lot of useless process buffers.
+   You will see them when closing Emacs if there is no timeout.
+
+   If you know how to fix the problem with `url-retrieve', please
+   let me know or send pull request at github!
+   \(Related bug report in Emacs bug tracker:
+   http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469)"
   :type '(choice (integer :tag "Timeout [ms]" 5000)
                  (const :tag "No timeout" nil))
   :group 'ein)
@@ -199,7 +215,7 @@ is killed immediately after the execution of this function.
 (defun* ein:query-ajax-timeout-callback (buffer &key
                                                 (error nil)
                                                 &allow-other-keys)
-  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %s" buffer)
+  (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %S" buffer)
   (ein:with-live-buffer buffer
     (setq ein:query-ajax-canceled 'timeout)
     (let ((proc (get-buffer-process buffer)))
@@ -211,6 +227,31 @@ is killed immediately after the execution of this function.
   (when ein:query-ajax-timer
     (cancel-timer ein:query-ajax-timer)
     (setq ein:query-ajax-timer nil)))
+
+(defvar ein:query-running-process-table (make-hash-table :test 'equal))
+
+(defun ein:query-singleton-ajax (key &rest args)
+  "Cancel the old process if there is a process associated with
+KEY, then call `ein:query-ajax' with ARGS.  KEY is compared by
+`equal'."
+  (ein:query-gc-running-process-table)
+  (ein:aif (gethash key ein:query-running-process-table)
+      (ein:with-live-buffer it
+        (setq ein:query-ajax-canceled 'user-cancel)
+        (let ((proc (get-buffer-process it)))
+          ;; This will call `ein:query-ajax-callback'.
+          (delete-process proc))))
+  (let ((buffer (apply #'ein:query-ajax args)))
+    (puthash key buffer ein:query-running-process-table)
+    buffer))
+
+(defun ein:query-gc-running-process-table ()
+  "Garbage collect dead processes in `ein:query-running-process-table'."
+  (maphash
+   (lambda (key buffer)
+     (unless (buffer-live-p buffer)
+       (remhash key ein:query-running-process-table)))
+   ein:query-running-process-table))
 
 (provide 'ein-query)
 

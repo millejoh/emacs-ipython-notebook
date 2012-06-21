@@ -91,7 +91,8 @@
            (lambda (&rest args)
              (pop-to-buffer
               (apply #'ein:notebooklist-url-retrieve-callback args))))))
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'notebooklist-open url-or-port)
      (ein:notebooklist-url url-or-port)
      :cache nil
      :parser #'ein:json-read
@@ -146,7 +147,8 @@
   (assert url-or-port nil
           (concat "URL-OR-PORT is not given and the current buffer "
                   "is not the notebook list buffer."))
-  (ein:query-ajax
+  (ein:query-singleton-ajax
+   (list 'notebooklist-new-notebook url-or-port)
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
@@ -200,7 +202,9 @@ This value is used from `ein:notebooklist-new-scratch-notebook'."
 
 (defun ein:notebooklist-delete-notebook (notebook-id name)
   (message "Deleting notebook %s..." name)
-  (ein:query-ajax
+  (ein:query-singleton-ajax
+   (list 'notebooklist-delete-notebook
+         (ein:$notebooklist-url-or-port ein:notebooklist) notebook-id)
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:notebooklist)
     notebook-id)

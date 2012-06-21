@@ -115,6 +115,28 @@ yet.  So be careful when using EIN functions.  They may change."
     (yes t)
     (t (funcall ein:notebook-discard-output-on-save notebook cell))))
 
+;; As opening/saving notebook treats possibly huge data, define these
+;; timeouts separately:
+
+(defcustom ein:notebook-querty-timeout-open (* 60 1000) ; 1 min
+  "Query timeout for opening notebook.
+If you cannot open large notebook because of timeout error, try
+to increase this value.  Setting this value to `nil' means to use
+global setting.  For global setting and more information, see
+`ein:query-timeout'."
+  :type '(choice (integer :tag "Timeout [ms]" 5000)
+                 (const :tag "Use global setting" nil))
+  :group 'ein)
+
+(defcustom ein:notebook-querty-timeout-save (* 60 1000) ; 1 min
+  "Query timeout for saving notebook.
+Similar to `ein:notebook-querty-timeout-open', but for saving
+notebook.  For global setting and more information, see
+`ein:query-timeout'."
+  :type '(choice (integer :tag "Timeout [ms]" 5000)
+                 (const :tag "Use global setting" nil))
+  :group 'ein)
+
 
 ;;; Class and variable
 
@@ -285,8 +307,10 @@ See `ein:notebook-open' for more information."
   (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
         (notebook (ein:notebook-new url-or-port notebook-id)))
     (ein:log 'debug "Opening notebook at %s" url)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'notebook-open url-or-port notebook-id)
      url
+     :timeout ein:notebook-querty-timeout-open
      :parser #'ein:json-read
      :success (cons #'ein:notebook-request-open-callback-with-callback
                     (list notebook callback cbargs)))
@@ -994,8 +1018,12 @@ shared output buffer.  You can open the buffer by the command
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'notebook-save
+           (ein:$notebook-url-or-port notebook)
+           (ein:$notebook-notebook-id notebook))
      (ein:notebook-url notebook)
+     :timeout ein:notebook-querty-timeout-save
      :type "PUT"
      :headers '(("Content-Type" . "application/json"))
      :cache nil
@@ -1041,10 +1069,13 @@ shared output buffer.  You can open the buffer by the command
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook))
 
-(defun ein:notebook-save-notebook-error (notebook &rest ignore)
-  (ein:log 'info "Failed to save notebook!")
-  (ein:events-trigger (ein:$notebook-events notebook)
-                      'notebook_save_failed.Notebook))
+(defun* ein:notebook-save-notebook-error (notebook &key symbol-status
+                                                   &allow-other-keys)
+  (if (eq symbol-status 'user-cancel)
+      (ein:log 'info "Cancel saving notebook.")
+    (ein:log 'info "Failed to save notebook!")
+    (ein:events-trigger (ein:$notebook-events notebook)
+                        'notebook_save_failed.Notebook)))
 
 (defun ein:notebook-rename-command (name)
   "Rename current notebook and save it immediately.

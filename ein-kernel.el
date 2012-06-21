@@ -110,7 +110,8 @@ FIXME: document other slots."
 (defun ein:kernel-start (kernel notebook-id)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'kernel-start (ein:$kernel-kernel-id kernel))
      (concat (ein:url (ein:$kernel-url-or-port kernel)
                       (ein:$kernel-base-url kernel))
              "?" (format "notebook=%s" notebook-id))
@@ -125,7 +126,8 @@ FIXME: document other slots."
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
     (ein:kernel-stop-channels kernel)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'kernel-restart (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel)
               "restart")
@@ -391,7 +393,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel-interrupt (kernel)
   (when (ein:$kernel-running kernel)
     (ein:log 'info "Interrupting kernel")
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'kernel-interrupt (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel)
               "interrupt")
@@ -403,7 +406,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 (defun ein:kernel-kill (kernel &optional callback cbargs)
   (when (ein:$kernel-running kernel)
-    (ein:query-ajax
+    (ein:query-singleton-ajax
+     (list 'kernel-kill (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel))
      :cache nil
