@@ -321,6 +321,14 @@ kill-ring of Emacs (kill-ring for texts).</p>
 
 <dl class="keybind">
 <dt>
+<tt class="descname">C-c C-w</tt><tt class="descclassname"> ein:notebook-copy-cell-command</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Copy the cell at point.  (Put the current cell into the kill-ring.)</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">C-c C-y</tt><tt class="descclassname"> ein:notebook-yank-cell-command</tt></dt>
 </dt>
 <dd><dd class="first last"><p>Insert (&#8220;paste&#8221;) the latest killed cell.
@@ -720,6 +728,11 @@ selecting it.</p>
 </dd></dd>
 </dl>
 
+<dl class="keybind">
+<dt>
+<tt class="descname">q</tt><tt class="descclassname"> bury-buffer</tt></dt>
+</dl>
+
 </div>
 <div class="section" id="traceback-viewer">
 <h3>Traceback viewer<a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
@@ -917,6 +930,25 @@ used.</p>
 </dd></dl>
 
 <dl class="variable">
+<dt id="ein:notebook-querty-timeout-open">
+<em class="property">variable </em><tt class="descname">ein:notebook-querty-timeout-open</tt><a class="headerlink" href="#ein:notebook-querty-timeout-open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query timeout for opening notebook.
+If you cannot open large notebook because of timeout error, try
+to increase this value.  Setting this value to <tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt> means to use
+global setting.  For global setting and more information, see
+<a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:query-timeout</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:notebook-querty-timeout-save">
+<em class="property">variable </em><tt class="descname">ein:notebook-querty-timeout-save</tt><a class="headerlink" href="#ein:notebook-querty-timeout-save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query timeout for saving notebook.
+Similar to <a class="reference internal" href="#ein:notebook-querty-timeout-open" title="ein:notebook-querty-timeout-open"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-querty-timeout-open</span></tt></a>, but for saving
+notebook.  For global setting and more information, see
+<a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:query-timeout</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="variable">
 <dt id="ein:notebook-console-security-dir">
 <em class="property">variable </em><tt class="descname">ein:notebook-console-security-dir</tt><a class="headerlink" href="#ein:notebook-console-security-dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Security directory setting.</p>
@@ -1035,6 +1067,21 @@ Types same as <a class="reference internal" href="#ein:notebook-console-security
 <dt id="ein:query-timeout">
 <em class="property">variable </em><tt class="descname">ein:query-timeout</tt><a class="headerlink" href="#ein:query-timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default query timeout for HTTP access in millisecond.</p>
+<p>Setting this to <tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt> means no timeout.</p>
+<p>If you do the same operation before the timeout, old operation
+will be canceled (see also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:query-singleton-ajax</span></tt>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This value exists because it looks like <tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt>
+occasionally fails to finish (start?) querying.  Timeout is
+used to let user notice that their operation is not finished.
+It also prevent opening a lot of useless process buffers.
+You will see them when closing Emacs if there is no timeout.</p>
+<p class="last">If you know how to fix the problem with <tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt>, please
+let me know or send pull request at github!
+(Related bug report in Emacs bug tracker:
+<a class="reference external" href="http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469">http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469</a>)</p>
+</div>
 </dd></dl>
 
 </div>
