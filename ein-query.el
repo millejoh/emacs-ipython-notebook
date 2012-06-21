@@ -55,12 +55,13 @@ If you do the same operation before the timeout, old operation
 will be canceled \(see also `ein:query-singleton-ajax').
 
 .. note:: This value exists because it looks like `url-retrieve'
-   occasionally fails to finish \(start?) querying.  To let user
-   notice that their operation is not finished, timeout is
-   important.  It also prevent opening a lot of useless process
-   buffers.  If you know how to fix the problem with `url-retrieve',
-   please let me know or send pull request at github!
+   occasionally fails to finish \(start?) querying.  Timeout is
+   used to let user notice that their operation is not finished.
+   It also prevent opening a lot of useless process buffers.
+   You will see them when closing Emacs if there is no timeout.
 
+   If you know how to fix the problem with `url-retrieve', please
+   let me know or send pull request at github!
    \(Related bug report in Emacs bug tracker:
    http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469)"
   :type '(choice (integer :tag "Timeout [ms]" 5000)
