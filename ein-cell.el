@@ -517,6 +517,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                      (ein:cell-element-get cell :prompt))))
 
 (declare-function pos-tip-show "pos-tip")
+(declare-function popup-tip "popup")
 
 (defun ein:cell-finish-tooltip (cell content)
   ;; See: Tooltip.prototype._show (tooltip.js)
@@ -538,8 +539,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (cond
          ((and window-system (featurep 'pos-tip))
           (pos-tip-show tooltip 'ein:pos-tip-face nil nil 0))
-         ((fboundp 'popup-tip)
-          (funcall 'popup-tip tooltip))
+         ((featurep 'popup)
+          (popup-tip tooltip))
          (t (when (stringp defstring)
               (message (ein:trim (ansi-color-apply defstring))))))
       (ein:log 'info "no info for %s" name))))
