@@ -254,8 +254,6 @@ Notebook list
 
 .. el:variable:: ein:url-or-port
 .. el:variable:: ein:default-url-or-port
-.. el:variable:: ein:notebook-querty-timeout-open
-.. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:scratch-notebook-name-template
 
 Notebook
@@ -265,6 +263,8 @@ Notebook
 .. el:variable:: ein:notebook-discard-output-on-save
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-kill-buffer-ask
+.. el:variable:: ein:notebook-querty-timeout-open
+.. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:notebook-console-security-dir
 .. el:variable:: ein:notebook-console-executable
 .. el:variable:: ein:notebook-console-args
