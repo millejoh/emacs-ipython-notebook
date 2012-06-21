@@ -121,10 +121,11 @@ yet.  So be careful when using EIN functions.  They may change."
 (defcustom ein:notebook-querty-timeout-open (* 60 1000) ; 1 min
   "Query timeout for opening notebook.
 If you cannot open large notebook because of timeout error, try
-to increase this value. For global setting and more information,
-see `ein:query-timeout'."
+to increase this value.  Setting this value to `nil' means to use
+global setting.  For global setting and more information, see
+`ein:query-timeout'."
   :type '(choice (integer :tag "Timeout [ms]" 5000)
-                 (const :tag "No timeout" nil))
+                 (const :tag "Use global setting" nil))
   :group 'ein)
 
 (defcustom ein:notebook-querty-timeout-save (* 60 1000) ; 1 min
@@ -133,7 +134,7 @@ Similar to `ein:notebook-querty-timeout-open', but for saving
 notebook.  For global setting and more information, see
 `ein:query-timeout'."
   :type '(choice (integer :tag "Timeout [ms]" 5000)
-                 (const :tag "No timeout" nil))
+                 (const :tag "Use global setting" nil))
   :group 'ein)
 
 
