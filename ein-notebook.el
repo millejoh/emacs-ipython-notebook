@@ -95,7 +95,7 @@ a function
     if you don't want to save image output but other kind of
     output, use `ein:notebook-cell-has-image-output-p'.
 
-Note that using function needs EIN lisp API, which is not defined
+Note that using function needs EIN lisp API, which is not determined
 yet.  So be careful when using EIN functions.  They may change."
   :type '(choice (const :tag "No" 'no)
                  (const :tag "Yes" 'yes)
