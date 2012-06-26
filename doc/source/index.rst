@@ -294,6 +294,41 @@ Misc
 .. el:variable:: ein:query-timeout
 
 
+Gotchas and caveats
+-------------------
+
+Although EIN mostly works fine, there are some deficits I noticed but
+have not fixed yet.  It seems that they originate from some upstream
+bugs so there is little I can do in EIN (but I'm not sure -- it's
+possible that I am misusing the libraries!).
+
+If you know how to fix/workaround them, patches are very welcome.
+
+:el:symbol:`url-retrieve`
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+While using EIN, probably most of the error messages are about server
+connections.  It looks like the problem is in :el:symbol:`url-retrieve`.
+But in those cases you don't loose any notebook data and your IPython
+kernel is fine.  You can just type the command again and it will go
+fine most of the time.  For saving notebook, I implemented code to
+retry when there is an error comes from :el:symbol:`url-retrieve` to
+make it even safer.
+
+MuMaMo
+^^^^^^
+
+When using MuMaMo based notebook mode, you will notice that
+highlighting outside of the cell input is turned off while you are in
+the input area.  It seems there is a bug in MuMaMo [#m3bug]_.
+
+If you are using smartrep and MuMaMo together, see also the warning in
+:el:symbol:`ein:use-smartrep` document.
+
+.. [#m3bug] See the relevant bug report I posted:
+            https://bugs.launchpad.net/nxhtml/+bug/1013794
+
+
 Advanced
 --------
 
