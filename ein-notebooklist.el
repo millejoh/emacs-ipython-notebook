@@ -107,6 +107,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
      (ein:notebooklist-url url-or-port)
      :cache nil
      :parser #'ein:json-read
+     :error (cons #'ein:notebooklist-open-error url-or-port)
      :success (cons success url-or-port)))
   (ein:notebooklist-get-buffer url-or-port))
 
@@ -128,6 +129,13 @@ This function adds NBLIST to `ein:notebooklist-map'."
     (goto-char (point-min))
     (message "Opened notebook list at %s" url-or-port)
     (current-buffer)))
+
+(defun* ein:notebooklist-open-error (url-or-port
+                                     &key symbol-status
+                                     &allow-other-keys)
+  (ein:log 'error
+    "Error (%s) while opening notebook list at the server %s."
+    symbol-status url-or-port))
 
 (defun ein:notebooklist-reload ()
   "Reload current Notebook list."
