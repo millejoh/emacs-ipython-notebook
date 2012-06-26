@@ -17,7 +17,12 @@ Features
 ========
 
 Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
-client and integrated REPL (like SLIME_).
+client and integrated REPL (like SLIME_).  While EIN makes notebook
+editing very powerful by allowing you to use any Emacs features, it
+also expose IPython features such as code evaluation, object
+inspection and code completion to the Emacs side.  These features can
+be accessed anywhere in Emacs and improve Python code editing and
+reading in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
