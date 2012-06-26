@@ -123,6 +123,13 @@
   (interactive)
   (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist) t))
 
+(defun ein:notebooklist-refresh-related ()
+  "Reload notebook list in which current notebook locates.
+This function is called via `ein:notebook-after-rename-hook'."
+  (ein:notebooklist-open (ein:$notebook-url-or-port ein:notebook) t))
+
+(add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
+
 (defun ein:notebooklist-get-data-in-body-tag (key)
   "Very ad-hoc parser to get data in body tag."
   (ignore-errors

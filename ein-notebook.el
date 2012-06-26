@@ -137,6 +137,10 @@ notebook.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
+(defvar ein:notebook-after-rename-hook nil
+  "Hooks to run after notebook is renamed successfully.
+Current buffer for these functions is set to the notebook buffer.")
+
 
 ;;; Class and variable
 
@@ -1011,7 +1015,7 @@ shared output buffer.  You can open the buffer by the command
     `((worksheets . [((cells . ,(apply #'vector cells)))])
       (metadata . ,(ein:$notebook-metadata notebook)))))
 
-(defun ein:notebook-save-notebook (notebook retry)
+(defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
   (let ((data (ein:notebook-to-json notebook)))
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
@@ -1030,32 +1034,40 @@ shared output buffer.  You can open the buffer by the command
      :data (json-encode data)
      :error (cons #'ein:notebook-save-notebook-error notebook)
      :success (cons #'ein:notebook-save-notebook-workaround
-                    (cons notebook retry))
+                    (list notebook retry callback cbarg))
      :status-code
-     `((204 . ,(cons #'ein:notebook-save-notebook-success notebook))))))
+     `((204 . ,(cons (lambda (arg &rest rest)
+                       (destructuring-bind (notebook callback cbarg)
+                           arg
+                         (apply #'ein:notebook-save-notebook-success
+                                notebook rest)
+                         (when callback
+                           (apply callback cbarg rest))))
+                     (list notebook callback cbarg)))))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
   (interactive)
   (ein:notebook-save-notebook ein:notebook 0))
 
-(defun* ein:notebook-save-notebook-workaround (nb-retry &rest args
-                                                        &key
-                                                        status
-                                                        response-status
-                                                        &allow-other-keys)
+(defun* ein:notebook-save-notebook-workaround (packed &rest args
+                                                      &key
+                                                      status
+                                                      response-status
+                                                      &allow-other-keys)
   ;; IPython server returns 204 only when the notebook URL is
   ;; accessed via PUT or DELETE.  As it seems Emacs failed to
   ;; choose PUT method every two times, let's check the response
   ;; here and fail when 204 is not returned.
   (unless (eq response-status 204)
-    (let ((notebook (car nb-retry))
-          (retry (cdr nb-retry)))
+    (destructuring-bind (notebook retry callback cbarg)
+        packed
       (with-current-buffer (ein:notebook-buffer notebook)
         (if (< retry ein:notebook-save-retry-max)
             (progn
               (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
-              (ein:notebook-save-notebook notebook (1+ retry)))
+              (ein:notebook-save-notebook notebook (1+ retry)
+                                          callback cbarg))
           (ein:notebook-save-notebook-error notebook :status status)
           (ein:log 'info
             "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
@@ -1088,7 +1100,12 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                           name)))))
   (ein:notebook-set-notebook-name ein:notebook name)
   (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
-  (ein:notebook-save-notebook ein:notebook 0))
+  (ein:notebook-save-notebook
+   ein:notebook 0
+   (lambda (notebook &rest ignore)
+     (with-current-buffer (ein:notebook-buffer notebook)
+       (run-hooks 'ein:notebook-after-rename-hook)))
+   ein:notebook))
 
 (defun ein:notebook-kill-kernel-then-close-command ()
   "Kill kernel and then kill notebook buffer.
