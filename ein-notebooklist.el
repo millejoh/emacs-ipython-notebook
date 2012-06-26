@@ -48,9 +48,20 @@
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
-(defvar ein:notebooklist-list nil
-  "A list of opened `ein:$notebooklist'.")
+(defvar ein:notebooklist-map (make-hash-table :test 'equal)
+  "Data store for `ein:notebooklist-list'.
+Mapping from URL-OR-PORT to an instance of `ein:$notebooklist'.")
 
+(defun ein:notebooklist-list ()
+  "Get a list of opened `ein:$notebooklist'."
+  (ein:hash-vals ein:notebooklist-map))
+
+(defun ein:notebooklist-list-add (nblist)
+  "Register notebook list instance NBLIST for global lookup.
+This function adds NBLIST to `ein:notebooklist-map'."
+  (puthash (ein:$notebooklist-url-or-port nblist)
+           nblist
+           ein:notebooklist-map))
 
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
@@ -112,7 +123,7 @@
     (setq ein:notebooklist
           (make-ein:$notebooklist :url-or-port url-or-port
                                   :data data))
-    (add-to-list 'ein:notebooklist-list ein:notebooklist)
+    (ein:notebooklist-list-add ein:notebooklist)
     (ein:notebooklist-render)
     (goto-char (point-min))
     (message "Opened notebook list at %s" url-or-port)
@@ -282,7 +293,7 @@ Notebook list data is passed via the buffer local variable
    (list (completing-read
           "Open notebook [URL-OR-PORT/NAME]: "
           (apply #'append
-                 (loop for nblist in ein:notebooklist-list
+                 (loop for nblist in (ein:notebooklist-list)
                        for url-or-port = (ein:$notebooklist-url-or-port nblist)
                        collect
                        (loop for note in (ein:$notebooklist-data nblist)
@@ -296,7 +307,7 @@ Notebook list data is passed via the buffer local variable
                (string-match "^[0-9]+$" url-or-port))
       (setq url-or-port (string-to-number url-or-port)))
     (let ((notebook-id
-           (loop for nblist in ein:notebooklist-list
+           (loop for nblist in (ein:notebooklist-list)
                  if (loop for note in (ein:$notebooklist-data nblist)
                           when (equal (plist-get note :name) name)
                           return (plist-get note :notebook_id))

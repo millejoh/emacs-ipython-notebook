@@ -239,6 +239,16 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
+(defun ein:hash-keys (table)
+  (let (keys)
+    (maphash (lambda (k v) (push k keys)) table)
+    keys))
+
+(defun ein:hash-vals (table)
+  (let (vals)
+    (maphash (lambda (k v) (push v vals)) table)
+    vals))
+
 (defun ein:filter (predicate sequence)
   (loop for item in sequence
         when (funcall predicate item)
