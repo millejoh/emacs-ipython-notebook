@@ -45,6 +45,8 @@ Links:
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
 
+.. contents::
+
 
 Quick try
 ---------
