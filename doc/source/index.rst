@@ -40,12 +40,14 @@ Other notebook features:
 
 Links:
 
+* `Online Documentation
+  <http://tkf.github.com/emacs-ipython-notebook/>`_
+* `Screenshots
+  <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
 * `Repository at GitHub
   <https://github.com/tkf/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
-* `Online Documentation
-  <http://tkf.github.com/emacs-ipython-notebook/>`_
 
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
@@ -71,8 +73,7 @@ This will launch a new Emacs instance.  For more information, see::
 Requirements
 ------------
 
-* IPython_ **0.12.1** (or developmental version):
-  EIN won't work with older versions.
+* IPython_ 0.12 or higher.
 * `websocket.el`_
 * (optional) mumamo_:
   It will be automatically loaded when it is on the path.

@@ -9,9 +9,10 @@
 Screenshot
 ==========
 
-.. figure:: http://farm8.staticflickr.com/7125/7006219050_2d424b4ece_z.jpg
+.. figure:: https://github.com/tkf/emacs-ipython-notebook/raw/data/screenshots/notebook_simple_plot.png
    :alt: Plotting in Emacs IPython Notebook
 
+See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
 
 Features
 ========
@@ -50,12 +51,14 @@ Other notebook features:
 
 Links:
 
+* `Online Documentation
+  <http://tkf.github.com/emacs-ipython-notebook/>`_
+* `Screenshots
+  <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
 * `Repository at GitHub
   <https://github.com/tkf/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
-* `Online Documentation
-  <http://tkf.github.com/emacs-ipython-notebook/>`_
 
 
 Quick try
@@ -76,8 +79,7 @@ This will launch a new Emacs instance.  For more information, see::
 Requirements
 ============
 
-* IPython_ **0.12.1** (or developmental version):
-  EIN won't work with older versions.
+* IPython_ 0.12 or higher.
 * `websocket.el`_
 * (optional) mumamo_:
   It will be automatically loaded when it is on the path.
@@ -155,6 +157,10 @@ Keybinds - Notebook
    C-x             Prefix Command
    ESC             Prefix Command
    C-:             ein:notebook-eval-string
+   <C-down>        ein:notebook-goto-next-input-command
+   <C-up>          ein:notebook-goto-prev-input-command
+   <M-down>        ein:notebook-move-cell-down-command
+   <M-up>          ein:notebook-move-cell-up-command
 
    C-x C-s         ein:notebook-save-notebook-command
    C-x C-w         ein:notebook-rename-command
@@ -181,11 +187,14 @@ Keybinds - Notebook
    C-c C-t         ein:notebook-toggle-cell-type
    C-c C-u         ein:notebook-change-cell-type
    C-c C-v         ein:notebook-set-collapsed-all-command
+   C-c C-w         ein:notebook-copy-cell-command
    C-c C-x         ein:notebook-view-traceback
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
    C-c C-S-l       ein:notebook-clear-all-output-command
+   C-c C-,         ein:pytools-jump-back-command
+   C-c C-.         ein:pytools-jump-to-source-command
    C-c <down>      ein:notebook-move-cell-down-command
    C-c <up>        ein:notebook-move-cell-up-command
 
@@ -221,5 +230,7 @@ commands are available.
    C-c TAB         ein:connect-complete-command
    C-c C-r         ein:connect-eval-region
    C-c C-z         ein:connect-pop-to-notebook
+   C-c C-,         ein:pytools-jump-back-command
+   C-c C-.         ein:pytools-jump-to-source-command
 
 .. // KEYS END //
