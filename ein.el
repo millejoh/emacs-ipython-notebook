@@ -3,6 +3,8 @@
 ;; Copyright (C) 2012- Takafumi Arakaki
 
 ;; Author: Takafumi Arakaki
+;; URL: http://tkf.github.com/emacs-ipython-notebook/
+;; Keywords: applications, tools
 
 ;; This file is NOT part of GNU Emacs.
 
