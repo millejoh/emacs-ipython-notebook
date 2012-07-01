@@ -3,7 +3,7 @@ Python utilities to use it from ein.el
 
 Copyright (C) 2012- Takafumi Arakaki
 
-Author: Takafumi Arakaki
+Author: Takafumi Arakaki <aka.tkf at gmail.com>
 
 ein.py is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
