@@ -5,6 +5,7 @@
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: http://tkf.github.com/emacs-ipython-notebook/
 ;; Keywords: applications, tools
+;; Version: 0.1.beta
 
 ;; This file is NOT part of GNU Emacs.
 
