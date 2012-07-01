@@ -44,6 +44,8 @@ Links:
   <http://tkf.github.com/emacs-ipython-notebook/>`_
 * `Screenshots
   <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+* `Downloads
+  <https://github.com/tkf/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
   <https://github.com/tkf/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
