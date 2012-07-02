@@ -16,7 +16,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp \
 	qthelp devhelp epub latex latexpdf text man changes linkcheck \
-	doctest gettext update-gh-pages push-gh-pages
+	doctest gettext gh-pages-update gh-pages-push
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -154,9 +154,9 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-update-gh-pages: clean html
+gh-pages-update: clean html
 	@echo "Update gh-pages"
 	./update-gh-pages.sh
 
-push-gh-pages:
+gh-pages-push:
 	cd build/html && git push origin gh-pages
