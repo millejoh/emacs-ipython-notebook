@@ -1,4 +1,4 @@
-(add-to-list 'load-path "~/.emacs.d/el-get/ein/")
+(add-to-list 'load-path "~/.emacs.d/el-get/ein/lisp/")
 (add-to-list 'load-path "~/.emacs.d/el-get/websocket/")
 (add-to-list 'load-path "~/.emacs.d/el-get/nxhtml/util/") ; mumamo
 (add-to-list 'load-path "~/.emacs.d/el-get/auto-complete/")
