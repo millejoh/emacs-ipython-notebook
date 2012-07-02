@@ -114,7 +114,7 @@ Using el-get
 
 If you use developmental version of `el-get`_, you can install it
 easily using it.  Emacs IPython Notebook is registered as package
-``ein``.
+``ein``.   See `el-get`_ website for more information.
 
 .. _el-get: https://github.com/dimitri/el-get
 
@@ -128,6 +128,16 @@ easily using it.  Emacs IPython Notebook is registered as package
    this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
    will solve the problem.  Note that this will remove the whole
    ``ein/`` directory including ``.git`` directory.
+
+
+Using package.el (MELPA)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can install EIN using `package.el`_ when MELPA_ package repository
+is added to its setting. See MELPA_ website for more information.
+
+.. _`package.el`: http://emacswiki.org/emacs/ELPA
+.. _MELPA: https://github.com/milkypostman/melpa
 
 
 Manual install
