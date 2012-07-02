@@ -16,7 +16,8 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp \
 	qthelp devhelp epub latex latexpdf text man changes linkcheck \
-	doctest gettext gh-pages-update gh-pages-push
+	doctest gettext gh-pages-update gh-pages-push gh-pages-clone \
+	gh-pages-pull
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -153,6 +154,14 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+gh-pages-clone:
+	git clone --branch gh-pages \
+		git://github.com/tkf/emacs-ipython-notebook.git \
+		build/html
+
+gh-pages-pull:
+	cd build/html && git pull
 
 gh-pages-update: clean html
 	@echo "Update gh-pages"
