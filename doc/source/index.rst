@@ -360,6 +360,13 @@ web client.  See `emacslisp.py`_ for more details.
   https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
 
 
+License
+=======
+
+Emacs IPython Notebook is licensed under GPL v3.
+See COPYING for details.
+
+
 Indices and tables
 ==================
 

@@ -236,3 +236,10 @@ commands are available.
    C-c C-.         ein:pytools-jump-to-source-command
 
 .. // KEYS END //
+
+
+License
+=======
+
+Emacs IPython Notebook is licensed under GPL v3.
+See COPYING for details.
