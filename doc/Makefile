@@ -157,7 +157,7 @@ doctest:
 
 gh-pages-clone:
 	git clone --branch gh-pages \
-		git://github.com/tkf/emacs-ipython-notebook.git \
+		git@github.com:tkf/emacs-ipython-notebook.git \
 		build/html
 
 gh-pages-pull:
