@@ -82,7 +82,7 @@ Requirements
   The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
 * (optional) python-mode:
-  It should work with either python.el or python-mode.el.
+  It should work with either python.el or `python-mode.el`_ [#]_.
   Fabian Gallina's `python.el`_ is required to use
   :el:symbol:`ein:notebook-console-open` command.
 * (optional) `auto-complete.el`_
@@ -102,8 +102,12 @@ EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
+.. _python-mode.el: :https://launchpad.net/python-mode
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
+
+.. [#] See
+   :ref:`Gotchas and caveats > python-mode.el <gotchas-python-mode.el>`.
 
 
 Install
@@ -359,6 +363,19 @@ If you are using smartrep and MuMaMo together, see also the warning in
 
 .. [#m3bug] See the relevant bug report I posted:
             https://bugs.launchpad.net/nxhtml/+bug/1013794
+
+
+.. _gotchas-python-mode.el:
+
+python-mode.el
+^^^^^^^^^^^^^^
+
+In my environment, using `python-mode.el`_ without byte-compiling it
+in MuMaMo based notebook mode produces segfault.
+
+Also, ``mumamo-idle-set-major-mode`` messages error
+``(wrong-type-argument listp python-saved-check-command)``
+time to time, making minibuffer bit noisy while editing notebook.
 
 
 Advanced
