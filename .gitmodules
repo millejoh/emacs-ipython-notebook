@@ -4,6 +4,3 @@
 [submodule "doc/eldomain"]
 	path = doc/eldomain
 	url = git://github.com/tkf/sphinx-eldomain.git
-[submodule "doc/build/html"]
-	path = doc/build/html
-	url = git://github.com/tkf/emacs-ipython-notebook.git
