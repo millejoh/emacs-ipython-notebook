@@ -1,6 +1,7 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
+(require 'ein)  ; for `ein:version'
 (require 'ein-utils)
 
 (ert-deftest ein-url-simple ()
@@ -80,3 +81,7 @@ def func():
 
 "))
     (should (equal (ein:trim-indent original) trimmed))))
+
+(ert-deftest ein:version ()
+  "Check if `ein:version' can be parsed by `version-to-list'."
+  (version-to-list ein:version))
