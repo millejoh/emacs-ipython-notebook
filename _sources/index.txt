@@ -122,11 +122,6 @@ easily using it.  Emacs IPython Notebook is registered as package
 
 .. _el-get: https://github.com/dimitri/el-get
 
-.. warning:: Due to recent directory reorganization, installation
-   from el-get may not work for a while.  Until the new recipe is
-   merged in el-get, you can use recipe from my fork:
-   https://github.com/tkf/el-get/blob/update-ein-rcp/recipes/ein.rcp
-
 .. note:: If el-get complains there is no "ein/ein-notebooklist", I
    guess you are updated EIN after I reorganized the repository.  In
    this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
