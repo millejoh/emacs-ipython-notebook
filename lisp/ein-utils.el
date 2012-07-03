@@ -28,9 +28,6 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 
-(defvar ein:version "0.1.beta"
-  "Version number for Emacs IPython Notebook (EIN).")
-
 (defgroup ein nil
   "IPython notebook client in Emacs"
   :group 'applications

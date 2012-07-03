@@ -5,7 +5,7 @@
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: http://tkf.github.com/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.1.beta
+;; Version: 0.1beta1
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,6 +27,9 @@
 ;;
 
 ;;; Code:
+
+(defvar ein:version "0.1beta1"
+  "Version number for Emacs IPython Notebook (EIN).")
 
 (autoload 'ein:notebooklist-open "ein-notebooklist"
   "Open notebook list buffer." t)
