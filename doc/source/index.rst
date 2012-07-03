@@ -126,7 +126,7 @@ easily using it.  Emacs IPython Notebook is registered as package
    guess you are updated EIN after I reorganized the repository.  In
    this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
    will solve the problem.  Note that this will remove the whole
-   ``ein/`` directory including ``.git`` directory.
+   ``ein/`` directory including ``.git`` directory before installation.
 
 
 Using package.el (MELPA)
