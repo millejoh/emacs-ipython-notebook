@@ -86,6 +86,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
 If URL-OR-PORT is not given or `nil', and the current buffer is
 the notebook list buffer, the notebook is searched in the
 notebook list of the current buffer."
+  ;; FIXME: Support no-popup argument to open notebook in background.
   (loop with nblist = (if url-or-port
                           (ein:notebooklist-list-get url-or-port)
                         ein:notebooklist)
