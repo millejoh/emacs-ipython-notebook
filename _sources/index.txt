@@ -76,7 +76,7 @@ Requirements
 ------------
 
 * IPython_ 0.12 or higher.
-* `websocket.el`_
+* `websocket.el`_ 0.9
 * (optional) mumamo_:
   It will be automatically loaded when it is on the path.
   The official way to setup path is to load nXhtml_.
@@ -126,7 +126,7 @@ easily using it.  Emacs IPython Notebook is registered as package
    guess you are updated EIN after I reorganized the repository.  In
    this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
    will solve the problem.  Note that this will remove the whole
-   ``ein/`` directory including ``.git`` directory.
+   ``ein/`` directory including ``.git`` directory before installation.
 
 
 Using package.el (MELPA)
