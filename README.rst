@@ -82,7 +82,7 @@ Requirements
 ============
 
 * IPython_ 0.12 or higher.
-* `websocket.el`_
+* `websocket.el`_ 0.9
 * (optional) mumamo_:
   It will be automatically loaded when it is on the path.
   The official way to setup path is to load nXhtml_.
