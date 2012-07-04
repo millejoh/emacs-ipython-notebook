@@ -32,6 +32,20 @@
 (require 'ein-notebook)
 (require 'ein-subpackages)
 
+(defcustom ein:notebooklist-first-open-hook nil
+  "Hooks to run when the notebook list is opened at first time.
+
+Example to open a notebook named _scratch_ when the notebook list
+is opened at first time.::
+
+  (add-hook
+   'ein:notebooklist-first-open-hook
+   (lambda () (ein:notebooklist-open-notebook-by-name \"_scratch_\")))
+
+"
+  :type 'hook
+  :group 'ein)
+
 (defstruct ein:$notebooklist
   "Hold notebooklist variables.
 
@@ -62,6 +76,25 @@ This function adds NBLIST to `ein:notebooklist-map'."
   (puthash (ein:$notebooklist-url-or-port nblist)
            nblist
            ein:notebooklist-map))
+
+(defun ein:notebooklist-list-get (url-or-port)
+  "Get an instance of `ein:$notebooklist' by URL-OR-PORT as a key."
+  (gethash url-or-port ein:notebooklist-map))
+
+(defun ein:notebooklist-open-notebook-by-name (name &optional url-or-port)
+  "Open notebook named NAME in the server URL-OR-PORT.
+If URL-OR-PORT is not given or `nil', and the current buffer is
+the notebook list buffer, the notebook is searched in the
+notebook list of the current buffer."
+  (loop with nblist = (if url-or-port
+                          (ein:notebooklist-list-get url-or-port)
+                        ein:notebooklist)
+        for note in (ein:$notebooklist-data nblist)
+        for notebook-name = (plist-get note :name)
+        for notebook-id = (plist-get note :notebook_id)
+        when (equal notebook-name name)
+        return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
+                                  notebook-id)))
 
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
@@ -121,14 +154,17 @@ This function adds NBLIST to `ein:notebooklist-map'."
       (error "Failed to connect to server '%s'.  Got: %S"
              (ein:url url-or-port) it))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-    (setq ein:notebooklist
-          (make-ein:$notebooklist :url-or-port url-or-port
-                                  :data data))
-    (ein:notebooklist-list-add ein:notebooklist)
-    (ein:notebooklist-render)
-    (goto-char (point-min))
-    (message "Opened notebook list at %s" url-or-port)
-    (current-buffer)))
+    (let ((already-opened-p (ein:notebooklist-list-get url-or-port)))
+      (setq ein:notebooklist
+            (make-ein:$notebooklist :url-or-port url-or-port
+                                    :data data))
+      (ein:notebooklist-list-add ein:notebooklist)
+      (ein:notebooklist-render)
+      (goto-char (point-min))
+      (message "Opened notebook list at %s" url-or-port)
+      (unless already-opened-p
+        (run-hooks 'ein:notebooklist-first-open-hook))
+      (current-buffer))))
 
 (defun* ein:notebooklist-open-error (url-or-port
                                      &key symbol-status
