@@ -30,14 +30,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
     (eintest:wait-until (lambda () ein:notebooklist))
-    (loop for note in (ein:$notebooklist-data ein:notebooklist)
-          for name = (plist-get note :name)
-          for notebook-id = (plist-get note :notebook_id)
-          when (equal name notebook-name)
-          return
-          (ein:notebook-open
-           (ein:$notebooklist-url-or-port ein:notebooklist)
-           notebook-id))))
+    (ein:notebooklist-open-notebook-by-name notebook-name)))
 
 (defun eintest:get-untitled0-or-create (url-or-port)
   (let ((notebook (eintest:get-notebook-by-name url-or-port "Untitled0")))
