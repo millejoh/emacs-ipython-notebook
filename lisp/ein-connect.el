@@ -107,7 +107,7 @@ Types same as `ein:notebook-console-security-dir' are valid."
   (interactive
    (list
     (completing-read
-     "Select notebook: "
+     "Notebook to connect: "
      (mapcar #'buffer-name (ein:notebook-opened-buffers)))))
   (let* ((notebook (buffer-local-value 'ein:notebook
                                        (get-buffer buffer-or-name)))
