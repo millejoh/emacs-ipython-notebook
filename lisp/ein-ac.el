@@ -72,6 +72,40 @@ compatibility with `ein:completer-finish-completing-default'."
         (setcdr (nthcdr (1- ein:ac-max-cache)
                         (delete-dups ein:ac-cache-matches)) nil)))
 
+(defun ein:ac-request-document-for-selected-candidate ()
+  "Request object information for the candidate at point.
+This is called via `ac-next' and `ac-previous' and set `document'
+property of the current candidate string.  If server replied
+within `ac-quick-help-delay' seconds, auto-complete will popup
+help string."
+  (let* ((candidate (ac-selected-candidate))
+         (kernel (ein:pytools-get-kernel))
+         (callbacks (list :object_info_reply
+                          (cons #'ein:ac-set-document candidate))))
+    (when (and candidate
+               kernel
+               (not (get-text-property 0 'document candidate)))
+      (ein:log 'debug "Requesting object info for AC candidate %S"
+               candidate)
+      (ein:kernel-object-info-request kernel candidate callbacks))))
+
+(defun ein:ac-set-document (candidate content)
+  (ein:log 'debug "EIN:AC-SET-DOCUMENT candidate=%S content=%S"
+           candidate content)
+  (put-text-property 0 (length candidate)
+                     'document (ein:kernel-construct-help-string content)
+                     candidate))
+
+(defadvice ac-next (after ein:ac-next-request)
+  "Monkey patch `auto-complete' internal function to request
+help documentation asynchronously."
+  (ein:ac-request-document-for-selected-candidate))
+
+(defadvice ac-previous (after ein:ac-previous-request)
+  "Monkey patch `auto-complete' internal function to request
+help documentation asynchronously."
+  (ein:ac-request-document-for-selected-candidate))
+
 (defadvice ac-prefix
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
@@ -82,10 +116,17 @@ dotty completion."
     ad-do-it))
 
 (defun ein:ac-superpack ()
-  "Enable dotty syntax table for auto-complete.
-This function monkey patches `ac-prefix' to make \".\" as a part of word."
+  "Enable richer auto-completion.
+
+* Enable omni completion by using dotty syntax table for auto-complete.
+  Monkey patch `ac-prefix' to make \".\" as a part of word.
+* Enable auto-completion help by monkey patching `ac-next'/`ac-previous'"
   (interactive)
+  (ad-enable-advice 'ac-next     'after 'ein:ac-next-request)
+  (ad-enable-advice 'ac-previous 'after 'ein:ac-previous-request)
   (ad-enable-advice 'ac-prefix 'around 'ein:ac-always-dotty)
+  (ad-activate 'ac-next)
+  (ad-activate 'ac-previous)
   (ad-activate 'ac-prefix))
 
 (defun ein:ac-setup ()
@@ -103,7 +144,7 @@ This function monkey patches `ac-prefix' to make \".\" as a part of word."
 
 (defun ein:ac-config (&optional superpack)
   "Install auto-complete-mode for notebook modes.
-Specifying non-`nil' to SUPERPACK enables dotty auto completion
+Specifying non-`nil' to SUPERPACK enables richer auto-completion
 \(see `ein:ac-superpack')."
   (add-hook 'after-change-major-mode-hook 'ein:ac-setup-maybe) ; [#hook]_
   (add-hook 'ein:notebook-plain-mode 'ein:ac-setup)
