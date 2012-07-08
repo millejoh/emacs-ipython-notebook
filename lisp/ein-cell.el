@@ -521,20 +521,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defun ein:cell-finish-tooltip (cell content)
   ;; See: Tooltip.prototype._show (tooltip.js)
-  (let* ((defstring (or (plist-get content :call_def)
-                        (plist-get content :init_definition)
-                        (plist-get content :definition)))
-         (docstring (or (plist-get content :call_docstring)
-                        (plist-get content :init_docstring)
-                        (plist-get content :docstring)
-                        ;; "<empty docstring>"
-                        ))
-         (name (plist-get content :name))
-         (tooltip
-          (ein:aif (ein:filter 'identity (list defstring docstring))
-              (ansi-color-apply (ein:join-str "\n" it)))))
-    (ein:log 'debug "EIN:CELL-FINISH-TOOLTIP")
-    (ein:log 'debug "tooltip: %s" tooltip)
+  (let ((tooltip (ein:kernel-construct-help-string content))
+        (defstring (ein:kernel-construct-defstring content))
+        (name (plist-get content :name)))
     (if tooltip
         (cond
          ((and window-system (featurep 'pos-tip))
