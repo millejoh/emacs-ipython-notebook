@@ -394,6 +394,21 @@ web client.  See `emacslisp.py`_ for more details.
   https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
 
 
+Change Log
+==========
+
+v0.1.1
+------
+
+* Support auto-complete_ popup/quick help.
+* Add :el:symbol:`ein:notebooklist-first-open-hook`.
+
+v0.1
+----
+
+* First release.
+
+
 License
 =======
 
