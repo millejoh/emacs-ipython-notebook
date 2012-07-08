@@ -74,10 +74,10 @@ compatibility with `ein:completer-finish-completing-default'."
 
 (defun ein:ac-request-document-for-selected-candidate ()
   "Request object information for the candidate at point.
-This is called via `ac-next' and `ac-previous' and set `document'
-property of the current candidate string.  If server replied
-within `ac-quick-help-delay' seconds, auto-complete will popup
-help string."
+This is called via `ac-next'/`ac-previous'/`ac-update' and set
+`document' property of the current candidate string.  If server
+replied within `ac-quick-help-delay' seconds, auto-complete will
+popup help string."
   (let* ((candidate (ac-selected-candidate))
          (kernel (ein:pytools-get-kernel))
          (callbacks (list :object_info_reply
@@ -106,6 +106,12 @@ help documentation asynchronously."
 help documentation asynchronously."
   (ein:ac-request-document-for-selected-candidate))
 
+(defadvice ac-update (after ein:ac-update-request)
+  "Monkey patch `auto-complete' internal function to request help
+documentation asynchronously.  This will request info for the
+first candidate when the `ac-menu' pops up."
+  (ein:ac-request-document-for-selected-candidate))
+
 (defadvice ac-prefix
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
@@ -124,9 +130,11 @@ dotty completion."
   (interactive)
   (ad-enable-advice 'ac-next     'after 'ein:ac-next-request)
   (ad-enable-advice 'ac-previous 'after 'ein:ac-previous-request)
+  (ad-enable-advice 'ac-update   'after 'ein:ac-update-request)
   (ad-enable-advice 'ac-prefix 'around 'ein:ac-always-dotty)
   (ad-activate 'ac-next)
   (ad-activate 'ac-previous)
+  (ad-activate 'ac-update)
   (ad-activate 'ac-prefix))
 
 (defun ein:ac-setup ()
