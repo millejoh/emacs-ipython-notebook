@@ -34,6 +34,7 @@
 (eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ansi-color)
+(require 'comint)
 
 (require 'ein-log)
 (require 'ein-utils)
@@ -668,7 +669,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  (ein:cell-append-stream-text-fontified (plist-get json :text) json)
+  (let ((start (point)))
+    (ein:cell-append-stream-text-fontified (plist-get json :text) json)
+    (comint-carriage-motion start (point)))
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
   )
