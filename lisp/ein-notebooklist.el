@@ -332,19 +332,26 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
+(defun ein:notebooklist-list-notebooks ()
+  "Return a list of notebook path (NBPATH).  Each element NBPATH
+is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
+  (apply #'append
+         (loop for nblist in (ein:notebooklist-list)
+               for url-or-port = (ein:$notebooklist-url-or-port nblist)
+               collect
+               (loop for note in (ein:$notebooklist-data nblist)
+                     collect (format "%s/%s"
+                                     url-or-port
+                                     (plist-get note :name))))))
+
 (defun ein:notebooklist-open-notebook-global (nbpath)
-  "Choose notebook from all opened notebook list and open it."
+  "Choose notebook from all opened notebook list and open it.
+Notebook is specified by a string NBPATH whose format is
+\"URL-OR-PORT/NOTEBOOK-NAME\"."
   (interactive
    (list (completing-read
           "Open notebook [URL-OR-PORT/NAME]: "
-          (apply #'append
-                 (loop for nblist in (ein:notebooklist-list)
-                       for url-or-port = (ein:$notebooklist-url-or-port nblist)
-                       collect
-                       (loop for note in (ein:$notebooklist-data nblist)
-                             collect (format "%s/%s"
-                                             url-or-port
-                                             (plist-get note :name))))))))
+          (ein:notebooklist-list-notebooks))))
   (let* ((path (split-string nbpath "/"))
          (url-or-port (car path))
          (name (cadr path)))
