@@ -34,6 +34,12 @@
 (autoload 'ein:notebooklist-open "ein-notebooklist"
   "Open notebook list buffer." t)
 
+(autoload 'ein:notebooklist-list-notebooks "ein-notebooklist"
+  "Return a list of notebook path (NBPATH)." t)
+
+(autoload 'ein:notebooklist-open-notebook-global "ein-notebooklist"
+  "Choose notebook from all opened notebook list and open it." t)
+
 (autoload 'ein:connect-to-notebook "ein-connect"
   "Connect any buffer to notebook and its kernel." t)
 
