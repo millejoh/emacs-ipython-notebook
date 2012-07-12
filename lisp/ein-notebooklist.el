@@ -81,12 +81,15 @@ This function adds NBLIST to `ein:notebooklist-map'."
   "Get an instance of `ein:$notebooklist' by URL-OR-PORT as a key."
   (gethash url-or-port ein:notebooklist-map))
 
-(defun ein:notebooklist-open-notebook-by-name (name &optional url-or-port)
+(defun ein:notebooklist-open-notebook-by-name (name &optional url-or-port
+                                                    callback cbargs)
   "Open notebook named NAME in the server URL-OR-PORT.
 If URL-OR-PORT is not given or `nil', and the current buffer is
 the notebook list buffer, the notebook is searched in the
-notebook list of the current buffer."
-  ;; FIXME: Support no-popup argument to open notebook in background.
+notebook list of the current buffer.
+
+When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'.
+To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (loop with nblist = (if url-or-port
                           (ein:notebooklist-list-get url-or-port)
                         ein:notebooklist)
@@ -95,7 +98,7 @@ notebook list of the current buffer."
         for notebook-id = (plist-get note :notebook_id)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
-                                  notebook-id)))
+                                  notebook-id callback cbargs)))
 
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
