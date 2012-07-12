@@ -138,7 +138,7 @@ Types same as `ein:notebook-console-security-dir' are valid."
       (push 'ac-source-ein-cached ac-sources))
     (with-current-buffer buffer
       (ein:connect-mode))
-    (message "Connected to %s"
+    (ein:log 'info "Connected to %s"
              (ein:$notebook-notebook-name notebook))
     connection))
 
