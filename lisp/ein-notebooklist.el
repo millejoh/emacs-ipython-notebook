@@ -243,7 +243,10 @@ This function is called via `ein:notebook-after-rename-hook'."
    (lambda (notebook created name)
      (assert created)
      (with-current-buffer (ein:notebook-buffer notebook)
-       (ein:notebook-rename-command name)))
+       (ein:notebook-rename-command name)
+       ;; As `ein:notebook-open' does not call `pop-to-buffer' when
+       ;; callback is specified, `pop-to-buffer' must be called here:
+       (pop-to-buffer (current-buffer))))
    (list name)))
 
 (defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
