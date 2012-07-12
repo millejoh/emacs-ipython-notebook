@@ -344,10 +344,12 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                                      url-or-port
                                      (plist-get note :name))))))
 
-(defun ein:notebooklist-open-notebook-global (nbpath)
+(defun ein:notebooklist-open-notebook-global (nbpath &optional callback cbargs)
   "Choose notebook from all opened notebook list and open it.
 Notebook is specified by a string NBPATH whose format is
-\"URL-OR-PORT/NOTEBOOK-NAME\"."
+\"URL-OR-PORT/NOTEBOOK-NAME\".
+
+When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
   (interactive
    (list (completing-read
           "Open notebook [URL-OR-PORT/NAME]: "
@@ -365,7 +367,7 @@ Notebook is specified by a string NBPATH whose format is
                           return (plist-get note :notebook_id))
                  return it)))
       (if notebook-id
-          (ein:notebook-open url-or-port notebook-id)
+          (ein:notebook-open url-or-port notebook-id callback cbargs)
         (message "Notebook '%s' not found" nbpath)))))
 
 

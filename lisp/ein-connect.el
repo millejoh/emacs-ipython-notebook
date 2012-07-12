@@ -36,6 +36,9 @@
 (require 'ein-notebook)
 (require 'ein-shared-output)
 
+(declare-function ein:notebooklist-list-notebooks "ein-notebooklist")
+(declare-function ein:notebooklist-open-notebook-global "ein-notebooklist")
+
 
 ;;; Utils
 
@@ -102,19 +105,39 @@ Types same as `ein:notebook-console-security-dir' are valid."
 
 ;;; Methods
 
-(defun ein:connect-to-notebook (buffer-or-name)
+(defun ein:connect-to-notebook (nbpath)
   "Connect any buffer to notebook and its kernel."
   (interactive
    (list
     (completing-read
-     "Notebook to connect: "
+     "Notebook to connect [URL-OR-PORT/NAME]: "
+     (ein:notebooklist-list-notebooks))))
+  (ein:notebooklist-open-notebook-global
+   nbpath
+   (lambda (notebook -ignore- buffer)
+     (ein:connect-buffer-to-notebook notebook buffer))
+   (list (current-buffer))))
+
+(defun ein:connect-to-notebook-buffer (buffer-or-name)
+  "Connect any buffer to opened notebook and its kernel."
+  (interactive
+   (list
+    (completing-read
+     "Notebook buffer to connect: "
      (mapcar #'buffer-name (ein:notebook-opened-buffers)))))
-  (let* ((notebook (buffer-local-value 'ein:notebook
-                                       (get-buffer buffer-or-name)))
-         (connection (ein:connect-setup notebook (current-buffer))))
+  (let ((notebook
+         (buffer-local-value 'ein:notebook (get-buffer buffer-or-name))))
+    (ein:connect-buffer-to-notebook notebook)))
+
+(defun ein:connect-buffer-to-notebook (notebook &optional buffer)
+  "Connect BUFFER to NOTEBOOK."
+  (unless buffer
+    (setq buffer (current-buffer)))
+  (let ((connection (ein:connect-setup notebook buffer)))
     (when (ein:eval-if-bound 'ac-sources)
       (push 'ac-source-ein-cached ac-sources))
-    (ein:connect-mode)
+    (with-current-buffer buffer
+      (ein:connect-mode))
     (message "Connected to %s"
              (ein:$notebook-notebook-name notebook))
     connection))
