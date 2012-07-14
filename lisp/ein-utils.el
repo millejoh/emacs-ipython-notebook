@@ -54,8 +54,10 @@ Notebook server."
   :group 'ein)
 
 (defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
-  "Template of notebook name.
-This value is used from `ein:notebooklist-new-scratch-notebook'."
+  "Template of scratch notebook name.
+This value is used from `ein:notebooklist-new-scratch-notebook'
+and `ein:notebook-rename-to-scratch-command'.  This must be a
+format string which can be passed to `format-time-string'."
   :type '(string :tag "Format string")
   :group 'ein)
 

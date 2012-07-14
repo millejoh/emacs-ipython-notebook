@@ -253,7 +253,9 @@ This function is called via `ein:notebook-after-rename-hook'."
    (list name)))
 
 (defun ein:notebooklist-new-scratch-notebook ()
-  "Open a notebook to try random thing."
+  "Open a notebook to try random thing.
+Notebook name is determined based on
+`ein:scratch-notebook-name-template'."
   (interactive)
   (ein:notebooklist-new-notebook-with-name
    (ein:scratch-notebook-name)
