@@ -65,6 +65,11 @@ This value is used from `ein:notebooklist-new-scratch-notebook'."
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
+(defun ein:scratch-notebook-name ()
+  "Generate new scratch notebook name based on `current-time' and
+`ein:scratch-notebook-name-template'."
+  (format-time-string ein:scratch-notebook-name-template (current-time)))
+
 (defvar ein:source-dir (file-name-directory load-file-name))
 
 

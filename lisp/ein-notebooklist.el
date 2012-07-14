@@ -256,7 +256,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   "Open a notebook to try random thing."
   (interactive)
   (ein:notebooklist-new-notebook-with-name
-   (format-time-string ein:scratch-notebook-name-template (current-time))
+   (ein:scratch-notebook-name)
    (ein:default-url-or-port)))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
