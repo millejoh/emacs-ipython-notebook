@@ -698,7 +698,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(emacs-lisp svg png jpeg latex text html javascript)
+   for key in '(emacs-lisp svg png jpeg text latex html javascript)
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
