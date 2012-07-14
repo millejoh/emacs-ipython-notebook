@@ -218,6 +218,7 @@ The following keybinds are available in notebook buffers.
 .. el:keymap:: ein:notebook-mode-map
 
 .. el:function:: ein:notebook-delete-cell-command
+.. el:function:: ein:notebook-rename-to-scratch-command
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -285,7 +286,6 @@ Notebook list
 
 .. el:variable:: ein:url-or-port
 .. el:variable:: ein:default-url-or-port
-.. el:variable:: ein:scratch-notebook-name-template
 
 Notebook
 ^^^^^^^^
@@ -300,6 +300,7 @@ Notebook
 .. el:variable:: ein:notebook-console-executable
 .. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
+.. el:variable:: ein:scratch-notebook-name-template
 
 Connect
 ^^^^^^^
@@ -406,6 +407,7 @@ v0.1.1
   the notebook which is not opened yet.
 * Plain text type output is favored over LaTeX type output
   (previous setting was opposite).
+* Add :el:symbol:`ein:notebook-rename-to-scratch-command`.
 
 v0.1
 ----
