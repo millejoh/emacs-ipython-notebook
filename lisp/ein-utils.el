@@ -33,6 +33,9 @@
   :group 'applications
   :prefix "ein:")
 
+
+;;; Configuration
+
 (defcustom ein:url-or-port '(8888)
   "List of default url-or-port values.
 This will be used for completion. So put your IPython servers.
@@ -49,6 +52,9 @@ Notebook server."
                  (string :tag "URL" "http://127.0.0.1:8888")
                  (const :tag "First value of `ein:url-or-port'" nil))
   :group 'ein)
+
+
+;;; Macros and core functions/variables
 
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
