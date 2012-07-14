@@ -400,7 +400,7 @@ Change Log
 v0.1.1
 ------
 
-* Support auto-complete_ popup/quick help.
+* Support `auto-complete.el`_\ 's popup/quick help.
 * Add :el:symbol:`ein:notebooklist-first-open-hook`.
 * :el:symbol:`ein:connect-to-notebook` is improved; it can connect to
   the notebook which is not opened yet.
