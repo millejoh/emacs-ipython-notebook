@@ -402,6 +402,10 @@ v0.1.1
 
 * Support auto-complete_ popup/quick help.
 * Add :el:symbol:`ein:notebooklist-first-open-hook`.
+* :el:symbol:`ein:connect-to-notebook` is improved; it can connect to
+  the notebook which is not opened yet.
+* Plain text type output is favored over LaTeX type output
+  (previous setting was opposite).
 
 v0.1
 ----
