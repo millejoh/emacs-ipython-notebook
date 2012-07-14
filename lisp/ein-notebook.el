@@ -280,20 +280,29 @@ is `nil', BODY is executed with any cell types."
 (defun ein:notebook-url-from-url-and-id (url-or-port notebook-id)
   (ein:url url-or-port "notebooks" notebook-id))
 
+(defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
+  "Default callback for `ein:notebook-open'."
+  (pop-to-buffer (current-buffer)))
+
 (defun ein:notebook-open (url-or-port notebook-id &optional callback cbargs)
   "Open notebook of NOTEBOOK-ID in the server URL-OR-PORT.
 Opened notebook instance is returned.  Note that notebook might not be
 ready at the time when this function is executed.
 
-After the notebook is opened, CALLBACK is called as
+After the notebook is opened, CALLBACK is called as::
+
   \(apply CALLBACK notebook CREATED CBARGS)
+
 where the second argument CREATED indicates whether the notebook
-is newly created or not."
+is newly created or not.  When CALLBACK is specified, buffer is
+**not** brought up by `pop-to-buffer'.  It is caller's
+responsibility to do so.  The current buffer is set to the
+notebook buffer when CALLBACK is called."
+  (unless callback (setq callback #'ein:notebook-pop-to-current-buffer))
   (let* ((key (list url-or-port notebook-id))
          (buffer (gethash key ein:notebook-opened-map)))
     (if (buffer-live-p buffer)
         (with-current-buffer buffer
-          (pop-to-buffer (current-buffer))
           (when callback
             (apply callback ein:notebook nil cbargs))
           ein:notebook)
@@ -326,7 +335,8 @@ See `ein:notebook-open' for more information."
         (cbargs (nth 2 packed)))
     (apply #'ein:notebook-request-open-callback notebook args)
     (when callback
-      (apply callback notebook t cbargs))))
+      (with-current-buffer (ein:notebook-get-buffer notebook)
+        (apply callback notebook t cbargs)))))
 
 (defun* ein:notebook-request-open-callback (notebook &key status data
                                                      &allow-other-keys)
@@ -342,8 +352,7 @@ See `ein:notebook-open' for more information."
       (set-buffer-modified-p nil)
       (puthash (list (ein:$notebook-url-or-port ein:notebook) notebook-id)
                (current-buffer)
-               ein:notebook-opened-map)
-      (pop-to-buffer (current-buffer)))))
+               ein:notebook-opened-map))))
 
 (defun ein:notebook-render ()
   "(Re-)Render the notebook."

@@ -81,12 +81,15 @@ This function adds NBLIST to `ein:notebooklist-map'."
   "Get an instance of `ein:$notebooklist' by URL-OR-PORT as a key."
   (gethash url-or-port ein:notebooklist-map))
 
-(defun ein:notebooklist-open-notebook-by-name (name &optional url-or-port)
+(defun ein:notebooklist-open-notebook-by-name (name &optional url-or-port
+                                                    callback cbargs)
   "Open notebook named NAME in the server URL-OR-PORT.
 If URL-OR-PORT is not given or `nil', and the current buffer is
 the notebook list buffer, the notebook is searched in the
-notebook list of the current buffer."
-  ;; FIXME: Support no-popup argument to open notebook in background.
+notebook list of the current buffer.
+
+When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'.
+To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (loop with nblist = (if url-or-port
                           (ein:notebooklist-list-get url-or-port)
                         ein:notebooklist)
@@ -95,7 +98,7 @@ notebook list of the current buffer."
         for notebook-id = (plist-get note :notebook_id)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
-                                  notebook-id)))
+                                  notebook-id callback cbargs)))
 
 (defun ein:notebooklist-url (url-or-port)
   (ein:url url-or-port "notebooks"))
@@ -243,7 +246,10 @@ This function is called via `ein:notebook-after-rename-hook'."
    (lambda (notebook created name)
      (assert created)
      (with-current-buffer (ein:notebook-buffer notebook)
-       (ein:notebook-rename-command name)))
+       (ein:notebook-rename-command name)
+       ;; As `ein:notebook-open' does not call `pop-to-buffer' when
+       ;; callback is specified, `pop-to-buffer' must be called here:
+       (pop-to-buffer (current-buffer))))
    (list name)))
 
 (defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
@@ -344,10 +350,12 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                                      url-or-port
                                      (plist-get note :name))))))
 
-(defun ein:notebooklist-open-notebook-global (nbpath)
+(defun ein:notebooklist-open-notebook-global (nbpath &optional callback cbargs)
   "Choose notebook from all opened notebook list and open it.
 Notebook is specified by a string NBPATH whose format is
-\"URL-OR-PORT/NOTEBOOK-NAME\"."
+\"URL-OR-PORT/NOTEBOOK-NAME\".
+
+When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
   (interactive
    (list (completing-read
           "Open notebook [URL-OR-PORT/NAME]: "
@@ -365,7 +373,7 @@ Notebook is specified by a string NBPATH whose format is
                           return (plist-get note :notebook_id))
                  return it)))
       (if notebook-id
-          (ein:notebook-open url-or-port notebook-id)
+          (ein:notebook-open url-or-port notebook-id callback cbargs)
         (message "Notebook '%s' not found" nbpath)))))
 
 

@@ -315,6 +315,9 @@ NOTE: This function creates new list."
   (loop for y in xs if (< y x) do (setq x y))
   x)
 
+(defun ein:do-nothing (&rest -ignore-)
+  "A function which can take any number of variables and do nothing.")
+
 (defun ein:ask-choice-char (prompt choices)
   "Show PROMPT and read one of acceptable key specified as CHOICES."
   (let ((char-list (loop for i from 0 below (length choices)
