@@ -252,12 +252,6 @@ This function is called via `ein:notebook-after-rename-hook'."
        (pop-to-buffer (current-buffer))))
    (list name)))
 
-(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
-  "Template of notebook name.
-This value is used from `ein:notebooklist-new-scratch-notebook'."
-  :type '(string :tag "Format string")
-  :group 'ein)
-
 (defun ein:notebooklist-new-scratch-notebook ()
   "Open a notebook to try random thing."
   (interactive)

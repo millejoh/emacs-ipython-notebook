@@ -53,6 +53,12 @@ Notebook server."
                  (const :tag "First value of `ein:url-or-port'" nil))
   :group 'ein)
 
+(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
+  "Template of notebook name.
+This value is used from `ein:notebooklist-new-scratch-notebook'."
+  :type '(string :tag "Format string")
+  :group 'ein)
+
 
 ;;; Macros and core functions/variables
 
