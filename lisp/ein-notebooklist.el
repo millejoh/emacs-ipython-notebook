@@ -252,17 +252,13 @@ This function is called via `ein:notebook-after-rename-hook'."
        (pop-to-buffer (current-buffer))))
    (list name)))
 
-(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
-  "Template of notebook name.
-This value is used from `ein:notebooklist-new-scratch-notebook'."
-  :type '(string :tag "Format string")
-  :group 'ein)
-
 (defun ein:notebooklist-new-scratch-notebook ()
-  "Open a notebook to try random thing."
+  "Open a notebook to try random thing.
+Notebook name is determined based on
+`ein:scratch-notebook-name-template'."
   (interactive)
   (ein:notebooklist-new-notebook-with-name
-   (format-time-string ein:scratch-notebook-name-template (current-time))
+   (ein:scratch-notebook-name)
    (ein:default-url-or-port)))
 
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)

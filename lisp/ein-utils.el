@@ -33,6 +33,9 @@
   :group 'applications
   :prefix "ein:")
 
+
+;;; Configuration
+
 (defcustom ein:url-or-port '(8888)
   "List of default url-or-port values.
 This will be used for completion. So put your IPython servers.
@@ -50,8 +53,24 @@ Notebook server."
                  (const :tag "First value of `ein:url-or-port'" nil))
   :group 'ein)
 
+(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
+  "Template of scratch notebook name.
+This value is used from `ein:notebooklist-new-scratch-notebook'
+and `ein:notebook-rename-to-scratch-command'.  This must be a
+format string which can be passed to `format-time-string'."
+  :type '(string :tag "Format string")
+  :group 'ein)
+
+
+;;; Macros and core functions/variables
+
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
+
+(defun ein:scratch-notebook-name ()
+  "Generate new scratch notebook name based on `current-time' and
+`ein:scratch-notebook-name-template'."
+  (format-time-string ein:scratch-notebook-name-template (current-time)))
 
 (defvar ein:source-dir (file-name-directory load-file-name))
 
