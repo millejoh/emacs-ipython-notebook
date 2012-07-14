@@ -1116,6 +1116,14 @@ NAME is any non-empty string that does not contain '/' or '\\'."
        (run-hooks 'ein:notebook-after-rename-hook)))
    ein:notebook))
 
+(defun ein:notebook-rename-to-scratch-command (name)
+  "Rename notebook based on `ein:scratch-notebook-name-template'
+and save it immediately."
+  (interactive
+   (list (read-string "Rename notebook: "
+                      (ein:scratch-notebook-name))))
+  (ein:notebook-rename-command name))
+
 (defun ein:notebook-kill-kernel-then-close-command ()
   "Kill kernel and then kill notebook buffer.
 It does not kill buffer if killing kernel fails.  To close
