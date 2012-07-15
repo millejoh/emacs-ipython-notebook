@@ -158,13 +158,14 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
       (error "Failed to connect to server '%s'.  Got: %S"
              (ein:url url-or-port) it))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-    (let ((already-opened-p (ein:notebooklist-list-get url-or-port)))
+    (let ((already-opened-p (ein:notebooklist-list-get url-or-port))
+          (orig-point (point)))
       (setq ein:notebooklist
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :data data))
       (ein:notebooklist-list-add ein:notebooklist)
       (ein:notebooklist-render)
-      (goto-char (point-min))
+      (goto-char orig-point)
       (message "Opened notebook list at %s" url-or-port)
       (unless already-opened-p
         (run-hooks 'ein:notebooklist-first-open-hook))
