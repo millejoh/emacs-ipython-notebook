@@ -87,6 +87,13 @@ using the command `ein:notebook-view-traceback'."
                  (const :tag "Show all traceback" nil))
   :group 'ein)
 
+(defcustom ein:cell-max-num-outputs 5
+  "Number of maximum outputs to be shown by default.
+To view full output, use `ein:shared-output-show-code-cell'."
+  :type '(choice (integer :tag "Number of outputs to show" 5)
+                 (const :tag "Show all traceback" nil))
+  :group 'ein)
+
 
 
 ;;; EIEIO related utils
@@ -403,8 +410,14 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
-  (if (oref cell :collapsed)
+  (if (or (oref cell :collapsed)
+          (and ein:cell-max-num-outputs
+               (> index ein:cell-max-num-outputs)))
       (progn
+        (when (and (not (oref cell :collapsed))
+                   (= (1+ index) ein:cell-max-num-outputs))
+          ;; The first output which exceeds `ein:cell-max-num-outputs'.
+          (ein:insert-read-only "\n"))
         (ein:insert-read-only ".")
         (when (= (1+ index) (ein:cell-num-outputs cell))
           (ein:insert-read-only "\n")))

@@ -139,7 +139,8 @@ where CELL locates."
     ;; Make sure `ein:@shared-output' is initialized:
     (ein:shared-output-get-or-create)
     (with-current-buffer (ein:shared-output-create-buffer)
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (ein:cell-max-num-outputs nil))
         (oset new :ewoc (oref ein:@shared-output :ewoc))
         (oset new :events (oref ein:@shared-output :events))
         (erase-buffer)  ; because there are only one cell anyway
