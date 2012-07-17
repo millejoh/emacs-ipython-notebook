@@ -319,6 +319,7 @@ MuMaMo
 .. el:variable:: ein:mumamo-rawcell-mode
 .. el:variable:: ein:mumamo-headingcell-mode
 .. el:variable:: ein:mumamo-fallback-mode
+.. el:variable:: ein:use-mumamo-indent-line-function-workaround
 
 Misc
 ^^^^
