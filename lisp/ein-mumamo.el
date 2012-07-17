@@ -30,6 +30,10 @@
 
 (require 'ein-notebook)
 
+
+
+;;; Customization
+
 (defcustom ein:mumamo-codecell-mode 'python-mode
   "Major Mode for Code Cell."
   :type '(symbol :tag "Major Mode")
@@ -66,6 +70,9 @@
   :group 'ein)
 
 
+
+;;; `ein:notebook-mumamo-mode'
+
 (define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
   "Background mode for `ein:notebook-mumamo-mode'."
   (setq font-lock-defaults '(nil t))
@@ -86,6 +93,10 @@
 (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
 
 (add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
+
+
+
+;;; Chunk functions
 
 (defmacro ein:mumamo-define-chunk (name)
   (let ((funcname (intern (format "ein:mumamo-chunk-%s" name)))
