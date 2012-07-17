@@ -167,7 +167,9 @@ slot.")))
     (("html") 'ein:htmlcell)
     (("markdown") 'ein:markdowncell)
     (("raw") 'ein:rawcell)
-    (("heading") 'ein:headingcell)))
+    (("heading") 'ein:headingcell)
+    ;; Defined in ein-shared-output.el:
+    (("shared-output") 'ein:shared-output-cell)))
 
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) "Cell" args))

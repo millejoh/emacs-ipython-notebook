@@ -786,6 +786,12 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-empty-undo-maybe)))
     (ein:log 'error "Not in notebook buffer!")))
 
+(defun ein:notebook-show-in-shared-output ()
+  "Show in shared-output buffer."
+  (interactive)
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:shared-output-show-code-cell cell)))
+
 
 ;;; Traceback
 

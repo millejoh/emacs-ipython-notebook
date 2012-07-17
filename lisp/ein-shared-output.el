@@ -44,6 +44,7 @@
 
 (defclass ein:$shared-output ()
   ((cell :initarg :cell :type ein:shared-output-cell)
+   (events :initarg :events :type ein:events)
    (ewoc :initarg :ewoc :type ewoc)))
 
 (defvar ein:@shared-output nil
@@ -102,7 +103,8 @@
         (erase-buffer)
         (ein:shared-output-bind-events events)
         (setq ein:@shared-output
-              (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell))
+              (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell
+                                  :events events))
         (ein:cell-enter-last cell))
       (setq buffer-read-only t)
       (ein:shared-output-mode)
@@ -128,6 +130,22 @@ Create a cell if the buffer has none."
   (interactive)
   (ein:shared-output-get-or-create)
   (pop-to-buffer (ein:shared-output-create-buffer)))
+
+(defmethod ein:shared-output-show-code-cell ((cell ein:codecell))
+  "Show code CELL in shared-output buffer.
+Note that this function assumed to be called in the buffer
+where CELL locates."
+  (let ((new (ein:cell-convert cell "shared-output")))
+    ;; Make sure `ein:@shared-output' is initialized:
+    (ein:shared-output-get-or-create)
+    (with-current-buffer (ein:shared-output-create-buffer)
+      (let ((inhibit-read-only t))
+        (oset new :ewoc (oref ein:@shared-output :ewoc))
+        (oset new :events (oref ein:@shared-output :events))
+        (erase-buffer)  ; because there are only one cell anyway
+        (oset ein:@shared-output :cell new)
+        (ein:cell-enter-last new)
+        (pop-to-buffer (current-buffer))))))
 
 
 ;;; ein:shared-output-mode
