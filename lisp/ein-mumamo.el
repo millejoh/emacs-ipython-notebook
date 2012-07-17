@@ -69,6 +69,55 @@
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
+(defcustom ein:use-mumamo-indent-line-function-workaround t
+  "Turn on workaround for `mumamo-indent-line-function'.
+
+In code cell, hitting TAB or C-j at the end of input area causes
+error from MuMaMo.  When this variable is non-`nil', EIN patches
+`mumamo-indent-line-function' to workaround this problem.  This
+workaround is on by default.
+
+Note that python-mode's indentation function has other problems
+with MuMaMo.  For example, hitting TAB twice, which decreases the
+indentation level by one in normal Python buffer, causes similar
+error in code cell.  The current workaround does not fix this
+problem."
+  :type 'boolean
+  :group 'ein)
+
+
+
+;;; Workaround
+
+(defadvice mumamo-indent-line-function
+  (around ein:mumamo-indent-line-function-workaround)
+  "Workaround the indentation problem when the cursor is at the
+end of input area."
+  (if (and (looking-at-p "\n")
+           (get-char-property (point) 'read-only))
+      (let (m)
+        ;; The cursor is at the end of input area
+        ;; Indentation does not work as-is.  Here is the workaround:
+        (unwind-protect
+            (progn
+              (insert "\n")
+              (setq m (point-marker))
+              (backward-char)
+              ad-do-it)
+          (save-excursion
+            (goto-char m)
+            (backward-char)
+            (delete-char 1))))
+    ad-do-it))
+
+(defun ein:mumamo-indent-line-function-workaround-turn-on ()
+  "Activate advice for `mumamo-indent-line-function'.
+Called via `ein:notebook-mumamo-mode-hook'."
+  (when ein:use-mumamo-indent-line-function-workaround
+    (ad-enable-advice 'mumamo-indent-line-function 'around
+                      'ein:mumamo-indent-line-function-workaround)
+    (ad-activate 'mumamo-indent-line-function)))
+
 
 
 ;;; `ein:notebook-mumamo-mode'
@@ -93,6 +142,8 @@
 (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
 
 (add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
+(add-hook 'ein:notebook-mumamo-mode-hook
+          'ein:mumamo-indent-line-function-workaround-turn-on)
 
 
 
