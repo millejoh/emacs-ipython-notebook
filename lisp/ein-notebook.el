@@ -787,7 +787,9 @@ Do not clear input prompts when the prefix argument is given."
     (ein:log 'error "Not in notebook buffer!")))
 
 (defun ein:notebook-show-in-shared-output ()
-  "Show in shared-output buffer."
+  "Show truncated code cell ouput in shared-output buffer.
+See also `ein:cell-max-num-outputs' to how to truncate long
+output."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:shared-output-show-code-cell cell)))
