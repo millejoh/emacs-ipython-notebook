@@ -89,7 +89,7 @@ using the command `ein:notebook-view-traceback'."
 
 (defcustom ein:cell-max-num-outputs 5
   "Number of maximum outputs to be shown by default.
-To view full output, use `ein:shared-output-show-code-cell'."
+To view full output, use `ein:notebook-show-in-shared-output'."
   :type '(choice (integer :tag "Number of outputs to show" 5)
                  (const :tag "Show all traceback" nil))
   :group 'ein)
