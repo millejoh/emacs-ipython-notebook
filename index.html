@@ -278,7 +278,9 @@ Notebook is specified by a string NBPATH whose format is
 <dl class="function">
 <dt id="ein:notebooklist-new-scratch-notebook">
 <em class="property">function </em><tt class="descname">ein:notebooklist-new-scratch-notebook</tt><a class="headerlink" href="#ein:notebooklist-new-scratch-notebook" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open a notebook to try random thing.</p>
+<dd><p>Open a notebook to try random thing.
+Notebook name is determined based on
+<a class="reference internal" href="#ein:scratch-notebook-name-template" title="ein:scratch-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:scratch-notebook-name-template</span></tt></a>.</p>
 </dd></dl>
 
 <p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-mode</span></tt>.</p>
@@ -666,6 +668,13 @@ deletion.  Use kill to play on the safe side.</p>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="ein:notebook-rename-to-scratch-command">
+<em class="property">function </em><big>(</big><tt class="descname">ein:notebook-rename-to-scratch-command </tt><em>name</em><big>)</big><a class="headerlink" href="#ein:notebook-rename-to-scratch-command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename notebook based on <a class="reference internal" href="#ein:scratch-notebook-name-template" title="ein:scratch-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:scratch-notebook-name-template</span></tt></a>
+and save it immediately.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="connected-buffer">
 <h3><a class="toc-backref" href="#id25">Connected buffer</a><a class="headerlink" href="#connected-buffer" title="Permalink to this headline">¶</a></h3>
@@ -934,13 +943,6 @@ to type every time).</p>
 Notebook server.</p>
 </dd></dl>
 
-<dl class="variable">
-<dt id="ein:scratch-notebook-name-template">
-<em class="property">variable </em><tt class="descname">ein:scratch-notebook-name-template</tt><a class="headerlink" href="#ein:scratch-notebook-name-template" title="Permalink to this definition">¶</a></dt>
-<dd><p>Template of notebook name.
-This value is used from <a class="reference internal" href="#ein:notebooklist-new-scratch-notebook" title="ein:notebooklist-new-scratch-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></tt></a>.</p>
-</dd></dl>
-
 </div>
 <div class="section" id="id8">
 <h3><a class="toc-backref" href="#id32">Notebook</a><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
@@ -1072,6 +1074,15 @@ Hidden tracebacks are not discarded.  You can always view them
 using the command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></tt>.</p>
 </dd></dl>
 
+<dl class="variable">
+<dt id="ein:scratch-notebook-name-template">
+<em class="property">variable </em><tt class="descname">ein:scratch-notebook-name-template</tt><a class="headerlink" href="#ein:scratch-notebook-name-template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template of scratch notebook name.
+This value is used from <a class="reference internal" href="#ein:notebooklist-new-scratch-notebook" title="ein:notebooklist-new-scratch-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></tt></a>
+and <a class="reference internal" href="#ein:notebook-rename-to-scratch-command" title="ein:notebook-rename-to-scratch-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt></a>.  This must be a
+format string which can be passed to <tt class="xref el el-symbol docutils literal"><span class="pre">format-time-string</span></tt>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="connect">
 <h3><a class="toc-backref" href="#id33">Connect</a><a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h3>
@@ -1137,6 +1148,21 @@ Types same as <a class="reference internal" href="#ein:notebook-console-security
 <dt id="ein:mumamo-fallback-mode">
 <em class="property">variable </em><tt class="descname">ein:mumamo-fallback-mode</tt><a class="headerlink" href="#ein:mumamo-fallback-mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fallback Major Mode.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:use-mumamo-indent-line-function-workaround">
+<em class="property">variable </em><tt class="descname">ein:use-mumamo-indent-line-function-workaround</tt><a class="headerlink" href="#ein:use-mumamo-indent-line-function-workaround" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn on workaround for <tt class="xref el el-symbol docutils literal"><span class="pre">mumamo-indent-line-function</span></tt>.</p>
+<p>In code cell, hitting TAB or C-j at the end of input area causes
+error from MuMaMo.  When this variable is non-<tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt>, EIN patches
+<tt class="xref el el-symbol docutils literal"><span class="pre">mumamo-indent-line-function</span></tt> to workaround this problem.  This
+workaround is on by default.</p>
+<p>Note that python-mode&#8217;s indentation function has other problems
+with MuMaMo.  For example, hitting TAB twice, which decreases the
+indentation level by one in normal Python buffer, causes similar
+error in code cell.  The current workaround does not fix this
+problem.</p>
 </dd></dl>
 
 </div>
@@ -1233,6 +1259,7 @@ web client.  See <a class="reference external" href="https://github.com/tkf/emac
 the notebook which is not opened yet.</li>
 <li>Plain text type output is favored over LaTeX type output
 (previous setting was opposite).</li>
+<li>Add <a class="reference internal" href="#ein:notebook-rename-to-scratch-command" title="ein:notebook-rename-to-scratch-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt></a>.</li>
 </ul>
 </div>
 <div class="section" id="v0-1">
