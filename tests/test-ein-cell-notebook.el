@@ -150,7 +150,7 @@ some input
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   latex
   ("some output \\\\LaTeX")
-  ((:text "some output text" :latex "some output \\LaTeX")))
+  ((:latex "some output \\LaTeX")))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   svg
@@ -182,7 +182,7 @@ some input
   text-latex-svg
   ("first output text" "second output \\\\LaTeX" " ")
   ((:text "first output text")
-   (:text "some output text" :latex "second output \\LaTeX")
+   (:latex "second output \\LaTeX")
    (:text "some output text" :svg eintest:example-svg)))
 
 
