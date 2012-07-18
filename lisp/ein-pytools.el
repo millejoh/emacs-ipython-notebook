@@ -137,7 +137,7 @@ selecting it."
   (interactive "P")
   (let ((kernel (ein:pytools-get-kernel))
         (object (ein:object-at-point)))
-    (assert (ein:kernel-ready-p kernel) nil "Kernel is not ready.")
+    (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
     (assert object nil "Object at point not found.")
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect

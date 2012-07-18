@@ -215,7 +215,7 @@ The kernel will no longer be responsive.")))
                          (ein:kernel-send-cookie channel)
                          ;; run `ein:$kernel-after-start-hook' if both
                          ;; channels are ready.
-                         (when (ein:kernel-ready-p kernel)
+                         (when (ein:kernel-live-p kernel)
                            (ein:kernel-run-after-start-hook kernel)))))
             do (setf (ein:$websocket-onclose c)
                      #'ein:kernel--ws-closed-callback))
@@ -250,7 +250,7 @@ The kernel will no longer be responsive.")))
     (setf (ein:$kernel-iopub-channel kernel) nil)))
 
 
-(defun ein:kernel-ready-p (kernel)
+(defun ein:kernel-live-p (kernel)
   (and
    (ein:aand (ein:$kernel-shell-channel kernel) (ein:websocket-open-p it))
    (ein:aand (ein:$kernel-iopub-channel kernel) (ein:websocket-open-p it))))
@@ -259,7 +259,7 @@ The kernel will no longer be responsive.")))
 (defmacro ein:kernel-if-ready (kernel &rest body)
   "Execute BODY if KERNEL is ready.  Warn user otherwise."
   (declare (indent 1))
-  `(if (ein:kernel-ready-p ,kernel)
+  `(if (ein:kernel-live-p ,kernel)
        (progn ,@body)
      (ein:log 'warn "Kernel is not ready yet! (or closed already.)")))
 
@@ -287,7 +287,7 @@ the second argument.
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (when objname
     (let* ((content (list :oname (format "%s" objname)))
            (msg (ein:kernel--get-msg kernel "object_info_request" content))
@@ -343,7 +343,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pu
 The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
 
 See `ein:kernel--handle-shell-reply' for how the callbacks are called."
-  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
                    :silent (or silent json-false)
@@ -377,7 +377,7 @@ the `content' object of the `complete_reply' message as the second.
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
-  (assert (ein:kernel-ready-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :text ""
                    :line line
@@ -557,8 +557,8 @@ When no such directory exists, `default-directory' will not be changed."
 
 (defun ein:kernelinfo-update-all (kernel)
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
-  (ein:log 'debug "(ein:kernel-ready-p kernel) = %S"
-           (ein:kernel-ready-p kernel))
+  (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
+           (ein:kernel-live-p kernel))
   (ein:kernelinfo-update-ccwd kernel)
   (ein:kernelinfo-update-hostname kernel))
 
