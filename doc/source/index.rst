@@ -219,6 +219,7 @@ The following keybinds are available in notebook buffers.
 
 .. el:function:: ein:notebook-delete-cell-command
 .. el:function:: ein:notebook-rename-to-scratch-command
+.. el:function:: ein:notebook-kill-all-buffers
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
