@@ -365,7 +365,7 @@ some text
   (mocker-let ((ein:kernel-execute
                 (kernel code callbacks kwd-silent silent)
                 ((:input (list kernel text callbacks :silent nil))))
-               (ein:kernel-ready-p
+               (ein:kernel-live-p
                 (kernel)
                 ((:input (list kernel) :output t))))
     (ein:notebook-execute-current-cell))

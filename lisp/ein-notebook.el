@@ -1134,16 +1134,18 @@ and save it immediately."
 
 (defun ein:notebook-kill-kernel-then-close-command ()
   "Kill kernel and then kill notebook buffer.
-It does not kill buffer if killing kernel fails.  To close
-notebook without killing kernel, just close the buffer as usual."
+To close notebook without killing kernel, just close the buffer
+as usual."
   (interactive)
   (when (ein:notebook-ask-before-kill-buffer)
-    (ein:kernel-kill
-     (ein:$notebook-kernel ein:notebook)
-     (lambda (notebook)
-       (let ((ein:notebook-kill-buffer-ask nil))
-         (kill-buffer (ein:notebook-buffer notebook))))
-     (list ein:notebook))))
+    (let ((kernel (ein:$notebook-kernel ein:notebook))
+          (close-notebook (lambda (notebook)
+                            (let ((ein:notebook-kill-buffer-ask nil))
+                              (kill-buffer (ein:notebook-buffer notebook))))))
+      ;; If kernel is live, kill it before closing.
+      (if (ein:kernel-live-p kernel)
+          (ein:kernel-kill kernel close-notebook (list ein:notebook))
+        (funcall close-notebook ein:notebook)))))
 
 
 ;;; Notebook mode
