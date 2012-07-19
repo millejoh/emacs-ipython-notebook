@@ -264,6 +264,7 @@ buffer.
 .. el:function:: ein:pytools-doctest
 .. el:function:: ein:pytools-whos
 .. el:function:: ein:pytools-hierarchy
+.. el:function:: ein:pytools-pandas-to-ses
 
 
 Customization
@@ -414,6 +415,7 @@ v0.1.1
 * Introduce :el:symbol:`ein:notebook-show-in-shared-output` command
   and :el:symbol:`ein:cell-max-num-outputs` configuration variable to
   truncate long output and show it in a separated buffer.
+* Add :el:symbol:`ein:pytools-pandas-to-ses`
 
 v0.1
 ----

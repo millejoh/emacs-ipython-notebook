@@ -27,6 +27,10 @@
 
 (eval-when-compile (require 'cl))
 
+;; for `ein:pytools-pandas-to-ses'
+(declare-function ses-yank-tsf "ses")
+(declare-function ses-command-hook "ses")
+
 (require 'ein-kernel)
 (require 'ein-shared-output)
 
@@ -187,6 +191,40 @@ You can explicitly specify the object by selecting it.
     (assert (and object (not (equal object "")))
             nil "Object at point not found.")
     (ein:pytools-eval-string-internal (format "%%hierarchy %s" object) t)))
+
+(defun ein:pytools-pandas-to-ses (dataframe)
+  "View pandas_ DataFrame in SES_ (Simple Emacs Spreadsheet).
+Open a `ses-mode' buffer and import DataFrame object into it.
+
+SES_ is distributed with Emacs since Emacs 22, so you don't need
+to install it if you are using newer Emacs.
+
+.. _pandas: http://pandas.pydata.org
+.. _SES: http://www.gnu.org/software/emacs/manual/html_node/ses/index.html"
+  (interactive (list (read-from-minibuffer "pandas DataFrame "
+                                           (ein:object-at-point))))
+  (let ((buffer (get-buffer-create
+                 (generate-new-buffer-name "*ein:ses pandas*"))))
+    ;; fetch TSV (tab separated values) via stdout
+    (ein:kernel-request-stream
+     (ein:pytools-get-kernel)
+     (concat dataframe ".to_csv(__import__('sys').stdout, sep='\\t')")
+     (lambda (tsv buffer)
+       (with-current-buffer buffer
+         (flet ((y-or-n-p
+                 (prompt)
+                 (if (string-prefix-p "Yank will insert " prompt)
+                     t
+                   (error "Unexpected prompt: %s" prompt))))
+           ;; Import DataFrame as TSV
+           (ses-yank-tsf tsv nil))
+         ;; Force SES to update (equivalent to run `post-command-hook').
+         (ses-command-hook)))
+     (list buffer))
+    ;; Open `ses-mode' buffer
+    (with-current-buffer buffer
+      (ses-mode))
+    (pop-to-buffer buffer)))
 
 (provide 'ein-pytools)
 
