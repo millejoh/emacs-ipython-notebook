@@ -93,6 +93,10 @@ problem."
   (around ein:mumamo-indent-line-function-workaround)
   "Workaround the indentation problem when the cursor is at the
 end of input area."
+  ;; Condition for the workaround must be as narrow as possible.  For
+  ;; example, hitting TAB at the beginning of line should move the
+  ;; cursor to the indentation column, instead of changing the
+  ;; indentation.  This will not happen if the newline is inserted.
   (if (and (looking-at-p "\n")
            (get-char-property (point) 'read-only))
       (let (m)
