@@ -1327,13 +1327,15 @@ Called via `kill-emacs-query-functions'."
 (add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 
 (defun ein:notebook-kill-all-buffers ()
-  "Close all opened notebooks.  If there are unsaved notebooks
-prompt asking whether to kill all of them or not will appears."
+  "Close all opened notebooks."
   (interactive)
-  (let ((buffers (ein:notebook-opened-buffers)))
+  (let* ((buffers (ein:notebook-opened-buffers))
+         (unsaved (ein:filter #'ein:notebook-modified-p buffers)))
     (if buffers
         (if (y-or-n-p
-             (format (concat "You have %s unsaved notebook(s). "
+             (format (concat "You have %s opened notebook(s). "
+                             (when unsaved
+                               (format "%s are UNSAVED. " (length unsaved)))
                              "Really kill all of them?")
                      (length buffers)))
             (progn (ein:log 'info "Killing all notebook buffers...")
