@@ -639,7 +639,8 @@ Prompt will appear in the minibuffer."
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (when level
           (ein:cell-change-level new level))
-        (ein:notebook-empty-undo-maybe)))))
+        (ein:notebook-empty-undo-maybe)
+        (ein:cell-goto new)))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
