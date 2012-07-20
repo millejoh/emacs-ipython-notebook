@@ -417,6 +417,7 @@ v0.1.1
   truncate long output and show it in a separated buffer.
 * Add :el:symbol:`ein:pytools-pandas-to-ses`.
 * Add Imenu support.
+* Better heading cell faces.
 
 
 v0.1
