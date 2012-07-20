@@ -83,7 +83,7 @@
   :group 'ein)
 
 (defface ein:cell-heading-6
-  '((t :weight bold :inherit variable-pitch))
+  '((t :weight bold :inherit (variable-pitch ein:cell-input-area)))
   "Face for level 6 heading."
   :group 'ein)
 
@@ -430,21 +430,20 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (let ((start (1+ (point))))
     ;; Newlines must allow insertion before/after its position.
     (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-            (ein:cell-propertized-input-text cell)
+            (or (ein:oref-safe cell :input) "")
             (propertize "\n" 'read-only t))
     ;; Highlight background using overlay.
     (let ((ol (make-overlay start (point))))
-      (overlay-put ol 'face 'ein:cell-input-area)
+      (overlay-put ol 'face (ein:cell-get-input-area-face cell))
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t))))
 
-(defmethod ein:cell-propertized-input-text ((cell ein:basecell))
-  "Return propertized (or not, if not needed) input text."
-  (or (ein:oref-safe cell :input) ""))
+(defmethod ein:cell-get-input-area-face ((cell ein:basecell))
+  "Return the face (symbol) for input area."
+  'ein:cell-input-area)
 
-(defmethod ein:cell-propertized-input-text ((cell ein:headingcell))
-  (let ((face (intern (format "ein:cell-heading-%d" (oref cell :level)))))
-    (propertize (call-next-method) 'font-lock-face face)))
+(defmethod ein:cell-get-input-area-face ((cell ein:headingcell))
+  (intern (format "ein:cell-heading-%d" (oref cell :level))))
 
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
