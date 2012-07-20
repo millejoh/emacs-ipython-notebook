@@ -57,6 +57,36 @@
   "Face for cell input area"
   :group 'ein)
 
+(defface ein:cell-heading-1
+  '((t :height 1.1 :inherit ein:cell-heading-2))
+  "Face for level 1 heading."
+  :group 'ein)
+
+(defface ein:cell-heading-2
+  '((t :height 1.1 :inherit ein:cell-heading-3))
+  "Face for level 2 heading."
+  :group 'ein)
+
+(defface ein:cell-heading-3
+  '((t :height 1.1 :inherit ein:cell-heading-4))
+  "Face for level 3 heading."
+  :group 'ein)
+
+(defface ein:cell-heading-4
+  '((t :height 1.1 :inherit ein:cell-heading-5))
+  "Face for level 4 heading."
+  :group 'ein)
+
+(defface ein:cell-heading-5
+  '((t :height 1.1 :inherit ein:cell-heading-6))
+  "Face for level 5 heading."
+  :group 'ein)
+
+(defface ein:cell-heading-6
+  '((t :weight bold :inherit variable-pitch))
+  "Face for level 6 heading."
+  :group 'ein)
+
 (defface ein:cell-output-prompt
   '((t :inherit header-line))
   "Face for cell output prompt"
@@ -400,13 +430,21 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (let ((start (1+ (point))))
     ;; Newlines must allow insertion before/after its position.
     (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-            (propertize (or (ein:oref-safe cell :input) ""))
+            (ein:cell-propertized-input-text cell)
             (propertize "\n" 'read-only t))
     ;; Highlight background using overlay.
     (let ((ol (make-overlay start (point))))
       (overlay-put ol 'face 'ein:cell-input-area)
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t))))
+
+(defmethod ein:cell-propertized-input-text ((cell ein:basecell))
+  "Return propertized (or not, if not needed) input text."
+  (or (ein:oref-safe cell :input) ""))
+
+(defmethod ein:cell-propertized-input-text ((cell ein:headingcell))
+  (let ((face (intern (format "ein:cell-heading-%d" (oref cell :level)))))
+    (propertize (call-next-method) 'font-lock-face face)))
 
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
