@@ -254,6 +254,7 @@ slot.")))
     new))
 
 (defmethod ein:cell-change-level ((cell ein:headingcell) level)
+  (assert (integerp level))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))         ; disable undo recording
     (oset cell :level level)
