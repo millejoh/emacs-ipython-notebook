@@ -145,6 +145,7 @@ Called via `ein:notebook-mumamo-mode-hook'."
 ;; "Sync" `ein:notebook-mumamo-mode-map' with `ein:notebook-mode-map'.
 (setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
 
+(add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-imenu-setup)
 (add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 (add-hook 'ein:notebook-mumamo-mode-hook
           'ein:mumamo-indent-line-function-workaround-turn-on)

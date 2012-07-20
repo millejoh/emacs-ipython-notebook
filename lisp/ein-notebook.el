@@ -1149,6 +1149,20 @@ as usual."
         (funcall close-notebook ein:notebook)))))
 
 
+;;; Imenu
+
+(defun ein:notebook-imenu-create-index ()
+  "`imenu-create-index-function' for notebook buffer."
+  (loop for cell in (ein:filter #'ein:headingcell-p
+                                (ein:notebook-get-cells ein:notebook))
+        collect (cons (ein:cell-get-text cell)
+                      (ein:cell-location cell :input))))
+
+(defun ein:notebook-imenu-setup ()
+  "Called via notebook mode hooks."
+  (setq imenu-create-index-function #'ein:notebook-imenu-create-index))
+
+
 ;;; Notebook mode
 
 (defcustom ein:notebook-modes
@@ -1237,8 +1251,12 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
+(add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-imenu-setup)
+
 (define-derived-mode ein:notebook-python-mode python-mode "ein:python"
   "Use `python-mode' for whole notebook buffer.")
+
+(add-hook 'ein:notebook-python-mode-hook 'ein:notebook-imenu-setup)
 
 ;; "Sync" `ein:notebook-plain-mode-map' with `ein:notebook-mode-map'.
 ;; This way, `ein:notebook-plain-mode-map' automatically changes when
