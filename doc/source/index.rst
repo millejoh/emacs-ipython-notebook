@@ -415,7 +415,9 @@ v0.1.1
 * Introduce :el:symbol:`ein:notebook-show-in-shared-output` command
   and :el:symbol:`ein:cell-max-num-outputs` configuration variable to
   truncate long output and show it in a separated buffer.
-* Add :el:symbol:`ein:pytools-pandas-to-ses`
+* Add :el:symbol:`ein:pytools-pandas-to-ses`.
+* Add Imenu support.
+
 
 v0.1
 ----

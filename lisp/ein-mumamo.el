@@ -122,6 +122,23 @@ Called via `ein:notebook-mumamo-mode-hook'."
                       'ein:mumamo-indent-line-function-workaround)
     (ad-activate 'mumamo-indent-line-function)))
 
+(defun ein:mumamo-imenu-setup-maybe ()
+  "Set `imenu-create-index-function' if the current buffer is the
+notebook buffer.
+This function is called via `after-change-major-mode-hook', to set
+the variable every time visiting the different chunks.
+
+.. note:: Making `imenu-create-index-function' permanent-local
+   also solves the problem.  However, this will make the variable
+   permanent-local in *any* buffer, including the buffers
+   irrelevant to EIN.  Therefore, the current approach is taken.
+
+This is the same workaround as `ein:ac-setup-maybe'."
+  (when ein:notebook
+    (ein:notebook-imenu-setup)))
+
+(add-hook 'after-change-major-mode-hook 'ein:mumamo-imenu-setup-maybe)
+
 
 
 ;;; `ein:notebook-mumamo-mode'
