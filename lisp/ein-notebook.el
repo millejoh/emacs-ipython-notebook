@@ -1156,7 +1156,7 @@ as usual."
   (loop for cell in (ein:filter #'ein:headingcell-p
                                 (ein:notebook-get-cells ein:notebook))
         collect (cons (ein:cell-get-text cell)
-                      (ein:cell-location cell :input))))
+                      (ein:cell-input-pos-min cell))))
 
 (defun ein:notebook-imenu-setup ()
   "Called via notebook mode hooks."
