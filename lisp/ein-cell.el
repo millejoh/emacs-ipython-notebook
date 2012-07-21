@@ -599,6 +599,12 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Skip the newline
   (forward-char))
 
+(defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
+  "Return the point relative to the input area of CELL.
+If the position POS is not given, current point is considered."
+  (unless pos (setq pos (point)))
+  (- pos (1+ (ewoc-location (ein:cell-element-get cell :input)))))
+
 (defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
   "Return the starting location of CELL.
 ELM is a name (keyword) of element that `ein:cell-element-get'
