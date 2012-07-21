@@ -1153,10 +1153,14 @@ as usual."
 
 (defun ein:notebook-imenu-create-index ()
   "`imenu-create-index-function' for notebook buffer."
+  ;; As Imenu does not provide the way to represent level *and*
+  ;; position, use #'s to do that.
   (loop for cell in (ein:filter #'ein:headingcell-p
                                 (ein:notebook-get-cells ein:notebook))
-        collect (cons (ein:cell-get-text cell)
-                      (ein:cell-input-pos-min cell))))
+        for sharps = (loop repeat (oref cell :level) collect "#")
+        for text = (ein:cell-get-text cell)
+        for name = (ein:join-str "" (append sharps (list " " text)))
+        collect (cons name (ein:cell-input-pos-min cell))))
 
 (defun ein:notebook-imenu-setup ()
   "Called via notebook mode hooks."
