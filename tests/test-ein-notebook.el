@@ -240,6 +240,29 @@ some text
     (should (slot-boundp (ein:notebook-get-current-cell) :kernel))
     (should (looking-back "some text"))))
 
+(ert-deftest ein:notebook-change-cell-type-cycle-through ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (ein:notebook-insert-cell-above-command)
+    (insert "some text")
+    ;; start with code cell
+    (should (ein:codecell-p (ein:notebook-get-current-cell)))
+    (should (slot-boundp (ein:notebook-get-current-cell) :kernel))
+    (let ((check
+           (lambda (type &optional level)
+             (let ((cell-p (intern (format "ein:%scell-p" type))))
+               (ein:notebook-change-cell-type type level)
+               (should (funcall cell-p (ein:notebook-get-current-cell)))
+               (should (looking-back "some text"))))))
+      ;; change type: code (no change) -> markdown -> raw
+      (loop for type in '("code" "markdown" "raw")
+            do (funcall check type))
+      ;; change level: 1 to 6
+      (loop for level from 1 to 6
+            do (funcall check "heading" level))
+      ;; back to code
+      (funcall check "code")
+      (should (slot-boundp (ein:notebook-get-current-cell) :kernel)))))
+
 (defun eintest:notebook-split-cell-at-point
   (insert-text search-text head-text tail-text &optional no-trim)
   (with-current-buffer (eintest:notebook-make-empty)
