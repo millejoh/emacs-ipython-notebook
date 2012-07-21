@@ -84,6 +84,26 @@ problem."
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:mumamo-indent-line-function-dummy-code "
+def ein_dummy():
+    return"
+  "Dummy code block for `mumamo-indent-line-function' workaround.
+This code block will be inserted at the end of cell input before
+indentation and then removed afterward (so user will not see this
+code).
+
+This is ugly but... \"practicality beats purity\"...
+I guess somebody should fix python.el and/or MuMaMo, in order to
+remove this ugliness.
+
+To make the workaround less aggressive, you can set a newline
+\"\\n\" for this variable.  In that case, you will be affected by
+`issue 24`_.
+
+.. _issue 24: https://github.com/tkf/emacs-ipython-notebook/issues/24"
+  :type 'boolean
+  :group 'ein)
+
 
 
 ;;; Workaround
@@ -101,18 +121,19 @@ code cell."
         (let ((cur (copy-marker (point)))
               (end (copy-marker (1+ (ein:cell-input-pos-max cell)))))
           ;;             v-- execute `delete-char' here
-          ;; ... [] ......\n
-          ;;      ^- cur    ^- end (non-inclusive end of cell)
+          ;; ... [] ......DUMMY
+          ;;      ^- cur       ^- end (non-inclusive end of cell)
           ;;      ^- `ad-do-it' here
           (unwind-protect
               (progn
                 (goto-char (1- end))
-                (insert "\n")
+                (insert ein:mumamo-indent-line-function-dummy-code)
                 (goto-char cur)
                 ad-do-it)
             (save-excursion
-              (goto-char (- end 2))
-              (delete-char 1))))
+              (let ((len (length ein:mumamo-indent-line-function-dummy-code)))
+                (goto-char (- end 1 len))
+                (delete-char len)))))
       ad-do-it)))
 
 (defun ein:mumamo-indent-line-function-workaround-turn-on ()
