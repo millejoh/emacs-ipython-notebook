@@ -611,11 +611,12 @@ directly."
                        (("markdown") "raw")
                        (("raw") "heading")
                        (("heading") "code"))))))
-      (let ((new (ein:cell-convert-inplace cell type)))
+      (let ((relpos (ein:cell-relative-point cell))
+            (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (ein:notebook-empty-undo-maybe)
-        (ein:cell-goto new)))))
+        (ein:cell-goto new relpos)))))
 
 (defun ein:notebook-change-cell-type ()
   "Change the cell type of the current cell.
@@ -634,13 +635,14 @@ Prompt will appear in the minibuffer."
                    (t "heading")))
            (level (when (equal type "heading")
                     (string-to-number (char-to-string key)))))
-      (let ((new (ein:cell-convert-inplace cell type)))
+      (let ((relpos (ein:cell-relative-point cell))
+            (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (when level
           (ein:cell-change-level new level))
         (ein:notebook-empty-undo-maybe)
-        (ein:cell-goto new)))))
+        (ein:cell-goto new relpos)))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
