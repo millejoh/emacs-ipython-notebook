@@ -233,12 +233,12 @@ some text
     ;; toggle to markdown
     (ein:notebook-toggle-cell-type)
     (should (ein:markdowncell-p (ein:notebook-get-current-cell)))
-    (should (looking-at "some text"))
+    (should (looking-back "some text"))
     ;; toggle to code
     (ein:notebook-toggle-cell-type)
     (should (ein:codecell-p (ein:notebook-get-current-cell)))
     (should (slot-boundp (ein:notebook-get-current-cell) :kernel))
-    (should (looking-at "some text"))))
+    (should (looking-back "some text"))))
 
 (defun eintest:notebook-split-cell-at-point
   (insert-text search-text head-text tail-text &optional no-trim)
