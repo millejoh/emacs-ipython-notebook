@@ -26,7 +26,6 @@
 ;;; Code:
 
 (require 'mumamo)
-(require 'mumamo-cmirr)
 
 (require 'ein-notebook)
 
