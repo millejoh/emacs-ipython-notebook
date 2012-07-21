@@ -866,6 +866,9 @@ output."
         ewoc-node)))
 
 (defun ein:notebook-get-current-cell (&optional pos)
+  "Return CELL at POS.  If POS is not given, it is assumed be the
+current cursor position.  When the current buffer is not notebook
+buffer or there is no cell in the current buffer, return `nil'."
   (let ((cell (ein:cell-from-ewoc-node
                (ein:notebook-get-current-ewoc-node pos))))
     (when (ein:basecell-child-p cell) cell)))

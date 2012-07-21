@@ -112,11 +112,9 @@ To make the workaround less aggressive, you can set a newline
   (around ein:mumamo-indent-line-function-workaround)
   "Workaround the indentation problem when the cursor is in the
 code cell."
-  ;; Condition for the workaround must be as narrow as possible.  For
-  ;; example, hitting TAB at the beginning of line should move the
-  ;; cursor to the indentation column, instead of changing the
-  ;; indentation.  This will not happen if the newline is inserted.
   (let ((cell (ein:notebook-get-current-cell)))
+    ;; Check if the current buffer is notebook AND the current cell is
+    ;; code cell.
     (if (ein:codecell-p cell)
         (let ((cur (copy-marker (point)))
               (end (copy-marker (1+ (ein:cell-input-pos-max cell)))))
