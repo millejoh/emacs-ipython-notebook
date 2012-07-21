@@ -594,10 +594,19 @@ Called from ewoc pretty printer via `ein:cell-pp'."
               (message (ein:trim (ansi-color-apply defstring))))))
       (ein:log 'info "no info for %s" name))))
 
-(defmethod ein:cell-goto ((cell ein:basecell))
+(defmethod ein:cell-goto ((cell ein:basecell) &optional relpos)
+  "Go to the input area of the given CELL.
+RELPOS is the position relative to the input area.  Default is 0."
+  (unless relpos (setq relpos 0))
   (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
-  ;; Skip the newline
-  (forward-char))
+  ;; `1+' to skip the newline
+  (forward-char (1+ relpos)))
+
+(defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
+  "Return the point relative to the input area of CELL.
+If the position POS is not given, current point is considered."
+  (unless pos (setq pos (point)))
+  (- pos (1+ (ewoc-location (ein:cell-element-get cell :input)))))
 
 (defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
   "Return the starting location of CELL.

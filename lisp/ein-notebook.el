@@ -611,36 +611,44 @@ directly."
                        (("markdown") "raw")
                        (("raw") "heading")
                        (("heading") "code"))))))
-      (let ((new (ein:cell-convert-inplace cell type)))
+      (let ((relpos (ein:cell-relative-point cell))
+            (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (ein:notebook-empty-undo-maybe)
-        (ein:cell-goto new)))))
+        (ein:cell-goto new relpos)))))
 
-(defun ein:notebook-change-cell-type ()
+(defun ein:notebook-change-cell-type (type &optional level)
   "Change the cell type of the current cell.
-Prompt will appear in the minibuffer."
-  (interactive)
+Prompt will appear in the minibuffer.
+
+When used in as a Lisp function, TYPE (string) should be chose
+from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
+an integer used only when the TYPE is \"heading\"."
+  (interactive
+   (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
+                     (2 "cm")
+                     (3 "cmr123456")))
+          (key (ein:ask-choice-char
+                (format "Cell type [%s]: " choices) choices))
+          (type (case key
+                  (?c "code")
+                  (?m "markdown")
+                  (?r "raw")
+                  (t "heading")))
+          (level (when (equal type "heading")
+                   (string-to-number (char-to-string key)))))
+     (list type level)))
+
   (ein:notebook-with-cell nil
-    (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
-                      (2 "cm")
-                      (3 "cmr123456")))
-           (key (ein:ask-choice-char
-                 (format "Cell type [%s]: " choices) choices))
-           (type (case key
-                   (?c "code")
-                   (?m "markdown")
-                   (?r "raw")
-                   (t "heading")))
-           (level (when (equal type "heading")
-                    (string-to-number (char-to-string key)))))
-      (let ((new (ein:cell-convert-inplace cell type)))
+    (let ((relpos (ein:cell-relative-point cell))
+            (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
           (oset new :kernel (ein:$notebook-kernel ein:notebook)))
         (when level
           (ein:cell-change-level new level))
         (ein:notebook-empty-undo-maybe)
-        (ein:cell-goto new)))))
+        (ein:cell-goto new relpos))))
 
 (defun ein:notebook-split-cell-at-point (&optional no-trim)
   "Split cell at current position. Newlines at the splitting
