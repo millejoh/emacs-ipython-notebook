@@ -90,28 +90,30 @@ problem."
 
 (defadvice mumamo-indent-line-function
   (around ein:mumamo-indent-line-function-workaround)
-  "Workaround the indentation problem when the cursor is at the
-end of input area."
+  "Workaround the indentation problem when the cursor is in the
+code cell."
   ;; Condition for the workaround must be as narrow as possible.  For
   ;; example, hitting TAB at the beginning of line should move the
   ;; cursor to the indentation column, instead of changing the
   ;; indentation.  This will not happen if the newline is inserted.
-  (if (and (looking-at-p "\n")
-           (get-char-property (point) 'read-only))
-      (let (m)
-        ;; The cursor is at the end of input area
-        ;; Indentation does not work as-is.  Here is the workaround:
-        (unwind-protect
-            (progn
-              (insert "\n")
-              (setq m (point-marker))
-              (backward-char)
-              ad-do-it)
-          (save-excursion
-            (goto-char m)
-            (backward-char)
-            (delete-char 1))))
-    ad-do-it))
+  (let ((cell (ein:notebook-get-current-cell)))
+    (if (ein:codecell-p cell)
+        (let ((cur (copy-marker (point)))
+              (end (copy-marker (1+ (ein:cell-input-pos-max cell)))))
+          ;;             v-- execute `delete-char' here
+          ;; ... [] ......\n
+          ;;      ^- cur    ^- end (non-inclusive end of cell)
+          ;;      ^- `ad-do-it' here
+          (unwind-protect
+              (progn
+                (goto-char (1- end))
+                (insert "\n")
+                (goto-char cur)
+                ad-do-it)
+            (save-excursion
+              (goto-char (- end 2))
+              (delete-char 1))))
+      ad-do-it)))
 
 (defun ein:mumamo-indent-line-function-workaround-turn-on ()
   "Activate advice for `mumamo-indent-line-function'.
