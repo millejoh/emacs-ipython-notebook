@@ -250,6 +250,12 @@ slot.")))
       (oset new :outputs (mapcar 'identity (oref cell :outputs))))
     new))
 
+(defmethod ein:cell-convert ((cell ein:headingcell) type)
+  (let ((new (call-next-method)))
+    (when (ein:headingcell-p new)
+      (oset new :level (oref cell :level)))
+    new))
+
 (defmethod ein:cell-copy ((cell ein:basecell))
   (ein:cell-convert cell (oref cell :cell-type)))
 
