@@ -8,6 +8,7 @@
 (require 'ein-mumamo)
 (require 'ein-ac)
 (require 'ein-connect)
+(require 'ein-autoexec)
 
 ;; Load `wid-edit'.  Otherwise the following error will be raised:
 ;;    Symbol's function definition is void: widget-button-press
