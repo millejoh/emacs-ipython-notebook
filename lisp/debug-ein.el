@@ -26,7 +26,6 @@
 ;;; Code:
 
 (add-to-list 'load-path (file-name-directory load-file-name))
-(eval-when-compile (require 'ein-notebooklist))
 (require 'ein)
 (require 'ein-dev)
 
