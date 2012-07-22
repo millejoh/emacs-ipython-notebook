@@ -198,14 +198,14 @@ This is the same workaround as `ein:ac-setup-maybe'."
        (mumamo-possible-chunk-forward
         pos max
         (lambda (pos max) "CHUNK-START-FUN"
-          (ein:log 'debug "CHUNK-START-FUN(pos=%s max=%s)" pos max)
+          (ein:log 'blather "CHUNK-START-FUN(pos=%s max=%s)" pos max)
           (ein:aif (ein:mumamo-find-edge pos max nil #',cell-p)
               (list it (if (functionp ,mode)
                            ,mode
                          ein:mumamo-fallback-mode)
                     nil)))
         (lambda (pos max) "CHUNK-END-FUN"
-          (ein:log 'debug "CHUNK-END-FUN(pos=%s max=%s)" pos max)
+          (ein:log 'blather "CHUNK-END-FUN(pos=%s max=%s)" pos max)
           (ein:mumamo-find-edge pos max t #',cell-p))))))
 
 (ein:mumamo-define-chunk codecell)
@@ -221,31 +221,31 @@ This is the same workaround as `ein:ac-setup-maybe'."
 Return the point of beginning of the input element of cell after
 the point POS.  Return `nil' if it cannot be found before the point
 MAX.  If END is non-`nil', end of the input element is returned."
-  (ein:log 'debug "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
+  (ein:log 'blather "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
            pos max end cell-p)
   (let* ((ewoc-node
           (ein:notebook-get-nearest-cell-ewoc-node pos max cell-p))
-         (_ (ein:log 'debug "(null ewoc-node) = %s" (null ewoc-node)))
+         (_ (ein:log 'blather "(null ewoc-node) = %s" (null ewoc-node)))
          (cell (ein:aand ewoc-node
                          (ein:$node-data (ewoc-data it))))
-         (_ (ein:log 'debug "(null cell) = %s" (null cell)))
+         (_ (ein:log 'blather "(null cell) = %s" (null cell)))
          (find
           (lambda (c)
             (ein:aand c
                       (ein:cell-element-get it (if end :after-input :input))
                       (progn
-                        (ein:log 'debug "(null it) = %s" (null it))
+                        (ein:log 'blather "(null it) = %s" (null it))
                         (ewoc-location it))
                       (if end it (1+ it)))))
          (input-pos (funcall find cell)))
-    (ein:log 'debug "input-pos (1) = %s" input-pos)
+    (ein:log 'blather "input-pos (1) = %s" input-pos)
     (when (and input-pos (< input-pos pos))
       (setq input-pos (ein:aand (ein:cell-next cell)
                                 (when (funcall cell-p it) (funcall find it)))))
-    (ein:log 'debug "input-pos (2) = %s" input-pos)
+    (ein:log 'blather "input-pos (2) = %s" input-pos)
     (when (and input-pos (> input-pos max))
       (setq input-pos nil))
-    (ein:log 'debug "input-pos (3) = %s" input-pos)
+    (ein:log 'blather "input-pos (3) = %s" input-pos)
     input-pos))
 
 (provide 'ein-mumamo)

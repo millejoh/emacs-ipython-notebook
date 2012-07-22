@@ -37,7 +37,14 @@ of activities occurred in this buffer.")
 (defvar ein:log-all-buffer-name " *ein:log-all*")
 
 (defvar ein:log-level-def
-  '((debug . 40) (verbose . 30) (info . 20) (warn . 10) (error . 0)))
+  '(;; debugging
+    (blather . 60) (trace . 50) (debug . 40)
+    ;; information
+    (verbose . 30) (info . 20)
+    ;; errors
+    (warn . 10) (error . 0))
+  "Named logging levels.")
+;; Some names are stolen from supervisord (http://supervisord.org/logging.html)
 
 (defvar ein:log-level 30)
 (defvar ein:log-message-level 20)
