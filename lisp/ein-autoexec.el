@@ -49,8 +49,8 @@ If the previous execution timer is not fired yet, cancel the timer."
   (let ((cell (ein:notebook-get-current-cell beg)))
     (when (and (ein:codecell-p cell)
                this-command
-               (<= (ein:cell-input-pos-min cell) beg)
-               (>= (ein:cell-input-pos-max cell) end))
+               (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
+               (ein:aif (ein:cell-input-pos-max cell) (>= it end)))
       (ein:autoexec-execute-cell cell))))
 
 (define-minor-mode ein:autoexec-mode
