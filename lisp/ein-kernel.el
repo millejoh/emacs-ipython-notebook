@@ -431,6 +431,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
   (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
+  (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
   (destructuring-bind
       (&key header content parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
@@ -438,12 +439,14 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (msg-id (plist-get parent_header :msg_id))
            (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
            (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
+      (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type = %s" msg-type)
       (if cb
           (ein:funcall-packed cb content)
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
                  msg-type msg-id))
       (ein:aif (plist-get content :payload)
-          (ein:kernel--handle-payload kernel callbacks it)))))
+          (ein:kernel--handle-payload kernel callbacks it))))
+  (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: finished"))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (loop with events = (ein:$kernel-events kernel)
@@ -460,6 +463,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
              (when cb (ein:funcall-packed cb text)))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
+  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
   (destructuring-bind
       (&key content parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
@@ -467,7 +471,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (callbacks (ein:kernel-get-callbacks-for-msg
                        kernel (plist-get parent_header :msg_id)))
            (events (ein:$kernel-events kernel)))
-      (ein:log 'debug "HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
+      (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
       (if (and (not (equal msg-type "status")) (null callbacks))
           (ein:log 'verbose "Got message not from this notebook.")
         (ein:case-equal msg-type
@@ -485,7 +489,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               (ein:events-trigger events 'status_dead.Kernel))))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
-               (ein:funcall-packed it content))))))))
+               (ein:funcall-packed it content)))))))
+  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
 ;;; Utility functions
