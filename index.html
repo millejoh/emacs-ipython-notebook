@@ -702,6 +702,14 @@ and save it immediately.</p>
 <dd><p>Close all opened notebooks.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="ein:autoexec-mode">
+<em class="property">function </em><big>(</big><tt class="descname">ein:autoexec-mode </tt><em>&amp;optional</em> <em>arg</em><big>)</big><a class="headerlink" href="#ein:autoexec-mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Automatic cell execution minor mode.
+Code cell at point will be automatically executed after any
+change in its input area.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="connected-buffer">
 <h3><a class="toc-backref" href="#id26">Connected buffer</a><a class="headerlink" href="#connected-buffer" title="Permalink to this headline">¶</a></h3>
@@ -1126,6 +1134,12 @@ and <a class="reference internal" href="#ein:notebook-rename-to-scratch-command"
 format string which can be passed to <tt class="xref el el-symbol docutils literal"><span class="pre">format-time-string</span></tt>.</p>
 </dd></dl>
 
+<dl class="variable">
+<dt id="ein:autoexec-delay">
+<em class="property">variable </em><tt class="descname">ein:autoexec-delay</tt><a class="headerlink" href="#ein:autoexec-delay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delay before executing cell after change in second.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="connect">
 <h3><a class="toc-backref" href="#id34">Connect</a><a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h3>
@@ -1362,6 +1376,7 @@ truncate long output and show it in a separated buffer.</li>
 <li>Add <a class="reference internal" href="#ein:pytools-pandas-to-ses" title="ein:pytools-pandas-to-ses"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-pandas-to-ses</span></tt></a>.</li>
 <li>Add Imenu support.</li>
 <li>Better heading cell faces.</li>
+<li>Add <a class="reference internal" href="#ein:autoexec-mode" title="ein:autoexec-mode"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:autoexec-mode</span></tt></a></li>
 </ul>
 </div>
 <div class="section" id="v0-1">
