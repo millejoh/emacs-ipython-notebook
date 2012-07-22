@@ -43,6 +43,9 @@
 (autoload 'ein:connect-to-notebook "ein-connect"
   "Connect any buffer to notebook and its kernel." t)
 
+(autoload 'ein:autoexec-mode "ein-autoexec"
+  "Automatic cell execution minor mode." t)
+
 (autoload 'ein:dev-insert-mode-map "ein-dev")
 (autoload 'ein:dev-start-debug "ein-dev" "Enable debugging support." t)
 (autoload 'ein:dev-stop-debug "ein-dev" "Disable debugging support." t)
