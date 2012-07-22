@@ -88,16 +88,23 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
 (defun ein:dev-show-debug-setting ()
   "Show variables related to EIN debugging."
   (interactive)
-  (message (concat "debug-on-error=%s websocket-debug=%s ein:debug=%s "
-                   "ein:log-level=%s ein:log-message-level=%s")
-           debug-on-error websocket-debug ein:debug
+  (message (concat "debug-on-error=%s websocket-debug=%s "
+                   "websocket-callback-debug-on-error=%s "
+                   "ein:debug=%s ein:log-level=%s ein:log-message-level=%s")
+           debug-on-error websocket-debug websocket-callback-debug-on-error
+           ein:debug
            (ein:log-level-int-to-name ein:log-level)
            (ein:log-level-int-to-name ein:log-message-level)))
 
-(defun ein:dev-start-debug ()
-  (interactive)
+(defun ein:dev-start-debug (&optional ws-callback)
+  "Enable EIN debugging support.
+When the prefix argument is given, debugging support for websocket
+callback (`websocket-callback-debug-on-error') is enabled."
+  (interactive "P")
   (setq debug-on-error t)
   (setq websocket-debug t)
+  (when ws-callback
+    (setq websocket-callback-debug-on-error t))
   (setq ein:debug t)
   (ein:log-set-level 'debug)
   (ein:log-set-message-level 'verbose)
@@ -105,9 +112,11 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (ein:dev-show-debug-setting))
 
 (defun ein:dev-stop-debug ()
+  "Disable debugging support enabled by `ein:dev-start-debug'."
   (interactive)
   (setq debug-on-error nil)
   (setq websocket-debug nil)
+  (setq websocket-callback-debug-on-error nil)
   (setq ein:debug nil)
   (ein:log-set-level 'verbose)
   (ein:log-set-message-level 'info)
