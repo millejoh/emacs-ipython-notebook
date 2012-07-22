@@ -44,13 +44,18 @@ If the previous execution timer is not fired yet, cancel the timer."
                              #'ein:notebook-execute-cell
                              ein:notebook cell)))
 
+(defun ein:autoexec-should-execute-p (cell beg end)
+  "Return non-`nil' if CELL should be executed by the change within
+BEG and END."
+  (and (ein:codecell-p cell)
+       this-command
+       (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
+       (ein:aif (ein:cell-input-pos-max cell) (>= it end))))
+
 (defun ein:autoexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."
   (let ((cell (ein:notebook-get-current-cell beg)))
-    (when (and (ein:codecell-p cell)
-               this-command
-               (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
-               (ein:aif (ein:cell-input-pos-max cell) (>= it end)))
+    (when (ein:autoexec-should-execute-p cell beg end)
       (ein:autoexec-execute-cell cell))))
 
 (define-minor-mode ein:autoexec-mode

@@ -255,3 +255,5 @@ some stderr 1
 some stdout 2
 some stderr 2
 "))
+
+(provide 'test-ein-cell-notebook)
