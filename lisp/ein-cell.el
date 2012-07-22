@@ -515,15 +515,19 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:aand ewoc-node (ewoc-data it) (ein:$node-data it)))
 
 (defmethod ein:cell-input-pos-min ((cell ein:basecell))
+  "Return editable minimum point in the input area of the CELL.
+If the input area of the CELL does not exist, return `nil'"
   (let* ((input-node (ein:cell-element-get cell :input)))
     ;; 1+ for skipping newline
-    (1+ (ewoc-location input-node))))
+    (when input-node (1+ (ewoc-location input-node)))))
 
 (defmethod ein:cell-input-pos-max ((cell ein:basecell))
+  "Return editable maximum point in the input area of the CELL.
+If the input area of the CELL does not exist, return `nil'"
   (let* ((ewoc (oref cell :ewoc))
          (input-node (ein:cell-element-get cell :input)))
     ;; 1- for skipping newline
-    (1- (ewoc-location (ewoc-next ewoc input-node)))))
+    (when input-node (1- (ewoc-location (ewoc-next ewoc input-node))))))
 
 (defmethod ein:cell-get-text ((cell ein:basecell))
   "Grab text in the input area of the cell at point."
