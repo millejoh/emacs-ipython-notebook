@@ -54,7 +54,9 @@ If the previous execution timer is not fired yet, cancel the timer."
       (ein:autoexec-execute-cell cell))))
 
 (define-minor-mode ein:autoexec-mode
-  "Automatic cell execution minor mode."
+  "Automatic cell execution minor mode.
+Code cell at point will be automatically executed after any
+change in its input area."
   :lighter " ein:au"
   :group 'ein
   (if ein:autoexec-mode
