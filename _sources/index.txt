@@ -402,8 +402,8 @@ web client.  See `emacslisp.py`_ for more details.
 Reporting issue
 ---------------
 
-Error logging
-^^^^^^^^^^^^^
+Logging
+^^^^^^^
 
 Sometime more information that the ``*Message*`` buffer provides is
 needed to debug.
@@ -429,12 +429,25 @@ needed to debug.
    If it is too long, you can use paste bin service such as
    `gist <https://gist.github.com/>`_.
 
+websocket.el
+""""""""""""
+
+websocket.el has its logging buffer.  Sometime its useful to see its
+log.  This is how to do that.
+
+1. ``(require 'ein-dev)``
+2. ``(setq websocket-debug t)`` or call :el:symbol:`ein:dev-start-debug`.
+3. Then do the operation which causes the problem.
+4. Go to log buffer using
+   :el:symbol:`ein:dev-pop-to-debug-shell` and
+   :el:symbol:`ein:dev-pop-to-debug-iopub`.
+   These command must be called in the notebook buffer.
+
 Debugging
 ^^^^^^^^^
 
 If you are interested in debugging EIN, you should start it with
-loading :el:symbol:`ein-dev` package and then execute the command
-:el:symbol:`ein:dev-start-debug`.
+calling the command :el:symbol:`ein:dev-start-debug`.
 This command sets :el:symbol:`debug-on-error` to ``t`` and do some
 patching to debugger.  This patching is required because printing EWOC
 objects freezes Emacs otherwise.  It also changes log level to
