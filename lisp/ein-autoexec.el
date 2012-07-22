@@ -27,6 +27,23 @@
 
 (require 'ein-notebook)
 
+(defcustom ein:autoexec-delay 0.3
+  "Delay before executing cell after change in second."
+  :type 'number
+  :group 'ein)
+
+(defvar ein:autoexec-timer nil)
+
+(defun ein:autoexec-execute-cell (cell)
+  "Call `ein:notebook-execute-cell' after `ein:autoexec-delay' second.
+If the previous execution timer is not fired yet, cancel the timer."
+  (when ein:autoexec-timer
+    (cancel-timer ein:autoexec-timer))
+  (setq ein:autoexec-timer
+        (run-with-idle-timer ein:autoexec-delay nil
+                             #'ein:notebook-execute-cell
+                             ein:notebook cell)))
+
 (defun ein:autoexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."
   (let ((cell (ein:notebook-get-current-cell beg)))
@@ -34,7 +51,7 @@
                this-command
                (<= (ein:cell-input-pos-min cell) beg)
                (>= (ein:cell-input-pos-max cell) end))
-      (ein:notebook-execute-cell ein:notebook cell))))
+      (ein:autoexec-execute-cell cell))))
 
 (define-minor-mode ein:autoexec-mode
   "Automatic cell execution minor mode."
