@@ -399,6 +399,49 @@ web client.  See `emacslisp.py`_ for more details.
   https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
 
 
+Reporting issue
+---------------
+
+Error logging
+^^^^^^^^^^^^^
+
+Sometime more information that the ``*Message*`` buffer provides is
+needed to debug.
+
+1. Execute ``(ein:log-set-level 'debug)``
+   (e.g., ``M-: (ein:log-set-level 'debug) RET``).
+2. Then do some operation which cause the problem.
+3. Go to the log buffer ``_*ein:log-all*`` (it starts with a space)
+   and paste the whole buffer to the issue tracker.
+
+   Please enclose the log with three backquotes to make the snippet as
+   a code block, like this::
+
+     ```
+     [verbose] Start logging. @#<buffer *ein: 8888/NAME*>
+     [info] Notebook NAME is ready @#<buffer *ein: 8888/NAME*>
+     [info] Kernel started: 5e4f74d1-ce91-4e7e-9575-9646adea5172 @#<buffer *scratch*>
+     ```
+
+   See also: `GitHub Flavored Markdown - Introduction
+   <http://github.github.com/github-flavored-markdown/>`_
+
+   If it is too long, you can use paste bin service such as
+   `gist <https://gist.github.com/>`_.
+
+Debugging
+^^^^^^^^^
+
+If you are interested in debugging EIN, you should start it with
+loading :el:symbol:`ein-dev` package and then execute the command
+:el:symbol:`ein:dev-start-debug`.
+This command sets :el:symbol:`debug-on-error` to ``t`` and do some
+patching to debugger.  This patching is required because printing EWOC
+objects freezes Emacs otherwise.  It also changes log level to
+log everything the log buffer.  You can reset the patch and log level
+with :el:symbol:`ein:dev-stop-debug`.
+
+
 Change Log
 ==========
 
