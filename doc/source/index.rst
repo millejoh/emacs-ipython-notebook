@@ -447,16 +447,12 @@ Debugging
 ^^^^^^^^^
 
 If you are interested in debugging EIN, you should start it with
-loading :el:symbol:`ein-dev` package [#]_ and then executing the
-command :el:symbol:`ein:dev-start-debug`.
+calling the command :el:symbol:`ein:dev-start-debug`.
 This command sets :el:symbol:`debug-on-error` to ``t`` and do some
 patching to debugger.  This patching is required because printing EWOC
 objects freezes Emacs otherwise.  It also changes log level to
 log everything the log buffer.  You can reset the patch and log level
 with :el:symbol:`ein:dev-stop-debug`.
-
-.. [#] You can set the variable :el:symbol:`ein:load-dev` to
-   :el:symbol:`t` to load ein-dev.el always.
 
 
 Change Log
