@@ -84,34 +84,55 @@ problem."
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:mumamo-indent-line-function-dummy-code "
+def ein_dummy():
+    return"
+  "Dummy code block for `mumamo-indent-line-function' workaround.
+This code block will be inserted at the end of cell input before
+indentation and then removed afterward (so user will not see this
+code).
+
+This is ugly but... \"practicality beats purity\"...
+I guess somebody should fix python.el and/or MuMaMo, in order to
+remove this ugliness.
+
+To make the workaround less aggressive, you can set a newline
+\"\\n\" for this variable.  In that case, you will be affected by
+`issue 24`_.
+
+.. _issue 24: https://github.com/tkf/emacs-ipython-notebook/issues/24"
+  :type 'boolean
+  :group 'ein)
+
 
 
 ;;; Workaround
 
 (defadvice mumamo-indent-line-function
   (around ein:mumamo-indent-line-function-workaround)
-  "Workaround the indentation problem when the cursor is at the
-end of input area."
-  ;; Condition for the workaround must be as narrow as possible.  For
-  ;; example, hitting TAB at the beginning of line should move the
-  ;; cursor to the indentation column, instead of changing the
-  ;; indentation.  This will not happen if the newline is inserted.
-  (if (and (looking-at-p "\n")
-           (get-char-property (point) 'read-only))
-      (let (m)
-        ;; The cursor is at the end of input area
-        ;; Indentation does not work as-is.  Here is the workaround:
-        (unwind-protect
-            (progn
-              (insert "\n")
-              (setq m (point-marker))
-              (backward-char)
-              ad-do-it)
-          (save-excursion
-            (goto-char m)
-            (backward-char)
-            (delete-char 1))))
-    ad-do-it))
+  "Workaround the indentation problem when the cursor is in the
+code cell."
+  (let ((cell (ein:notebook-get-current-cell)))
+    ;; Check if the current buffer is notebook AND the current cell is
+    ;; code cell.
+    (if (ein:codecell-p cell)
+        (let ((cur (copy-marker (point)))
+              (end (copy-marker (1+ (ein:cell-input-pos-max cell)))))
+          ;;             v-- execute `delete-char' here
+          ;; ... [] ......DUMMY
+          ;;      ^- cur       ^- end (non-inclusive end of cell)
+          ;;      ^- `ad-do-it' here
+          (unwind-protect
+              (progn
+                (goto-char (1- end))
+                (insert ein:mumamo-indent-line-function-dummy-code)
+                (goto-char cur)
+                ad-do-it)
+            (save-excursion
+              (let ((len (length ein:mumamo-indent-line-function-dummy-code)))
+                (goto-char (- end 1 len))
+                (delete-char len)))))
+      ad-do-it)))
 
 (defun ein:mumamo-indent-line-function-workaround-turn-on ()
   "Activate advice for `mumamo-indent-line-function'.
