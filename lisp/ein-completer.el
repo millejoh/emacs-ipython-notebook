@@ -27,12 +27,15 @@
 
 (require 'ein-utils)
 (require 'ein-log)
+(require 'ein-subpackages)
 
 (defun ein:completer-choose ()
   (when (require 'auto-complete nil t)
     (require 'ein-ac))
   (cond
-   ((and (ein:eval-if-bound 'auto-complete-mode)
+   ((and (or ein:use-auto-complete
+             ein:use-auto-complete-superpack)
+         (ein:eval-if-bound 'auto-complete-mode)
          (fboundp 'ein:completer-finish-completing-ac))
     #'ein:completer-finish-completing-ac)
    (t
