@@ -61,6 +61,8 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; I don't need to check if the point is at right position, as in
   ;; `ein:completer-finish-completing-default' because `auto-complete'
   ;; checks it anyway.
+  (ein:log 'debug "COMPLETER-FINISH-COMPLETING-AC: matched-text=%S matches=%S"
+           matched-text matches)
   (setq ein:ac-direct-matches matches)  ; let-binding won't work
   (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
   (run-with-idle-timer 1 nil #'ein:ac-clear-cache)

@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'ein-utils)
+(require 'ein-log)
 
 (defun ein:completer-choose ()
   (when (require 'auto-complete nil t)
@@ -42,9 +43,11 @@
     (re-search-backward (concat matched-text "\\="))))
 
 (defun ein:completer-finish-completing (_dummy_ content)
+  (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
   (let ((matched-text (plist-get content :matched_text))
         (matches (plist-get content :matches))
         (completer (ein:completer-choose)))
+    (ein:log 'debug "COMPLETER-FINISH-COMPLETING: completer=%s" completer)
     (funcall completer matched-text matches)))
 
 (defun ein:completer-finish-completing-default (matched-text matches)
