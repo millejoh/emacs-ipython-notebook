@@ -42,13 +42,11 @@
 (declare-function global-auto-complete-mode "auto-complete")
 (when (featurep 'auto-complete)
   (global-auto-complete-mode t)
-  (require 'ein-ac)
-  (ein:ac-config t))
+  (setq ein:use-auto-complete-superpack t))
 
 (declare-function ein:smartrep-config "ein-smartrep")
 (when (featurep 'smartrep)
-  (require 'ein-smartrep)
-  (ein:smartrep-config))
+  (setq ein:use-smartrep t))
 
 (custom-set-faces
    ;; Turn off background color for mumamo major chunk, to see
