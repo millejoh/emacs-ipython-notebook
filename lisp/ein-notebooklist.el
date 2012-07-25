@@ -220,24 +220,26 @@ This function is called via `ein:notebook-after-rename-hook'."
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
    :success (cons #'ein:notebooklist-new-notebook-callback
-                  (list (ein:notebooklist-get-buffer url-or-port)
-                        callback cbargs))))
+                  (list url-or-port callback cbargs))))
 
 (defun* ein:notebooklist-new-notebook-callback (packed &key
                                                        data
-                                                       &allow-other-keys)
-  (let ((notebook-id data)
-        (buffer (nth 0 packed))
-        (callback (nth 1 packed))
-        (cbargs (nth 2 packed)))
+                                                       &allow-other-keys
+                                                       &aux
+                                                       (notebook-id data)
+                                                       (no-popup t))
+  (destructuring-bind (url-or-port callback cbargs)
+      packed
     (message "Creating a new notebook... Done.")
-    (with-current-buffer buffer
-      (if notebook-id
-          (ein:notebooklist-open-notebook ein:notebooklist notebook-id nil
-                                          callback cbargs)
-        (message (concat "Oops. EIN failed to open new notebook. "
-                         "Please find it in the notebook list.")))
-      (ein:notebooklist-reload))))
+    (if notebook-id
+        (progn
+          (message "Open new notebook %s." notebook-id)
+          (ein:notebook-open url-or-port notebook-id callback cbargs))
+      (message (concat "Oops. EIN failed to open new notebook. "
+                       "Please find it in the notebook list."))
+      (setq no-popup nil))
+    ;; reload or open notebook list
+    (ein:notebooklist-open url-or-port no-popup)))
 
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
   "Open new notebook and rename the notebook."
