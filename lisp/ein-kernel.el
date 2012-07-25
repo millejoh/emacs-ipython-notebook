@@ -509,14 +509,15 @@ Used in `ein:cell-finish-tooltip', etc."
                      (ein:kernel-construct-defstring content)
                      (ansi-color-apply it)
                      (ein:string-fill-paragraph it)))
-         (docstring (or (plist-get content :call_docstring)
-                        (plist-get content :init_docstring)
-                        (plist-get content :docstring)
-                        ;; "<empty docstring>"
-                        ))
-         (help
-          (ein:aif (ein:filter 'identity (list defstring docstring))
-              (ansi-color-apply (ein:join-str "\n" it)))))
+         (docstring (ein:aand
+                     (or (plist-get content :call_docstring)
+                         (plist-get content :init_docstring)
+                         (plist-get content :docstring)
+                         ;; "<empty docstring>"
+                         )
+                     (ansi-color-apply it)))
+         (help (ein:join-str
+                "\n" (ein:filter 'identity (list defstring docstring)))))
     (ein:log 'debug "EIN:KERNEL-CONSTRUCT-HELP-STRING")
     (ein:log 'debug "help %s" help)
     help))
