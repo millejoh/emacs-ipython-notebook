@@ -505,7 +505,10 @@ Used in `ein:cell-finish-tooltip', etc."
 (defun ein:kernel-construct-help-string (content)
   "Construct help string from CONTENT of ``:object_info_reply``.
 Used in `ein:cell-finish-tooltip', etc."
-  (let* ((defstring (ein:kernel-construct-defstring content))
+  (let* ((defstring (ein:aand
+                     (ein:kernel-construct-defstring content)
+                     (ansi-color-apply it)
+                     (ein:string-fill-paragraph it)))
          (docstring (or (plist-get content :call_docstring)
                         (plist-get content :init_docstring)
                         (plist-get content :docstring)
