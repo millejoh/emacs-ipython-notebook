@@ -101,9 +101,8 @@
   :group 'ein)
 
 (defface ein:pos-tip-face
-  '((t (:background "khaki1" :foreground "black")))
+  '((t (:inherit 'popup-tip-face)))
   "Face for tooltip when using pos-tip backend."
-  ;; Adapted from `popup-tip-face.'
   :group 'ein)
 
 
