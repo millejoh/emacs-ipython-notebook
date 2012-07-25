@@ -517,8 +517,9 @@ Used in `ein:cell-finish-tooltip', etc."
                          ;; "<empty docstring>"
                          )
                      (ansi-color-apply it)))
-         (help (ein:join-str
-                "\n" (ein:filter 'identity (list defstring docstring)))))
+         (help (ein:aand
+                (ein:filter 'identity (list defstring docstring))
+                (ein:join-str "\n" it))))
     (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING: help=%s" help)
     help))
 
