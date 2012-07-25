@@ -505,6 +505,7 @@ Used in `ein:cell-finish-tooltip', etc."
 (defun ein:kernel-construct-help-string (content)
   "Construct help string from CONTENT of ``:object_info_reply``.
 Used in `ein:cell-finish-tooltip', etc."
+  (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING")
   (let* ((defstring (ein:aand
                      (ein:kernel-construct-defstring content)
                      (ansi-color-apply it)
@@ -518,8 +519,7 @@ Used in `ein:cell-finish-tooltip', etc."
                      (ansi-color-apply it)))
          (help (ein:join-str
                 "\n" (ein:filter 'identity (list defstring docstring)))))
-    (ein:log 'debug "EIN:KERNEL-CONSTRUCT-HELP-STRING")
-    (ein:log 'debug "help %s" help)
+    (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING: help=%s" help)
     help))
 
 (defun ein:kernel-request-stream (kernel code func &optional args)
