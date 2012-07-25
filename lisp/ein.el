@@ -40,6 +40,9 @@
 (autoload 'ein:notebooklist-open-notebook-global "ein-notebooklist"
   "Choose notebook from all opened notebook list and open it." t)
 
+(autoload 'ein:notebooklist-new-notebook "ein-notebooklist"
+  "Ask server to create a new notebook and open it in a new buffer." t)
+
 (autoload 'ein:connect-to-notebook "ein-connect"
   "Connect any buffer to notebook and its kernel." t)
 
