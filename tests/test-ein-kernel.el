@@ -66,3 +66,33 @@
              (got-url-1 (nth 1 l)))
         (should (equal got-url-0 desired-url))
         (should (string-match "^_=[0-9]+$" got-url-1))))))
+
+
+;;; Test `ein:kernel-construct-help-string'
+
+(ert-deftest ein:kernel-construct-help-string-when-found ()
+  (let ((callsig "function(a=1, b=2, c=d)")
+        (docstring "This function does what."))
+    (loop for pcallsig in '(:call_def :init_definition :definition)
+          do (loop for pdoc in '(:call_docstring :init_docstring :docstring)
+                   do (should (equal (ein:kernel-construct-help-string
+                                      (list pcallsig callsig
+                                            pdoc docstring))
+                                     (format "%s\n%s" callsig docstring)))))))
+
+(ert-deftest ein:kernel-construct-help-string-when-callsig-found ()
+  (let ((callsig "function(a=1, b=2, c=d)"))
+    (loop for pcallsig in '(:call_def :init_definition :definition)
+          do (should (equal (ein:kernel-construct-help-string
+                             (list pcallsig callsig))
+                            callsig)))))
+
+(ert-deftest ein:kernel-construct-help-string-when-doc-found ()
+  (let ((docstring "This function does what."))
+    (loop for pdoc in '(:call_docstring :init_docstring :docstring)
+          do (should (equal (ein:kernel-construct-help-string
+                             (list pdoc docstring))
+                            docstring)))))
+
+(ert-deftest ein:kernel-construct-help-string-when-not-found ()
+  (should (equal (ein:kernel-construct-help-string nil) nil)))
