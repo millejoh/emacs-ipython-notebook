@@ -461,9 +461,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                    (= (1+ index) ein:cell-max-num-outputs))
           ;; The first output which exceeds `ein:cell-max-num-outputs'.
           (ein:insert-read-only "\n"))
-        (ein:insert-read-only ".")
-        (when (= (1+ index) (ein:cell-num-outputs cell))
-          (ein:insert-read-only "\n")))
+        (ein:insert-read-only "."))
     (let ((out (nth index (oref cell :outputs))))
       ;; Handle newline for previous stream output.
       ;; In IPython JS, it is handled in `append_stream' because JS
@@ -494,9 +492,14 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-insert-footer ((cell ein:codecell))
-  (let ((last-out (car (last (oref cell :outputs)))))
-    (when (equal (plist-get last-out :output_type) "stream")
-      (ein:cell-append-stream-text-fontified "\n" last-out)))
+  (if (or (oref cell :collapsed)
+          (and ein:cell-max-num-outputs
+               (> (ein:cell-num-outputs cell) ein:cell-max-num-outputs)))
+      ;; Add a newline after the last ".".
+      (ein:insert-read-only "\n")
+    (let ((last-out (car (last (oref cell :outputs)))))
+      (when (equal (plist-get last-out :output_type) "stream")
+        (ein:cell-append-stream-text-fontified "\n" last-out))))
   (call-next-method))
 
 
