@@ -455,10 +455,11 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 Called from ewoc pretty printer via `ein:cell-pp'."
   (if (or (oref cell :collapsed)
           (and ein:cell-max-num-outputs
-               (> index ein:cell-max-num-outputs)))
+               (>= index ein:cell-max-num-outputs)))
       (progn
         (when (and (not (oref cell :collapsed))
-                   (= (1+ index) ein:cell-max-num-outputs))
+                   (= index ein:cell-max-num-outputs)
+                   (> (point) (point-at-bol)))
           ;; The first output which exceeds `ein:cell-max-num-outputs'.
           (ein:insert-read-only "\n"))
         (ein:insert-read-only "."))
