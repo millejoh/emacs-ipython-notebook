@@ -78,6 +78,14 @@ Types same as `ein:notebook-console-security-dir' are valid."
                     (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
 
+(defcustom ein:connect-aotoexec-lighter nil
+  "String appended to the lighter of `ein:connect-mode' (`ein:c')
+when auto-execution mode is on.  When `nil', use the same string
+as `ein:cell-autoexec-prompt'."
+  :type '(choice (string :tag "String appended to ein:c" "@")
+                 (const :tag "Use `ein:cell-autoexec-prompt'." nil))
+  :group 'ein)
+
 (defun ein:connect-run-command-get ()
   (ein:choose-setting 'ein:connect-run-command
                       (ein:$notebook-url-or-port (ein:connect-get-notebook))))
@@ -94,7 +102,12 @@ Types same as `ein:notebook-console-security-dir' are valid."
 
 (defclass ein:$connect ()
   ((notebook :initarg :notebook :type ein:$notebook)
-   (buffer :initarg :buffer :type buffer)))
+   (buffer :initarg :buffer :type buffer)
+   (autoexec :initarg :autoexec :initform nil :type boolean
+             :document "Auto-execution mode flag.
+
+See also the document of the `autoexec' slot of `ein:codecell'
+class.")))
 
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
@@ -230,6 +243,38 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
 
 
+;;; Auto-execution
+
+(defun ein:connect-assert-connected ()
+  (assert (ein:$connect-p ein:@connect) nil
+          "Current buffer (%s) is not connected to IPython notebook."
+          (buffer-name)))
+
+(defun ein:connect-execute-autoexec-cells ()
+  "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
+  (ein:connect-assert-connected)
+  (let ((notebook (ein:connect-get-notebook)))
+    (ein:notebook-with-buffer notebook
+      (ein:notebook-execute-autoexec-cells notebook))))
+
+(defun ein:connect-toggle-autoexec ()
+  "Toggle auto-execution mode of the current connected buffer.
+
+Note that you need to set cells to run in the connecting buffer
+or no cell will be executed.
+Use the `ein:notebook-turn-on-autoexec' command in notebook to
+change the cells to run."
+  (interactive)
+  (ein:connect-assert-connected)
+  (oset ein:@connect :autoexec (not (oref ein:@connect :autoexec)))
+  (let ((autoexec-p (oref ein:@connect :autoexec)))
+    (if autoexec-p
+        (add-hook 'after-save-hook 'ein:connect-execute-autoexec-cells nil t)
+      (remove-hook 'after-save-hook 'ein:connect-execute-autoexec-cells t))
+    (ein:log 'info "Auto-execution mode is %s."
+             (if autoexec-p "enabled" "disabled"))))
+
+
 ;;; ein:connect-mode
 
 (defvar ein:connect-mode-map (make-sparse-keymap))
@@ -241,17 +286,24 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
+  (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   map)
 
+(defun ein:connect-mode-get-lighter ()
+  (if (oref ein:@connect :autoexec)
+      (format " ein:c%s" (or ein:connect-aotoexec-lighter
+                             ein:cell-autoexec-prompt))
+    " ein:c"))
+
 (define-minor-mode ein:connect-mode
   "Minor mode for communicating with IPython notebook.
 
 \\{ein:connect-mode-map}"
-  :lighter " ein:c"
+  :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
   :group 'ein)
 

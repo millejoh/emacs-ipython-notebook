@@ -123,6 +123,12 @@ To view full output, use `ein:notebook-show-in-shared-output'."
                  (const :tag "Show all traceback" nil))
   :group 'ein)
 
+(defcustom ein:cell-autoexec-prompt "⚡"
+  "String shown in the cell prompt when the auto-execution flag
+is on.  See also `ein:connect-aotoexec-lighter'."
+  :type 'string
+  :group 'ein)
+
 
 
 ;;; EIEIO related utils
@@ -174,7 +180,13 @@ to `t' when executing cell.  See `ein:notebook-execute-cell'.
 In the implantation of IPython web client it is passed around via
 argument, but since it is difficult to pass argument to EWOC
 pretty printer, `ein:codecell' instance holds this setting in a
-slot.")))
+slot.")
+   (autoexec :initarg :autoexec :initform nil :type boolean
+             :documentation "Auto-execution flag.
+
+This cell is executed when the connected buffer is saved,
+provided that (1) this flag is `t' and (2) corresponding
+auto-execution mode flag in the connected buffer is `t'.")))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
@@ -416,7 +428,9 @@ A specific node can be specified using optional ARGS."
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))
+   (concat
+    (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))
+    (when (oref cell :autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
@@ -575,12 +589,34 @@ If the input area of the CELL does not exist, return `nil'"
   "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (ein:cell-set-collapsed cell (not (oref cell :collapsed))))
 
-(defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
-  (oset cell :input-prompt-number number)
+(defmethod ein:cell-invalidate-prompt ((cell ein:codecell))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))           ; disable undo recording
     (ewoc-invalidate (oref cell :ewoc)
                      (ein:cell-element-get cell :prompt))))
+
+(defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
+  (oset cell :input-prompt-number number)
+  (ein:cell-invalidate-prompt cell))
+
+(defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
+  "Set auto-execution flag of CELL to BOOL and invalidate the
+prompt EWOC node."
+  (oset cell :autoexec bool)
+  (ein:cell-invalidate-prompt cell))
+
+(defmethod ein:cell-autoexec-p ((cell ein:basecell))
+  "Auto-execution flag set to CELL.
+Return `nil' always for non-code cells."
+  nil)
+
+(defmethod ein:cell-autoexec-p ((cell ein:codecell))
+  (oref cell :autoexec))
+
+(defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
+  "Toggle auto-execution flag of CELL to BOOL and invalidate the
+prompt EWOC node."
+  (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
 (declare-function pos-tip-show "pos-tip")
 (declare-function popup-tip "popup")

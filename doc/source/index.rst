@@ -304,6 +304,7 @@ Notebook
 .. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-max-num-outputs
+.. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
 
@@ -313,6 +314,7 @@ Connect
 .. el:variable:: ein:connect-run-command
 .. el:variable:: ein:connect-save-before-run
 .. el:variable:: ein:propagate-connect
+.. el:variable:: ein:connect-aotoexec-lighter
 
 MuMaMo
 ^^^^^^
@@ -477,6 +479,9 @@ v0.1.1
 * Add Imenu support.
 * Better heading cell faces.
 * Add :el:symbol:`ein:iexec-mode`
+* Add auto-execution mode
+  (see :el:symbol:`ein:connect-toggle-autoexec` and
+  :el:symbol:`ein:notebook-turn-on-autoexec`).
 
 
 v0.1
