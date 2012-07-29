@@ -307,6 +307,7 @@ Notebook
 .. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
+.. el:variable:: ein:complete-on-dot
 
 Connect
 ^^^^^^^
@@ -482,6 +483,8 @@ v0.1.1
 * Add auto-execution mode
   (see :el:symbol:`ein:connect-toggle-autoexec` and
   :el:symbol:`ein:notebook-turn-on-autoexec`).
+* Start completion when "." is inserted.
+  Use :el:symbol:`ein:complete-on-dot` to disable this feature.
 
 
 v0.1
