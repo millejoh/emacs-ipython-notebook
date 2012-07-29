@@ -1,4 +1,4 @@
-;;; ein-autoexec.el --- Automatic cell execution
+;;; ein-iexec.el --- Instant execution mode for notebook
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -6,18 +6,18 @@
 
 ;; This file is NOT part of GNU Emacs.
 
-;; ein-autoexec.el is free software: you can redistribute it and/or modify
+;; ein-iexec.el is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; ein-autoexec.el is distributed in the hope that it will be useful,
+;; ein-iexec.el is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with ein-autoexec.el.  If not, see <http://www.gnu.org/licenses/>.
+;; along with ein-iexec.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -27,24 +27,24 @@
 
 (require 'ein-notebook)
 
-(defcustom ein:autoexec-delay 0.3
+(defcustom ein:iexec-delay 0.3
   "Delay before executing cell after change in second."
   :type 'number
   :group 'ein)
 
-(defvar ein:autoexec-timer nil)
+(defvar ein:iexec-timer nil)
 
-(defun ein:autoexec-execute-cell (cell)
-  "Call `ein:notebook-execute-cell' after `ein:autoexec-delay' second.
+(defun ein:iexec-execute-cell (cell)
+  "Call `ein:notebook-execute-cell' after `ein:iexec-delay' second.
 If the previous execution timer is not fired yet, cancel the timer."
-  (when ein:autoexec-timer
-    (cancel-timer ein:autoexec-timer))
-  (setq ein:autoexec-timer
-        (run-with-idle-timer ein:autoexec-delay nil
+  (when ein:iexec-timer
+    (cancel-timer ein:iexec-timer))
+  (setq ein:iexec-timer
+        (run-with-idle-timer ein:iexec-delay nil
                              #'ein:notebook-execute-cell
                              ein:notebook cell)))
 
-(defun ein:autoexec-should-execute-p (cell beg end)
+(defun ein:iexec-should-execute-p (cell beg end)
   "Return non-`nil' if CELL should be executed by the change within
 BEG and END."
   (and (ein:codecell-p cell)
@@ -52,27 +52,27 @@ BEG and END."
        (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
        (ein:aif (ein:cell-input-pos-max cell) (>= it end))))
 
-(defun ein:autoexec-after-change (beg end -ignore-len-)
+(defun ein:iexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."
   (let ((cell (ein:notebook-get-current-cell beg)))
-    (when (ein:autoexec-should-execute-p cell beg end)
-      (ein:autoexec-execute-cell cell))))
+    (when (ein:iexec-should-execute-p cell beg end)
+      (ein:iexec-execute-cell cell))))
 
-(define-minor-mode ein:autoexec-mode
-  "Automatic cell execution minor mode.
+(define-minor-mode ein:iexec-mode
+  "Instant cell execution minor mode.
 Code cell at point will be automatically executed after any
 change in its input area."
   :lighter " ein:au"
   :group 'ein
-  (if ein:autoexec-mode
-      (add-hook 'after-change-functions 'ein:autoexec-after-change nil t)
-    (remove-hook 'after-change-functions 'ein:autoexec-after-change t)))
+  (if ein:iexec-mode
+      (add-hook 'after-change-functions 'ein:iexec-after-change nil t)
+    (remove-hook 'after-change-functions 'ein:iexec-after-change t)))
 
-;; To avoid MuMaMo to discard `ein:autoexec-after-change', make it
+;; To avoid MuMaMo to discard `ein:iexec-after-change', make it
 ;; permanent local.
-(put 'ein:autoexec-after-change 'permanent-local-hook t)
-(put 'ein:autoexec-mode 'permanent-local t)
+(put 'ein:iexec-after-change 'permanent-local-hook t)
+(put 'ein:iexec-mode 'permanent-local t)
 
-(provide 'ein-autoexec)
+(provide 'ein-iexec)
 
-;;; ein-autoexec.el ends here
+;;; ein-iexec.el ends here
