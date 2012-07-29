@@ -62,7 +62,7 @@ BEG and END."
   "Instant cell execution minor mode.
 Code cell at point will be automatically executed after any
 change in its input area."
-  :lighter " ein:au"
+  :lighter " ein:i"
   :group 'ein
   (if ein:iexec-mode
       (add-hook 'after-change-functions 'ein:iexec-after-change nil t)
