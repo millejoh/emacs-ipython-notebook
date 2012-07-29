@@ -140,7 +140,8 @@ notebook.  For global setting and more information, see
 (defcustom ein:complete-on-dot t
   "Start completion when inserting a dot.  Note that
 `ein:use-auto-complete' (or `ein:use-auto-complete-superpack')
-must be `t' to enable this option."
+must be `t' to enable this option.  This variable has effect on
+notebook buffers and connected buffers."
   :type 'boolean
   :group 'ein)
 
