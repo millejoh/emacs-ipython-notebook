@@ -78,6 +78,13 @@ Types same as `ein:notebook-console-security-dir' are valid."
                     (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
 
+(defcustom ein:connect-aotoexec-lighter nil
+  "String appended to the lighter of `ein:connect-mode' (`ein:c')
+when auto-execution mode is on."
+  :type '(choice (string :tag "String appended to ein:c" "@")
+                 (const :tag "Use `ein:cell-autoexec-prompt'." nil))
+  :group 'ein)
+
 (defun ein:connect-run-command-get ()
   (ein:choose-setting 'ein:connect-run-command
                       (ein:$notebook-url-or-port (ein:connect-get-notebook))))
@@ -274,11 +281,17 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   map)
 
+(defun ein:connect-mode-get-lighter ()
+  (if (oref ein:@connect :autoexec)
+      (format " ein:c%s" (or ein:connect-aotoexec-lighter
+                             ein:cell-autoexec-prompt))
+    " ein:c"))
+
 (define-minor-mode ein:connect-mode
   "Minor mode for communicating with IPython notebook.
 
 \\{ein:connect-mode-map}"
-  :lighter " ein:c"
+  :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
   :group 'ein)
 
