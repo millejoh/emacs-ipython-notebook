@@ -595,7 +595,8 @@ If the input area of the CELL does not exist, return `nil'"
   (ein:cell-invalidate-prompt cell))
 
 (defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
-  (oset cell :autoexec bool))
+  (oset cell :autoexec bool)
+  (ein:cell-invalidate-prompt cell))
 
 (defmethod ein:cell-autoexec-p ((cell ein:basecell))
   nil)
@@ -604,8 +605,7 @@ If the input area of the CELL does not exist, return `nil'"
   (oref cell :autoexec))
 
 (defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
-  (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell)))
-  (ein:cell-invalidate-prompt cell))
+  (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
 (declare-function pos-tip-show "pos-tip")
 (declare-function popup-tip "popup")

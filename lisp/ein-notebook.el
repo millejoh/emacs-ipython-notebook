@@ -231,7 +231,8 @@ is `nil', BODY is executed with any cell types."
        (ein:log 'warn "Not in cell"))))
 
 (defmacro ein:notebook-with-cells-in-region (&rest body)
-  "Similar to `ein:notebook-with-cell' but sets a list of cells to `cells'."
+  "Similar to `ein:notebook-with-cell' but sets a list of cells to `cells'.
+Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
   (declare (indent 0))
   `(let* ((cells (ein:notebook-get-cells-in-region-or-at-point)))
      (if cells
@@ -995,6 +996,22 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:cell-toggle-autoexec cell)))
 
+(defun ein:notebook-turn-on-autoexec (cells &optional off)
+  "Turn on auto-execution flag of the cells in region or cell at point.
+When the prefix argument is given, turn off the flag instead."
+  (interactive
+   (list (let ((cells
+                (ein:filter #'ein:codecell-p
+                            (ein:notebook-get-cells-in-region-or-at-point))))
+           (if cells
+               cells
+             (error "Cell note found.")))
+         current-prefix-arg))
+  (mapc (lambda (c) (ein:cell-set-autoexec c (not off))) cells)
+  (ein:log 'info "Turn %s auto-execution flag of %s cells."
+           (if off "off" "on")
+           (length cells)))
+
 (defun ein:notebook-execute-autoexec-cells (notebook)
   (interactive (if ein:notebook
                    (list ein:notebook)
@@ -1247,6 +1264,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-c" 'ein:notebook-execute-current-cell)
   (define-key map (kbd "M-RET")
     'ein:notebook-execute-current-cell-and-goto-next)
+  (define-key map (kbd "C-c C-'") 'ein:notebook-turn-on-autoexec)
   (define-key map "\C-c\C-e" 'ein:notebook-toggle-output-command)
   (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
   (define-key map "\C-c\C-l" 'ein:notebook-clear-output-command)
