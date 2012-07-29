@@ -597,6 +597,9 @@ If the input area of the CELL does not exist, return `nil'"
 (defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
   (oset cell :autoexec bool))
 
+(defmethod ein:cell-autoexec-p ((cell ein:basecell))
+  nil)
+
 (defmethod ein:cell-autoexec-p ((cell ein:codecell))
   (oref cell :autoexec))
 

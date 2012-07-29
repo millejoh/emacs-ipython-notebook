@@ -988,6 +988,15 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:notebook-with-cell #'ein:codecell-p
     (ein:cell-toggle-autoexec cell)))
 
+(defun ein:notebook-execute-autoexec-cells (notebook)
+  (interactive (if ein:notebook
+                   (list ein:notebook)
+                 (error "Not in notebook buffer!")))
+  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
+    (mapc #'ein:cell-execute
+          (ein:filter #'ein:cell-autoexec-p
+                      (ein:notebook-get-cells notebook)))))
+
 ;; misc kernel related
 
 (defun ein:notebook-eval-string (code)
