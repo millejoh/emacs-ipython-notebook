@@ -241,6 +241,14 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (interactive)
   (ein:notebook-complete-at-point (ein:connect-get-notebook)))
 
+(defun ein:connect-complete-dot ()
+  "Insert dot and request completion."
+  (interactive)
+  (insert ".")
+  (let ((notebook (ein:connect-get-notebook)))
+    (when (and notebook (ein:kernel-live-p (ein:$notebook-kernel notebook)))
+      (ein:notebook-complete-at-point notebook))))
+
 (defun ein:connect-pop-to-notebook ()
   (interactive)
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
@@ -308,7 +316,8 @@ change the cells to run."
 \\{ein:connect-mode-map}"
   :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
-  :group 'ein)
+  :group 'ein
+  (ein:complete-on-dot-install ein:connect-mode-map 'ein:connect-complete-dot))
 
 
 (provide 'ein-connect)
