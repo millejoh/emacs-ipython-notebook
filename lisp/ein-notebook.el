@@ -998,7 +998,11 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook-turn-on-autoexec (cells &optional off)
   "Turn on auto-execution flag of the cells in region or cell at point.
-When the prefix argument is given, turn off the flag instead."
+When the prefix argument is given, turn off the flag instead.
+
+To use autoexec feature, you need to turn on auto-execution mode
+in connected buffers, using the `ein:connect-toggle-autoexec'
+command."
   (interactive
    (list (let ((cells
                 (ein:filter #'ein:codecell-p
@@ -1013,6 +1017,7 @@ When the prefix argument is given, turn off the flag instead."
            (length cells)))
 
 (defun ein:notebook-execute-autoexec-cells (notebook)
+  "Execute cells of which auto-execution flag is on."
   (interactive (if ein:notebook
                    (list ein:notebook)
                  (error "Not in notebook buffer!")))

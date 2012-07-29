@@ -124,8 +124,8 @@ To view full output, use `ein:notebook-show-in-shared-output'."
   :group 'ein)
 
 (defcustom ein:cell-autoexec-prompt "⚡"
-  "Prompt shown when the cell is executed automatically when
-autoexec-enabled connected buffers are saved."
+  "String shown in the cell prompt when the auto-execution flag
+is on.  See also `ein:connect-aotoexec-lighter'."
   :type 'string
   :group 'ein)
 
@@ -181,7 +181,12 @@ In the implantation of IPython web client it is passed around via
 argument, but since it is difficult to pass argument to EWOC
 pretty printer, `ein:codecell' instance holds this setting in a
 slot.")
-   (autoexec :initarg :autoexec :initform nil :type boolean)))
+   (autoexec :initarg :autoexec :initform nil :type boolean
+             :documentation "Auto-execution flag.
+
+This cell is executed when the connected buffer is saved,
+provided that (1) this flag is `t' and (2) corresponding
+auto-execution mode flag in the connected buffer is `t'.")))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
@@ -595,16 +600,22 @@ If the input area of the CELL does not exist, return `nil'"
   (ein:cell-invalidate-prompt cell))
 
 (defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
+  "Set auto-execution flag of CELL to BOOL and invalidate the
+prompt EWOC node."
   (oset cell :autoexec bool)
   (ein:cell-invalidate-prompt cell))
 
 (defmethod ein:cell-autoexec-p ((cell ein:basecell))
+  "Auto-execution flag set to CELL.
+Return `nil' always for non-code cells."
   nil)
 
 (defmethod ein:cell-autoexec-p ((cell ein:codecell))
   (oref cell :autoexec))
 
 (defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
+  "Toggle auto-execution flag of CELL to BOOL and invalidate the
+prompt EWOC node."
   (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
 (declare-function pos-tip-show "pos-tip")

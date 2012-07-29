@@ -80,7 +80,8 @@ Types same as `ein:notebook-console-security-dir' are valid."
 
 (defcustom ein:connect-aotoexec-lighter nil
   "String appended to the lighter of `ein:connect-mode' (`ein:c')
-when auto-execution mode is on."
+when auto-execution mode is on.  When `nil', use the same string
+as `ein:cell-autoexec-prompt'."
   :type '(choice (string :tag "String appended to ein:c" "@")
                  (const :tag "Use `ein:cell-autoexec-prompt'." nil))
   :group 'ein)
@@ -102,7 +103,11 @@ when auto-execution mode is on."
 (defclass ein:$connect ()
   ((notebook :initarg :notebook :type ein:$notebook)
    (buffer :initarg :buffer :type buffer)
-   (autoexec :initarg :autoexec :initform nil :type boolean)))
+   (autoexec :initarg :autoexec :initform nil :type boolean
+             :document "Auto-execution mode flag.
+
+See also the document of the `autoexec' slot of `ein:codecell'
+class.")))
 
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
@@ -242,7 +247,8 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:connect-assert-connected ()
   (assert (ein:$connect-p ein:@connect) nil
-          "Current buffer is not connected to IPython notebook."))
+          "Current buffer (%s) is not connected to IPython notebook."
+          (buffer-name)))
 
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
@@ -252,6 +258,12 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
       (ein:notebook-execute-autoexec-cells notebook))))
 
 (defun ein:connect-toggle-autoexec ()
+  "Toggle auto-execution mode of the current connected buffer.
+
+Note that you need to set cells to run in the connecting buffer
+or no cell will be executed.
+Use the `ein:notebook-turn-on-autoexec' command in notebook to
+change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
   (oset ein:@connect :autoexec (not (oref ein:@connect :autoexec)))
