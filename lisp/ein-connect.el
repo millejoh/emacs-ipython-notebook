@@ -61,7 +61,7 @@ of OPTION:
       (t nil))))
 
 
-;;; Variable/class
+;;; Configuration
 
 (defcustom ein:connect-run-command "%run -n"
   "``%run`` magic command used for `ein:connect-run-buffer'.
@@ -78,14 +78,6 @@ Types same as `ein:notebook-console-security-dir' are valid."
                     (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
 
-(defcustom ein:connect-aotoexec-lighter nil
-  "String appended to the lighter of `ein:connect-mode' (`ein:c')
-when auto-execution mode is on.  When `nil', use the same string
-as `ein:cell-autoexec-prompt'."
-  :type '(choice (string :tag "String appended to ein:c" "@")
-                 (const :tag "Use `ein:cell-autoexec-prompt'." nil))
-  :group 'ein)
-
 (defun ein:connect-run-command-get ()
   (ein:choose-setting 'ein:connect-run-command
                       (ein:$notebook-url-or-port (ein:connect-get-notebook))))
@@ -96,6 +88,17 @@ as `ein:cell-autoexec-prompt'."
                  (const :tag "Always do not save buffer" no)
                  (const :tag "Ask" ask))
   :group 'ein)
+
+(defcustom ein:connect-aotoexec-lighter nil
+  "String appended to the lighter of `ein:connect-mode' (`ein:c')
+when auto-execution mode is on.  When `nil', use the same string
+as `ein:cell-autoexec-prompt'."
+  :type '(choice (string :tag "String appended to ein:c" "@")
+                 (const :tag "Use `ein:cell-autoexec-prompt'." nil))
+  :group 'ein)
+
+
+;;; Class
 
 (ein:deflocal ein:@connect nil
   "Buffer local variable to store an instance of `ein:$connect'")
