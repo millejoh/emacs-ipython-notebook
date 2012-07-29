@@ -94,7 +94,8 @@ Types same as `ein:notebook-console-security-dir' are valid."
 
 (defclass ein:$connect ()
   ((notebook :initarg :notebook :type ein:$notebook)
-   (buffer :initarg :buffer :type buffer)))
+   (buffer :initarg :buffer :type buffer)
+   (autoexec :initarg :autoexec :initform nil :type boolean)))
 
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
@@ -230,6 +231,31 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
 
 
+;;; Auto-execution
+
+(defun ein:connect-assert-connected ()
+  (assert (ein:$connect-p ein:@connect) nil
+          "Current buffer is not connected to IPython notebook."))
+
+(defun ein:connect-execute-autoexec-cells ()
+  "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
+  (ein:connect-assert-connected)
+  (let ((notebook (ein:connect-get-notebook)))
+    (ein:notebook-with-buffer notebook
+      (ein:notebook-execute-autoexec-cells notebook))))
+
+(defun ein:connect-toggle-autoexec ()
+  (interactive)
+  (ein:connect-assert-connected)
+  (oset ein:@connect :autoexec (not (oref ein:@connect :autoexec)))
+  (let ((autoexec-p (oref ein:@connect :autoexec)))
+    (if autoexec-p
+        (add-hook 'after-save-hook 'ein:connect-execute-autoexec-cells nil t)
+      (remove-hook 'after-save-hook 'ein:connect-execute-autoexec-cells t))
+    (ein:log 'info "Auto-execution mode is %s."
+             (if autoexec-p "enabled" "disabled"))))
+
+
 ;;; ein:connect-mode
 
 (defvar ein:connect-mode-map (make-sparse-keymap))
@@ -241,6 +267,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
+  (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)

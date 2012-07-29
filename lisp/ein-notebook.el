@@ -238,6 +238,13 @@ is `nil', BODY is executed with any cell types."
          (progn ,@body)
        (ein:log 'warn "Not in cell"))))
 
+(defmacro ein:notebook-with-buffer (notebook &rest body)
+  "Execute BODY with current buffer setting at the one of NOTEBOOK."
+  ;; FIXME: MANY functions can use this macro.  Refactor them!
+  (declare (indent 1))
+  `(with-current-buffer (ein:notebook-buffer ,notebook)
+     ,@body))
+
 (defun ein:notebook-new (url-or-port notebook-id &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
