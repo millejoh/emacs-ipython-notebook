@@ -25,7 +25,8 @@
 
 ;;; Code:
 
-(require 'rst)
+(declare-function rst-shift-region "rst")
+
 (require 'ein-notebook)
 (require 'ein-subpackages)
 
