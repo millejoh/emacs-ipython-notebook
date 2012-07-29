@@ -980,6 +980,14 @@ This is equivalent to do ``C-c`` in the console program."
   (when (y-or-n-p "Really kill kernel?")
     (ein:kernel-kill (ein:$notebook-kernel ein:notebook))))
 
+;; autoexec
+
+(defun ein:notebook-toggle-autoexec ()
+  "Toggle auto-execution flag of the cell at point."
+  (interactive)
+  (ein:notebook-with-cell #'ein:codecell-p
+    (ein:cell-toggle-autoexec cell)))
+
 ;; misc kernel related
 
 (defun ein:notebook-eval-string (code)
