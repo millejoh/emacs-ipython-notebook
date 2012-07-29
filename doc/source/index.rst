@@ -220,7 +220,7 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:notebook-delete-cell-command
 .. el:function:: ein:notebook-rename-to-scratch-command
 .. el:function:: ein:notebook-kill-all-buffers
-.. el:function:: ein:autoexec-mode
+.. el:function:: ein:iexec-mode
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -305,7 +305,7 @@ Notebook
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-max-num-outputs
 .. el:variable:: ein:scratch-notebook-name-template
-.. el:variable:: ein:autoexec-delay
+.. el:variable:: ein:iexec-delay
 
 Connect
 ^^^^^^^
@@ -476,7 +476,7 @@ v0.1.1
 * Add :el:symbol:`ein:pytools-pandas-to-ses`.
 * Add Imenu support.
 * Better heading cell faces.
-* Add :el:symbol:`ein:autoexec-mode`
+* Add :el:symbol:`ein:iexec-mode`
 
 
 v0.1
