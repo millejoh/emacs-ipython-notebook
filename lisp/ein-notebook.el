@@ -137,6 +137,21 @@ notebook.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
+(defcustom ein:complete-on-dot t
+  "Start completion when inserting a dot.  Note that
+`ein:use-auto-complete' (or `ein:use-auto-complete-superpack')
+must be `t' to enable this option.  This variable has effect on
+notebook buffers and connected buffers."
+  :type 'boolean
+  :group 'ein)
+
+(defun ein:complete-on-dot-install (map func)
+  (if (and ein:complete-on-dot
+           (or ein:use-auto-complete
+               ein:use-auto-complete-superpack))
+      (define-key map "." func)
+    (define-key map "." nil)))
+
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
@@ -977,6 +992,15 @@ pager buffer.  You can explicitly specify the object by selecting it."
     (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
       (ein:notebook-complete-at-point ein:notebook))))
 
+(defun ein:notebook-complete-dot ()
+  "Insert dot and request completion."
+  (interactive)
+  (insert ".")
+  (when (and ein:notebook
+             (ein:codecell-p (ein:notebook-get-current-cell))
+             (ein:kernel-live-p (ein:$notebook-kernel ein:notebook)))
+    (ein:notebook-complete-at-point ein:notebook)))
+
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
 This is equivalent to do ``C-c`` in the console program."
@@ -1260,9 +1284,6 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
         if (functionp mode)
         return mode))
 
-(defun ein:notebook-mode ()
-  (funcall (ein:notebook-choose-mode)))
-
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
@@ -1309,6 +1330,11 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   map)
 
+(defun ein:notebook-mode ()
+  (funcall (ein:notebook-choose-mode))
+  (ein:complete-on-dot-install
+   ein:notebook-mode-map 'ein:notebook-complete-dot))
+
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
@@ -1320,12 +1346,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 
 (add-hook 'ein:notebook-python-mode-hook 'ein:notebook-imenu-setup)
 
-;; "Sync" `ein:notebook-plain-mode-map' with `ein:notebook-mode-map'.
-;; This way, `ein:notebook-plain-mode-map' automatically changes when
-;; `ein:notebook-mode-map' is changed.
-(setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
-
-(setcdr ein:notebook-python-mode-map (cdr ein:notebook-mode-map))
+(set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
+(set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
 
 (defun ein:notebook-open-in-browser (&optional print)
   "Open current notebook in web browser.

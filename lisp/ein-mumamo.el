@@ -179,8 +179,7 @@ This is the same workaround as `ein:ac-setup-maybe'."
     ein:mumamo-chunk-headingcell
     )))
 
-;; "Sync" `ein:notebook-mumamo-mode-map' with `ein:notebook-mode-map'.
-(setcdr ein:notebook-mumamo-mode-map (cdr ein:notebook-mode-map))
+(set-keymap-parent ein:notebook-mumamo-mode-map ein:notebook-mode-map)
 
 (add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 (add-hook 'ein:notebook-mumamo-mode-hook
