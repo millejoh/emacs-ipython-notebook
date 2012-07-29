@@ -1345,12 +1345,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 
 (add-hook 'ein:notebook-python-mode-hook 'ein:notebook-imenu-setup)
 
-;; "Sync" `ein:notebook-plain-mode-map' with `ein:notebook-mode-map'.
-;; This way, `ein:notebook-plain-mode-map' automatically changes when
-;; `ein:notebook-mode-map' is changed.
-(setcdr ein:notebook-plain-mode-map (cdr ein:notebook-mode-map))
-
-(setcdr ein:notebook-python-mode-map (cdr ein:notebook-mode-map))
+(set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
+(set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
 
 (defun ein:notebook-open-in-browser (&optional print)
   "Open current notebook in web browser.
