@@ -699,12 +699,12 @@ argument \(C-u)."
       (ein:notebook-empty-undo-maybe)
       (ein:cell-goto cell))))
 
-(defun ein:notebook-merge-cell-command (&optional prev)
-  "Merge next cell into current cell.
-If prefix is given, merge current cell into previous cell."
+(defun ein:notebook-merge-cell-command (&optional next)
+  "Merge previous cell into current cell.
+If prefix is given, merge current cell into next cell."
   (interactive "P")
   (ein:notebook-with-cell nil
-    (when prev
+    (unless next
       (setq cell (ein:cell-prev cell))
       (unless cell (error "No previous cell"))
       (ein:cell-goto cell))

@@ -309,13 +309,13 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (eintest:notebook-split-cell-at-point
    "some\ntext" "\ntext" "some" "\ntext" t))
 
-(ert-deftest ein:notebook-merge-cell-command-simple ()
+(ert-deftest ein:notebook-merge-cell-command-next ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (insert "Cell 1")
     (ein:notebook-insert-cell-above-command)
     (insert "Cell 0")
-    (ein:notebook-merge-cell-command)
+    (ein:notebook-merge-cell-command t)
     (ein:cell-goto (ein:notebook-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
@@ -325,7 +325,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (insert "Cell 0")
     (ein:notebook-insert-cell-below-command)
     (insert "Cell 1")
-    (ein:notebook-merge-cell-command t)
+    (ein:notebook-merge-cell-command)
     (ein:cell-goto (ein:notebook-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
@@ -501,7 +501,6 @@ second line
       (insert line-2)
       (undo-boundary)
 
-      (ein:notebook-goto-prev-input-command)
       (ein:notebook-merge-cell-command)
       (undo-boundary)
 
