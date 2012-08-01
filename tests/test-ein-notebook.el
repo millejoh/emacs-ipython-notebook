@@ -265,6 +265,14 @@ some text
 
 (defun eintest:notebook-split-cell-at-point
   (insert-text search-text head-text tail-text &optional no-trim)
+  "Test `ein:notebook-split-cell-at-point' by the following procedure.
+
+1. Insert, INSERT-TEXT.
+2. Split cell just before SEARCH-TEXT.
+3. Check that head cell has HEAD-TEXT.
+4. Check that tail cell has TAIL-TEXT.
+
+NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (insert insert-text)
