@@ -709,11 +709,12 @@ If prefix is given, merge current cell into previous cell."
       (unless cell (error "No previous cell"))
       (ein:cell-goto cell))
     (let* ((next-cell (ein:cell-next cell))
-           (tail (ein:cell-get-text next-cell)))
-      (ein:notebook-delete-cell ein:notebook next-cell)
+           (head (ein:cell-get-text cell)))
+      (ein:notebook-delete-cell ein:notebook cell)
       (save-excursion
-        (goto-char (1- (ein:cell-location cell :input t)))
-        (insert "\n" tail)))))
+        (goto-char (ein:cell-input-pos-min next-cell))
+        (insert head "\n"))
+      (ein:cell-goto next-cell))))
 
 
 ;;; Cell selection.

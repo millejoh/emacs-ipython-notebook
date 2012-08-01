@@ -512,7 +512,7 @@ second line
         (undo)
         (should (equal (buffer-string) "
 In [ ]:
-first line
+second line
 
 In [ ]:
 
