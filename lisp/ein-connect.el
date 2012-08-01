@@ -121,6 +121,16 @@ class.")))
 
 ;;; Methods
 
+(defun ein:connect-to-notebook-command (&optional not-yet-opened)
+  "Connect to notebook.  When the prefix argument is given,
+you can choose any notebook on your server including the ones
+not yet opened.  Otherwise, already chose from already opened
+notebooks."
+  (interactive "P")
+  (call-interactively (if not-yet-opened
+                          #'ein:connect-to-notebook
+                        #'ein:connect-to-notebook-buffer)))
+
 (defun ein:connect-to-notebook (nbpath)
   "Connect any buffer to notebook and its kernel."
   (interactive
