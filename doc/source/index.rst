@@ -52,7 +52,7 @@ Links:
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
 
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
-.. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
+.. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
 .. contents::
 
@@ -236,7 +236,7 @@ are available.
 
 Other useful commands:
 
-.. el:function:: ein:connect-to-notebook
+.. el:function:: ein:connect-to-notebook-command
 .. el:function:: ein:connect-eval-buffer
 .. el:function:: ein:connect-run-buffer
 
@@ -468,8 +468,8 @@ v0.1.1
 
 * Support `auto-complete.el`_\ 's popup/quick help.
 * Add :el:symbol:`ein:notebooklist-first-open-hook`.
-* :el:symbol:`ein:connect-to-notebook` is improved; it can connect to
-  the notebook which is not opened yet.
+* :el:symbol:`ein:connect-to-notebook-command` is improved;
+  it can connect to the notebook which is not opened yet.
 * Plain text type output is favored over LaTeX type output
   (previous setting was opposite).
 * Add :el:symbol:`ein:notebook-rename-to-scratch-command`.
