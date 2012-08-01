@@ -507,7 +507,7 @@ second line
 
       (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
                      (concat line-1 "\n" line-2)))
-      (if (eq ein:notebook-enable-undo 'no)
+      (if (not (eq ein:notebook-enable-undo 'full))
           (should-error (undo))
         (undo)
         (should (equal (buffer-string) "

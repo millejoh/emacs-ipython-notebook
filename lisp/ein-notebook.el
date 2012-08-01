@@ -714,6 +714,7 @@ If prefix is given, merge current cell into previous cell."
       (save-excursion
         (goto-char (ein:cell-input-pos-min next-cell))
         (insert head "\n"))
+      (ein:notebook-empty-undo-maybe)
       (ein:cell-goto next-cell))))
 
 
