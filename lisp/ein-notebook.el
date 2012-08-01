@@ -682,38 +682,41 @@ argument \(C-u)."
   (interactive "P")
   (ein:notebook-with-cell nil
     ;; FIXME: should I inhibit undo?
-    (let* ((end (ein:cell-input-pos-max cell))
-           (pos (point))
-           (tail (buffer-substring pos end))
-           (new (ein:notebook-insert-cell-below ein:notebook
+    (let* ((beg (set-marker (make-marker) (ein:cell-input-pos-min cell)))
+           (pos (point-marker))
+           (head (buffer-substring beg pos))
+           (new (ein:notebook-insert-cell-above ein:notebook
                                                 (oref cell :cell-type)
                                                 cell)))
-      (delete-region pos end)
+      (delete-region beg pos)
       (unless no-trim
-        (setq tail (ein:trim-left tail "\n"))
+        (setq head (ein:trim-right head "\n"))
         (save-excursion
           (goto-char pos)
-          (ignore-errors
-            (while t
-              (search-backward-regexp "\n\\=")
-              (delete-char 1)))))
-      (ein:cell-set-text new tail))))
+          (while (looking-at-p "\n")
+            (delete-char 1))))
+      (ein:cell-set-text new head)
+      (ein:notebook-empty-undo-maybe)
+      (ein:cell-goto cell))))
 
-(defun ein:notebook-merge-cell-command (&optional prev)
-  "Merge next cell into current cell.
-If prefix is given, merge current cell into previous cell."
+(defun ein:notebook-merge-cell-command (&optional next)
+  "Merge previous cell into current cell.
+If prefix is given, merge current cell into next cell."
   (interactive "P")
   (ein:notebook-with-cell nil
-    (when prev
+    (unless next
       (setq cell (ein:cell-prev cell))
       (unless cell (error "No previous cell"))
       (ein:cell-goto cell))
     (let* ((next-cell (ein:cell-next cell))
-           (tail (ein:cell-get-text next-cell)))
-      (ein:notebook-delete-cell ein:notebook next-cell)
+           (head (ein:cell-get-text cell)))
+      (assert next-cell nil "No cell to merge.")
+      (ein:notebook-delete-cell ein:notebook cell)
       (save-excursion
-        (goto-char (1- (ein:cell-location cell :input t)))
-        (insert "\n" tail)))))
+        (goto-char (ein:cell-input-pos-min next-cell))
+        (insert head "\n"))
+      (ein:notebook-empty-undo-maybe)
+      (ein:cell-goto next-cell))))
 
 
 ;;; Cell selection.

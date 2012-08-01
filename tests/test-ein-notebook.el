@@ -265,6 +265,14 @@ some text
 
 (defun eintest:notebook-split-cell-at-point
   (insert-text search-text head-text tail-text &optional no-trim)
+  "Test `ein:notebook-split-cell-at-point' by the following procedure.
+
+1. Insert, INSERT-TEXT.
+2. Split cell just before SEARCH-TEXT.
+3. Check that head cell has HEAD-TEXT.
+4. Check that tail cell has TAIL-TEXT.
+
+NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (insert insert-text)
@@ -301,13 +309,13 @@ some text
   (eintest:notebook-split-cell-at-point
    "some\ntext" "\ntext" "some" "\ntext" t))
 
-(ert-deftest ein:notebook-merge-cell-command-simple ()
+(ert-deftest ein:notebook-merge-cell-command-next ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (insert "Cell 1")
     (ein:notebook-insert-cell-above-command)
     (insert "Cell 0")
-    (ein:notebook-merge-cell-command)
+    (ein:notebook-merge-cell-command t)
     (ein:cell-goto (ein:notebook-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
@@ -317,7 +325,7 @@ some text
     (insert "Cell 0")
     (ein:notebook-insert-cell-below-command)
     (insert "Cell 1")
-    (ein:notebook-merge-cell-command t)
+    (ein:notebook-merge-cell-command)
     (ein:cell-goto (ein:notebook-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
@@ -456,6 +464,7 @@ In [ ]:
       (undo-boundary)
       (move-beginning-of-line 1)
       (ein:notebook-split-cell-at-point)
+      (undo-boundary)
       (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
                      line-2))
       (if (eq ein:notebook-enable-undo 'full)
@@ -467,7 +476,8 @@ In [ ]:
 
 
 In [ ]:
-
+first line
+second line
 
 "))))))
 
@@ -491,18 +501,17 @@ In [ ]:
       (insert line-2)
       (undo-boundary)
 
-      (ein:notebook-goto-prev-input-command)
       (ein:notebook-merge-cell-command)
       (undo-boundary)
 
       (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
                      (concat line-1 "\n" line-2)))
-      (if (eq ein:notebook-enable-undo 'no)
+      (if (not (eq ein:notebook-enable-undo 'full))
           (should-error (undo))
         (undo)
         (should (equal (buffer-string) "
 In [ ]:
-first line
+second line
 
 In [ ]:
 
