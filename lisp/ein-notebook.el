@@ -710,6 +710,7 @@ If prefix is given, merge current cell into next cell."
       (ein:cell-goto cell))
     (let* ((next-cell (ein:cell-next cell))
            (head (ein:cell-get-text cell)))
+      (assert next-cell nil "No cell to merge.")
       (ein:notebook-delete-cell ein:notebook cell)
       (save-excursion
         (goto-char (ein:cell-input-pos-min next-cell))
