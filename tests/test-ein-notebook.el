@@ -464,6 +464,7 @@ In [ ]:
       (undo-boundary)
       (move-beginning-of-line 1)
       (ein:notebook-split-cell-at-point)
+      (undo-boundary)
       (should (equal (ein:cell-get-text (ein:notebook-get-current-cell))
                      line-2))
       (if (eq ein:notebook-enable-undo 'full)
@@ -475,7 +476,8 @@ In [ ]:
 
 
 In [ ]:
-
+first line
+second line
 
 "))))))
 
