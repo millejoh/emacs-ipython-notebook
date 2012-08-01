@@ -35,6 +35,7 @@
 
 (eval-when-compile (require 'cl))
 (require 'ewoc)
+(eval-when-compile (require 'auto-complete nil t))
 
 (require 'ein-utils)
 (require 'ein-log)
@@ -147,6 +148,7 @@ notebook buffers and connected buffers."
 
 (defun ein:complete-on-dot-install (map func)
   (if (and ein:complete-on-dot
+           (featurep 'auto-complete)
            (or ein:use-auto-complete
                ein:use-auto-complete-superpack))
       (define-key map "." func)
@@ -997,6 +999,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
   (interactive)
   (insert ".")
   (when (and ein:notebook
+             (not (ac-cursor-on-diable-face-p))
              (ein:codecell-p (ein:notebook-get-current-cell))
              (ein:kernel-live-p (ein:$notebook-kernel ein:notebook)))
     (ein:notebook-complete-at-point ein:notebook)))

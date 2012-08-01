@@ -246,7 +246,9 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (interactive)
   (insert ".")
   (let ((notebook (ein:connect-get-notebook)))
-    (when (and notebook (ein:kernel-live-p (ein:$notebook-kernel notebook)))
+    (when (and notebook
+               (not (ac-cursor-on-diable-face-p))
+               (ein:kernel-live-p (ein:$notebook-kernel notebook)))
       (ein:notebook-complete-at-point notebook))))
 
 (defun ein:connect-pop-to-notebook ()
