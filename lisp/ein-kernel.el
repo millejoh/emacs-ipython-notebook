@@ -524,6 +524,10 @@ Used in `ein:cell-finish-tooltip', etc."
     help))
 
 (defun ein:kernel-request-stream (kernel code func &optional args)
+  "Run lisp callback FUNC with the output stream returned by Python CODE.
+
+The first argument to the lisp function FUNC is the stream output
+as a string and the rest of the argument is the optional ARGS."
   (ein:kernel-execute
    kernel
    code
