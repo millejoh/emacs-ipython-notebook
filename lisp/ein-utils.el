@@ -469,6 +469,11 @@ Usage::
     (setq ein:filename-translations
           `((8888
              . ,(ein:tramp-create-filename-translator \"MY-HOSTNAME\"))))
+    ;; Equivalently:
+    (setq ein:filename-translations
+          (lambda (url-or-port)
+            (when (equal url-or-port 8888)
+              (ein:tramp-create-filename-translator \"MY-HOSTNAME\"))))
 
 This setting assumes that the IPython server which can be
 connected using the port 8888 in localhost is actually running in
