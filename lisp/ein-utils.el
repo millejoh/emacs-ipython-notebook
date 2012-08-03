@@ -61,6 +61,41 @@ format string which can be passed to `format-time-string'."
   :type '(string :tag "Format string")
   :group 'ein)
 
+(defcustom ein:filename-translations nil
+  "Convert file paths between Emacs and Python process.
+
+This value can take these form:
+
+alist
+    Its key specifies URL-OR-PORT and value must be a list of two
+    functions: (TO-PYTHON FROM-PYTHON).  Key (URL-OR-PORT) can be
+    string (URL), integer (port), or `default' (symbol).  The
+    value of `default' is used when other key does not much.
+function
+    Called with an argument URL-OR-PORT (integer or string).
+    This function must return a list of two functions:
+    (TO-PYTHON FROM-PYTHON).
+
+Here, the functions TO-PYTHON and FROM-PYTHON are defined as:
+
+TO-PYTHON
+    A function which converts a file name (returned by
+    `buffer-file-name') to the one Python understands.
+FROM-PYTHON
+    A function which converts a file path returned by
+    Python process to the one Emacs understands."
+  ;; I've got the idea from `slime-filename-translations'.
+  :type '(choice
+          (alist :tag "Translations mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (list (function :tag "TO-PYTHON")
+                                   (function :tag "FROM-PYTHON")))
+          (function :tag "Translations getter"))
+  :group 'ein)
+
 
 ;;; Macros and core functions/variables
 
@@ -387,6 +422,22 @@ NOTE: This function creates new list."
                (length errors)
                (ein:join-str " " (mapcar #'file-name-nondirectory it))))
     (message "Compiled %s files" (length files))))
+
+
+;;; File name translation
+
+(defun ein:filename-translations-get (url-or-port)
+  (ein:choose-setting 'ein:filename-translations url-or-port))
+
+(defun ein:filename-to-python (filename url-or-port)
+  (ein:aif (car (ein:filename-translations-get url-or-port))
+      (funcall it filename)
+    filename))
+
+(defun ein:filename-from-python (filename url-or-port)
+  (ein:aif (cadr (ein:filename-translations-get url-or-port))
+      (funcall it filename)
+    filename))
 
 
 ;;; utils.js compatible
