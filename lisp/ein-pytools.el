@@ -109,9 +109,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     :output
     (cons
      (lambda (packed msg-type content)
-       (let ((object (nth 0 packed))
-             (other-window (nth 1 packed))
-             (notebook-buffer (nth 2 packed)))
+       (destructuring-bind (object other-window notebook-buffer)
+           packed
          (ein:case-equal msg-type
            (("stream")
             (ein:aif (plist-get content :data)
