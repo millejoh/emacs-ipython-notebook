@@ -83,7 +83,10 @@ TO-PYTHON
     `buffer-file-name') to the one Python understands.
 FROM-PYTHON
     A function which converts a file path returned by
-    Python process to the one Emacs understands."
+    Python process to the one Emacs understands.
+
+Use `ein:make-tramp-filename-translation' to easily generate the
+pair of TO-PYTHON and FROM-PYTHON."
   ;; I've got the idea from `slime-filename-translations'.
   :type '(choice
           (alist :tag "Translations mapping"
@@ -438,6 +441,23 @@ NOTE: This function creates new list."
   (ein:aif (cadr (ein:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
+
+(defun ein:make-tramp-filename-translation (prefix)
+  "Generate a pair of TO-PYTHON and FROM-PYTHON for
+`ein:filename-translations'.
+
+Usage::
+
+    (setq ein:filename-translations
+          `((8888
+             . ,(ein:make-tramp-filename-translation \"/scpc:MY-HOSTNAME:\"))))
+
+This setting assumes that the IPython server which can be
+connected using the port 8888 in localhost is actually running in
+the host named MY-HOSTNAME."
+  (lexical-let ((prefix prefix))
+    (list (lambda (filename) (substring filename (length prefix)))
+          (lambda (filename) (concat prefix filename)))))
 
 
 ;;; utils.js compatible
