@@ -495,6 +495,14 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 ;;; Utility functions
 
+(defun ein:kernel-filename-to-python (kernel filename)
+  "See: `ein:filename-to-python'."
+  (ein:filename-to-python (ein:$kernel-url-or-port kernel) filename))
+
+(defun ein:kernel-filename-from-python (kernel filename)
+  "See: `ein:filename-from-python'."
+  (ein:filename-from-python (ein:$kernel-url-or-port kernel) filename))
+
 (defun ein:kernel-construct-defstring (content)
   "Construct call signature from CONTENT of ``:object_info_reply``.
 Used in `ein:cell-finish-tooltip', etc."
@@ -548,9 +556,7 @@ When no such directory exists, `default-directory' will not be changed."
    "__import__('sys').stdout.write(__import__('os').getcwd())"
    (lambda (path kernel buffer)
      (with-current-buffer buffer
-       (setq path (ein:filename-from-python
-                   path
-                   (ein:$kernel-url-or-port kernel)))
+       (setq path (ein:kernel-filename-from-python kernel path))
        (if (file-accessible-directory-p path)
            (progn
              (setq default-directory path)
@@ -584,9 +590,7 @@ When no such directory exists, `default-directory' will not be changed."
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
    (lambda (cwd kernel kernelinfo buffer)
-     (setq cwd (ein:filename-from-python
-                cwd
-                (ein:$kernel-url-or-port kernel)))
+     (setq cwd (ein:kernel-filename-from-python kernel cwd))
      (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
      ;; sync buffer's `default-directory' with CWD
      (when (buffer-live-p buffer)

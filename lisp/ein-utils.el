@@ -434,15 +434,19 @@ NOTE: This function creates new list."
 
 ;;; File name translation
 
+;; Probably it's better to define `ein:filename-translations-get' as
+;; an EIEIO method so that I don't have to re-define functions such as
+;; `ein:kernel-filename-to-python' and `ein:kernel-filename-from-python'.
+
 (defun ein:filename-translations-get (url-or-port)
   (ein:choose-setting 'ein:filename-translations url-or-port))
 
-(defun ein:filename-to-python (filename url-or-port)
+(defun ein:filename-to-python (url-or-port filename)
   (ein:aif (car (ein:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
 
-(defun ein:filename-from-python (filename url-or-port)
+(defun ein:filename-from-python (url-or-port filename)
   (ein:aif (cadr (ein:filename-translations-get url-or-port))
       (funcall it filename)
     filename))

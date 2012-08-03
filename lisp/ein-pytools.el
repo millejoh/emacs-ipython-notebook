@@ -121,9 +121,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                   (destructuring-bind (filename &optional lineno &rest ignore)
                       (split-string it "\n")
                     (setq lineno (string-to-number lineno))
-                    (setq filename (ein:filename-from-python
-                                    filename
-                                    (ein:$kernel-url-or-port kernel)))
+                    (setq filename
+                          (ein:kernel-filename-from-python kernel filename))
                     (ein:goto-file filename lineno other-window)
                     (when (and notebook-buffer (not ein:@connect))
                       (ein:connect-to-notebook-buffer notebook-buffer))
