@@ -28,6 +28,11 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 
+;; Optional dependency on tramp:
+(declare-function tramp-make-tramp-file-name "tramp")
+(declare-function tramp-file-name-localname "tramp")
+(declare-function tramp-dissect-file-name "tramp")
+
 (defgroup ein nil
   "IPython notebook client in Emacs"
   :group 'applications
@@ -442,7 +447,20 @@ NOTE: This function creates new list."
       (funcall it filename)
     filename))
 
-(defun ein:make-tramp-filename-translation (prefix)
+(defun ein:make-tramp-file-name (username remote-host python-filename)
+  "Old (with multi-hops) tramp compatability function.
+Adapted from `slime-make-tramp-file-name'."
+  (if (boundp 'tramp-multi-methods)
+      (tramp-make-tramp-file-name nil nil
+                                  username
+                                  remote-host
+                                  python-filename)
+    (tramp-make-tramp-file-name nil
+                                username
+                                remote-host
+                                python-filename)))
+
+(defun ein:tramp-create-filename-translator (remote-host &optional username)
   "Generate a pair of TO-PYTHON and FROM-PYTHON for
 `ein:filename-translations'.
 
@@ -450,14 +468,21 @@ Usage::
 
     (setq ein:filename-translations
           `((8888
-             . ,(ein:make-tramp-filename-translation \"/scpc:MY-HOSTNAME:\"))))
+             . ,(ein:tramp-create-filename-translator \"MY-HOSTNAME\"))))
 
 This setting assumes that the IPython server which can be
 connected using the port 8888 in localhost is actually running in
-the host named MY-HOSTNAME."
-  (lexical-let ((prefix prefix))
-    (list (lambda (filename) (substring filename (length prefix)))
-          (lambda (filename) (concat prefix filename)))))
+the host named MY-HOSTNAME.
+
+Adapted from `slime-create-filename-translator'."
+  (require 'tramp)
+  (lexical-let ((remote-host remote-host)
+                (username (or username (user-login-name))))
+    (list (lambda (emacs-filename)
+            (tramp-file-name-localname
+             (tramp-dissect-file-name emacs-filename)))
+          (lambda (python-filename)
+             (ein:make-tramp-file-name username remote-host python-filename)))))
 
 
 ;;; utils.js compatible
