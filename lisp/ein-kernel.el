@@ -495,6 +495,14 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 ;;; Utility functions
 
+(defun ein:kernel-filename-to-python (kernel filename)
+  "See: `ein:filename-to-python'."
+  (ein:filename-to-python (ein:$kernel-url-or-port kernel) filename))
+
+(defun ein:kernel-filename-from-python (kernel filename)
+  "See: `ein:filename-from-python'."
+  (ein:filename-from-python (ein:$kernel-url-or-port kernel) filename))
+
 (defun ein:kernel-construct-defstring (content)
   "Construct call signature from CONTENT of ``:object_info_reply``.
 Used in `ein:cell-finish-tooltip', etc."
@@ -524,6 +532,10 @@ Used in `ein:cell-finish-tooltip', etc."
     help))
 
 (defun ein:kernel-request-stream (kernel code func &optional args)
+  "Run lisp callback FUNC with the output stream returned by Python CODE.
+
+The first argument to the lisp function FUNC is the stream output
+as a string and the rest of the argument is the optional ARGS."
   (ein:kernel-execute
    kernel
    code
@@ -542,8 +554,9 @@ When no such directory exists, `default-directory' will not be changed."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (lambda (path buffer)
+   (lambda (path kernel buffer)
      (with-current-buffer buffer
+       (setq path (ein:kernel-filename-from-python kernel path))
        (if (file-accessible-directory-p path)
            (progn
              (setq default-directory path)
@@ -553,7 +566,7 @@ When no such directory exists, `default-directory' will not be changed."
          (ein:log 'info
            "Syncing directory of %s with kernel...FAILED (no dir: %s)"
            buffer path))))
-   (list buffer)))
+   (list kernel buffer)))
 
 (defun ein:kernelinfo-init (kernelinfo buffer)
   (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
@@ -576,7 +589,8 @@ When no such directory exists, `default-directory' will not be changed."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (lambda (cwd kernelinfo buffer)
+   (lambda (cwd kernel kernelinfo buffer)
+     (setq cwd (ein:kernel-filename-from-python kernel cwd))
      (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
      ;; sync buffer's `default-directory' with CWD
      (when (buffer-live-p buffer)
@@ -584,7 +598,7 @@ When no such directory exists, `default-directory' will not be changed."
          (when (file-accessible-directory-p cwd)
            (setq default-directory (file-name-as-directory cwd))))))
    (let ((kernelinfo (ein:$kernel-kernelinfo kernel)))
-     (list kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
+     (list kernel kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
 
 (defun ein:kernelinfo-update-hostname (kernel)
   (ein:kernel-request-stream

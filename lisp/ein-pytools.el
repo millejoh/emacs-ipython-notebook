@@ -109,9 +109,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     :output
     (cons
      (lambda (packed msg-type content)
-       (let ((object (nth 0 packed))
-             (other-window (nth 1 packed))
-             (notebook-buffer (nth 2 packed)))
+       (destructuring-bind (kernel object other-window notebook-buffer)
+           packed
          (ein:case-equal msg-type
            (("stream")
             (ein:aif (plist-get content :data)
@@ -122,6 +121,8 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                   (destructuring-bind (filename &optional lineno &rest ignore)
                       (split-string it "\n")
                     (setq lineno (string-to-number lineno))
+                    (setq filename
+                          (ein:kernel-filename-from-python kernel filename))
                     (ein:goto-file filename lineno other-window)
                     (when (and notebook-buffer (not ein:@connect))
                       (ein:connect-to-notebook-buffer notebook-buffer))
@@ -131,7 +132,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
            (("pyerr")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
-     (list object other-window notebook-buffer)))))
+     (list kernel object other-window notebook-buffer)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
