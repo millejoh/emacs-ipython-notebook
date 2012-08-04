@@ -90,7 +90,7 @@ FROM-PYTHON
     A function which converts a file path returned by
     Python process to the one Emacs understands.
 
-Use `ein:make-tramp-filename-translation' to easily generate the
+Use `ein:tramp-create-filename-translator' to easily generate the
 pair of TO-PYTHON and FROM-PYTHON."
   ;; I've got the idea from `slime-filename-translations'.
   :type '(choice
