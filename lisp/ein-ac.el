@@ -69,11 +69,12 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; checks it anyway.
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING-AC: matched-text=%S matches=%S"
            matched-text matches)
-  (setq ein:ac-direct-matches matches)  ; let-binding won't work
-  (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
-  (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
-  (with-syntax-table ein:ac-syntax-table
-    (auto-complete '(ac-source-ein-direct))))
+  (when matches      ; No auto-complete drop-down list when no matches
+    (setq ein:ac-direct-matches matches)  ; let-binding won't work
+    (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
+    (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
+    (with-syntax-table ein:ac-syntax-table
+      (auto-complete '(ac-source-ein-direct)))))
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
