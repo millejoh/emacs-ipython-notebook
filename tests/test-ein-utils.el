@@ -89,6 +89,11 @@ def func():
 
 ;;; File name translation
 
+;; Requiring `tramp' during (inside of) tests yields error from
+;; MuMaMo.  Although I don't understand the reason, requiring it
+;; before running tests workarounds this problem.
+(require 'tramp)
+
 (ert-deftest ein:filename-translations-from-to-tramp ()
   (loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
