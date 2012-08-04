@@ -332,6 +332,8 @@ MuMaMo
 Misc
 ^^^^
 
+.. el:variable:: ein:filename-translations
+.. el:function:: ein:tramp-create-filename-translator
 .. el:variable:: ein:query-timeout
 
 
@@ -485,6 +487,7 @@ v0.1.1
   :el:symbol:`ein:notebook-turn-on-autoexec`).
 * Start completion when "." is inserted.
   Use :el:symbol:`ein:complete-on-dot` to disable this feature.
+* Support tramp.  See :el:symbol:`ein:filename-translations`.
 
 
 v0.1
