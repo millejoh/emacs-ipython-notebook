@@ -104,6 +104,7 @@ FIXME: document other slots."
             :username (ein:$kernel-username kernel)
             :session (ein:$kernel-session-id kernel)
             :msg_type msg-type)
+   :metadata (make-hash-table)
    :content content
    :parent_header (make-hash-table)))
 
