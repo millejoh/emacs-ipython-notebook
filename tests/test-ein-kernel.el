@@ -70,29 +70,56 @@
 
 ;;; Test `ein:kernel-construct-help-string'
 
+(defvar eintest:kernel-construct-help-string-pcallsig-list
+  '(nil :call_def :init_definition :definition))
+
+(defvar eintest:kernel-construct-help-string-pdocstring-list
+  '(nil :call_docstring :init_docstring :docstring))
+
+(defun eintest:kernel-construct-help-string-test-func (content result)
+  (should (equal (ein:kernel-construct-help-string content) result)))
+
+(defun eintest:kernel-construct-help-string-loop (&optional test
+                                                            pcallsig-list
+                                                            pdocstring-list)
+  "Run tests for `ein:kernel-construct-help-string-loop'.
+
+TEST
+   A function takes two arguments, namely CONTENT and RESULT.
+   CONTENT is the argument to `ein:kernel-construct-help-string' and
+   RESULT must match to its returned value.  Use `should' to test
+   equality.
+PCALLSIG-LIST
+   `nil' or (subset of) `eintest:kernel-construct-help-string-pcallsig-list'.
+PDOCSTRING-LIST
+   `nil' or (subset of) `eintest:kernel-construct-help-string-pdocstring-list'.
+
+All combinations of PCALLSIG-LIST and PDOCSTRING-LIST are used to
+construct CONTENT and RESULT."
+  (unless test (setq test #'eintest:kernel-construct-help-string-test-func))
+  (unless pcallsig-list
+    (setq pcallsig-list
+          eintest:kernel-construct-help-string-pcallsig-list))
+  (unless pdocstring-list
+    (setq pdocstring-list
+          eintest:kernel-construct-help-string-pdocstring-list))
+  (loop with callsig = "function(a=1, b=2, c=d)"
+        with docstring = "This function does what."
+        for pcallsig in pcallsig-list
+        do (loop for pdoc in pdocstring-list
+                 for content = (append
+                                (when pcallsig (list pcallsig callsig))
+                                (when pdoc (list pdoc docstring)))
+                 for result = (ein:aif (append
+                                        (when pcallsig (list callsig))
+                                        (when pdoc (list docstring)))
+                                  (ein:join-str "\n" it))
+                 do (funcall test content result))))
+
 (ert-deftest ein:kernel-construct-help-string-when-found ()
-  (let ((callsig "function(a=1, b=2, c=d)")
-        (docstring "This function does what."))
-    (loop for pcallsig in '(:call_def :init_definition :definition)
-          do (loop for pdoc in '(:call_docstring :init_docstring :docstring)
-                   do (should (equal (ein:kernel-construct-help-string
-                                      (list pcallsig callsig
-                                            pdoc docstring))
-                                     (format "%s\n%s" callsig docstring)))))))
-
-(ert-deftest ein:kernel-construct-help-string-when-callsig-found ()
-  (let ((callsig "function(a=1, b=2, c=d)"))
-    (loop for pcallsig in '(:call_def :init_definition :definition)
-          do (should (equal (ein:kernel-construct-help-string
-                             (list pcallsig callsig))
-                            callsig)))))
-
-(ert-deftest ein:kernel-construct-help-string-when-doc-found ()
-  (let ((docstring "This function does what."))
-    (loop for pdoc in '(:call_docstring :init_docstring :docstring)
-          do (should (equal (ein:kernel-construct-help-string
-                             (list pdoc docstring))
-                            docstring)))))
+  (eintest:kernel-construct-help-string-loop))
 
 (ert-deftest ein:kernel-construct-help-string-when-not-found ()
   (should (equal (ein:kernel-construct-help-string nil) nil)))
+;; Included in `ein:kernel-construct-help-string-when-found', but test
+;; it explicitly to be sure.
