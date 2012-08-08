@@ -340,6 +340,8 @@ Call signature
 
 Links
 -----
+* For general description of CONTENT and METADATA:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#general-message-format
 * `execute_reply' message is documented here:
   http://ipython.org/ipython-doc/dev/development/messaging.html#execute
 * Output type messages is documented here:
@@ -352,6 +354,17 @@ Sample implementations
 * `ein:cell--handle-clear-output'
 * `ein:cell--handle-set-next-input'
 "
+  ;; FIXME: Consider changing callback to use `&key'.
+  ;;        Otherwise, adding new arguments to callback requires
+  ;;        backward incompatible changes (hence a big diff), unlike
+  ;;        Javascript.  Downside of this is that there is no short way
+  ;;        to write anonymous callback because there is no `lambda*'.
+  ;;        You can use `function*', but that's bit long...
+
+  ;; FIXME: Consider allowing a list of fixed argument so that the
+  ;;        call signature becomes something like:
+  ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
+
   (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
