@@ -910,7 +910,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
    :clear_output   (cons #'ein:cell--handle-clear-output   cell)
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
-(defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content)
+(defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content
+                                           -metadata-not-used-)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
   (let ((events (oref cell :events)))
@@ -931,7 +932,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 ;; EWOC is connected in complicated way, I will leave them in
 ;; ein-cell.el.
 
-(defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content)
+(defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content
+                                    -metadata-not-used-)
   (let* ((json (list :output_type msg-type)))
     (ein:case-equal msg-type
       (("stream")
@@ -966,7 +968,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   json)
 
 
-(defmethod ein:cell--handle-clear-output ((cell ein:codecell) content)
+(defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
+                                          -metadata-not-used-)
   (ein:cell-clear-output cell
                          (plist-get content :stdout)
                          (plist-get content :stderr)

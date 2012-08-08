@@ -548,7 +548,7 @@ as a string and the rest of the argument is the optional ARGS."
   (ein:kernel-execute
    kernel
    code
-   (list :output (cons (lambda (packed msg-type content)
+   (list :output (cons (lambda (packed msg-type content -metadata-not-used-)
                          (let ((func (car packed))
                                (args (cdr packed)))
                            (when (equal msg-type "stream")

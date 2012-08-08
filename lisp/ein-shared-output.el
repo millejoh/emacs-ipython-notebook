@@ -62,7 +62,7 @@
   (ein:cell-execute-internal cell kernel code :silent nil))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
-                                    msg-type content)
+                                    msg-type content -metadata-not-used-)
   (ein:log 'info "Got output '%s' in the shared buffer." msg-type)
   (when (oref cell :popup)
     (pop-to-buffer (ein:shared-output-create-buffer)))
