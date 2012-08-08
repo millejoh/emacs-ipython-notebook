@@ -316,34 +316,41 @@ When calling this method pass a CALLBACKS structure of the form:
    :set_next_input SET-NEXT-INPUT)
 
 Objects end with -CALLBACK above must pack a FUNCTION and its
-first ARGUMENT in a `cons':
+first ARGUMENT in a `cons'::
 
   (FUNCTION . ARGUMENT)
 
-Call signature of the callbacks:
+Call signature
+--------------
+::
 
-Callback                `msg_type'        Extra arguments        Notes
-----------------------  ----------------  ---------------------  ------------
-EXECUTE-REPLY-CALLBACK  `execute_reply'   `content'
-OUTPUT-CALLBACK         [#output]_        `msg_type' `content'   [#output2]_
-CLEAR-OUTPUT-CALLBACK   `clear_output'    `content'              [#clear]_
+  (`funcall' EXECUTE-REPLY-CALLBACK ARGUMENT          CONTENT)
+  (`funcall' OUTPUT-CALLBACK        ARGUMENT MSG-TYPE CONTENT)
+  (`funcall' CLEAR-OUTPUT-CALLBACK  ARGUMENT          CONTENT)
+  (`funcall' SET-NEXT-INPUT         ARGUMENT TEXT)
 
-For example, the EXECUTE-REPLY-CALLBACK is called as:
-  (`funcall' FUNCTION ARGUMENT CONTENT)
+* The MSG-TYPE argument for OUTPUT-CALLBACK is a string
+  (one of `stream', `display_data', `pyout' and `pyerr').
+* The CONTENT object for CLEAR-OUTPUT-CALLBACK has
+  `stdout', `stderr' and `other' fields that are booleans.
+* The SET-NEXT-INPUT callback will be passed the `set_next_input' payload,
+  which is a string.
+  See `ein:kernel--handle-shell-reply' for how the callbacks are called.
 
-.. [#output]  One of `stream', `display_data', `pyout', `pyerr'.
-.. [#output2] The argument MSG-ID for the FUNCTION is a string.
-.. [#clear]_  Content object has `stdout', `stderr' and `other'
-              fields that are booleans.
+Links
+-----
+* `execute_reply' message is documented here:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#execute
+* Output type messages is documented here:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
 
-`execute_reply' message is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#execute
-Output type messages is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
-
-The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
-
-See `ein:kernel--handle-shell-reply' for how the callbacks are called."
+Sample implementations
+----------------------
+* `ein:cell--handle-execute-reply'
+* `ein:cell--handle-output'
+* `ein:cell--handle-clear-output'
+* `ein:cell--handle-set-next-input'
+"
   (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
