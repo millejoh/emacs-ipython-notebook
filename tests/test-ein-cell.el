@@ -7,6 +7,7 @@
 (require 'mocker)
 
 (require 'ein-cell)
+(require 'test-ein-kernel)
 
 
 ;;; ein:cell-from-json
@@ -275,3 +276,23 @@
           (ein:plist-iter element))
     (should (equal (ein:cell-element-get cell :after-input) 5))
     (should (equal (ein:cell-element-get cell :before-input) 1))))
+
+
+;;; Kernel related
+
+(ert-deftest ein:cell-finish-tooltip ()
+  (eintest:kernel-construct-help-string-loop
+   (lambda (content result)
+     (if result
+         (mocker-let
+             ((featurep
+               (feature)
+               ((:input '(pos-tip) :output t)))
+              (pos-tip-show
+               (string &optional tip-color pos window timeout)
+               ((:input (list result 'ein:pos-tip-face nil nil 0)))))
+           (let ((window-system t))
+             (ein:cell-finish-tooltip '-not-used- content '-not-used-)))
+       (mocker-let
+           ((featurep (feature) ()))
+         (ein:cell-finish-tooltip '-not-used- content '-not-used-))))))
