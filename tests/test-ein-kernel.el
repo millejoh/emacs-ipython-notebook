@@ -123,3 +123,5 @@ construct CONTENT and RESULT."
   (should (equal (ein:kernel-construct-help-string nil) nil)))
 ;; Included in `ein:kernel-construct-help-string-when-found', but test
 ;; it explicitly to be sure.
+
+(provide 'test-ein-kernel)
