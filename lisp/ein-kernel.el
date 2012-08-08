@@ -324,11 +324,12 @@ Call signature
 --------------
 ::
 
-  (`funcall' EXECUTE-REPLY-CALLBACK ARGUMENT          CONTENT)
-  (`funcall' OUTPUT-CALLBACK        ARGUMENT MSG-TYPE CONTENT)
-  (`funcall' CLEAR-OUTPUT-CALLBACK  ARGUMENT          CONTENT)
+  (`funcall' EXECUTE-REPLY-CALLBACK ARGUMENT          CONTENT METADATA)
+  (`funcall' OUTPUT-CALLBACK        ARGUMENT MSG-TYPE CONTENT METADATA)
+  (`funcall' CLEAR-OUTPUT-CALLBACK  ARGUMENT          CONTENT METADATA)
   (`funcall' SET-NEXT-INPUT         ARGUMENT TEXT)
 
+* Both CONTENT and METADATA objects are plist.
 * The MSG-TYPE argument for OUTPUT-CALLBACK is a string
   (one of `stream', `display_data', `pyout' and `pyerr').
 * The CONTENT object for CLEAR-OUTPUT-CALLBACK has
@@ -441,7 +442,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
   (destructuring-bind
-      (&key header content parent_header &allow-other-keys)
+      (&key header content metadata parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let* ((msg-type (plist-get header :msg_type))
            (msg-id (plist-get parent_header :msg_id))
@@ -449,7 +450,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
       (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type = %s" msg-type)
       (if cb
-          (ein:funcall-packed cb content)
+          (ein:funcall-packed cb content metadata)
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
                  msg-type msg-id))
       (ein:aif (plist-get content :payload)
@@ -473,7 +474,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
   (destructuring-bind
-      (&key content parent_header header &allow-other-keys)
+      (&key content metadata parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let* ((msg-type (plist-get header :msg_type))
            (callbacks (ein:kernel-get-callbacks-for-msg
@@ -485,7 +486,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr")
            (ein:aif (plist-get callbacks :output)
-               (ein:funcall-packed it msg-type content)))
+               (ein:funcall-packed it msg-type content metadata)))
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
@@ -497,7 +498,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               (ein:events-trigger events 'status_dead.Kernel))))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
-               (ein:funcall-packed it content)))))))
+               (ein:funcall-packed it content metadata)))))))
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
