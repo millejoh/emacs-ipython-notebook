@@ -621,7 +621,7 @@ prompt EWOC node."
 (declare-function pos-tip-show "pos-tip")
 (declare-function popup-tip "popup")
 
-(defun ein:cell-finish-tooltip (cell content)
+(defun ein:cell-finish-tooltip (cell content -metadata-not-used-)
   ;; See: Tooltip.prototype._show (tooltip.js)
   (let ((tooltip (ein:kernel-construct-help-string content))
         (defstring (ein:kernel-construct-defstring content))

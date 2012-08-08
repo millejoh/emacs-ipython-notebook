@@ -281,9 +281,11 @@ When calling this method pass a CALLBACKS structure of the form:
 
     (:object_info_reply (FUNCTION . ARGUMENT))
 
-The FUNCTION will be passed the ARGUMENT as the first argument
-and the `content' object of the `object_into_reply' message as
-the second argument.
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `object_into_reply' message.
 
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
@@ -393,8 +395,11 @@ When calling this method pass a CALLBACKS structure of the form:
 
     (:complete_reply (FUNCTION . ARGUMENT))
 
-The FUNCTION will be passed the ARGUMENT as the first argument and
-the `content' object of the `complete_reply' message as the second.
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `complete_reply' message.
 
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
