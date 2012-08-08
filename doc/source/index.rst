@@ -488,6 +488,9 @@ v0.1.1
 * Start completion when "." is inserted.
   Use :el:symbol:`ein:complete-on-dot` to disable this feature.
 * Support tramp.  See :el:symbol:`ein:filename-translations`.
+* Change callback API in :el:symbol:`ein:kernel-execute`
+  to adapt messaging protocol change in
+  `IPython (#2051) <https://github.com/ipython/ipython/pull/2051>`_.
 
 
 v0.1
