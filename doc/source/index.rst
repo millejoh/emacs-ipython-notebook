@@ -267,6 +267,17 @@ buffer.
 .. el:function:: ein:pytools-hierarchy
 .. el:function:: ein:pytools-pandas-to-ses
 
+Misc
+^^^^
+
+.. el:package:: helm
+.. el:function:: helm-ein-notebook-buffers
+.. el:package:: anything
+.. el:function:: anything-ein-notebook-buffers
+.. el:package:: ein
+
+.. It is better to remove el:package from eldomain??
+
 
 Customization
 -------------
@@ -491,6 +502,9 @@ v0.1.1
 * Change callback API in :el:symbol:`ein:kernel-execute`
   to adapt messaging protocol change in
   `IPython (#2051) <https://github.com/ipython/ipython/pull/2051>`_.
+* Add helm/anything support.
+  Use :el:symbol:`helm-ein-notebook-buffers` or
+  :el:symbol:`anything-ein-notebook-buffers`.
 
 
 v0.1

@@ -53,10 +53,12 @@
 ;;; Helm/anything commands
 
 (defun anything-ein-notebook-buffers ()
+  "Choose opened notebook using anything.el interface."
   (interactive)
   (anything-other-buffer ein:helm-source-notebook-buffers "*anything ein*"))
 
 (defun helm-ein-notebook-buffers ()
+  "Choose opened notebook using helm interface."
   (interactive)
   (helm-other-buffer ein:helm-source-notebook-buffers "*helm ein*"))
 

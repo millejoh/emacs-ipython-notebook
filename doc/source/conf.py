@@ -250,4 +250,8 @@ texinfo_documents = [
 # -- Options for EL domain -----------------------------------------------------
 
 emacs_executable = 'emacs-snapshot'
-elisp_packages = {'ein': 'ein:'}
+elisp_packages = {
+    'ein': 'ein:',
+    'helm': 'helm-',
+    'anything': 'anything-',
+}
