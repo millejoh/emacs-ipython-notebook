@@ -34,8 +34,7 @@
 
 (defvar ein:helm-source-notebook-buffers
   '((name . "IPython notebook buffers")
-    (candidates
-     . (lambda () (mapcar #'buffer-name (ein:notebook-opened-buffers))))
+    (candidates . ein:notebook-opened-buffer-names)
     (type . buffer))
   "Helm/anything source for notebook buffers.")
 

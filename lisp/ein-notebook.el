@@ -1406,6 +1406,10 @@ This function also cleans up closed buffers stores in
              ein:notebook-opened-map)
     buffers))
 
+(defun ein:notebook-opened-buffer-names ()
+  "Return list of opened notebook buffer names."
+  (mapcar #'buffer-name (ein:notebook-opened-buffers)))
+
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."

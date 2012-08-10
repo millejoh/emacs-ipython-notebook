@@ -150,7 +150,7 @@ notebooks."
    (list
     (completing-read
      "Notebook buffer to connect: "
-     (mapcar #'buffer-name (ein:notebook-opened-buffers)))))
+     (ein:notebook-opened-buffer-names))))
   (let ((notebook
          (buffer-local-value 'ein:notebook (get-buffer buffer-or-name))))
     (ein:connect-buffer-to-notebook notebook)))
