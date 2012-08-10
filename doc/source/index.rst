@@ -480,10 +480,15 @@ v0.1.1
 
 * Support `auto-complete.el`_\ 's popup/quick help.
 * Add :el:symbol:`ein:notebooklist-first-open-hook`.
+* Handle carriage return
+  (`#13 <https://github.com/tkf/emacs-ipython-notebook/issues/13>`_).
 * :el:symbol:`ein:connect-to-notebook-command` is improved;
   it can connect to the notebook which is not opened yet.
 * Plain text type output is favored over LaTeX type output
   (previous setting was opposite).
+* Workaround indentation problem when using MuMaMo
+  (`#20 <https://github.com/tkf/emacs-ipython-notebook/issues/20>`_).
+  See :el:symbol:`ein:use-mumamo-indent-line-function-workaround`.
 * Add :el:symbol:`ein:notebook-rename-to-scratch-command`.
 * Add :el:symbol:`ein:pytools-pandas-to-ses`.
 * Add Imenu support.
