@@ -314,7 +314,6 @@ Notebook
 .. el:variable:: ein:notebook-console-executable
 .. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
-.. el:variable:: ein:cell-max-num-outputs
 .. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
@@ -486,9 +485,6 @@ v0.1.1
 * Plain text type output is favored over LaTeX type output
   (previous setting was opposite).
 * Add :el:symbol:`ein:notebook-rename-to-scratch-command`.
-* Introduce :el:symbol:`ein:notebook-show-in-shared-output` command
-  and :el:symbol:`ein:cell-max-num-outputs` configuration variable to
-  truncate long output and show it in a separated buffer.
 * Add :el:symbol:`ein:pytools-pandas-to-ses`.
 * Add Imenu support.
 * Better heading cell faces.
