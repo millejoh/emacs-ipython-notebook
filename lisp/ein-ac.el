@@ -98,7 +98,7 @@ popup help string."
                candidate)
       (ein:kernel-object-info-request kernel candidate callbacks))))
 
-(defun ein:ac-set-document (candidate content)
+(defun ein:ac-set-document (candidate content -metadata-not-used-)
   (ein:log 'debug "EIN:AC-SET-DOCUMENT candidate=%S content=%S"
            candidate content)
   (put-text-property 0 (length candidate)

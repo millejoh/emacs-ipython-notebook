@@ -45,7 +45,7 @@
   (save-excursion
     (re-search-backward (concat matched-text "\\="))))
 
-(defun ein:completer-finish-completing (_dummy_ content)
+(defun ein:completer-finish-completing (_dummy_ content -metadata-not-used-)
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
   (let ((matched-text (plist-get content :matched_text))
         (matches (plist-get content :matches))

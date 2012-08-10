@@ -104,6 +104,7 @@ FIXME: document other slots."
             :username (ein:$kernel-username kernel)
             :session (ein:$kernel-session-id kernel)
             :msg_type msg-type)
+   :metadata (make-hash-table)
    :content content
    :parent_header (make-hash-table)))
 
@@ -280,9 +281,11 @@ When calling this method pass a CALLBACKS structure of the form:
 
     (:object_info_reply (FUNCTION . ARGUMENT))
 
-The FUNCTION will be passed the ARGUMENT as the first argument
-and the `content' object of the `object_into_reply' message as
-the second argument.
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `object_into_reply' message.
 
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
@@ -315,34 +318,55 @@ When calling this method pass a CALLBACKS structure of the form:
    :set_next_input SET-NEXT-INPUT)
 
 Objects end with -CALLBACK above must pack a FUNCTION and its
-first ARGUMENT in a `cons':
+first ARGUMENT in a `cons'::
 
   (FUNCTION . ARGUMENT)
 
-Call signature of the callbacks:
+Call signature
+--------------
+::
 
-Callback                `msg_type'        Extra arguments        Notes
-----------------------  ----------------  ---------------------  ------------
-EXECUTE-REPLY-CALLBACK  `execute_reply'   `content'
-OUTPUT-CALLBACK         [#output]_        `msg_type' `content'   [#output2]_
-CLEAR-OUTPUT-CALLBACK   `clear_output'    `content'              [#clear]_
+  (`funcall' EXECUTE-REPLY-CALLBACK ARGUMENT          CONTENT METADATA)
+  (`funcall' OUTPUT-CALLBACK        ARGUMENT MSG-TYPE CONTENT METADATA)
+  (`funcall' CLEAR-OUTPUT-CALLBACK  ARGUMENT          CONTENT METADATA)
+  (`funcall' SET-NEXT-INPUT         ARGUMENT TEXT)
 
-For example, the EXECUTE-REPLY-CALLBACK is called as:
-  (`funcall' FUNCTION ARGUMENT CONTENT)
+* Both CONTENT and METADATA objects are plist.
+* The MSG-TYPE argument for OUTPUT-CALLBACK is a string
+  (one of `stream', `display_data', `pyout' and `pyerr').
+* The CONTENT object for CLEAR-OUTPUT-CALLBACK has
+  `stdout', `stderr' and `other' fields that are booleans.
+* The SET-NEXT-INPUT callback will be passed the `set_next_input' payload,
+  which is a string.
+  See `ein:kernel--handle-shell-reply' for how the callbacks are called.
 
-.. [#output]  One of `stream', `display_data', `pyout', `pyerr'.
-.. [#output2] The argument MSG-ID for the FUNCTION is a string.
-.. [#clear]_  Content object has `stdout', `stderr' and `other'
-              fields that are booleans.
+Links
+-----
+* For general description of CONTENT and METADATA:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#general-message-format
+* `execute_reply' message is documented here:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#execute
+* Output type messages is documented here:
+  http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
 
-`execute_reply' message is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#execute
-Output type messages is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
+Sample implementations
+----------------------
+* `ein:cell--handle-execute-reply'
+* `ein:cell--handle-output'
+* `ein:cell--handle-clear-output'
+* `ein:cell--handle-set-next-input'
+"
+  ;; FIXME: Consider changing callback to use `&key'.
+  ;;        Otherwise, adding new arguments to callback requires
+  ;;        backward incompatible changes (hence a big diff), unlike
+  ;;        Javascript.  Downside of this is that there is no short way
+  ;;        to write anonymous callback because there is no `lambda*'.
+  ;;        You can use `function*', but that's bit long...
 
-The SET-NEXT-INPUT callback will be passed the `set_next_input' payload.
+  ;; FIXME: Consider allowing a list of fixed argument so that the
+  ;;        call signature becomes something like:
+  ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
 
-See `ein:kernel--handle-shell-reply' for how the callbacks are called."
   (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
                    :code code
@@ -371,8 +395,11 @@ When calling this method pass a CALLBACKS structure of the form:
 
     (:complete_reply (FUNCTION . ARGUMENT))
 
-The FUNCTION will be passed the ARGUMENT as the first argument and
-the `content' object of the `complete_reply' message as the second.
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `complete_reply' message.
 
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
@@ -433,7 +460,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
   (destructuring-bind
-      (&key header content parent_header &allow-other-keys)
+      (&key header content metadata parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let* ((msg-type (plist-get header :msg_type))
            (msg-id (plist-get parent_header :msg_id))
@@ -441,7 +468,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
            (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
       (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type = %s" msg-type)
       (if cb
-          (ein:funcall-packed cb content)
+          (ein:funcall-packed cb content metadata)
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
                  msg-type msg-id))
       (ein:aif (plist-get content :payload)
@@ -465,7 +492,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
   (destructuring-bind
-      (&key content parent_header header &allow-other-keys)
+      (&key content metadata parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let* ((msg-type (plist-get header :msg_type))
            (callbacks (ein:kernel-get-callbacks-for-msg
@@ -477,7 +504,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr")
            (ein:aif (plist-get callbacks :output)
-               (ein:funcall-packed it msg-type content)))
+               (ein:funcall-packed it msg-type content metadata)))
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
@@ -489,7 +516,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
               (ein:events-trigger events 'status_dead.Kernel))))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
-               (ein:funcall-packed it content)))))))
+               (ein:funcall-packed it content metadata)))))))
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
@@ -539,7 +566,7 @@ as a string and the rest of the argument is the optional ARGS."
   (ein:kernel-execute
    kernel
    code
-   (list :output (cons (lambda (packed msg-type content)
+   (list :output (cons (lambda (packed msg-type content -metadata-not-used-)
                          (let ((func (car packed))
                                (args (cdr packed)))
                            (when (equal msg-type "stream")

@@ -108,7 +108,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
    (list
     :output
     (cons
-     (lambda (packed msg-type content)
+     (lambda (packed msg-type content -metadata-not-used-)
        (destructuring-bind (kernel object other-window notebook-buffer)
            packed
          (ein:case-equal msg-type
