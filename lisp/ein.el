@@ -49,6 +49,9 @@
 (autoload 'ein:iexec-mode "ein-iexec"
   "Instant cell execution minor mode." t)
 
+(autoload 'anything-ein-notebook-buffers "ein-helm" nil t)
+(autoload 'helm-ein-notebook-buffers "ein-helm" nil t)
+
 (autoload 'ein:dev-insert-mode-map "ein-dev")
 (autoload 'ein:dev-start-debug "ein-dev" "Enable debugging support." t)
 (autoload 'ein:dev-stop-debug "ein-dev" "Disable debugging support." t)

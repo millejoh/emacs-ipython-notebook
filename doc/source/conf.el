@@ -9,6 +9,7 @@
 (require 'ein-ac)
 (require 'ein-connect)
 (require 'ein-iexec)
+(require 'ein-helm)
 
 ;; Load `wid-edit'.  Otherwise the following error will be raised:
 ;;    Symbol's function definition is void: widget-button-press
