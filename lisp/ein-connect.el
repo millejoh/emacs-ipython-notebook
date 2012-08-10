@@ -146,11 +146,8 @@ notebooks."
 
 (defun ein:connect-to-notebook-buffer (buffer-or-name)
   "Connect any buffer to opened notebook and its kernel."
-  (interactive
-   (list
-    (completing-read
-     "Notebook buffer to connect: "
-     (ein:notebook-opened-buffer-names))))
+  (interactive (list (completing-read "Notebook buffer to connect: "
+                                      (ein:notebook-opened-buffer-names))))
   (let ((notebook
          (buffer-local-value 'ein:notebook (get-buffer buffer-or-name))))
     (ein:connect-buffer-to-notebook notebook)))
