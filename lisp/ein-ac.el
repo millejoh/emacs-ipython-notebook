@@ -169,9 +169,14 @@ Specifying non-`nil' to SUPERPACK enables richer auto-completion
   (add-hook 'ein:notebook-plain-mode 'ein:ac-setup)
   (when superpack
     (ein:ac-superpack)))
+
 ;; .. [#hook] Setting `ein:notebook-mumamo-mode-hook' does not work
 ;;    because `ac-sources' in `ein:notebook-mumamo-mode'-enabled
 ;;    buffer is *chunk local*, rather than buffer local.
+;;
+;;    Making `ac-sources' permanent-local also addresses issue of
+;;    MuMaMo discarding `ac-sources'.  However, it effects to entire
+;;    Emacs setting.  So this is not the right way to do it.
 
 
 (defvar ein:ac-config-once-called nil)
