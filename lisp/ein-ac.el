@@ -30,7 +30,7 @@
 
 (require 'ein-utils)
 (eval-when-compile (require 'ein-notebook)
-                   (require 'ein-mumamo))
+                   (defvar ein:mumamo-codecell-mode))
 
 (defvar ein:ac-sources (and (boundp 'ac-sources)
                             (default-value 'ac-sources))
@@ -157,6 +157,7 @@ dotty completion."
 
 (defun ein:ac-setup-maybe ()            ; [#hook]_
   (and ein:notebook
+       (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
        (ein:ac-setup)))
 
