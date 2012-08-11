@@ -166,7 +166,8 @@ dotty completion."
 Specifying non-`nil' to SUPERPACK enables richer auto-completion
 \(see `ein:ac-superpack')."
   (add-hook 'after-change-major-mode-hook 'ein:ac-setup-maybe) ; [#hook]_
-  (add-hook 'ein:notebook-plain-mode 'ein:ac-setup)
+  (add-hook 'ein:notebook-python-mode-hook 'ein:ac-setup)
+  (add-hook 'ein:notebook-plain-mode-hook 'ein:ac-setup)
   (when superpack
     (ein:ac-superpack)))
 
