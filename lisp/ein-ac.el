@@ -32,7 +32,8 @@
 (eval-when-compile (require 'ein-notebook)
                    (require 'ein-mumamo))
 
-(defvar ein:ac-sources (default-value 'ac-sources)
+(defvar ein:ac-sources (and (boundp 'ac-sources)
+                            (default-value 'ac-sources))
   "Extra `ac-sources' used in notebook.")
 
 (defcustom ein:ac-max-cache 1000
