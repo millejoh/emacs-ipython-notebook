@@ -155,7 +155,23 @@ dotty completion."
   ;; sources.
   (setq ac-sources (append '(ac-source-ein-cached) ein:ac-sources)))
 
-(defun ein:ac-setup-maybe ()            ; [#hook]_
+(defun ein:ac-setup-maybe ()
+  "Setup `ac-sources' for mumamo.
+
+.. note:: Setting `ein:notebook-mumamo-mode-hook' does not work
+   because `ac-sources' in `ein:notebook-mumamo-mode'-enabled
+   buffer is *chunk local*, rather than buffer local.
+
+   Making `ac-sources' permanent-local also addresses issue of
+   MuMaMo discarding `ac-sources'.  However, it effects to entire
+   Emacs setting.  So this is not the right way to do it.
+
+   Using `mumamo-make-variable-buffer-permanent' (i.e., adding
+   `ac-sources' to `mumamo-per-buffer-local-vars' or
+   `mumamo-per-main-major-local-vars') is also not appropriate.
+   Adding `ac-sources' to them makes it impossible to different
+   `ac-sources' between chunks, which is good for EIN but may not
+   for other package."
   (and ein:notebook
        (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
@@ -165,26 +181,11 @@ dotty completion."
   "Install auto-complete-mode for notebook modes.
 Specifying non-`nil' to SUPERPACK enables richer auto-completion
 \(see `ein:ac-superpack')."
-  (add-hook 'after-change-major-mode-hook 'ein:ac-setup-maybe) ; [#hook]_
+  (add-hook 'after-change-major-mode-hook 'ein:ac-setup-maybe)
   (add-hook 'ein:notebook-python-mode-hook 'ein:ac-setup)
   (add-hook 'ein:notebook-plain-mode-hook 'ein:ac-setup)
   (when superpack
     (ein:ac-superpack)))
-
-;; .. [#hook] Setting `ein:notebook-mumamo-mode-hook' does not work
-;;    because `ac-sources' in `ein:notebook-mumamo-mode'-enabled
-;;    buffer is *chunk local*, rather than buffer local.
-;;
-;;    Making `ac-sources' permanent-local also addresses issue of
-;;    MuMaMo discarding `ac-sources'.  However, it effects to entire
-;;    Emacs setting.  So this is not the right way to do it.
-;;
-;;    Using `mumamo-make-variable-buffer-permanent' (i.e., adding
-;;    `ac-sources' to `mumamo-per-buffer-local-vars' or
-;;    `mumamo-per-main-major-local-vars') is also not appropriate.
-;;    Adding `ac-sources' to them makes it impossible to different
-;;    `ac-sources' between chunks, which is good for EIN but may not
-;;    for other package.
 
 
 (defvar ein:ac-config-once-called nil)
