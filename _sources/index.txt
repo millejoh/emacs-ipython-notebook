@@ -52,7 +52,7 @@ Links:
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
 
 .. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
-.. [#] Use the command :el:symbol:`ein:connect-to-notebook`.
+.. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
 .. contents::
 
@@ -220,7 +220,7 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:notebook-delete-cell-command
 .. el:function:: ein:notebook-rename-to-scratch-command
 .. el:function:: ein:notebook-kill-all-buffers
-.. el:function:: ein:autoexec-mode
+.. el:function:: ein:iexec-mode
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -236,7 +236,7 @@ are available.
 
 Other useful commands:
 
-.. el:function:: ein:connect-to-notebook
+.. el:function:: ein:connect-to-notebook-command
 .. el:function:: ein:connect-eval-buffer
 .. el:function:: ein:connect-run-buffer
 
@@ -266,6 +266,17 @@ buffer.
 .. el:function:: ein:pytools-whos
 .. el:function:: ein:pytools-hierarchy
 .. el:function:: ein:pytools-pandas-to-ses
+
+Misc
+^^^^
+
+.. el:package:: helm
+.. el:function:: helm-ein-notebook-buffers
+.. el:package:: anything
+.. el:function:: anything-ein-notebook-buffers
+.. el:package:: ein
+
+.. It is better to remove el:package from eldomain??
 
 
 Customization
@@ -303,9 +314,10 @@ Notebook
 .. el:variable:: ein:notebook-console-executable
 .. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
-.. el:variable:: ein:cell-max-num-outputs
+.. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
-.. el:variable:: ein:autoexec-delay
+.. el:variable:: ein:iexec-delay
+.. el:variable:: ein:complete-on-dot
 
 Connect
 ^^^^^^^
@@ -313,6 +325,7 @@ Connect
 .. el:variable:: ein:connect-run-command
 .. el:variable:: ein:connect-save-before-run
 .. el:variable:: ein:propagate-connect
+.. el:variable:: ein:connect-aotoexec-lighter
 
 MuMaMo
 ^^^^^^
@@ -329,6 +342,8 @@ MuMaMo
 Misc
 ^^^^
 
+.. el:variable:: ein:filename-translations
+.. el:function:: ein:tramp-create-filename-translator
 .. el:variable:: ein:query-timeout
 
 
@@ -465,18 +480,32 @@ v0.1.1
 
 * Support `auto-complete.el`_\ 's popup/quick help.
 * Add :el:symbol:`ein:notebooklist-first-open-hook`.
-* :el:symbol:`ein:connect-to-notebook` is improved; it can connect to
-  the notebook which is not opened yet.
+* Handle carriage return
+  (`#13 <https://github.com/tkf/emacs-ipython-notebook/issues/13>`_).
+* :el:symbol:`ein:connect-to-notebook-command` is improved;
+  it can connect to the notebook which is not opened yet.
 * Plain text type output is favored over LaTeX type output
   (previous setting was opposite).
+* Workaround indentation problem when using MuMaMo
+  (`#20 <https://github.com/tkf/emacs-ipython-notebook/issues/20>`_).
+  See :el:symbol:`ein:use-mumamo-indent-line-function-workaround`.
 * Add :el:symbol:`ein:notebook-rename-to-scratch-command`.
-* Introduce :el:symbol:`ein:notebook-show-in-shared-output` command
-  and :el:symbol:`ein:cell-max-num-outputs` configuration variable to
-  truncate long output and show it in a separated buffer.
 * Add :el:symbol:`ein:pytools-pandas-to-ses`.
 * Add Imenu support.
 * Better heading cell faces.
-* Add :el:symbol:`ein:autoexec-mode`
+* Add :el:symbol:`ein:iexec-mode`
+* Add auto-execution mode
+  (see :el:symbol:`ein:connect-toggle-autoexec` and
+  :el:symbol:`ein:notebook-turn-on-autoexec`).
+* Start completion when "." is inserted.
+  Use :el:symbol:`ein:complete-on-dot` to disable this feature.
+* Support tramp.  See :el:symbol:`ein:filename-translations`.
+* Change callback API in :el:symbol:`ein:kernel-execute`
+  to adapt messaging protocol change in
+  `IPython (#2051) <https://github.com/ipython/ipython/pull/2051>`_.
+* Add helm/anything support.
+  Use :el:symbol:`helm-ein-notebook-buffers` or
+  :el:symbol:`anything-ein-notebook-buffers`.
 
 
 v0.1
