@@ -178,6 +178,13 @@ Specifying non-`nil' to SUPERPACK enables richer auto-completion
 ;;    Making `ac-sources' permanent-local also addresses issue of
 ;;    MuMaMo discarding `ac-sources'.  However, it effects to entire
 ;;    Emacs setting.  So this is not the right way to do it.
+;;
+;;    Using `mumamo-make-variable-buffer-permanent' (i.e., adding
+;;    `ac-sources' to `mumamo-per-buffer-local-vars' or
+;;    `mumamo-per-main-major-local-vars') is also not appropriate.
+;;    Adding `ac-sources' to them makes it impossible to different
+;;    `ac-sources' between chunks, which is good for EIN but may not
+;;    for other package.
 
 
 (defvar ein:ac-config-once-called nil)
