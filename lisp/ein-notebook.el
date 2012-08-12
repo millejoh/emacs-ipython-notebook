@@ -392,6 +392,7 @@ See `ein:notebook-open' for more information."
         (ein:notification-setup (current-buffer)))
   (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
   (ein:notebook-setup-traceback ein:notebook)
+  (ein:notebook--check-nbformat (ein:$notebook-data ein:notebook))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -401,6 +402,33 @@ See `ein:notebook-open' for more information."
         (data (ein:$node-data ewoc-data)))
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
+
+(defun ein:notebook--different-number (n1 n2)
+  (and (numberp n1) (numberp n2) (not (= n1 n2))))
+
+(defun ein:notebook--check-nbformat (data)
+  "Warn user when nbformat is changed on server side.
+See https://github.com/ipython/ipython/pull/1934 for the purpose
+of minor mode."
+  ;; See `Notebook.prototype.load_notebook_success'
+  ;; at IPython/frontend/html/notebook/static/js/notebook.js
+  (destructuring-bind (&key nbformat orig_nbformat
+                            nbformat_minor orig_nbformat_minor
+                            &allow-other-keys)
+      data
+    (cond
+     ((ein:notebook--different-number nbformat orig_nbformat)
+      (ein:display-warning
+       (format "Notebook major version updated (v%d -> v%d).
+  To not update version, do not save this notebook."
+               orig_nbformat nbformat)))
+     ((ein:notebook--different-number nbformat_minor orig_nbformat_minor)
+      (ein:display-warning
+       (format "This notebook is version v%s.%s, but IPython
+  server you are using only fully support up to v%s.%s.
+  Some features may not be available."
+               orig_nbformat orig_nbformat_minor
+               nbformat nbformat_minor))))))
 
 
 ;;; Initialization.
