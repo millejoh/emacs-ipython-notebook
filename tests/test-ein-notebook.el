@@ -708,5 +708,38 @@ value of `ein:notebook-enable-undo'."
         (notebook (ein:notebook-new "DUMMY-URL-OR-PORT" "DUMMY-NOTEBOOK-ID")))
     (should (equal (ein:notebook-console-security-dir-get notebook) "/dir/"))))
 
+(defun* eintest:notebook--check-nbformat (&optional orig_nbformat
+                                                    orig_nbformat_minor
+                                                    nbformat
+                                                    nbformat_minor
+                                                    &key data)
+  (let ((data (or data
+                  (list :nbformat nbformat :nbformat_minor nbformat_minor
+                        :orig_nbformat orig_nbformat
+                        :orig_nbformat_minor orig_nbformat_minor))))
+    (ein:notebook--check-nbformat data)))
+
+(ert-deftest ein:notebook--check-nbformat-nothing ()
+  (mocker-let ((ein:display-warning (message) ()))
+    (eintest:notebook--check-nbformat)
+    (eintest:notebook--check-nbformat :data nil)
+    (eintest:notebook--check-nbformat 2 0)
+    (eintest:notebook--check-nbformat 2 0 2)
+    (eintest:notebook--check-nbformat 2 0 2 0)))
+
+(defmacro ein:notebook--check-nbformat-assert-match (regexp &rest args)
+  `(mocker-let ((ein:display-warning
+                 (message)
+                 ((:input-matcher
+                   (lambda (m) (string-match ,regexp m))))))
+     (eintest:notebook--check-nbformat ,@args)))
+
+(ert-deftest ein:notebook--check-nbformat-warn-major ()
+  (ein:notebook--check-nbformat-assert-match "v2 -> v3" 2 nil 3)
+  (ein:notebook--check-nbformat-assert-match "v2 -> v3" 2 0 3 0))
+
+(ert-deftest ein:notebook--check-nbformat-warn-minor ()
+  (ein:notebook--check-nbformat-assert-match
+   "version v2\\.1, [^\\.]* up to v2.0" 2 1 2 0))
 
 (provide 'test-ein-notebook)
