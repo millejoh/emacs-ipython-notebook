@@ -453,6 +453,15 @@ NOTE: This function creates new list."
                (ein:join-str " " (mapcar #'file-name-nondirectory it))))
     (message "Compiled %s files" (length files))))
 
+(defun ein:display-warning (message &optional level)
+  "Simple wrapper around `display-warning'.
+LEVEL must be one of :emergency, :error or :warning (default).
+This must be used only for notifying user.
+Use `ein:log' for debugging and logging."
+  ;; FIXME: Probably set BUFFER-NAME per notebook?
+  ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
+  (display-warning 'ein message level))
+
 
 ;;; File name translation (tramp support)
 
