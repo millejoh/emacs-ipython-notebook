@@ -210,6 +210,9 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-nbformat' : integer
   Notebook file format version.
 
+`ein:$notebook-nbformat-minor' : integer
+  Notebook file format version.
+
 `ein:$notebook-events' : `ein:$events'
   Event handler instance.
 
@@ -228,6 +231,7 @@ Current buffer for these functions is set to the notebook buffer.")
   metadata
   notebook-name
   nbformat
+  nbformat-minor
   events
   notification
   traceback
@@ -277,6 +281,8 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
          (notebook-name (plist-get metadata :name)))
     (setf (ein:$notebook-metadata notebook) metadata)
     (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
+    (setf (ein:$notebook-nbformat-minor notebook)
+          (plist-get data :nbformat_minor))
     (setf (ein:$notebook-notebook-name notebook) notebook-name)))
 
 (defun ein:notebook-del (notebook)
@@ -1153,6 +1159,9 @@ shared output buffer.  You can open the buffer by the command
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+    (ein:aif (ein:$notebook-nbformat-minor notebook)
+        ;; Do not set nbformat when it is not given from server.
+        (push `(nbformat_minor . ,it) data))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (ein:query-singleton-ajax
