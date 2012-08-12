@@ -162,13 +162,13 @@ FIXME: document other slots."
 (defun ein:kernel--websocket-closed (kernel ws-url early)
   (if early
       (ein:display-warning
-       "Websocket connection to %s could not be established. \
-You will NOT be able to run code. \
-Your websocket.el may not be compatible with the websocket version in \
-the server, or if the url does not look right, there could be an \
-error in the server's configuration." ws-url)
-    (ein:display-warning "Websocket connection closed unexpectedly. \
-The kernel will no longer be responsive.")))
+       "Websocket connection to %s could not be established.
+  You will NOT be able to run code.  Your websocket.el may not be
+  compatible with the websocket version in the server, or if the
+  url does not look right, there could be an error in the
+  server's configuration." ws-url)
+    (ein:display-warning "Websocket connection closed unexpectedly.
+  The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-send-cookie (channel)
