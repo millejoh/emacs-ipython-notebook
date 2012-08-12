@@ -436,6 +436,9 @@ NOTE: This function creates new list."
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
 
+
+;;; Emacs utilities
+
 (defun ein:byte-compile-ein ()
   "Byte compile EIN files."
   (interactive)
@@ -451,7 +454,7 @@ NOTE: This function creates new list."
     (message "Compiled %s files" (length files))))
 
 
-;;; File name translation
+;;; File name translation (tramp support)
 
 ;; Probably it's better to define `ein:filename-translations-get' as
 ;; an EIEIO method so that I don't have to re-define functions such as
