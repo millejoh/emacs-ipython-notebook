@@ -210,6 +210,9 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-nbformat' : integer
   Notebook file format version.
 
+`ein:$notebook-nbformat-minor' : integer
+  Notebook file format version.
+
 `ein:$notebook-events' : `ein:$events'
   Event handler instance.
 
@@ -228,6 +231,7 @@ Current buffer for these functions is set to the notebook buffer.")
   metadata
   notebook-name
   nbformat
+  nbformat-minor
   events
   notification
   traceback
@@ -277,6 +281,8 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
          (notebook-name (plist-get metadata :name)))
     (setf (ein:$notebook-metadata notebook) metadata)
     (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
+    (setf (ein:$notebook-nbformat-minor notebook)
+          (plist-get data :nbformat_minor))
     (setf (ein:$notebook-notebook-name notebook) notebook-name)))
 
 (defun ein:notebook-del (notebook)
@@ -392,6 +398,7 @@ See `ein:notebook-open' for more information."
         (ein:notification-setup (current-buffer)))
   (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
   (ein:notebook-setup-traceback ein:notebook)
+  (ein:notebook--check-nbformat (ein:$notebook-data ein:notebook))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
            (ein:$notebook-notebook-name ein:notebook)))
@@ -401,6 +408,33 @@ See `ein:notebook-open' for more information."
         (data (ein:$node-data ewoc-data)))
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
+
+(defun ein:notebook--different-number (n1 n2)
+  (and (numberp n1) (numberp n2) (not (= n1 n2))))
+
+(defun ein:notebook--check-nbformat (data)
+  "Warn user when nbformat is changed on server side.
+See https://github.com/ipython/ipython/pull/1934 for the purpose
+of minor mode."
+  ;; See `Notebook.prototype.load_notebook_success'
+  ;; at IPython/frontend/html/notebook/static/js/notebook.js
+  (destructuring-bind (&key nbformat orig_nbformat
+                            nbformat_minor orig_nbformat_minor
+                            &allow-other-keys)
+      data
+    (cond
+     ((ein:notebook--different-number nbformat orig_nbformat)
+      (ein:display-warning
+       (format "Notebook major version updated (v%d -> v%d).
+  To not update version, do not save this notebook."
+               orig_nbformat nbformat)))
+     ((ein:notebook--different-number nbformat_minor orig_nbformat_minor)
+      (ein:display-warning
+       (format "This notebook is version v%s.%s, but IPython
+  server you are using only fully support up to v%s.%s.
+  Some features may not be available."
+               orig_nbformat orig_nbformat_minor
+               nbformat nbformat_minor))))))
 
 
 ;;; Initialization.
@@ -1125,6 +1159,9 @@ shared output buffer.  You can open the buffer by the command
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+    (ein:aif (ein:$notebook-nbformat-minor notebook)
+        ;; Do not set nbformat when it is not given from server.
+        (push `(nbformat_minor . ,it) data))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (ein:query-singleton-ajax

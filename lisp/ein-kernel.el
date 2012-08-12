@@ -160,18 +160,15 @@ FIXME: document other slots."
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
-  ;; FIXME: `message' is not good choice for showing multiple line
-  ;; message.  I should implement ein-pager.el first and show the
-  ;; message using its function.
   (if early
-      (ein:log 'warn
-       "Websocket connection to %s could not be established. \
-You will NOT be able to run code. \
-Your websocket.el may not be compatible with the websocket version in \
-the server, or if the url does not look right, there could be an \
-error in the server's configuration." ws-url)
-    (ein:log 'warn "Websocket connection closed unexpectedly. \
-The kernel will no longer be responsive.")))
+      (ein:display-warning
+       "Websocket connection to %s could not be established.
+  You will NOT be able to run code.  Your websocket.el may not be
+  compatible with the websocket version in the server, or if the
+  url does not look right, there could be an error in the
+  server's configuration." ws-url)
+    (ein:display-warning "Websocket connection closed unexpectedly.
+  The kernel will no longer be responsive.")))
 
 
 (defun ein:kernel-send-cookie (channel)
