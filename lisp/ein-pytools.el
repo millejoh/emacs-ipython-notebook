@@ -31,11 +31,9 @@
 (declare-function ses-yank-tsf "ses")
 (declare-function ses-command-hook "ses")
 
+(require 'ein)
 (require 'ein-kernel)
 (require 'ein-shared-output)
-
-(eval-when-compile (defvar ein:@connect))
-(declare-function ein:connect-to-notebook-buffer "ein-connect")
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.
@@ -103,8 +101,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                     (setq filename
                           (ein:kernel-filename-from-python kernel filename))
                     (ein:goto-file filename lineno other-window)
-                    (when (and notebook-buffer (not ein:@connect))
-                      (ein:connect-to-notebook-buffer notebook-buffer))
+                    (ein:connect-to-notebook-buffer notebook-buffer t)
                     (push (point-marker) ein:pytools-jump-stack)
                     (ein:log 'info
                       "Jumping to the source of %s...Done" object)))))
