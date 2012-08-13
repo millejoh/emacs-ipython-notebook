@@ -263,6 +263,19 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
 
 
+;;; Generic getter
+
+(defun ein:get-url-or-port--connect ()
+  (ein:aand (ein:get-notebook--connect) (ein:$notebook-url-or-port it)))
+
+(defun ein:get-notebook--connect ()
+  (when (ein:$connect-p ein:@connect)
+    (oref ein:@connect :notebook)))
+
+(defun ein:get-kernel--connect ()
+  (ein:aand (ein:get-notebook--connect) (ein:$notebook-kernel it)))
+
+
 ;;; Auto-execution
 
 (defun ein:connect-assert-connected ()

@@ -376,6 +376,13 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
         (message "Notebook '%s' not found" nbpath)))))
 
 
+;;; Generic getter
+
+(defun ein:get-url-or-port--notebooklist ()
+  (when (ein:$notebooklist-p ein:notebooklist)
+    (ein:$notebooklist-url-or-port ein:notebooklist)))
+
+
 ;;; Notebook list mode
 
 (define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"

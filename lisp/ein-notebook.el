@@ -1268,6 +1268,23 @@ as usual."
         (funcall close-notebook ein:notebook)))))
 
 
+;;; Generic getter
+
+(defun ein:get-url-or-port--notebook ()
+  (when ein:notebook (ein:$notebook-url-or-port ein:notebook)))
+
+(defun ein:get-notebook--notebook ()
+  ein:notebook)
+
+(defun ein:get-notebook-buffer--notebook ()
+  (when (ein:$notebook-p ein:notebook)
+    (ein:notebook-buffer ein:notebook)))
+
+(defun ein:get-kernel--notebook ()
+  (when (ein:$notebook-p ein:notebook)
+    (ein:$notebook-kernel ein:notebook)))
+
+
 ;;; Imenu
 
 (defun ein:notebook-imenu-create-index ()

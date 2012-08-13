@@ -463,6 +463,44 @@ Use `ein:log' for debugging and logging."
   (display-warning 'ein message level))
 
 
+;;; Generic getter
+
+(defun ein:generic-getter (func-list)
+  "Internal function for generic getter functions (`ein:-get-*').
+
+FUNC-LIST is a list of function which takes no argument and
+return what is desired or nil.  Each function in FUNC-LIST is
+called one by one and the first non-nil result will be used.  The
+function is not called when it is not bound.  So, it is safe to
+give functions defined in lazy-loaded sub-modules.
+
+This is for something similar to dispatching in EIEIO, but
+without argument.  This helps writing generic commands which
+requires same object but can operate in different contexts."
+  (loop for func in func-list
+        if (and (functionp func) (funcall func))
+        return it))
+
+(defun ein:get-url-or-port ()
+  (ein:generic-getter '(ein:get-url-or-port--notebooklist
+                        ein:get-url-or-port--notebook
+                        ein:get-url-or-port--shared-output
+                        ein:get-url-or-port--connect)))
+
+(defun ein:get-notebook ()
+  (ein:generic-getter '(ein:get-notebook--notebook
+                        ;; ein:get-notebook--shared-output
+                        ein:get-notebook--connect)))
+
+(defun ein:get-notebook-buffer ()
+  (ein:generic-getter '(ein:get-notebook-buffer--notebook)))
+
+(defun ein:get-kernel ()
+  (ein:generic-getter '(ein:get-kernel--notebook
+                        ein:get-kernel--shared-output
+                        ein:get-kernel--connect)))
+
+
 ;;; File name translation (tramp support)
 
 ;; Probably it's better to define `ein:filename-translations-get' as

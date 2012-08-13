@@ -149,6 +149,20 @@ where CELL locates."
         (pop-to-buffer (current-buffer))))))
 
 
+;;; Generic getter
+
+(defun ein:get-url-or-port--shared-output ()
+  (ein:aand (ein:get-kernel--shared-output) (ein:$kernel-url-or-port it)))
+
+;; (defun ein:get-notebook--shared-output ())
+
+(defun ein:get-kernel--shared-output ()
+  (when (ein:$shared-output-p ein:@shared-output)
+    (let ((cell (oref ein:@shared-output :cell)))
+      (when (slot-boundp cell :kernel)
+        (oref cell :kernel)))))
+
+
 ;;; ein:shared-output-mode
 
 (define-derived-mode ein:shared-output-mode fundamental-mode "ein:so"
