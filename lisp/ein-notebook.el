@@ -218,9 +218,7 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-notification' : `ein:notification'
   Notification widget.
-
-`ein:$notebook-traceback' : `ein:traceback'
-  Traceback viewer."
+"
   url-or-port
   notebook-id
   data
@@ -234,7 +232,6 @@ Current buffer for these functions is set to the notebook buffer.")
   nbformat-minor
   events
   notification
-  traceback
   )
 
 (ein:deflocal ein:notebook nil
@@ -397,7 +394,6 @@ See `ein:notebook-open' for more information."
   (setf (ein:$notebook-notification ein:notebook)
         (ein:notification-setup (current-buffer)))
   (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
-  (ein:notebook-setup-traceback ein:notebook)
   (ein:notebook--check-nbformat (ein:$notebook-data ein:notebook))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
@@ -474,13 +470,6 @@ of minor mode."
          (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
     (ein:cell-set-text new-cell text)
     (setf (ein:$notebook-dirty notebook) t)))
-
-(defun ein:notebook-setup-traceback (notebook)
-  (setf (ein:$notebook-traceback notebook)
-        (ein:tb-new
-         (format ein:notebook-tb-buffer-name-template
-                 (ein:$notebook-url-or-port notebook)
-                 (ein:$notebook-notebook-name notebook)))))
 
 
 ;;; Cell indexing, retrieval, etc.
@@ -868,6 +857,12 @@ output."
 
 ;;; Traceback
 
+(defun ein:notebook-tb-new (notebook)
+  (ein:tb-new
+   (format ein:notebook-tb-buffer-name-template
+           (ein:$notebook-url-or-port notebook)
+           (ein:$notebook-notebook-name notebook))))
+
 (defun ein:notebook-view-traceback ()
   "Open traceback viewer for the traceback at point."
   (interactive)
@@ -877,7 +872,7 @@ output."
                  when (equal (plist-get out :output_type) "pyerr")
                  return (plist-get out :traceback))))
       (if tb-data
-          (ein:tb-popup (ein:$notebook-traceback ein:notebook) tb-data)
+          (ein:tb-popup (ein:notebook-tb-new ein:notebook) tb-data)
         (ein:log 'info "No Traceback found for the current cell.")))))
 
 
