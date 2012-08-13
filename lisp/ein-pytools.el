@@ -34,12 +34,7 @@
 (require 'ein-kernel)
 (require 'ein-shared-output)
 
-(eval-when-compile (defvar ein:notebook)
-                   (defvar ein:@connect))
-(declare-function ein:$notebook-kernel "ein-notebook")
-(declare-function ein:notebook-buffer "ein-notebook")
-(declare-function ein:connect-get-kernel "ein-connect")
-(declare-function ein:connect-get-notebook "ein-connect")
+(eval-when-compile (defvar ein:@connect))
 (declare-function ein:connect-to-notebook-buffer "ein-connect")
 
 (defun ein:goto-file (filename lineno &optional other-window)
@@ -59,22 +54,6 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil))
   :group 'ein)
-
-(defun ein:pytools-get-kernel ()
-  (require 'ein-connect)
-  (cond
-   (ein:notebook (ein:$notebook-kernel ein:notebook))
-   (ein:@connect (ein:connect-get-kernel))
-   ((eq major-mode 'ein:shared-output-mode) (ein:shared-output-get-kernel))))
-
-(defun ein:pytools-get-notebook ()
-  (require 'ein-connect)
-  (cond
-   (ein:notebook ein:notebook)
-   (ein:@connect (ein:connect-get-notebook))))
-
-(defun ein:pytools-get-notebook-buffer ()
-  (ein:aand (ein:pytools-get-notebook) (ein:notebook-buffer it)))
 
 (defun ein:pytools-setup-hooks (kernel)
   (push (cons #'ein:pytools-add-sys-path kernel)
@@ -140,13 +119,13 @@ When the prefix argument ``C-u`` is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it."
   (interactive "P")
-  (let ((kernel (ein:pytools-get-kernel))
+  (let ((kernel (ein:get-kernel))
         (object (ein:object-at-point)))
     (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
     (assert object nil "Object at point not found.")
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect
-                                  (ein:pytools-get-notebook-buffer)))))
+                                  (ein:get-notebook-buffer)))))
 
 (defun ein:pytools-jump-back-command (&optional other-window)
   "Go back to the point where `ein:pytools-jump-to-source-command'
@@ -162,7 +141,7 @@ given, open the last point in the other window."
 
 (defun ein:pytools-eval-string-internal (code &optional popup)
   (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:pytools-get-kernel))
+        (kernel (ein:get-kernel))
         (code (ein:trim-indent code)))
     (ein:cell-execute cell kernel code popup)))
 
@@ -208,7 +187,7 @@ to install it if you are using newer Emacs.
                  (generate-new-buffer-name "*ein:ses pandas*"))))
     ;; fetch TSV (tab separated values) via stdout
     (ein:kernel-request-stream
-     (ein:pytools-get-kernel)
+     (ein:get-kernel)
      (concat dataframe ".to_csv(__import__('sys').stdout, sep='\\t')")
      (lambda (tsv buffer)
        (with-current-buffer buffer

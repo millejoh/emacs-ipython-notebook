@@ -113,7 +113,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
 (defun ein:notebooklist-ask-url-or-port ()
   (let* ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
                                    ein:url-or-port))
-         (default (format "%s" (ein:aif (ein:pytools-get-notebook)
+         (default (format "%s" (ein:aif (ein:get-notebook)
                                    (ein:$notebook-url-or-port it)
                                  (ein:aif ein:notebooklist
                                      (ein:$notebooklist-url-or-port it)
