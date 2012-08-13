@@ -26,6 +26,16 @@
 ;;; Code:
 
 
+(eval-when-compile (require 'cl))
+(require 'eieio)
+
+(defclass ein:worksheet ()
+  ((ewoc :initarg :ewoc :type ewoc)
+   (data :initarg :date)
+   (metadata :initarg :metadata)
+   (events :initarg :events)
+   (notification :initarg :notification)))
+
 
 (provide 'ein-worksheet)
 
