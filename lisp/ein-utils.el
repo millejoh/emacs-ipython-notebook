@@ -497,6 +497,10 @@ requires same object but can operate in different contexts."
                         ein:get-kernel--shared-output
                         ein:get-kernel--connect)))
 
+(defun ein:get-cell-at-point ()
+  (ein:generic-getter '(ein:get-cell-at-point--notebook
+                        ein:get-cell-at-point--shared-output)))
+
 
 ;;; File name translation (tramp support)
 

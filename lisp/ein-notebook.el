@@ -1280,6 +1280,8 @@ as usual."
   (when (ein:$notebook-p ein:notebook)
     (ein:$notebook-kernel ein:notebook)))
 
+(defalias 'ein:get-cell-at-point--notebook 'ein:notebook-get-current-cell)
+
 
 ;;; Imenu
 

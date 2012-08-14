@@ -157,10 +157,13 @@ where CELL locates."
 ;; (defun ein:get-notebook--shared-output ())
 
 (defun ein:get-kernel--shared-output ()
+  (let ((cell (ein:get-cell-at-point--shared-output)))
+    (when (slot-boundp cell :kernel)
+      (oref cell :kernel))))
+
+(defun ein:get-cell-at-point--shared-output ()
   (when (ein:$shared-output-p ein:@shared-output)
-    (let ((cell (oref ein:@shared-output :cell)))
-      (when (slot-boundp cell :kernel)
-        (oref cell :kernel)))))
+    (oref ein:@shared-output :cell)))
 
 
 ;;; ein:shared-output-mode
