@@ -158,7 +158,7 @@ where CELL locates."
 
 (defun ein:get-kernel--shared-output ()
   (let ((cell (ein:get-cell-at-point--shared-output)))
-    (when (slot-boundp cell :kernel)
+    (when (and (object-p cell) (slot-boundp cell :kernel))
       (oref cell :kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
