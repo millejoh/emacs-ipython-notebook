@@ -479,7 +479,7 @@ Use `ein:log' for debugging and logging."
 ;;; Generic getter
 
 (defun ein:generic-getter (func-list)
-  "Internal function for generic getter functions (`ein:-get-*').
+  "Internal function for generic getter functions (`ein:get-*').
 
 FUNC-LIST is a list of function which takes no argument and
 return what is desired or nil.  Each function in FUNC-LIST is
@@ -487,9 +487,11 @@ called one by one and the first non-nil result will be used.  The
 function is not called when it is not bound.  So, it is safe to
 give functions defined in lazy-loaded sub-modules.
 
-This is for something similar to dispatching in EIEIO, but
-without argument.  This helps writing generic commands which
-requires same object but can operate in different contexts."
+This is something similar to dispatching in generic function such
+as `defgeneric' in EIEIO, but it takes no argument.  Actual
+implementation is chosen based on context (buffer, point, etc.).
+This helps writing generic commands which requires same object
+but can operate in different contexts."
   (loop for func in func-list
         if (and (functionp func) (funcall func))
         return it))
