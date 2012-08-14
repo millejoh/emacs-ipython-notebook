@@ -121,6 +121,8 @@ class.")))
 
 ;;; Methods
 
+;; FIXME: Clarify names of these `connect-to-*' functions:
+
 (defun ein:connect-to-notebook-command (&optional not-yet-opened)
   "Connect to notebook.  When the prefix argument is given,
 you can choose any notebook on your server including the ones
