@@ -50,7 +50,6 @@
 (require 'ein-query)
 (require 'ein-shared-output)
 (require 'ein-pytools)
-(require 'ein-traceback)
 
 
 ;;; Configuration
@@ -166,7 +165,6 @@ Current buffer for these functions is set to the notebook buffer.")
 ;; IPython developers for an API to get this from notebook server.
 
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
-(defvar ein:notebook-tb-buffer-name-template "*ein:tb %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (defvar ein:notebook-save-retry-max 1
@@ -857,27 +855,6 @@ output."
     (ein:shared-output-show-code-cell cell)))
 
 
-;;; Traceback
-
-(defun ein:notebook-tb-new (notebook)
-  (ein:tb-new
-   (format ein:notebook-tb-buffer-name-template
-           (ein:$notebook-url-or-port notebook)
-           (ein:$notebook-notebook-name notebook))))
-
-(defun ein:notebook-view-traceback ()
-  "Open traceback viewer for the traceback at point."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (let ((tb-data
-           (loop for out in (oref cell :outputs)
-                 when (equal (plist-get out :output_type) "pyerr")
-                 return (plist-get out :traceback))))
-      (if tb-data
-          (ein:tb-popup (ein:notebook-tb-new ein:notebook) tb-data)
-        (ein:log 'info "No Traceback found for the current cell.")))))
-
-
 ;;; Kernel related things
 
 (defun ein:notebook-start-kernel ()
@@ -1374,7 +1351,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "M-<down>") 'ein:notebook-move-cell-down-command)
   (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
-  (define-key map "\C-c\C-x" 'ein:notebook-view-traceback)
+  (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
