@@ -131,6 +131,19 @@ pair of TO-PYTHON and FROM-PYTHON."
   `(let ((it ,test))
      (if it ,(if rest (macroexpand-all `(ein:aand ,@rest)) 'it))))
 
+(defmacro ein:and-let* (bindings &rest form)
+  "Gauche's `and-let*'."
+  (declare (debug (((symbolp form)) &rest form))
+           (indent 1))
+  (if (null bindings)
+      `(progn ,@form)
+    (let* ((head (car bindings))
+           (tail (cdr bindings))
+           (rest (macroexpand-all `(ein:and-let* ,tail ,@form))))
+      (cond
+       ((symbolp head) `(if ,head ,rest))
+       ((= (length head) 1) `(if ,(car head) ,rest))
+       (t `(let (,head) (if ,(car head) ,rest)))))))
 
 (defmacro ein:deflocal (name &optional initvalue docstring)
   "Define permanent buffer local variable named NAME.
