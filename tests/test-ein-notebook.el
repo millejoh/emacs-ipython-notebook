@@ -638,6 +638,32 @@ value of `ein:notebook-enable-undo'."
 (eintest:notebook-undo-make-tests notebook-undo-after-execution-2-cells)
 
 
+;; Generic getter
+
+(ert-deftest ein:get-url-or-port--notebook ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (should (equal (ein:get-url-or-port) "DUMMY-URL"))))
+
+(ert-deftest ein:get-notebook--notebook ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (should (eq (ein:get-notebook) ein:notebook))))
+
+(ert-deftest ein:get-kernel--notebook ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (let ((kernel (ein:$notebook-kernel ein:notebook)))
+      (should (ein:$kernel-p kernel))
+      (should (eq (ein:get-kernel) kernel)))))
+
+(ert-deftest ein:get-cell-at-point--notebook ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (should-not (ein:get-cell-at-point))))
+
+(ert-deftest ein:get-traceback-data--notebook ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    ;; FIXME: write test with non-empty TB
+    (should-not (ein:get-traceback-data))))
+
+
 ;; Notebook mode
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
