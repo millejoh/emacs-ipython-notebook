@@ -990,6 +990,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
   nil)
 
+(defmethod ein:cell-get-tb-data ((cell ein:codecell))
+  (loop for out in (oref cell :outputs)
+        when (equal (plist-get out :output_type) "pyerr")
+        return (plist-get out :traceback)))
+
 (provide 'ein-cell)
 
 ;;; ein-cell.el ends here

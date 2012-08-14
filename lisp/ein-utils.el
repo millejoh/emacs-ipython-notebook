@@ -501,6 +501,11 @@ requires same object but can operate in different contexts."
   (ein:generic-getter '(ein:get-cell-at-point--notebook
                         ein:get-cell-at-point--shared-output)))
 
+(defun ein:get-traceback-data ()
+  (ein:generic-getter '(ein:get-traceback-data--notebook
+                        ein:get-traceback-data--shared-output
+                        ein:get-traceback-data--connect)))
+
 
 ;;; File name translation (tramp support)
 

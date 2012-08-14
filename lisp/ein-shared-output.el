@@ -165,6 +165,9 @@ where CELL locates."
   (when (ein:$shared-output-p ein:@shared-output)
     (oref ein:@shared-output :cell)))
 
+(defun ein:get-traceback-data--shared-output ()
+  (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))
+
 
 ;;; ein:shared-output-mode
 

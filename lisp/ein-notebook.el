@@ -1282,6 +1282,9 @@ as usual."
 
 (defalias 'ein:get-cell-at-point--notebook 'ein:notebook-get-current-cell)
 
+(defun ein:get-traceback-data--notebook ()
+  (ein:aand (ein:notebook-get-current-cell) (ein:cell-get-tb-data it)))
+
 
 ;;; Imenu
 

@@ -281,6 +281,11 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:get-kernel--connect ()
   (ein:aand (ein:get-notebook--connect) (ein:$notebook-kernel it)))
 
+(defun ein:get-traceback-data--connect ()
+  ;; FIXME: Check if the TB in shared-output buffer is originated from
+  ;;        the current buffer.
+  (ein:aand (ein:shared-output-get-cell) (ein:cell-get-tb-data it)))
+
 
 ;;; Auto-execution
 
