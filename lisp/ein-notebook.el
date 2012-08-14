@@ -1276,10 +1276,6 @@ as usual."
 (defun ein:get-notebook--notebook ()
   ein:notebook)
 
-(defun ein:get-notebook-buffer--notebook ()
-  (when (ein:$notebook-p ein:notebook)
-    (ein:notebook-buffer ein:notebook)))
-
 (defun ein:get-kernel--notebook ()
   (when (ein:$notebook-p ein:notebook)
     (ein:$notebook-kernel ein:notebook)))

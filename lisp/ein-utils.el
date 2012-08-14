@@ -492,9 +492,6 @@ requires same object but can operate in different contexts."
                         ;; ein:get-notebook--shared-output
                         ein:get-notebook--connect)))
 
-(defun ein:get-notebook-buffer ()
-  (ein:generic-getter '(ein:get-notebook-buffer--notebook)))
-
 (defun ein:get-kernel ()
   (ein:generic-getter '(ein:get-kernel--notebook
                         ein:get-kernel--shared-output

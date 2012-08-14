@@ -72,7 +72,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                       "^\n")))
 
 (defun ein:pytools-jump-to-source (kernel object &optional
-                                          other-window notebook-buffer)
+                                          other-window notebook)
   (ein:log 'info "Jumping to the source of %s..." object)
   (let ((last (car ein:pytools-jump-stack)))
     (if (ein:aand last (eql (current-buffer) (marker-buffer it)))
@@ -86,7 +86,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     :output
     (cons
      (lambda (packed msg-type content -metadata-not-used-)
-       (destructuring-bind (kernel object other-window notebook-buffer)
+       (destructuring-bind (kernel object other-window notebook)
            packed
          (ein:case-equal msg-type
            (("stream")
@@ -101,14 +101,15 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                     (setq filename
                           (ein:kernel-filename-from-python kernel filename))
                     (ein:goto-file filename lineno other-window)
-                    (ein:connect-to-notebook-buffer notebook-buffer t)
+                    ;; Connect current buffer to NOTEBOOK. No reconnection.
+                    (ein:connect-buffer-to-notebook notebook nil t)
                     (push (point-marker) ein:pytools-jump-stack)
                     (ein:log 'info
                       "Jumping to the source of %s...Done" object)))))
            (("pyerr")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
-     (list kernel object other-window notebook-buffer)))))
+     (list kernel object other-window notebook)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
@@ -122,7 +123,7 @@ selecting it."
     (assert object nil "Object at point not found.")
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect
-                                  (ein:get-notebook-buffer)))))
+                                  (ein:get-notebook)))))
 
 (defun ein:pytools-jump-back-command (&optional other-window)
   "Go back to the point where `ein:pytools-jump-to-source-command'

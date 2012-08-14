@@ -46,6 +46,7 @@
 (autoload 'ein:connect-to-notebook-command "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook         "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
+(autoload 'ein:connect-buffer-to-notebook  "ein-connect")
 
 (autoload 'ein:iexec-mode "ein-iexec"
   "Instant cell execution minor mode." t)
