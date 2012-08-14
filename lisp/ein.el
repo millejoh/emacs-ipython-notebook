@@ -43,10 +43,14 @@
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist"
   "Ask server to create a new notebook and open it in a new buffer." t)
 
+(autoload 'ein:notebook-name "ein-notebook")
+
 (autoload 'ein:connect-to-notebook-command "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook         "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
 (autoload 'ein:connect-buffer-to-notebook  "ein-connect")
+
+(autoload 'ein:tb-show "ein-traceback" nil t)
 
 (autoload 'ein:iexec-mode "ein-iexec"
   "Instant cell execution minor mode." t)

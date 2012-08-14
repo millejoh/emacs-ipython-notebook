@@ -30,6 +30,7 @@
 (require 'ewoc)
 (require 'ansi-color)
 
+(require 'ein)
 (require 'ein-utils)
 
 (defclass ein:traceback ()
@@ -40,6 +41,8 @@
 
 (ein:deflocal ein:@traceback nil
   "Buffer local variable to store an instance of `ein:traceback'.")
+
+(defvar ein:tb-buffer-name-template "*ein:tb %s/%s*")
 
 (defun ein:tb-new (buffer-name)
   (ein:traceback "Traceback" :buffer-name buffer-name))
@@ -69,6 +72,20 @@
 (defmethod ein:tb-popup ((traceback ein:traceback) tb-data)
   (ein:tb-render traceback tb-data)
   (pop-to-buffer (ein:tb-get-buffer traceback)))
+
+(defun ein:tb-show ()
+  "Popup traceback viewer."
+  (interactive)
+  (unless
+      (ein:and-let* ((tb-data (ein:get-traceback-data))
+                     (url-or-port (ein:get-url-or-port))
+                     (notebook (ein:get-notebook))
+                     (nb-name (ein:notebook-name notebook))
+                     (tb-name (format ein:tb-buffer-name-template
+                                      url-or-port nb-name)))
+        (ein:tb-popup (ein:tb-new tb-name) tb-data)
+        t)
+    (error "No traceback is available.")))
 
 (defmethod ein:tb-range-of-node-at-point ((traceback ein:traceback))
   (let* ((ewoc (oref traceback :ewoc))

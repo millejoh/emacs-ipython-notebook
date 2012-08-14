@@ -301,6 +301,8 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
   "Return the buffer that is associated with NOTEBOOK."
   (ewoc-buffer (ein:$notebook-ewoc notebook)))
 
+(defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
+
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-id notebook)))
