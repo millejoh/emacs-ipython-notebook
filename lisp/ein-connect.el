@@ -331,6 +331,7 @@ change the cells to run."
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
   (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
+  (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)

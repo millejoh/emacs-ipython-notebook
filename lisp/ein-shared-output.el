@@ -176,6 +176,7 @@ where CELL locates."
   (font-lock-mode))
 
 (let ((map ein:shared-output-mode-map))
+  (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "q" 'bury-buffer))
