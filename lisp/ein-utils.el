@@ -512,6 +512,10 @@ but can operate in different contexts."
                         ein:get-kernel--shared-output
                         ein:get-kernel--connect)))
 
+(defun ein:get-kernel-or-error ()
+  (or (ein:get-kernel)
+      (error "No kernel related to the current buffer.")))
+
 (defun ein:get-cell-at-point ()
   (ein:generic-getter '(ein:get-cell-at-point--notebook
                         ein:get-cell-at-point--shared-output)))
