@@ -278,6 +278,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   ;; FIXME: Check if the TB in shared-output buffer is originated from
   ;;        the current buffer.
   (ein:aand (ein:shared-output-get-cell) (ein:cell-get-tb-data it)))
+(autoload 'ein:shared-output-get-cell "ein-shared-output") ; FIXME: Remove!
 
 
 ;;; Auto-execution
