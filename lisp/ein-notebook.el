@@ -48,7 +48,6 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 (require 'ein-query)
-(require 'ein-shared-output)
 (require 'ein-pytools)
 
 
@@ -1060,20 +1059,9 @@ command."
           (ein:filter #'ein:cell-autoexec-p
                       (ein:notebook-get-cells notebook)))))
 
-;; misc kernel related
-
-(defun ein:notebook-eval-string (code)
-  "Evaluate a code.  Prompt will appear asking the code to run.
-This is handy when you want to execute something quickly without
-making a cell.  If the code outputs something, it will go to the
-shared output buffer.  You can open the buffer by the command
-`ein:shared-output-pop-to-buffer'."
-  (interactive "sIP[y]: ")
-  (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:$notebook-kernel ein:notebook))
-        (code (ein:trim-indent code)))
-    (ein:cell-execute cell kernel code))
-  (ein:log 'info "Code \"%s\" is sent to the kernel." code))
+(define-obsolete-function-alias
+  'ein:notebook-eval-string
+  'ein:shared-output-eval-string "0.1.2")
 
 ;; Followings are kernel related, but EIN specific
 
@@ -1351,7 +1339,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
-  (define-key map (kbd "C-:") 'ein:notebook-eval-string)
+  (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
   (define-key map "\C-c\C-o" 'ein:notebook-console-open)
   (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
   (define-key map "\C-x\C-w" 'ein:notebook-rename-command)

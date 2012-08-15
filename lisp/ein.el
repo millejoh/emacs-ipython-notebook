@@ -51,6 +51,9 @@
 (autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
 (autoload 'ein:connect-buffer-to-notebook  "ein-connect")
 
+(autoload 'ein:shared-output-eval-string "ein-shared-output" nil t)
+(autoload 'ein:shared-output-show-code-cell-at-point "ein-shared-output" nil t)
+
 (autoload 'ein:tb-show "ein-traceback" nil t)
 
 (autoload 'ein:iexec-mode "ein-iexec"
