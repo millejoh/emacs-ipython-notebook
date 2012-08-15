@@ -1583,8 +1583,8 @@ Types same as `ein:notebook-console-security-dir' are valid."
                       (ein:$notebook-url-or-port notebook)))
 
 ;; `Fabian Gallina's python.el`_
-(declare-function run-python "python")
-(declare-function python-shell-parse-command "python")
+(declare-function python-shell-make-comint "python")
+(declare-function python-shell-get-process-name "python")
 (declare-function python-shell-switch-to-shell "python")
 
 (defun ein:notebook-console-open ()
@@ -1607,13 +1607,18 @@ It should be possible to support python-mode.el.  Patches are welcome!
              (args (ein:notebook-console-args-get ein:notebook))
              ;; python.el settings:
              (python-shell-setup-codes nil)
-             (python-shell-interpreter
+             (cmd
               (format "python %s console --existing %skernel-%s.json %s"
                       ipy dir kid args))
              ;; python.el makes dedicated process when
              ;; `buffer-file-name' has some value.
              (buffer-file-name (buffer-name)))
-        (run-python t (python-shell-parse-command))
+        ;; The following line does what `run-python' does.
+        ;; But as `run-python' changed the call signature in the new
+        ;; version, let's do this manually.
+        ;; See also: https://github.com/tkf/emacs-ipython-notebook/pull/50
+        (python-shell-make-comint cmd (python-shell-get-process-name t))
+        ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
     (ein:log 'warn "python.el is not loaded!")))
 
