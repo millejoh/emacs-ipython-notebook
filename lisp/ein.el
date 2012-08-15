@@ -44,6 +44,7 @@
   "Ask server to create a new notebook and open it in a new buffer." t)
 
 (autoload 'ein:notebook-name "ein-notebook")
+(autoload 'ein:kernel-id "ein-kernel")
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook         "ein-connect" nil t)

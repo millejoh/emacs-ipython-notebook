@@ -79,10 +79,10 @@
   (unless
       (ein:and-let* ((tb-data (ein:get-traceback-data))
                      (url-or-port (ein:get-url-or-port))
-                     (notebook (ein:get-notebook))
-                     (nb-name (ein:notebook-name notebook))
+                     (kernel (ein:get-kernel))
+                     (kr-id (ein:kernel-id kernel))
                      (tb-name (format ein:tb-buffer-name-template
-                                      url-or-port nb-name)))
+                                      url-or-port kr-id)))
         (ein:tb-popup (ein:tb-new tb-name) tb-data)
         t)
     (error "No traceback is available.")))
