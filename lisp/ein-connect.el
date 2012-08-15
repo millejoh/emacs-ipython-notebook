@@ -33,8 +33,8 @@
 (require 'eieio)
 (eval-when-compile (require 'auto-complete nil t))
 
+(require 'ein)
 (require 'ein-notebook)
-(require 'ein-shared-output)
 
 (declare-function ein:notebooklist-list-notebooks "ein-notebooklist")
 (declare-function ein:notebooklist-open-notebook-global "ein-notebooklist")
@@ -181,7 +181,7 @@ notebooks."
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (ein:connect-eval-string-internal (buffer-string))
+  (ein:shared-output-eval-string (buffer-string))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
@@ -198,7 +198,7 @@ Variable `ein:connect-run-command' sets the default command."
              (cmd (format "%s %s" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
-              (ein:connect-eval-string-internal cmd)
+              (ein:shared-output-eval-string cmd)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))
     (error (concat "This buffer has no associated file.  "
@@ -217,19 +217,12 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
-  (ein:connect-eval-string-internal (buffer-substring start end))
+  (ein:shared-output-eval-string (buffer-substring start end))
   (ein:log 'info "Selected region is sent to the kernel."))
 
-(defun ein:connect-eval-string (code)
-  (interactive "sIP[y]: ")
-  (ein:connect-eval-string-internal code)
-  (ein:log 'info "Code \"%s\" is sent to the kernel." code))
-
-(defun ein:connect-eval-string-internal (code)
-  (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:connect-get-kernel))
-        (code (ein:trim-indent code)))
-    (ein:cell-execute cell kernel code)))
+(define-obsolete-function-alias
+  'ein:connect-eval-string-internal
+  'ein:shared-output-eval-string "0.1.2")
 
 (defun ein:connect-request-tool-tip-command ()
   (interactive)
@@ -326,7 +319,7 @@ change the cells to run."
 (let ((map ein:connect-mode-map))
   (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
   (define-key map "\C-c\C-r" 'ein:connect-eval-region)
-  (define-key map (kbd "C-:") 'ein:connect-eval-string)
+  (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
   (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
