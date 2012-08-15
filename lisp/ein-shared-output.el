@@ -148,6 +148,16 @@ where CELL locates."
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
+(defun ein:shared-output-show-code-cell-at-point ()
+  "Show code cell at point in shared-output buffer.
+It is useful when the output of the cell at point is truncated.
+See also `ein:cell-max-num-outputs'."
+  (interactive)
+  (let ((cell (ein:get-cell-at-point)))
+    (if (ein:codecell-p cell)
+        (ein:shared-output-show-code-cell cell)
+      (error "No code cell at point."))))
+
 
 ;;; Generic getter
 

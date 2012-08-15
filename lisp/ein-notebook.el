@@ -846,13 +846,9 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-empty-undo-maybe)))
     (ein:log 'error "Not in notebook buffer!")))
 
-(defun ein:notebook-show-in-shared-output ()
-  "Show truncated code cell ouput in shared-output buffer.
-See also `ein:cell-max-num-outputs' to how to truncate long
-output."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:shared-output-show-code-cell cell)))
+(define-obsolete-function-alias
+  'ein:notebook-show-in-shared-output
+  'ein:shared-output-show-code-cell-at-point "0.1.2")
 
 
 ;;; Kernel related things
@@ -1330,7 +1326,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
   (define-key map "\C-c\C-l" 'ein:notebook-clear-output-command)
   (define-key map (kbd "C-c C-S-l") 'ein:notebook-clear-all-output-command)
-  (define-key map (kbd "C-c C-;") 'ein:notebook-show-in-shared-output)
+  (define-key map (kbd "C-c C-;") 'ein:shared-output-show-code-cell-at-point)
   (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
   (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
   (define-key map "\C-c\C-w" 'ein:notebook-copy-cell-command)
