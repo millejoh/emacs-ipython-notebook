@@ -161,7 +161,7 @@ See also `ein:cell-max-num-outputs'."
 (defvar ein:shared-output-eval-string-history nil
   "History of the `ein:shared-output-eval-string' prompt.")
 
-(defun ein:shared-output-eval-string (code &optional verbose kernel)
+(defun ein:shared-output-eval-string (code &optional popup verbose kernel)
   "Evaluate a code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
@@ -173,10 +173,10 @@ shared output buffer.  You can open the buffer by the command
          ;; is impossible to execute
          (code (read-string
                 "IP[y]: " nil 'ein:shared-output-eval-string-history)))
-     (list code t kernel)))
+     (list code nil t kernel)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
-    (ein:cell-execute cell kernel (ein:trim-indent code)))
+    (ein:cell-execute cell kernel (ein:trim-indent code) popup))
   (when verbose
     (ein:log 'info "Code \"%s\" is sent to the kernel." code)))
 

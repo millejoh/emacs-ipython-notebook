@@ -33,7 +33,6 @@
 
 (require 'ein)
 (require 'ein-kernel)
-(require 'ein-shared-output)
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.
@@ -137,24 +136,22 @@ given, open the last point in the other window."
       (ein:goto-marker it other-window)
     (ein:log 'info "Nothing on stack.")))
 
-(defun ein:pytools-eval-string-internal (code &optional popup)
-  (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:get-kernel))
-        (code (ein:trim-indent code)))
-    (ein:cell-execute cell kernel code popup)))
+(define-obsolete-function-alias
+  'ein:pytools-eval-string-internal
+  'ein:shared-output-eval-string "0.1.2")
 
 (defun ein:pytools-doctest ()
   "Do the doctest of the object at point."
   (interactive)
   (let ((object (ein:object-at-point)))
-    (ein:pytools-eval-string-internal
+    (ein:shared-output-eval-string
      (format "__import__('ein').run_docstring_examples(%s)" object)
      t)))
 
 (defun ein:pytools-whos ()
   "Execute ``%whos`` magic command and popup the result."
   (interactive)
-  (ein:pytools-eval-string-internal "%whos" t))
+  (ein:shared-output-eval-string "%whos" t))
 
 (defun ein:pytools-hierarchy (&optional ask)
   "Draw inheritance graph of the class at point.
@@ -168,7 +165,7 @@ You can explicitly specify the object by selecting it.
       (setq object (read-from-minibuffer "class or object: " object)))
     (assert (and object (not (equal object "")))
             nil "Object at point not found.")
-    (ein:pytools-eval-string-internal (format "%%hierarchy %s" object) t)))
+    (ein:shared-output-eval-string (format "%%hierarchy %s" object) t)))
 
 (defun ein:pytools-pandas-to-ses (dataframe)
   "View pandas_ DataFrame in SES_ (Simple Emacs Spreadsheet).
