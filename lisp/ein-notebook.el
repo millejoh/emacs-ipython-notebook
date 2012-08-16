@@ -48,9 +48,7 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 (require 'ein-query)
-(require 'ein-shared-output)
 (require 'ein-pytools)
-(require 'ein-traceback)
 
 
 ;;; Configuration
@@ -166,7 +164,6 @@ Current buffer for these functions is set to the notebook buffer.")
 ;; IPython developers for an API to get this from notebook server.
 
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
-(defvar ein:notebook-tb-buffer-name-template "*ein:tb %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (defvar ein:notebook-save-retry-max 1
@@ -300,6 +297,8 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   (ewoc-buffer (ein:$notebook-ewoc notebook)))
+
+(defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
@@ -846,34 +845,9 @@ Do not clear input prompts when the prefix argument is given."
                (ein:notebook-empty-undo-maybe)))
     (ein:log 'error "Not in notebook buffer!")))
 
-(defun ein:notebook-show-in-shared-output ()
-  "Show truncated code cell ouput in shared-output buffer.
-See also `ein:cell-max-num-outputs' to how to truncate long
-output."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:shared-output-show-code-cell cell)))
-
-
-;;; Traceback
-
-(defun ein:notebook-tb-new (notebook)
-  (ein:tb-new
-   (format ein:notebook-tb-buffer-name-template
-           (ein:$notebook-url-or-port notebook)
-           (ein:$notebook-notebook-name notebook))))
-
-(defun ein:notebook-view-traceback ()
-  "Open traceback viewer for the traceback at point."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (let ((tb-data
-           (loop for out in (oref cell :outputs)
-                 when (equal (plist-get out :output_type) "pyerr")
-                 return (plist-get out :traceback))))
-      (if tb-data
-          (ein:tb-popup (ein:notebook-tb-new ein:notebook) tb-data)
-        (ein:log 'info "No Traceback found for the current cell.")))))
+(define-obsolete-function-alias
+  'ein:notebook-show-in-shared-output
+  'ein:shared-output-show-code-cell-at-point "0.1.2")
 
 
 ;;; Kernel related things
@@ -1085,20 +1059,9 @@ command."
           (ein:filter #'ein:cell-autoexec-p
                       (ein:notebook-get-cells notebook)))))
 
-;; misc kernel related
-
-(defun ein:notebook-eval-string (code)
-  "Evaluate a code.  Prompt will appear asking the code to run.
-This is handy when you want to execute something quickly without
-making a cell.  If the code outputs something, it will go to the
-shared output buffer.  You can open the buffer by the command
-`ein:shared-output-pop-to-buffer'."
-  (interactive "sIP[y]: ")
-  (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:$notebook-kernel ein:notebook))
-        (code (ein:trim-indent code)))
-    (ein:cell-execute cell kernel code))
-  (ein:log 'info "Code \"%s\" is sent to the kernel." code))
+(define-obsolete-function-alias
+  'ein:notebook-eval-string
+  'ein:shared-output-eval-string "0.1.2")
 
 ;; Followings are kernel related, but EIN specific
 
@@ -1268,6 +1231,24 @@ as usual."
         (funcall close-notebook ein:notebook)))))
 
 
+;;; Generic getter
+
+(defun ein:get-url-or-port--notebook ()
+  (when ein:notebook (ein:$notebook-url-or-port ein:notebook)))
+
+(defun ein:get-notebook--notebook ()
+  ein:notebook)
+
+(defun ein:get-kernel--notebook ()
+  (when (ein:$notebook-p ein:notebook)
+    (ein:$notebook-kernel ein:notebook)))
+
+(defalias 'ein:get-cell-at-point--notebook 'ein:notebook-get-current-cell)
+
+(defun ein:get-traceback-data--notebook ()
+  (ein:aand (ein:notebook-get-current-cell) (ein:cell-get-tb-data it)))
+
+
 ;;; Imenu
 
 (defun ein:notebook-imenu-create-index ()
@@ -1333,7 +1314,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-v" 'ein:notebook-set-collapsed-all-command)
   (define-key map "\C-c\C-l" 'ein:notebook-clear-output-command)
   (define-key map (kbd "C-c C-S-l") 'ein:notebook-clear-all-output-command)
-  (define-key map (kbd "C-c C-;") 'ein:notebook-show-in-shared-output)
+  (define-key map (kbd "C-c C-;") 'ein:shared-output-show-code-cell-at-point)
   (define-key map "\C-c\C-k" 'ein:notebook-kill-cell-command)
   (define-key map "\C-c\M-w" 'ein:notebook-copy-cell-command)
   (define-key map "\C-c\C-w" 'ein:notebook-copy-cell-command)
@@ -1354,11 +1335,11 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "M-<down>") 'ein:notebook-move-cell-down-command)
   (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
   (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
-  (define-key map "\C-c\C-x" 'ein:notebook-view-traceback)
+  (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
-  (define-key map (kbd "C-:") 'ein:notebook-eval-string)
+  (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
   (define-key map "\C-c\C-o" 'ein:notebook-console-open)
   (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
   (define-key map "\C-x\C-w" 'ein:notebook-rename-command)

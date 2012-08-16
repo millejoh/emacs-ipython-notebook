@@ -113,7 +113,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
 (defun ein:notebooklist-ask-url-or-port ()
   (let* ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
                                    ein:url-or-port))
-         (default (format "%s" (ein:aif (ein:pytools-get-notebook)
+         (default (format "%s" (ein:aif (ein:get-notebook)
                                    (ein:$notebook-url-or-port it)
                                  (ein:aif ein:notebooklist
                                      (ein:$notebooklist-url-or-port it)
@@ -374,6 +374,13 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
       (if notebook-id
           (ein:notebook-open url-or-port notebook-id callback cbargs)
         (message "Notebook '%s' not found" nbpath)))))
+
+
+;;; Generic getter
+
+(defun ein:get-url-or-port--notebooklist ()
+  (when (ein:$notebooklist-p ein:notebooklist)
+    (ein:$notebooklist-url-or-port ein:notebooklist)))
 
 
 ;;; Notebook list mode

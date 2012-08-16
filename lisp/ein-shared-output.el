@@ -148,6 +148,58 @@ where CELL locates."
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
+(defun ein:shared-output-show-code-cell-at-point ()
+  "Show code cell at point in shared-output buffer.
+It is useful when the output of the cell at point is truncated.
+See also `ein:cell-max-num-outputs'."
+  (interactive)
+  (let ((cell (ein:get-cell-at-point)))
+    (if (ein:codecell-p cell)
+        (ein:shared-output-show-code-cell cell)
+      (error "No code cell at point."))))
+
+(defvar ein:shared-output-eval-string-history nil
+  "History of the `ein:shared-output-eval-string' prompt.")
+
+(defun ein:shared-output-eval-string (code &optional popup verbose kernel)
+  "Evaluate a code.  Prompt will appear asking the code to run.
+This is handy when you want to execute something quickly without
+making a cell.  If the code outputs something, it will go to the
+shared output buffer.  You can open the buffer by the command
+`ein:shared-output-pop-to-buffer'."
+  (interactive
+   (let ((kernel (ein:get-kernel-or-error))
+         ;; ... so error will be raised before user typing code if it
+         ;; is impossible to execute
+         (code (read-string
+                "IP[y]: " nil 'ein:shared-output-eval-string-history)))
+     (list code nil t kernel)))
+  (unless kernel (setq kernel (ein:get-kernel-or-error)))
+  (let ((cell (ein:shared-output-get-cell)))
+    (ein:cell-execute cell kernel (ein:trim-indent code) popup))
+  (when verbose
+    (ein:log 'info "Code \"%s\" is sent to the kernel." code)))
+
+
+;;; Generic getter
+
+(defun ein:get-url-or-port--shared-output ()
+  (ein:aand (ein:get-kernel--shared-output) (ein:$kernel-url-or-port it)))
+
+;; (defun ein:get-notebook--shared-output ())
+
+(defun ein:get-kernel--shared-output ()
+  (let ((cell (ein:get-cell-at-point--shared-output)))
+    (when (and (object-p cell) (slot-boundp cell :kernel))
+      (oref cell :kernel))))
+
+(defun ein:get-cell-at-point--shared-output ()
+  (when (ein:$shared-output-p ein:@shared-output)
+    (oref ein:@shared-output :cell)))
+
+(defun ein:get-traceback-data--shared-output ()
+  (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))
+
 
 ;;; ein:shared-output-mode
 
@@ -156,6 +208,7 @@ where CELL locates."
   (font-lock-mode))
 
 (let ((map ein:shared-output-mode-map))
+  (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "q" 'bury-buffer))

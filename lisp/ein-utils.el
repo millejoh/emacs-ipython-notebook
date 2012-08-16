@@ -131,6 +131,19 @@ pair of TO-PYTHON and FROM-PYTHON."
   `(let ((it ,test))
      (if it ,(if rest (macroexpand-all `(ein:aand ,@rest)) 'it))))
 
+(defmacro ein:and-let* (bindings &rest form)
+  "Gauche's `and-let*'."
+  (declare (debug (((symbolp form)) &rest form))
+           (indent 1))
+  (if (null bindings)
+      `(progn ,@form)
+    (let* ((head (car bindings))
+           (tail (cdr bindings))
+           (rest (macroexpand-all `(ein:and-let* ,tail ,@form))))
+      (cond
+       ((symbolp head) `(if ,head ,rest))
+       ((= (length head) 1) `(if ,(car head) ,rest))
+       (t `(let (,head) (if ,(car head) ,rest)))))))
 
 (defmacro ein:deflocal (name &optional initvalue docstring)
   "Define permanent buffer local variable named NAME.
@@ -461,6 +474,56 @@ Use `ein:log' for debugging and logging."
   ;; FIXME: Probably set BUFFER-NAME per notebook?
   ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
   (display-warning 'ein message level))
+
+
+;;; Generic getter
+
+(defun ein:generic-getter (func-list)
+  "Internal function for generic getter functions (`ein:get-*').
+
+FUNC-LIST is a list of function which takes no argument and
+return what is desired or nil.  Each function in FUNC-LIST is
+called one by one and the first non-nil result will be used.  The
+function is not called when it is not bound.  So, it is safe to
+give functions defined in lazy-loaded sub-modules.
+
+This is something similar to dispatching in generic function such
+as `defgeneric' in EIEIO, but it takes no argument.  Actual
+implementation is chosen based on context (buffer, point, etc.).
+This helps writing generic commands which requires same object
+but can operate in different contexts."
+  (loop for func in func-list
+        if (and (functionp func) (funcall func))
+        return it))
+
+(defun ein:get-url-or-port ()
+  (ein:generic-getter '(ein:get-url-or-port--notebooklist
+                        ein:get-url-or-port--notebook
+                        ein:get-url-or-port--shared-output
+                        ein:get-url-or-port--connect)))
+
+(defun ein:get-notebook ()
+  (ein:generic-getter '(ein:get-notebook--notebook
+                        ;; ein:get-notebook--shared-output
+                        ein:get-notebook--connect)))
+
+(defun ein:get-kernel ()
+  (ein:generic-getter '(ein:get-kernel--notebook
+                        ein:get-kernel--shared-output
+                        ein:get-kernel--connect)))
+
+(defun ein:get-kernel-or-error ()
+  (or (ein:get-kernel)
+      (error "No kernel related to the current buffer.")))
+
+(defun ein:get-cell-at-point ()
+  (ein:generic-getter '(ein:get-cell-at-point--notebook
+                        ein:get-cell-at-point--shared-output)))
+
+(defun ein:get-traceback-data ()
+  (ein:generic-getter '(ein:get-traceback-data--notebook
+                        ein:get-traceback-data--shared-output
+                        ein:get-traceback-data--connect)))
 
 
 ;;; File name translation (tramp support)

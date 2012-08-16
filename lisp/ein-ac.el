@@ -89,7 +89,7 @@ This is called via `ac-next'/`ac-previous'/`ac-update' and set
 replied within `ac-quick-help-delay' seconds, auto-complete will
 popup help string."
   (let* ((candidate (ac-selected-candidate))
-         (kernel (ein:pytools-get-kernel))
+         (kernel (ein:get-kernel))
          (callbacks (list :object_info_reply
                           (cons #'ein:ac-set-document candidate))))
     (when (and candidate

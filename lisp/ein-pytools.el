@@ -31,16 +31,8 @@
 (declare-function ses-yank-tsf "ses")
 (declare-function ses-command-hook "ses")
 
+(require 'ein)
 (require 'ein-kernel)
-(require 'ein-shared-output)
-
-(eval-when-compile (defvar ein:notebook)
-                   (defvar ein:@connect))
-(declare-function ein:$notebook-kernel "ein-notebook")
-(declare-function ein:notebook-buffer "ein-notebook")
-(declare-function ein:connect-get-kernel "ein-connect")
-(declare-function ein:connect-get-notebook "ein-connect")
-(declare-function ein:connect-to-notebook-buffer "ein-connect")
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.
@@ -59,22 +51,6 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil))
   :group 'ein)
-
-(defun ein:pytools-get-kernel ()
-  (require 'ein-connect)
-  (cond
-   (ein:notebook (ein:$notebook-kernel ein:notebook))
-   (ein:@connect (ein:connect-get-kernel))
-   ((eq major-mode 'ein:shared-output-mode) (ein:shared-output-get-kernel))))
-
-(defun ein:pytools-get-notebook ()
-  (require 'ein-connect)
-  (cond
-   (ein:notebook ein:notebook)
-   (ein:@connect (ein:connect-get-notebook))))
-
-(defun ein:pytools-get-notebook-buffer ()
-  (ein:aand (ein:pytools-get-notebook) (ein:notebook-buffer it)))
 
 (defun ein:pytools-setup-hooks (kernel)
   (push (cons #'ein:pytools-add-sys-path kernel)
@@ -95,7 +71,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                       "^\n")))
 
 (defun ein:pytools-jump-to-source (kernel object &optional
-                                          other-window notebook-buffer)
+                                          other-window notebook)
   (ein:log 'info "Jumping to the source of %s..." object)
   (let ((last (car ein:pytools-jump-stack)))
     (if (ein:aand last (eql (current-buffer) (marker-buffer it)))
@@ -109,7 +85,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     :output
     (cons
      (lambda (packed msg-type content -metadata-not-used-)
-       (destructuring-bind (kernel object other-window notebook-buffer)
+       (destructuring-bind (kernel object other-window notebook)
            packed
          (ein:case-equal msg-type
            (("stream")
@@ -124,15 +100,15 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                     (setq filename
                           (ein:kernel-filename-from-python kernel filename))
                     (ein:goto-file filename lineno other-window)
-                    (when (and notebook-buffer (not ein:@connect))
-                      (ein:connect-to-notebook-buffer notebook-buffer))
+                    ;; Connect current buffer to NOTEBOOK. No reconnection.
+                    (ein:connect-buffer-to-notebook notebook nil t)
                     (push (point-marker) ein:pytools-jump-stack)
                     (ein:log 'info
                       "Jumping to the source of %s...Done" object)))))
            (("pyerr")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
-     (list kernel object other-window notebook-buffer)))))
+     (list kernel object other-window notebook)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
@@ -140,13 +116,13 @@ When the prefix argument ``C-u`` is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it."
   (interactive "P")
-  (let ((kernel (ein:pytools-get-kernel))
+  (let ((kernel (ein:get-kernel))
         (object (ein:object-at-point)))
     (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
     (assert object nil "Object at point not found.")
     (ein:pytools-jump-to-source kernel object other-window
                                 (when ein:propagate-connect
-                                  (ein:pytools-get-notebook-buffer)))))
+                                  (ein:get-notebook)))))
 
 (defun ein:pytools-jump-back-command (&optional other-window)
   "Go back to the point where `ein:pytools-jump-to-source-command'
@@ -160,24 +136,22 @@ given, open the last point in the other window."
       (ein:goto-marker it other-window)
     (ein:log 'info "Nothing on stack.")))
 
-(defun ein:pytools-eval-string-internal (code &optional popup)
-  (let ((cell (ein:shared-output-get-cell))
-        (kernel (ein:pytools-get-kernel))
-        (code (ein:trim-indent code)))
-    (ein:cell-execute cell kernel code popup)))
+(define-obsolete-function-alias
+  'ein:pytools-eval-string-internal
+  'ein:shared-output-eval-string "0.1.2")
 
 (defun ein:pytools-doctest ()
   "Do the doctest of the object at point."
   (interactive)
   (let ((object (ein:object-at-point)))
-    (ein:pytools-eval-string-internal
+    (ein:shared-output-eval-string
      (format "__import__('ein').run_docstring_examples(%s)" object)
      t)))
 
 (defun ein:pytools-whos ()
   "Execute ``%whos`` magic command and popup the result."
   (interactive)
-  (ein:pytools-eval-string-internal "%whos" t))
+  (ein:shared-output-eval-string "%whos" t))
 
 (defun ein:pytools-hierarchy (&optional ask)
   "Draw inheritance graph of the class at point.
@@ -191,7 +165,7 @@ You can explicitly specify the object by selecting it.
       (setq object (read-from-minibuffer "class or object: " object)))
     (assert (and object (not (equal object "")))
             nil "Object at point not found.")
-    (ein:pytools-eval-string-internal (format "%%hierarchy %s" object) t)))
+    (ein:shared-output-eval-string (format "%%hierarchy %s" object) t)))
 
 (defun ein:pytools-pandas-to-ses (dataframe)
   "View pandas_ DataFrame in SES_ (Simple Emacs Spreadsheet).
@@ -208,7 +182,7 @@ to install it if you are using newer Emacs.
                  (generate-new-buffer-name "*ein:ses pandas*"))))
     ;; fetch TSV (tab separated values) via stdout
     (ein:kernel-request-stream
-     (ein:pytools-get-kernel)
+     (ein:get-kernel)
      (concat dataframe ".to_csv(__import__('sys').stdout, sep='\\t')")
      (lambda (tsv buffer)
        (with-current-buffer buffer

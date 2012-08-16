@@ -58,6 +58,7 @@ FIXME: document other slots."
   after-execute-hook
   kernelinfo)
 
+(defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
 (defstruct ein:$kernelinfo
   "Info related (but unimportant) to kernel

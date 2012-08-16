@@ -261,6 +261,13 @@ auto-execution mode flag in the connected buffer is `t'.")))
       (oset new :outputs (mapcar 'identity (oref cell :outputs))))
     new))
 
+(defmethod ein:cell-convert ((cell ein:codecell) type)
+  (let ((new (call-next-method)))
+    (when (and (ein:codecell-child-p new)
+               (slot-boundp cell :kernel))
+      (oset new :kernel (oref cell :kernel)))
+    new))
+
 (defmethod ein:cell-convert ((cell ein:headingcell) type)
   (let ((new (call-next-method)))
     (when (ein:headingcell-p new)
@@ -989,6 +996,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
   nil)
+
+(defmethod ein:cell-get-tb-data ((cell ein:codecell))
+  (loop for out in (oref cell :outputs)
+        when (equal (plist-get out :output_type) "pyerr")
+        return (plist-get out :traceback)))
 
 (provide 'ein-cell)
 
