@@ -1,6 +1,9 @@
-===================================
- Emacs IPython Notebook (and more)
-===================================
+===============================
+ EIN -- Emacs IPython Notebook
+===============================
+
+  --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
+
 
 .. note:: It is stable enough for my day to day work, but I can't
           grantee the safety for your notebook data.  So please make
@@ -17,8 +20,8 @@ See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
 Features
 ========
 
-Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
-client and integrated REPL (like SLIME_).  While EIN makes notebook
+Emacs IPython Notebook (EIN) provides a IPython Notebook client and
+integrated REPL (like SLIME_) in Emacs.  While EIN makes notebook
 editing very powerful by allowing you to use any Emacs features, it
 also expose IPython features such as code evaluation, object
 inspection and code completion to the Emacs side.  These features can
