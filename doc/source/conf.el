@@ -5,6 +5,7 @@
 (add-to-list 'load-path "~/.emacs.d/el-get/popup/") ; for auto-complete
 
 (require 'ein-notebooklist)
+(require 'ein-console)
 (require 'ein-shared-output)
 (require 'ein-traceback)
 (require 'ein-mumamo)

@@ -483,6 +483,9 @@ Change Log
 v0.1.2
 ------
 
+* Rename command :el:symbol:`ein:notebook-console-open` to
+  :el:symbol:`ein:console-open`.  It is available from non-notebook
+  buffer such as connected buffer now.
 * Add :el:symbol:`ein:connect-reload-buffer`.
   Old default :el:symbol:`ein:connect-run-buffer` behavior is
   replaced by this function.  :el:symbol:`ein:connect-run-buffer`
