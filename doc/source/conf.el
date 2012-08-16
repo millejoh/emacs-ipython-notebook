@@ -6,6 +6,7 @@
 
 (require 'ein-notebooklist)
 (require 'ein-shared-output)
+(require 'ein-traceback)
 (require 'ein-mumamo)
 (require 'ein-ac)
 (require 'ein-connect)
