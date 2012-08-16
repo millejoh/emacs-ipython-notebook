@@ -161,7 +161,8 @@ Keybinds - Notebook
    C-c             Prefix Command
    C-x             Prefix Command
    ESC             Prefix Command
-   C-:             ein:notebook-eval-string
+   .               ein:notebook-complete-dot
+   C-:             ein:shared-output-eval-string
    <C-down>        ein:notebook-goto-next-input-command
    <C-up>          ein:notebook-goto-prev-input-command
    <M-down>        ein:notebook-move-cell-down-command
@@ -193,13 +194,15 @@ Keybinds - Notebook
    C-c C-u         ein:notebook-change-cell-type
    C-c C-v         ein:notebook-set-collapsed-all-command
    C-c C-w         ein:notebook-copy-cell-command
-   C-c C-x         ein:notebook-view-traceback
+   C-c C-x         ein:tb-show
    C-c C-y         ein:notebook-yank-cell-command
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
    C-c C-S-l       ein:notebook-clear-all-output-command
+   C-c C-'         ein:notebook-turn-on-autoexec
    C-c C-,         ein:pytools-jump-back-command
    C-c C-.         ein:pytools-jump-to-source-command
+   C-c C-;         ein:shared-output-show-code-cell-at-point
    C-c <down>      ein:notebook-move-cell-down-command
    C-c <up>        ein:notebook-move-cell-up-command
 
@@ -225,15 +228,19 @@ commands are available.
 
    C-c             Prefix Command
    ESC             Prefix Command
-   C-:             ein:connect-eval-string
+   .               ein:connect-complete-dot
+   C-:             ein:shared-output-eval-string
 
    M-,             ein:pytools-jump-back-command
    M-.             ein:pytools-jump-to-source-command
 
+   C-c C-a         ein:connect-toggle-autoexec
    C-c C-c         ein:connect-run-or-eval-buffer
    C-c C-f         ein:connect-request-tool-tip-or-help-command
    C-c TAB         ein:connect-complete-command
+   C-c C-l         ein:connect-reload-buffer
    C-c C-r         ein:connect-eval-region
+   C-c C-x         ein:tb-show
    C-c C-z         ein:connect-pop-to-notebook
    C-c C-,         ein:pytools-jump-back-command
    C-c C-.         ein:pytools-jump-to-source-command
