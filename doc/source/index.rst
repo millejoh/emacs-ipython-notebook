@@ -51,7 +51,7 @@ Links:
 * `Issue Tracker at GitHub
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
 
-.. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
+.. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
 .. contents::
@@ -84,7 +84,7 @@ Requirements
 * (optional) python-mode:
   It should work with either python.el or `python-mode.el`_ [#]_.
   Fabian Gallina's `python.el`_ is required to use
-  :el:symbol:`ein:notebook-console-open` command.
+  :el:symbol:`ein:console-open` command.
 * (optional) `auto-complete.el`_
   You need to configure :el:symbol:`ein:use-auto-complete` to enable
   this feature.
@@ -310,14 +310,18 @@ Notebook
 .. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
-.. el:variable:: ein:notebook-console-security-dir
-.. el:variable:: ein:notebook-console-executable
-.. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
+
+Console
+^^^^^^^
+
+.. el:variable:: ein:console-security-dir
+.. el:variable:: ein:console-executable
+.. el:variable:: ein:console-args
 
 Connect
 ^^^^^^^
@@ -479,6 +483,9 @@ Change Log
 v0.1.2
 ------
 
+* Rename command :el:symbol:`ein:notebook-console-open` to
+  :el:symbol:`ein:console-open`.  It is available from non-notebook
+  buffer such as connected buffer now.
 * Add :el:symbol:`ein:connect-reload-buffer`.
   Old default :el:symbol:`ein:connect-run-buffer` behavior is
   replaced by this function.  :el:symbol:`ein:connect-run-buffer`

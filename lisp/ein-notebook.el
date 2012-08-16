@@ -1347,7 +1347,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (define-key map "\C-c\C-o" 'ein:notebook-console-open)
+  (define-key map "\C-c\C-o" 'ein:console-open)
   (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
   (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
@@ -1476,134 +1476,6 @@ Called via `kill-emacs-query-functions'."
                    (ein:log 'info "Killing all notebook buffers... Done!"))
           (ein:log 'info "Canceled to kill all notebooks."))
       (ein:log 'info "No opened notebooks."))))
-
-
-;;; Console integration
-
-(defcustom ein:notebook-console-security-dir ""
-  "Security directory setting.
-
-Following types are valid:
-
-string
-    Use this value as a path to security directory.
-    Handy when you have only one IPython server.
-alist
-    An alist whose element is \"(URL-OR-PORT . DIR)\".
-    Key (URL-OR-PORT) can be string (URL), integer (port), or
-    `default' (symbol).  The value of `default' is used when
-    other key does not much.  Normally you should have this
-    entry.
-function
-    Called with an argument URL-OR-PORT (integer or string).
-    You can have complex setting using this."
-  :type '(choice
-          (string :tag "Security directory"
-                  "~/.config/ipython/profile_nbserver/security/")
-          (alist :tag "Security directory mapping"
-                 :key-type (choice :tag "URL or PORT"
-                                   (string :tag "URL" "http://127.0.0.1:8888")
-                                   (integer :tag "PORT" 8888)
-                                   (const default))
-                 :value-type (string :tag "Security directory"))
-          (function :tag "Security directory getter"
-                    (lambda (url-or-port)
-                      (format "~/.config/ipython/profile_%s/security/"
-                              url-or-port))))
-  :group 'ein)
-
-(defcustom ein:notebook-console-executable (executable-find "ipython")
-  "IPython executable used for console.
-
-Example: ``\"/user/bin/ipython\"``.
-Types same as `ein:notebook-console-security-dir' are valid."
-  :type '(choice
-          (string :tag "IPython executable" "/user/bin/ipython")
-          (alist :tag "IPython executable mapping"
-                 :key-type (choice :tag "URL or PORT"
-                                   (string :tag "URL" "http://127.0.0.1:8888")
-                                   (integer :tag "PORT" 8888)
-                                   (const default))
-                 :value-type (string :tag "IPython executable"
-                                     "/user/bin/ipython"))
-          (function :tag "IPython executable getter"
-                    (lambda (url-or-port) (executable-find "ipython"))))
-  :group 'ein)
-
-(defcustom ein:notebook-console-args "--profile nbserver"
-  "Additional argument when using console.
-
-Example: ``\"--ssh HOSTNAME\"``.
-Types same as `ein:notebook-console-security-dir' are valid."
-  :type '(choice
-          (string :tag "Arguments to IPython"
-                  "--profile nbserver --ssh HOSTNAME")
-          (alist :tag "Arguments mapping"
-                 :key-type (choice :tag "URL or PORT"
-                                   (string :tag "URL" "http://127.0.0.1:8888")
-                                   (integer :tag "PORT" 8888)
-                                   (const default))
-                 :value-type (string :tag "Arguments to IPython"
-                                     "--profile nbserver --ssh HOSTNAME"))
-          (function :tag "Additional arguments getter"
-                    (lambda (url-or-port)
-                      (format "--ssh %s" url-or-port))))
-  :group 'ein)
-
-(defun ein:notebook-console-security-dir-get (notebook)
-  (let ((dir (ein:choose-setting 'ein:notebook-console-security-dir
-                                 (ein:$notebook-url-or-port notebook))))
-    (if (equal dir "")
-        dir
-    (file-name-as-directory (expand-file-name dir)))))
-
-(defun ein:notebook-console-executable-get (notebook)
-  (ein:choose-setting 'ein:notebook-console-executable
-                      (ein:$notebook-url-or-port notebook)))
-
-(defun ein:notebook-console-args-get (notebook)
-  (ein:choose-setting 'ein:notebook-console-args
-                      (ein:$notebook-url-or-port notebook)))
-
-;; `Fabian Gallina's python.el`_
-(declare-function python-shell-make-comint "python")
-(declare-function python-shell-get-process-name "python")
-(declare-function python-shell-switch-to-shell "python")
-
-(defun ein:notebook-console-open ()
-  "Open IPython console.
-To use this function, `ein:notebook-console-security-dir' and
-`ein:notebook-console-args' must be set properly.
-This function requires `Fabian Gallina's python.el`_ for now;
-It should be possible to support python-mode.el.  Patches are welcome!
-
-.. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el"
-  ;; FIXME: use %connect_info to get connection file, then I can get
-  ;; rid of `ein:notebook-console-security-dir'.
-  (interactive)
-  (unless ein:notebook (error "Not in notebook buffer!"))
-  (if (fboundp 'python-shell-switch-to-shell)
-      (let* ((dir (ein:notebook-console-security-dir-get ein:notebook))
-             (kid (ein:$kernel-kernel-id
-                   (ein:$notebook-kernel ein:notebook)))
-             (ipy (ein:notebook-console-executable-get ein:notebook))
-             (args (ein:notebook-console-args-get ein:notebook))
-             ;; python.el settings:
-             (python-shell-setup-codes nil)
-             (cmd
-              (format "python %s console --existing %skernel-%s.json %s"
-                      ipy dir kid args))
-             ;; python.el makes dedicated process when
-             ;; `buffer-file-name' has some value.
-             (buffer-file-name (buffer-name)))
-        ;; The following line does what `run-python' does.
-        ;; But as `run-python' changed the call signature in the new
-        ;; version, let's do this manually.
-        ;; See also: https://github.com/tkf/emacs-ipython-notebook/pull/50
-        (python-shell-make-comint cmd (python-shell-get-process-name t))
-        ;; Pop to inferior Python process buffer
-        (python-shell-switch-to-shell))
-    (ein:log 'warn "python.el is not loaded!")))
 
 (provide 'ein-notebook)
 

@@ -65,7 +65,7 @@ of OPTION:
 
 (defcustom ein:connect-run-command "%run"
   "``%run`` magic command used for `ein:connect-run-buffer'.
-Types same as `ein:notebook-console-security-dir' are valid."
+Types same as `ein:console-security-dir' are valid."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
@@ -347,6 +347,7 @@ change the cells to run."
   (define-key map "\C-c\C-i" 'ein:connect-complete-command)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
   (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
+  (define-key map "\C-c\C-o" 'ein:console-open)
   (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)

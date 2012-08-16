@@ -93,7 +93,7 @@ Requirements
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
-  ``ein:notebook-console-open`` command.
+  ``ein:console-open`` command.
 * (optional) `auto-complete.el`_
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
@@ -185,7 +185,7 @@ Keybinds - Notebook
    C-c C-l         ein:notebook-clear-output-command
    C-c RET         ein:notebook-merge-cell-command
    C-c C-n         ein:notebook-goto-next-input-command
-   C-c C-o         ein:notebook-console-open
+   C-c C-o         ein:console-open
    C-c C-p         ein:notebook-goto-prev-input-command
    C-c C-q         ein:notebook-kill-kernel-then-close-command
    C-c C-r         ein:notebook-restart-kernel-command
