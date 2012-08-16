@@ -29,6 +29,13 @@
 (require 'ein)
 (require 'ein-utils)
 
+;; Functions from `Fabian Gallina's python.el`_
+;; NOTE: Do *not* load python.el here, since user may be using the other
+;;       version of python-mode.
+(declare-function python-shell-make-comint "python")
+(declare-function python-shell-get-process-name "python")
+(declare-function python-shell-switch-to-shell "python")
+
 
 (defcustom ein:console-security-dir ""
   "Security directory setting.
@@ -111,11 +118,6 @@ Types same as `ein:console-security-dir' are valid."
 
 (defun ein:console-args-get (url-or-port)
   (ein:choose-setting 'ein:console-args url-or-port))
-
-;; `Fabian Gallina's python.el`_
-(declare-function python-shell-make-comint "python")
-(declare-function python-shell-get-process-name "python")
-(declare-function python-shell-switch-to-shell "python")
 
 (defun ein:console-open ()
   "Open IPython console.
