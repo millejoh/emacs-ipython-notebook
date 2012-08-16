@@ -37,6 +37,21 @@
 (declare-function python-shell-switch-to-shell "python")
 
 
+
+;;; Define aliases to old variables and functions.
+
+(define-obsolete-variable-alias
+  'ein:notebook-console-security-dir 'ein:console-security-dir "0.1.2")
+(define-obsolete-variable-alias
+  'ein:notebook-console-executable 'ein:console-executable "0.1.2")
+(define-obsolete-variable-alias
+  'ein:notebook-console-args 'ein:console-args "0.1.2")
+(define-obsolete-function-alias
+  'ein:notebook-console-open 'ein:console-open "0.1.2")
+
+
+;;; Configuration
+
 (defcustom ein:console-security-dir ""
   "Security directory setting.
 
@@ -155,18 +170,6 @@ It should be possible to support python-mode.el.  Patches are welcome!
         ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
     (error "python.el is not loaded!")))
-
-
-;;; Define aliases to old variables and functions.
-
-(define-obsolete-variable-alias
-  'ein:notebook-console-security-dir 'ein:console-security-dir "0.1.2")
-(define-obsolete-variable-alias
-  'ein:notebook-console-executable 'ein:console-executable "0.1.2")
-(define-obsolete-variable-alias
-  'ein:notebook-console-args 'ein:console-args "0.1.2")
-(define-obsolete-function-alias
-  'ein:notebook-console-open 'ein:console-open "0.1.2")
 
 (provide 'ein-console)
 
