@@ -323,6 +323,7 @@ Connect
 ^^^^^^^
 
 .. el:variable:: ein:connect-run-command
+.. el:variable:: ein:connect-reload-command
 .. el:variable:: ein:connect-save-before-run
 .. el:variable:: ein:propagate-connect
 .. el:variable:: ein:connect-aotoexec-lighter
@@ -474,6 +475,15 @@ with :el:symbol:`ein:dev-stop-debug`.
 
 Change Log
 ==========
+
+v0.1.2
+------
+
+* Add :el:symbol:`ein:connect-reload-buffer`.
+  Old default :el:symbol:`ein:connect-run-buffer` behavior is
+  replaced by this function.  :el:symbol:`ein:connect-run-buffer`
+  now actually runs buffer instead of loading it.
+
 
 v0.1.1
 ------

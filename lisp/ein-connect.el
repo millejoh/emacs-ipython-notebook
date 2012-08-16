@@ -63,9 +63,24 @@ of OPTION:
 
 ;;; Configuration
 
-(defcustom ein:connect-run-command "%run -n"
+(defcustom ein:connect-run-command "%run"
   "``%run`` magic command used for `ein:connect-run-buffer'.
 Types same as `ein:notebook-console-security-dir' are valid."
+  :type '(choice
+          (string :tag "command" "%run")
+          (alist :tag "command mapping"
+                 :key-type (choice :tag "URL or PORT"
+                                   (string :tag "URL" "http://127.0.0.1:8888")
+                                   (integer :tag "PORT" 8888)
+                                   (const default))
+                 :value-type (string :tag "command" "%run"))
+          (function :tag "command getter"
+                    (lambda (url-or-port) (format "%%run -n -i -t -d"))))
+  :group 'ein)
+
+(defcustom ein:connect-reload-command "%run -n"
+  "Setting for `ein:connect-reload-buffer'.
+Same as `ein:connect-run-command'."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
@@ -215,6 +230,12 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
       (ein:connect-eval-buffer)
     (ein:connect-run-buffer)))
 
+(defun ein:connect-reload-buffer ()
+  "Reload buffer using the command set by `ein:connect-reload-command'."
+  (interactive)
+  (let ((ein:connect-run-command ein:connect-reload-command))
+    (call-interactively #'ein:connect-run-buffer)))
+
 (defun ein:connect-eval-region (start end)
   (interactive "r")
   (ein:shared-output-eval-string (buffer-substring start end))
@@ -319,6 +340,7 @@ change the cells to run."
 
 (let ((map ein:connect-mode-map))
   (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
+  (define-key map "\C-c\C-l" 'ein:connect-reload-buffer)
   (define-key map "\C-c\C-r" 'ein:connect-eval-region)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
   (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
