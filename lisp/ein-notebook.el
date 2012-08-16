@@ -282,8 +282,6 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
   (ein:log-ignore-errors
-    (with-current-buffer (ein:notebook-buffer notebook)
-      (ein:log-del))
     (ein:kernel-del (ein:$notebook-kernel notebook))))
 
 (defun ein:notebook-get-buffer-name (notebook)
@@ -373,7 +371,6 @@ See `ein:notebook-open' for more information."
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-init notebook data)
     (with-current-buffer (ein:notebook-get-buffer notebook)
-      (ein:log-setup (ein:$notebook-notebook-id notebook))
       (setq ein:notebook notebook)
       (ein:notebook-render)
       (set-buffer-modified-p nil)

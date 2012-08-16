@@ -28,12 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'ein-utils)
 
-(ein:deflocal ein:log-buffer nil
-  "Buffer local variable to store a name of buffer to output log
-of activities occurred in this buffer.")
 
-
-(defvar ein:log-buffer-name-template " *ein:log %s*")
 (defvar ein:log-all-buffer-name " *ein:log-all*")
 
 (defvar ein:log-level-def
@@ -80,10 +75,6 @@ of activities occurred in this buffer.")
       (if (and ein:log-max-string
                (> (length msg) ein:log-max-string))
           (setq msg (substring msg 0 ein:log-max-string)))
-      (when ein:log-buffer
-        (ein:with-read-only-buffer (get-buffer-create ein:log-buffer)
-          (goto-char (point-max))
-          (insert msg "\n")))
       (ein:with-read-only-buffer (get-buffer-create ein:log-all-buffer-name)
         (goto-char (point-max))
         (insert msg (format " @%S" orig-buffer) "\n"))
@@ -93,10 +84,6 @@ of activities occurred in this buffer.")
 (defmacro ein:log (level string &rest args)
   (declare (indent 1))
   `(ein:log-wrapper ,level (lambda () (format ,string ,@args))))
-
-(defun ein:log-setup (name)
-  (setq ein:log-buffer (format ein:log-buffer-name-template name))
-  (ein:log 'verbose "Start logging."))
 
 ;; FIXME: this variable must go to somewhere more central
 (defvar ein:debug nil
@@ -115,20 +102,6 @@ Otherwise, return result of last form in BODY."
         (ein:log 'debug "Error: %S" err)
         (ein:log 'error (error-message-string err))
         nil))))
-
-(defun ein:log-del ()
-  "Kill buffer `ein:log-buffer'."
-  ;; FIXME: Maybe add `ein:debug' option for not killing buffer?
-  (when ein:log-buffer
-    (when (get-buffer ein:log-buffer)
-      (kill-buffer ein:log-buffer))
-    (setq ein:log-buffer nil)))
-
-(defun ein:log-pop-to-buffer ()
-  (interactive)
-  (if ein:log-buffer
-      (pop-to-buffer ein:log-buffer)
-    (message "ein: log buffer for current buffer is not set.")))
 
 (defun ein:log-pop-to-all-buffer ()
   (interactive)
