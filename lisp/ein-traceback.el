@@ -62,7 +62,7 @@
     (setq ein:@traceback traceback)
     (setq buffer-read-only t)
     (let ((inhibit-read-only t)
-          (ewoc (ewoc-create #'ein:tb-pp)))
+          (ewoc (ein:ewoc-create #'ein:tb-pp)))
       (erase-buffer)
       (oset traceback :ewoc ewoc)
       (oset traceback :tb-data tb-data)

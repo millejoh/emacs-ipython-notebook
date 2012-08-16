@@ -93,9 +93,9 @@
              ;; Enable nonsep for ewoc object (the last argument is non-nil).
              ;; This is for putting read-only text properties to the newlines.
              ;; FIXME: Do not depend on `ein:notebook-pp'!
-             (ewoc (ewoc-create 'ein:notebook-pp
-                                (ein:propertize-read-only "\n")
-                                nil t))
+             (ewoc (ein:ewoc-create 'ein:notebook-pp
+                                    (ein:propertize-read-only "\n")
+                                    nil t))
              (events (ein:events-new (current-buffer)))
              (cell (ein:shared-output-cell "SharedOutputCell"
                                            :ewoc ewoc

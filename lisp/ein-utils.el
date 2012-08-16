@@ -254,6 +254,20 @@ See: http://api.jquery.com/jQuery.ajax/"
   (setq ad-return-value (ein:json-encode-char char)))
 
 
+;;; EWOC
+
+(defun ein:ewoc-create (pretty-printer &optional header footer nosep)
+  "Do nothing wrapper of `ewoc-create' to provide better error message."
+  (condition-case nil
+      (ewoc-create pretty-printer header footer nosep)
+    ((debug wrong-number-of-arguments)
+     (ein:display-warning "Incompatible EOWC version.
+  The version of ewoc.el you are using is too old for EIN.
+  Please install the newer version.
+  See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
+     (error "Incompatible EOWC version."))))
+
+
 ;;; Text property
 
 (defun ein:propertize-read-only (string &rest properties)
