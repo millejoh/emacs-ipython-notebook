@@ -65,7 +65,7 @@ of OPTION:
 
 (defcustom ein:connect-run-command "%run"
   "``%run`` magic command used for `ein:connect-run-buffer'.
-Types same as `ein:notebook-console-security-dir' are valid."
+Types same as `ein:console-security-dir' are valid."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
