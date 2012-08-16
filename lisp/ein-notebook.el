@@ -1094,9 +1094,16 @@ command."
     ;; Enable nonsep for ewoc object (the last argument is non-nil).
     ;; This is for putting read-only text properties to the newlines.
     (setf (ein:$notebook-ewoc notebook)
-          (ewoc-create 'ein:notebook-pp
-                       (ein:propertize-read-only "\n")
-                       nil t))
+          (condition-case nil
+              (ewoc-create 'ein:notebook-pp
+                           (ein:propertize-read-only "\n")
+                           nil t)
+            ((debug wrong-number-of-arguments)
+             (ein:display-warning "Incompatible EOWC version.
+  The version of ewoc.el you are using is too old for EIN.
+  Please install the newer version.
+  See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
+             (error "Incompatible EOWC version."))))
     (mapc (lambda (cell-data)
             (ein:cell-enter-last
              (ein:notebook-cell-from-json ein:notebook cell-data)))
