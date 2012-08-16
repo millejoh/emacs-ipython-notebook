@@ -119,6 +119,16 @@ Types same as `ein:console-security-dir' are valid."
 (defun ein:console-args-get (url-or-port)
   (ein:choose-setting 'ein:console-args url-or-port))
 
+(defun ein:console-make-command ()
+  (let* ((url-or-port (or (ein:get-url-or-port)
+                          (error "Cannot find notebook to connect!")))
+         (dir (ein:console-security-dir-get url-or-port))
+         (kid (ein:kernel-id (ein:get-kernel)))
+         (ipy (ein:console-executable-get url-or-port))
+         (args (ein:console-args-get url-or-port)))
+    (format "python %s console --existing %skernel-%s.json %s"
+            ipy dir kid args)))
+
 (defun ein:console-open ()
   "Open IPython console.
 To use this function, `ein:console-security-dir' and
@@ -131,20 +141,12 @@ It should be possible to support python-mode.el.  Patches are welcome!
   ;; rid of `ein:console-security-dir'.
   (interactive)
   (if (fboundp 'python-shell-switch-to-shell)
-      (let* ((url-or-port (or (ein:get-url-or-port)
-                              (error "Cannot find notebook to connect!")))
-             (dir (ein:console-security-dir-get url-or-port))
-             (kid (ein:kernel-id (ein:get-kernel)))
-             (ipy (ein:console-executable-get url-or-port))
-             (args (ein:console-args-get url-or-port))
-             ;; python.el settings:
-             (python-shell-setup-codes nil)
-             (cmd
-              (format "python %s console --existing %skernel-%s.json %s"
-                      ipy dir kid args))
-             ;; python.el makes dedicated process when
-             ;; `buffer-file-name' has some value.
-             (buffer-file-name (buffer-name)))
+      (let ((cmd (ein:console-make-command))
+            ;; python.el settings:
+            (python-shell-setup-codes nil)
+            ;; python.el makes dedicated process when
+            ;; `buffer-file-name' has some value.
+            (buffer-file-name (buffer-name)))
         ;; The following line does what `run-python' does.
         ;; But as `run-python' changed the call signature in the new
         ;; version, let's do this manually.
