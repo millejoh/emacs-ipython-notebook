@@ -130,7 +130,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (pop-to-buffer
    (websocket-get-debug-buffer-create
     (ein:$websocket-ws (ein:$kernel-shell-channel
-                        (ein:$notebook-kernel ein:notebook))))))
+                        (ein:$notebook-kernel ein:%notebook%))))))
 
 (defun ein:dev-pop-to-debug-iopub ()
   "Open iopub channel websocket log buffer."
@@ -138,7 +138,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (pop-to-buffer
    (websocket-get-debug-buffer-create
     (ein:$websocket-ws (ein:$kernel-iopub-channel
-                        (ein:$notebook-kernel ein:notebook))))))
+                        (ein:$notebook-kernel ein:%notebook%))))))
 
 (defun ein:dev-notebook-plain-mode ()
   "Use `ein:notebook-plain-mode'."

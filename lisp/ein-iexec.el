@@ -42,7 +42,7 @@ If the previous execution timer is not fired yet, cancel the timer."
   (setq ein:iexec-timer
         (run-with-idle-timer ein:iexec-delay nil
                              #'ein:notebook-execute-cell
-                             ein:notebook cell)))
+                             ein:%notebook% cell)))
 
 (defun ein:iexec-should-execute-p (cell beg end)
   "Return non-`nil' if CELL should be executed by the change within
