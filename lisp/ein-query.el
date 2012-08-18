@@ -70,7 +70,7 @@ will be canceled \(see also `ein:query-singleton-ajax').
 
 (ein:deflocal ein:%query-ajax-timer% nil)
 
-(ein:deflocal ein:query-ajax-canceled nil
+(ein:deflocal ein:%query-ajax-canceled% nil
   "Buffer local variable which is set to the reason for cancel (a symbol)
 when it is cancelled.")
 
@@ -190,7 +190,7 @@ is killed immediately after the execution of this function.
          (response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
          (status-error (plist-get status :error))
-         (canceled ein:query-ajax-canceled)
+         (canceled ein:%query-ajax-canceled%)
          (data (unwind-protect
                    (if (and parser (not status-error))
                        (funcall parser))
@@ -217,7 +217,7 @@ is killed immediately after the execution of this function.
                                                 &allow-other-keys)
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %S" buffer)
   (ein:with-live-buffer buffer
-    (setq ein:query-ajax-canceled 'timeout)
+    (setq ein:%query-ajax-canceled% 'timeout)
     (let ((proc (get-buffer-process buffer)))
       ;; This will call `ein:query-ajax-callback'.
       (delete-process proc))))
@@ -237,7 +237,7 @@ KEY, then call `ein:query-ajax' with ARGS.  KEY is compared by
   (ein:query-gc-running-process-table)
   (ein:aif (gethash key ein:query-running-process-table)
       (ein:with-live-buffer it
-        (setq ein:query-ajax-canceled 'user-cancel)
+        (setq ein:%query-ajax-canceled% 'user-cancel)
         (let ((proc (get-buffer-process it)))
           ;; This will call `ein:query-ajax-callback'.
           (delete-process proc))))
