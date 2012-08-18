@@ -126,7 +126,7 @@ first candidate when the `ac-menu' pops up."
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
 dotty completion."
-  (if (or ein:%notebook% (ein:eval-if-bound 'ein:@connect))
+  (if (or ein:%notebook% (ein:eval-if-bound 'ein:%connect%))
       (with-syntax-table ein:ac-syntax-table
         ad-do-it)
     ad-do-it))
