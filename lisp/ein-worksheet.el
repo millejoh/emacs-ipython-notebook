@@ -55,7 +55,7 @@
    (events :initarg :events)
    (notification :initarg :notification)))
 
-(ein:deflocal ein:@worksheet nil
+(ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
 
 
@@ -99,7 +99,7 @@
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
-    (setq ein:@worksheet ws)
+    (setq ein:%worksheet% ws)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
