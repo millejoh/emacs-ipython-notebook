@@ -68,7 +68,7 @@ will be canceled \(see also `ein:query-singleton-ajax').
                  (const :tag "No timeout" nil))
   :group 'ein)
 
-(ein:deflocal ein:query-ajax-timer nil)
+(ein:deflocal ein:%query-ajax-timer% nil)
 
 (ein:deflocal ein:query-ajax-canceled nil
   "Buffer local variable which is set to the reason for cancel (a symbol)
@@ -162,7 +162,7 @@ is killed immediately after the execution of this function.
     (when timeout
       (ein:log 'debug "Start timer: timeout=%s ms" timeout)
       (with-current-buffer buffer
-        (setq ein:query-ajax-timer
+        (setq ein:%query-ajax-timer%
               (apply #'run-at-time
                      (/ timeout 1000.0) nil
                      #'ein:query-ajax-timeout-callback
@@ -224,9 +224,9 @@ is killed immediately after the execution of this function.
 
 (defun ein:query-ajax-cancel-timer ()
   (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
-  (when ein:query-ajax-timer
-    (cancel-timer ein:query-ajax-timer)
-    (setq ein:query-ajax-timer nil)))
+  (when ein:%query-ajax-timer%
+    (cancel-timer ein:%query-ajax-timer%)
+    (setq ein:%query-ajax-timer% nil)))
 
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
 
