@@ -129,6 +129,33 @@
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (oset ws :data data))
 
+
+;;; Cell indexing, retrieval, etc.
+
+
+;;; Insertion and deletion of cells
+
+
+;;; Cell selection.
+
+
+;;; Cell movement
+
+
+;;; Cell collapsing and output clearing
+
+
+;;; Kernel related things
+
+
+;;; Generic getter
+
+
+;;; Buffer
+
+
+;;; Imenu
+
 (provide 'ein-worksheet)
 
 ;;; ein-worksheet.el ends here
