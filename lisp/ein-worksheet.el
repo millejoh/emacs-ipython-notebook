@@ -33,8 +33,14 @@
 (require 'ein)
 (require 'ein-utils)
 (require 'ein-cell)
-(declare-function ein:$notebook-url-or-port "ein-notebook")
+(require 'ein-notification)
 
+(eval-when-compile (defvar ein:notebook-enable-undo))
+(declare-function ein:$notebook-url-or-port "ein-notebook")
+(declare-function ein:notebook-mode "ein-notebook")
+
+
+;;; Class and variable
 
 (defvar ein:worksheet-buffer-name-template "*ein: %s/%s*")
 
@@ -52,8 +58,17 @@
 (ein:deflocal ein:@worksheet nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
 
-(defun ein:worksheet-from-json (data)
-  (make-instance 'ein:worksheet :data data))
+
+;;; Initialization of object and buffer
+
+(defun ein:worksheet-new (notebook kernel events &rest args)
+  (apply #'make-instance 'ein:worksheet
+         :notebook notebook :events events :kernel kernel
+         args))
+
+(defmethod ein:worksheet-bind-events ((ws ein:worksheet))
+  (ein:notification-bind-events (oref ws :notification)
+                                (oref ws :events)))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))
@@ -63,6 +78,12 @@
 
 (defmethod ein:worksheet-name ((ws ein:worksheet))
   (plist-get (oref ws :metadata) :name))
+
+(defmethod ein:worksheet-full-name ((ws ein:worksheet))
+  (let ((nb-name (ein:worksheet-notebook-name ws)))
+    (ein:aif (ein:worksheet-name ws)
+        (concat nb-name "/" it)
+      nb-name)))
 
 (defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
@@ -74,10 +95,7 @@
       (generate-new-buffer
        (format ein:worksheet-buffer-name-template
                (ein:worksheet-url-or-port ws)
-               (let ((nb-name (ein:worksheet-notebook-name ws)))
-                 (ein:aif (ein:worksheet-name ws)
-                     (concat nb-name "/" it)
-                   nb-name))))))
+               (ein:worksheet-full-name ws)))))
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
@@ -90,13 +108,26 @@
         (mapc (lambda (cell-data)
                 (ein:cell-enter-last
                  (ein:cell-from-json cell-data :ewoc ewoc)))
-              (plist-get (oref ws :data) :cells))))))
+              (plist-get (oref ws :data) :cells))))
+    (setq buffer-undo-list nil)  ; clear undo history
+    (when (eq ein:notebook-enable-undo 'no)
+      (setq buffer-undo-list t))
+    (ein:notebook-mode)
+    (oset ws :notification (ein:notification-setup (current-buffer)))
+    (ein:worksheet-bind-events ws)
+    (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
 
 (defun ein:worksheet-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
+
+
+;;; Persistance and loading
+
+(defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
+  (oset ws :data data))
 
 (provide 'ein-worksheet)
 
