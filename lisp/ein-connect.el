@@ -116,10 +116,10 @@ as `ein:cell-autoexec-prompt'."
 ;;; Class
 
 (ein:deflocal ein:%connect% nil
-  "Buffer local variable to store an instance of `ein:$connect'")
+  "Buffer local variable to store an instance of `ein:connect'")
 (define-obsolete-variable-alias 'ein:@connect 'ein:%connect% "0.1.2")
 
-(defclass ein:$connect ()
+(defclass ein:connect ()
   ((notebook :initarg :notebook :type ein:$notebook)
    (buffer :initarg :buffer :type buffer)
    (autoexec :initarg :autoexec :initform nil :type boolean
@@ -131,7 +131,7 @@ class.")))
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
     (setq ein:%connect%
-          (ein:$connect "Connect" :notebook notebook :buffer buffer))
+          (ein:connect "Connect" :notebook notebook :buffer buffer))
     ein:%connect%))
 
 
@@ -290,7 +290,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (ein:aand (ein:get-notebook--connect) (ein:$notebook-url-or-port it)))
 
 (defun ein:get-notebook--connect ()
-  (when (ein:$connect-p ein:%connect%)
+  (when (ein:connect-p ein:%connect%)
     (oref ein:%connect% :notebook)))
 
 (defun ein:get-kernel--connect ()
@@ -306,7 +306,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 ;;; Auto-execution
 
 (defun ein:connect-assert-connected ()
-  (assert (ein:$connect-p ein:%connect%) nil
+  (assert (ein:connect-p ein:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
           (buffer-name)))
 
