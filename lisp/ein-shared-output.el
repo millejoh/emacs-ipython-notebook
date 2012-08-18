@@ -42,13 +42,13 @@
    )
   "A singleton cell to show output from non-notebook buffers.")
 
-(defclass ein:$shared-output ()
+(defclass ein:shared-output ()
   ((cell :initarg :cell :type ein:shared-output-cell)
    (events :initarg :events :type ein:events)
    (ewoc :initarg :ewoc :type ewoc)))
 
 (defvar ein:%shared-output% nil
-  "Hold an instance of `ein:$shared-output'.")
+  "Hold an instance of `ein:shared-output'.")
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
 
@@ -80,7 +80,7 @@
   (ewoc-buffer (oref ein:%shared-output% :ewoc)))
 
 (defun ein:shared-output-healthy-p ()
-  (and (ein:$shared-output-p ein:%shared-output%)
+  (and (ein:shared-output-p ein:%shared-output%)
        (buffer-live-p (ein:shared-output-buffer))))
 
 (defun ein:shared-output-get-or-create ()
@@ -103,7 +103,7 @@
         (erase-buffer)
         (ein:shared-output-bind-events events)
         (setq ein:%shared-output%
-              (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell
+              (ein:shared-output "SharedOutput" :ewoc ewoc :cell cell
                                   :events events))
         (ein:cell-enter-last cell))
       (setq buffer-read-only t)
@@ -194,7 +194,7 @@ shared output buffer.  You can open the buffer by the command
       (oref cell :kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
-  (when (ein:$shared-output-p ein:%shared-output%)
+  (when (ein:shared-output-p ein:%shared-output%)
     (oref ein:%shared-output% :cell)))
 
 (defun ein:get-traceback-data--shared-output ()
