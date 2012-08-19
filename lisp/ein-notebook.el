@@ -136,22 +136,6 @@ notebook.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
-(defcustom ein:complete-on-dot t
-  "Start completion when inserting a dot.  Note that
-`ein:use-auto-complete' (or `ein:use-auto-complete-superpack')
-must be `t' to enable this option.  This variable has effect on
-notebook buffers and connected buffers."
-  :type 'boolean
-  :group 'ein)
-
-(defun ein:complete-on-dot-install (map func)
-  (if (and ein:complete-on-dot
-           (featurep 'auto-complete)
-           (or ein:use-auto-complete
-               ein:use-auto-complete-superpack))
-      (define-key map "." func)
-    (define-key map "." nil)))
-
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
@@ -945,31 +929,11 @@ next cell, or insert if none."
   'ein:notebook-request-tool-tip-or-help-command
   'ein:pytools-request-tooltip-or-help "0.1.2")
 
-(defun ein:notebook-complete-at-point (notebook)
-  (let ((kernel (ein:$notebook-kernel notebook))
-        (callbacks
-         (list :complete_reply
-               (cons #'ein:completer-finish-completing nil))))
-    (ein:kernel-complete kernel
-                         (thing-at-point 'line)
-                         (current-column)
-                         callbacks)))
-
-(defun ein:notebook-complete-command ()
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:%notebook%)
-      (ein:notebook-complete-at-point ein:%notebook%))))
-
 (defun ein:notebook-complete-dot ()
   "Insert dot and request completion."
   (interactive)
-  (insert ".")
-  (when (and ein:%notebook%
-             (not (ac-cursor-on-diable-face-p))
-             (ein:codecell-p (ein:notebook-get-current-cell))
-             (ein:kernel-live-p (ein:$notebook-kernel ein:%notebook%)))
-    (ein:notebook-complete-at-point ein:%notebook%)))
+  (when (and ein:%notebook% (ein:codecell-p (ein:notebook-get-current-cell)))
+    (ein:completer-dot-complete)))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
@@ -1352,7 +1316,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "M-<up>") 'ein:notebook-move-cell-up-command)
   (define-key map (kbd "M-<down>") 'ein:notebook-move-cell-down-command)
   (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
-  (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
+  (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
