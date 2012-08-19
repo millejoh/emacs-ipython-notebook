@@ -405,34 +405,6 @@ of minor mode."
       (setf (ein:$notebook-dirty notebook) t))))
 
 
-;;; Cell selection.
-
-(defun ein:notebook-goto-input (ewoc-node up)
-  (let* ((ewoc-data (ewoc-data ewoc-node))
-         (cell (ein:$node-data ewoc-data))
-         (path (ein:$node-path ewoc-data))
-         (element (nth 1 path)))
-    (ein:aif
-        (if (memql element (if up '(output footer) '(prompt)))
-            cell
-          (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))
-        (ein:cell-goto it)
-      (ein:log 'warn "No %s input!" (if up "previous" "next")))))
-
-(defun ein:notebook-goto-input-in-notebook-buffer (up)
-  (ein:aif (ein:notebook-get-current-ewoc-node)
-      (ein:notebook-goto-input it up)
-    (ein:log 'warn "Not in notebook buffer!")))
-
-(defun ein:notebook-goto-next-input-command ()
-  (interactive)
-  (ein:notebook-goto-input-in-notebook-buffer nil))
-
-(defun ein:notebook-goto-prev-input-command ()
-  (interactive)
-  (ein:notebook-goto-input-in-notebook-buffer t))
-
-
 ;;; Cell movement
 
 (defun ein:notebook-move-cell (notebook cell up)

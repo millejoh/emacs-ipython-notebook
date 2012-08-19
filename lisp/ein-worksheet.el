@@ -454,6 +454,28 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
+(defun ein:worksheet-goto-input (ewoc-node up)
+  (let* ((ewoc-data (ewoc-data ewoc-node))
+         (cell (ein:$node-data ewoc-data))
+         (path (ein:$node-path ewoc-data))
+         (element (nth 1 path)))
+    (ein:aif
+        (if (memql element (if up '(output footer) '(prompt)))
+            cell
+          (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))
+        (ein:cell-goto it)
+      (error "No %s input!" (if up "previous" "next")))))
+
+(defun ein:worksheet-goto-next-input (ewoc-node)
+  (interactive (list (and (ein:worksheet--get-ws-or-error)
+                          (ein:worksheet-get-current-ewoc-node))))
+  (ein:worksheet-goto-input ewoc-node nil))
+
+(defun ein:worksheet-goto-prev-input (ewoc-node)
+  (interactive (list (and (ein:worksheet--get-ws-or-error)
+                          (ein:worksheet-get-current-ewoc-node))))
+  (ein:worksheet-goto-input ewoc-node t))
+
 
 ;;; Cell movement
 
