@@ -1257,6 +1257,10 @@ as usual."
   "Return list of opened notebook buffers."
   (mapcar #'ein:notebook-buffer (ein:notebook-opened-notebooks)))
 
+(defun ein:notebook-opened-buffer-names ()
+  "Return list of opened notebook buffer names."
+  (mapcar #'buffer-name (ein:notebook-opened-buffers)))
+
 
 ;;; Generic getter
 
@@ -1439,10 +1443,6 @@ Called via `kill-buffer-query-functions'."
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
-
-(defun ein:notebook-opened-buffer-names ()
-  "Return list of opened notebook buffer names."
-  (mapcar #'buffer-name (ein:notebook-opened-buffers)))
 
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
