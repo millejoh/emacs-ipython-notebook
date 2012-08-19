@@ -1207,20 +1207,23 @@ and save it immediately."
                       (ein:scratch-notebook-name))))
   (ein:notebook-rename-command name))
 
+(defun ein:notebook-close (notebook)
+  "Close NOTEBOOK and kill its buffer."
+  (let ((ein:notebook-kill-buffer-ask nil))
+    ;; Let `ein:notebook-kill-buffer-callback' do its job.
+    (kill-buffer (ein:notebook-buffer notebook))))
+
 (defun ein:notebook-kill-kernel-then-close-command ()
   "Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual."
   (interactive)
   (when (ein:notebook-ask-before-kill-buffer)
-    (let ((kernel (ein:$notebook-kernel ein:%notebook%))
-          (close-notebook (lambda (notebook)
-                            (let ((ein:notebook-kill-buffer-ask nil))
-                              (kill-buffer (ein:notebook-buffer notebook))))))
+    (let ((kernel (ein:$notebook-kernel ein:%notebook%)))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-kill kernel close-notebook (list ein:%notebook%))
-        (funcall close-notebook ein:%notebook%)))))
+          (ein:kernel-kill kernel #'ein:notebook-close (list ein:%notebook%))
+        (ein:notebook-close ein:%notebook%)))))
 
 
 ;;; Opened notebooks
@@ -1282,6 +1285,13 @@ as usual."
 (defun ein:notebook-live-p (notebook)
   "Return non-`nil' if NOTEBOOK has live buffer."
   (buffer-live-p (ein:notebook-buffer notebook)))
+
+(defun ein:notebook-modified-p (&optional notebook)
+  (unless notebook (setq notebook ein:%notebook%))
+  (and (ein:$notebook-p notebook)
+       (ein:notebook-live-p notebook)
+       (or (ein:$notebook-dirty notebook)
+           (buffer-modified-p (ein:notebook-buffer notebook)))))
 
 
 ;;; Imenu
@@ -1415,14 +1425,6 @@ Note that print page is not supported in IPython 0.12.1."
     (message "Opening %s in browser" url)
     (browse-url url)))
 
-(defun ein:notebook-modified-p (&optional buffer)
-  (unless buffer (setq buffer (current-buffer)))
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (and (ein:$notebook-p ein:%notebook%)
-           (or (ein:$notebook-dirty ein:%notebook%)
-               (buffer-modified-p))))))
-
 (defcustom ein:notebook-kill-buffer-ask t
   "Whether EIN should ask before killing unsaved notebook buffer."
   :type '(choice (const :tag "Yes" t)
@@ -1438,11 +1440,6 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
-(defun ein:notebook-force-kill-buffers (buffers)
-  "Kill notebook BUFFERS without confirmation."
-  (let ((ein:notebook-kill-buffer-ask nil))
-    (mapc #'kill-buffer buffers)))
-
 (defun ein:notebook-opened-buffer-names ()
   "Return list of opened notebook buffer names."
   (mapcar #'buffer-name (ein:notebook-opened-buffers)))
@@ -1451,7 +1448,7 @@ Called via `kill-buffer-query-functions'."
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
   (let ((unsaved (ein:filter #'ein:notebook-modified-p
-                             (ein:notebook-opened-buffers))))
+                             (ein:notebook-opened-notebooks))))
     (if (null unsaved)
         t
       (let ((answer
@@ -1460,7 +1457,7 @@ Called via `kill-emacs-query-functions'."
                       (length unsaved)))))
         ;; kill all unsaved buffers forcefully
         (when answer
-          (ein:notebook-force-kill-buffers unsaved))
+          (mapc #'ein:notebook-close unsaved))
         answer))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
@@ -1479,17 +1476,17 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-kill-all-buffers ()
   "Close all opened notebooks."
   (interactive)
-  (let* ((buffers (ein:notebook-opened-buffers))
-         (unsaved (ein:filter #'ein:notebook-modified-p buffers)))
-    (if buffers
+  (let* ((notebooks (ein:notebook-opened-notebooks))
+         (unsaved (ein:filter #'ein:notebook-modified-p notebooks)))
+    (if notebooks
         (if (y-or-n-p
              (format (concat "You have %s opened notebook(s). "
                              (when unsaved
                                (format "%s are UNSAVED. " (length unsaved)))
                              "Really kill all of them?")
-                     (length buffers)))
+                     (length notebooks)))
             (progn (ein:log 'info "Killing all notebook buffers...")
-                   (ein:notebook-force-kill-buffers buffers)
+                   (mapc #'ein:notebook-close unsaved)
                    (ein:log 'info "Killing all notebook buffers... Done!"))
           (ein:log 'info "Canceled to kill all notebooks."))
       (ein:log 'info "No opened notebooks."))))
