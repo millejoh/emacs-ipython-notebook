@@ -1232,8 +1232,8 @@ as usual."
   (gethash (list url-or-port notebook-id) ein:notebook--opened-map))
 
 (defun ein:notebook-get-opened-buffer (url-or-port notebook-id)
-  (ein:notebook-buffer
-   (ein:notebook-get-opened-notebook url-or-port notebook-id)))
+  (ein:aand (ein:notebook-get-opened-notebook url-or-port notebook-id)
+            (ein:notebook-buffer it)))
 
 (defun ein:notebook-put-opened-notebook (notebook)
   (puthash (list (ein:$notebook-url-or-port notebook)
