@@ -169,9 +169,6 @@ Current buffer for these functions is set to the notebook buffer.")
 (defvar ein:notebook-save-retry-max 1
   "Maximum retries for notebook saving.")
 
-(defvar ein:notebook-opened-map (make-hash-table :test 'equal)
-  "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook buffer.")
-
 (defstruct ein:$notebook
   "Hold notebook variables.
 
@@ -325,8 +322,7 @@ is newly created or not.  When CALLBACK is specified, buffer is
 responsibility to do so.  The current buffer is set to the
 notebook buffer when CALLBACK is called."
   (unless callback (setq callback #'ein:notebook-pop-to-current-buffer))
-  (let* ((key (list url-or-port notebook-id))
-         (buffer (gethash key ein:notebook-opened-map)))
+  (let ((buffer (ein:notebook-get-opened-buffer url-or-port notebook-id)))
     (if (buffer-live-p buffer)
         (with-current-buffer buffer
           (when callback
@@ -375,9 +371,7 @@ See `ein:notebook-open' for more information."
       (setq ein:%notebook% notebook)
       (ein:notebook-render)
       (set-buffer-modified-p nil)
-      (puthash (list (ein:$notebook-url-or-port ein:%notebook%) notebook-id)
-               (current-buffer)
-               ein:notebook-opened-map))))
+      (ein:notebook-put-opened-notebook notebook))))
 
 (defun ein:notebook-render ()
   "(Re-)Render the notebook."
@@ -1229,6 +1223,38 @@ as usual."
         (funcall close-notebook ein:%notebook%)))))
 
 
+;;; Opened notebooks
+
+(defvar ein:notebook--opened-map (make-hash-table :test 'equal)
+  "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook instance.")
+
+(defun ein:notebook-get-opened-notebook (url-or-port notebook-id)
+  (gethash (list url-or-port notebook-id) ein:notebook--opened-map))
+
+(defun ein:notebook-get-opened-buffer (url-or-port notebook-id)
+  (ein:notebook-buffer
+   (ein:notebook-get-opened-notebook url-or-port notebook-id)))
+
+(defun ein:notebook-put-opened-notebook (notebook)
+  (puthash (list (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-id notebook))
+           notebook
+           ein:notebook--opened-map))
+
+(defun ein:notebook-opened-notebooks ()
+  "Return list of opened notebook instances."
+  (let (notebooks)
+    (maphash (lambda (k n) (if (ein:notebook-live-p n)
+                               (push n notebooks)
+                             (remhash k ein:notebook--opened-map)))
+             ein:notebook--opened-map)
+    notebooks))
+
+(defun ein:notebook-opened-buffers ()
+  "Return list of opened notebook buffers."
+  (mapcar #'ein:notebook-buffer (ein:notebook-opened-notebooks)))
+
+
 ;;; Generic getter
 
 (defun ein:get-url-or-port--notebook ()
@@ -1252,6 +1278,10 @@ as usual."
 (defun ein:notebook-buffer-p ()
   "Return non-`nil' if current buffer is notebook buffer."
   ein:%notebook%)
+
+(defun ein:notebook-live-p (notebook)
+  "Return non-`nil' if NOTEBOOK has live buffer."
+  (buffer-live-p (ein:notebook-buffer notebook)))
 
 
 ;;; Imenu
@@ -1412,17 +1442,6 @@ Called via `kill-buffer-query-functions'."
   "Kill notebook BUFFERS without confirmation."
   (let ((ein:notebook-kill-buffer-ask nil))
     (mapc #'kill-buffer buffers)))
-
-(defun ein:notebook-opened-buffers ()
-  "Return list of opened buffers.
-This function also cleans up closed buffers stores in
-`ein:notebook-opened-map'."
-  (let (buffers)
-    (maphash (lambda (k b) (if (buffer-live-p b)
-                               (push b buffers)
-                             (remhash k ein:notebook-opened-map)))
-             ein:notebook-opened-map)
-    buffers))
 
 (defun ein:notebook-opened-buffer-names ()
   "Return list of opened notebook buffer names."
