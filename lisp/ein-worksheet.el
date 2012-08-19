@@ -554,6 +554,16 @@ Do not clear input prompts when the prefix argument is given."
   (mapc (lambda (cell) (oset cell :kernel (oref ws :kernel)))
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
+(defun ein:worksheet-execute-cell (ws cell)
+  "Execute code type CELL."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell
+                      :cell-p #'ein:codecell-p)))
+  (ein:kernel-if-ready (oref ws :kernel)
+    (ein:cell-execute cell)
+    (oset ws :dirty t)
+    cell))
+
 
 ;;; Generic getter
 

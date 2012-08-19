@@ -435,18 +435,6 @@ of minor mode."
     (ein:log 'error "Not in notebook buffer!")))
 
 
-(defun ein:notebook-execute-cell (notebook cell)
-  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
-    (ein:cell-execute cell)
-    (setf (ein:$notebook-dirty notebook) t)
-    cell))
-
-(defun ein:notebook-execute-current-cell ()
-  "Execute cell at point."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:notebook-execute-cell ein:%notebook% cell)))
-
 (defun ein:notebook-execute-current-cell-and-goto-next ()
   "Execute cell at point if it is a code cell and move to the
 next cell, or insert if none."
