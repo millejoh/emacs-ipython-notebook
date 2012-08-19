@@ -564,6 +564,17 @@ Do not clear input prompts when the prefix argument is given."
     (oset ws :dirty t)
     cell))
 
+(defun ein:worksheet-execute-cell-and-goto-next (ws cell)
+  "Execute cell at point if it is a code cell and move to the
+next cell, or insert if none."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)))
+  (when (ein:codecell-p cell)
+    (ein:worksheet-execute-cell ws cell))
+  (ein:aif (ein:cell-next cell)
+      (ein:cell-goto it)
+    (ein:worksheet-insert-cell-below ws 'code cell)))
+
 
 ;;; Generic getter
 

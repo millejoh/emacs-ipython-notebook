@@ -435,17 +435,6 @@ of minor mode."
     (ein:log 'error "Not in notebook buffer!")))
 
 
-(defun ein:notebook-execute-current-cell-and-goto-next ()
-  "Execute cell at point if it is a code cell and move to the
-next cell, or insert if none."
-  (interactive)
-  (ein:notebook-with-cell nil
-    (when (ein:codecell-p cell)
-      (ein:notebook-execute-cell ein:%notebook% cell))
-    (ein:aif (ein:cell-next cell)
-        (ein:cell-goto it)
-      (ein:notebook-insert-cell-below ein:%notebook% 'code cell))))
-
 (defun ein:notebook-execute-all-cell ()
   "Execute all cells in the current notebook buffer."
   (interactive)
