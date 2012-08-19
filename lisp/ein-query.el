@@ -38,11 +38,6 @@
   (when packed
     (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
 
-(defmacro ein:with-live-buffer (buffer &rest body)
-  "Execute BODY if BUFFER is alive."
-  (declare (indent 1) (debug t))
-  `(when (buffer-live-p ,buffer) (with-current-buffer ,buffer ,@body)))
-
 
 ;;; Variables
 
