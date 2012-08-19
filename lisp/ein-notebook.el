@@ -407,18 +407,6 @@ of minor mode."
 
 ;;; Cell collapsing and output clearing
 
-(defun ein:notebook-set-collapsed-all (notebook collapsed)
-  (mapc (lambda (c)
-          (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
-        (ein:notebook-get-cells notebook))
-  (ein:notebook-empty-undo-maybe)
-  (setf (ein:$notebook-dirty notebook) t))
-
-(defun ein:notebook-set-collapsed-all-command (&optional show)
-  "Hide all cell output.  When prefix is given, show all cell output."
-  (interactive "P")
-  (ein:notebook-set-collapsed-all ein:%notebook% (not show)))
-
 (defun ein:notebook-clear-output-command (&optional preserve-input-prompt)
   "Clear output from the current cell at point.
 Do not clear input prompt when the prefix argument is given."
