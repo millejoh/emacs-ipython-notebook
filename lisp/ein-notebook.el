@@ -1247,6 +1247,13 @@ as usual."
   (ein:aand (ein:notebook-get-current-cell) (ein:cell-get-tb-data it)))
 
 
+;;; API
+
+(defun ein:notebook-buffer-p ()
+  "Return non-`nil' if current buffer is notebook buffer."
+  ein:%notebook%)
+
+
 ;;; Imenu
 
 (defun ein:notebook-imenu-create-index ()
