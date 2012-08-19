@@ -441,8 +441,10 @@ of minor mode."
                  notebook)
   (ein:events-on events
                  'maybe_reset_undo.Notebook
-                 (lambda (&rest -ignore-)
-                   (ein:notebook-empty-undo-maybe)))
+                 (lambda (notebook -ignore-)
+                   (with-current-buffer (ein:notebook-buffer notebook)
+                     (ein:notebook-empty-undo-maybe)))
+                 notebook)
   ;; Bind events for sub components:
   (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
         (ein:notebook-get-cells notebook))
@@ -456,11 +458,12 @@ of minor mode."
          (ein:$notebook-events notebook))))
 
 (defun ein:notebook--set-next-input (notebook data)
-  (let* ((cell (plist-get data :cell))
-         (text (plist-get data :text))
-         (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
-    (ein:cell-set-text new-cell text)
-    (setf (ein:$notebook-dirty notebook) t)))
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (let* ((cell (plist-get data :cell))
+           (text (plist-get data :text))
+           (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
+      (ein:cell-set-text new-cell text)
+      (setf (ein:$notebook-dirty notebook) t))))
 
 
 ;;; Cell indexing, retrieval, etc.
