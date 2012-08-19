@@ -540,6 +540,13 @@ Do not clear input prompt when the prefix argument is given."
     (ein:cell-set-input-prompt cell))
   (ein:notebook-empty-undo-maybe))
 
+(defun ein:worksheet-clear-all-output (ws &optional preserve-input-prompt)
+  "Clear output from all cells.
+Do not clear input prompts when the prefix argument is given."
+  (interactive (list (ein:worksheet--get-ws-or-error) prefix-arg))
+  (mapc (lambda (c) (ein:worksheet-clear-output c preserve-input-prompt))
+        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+
 
 ;;; Kernel related things
 

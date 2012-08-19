@@ -404,22 +404,6 @@ of minor mode."
       (ein:cell-set-text new-cell text)
       (setf (ein:$notebook-dirty notebook) t))))
 
-
-;;; Cell collapsing and output clearing
-
-(defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
-  "Clear output from all cells.
-Do not clear input prompts when the prefix argument is given."
-  (interactive "P")
-  (if ein:%notebook%
-    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
-          do (when (ein:codecell-p cell)
-               (ein:cell-clear-output cell t t t)
-               (unless preserve-input-prompt
-                 (ein:cell-set-input-prompt cell))
-               (ein:notebook-empty-undo-maybe)))
-    (ein:log 'error "Not in notebook buffer!")))
-
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output
   'ein:shared-output-show-code-cell-at-point "0.1.2")
