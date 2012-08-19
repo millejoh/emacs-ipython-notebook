@@ -185,13 +185,17 @@
       (setq ewoc-node (ewoc-next (oref ein:%worksheet% :ewoc) ewoc-node)))
     ewoc-node))
 
-(defun ein:worksheet-get-current-cell (&optional pos noerror)
+(defun* ein:worksheet-get-current-cell (&optional
+                                        pos
+                                        &key
+                                        noerror
+                                        (cell-p #'ein:basecell-child-p))
   "Return a cell at POS.  If POS is not given, it is assumed be the
 current cursor position.  When the current buffer is not worksheet
 buffer or there is no cell in the current buffer, return `nil'."
   (let ((cell (ein:cell-from-ewoc-node
                (ein:worksheet-get-current-ewoc-node pos))))
-    (if (ein:basecell-child-p cell)
+    (if (funcall cell-p cell)
         cell
       (unless noerror
         (error "No cell found at pos=%s" pos)))))
@@ -282,7 +286,7 @@ Prefixes are act same as the normal `yank' command."
                        (cond ((listp arg) 0)
                              ((eq arg '-) -2)
                              (t (1- arg))))))
-  (let* ((cell (ein:worksheet-get-current-cell)) ; can be nil
+  (let* ((cell (ein:worksheet-get-current-cell :noerror t)) ; can be nil
          (killed (ein:current-kill n)))
     (loop for c in killed
           with last = cell
@@ -309,7 +313,7 @@ When used as a lisp function, insert a cell of TYPE-OR-CELL just
 after PIVOT and return the new cell."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (if prefix-arg 'markdown 'code)
-                     (ein:worksheet-get-current-cell nil t) ; can be nil
+                     (ein:worksheet-get-current-cell :noerror t) ; can be nil
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
     (cond
@@ -330,7 +334,7 @@ when the prefix argument is given.
 See also: `ein:worksheet-insert-cell-below'."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (if prefix-arg 'markdown 'code)
-                     (ein:worksheet-get-current-cell nil t) ; can be nil
+                     (ein:worksheet-get-current-cell :noerror t) ; can be nil
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
     (cond
@@ -505,6 +509,16 @@ If prefix is given, merge current cell into next cell."
 
 
 ;;; Cell collapsing and output clearing
+
+(defun ein:worksheet-toggle-output (ws cell)
+  "Toggle the visibility of the output of the cell at point.
+This does not alter the actual data stored in the cell."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell
+                      :cell-p #'ein:codecell-p)))
+  (ein:cell-toggle-output cell)
+  (ein:notebook-empty-undo-maybe)
+  (oset ws :dirty t))
 
 
 ;;; Kernel related things

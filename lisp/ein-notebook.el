@@ -407,18 +407,6 @@ of minor mode."
 
 ;;; Cell collapsing and output clearing
 
-(defun ein:notebook-toggle-output (notebook cell)
-  (ein:cell-toggle-output cell)
-  (ein:notebook-empty-undo-maybe)
-  (setf (ein:$notebook-dirty notebook) t))
-
-(defun ein:notebook-toggle-output-command ()
-  "Toggle the visibility of the output of the cell at point.
-This does not alter the actual data stored in the cell."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:notebook-toggle-output ein:%notebook% cell)))
-
 (defun ein:notebook-set-collapsed-all (notebook collapsed)
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
