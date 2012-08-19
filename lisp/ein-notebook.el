@@ -1493,7 +1493,7 @@ Called via `kill-emacs-query-functions'."
                              "Really kill all of them?")
                      (length notebooks)))
             (progn (ein:log 'info "Killing all notebook buffers...")
-                   (mapc #'ein:notebook-close unsaved)
+                   (mapc #'ein:notebook-close notebooks)
                    (ein:log 'info "Killing all notebook buffers... Done!"))
           (ein:log 'info "Canceled to kill all notebooks."))
       (ein:log 'info "No opened notebooks."))))
