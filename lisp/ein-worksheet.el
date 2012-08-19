@@ -575,6 +575,12 @@ next cell, or insert if none."
       (ein:cell-goto it)
     (ein:worksheet-insert-cell-below ws 'code cell)))
 
+(defun ein:worksheet-execute-all-cell (ws)
+  "Execute all cells in the current worksheet buffer."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (mapc #'ein:cell-execute
+        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+
 
 ;;; Generic getter
 

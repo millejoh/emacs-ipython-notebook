@@ -434,16 +434,6 @@ of minor mode."
         (ein:notebook-restart-kernel ein:%notebook%))
     (ein:log 'error "Not in notebook buffer!")))
 
-
-(defun ein:notebook-execute-all-cell ()
-  "Execute all cells in the current notebook buffer."
-  (interactive)
-  (if ein:%notebook%
-    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
-          when (ein:codecell-p cell)
-          do (ein:cell-execute cell))
-    (ein:log 'error "Not in notebook buffer!")))
-
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
   'ein:pytools-request-tooltip-or-help "0.1.2")
