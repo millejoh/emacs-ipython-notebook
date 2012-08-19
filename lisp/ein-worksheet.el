@@ -479,6 +479,30 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell movement
 
+(defun ein:worksheet-move-cell (ws cell up)
+  (ein:aif (if up (ein:cell-prev cell) (ein:cell-next cell))
+      (let ((inhibit-read-only t)
+            (pivot-cell it))
+        (ein:cell-save-text cell)
+        (ein:worksheet-delete-cell ws cell)
+        (funcall (if up
+                     #'ein:worksheet-insert-cell-above
+                   #'ein:worksheet-insert-cell-below)
+                 ws cell pivot-cell)
+        (ein:cell-goto cell)
+        (oset ws :dirty t))
+    (error "No %s cell" (if up "previous" "next"))))
+
+(defun ein:worksheet-move-cell-up (ws cell)
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)))
+  (ein:worksheet-move-cell ws cell t))
+
+(defun ein:worksheet-move-cell-down (ws cell)
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)))
+  (ein:worksheet-move-cell ws cell nil))
+
 
 ;;; Cell collapsing and output clearing
 

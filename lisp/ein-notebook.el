@@ -405,33 +405,6 @@ of minor mode."
       (setf (ein:$notebook-dirty notebook) t))))
 
 
-;;; Cell movement
-
-(defun ein:notebook-move-cell (notebook cell up)
-  (ein:aif (if up (ein:cell-prev cell) (ein:cell-next cell))
-      (let ((inhibit-read-only t)
-            (pivot-cell it))
-        (ein:cell-save-text cell)
-        (ein:notebook-delete-cell ein:%notebook% cell)
-        (funcall (if up
-                     #'ein:notebook-insert-cell-above
-                   #'ein:notebook-insert-cell-below)
-                 notebook cell pivot-cell)
-        (ein:cell-goto cell)
-        (setf (ein:$notebook-dirty notebook) t))
-    (ein:log 'warn "No %s cell" (if up "previous" "next"))))
-
-(defun ein:notebook-move-cell-up-command ()
-  (interactive)
-  (ein:notebook-with-cell nil
-    (ein:notebook-move-cell ein:%notebook% cell t)))
-
-(defun ein:notebook-move-cell-down-command ()
-  (interactive)
-  (ein:notebook-with-cell nil
-    (ein:notebook-move-cell ein:%notebook% cell nil)))
-
-
 ;;; Cell collapsing and output clearing
 
 (defun ein:notebook-toggle-output (notebook cell)
