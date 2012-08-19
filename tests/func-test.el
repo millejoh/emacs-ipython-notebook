@@ -140,7 +140,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (ein:aif (get-buffer pager-name)
             (kill-buffer it))
         (insert "file")
-        (ein:notebook-request-help-command)
+        (call-interactively #'ein:pytools-request-help)
         ;; Pager buffer will be created when got the response
         (eintest:wait-until (lambda () (get-buffer pager-name)))
         (with-current-buffer (get-buffer pager-name)
