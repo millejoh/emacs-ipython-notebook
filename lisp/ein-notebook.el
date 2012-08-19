@@ -405,28 +405,6 @@ of minor mode."
       (setf (ein:$notebook-dirty notebook) t))))
 
 
-;; Insertion and deletion of cells
-
-(defun ein:notebook-merge-cell-command (&optional next)
-  "Merge previous cell into current cell.
-If prefix is given, merge current cell into next cell."
-  (interactive "P")
-  (ein:notebook-with-cell nil
-    (unless next
-      (setq cell (ein:cell-prev cell))
-      (unless cell (error "No previous cell"))
-      (ein:cell-goto cell))
-    (let* ((next-cell (ein:cell-next cell))
-           (head (ein:cell-get-text cell)))
-      (assert next-cell nil "No cell to merge.")
-      (ein:notebook-delete-cell ein:%notebook% cell)
-      (save-excursion
-        (goto-char (ein:cell-input-pos-min next-cell))
-        (insert head "\n"))
-      (ein:notebook-empty-undo-maybe)
-      (ein:cell-goto next-cell))))
-
-
 ;;; Cell selection.
 
 (defun ein:notebook-goto-input (ewoc-node up)

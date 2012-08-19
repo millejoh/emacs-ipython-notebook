@@ -430,6 +430,27 @@ argument \(C-u)."
     (ein:notebook-empty-undo-maybe)
     (when focus (ein:cell-goto cell))))
 
+(defun ein:worksheet-merge-cell (ws cell &optional next focus)
+  "Merge previous cell into current cell.
+If prefix is given, merge current cell into next cell."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     prefix-arg
+                     t))
+  (unless next
+    (setq cell (ein:cell-prev cell))
+    (unless cell (error "No previous cell"))
+    (ein:cell-goto cell))
+  (let* ((next-cell (ein:cell-next cell))
+         (head (ein:cell-get-text cell)))
+    (assert next-cell nil "No cell to merge.")
+    (ein:worksheet-delete-cell ws cell)
+    (save-excursion
+      (goto-char (ein:cell-input-pos-min next-cell))
+      (insert head "\n"))
+    (ein:notebook-empty-undo-maybe)
+    (when focus (ein:cell-goto next-cell))))
+
 
 ;;; Cell selection.
 
