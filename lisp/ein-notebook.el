@@ -407,28 +407,6 @@ of minor mode."
 
 ;; Insertion and deletion of cells
 
-(defun ein:notebook-toggle-cell-type ()
-  "Toggle the cell type of the cell at point.
-Use `ein:notebook-change-cell-type' to change the cell type
-directly."
-  (interactive)
-  (ein:notebook-with-cell nil
-    (let ((type (case (ein:$notebook-nbformat ein:%notebook%)
-                  (2 (ein:case-equal (oref cell :cell-type)
-                       (("code") "markdown")
-                       (("markdown") "code")))
-                  (3 (ein:case-equal (oref cell :cell-type)
-                       (("code") "markdown")
-                       (("markdown") "raw")
-                       (("raw") "heading")
-                       (("heading") "code"))))))
-      (let ((relpos (ein:cell-relative-point cell))
-            (new (ein:cell-convert-inplace cell type)))
-        (when (ein:codecell-p new)
-          (oset new :kernel (ein:$notebook-kernel ein:%notebook%)))
-        (ein:notebook-empty-undo-maybe)
-        (ein:cell-goto new relpos)))))
-
 (defun ein:notebook-change-cell-type (type &optional level)
   "Change the cell type of the current cell.
 Prompt will appear in the minibuffer.

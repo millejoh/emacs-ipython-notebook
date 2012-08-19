@@ -38,6 +38,7 @@
 
 (eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
+(declare-function ein:$worksheet-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
 (declare-function ein:notebook-empty-undo-maybe "ein-notebook")
@@ -347,6 +348,28 @@ See also: `ein:worksheet-insert-cell-below'."
     (when focus (ein:cell-goto cell))
     cell))
 
+(defun ein:worksheet-toggle-cell-type (ws cell &optional focus)
+  "Toggle the cell type of the cell at point.
+Use `ein:worksheet-change-cell-type' to change the cell type
+directly."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     t))
+  (let ((type (case (ein:$worksheet-nbformat (oref ws :notebook))
+                (2 (ein:case-equal (oref cell :cell-type)
+                     (("code") "markdown")
+                     (("markdown") "code")))
+                (3 (ein:case-equal (oref cell :cell-type)
+                     (("code") "markdown")
+                     (("markdown") "raw")
+                     (("raw") "heading")
+                     (("heading") "code"))))))
+    (let ((relpos (ein:cell-relative-point cell))
+          (new (ein:cell-convert-inplace cell type)))
+      (when (ein:codecell-p new)
+        (oset new :kernel (oref ws :kernel)))
+      (ein:notebook-empty-undo-maybe)
+      (when focus (ein:cell-goto new relpos)))))
 
 ;;; Cell selection.
 
