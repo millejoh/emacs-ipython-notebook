@@ -384,7 +384,7 @@ See `ein:notebook-open' for more information."
   (ein:notebook-mode)
   (setf (ein:$notebook-notification ein:%notebook%)
         (ein:notification-setup (current-buffer)))
-  (ein:notebook-bind-events ein:%notebook% (ein:events-new (current-buffer)))
+  (ein:notebook-bind-events ein:%notebook% (ein:events-new))
   (ein:notebook--check-nbformat (ein:$notebook-data ein:%notebook%))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"

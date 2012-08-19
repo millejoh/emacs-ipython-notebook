@@ -96,7 +96,7 @@
              (ewoc (ein:ewoc-create 'ein:notebook-pp
                                     (ein:propertize-read-only "\n")
                                     nil t))
-             (events (ein:events-new (current-buffer)))
+             (events (ein:events-new))
              (cell (ein:shared-output-cell "SharedOutputCell"
                                            :ewoc ewoc
                                            :events events)))

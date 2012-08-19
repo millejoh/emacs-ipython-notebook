@@ -35,24 +35,20 @@
 ;;; Events handling class
 
 (defclass ein:events ()
-  ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
-   (callbacks :initarg :callbacks :type hash-table
+  ((callbacks :initarg :callbacks :type hash-table
               :initform (make-hash-table :test 'eq)))
   "Event handler class.")
 
-(defun ein:events-new (buffer)
+(defun ein:events-new ()
   "Return a new event handler instance."
-  (ein:events "Events" :buffer buffer))
+  (make-instance 'ein:events))
 
 (defun ein:events-trigger (events event-type &optional data)
   "Trigger EVENT-TYPE and let event handler EVENTS handle that event."
   (ein:log 'debug "Event: %S" event-type)
-  ;; Ensure that event is handled in the related buffer.
-  ;; This helps logging by `ein:log' (and maybe EWOC?).
-  (with-current-buffer (oref events :buffer)
-    (ein:aif (gethash event-type (oref events :callbacks))
-        (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it)
-      (ein:log 'info "Unknown event: %S" event-type))))
+  (ein:aif (gethash event-type (oref events :callbacks))
+      (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it)
+    (ein:log 'info "Unknown event: %S" event-type)))
 
 
 (defmethod ein:events-on ((events ein:events) event-type
@@ -62,9 +58,7 @@
 When EVENT-TYPE is triggered on the event handler EVENTS,
 CALLBACK is called.  CALLBACK must take two arguments:
 ARG as the first argument and DATA, which is passed via
-`ein:events-trigger', as the second.  When calling the function,
-current buffer is set to the configured buffer.  `ein:events-new'
-is used to configure the buffer."
+`ein:events-trigger', as the second."
   (assert (symbolp event-type))
   (let* ((table (oref events :callbacks))
          (cbs (gethash event-type table)))
