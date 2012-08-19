@@ -167,7 +167,7 @@ notebooks."
   (interactive (list (completing-read "Notebook buffer to connect: "
                                       (ein:notebook-opened-buffer-names))))
   (let ((notebook
-         (buffer-local-value 'ein:notebook (get-buffer buffer-or-name))))
+         (buffer-local-value 'ein:%notebook% (get-buffer buffer-or-name))))
     (ein:connect-buffer-to-notebook notebook)))
 
 (defun ein:connect-buffer-to-notebook (notebook &optional buffer

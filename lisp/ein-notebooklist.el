@@ -187,7 +187,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
 (defun ein:notebooklist-refresh-related ()
   "Reload notebook list in which current notebook locates.
 This function is called via `ein:notebook-after-rename-hook'."
-  (ein:notebooklist-open (ein:$notebook-url-or-port ein:notebook) t))
+  (ein:notebooklist-open (ein:$notebook-url-or-port ein:%notebook%) t))
 
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 

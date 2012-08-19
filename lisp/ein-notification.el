@@ -146,7 +146,7 @@ local variable of the BUFFER"
 As `header-line-format' is buffer local variable, it must be set
 for each chunk when in
 See also `ein:ac-setup-maybe'."
-  (and (ein:eval-if-bound 'ein:notebook)
+  (and (ein:eval-if-bound 'ein:%notebook%)
        (ein:eval-if-bound 'mumamo-multi-major-mode)
        (setq header-line-format ein:header-line-format)))
 (add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
