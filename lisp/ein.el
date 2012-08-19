@@ -24,7 +24,21 @@
 
 ;;; Commentary:
 
+;; # Development
 ;;
+;; Variable named `ein:%VAR-NAME%' is a permanent buffer local
+;; variable defined by `ein:deflocal'.  It is often an instance of a
+;; class/struct named `ein:VAR-NAME'.
+;;
+;; Old naming rule:
+;; * `ein:@VAR-NAME'/`ein:VAR-NAME' is a permanent buffer local
+;;   variable.  These variables are obsolete now.
+;; * `ein:$STRUCT-NAME' is a name of struct.
+;;   These strcuts will be renamed to `ein:CLASS-NAME' when
+;;   reimplementing them using EIEIO class instead of CL struct.
+;;
+;; See also:
+;; `CLiki : naming conventions <http://www.cliki.net/naming%20conventions>`_
 
 ;;; Code:
 

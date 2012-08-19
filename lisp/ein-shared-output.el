@@ -42,13 +42,13 @@
    )
   "A singleton cell to show output from non-notebook buffers.")
 
-(defclass ein:$shared-output ()
+(defclass ein:shared-output ()
   ((cell :initarg :cell :type ein:shared-output-cell)
    (events :initarg :events :type ein:events)
    (ewoc :initarg :ewoc :type ewoc)))
 
-(defvar ein:@shared-output nil
-  "Hold an instance of `ein:$shared-output'.")
+(defvar ein:%shared-output% nil
+  "Hold an instance of `ein:shared-output'.")
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
 
@@ -76,16 +76,16 @@
   (get-buffer-create ein:shared-output-buffer-name))
 
 (defun ein:shared-output-buffer ()
-  "Get the buffer associated with `ein:@shared-output'."
-  (ewoc-buffer (oref ein:@shared-output :ewoc)))
+  "Get the buffer associated with `ein:%shared-output%'."
+  (ewoc-buffer (oref ein:%shared-output% :ewoc)))
 
 (defun ein:shared-output-healthy-p ()
-  (and (ein:$shared-output-p ein:@shared-output)
+  (and (ein:shared-output-p ein:%shared-output%)
        (buffer-live-p (ein:shared-output-buffer))))
 
 (defun ein:shared-output-get-or-create ()
   (if (ein:shared-output-healthy-p)
-      ein:@shared-output
+      ein:%shared-output%
     (with-current-buffer (ein:shared-output-create-buffer)
       ;; FIXME: This is a duplication of `ein:notebook-from-json'.
       ;;        Must be merged.
@@ -102,13 +102,13 @@
                                            :events events)))
         (erase-buffer)
         (ein:shared-output-bind-events events)
-        (setq ein:@shared-output
-              (ein:$shared-output "SharedOutput" :ewoc ewoc :cell cell
+        (setq ein:%shared-output%
+              (ein:shared-output "SharedOutput" :ewoc ewoc :cell cell
                                   :events events))
         (ein:cell-enter-last cell))
       (setq buffer-read-only t)
       (ein:shared-output-mode)
-      ein:@shared-output)))
+      ein:%shared-output%)))
 
 (defun ein:shared-output-bind-events (events)
   "Add dummy event handlers."
@@ -136,15 +136,15 @@ Create a cell if the buffer has none."
 Note that this function assumed to be called in the buffer
 where CELL locates."
   (let ((new (ein:cell-convert cell "shared-output")))
-    ;; Make sure `ein:@shared-output' is initialized:
+    ;; Make sure `ein:%shared-output%' is initialized:
     (ein:shared-output-get-or-create)
     (with-current-buffer (ein:shared-output-create-buffer)
       (let ((inhibit-read-only t)
             (ein:cell-max-num-outputs nil))
-        (oset new :ewoc (oref ein:@shared-output :ewoc))
-        (oset new :events (oref ein:@shared-output :events))
+        (oset new :ewoc (oref ein:%shared-output% :ewoc))
+        (oset new :events (oref ein:%shared-output% :events))
         (erase-buffer)  ; because there are only one cell anyway
-        (oset ein:@shared-output :cell new)
+        (oset ein:%shared-output% :cell new)
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
@@ -194,8 +194,8 @@ shared output buffer.  You can open the buffer by the command
       (oref cell :kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
-  (when (ein:$shared-output-p ein:@shared-output)
-    (oref ein:@shared-output :cell)))
+  (when (ein:shared-output-p ein:%shared-output%)
+    (oref ein:%shared-output% :cell)))
 
 (defun ein:get-traceback-data--shared-output ()
   (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))

@@ -231,8 +231,9 @@ Current buffer for these functions is set to the notebook buffer.")
   notification
   )
 
-(ein:deflocal ein:notebook nil
+(ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
+(define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
 (defmacro ein:notebook-with-cell (cell-p &rest body)
   "Execute BODY if in cell with a dynamically bound variable `cell'.
@@ -329,8 +330,8 @@ notebook buffer when CALLBACK is called."
     (if (buffer-live-p buffer)
         (with-current-buffer buffer
           (when callback
-            (apply callback ein:notebook nil cbargs))
-          ein:notebook)
+            (apply callback ein:%notebook% nil cbargs))
+          ein:%notebook%)
       (ein:notebook-request-open url-or-port notebook-id callback cbargs))))
 
 (defun ein:notebook-request-open (url-or-port notebook-id
@@ -371,29 +372,29 @@ See `ein:notebook-open' for more information."
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-init notebook data)
     (with-current-buffer (ein:notebook-get-buffer notebook)
-      (setq ein:notebook notebook)
+      (setq ein:%notebook% notebook)
       (ein:notebook-render)
       (set-buffer-modified-p nil)
-      (puthash (list (ein:$notebook-url-or-port ein:notebook) notebook-id)
+      (puthash (list (ein:$notebook-url-or-port ein:%notebook%) notebook-id)
                (current-buffer)
                ein:notebook-opened-map))))
 
 (defun ein:notebook-render ()
   "(Re-)Render the notebook."
   (interactive)
-  (assert ein:notebook)  ; make sure in a notebook buffer
-  (ein:notebook-from-json ein:notebook (ein:$notebook-data ein:notebook))
+  (assert ein:%notebook%)  ; make sure in a notebook buffer
+  (ein:notebook-from-json ein:%notebook% (ein:$notebook-data ein:%notebook%))
   (setq buffer-undo-list nil)  ; clear undo history
   (when (eq ein:notebook-enable-undo 'no)
     (setq buffer-undo-list t))
   (ein:notebook-mode)
-  (setf (ein:$notebook-notification ein:notebook)
+  (setf (ein:$notebook-notification ein:%notebook%)
         (ein:notification-setup (current-buffer)))
-  (ein:notebook-bind-events ein:notebook (ein:events-new (current-buffer)))
-  (ein:notebook--check-nbformat (ein:$notebook-data ein:notebook))
+  (ein:notebook-bind-events ein:%notebook% (ein:events-new (current-buffer)))
+  (ein:notebook--check-nbformat (ein:$notebook-data ein:%notebook%))
   (ein:notebook-start-kernel)
   (ein:log 'info "Notebook %s is ready"
-           (ein:$notebook-notebook-name ein:notebook)))
+           (ein:$notebook-notebook-name ein:%notebook%)))
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
@@ -433,7 +434,7 @@ of minor mode."
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
-  (setf (ein:$notebook-events ein:notebook) events)
+  (setf (ein:$notebook-events ein:%notebook%) events)
   (ein:events-on events
                  'set_next_input.Notebook
                  #'ein:notebook--set-next-input
@@ -451,7 +452,7 @@ of minor mode."
   ;; Bind events for sub components:
   (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
         (ein:notebook-get-cells notebook))
-  (ein:notification-bind-events (ein:$notebook-notification ein:notebook)
+  (ein:notification-bind-events (ein:$notebook-notification ein:%notebook%)
                                 events)
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
@@ -515,7 +516,7 @@ If you really want use this command, you can do something like this
               'ein:notebook-delete-cell-command)"
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:notebook-delete-cell ein:notebook cell)
+    (ein:notebook-delete-cell ein:%notebook% cell)
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
 (defun ein:notebook-kill-cells (notebook cells)
@@ -533,7 +534,7 @@ Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts)."
   (interactive)
   (ein:notebook-with-cells-in-region
-    (ein:notebook-kill-cells ein:notebook cells)
+    (ein:notebook-kill-cells ein:%notebook% cells)
     (deactivate-mark)
     (ein:aif (ein:notebook-get-current-cell) (ein:cell-goto it))))
 
@@ -568,7 +569,7 @@ Prefixes are act same as the normal `yank' command."
                                     (t (1- arg))))))
     (loop for c in killed
           with last = cell
-          do (setq last (ein:notebook-insert-clone-below ein:notebook c last))
+          do (setq last (ein:notebook-insert-clone-below ein:%notebook% c last))
           finally (ein:cell-goto last))))
 
 (defun ein:notebook-maybe-new-cell (notebook type-or-cell)
@@ -608,7 +609,7 @@ when the prefix argument is given."
     ;; This command should add the first cell.  So this clause must be
     ;; executed even if `cell' is `nil'.
     (ein:cell-goto
-     (ein:notebook-insert-cell-below ein:notebook
+     (ein:notebook-insert-cell-below ein:%notebook%
                                      (if markdown 'markdown 'code)
                                      cell))))
 
@@ -636,7 +637,7 @@ when the prefix argument is given."
   (interactive "P")
   (let ((cell (ein:notebook-get-current-cell)))
     (ein:cell-goto
-     (ein:notebook-insert-cell-above ein:notebook
+     (ein:notebook-insert-cell-above ein:%notebook%
                                      (if markdown 'markdown 'code)
                                      cell))))
 
@@ -646,7 +647,7 @@ Use `ein:notebook-change-cell-type' to change the cell type
 directly."
   (interactive)
   (ein:notebook-with-cell nil
-    (let ((type (case (ein:$notebook-nbformat ein:notebook)
+    (let ((type (case (ein:$notebook-nbformat ein:%notebook%)
                   (2 (ein:case-equal (oref cell :cell-type)
                        (("code") "markdown")
                        (("markdown") "code")))
@@ -658,7 +659,7 @@ directly."
       (let ((relpos (ein:cell-relative-point cell))
             (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
-          (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+          (oset new :kernel (ein:$notebook-kernel ein:%notebook%)))
         (ein:notebook-empty-undo-maybe)
         (ein:cell-goto new relpos)))))
 
@@ -670,7 +671,7 @@ When used in as a Lisp function, TYPE (string) should be chose
 from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
 an integer used only when the TYPE is \"heading\"."
   (interactive
-   (let* ((choices (case (ein:$notebook-nbformat ein:notebook)
+   (let* ((choices (case (ein:$notebook-nbformat ein:%notebook%)
                      (2 "cm")
                      (3 "cmr123456")))
           (key (ein:ask-choice-char
@@ -688,7 +689,7 @@ an integer used only when the TYPE is \"heading\"."
     (let ((relpos (ein:cell-relative-point cell))
             (new (ein:cell-convert-inplace cell type)))
         (when (ein:codecell-p new)
-          (oset new :kernel (ein:$notebook-kernel ein:notebook)))
+          (oset new :kernel (ein:$notebook-kernel ein:%notebook%)))
         (when level
           (ein:cell-change-level new level))
         (ein:notebook-empty-undo-maybe)
@@ -704,7 +705,7 @@ argument \(C-u)."
     (let* ((beg (set-marker (make-marker) (ein:cell-input-pos-min cell)))
            (pos (point-marker))
            (head (buffer-substring beg pos))
-           (new (ein:notebook-insert-cell-above ein:notebook
+           (new (ein:notebook-insert-cell-above ein:%notebook%
                                                 (oref cell :cell-type)
                                                 cell)))
       (delete-region beg pos)
@@ -730,7 +731,7 @@ If prefix is given, merge current cell into next cell."
     (let* ((next-cell (ein:cell-next cell))
            (head (ein:cell-get-text cell)))
       (assert next-cell nil "No cell to merge.")
-      (ein:notebook-delete-cell ein:notebook cell)
+      (ein:notebook-delete-cell ein:%notebook% cell)
       (save-excursion
         (goto-char (ein:cell-input-pos-min next-cell))
         (insert head "\n"))
@@ -773,7 +774,7 @@ If prefix is given, merge current cell into next cell."
       (let ((inhibit-read-only t)
             (pivot-cell it))
         (ein:cell-save-text cell)
-        (ein:notebook-delete-cell ein:notebook cell)
+        (ein:notebook-delete-cell ein:%notebook% cell)
         (funcall (if up
                      #'ein:notebook-insert-cell-above
                    #'ein:notebook-insert-cell-below)
@@ -785,12 +786,12 @@ If prefix is given, merge current cell into next cell."
 (defun ein:notebook-move-cell-up-command ()
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:notebook-move-cell ein:notebook cell t)))
+    (ein:notebook-move-cell ein:%notebook% cell t)))
 
 (defun ein:notebook-move-cell-down-command ()
   (interactive)
   (ein:notebook-with-cell nil
-    (ein:notebook-move-cell ein:notebook cell nil)))
+    (ein:notebook-move-cell ein:%notebook% cell nil)))
 
 
 ;;; Cell collapsing and output clearing
@@ -805,7 +806,7 @@ If prefix is given, merge current cell into next cell."
 This does not alter the actual data stored in the cell."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:notebook-toggle-output ein:notebook cell)))
+    (ein:notebook-toggle-output ein:%notebook% cell)))
 
 (defun ein:notebook-set-collapsed-all (notebook collapsed)
   (mapc (lambda (c)
@@ -817,7 +818,7 @@ This does not alter the actual data stored in the cell."
 (defun ein:notebook-set-collapsed-all-command (&optional show)
   "Hide all cell output.  When prefix is given, show all cell output."
   (interactive "P")
-  (ein:notebook-set-collapsed-all ein:notebook (not show)))
+  (ein:notebook-set-collapsed-all ein:%notebook% (not show)))
 
 (defun ein:notebook-clear-output-command (&optional preserve-input-prompt)
   "Clear output from the current cell at point.
@@ -833,8 +834,8 @@ Do not clear input prompt when the prefix argument is given."
   "Clear output from all cells.
 Do not clear input prompts when the prefix argument is given."
   (interactive "P")
-  (if ein:notebook
-    (loop for cell in (ein:notebook-get-cells ein:notebook)
+  (if ein:%notebook%
+    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
           do (when (ein:codecell-p cell)
                (ein:cell-clear-output cell t t t)
                (unless preserve-input-prompt
@@ -851,16 +852,16 @@ Do not clear input prompts when the prefix argument is given."
 
 (defun ein:notebook-start-kernel ()
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
-         (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:notebook)
+         (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:%notebook%)
                                  base-url
-                                 (ein:$notebook-events ein:notebook))))
-    (setf (ein:$notebook-kernel ein:notebook) kernel)
+                                 (ein:$notebook-events ein:%notebook%))))
+    (setf (ein:$notebook-kernel ein:%notebook%) kernel)
     (ein:kernelinfo-init (ein:$kernel-kernelinfo kernel) (current-buffer))
     (ein:kernelinfo-setup-hooks kernel)
     (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id ein:notebook))
-    (loop for cell in (ein:notebook-get-cells ein:notebook)
+                      (ein:$notebook-notebook-id ein:%notebook%))
+    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
           do (when (ein:codecell-p cell)
                (ein:cell-set-kernel cell kernel)))))
 
@@ -870,14 +871,14 @@ Do not clear input prompts when the prefix argument is given."
 (defun ein:notebook-restart-kernel-command ()
   "Send request to the server to restart kernel."
   (interactive)
-  (if ein:notebook
+  (if ein:%notebook%
       (when (y-or-n-p "Really restart kernel? ")
-        (ein:notebook-restart-kernel ein:notebook))
+        (ein:notebook-restart-kernel ein:%notebook%))
     (ein:log 'error "Not in notebook buffer!")))
 
 
 (defun ein:notebook-get-current-ewoc-node (&optional pos)
-  (ein:aand ein:notebook (ein:$notebook-ewoc it) (ewoc-locate it pos)))
+  (ein:aand ein:%notebook% (ein:$notebook-ewoc it) (ewoc-locate it pos)))
 
 (defun ein:notebook-get-nearest-cell-ewoc-node (&optional pos max cell-p)
   (ein:aif (ein:notebook-get-current-ewoc-node pos)
@@ -889,7 +890,7 @@ Do not clear input prompts when the prefix argument is given."
                                   (funcall cell-p
                                            (ein:cell-from-ewoc-node ewoc-node))
                                 t))))
-          (setq ewoc-node (ewoc-next (ein:$notebook-ewoc ein:notebook)
+          (setq ewoc-node (ewoc-next (ein:$notebook-ewoc ein:%notebook%)
                                      ewoc-node)))
         ewoc-node)))
 
@@ -902,7 +903,7 @@ buffer or there is no cell in the current buffer, return `nil'."
     (when (ein:basecell-child-p cell) cell)))
 
 (defun ein:notebook-get-cells-in-region (beg end)
-  (ein:clip-list (ein:aand ein:notebook (ein:notebook-get-cells it))
+  (ein:clip-list (ein:aand ein:%notebook% (ein:notebook-get-cells it))
                  (ein:notebook-get-current-cell beg)
                  (ein:notebook-get-current-cell end)))
 
@@ -921,7 +922,7 @@ buffer or there is no cell in the current buffer, return `nil'."
   "Execute cell at point."
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:notebook-execute-cell ein:notebook cell)))
+    (ein:notebook-execute-cell ein:%notebook% cell)))
 
 (defun ein:notebook-execute-current-cell-and-goto-next ()
   "Execute cell at point if it is a code cell and move to the
@@ -929,16 +930,16 @@ next cell, or insert if none."
   (interactive)
   (ein:notebook-with-cell nil
     (when (ein:codecell-p cell)
-      (ein:notebook-execute-cell ein:notebook cell))
+      (ein:notebook-execute-cell ein:%notebook% cell))
     (ein:aif (ein:cell-next cell)
         (ein:cell-goto it)
-      (ein:notebook-insert-cell-below ein:notebook 'code cell))))
+      (ein:notebook-insert-cell-below ein:%notebook% 'code cell))))
 
 (defun ein:notebook-execute-all-cell ()
   "Execute all cells in the current notebook buffer."
   (interactive)
-  (if ein:notebook
-    (loop for cell in (ein:notebook-get-cells ein:notebook)
+  (if ein:%notebook%
+    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
           when (ein:codecell-p cell)
           do (ein:cell-execute cell))
     (ein:log 'error "Not in notebook buffer!")))
@@ -953,9 +954,9 @@ next cell, or insert if none."
 (defun ein:notebook-request-tool-tip-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
+    (ein:kernel-if-ready (ein:$notebook-kernel ein:%notebook%)
       (let ((func (ein:object-at-point)))
-        (ein:notebook-request-tool-tip ein:notebook cell func)))))
+        (ein:notebook-request-tool-tip ein:%notebook% cell func)))))
 
 (defun ein:notebook-request-help (notebook)
   (ein:kernel-if-ready (ein:$notebook-kernel notebook)
@@ -970,7 +971,7 @@ next cell, or insert if none."
 
 (defun ein:notebook-request-help-command ()
   (interactive)
-  (ein:notebook-request-help ein:notebook))
+  (ein:notebook-request-help ein:%notebook%))
 
 (defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
   "Show the help for the object at point using tooltip.
@@ -994,29 +995,29 @@ pager buffer.  You can explicitly specify the object by selecting it."
 (defun ein:notebook-complete-command ()
   (interactive)
   (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:notebook)
-      (ein:notebook-complete-at-point ein:notebook))))
+    (ein:kernel-if-ready (ein:$notebook-kernel ein:%notebook%)
+      (ein:notebook-complete-at-point ein:%notebook%))))
 
 (defun ein:notebook-complete-dot ()
   "Insert dot and request completion."
   (interactive)
   (insert ".")
-  (when (and ein:notebook
+  (when (and ein:%notebook%
              (not (ac-cursor-on-diable-face-p))
              (ein:codecell-p (ein:notebook-get-current-cell))
-             (ein:kernel-live-p (ein:$notebook-kernel ein:notebook)))
-    (ein:notebook-complete-at-point ein:notebook)))
+             (ein:kernel-live-p (ein:$notebook-kernel ein:%notebook%)))
+    (ein:notebook-complete-at-point ein:%notebook%)))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
 This is equivalent to do ``C-c`` in the console program."
   (interactive)
-  (ein:kernel-interrupt (ein:$notebook-kernel ein:notebook)))
+  (ein:kernel-interrupt (ein:$notebook-kernel ein:%notebook%)))
 
 (defun ein:notebook-kernel-kill-command ()
   (interactive)
   (when (y-or-n-p "Really kill kernel?")
-    (ein:kernel-kill (ein:$notebook-kernel ein:notebook))))
+    (ein:kernel-kill (ein:$notebook-kernel ein:%notebook%))))
 
 ;; autoexec
 
@@ -1048,8 +1049,8 @@ command."
 
 (defun ein:notebook-execute-autoexec-cells (notebook)
   "Execute cells of which auto-execution flag is on."
-  (interactive (if ein:notebook
-                   (list ein:notebook)
+  (interactive (if ein:%notebook%
+                   (list ein:%notebook%)
                  (error "Not in notebook buffer!")))
   (ein:kernel-if-ready (ein:$notebook-kernel notebook)
     (mapc #'ein:cell-execute
@@ -1068,7 +1069,7 @@ command."
 
 (defun ein:notebook-sync-directory-command ()
   (interactive)
-  (when ein:notebook (ein:notebook-sync-directory ein:notebook)))
+  (when ein:%notebook% (ein:notebook-sync-directory ein:%notebook%)))
 
 
 ;;; Persistance and loading
@@ -1096,7 +1097,7 @@ command."
                            nil t))
     (mapc (lambda (cell-data)
             (ein:cell-enter-last
-             (ein:notebook-cell-from-json ein:notebook cell-data)))
+             (ein:notebook-cell-from-json ein:%notebook% cell-data)))
           ;; Only handle 1 worksheet for now, as in notebook.js
           (plist-get (nth 0 (plist-get data :worksheets)) :cells))))
 
@@ -1145,7 +1146,7 @@ command."
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
   (interactive)
-  (ein:notebook-save-notebook ein:notebook 0))
+  (ein:notebook-save-notebook ein:%notebook% 0))
 
 (defun* ein:notebook-save-notebook-workaround (packed &rest args
                                                       &key
@@ -1192,17 +1193,17 @@ command."
 NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
    (list (read-string "Rename notebook: "
-                      (let ((name (ein:$notebook-notebook-name ein:notebook)))
+                      (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
                         (unless (string-match "Untitled[0-9]+" name)
                           name)))))
-  (ein:notebook-set-notebook-name ein:notebook name)
-  (rename-buffer (ein:notebook-get-buffer-name ein:notebook))
+  (ein:notebook-set-notebook-name ein:%notebook% name)
+  (rename-buffer (ein:notebook-get-buffer-name ein:%notebook%))
   (ein:notebook-save-notebook
-   ein:notebook 0
+   ein:%notebook% 0
    (lambda (notebook &rest ignore)
      (with-current-buffer (ein:notebook-buffer notebook)
        (run-hooks 'ein:notebook-after-rename-hook)))
-   ein:notebook))
+   ein:%notebook%))
 
 (defun ein:notebook-rename-to-scratch-command (name)
   "Rename notebook based on `ein:scratch-notebook-name-template'
@@ -1218,27 +1219,27 @@ To close notebook without killing kernel, just close the buffer
 as usual."
   (interactive)
   (when (ein:notebook-ask-before-kill-buffer)
-    (let ((kernel (ein:$notebook-kernel ein:notebook))
+    (let ((kernel (ein:$notebook-kernel ein:%notebook%))
           (close-notebook (lambda (notebook)
                             (let ((ein:notebook-kill-buffer-ask nil))
                               (kill-buffer (ein:notebook-buffer notebook))))))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-kill kernel close-notebook (list ein:notebook))
-        (funcall close-notebook ein:notebook)))))
+          (ein:kernel-kill kernel close-notebook (list ein:%notebook%))
+        (funcall close-notebook ein:%notebook%)))))
 
 
 ;;; Generic getter
 
 (defun ein:get-url-or-port--notebook ()
-  (when ein:notebook (ein:$notebook-url-or-port ein:notebook)))
+  (when ein:%notebook% (ein:$notebook-url-or-port ein:%notebook%)))
 
 (defun ein:get-notebook--notebook ()
-  ein:notebook)
+  ein:%notebook%)
 
 (defun ein:get-kernel--notebook ()
-  (when (ein:$notebook-p ein:notebook)
-    (ein:$notebook-kernel ein:notebook)))
+  (when (ein:$notebook-p ein:%notebook%)
+    (ein:$notebook-kernel ein:%notebook%)))
 
 (defalias 'ein:get-cell-at-point--notebook 'ein:notebook-get-current-cell)
 
@@ -1253,7 +1254,7 @@ as usual."
   ;; As Imenu does not provide the way to represent level *and*
   ;; position, use #'s to do that.
   (loop for cell in (ein:filter #'ein:headingcell-p
-                                (ein:notebook-get-cells ein:notebook))
+                                (ein:notebook-get-cells ein:%notebook%))
         for sharps = (loop repeat (oref cell :level) collect "#")
         for text = (ein:cell-get-text cell)
         for name = (ein:join-str "" (append sharps (list " " text)))
@@ -1371,8 +1372,8 @@ When the prefix argument (``C-u``) is given, print page is opened.
 Note that print page is not supported in IPython 0.12.1."
   (interactive "P")
   (let ((url (apply #'ein:url
-                    (ein:$notebook-url-or-port ein:notebook)
-                    (ein:$notebook-notebook-id ein:notebook)
+                    (ein:$notebook-url-or-port ein:%notebook%)
+                    (ein:$notebook-notebook-id ein:%notebook%)
                     (if print (list "print")))))
     (message "Opening %s in browser" url)
     (browse-url url)))
@@ -1381,8 +1382,8 @@ Note that print page is not supported in IPython 0.12.1."
   (unless buffer (setq buffer (current-buffer)))
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
-      (and (ein:$notebook-p ein:notebook)
-           (or (ein:$notebook-dirty ein:notebook)
+      (and (ein:$notebook-p ein:%notebook%)
+           (or (ein:$notebook-dirty ein:%notebook%)
                (buffer-modified-p))))))
 
 (defcustom ein:notebook-kill-buffer-ask t
@@ -1440,8 +1441,8 @@ Called via `kill-emacs-query-functions'."
 
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
-  (when (ein:$notebook-p ein:notebook)
-    (ein:notebook-del ein:notebook)))
+  (when (ein:$notebook-p ein:%notebook%)
+    (ein:notebook-del ein:%notebook%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
   "Add \"notebook destructor\" to `kill-buffer-hook'."

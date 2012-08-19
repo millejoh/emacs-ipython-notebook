@@ -34,8 +34,9 @@
 
 ;; Class and variable
 
-(ein:deflocal ein:@notification nil
+(ein:deflocal ein:%notification% nil
   "Buffer local variable to hold an instance of `ein:notification'.")
+(define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 ;; Note: can't put this below of `ein:notification-setup'...
@@ -122,10 +123,10 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
 This function saves the new notification widget instance in the
 local variable of the BUFFER"
   (with-current-buffer buffer
-    (setq ein:@notification
+    (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
     (setq header-line-format ein:header-line-format)
-    ein:@notification))
+    ein:%notification%))
 
 
 ;;; Header line
@@ -137,8 +138,8 @@ local variable of the BUFFER"
     " | "
     (ein:filter
      'identity
-     (list (oref (oref ein:@notification :notebook) :message)
-           (oref (oref ein:@notification :kernel) :message))))))
+     (list (oref (oref ein:%notification% :notebook) :message)
+           (oref (oref ein:%notification% :kernel) :message))))))
 
 (defun ein:header-line-setup-maybe ()
   "Setup `header-line-format' for mumamo.

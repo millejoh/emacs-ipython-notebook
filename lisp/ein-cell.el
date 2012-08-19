@@ -781,7 +781,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
             tb)))
   (ein:insert-read-only "\n"))
 
-(ein:deflocal ein:cell-append-stream-last-cell nil
+(ein:deflocal ein:%cell-append-stream-last-cell% nil
   "The last cell in which `ein:cell-append-stream' is used.")
 
 (defmethod ein:cell-append-stream ((cell ein:codecell) json)
@@ -789,7 +789,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
     (plist-put json :stream "stdout"))
-  (unless (eq cell ein:cell-append-stream-last-cell)
+  (unless (eq cell ein:%cell-append-stream-last-cell%)
     ;; Avoid applying unclosed ANSI escape code in the cell.  Note
     ;; that I don't need to distinguish stdout/stderr because it looks
     ;; like normal terminal does not.
@@ -799,7 +799,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (comint-carriage-motion start (point)))
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
-  (setq ein:cell-append-stream-last-cell cell))
+  (setq ein:%cell-append-stream-last-cell% cell))
 
 (defun ein:cell-append-stream-text-fontified (text json)
   "Insert TEXT with font properties defined by JSON data."

@@ -49,8 +49,8 @@
     (with-current-buffer (ein:notebook-request-open-callback
                           (ein:notebook-new "DUMMY-URL" notebook-id)
                           :data (ein:json-read-from-string json-string))
-      (let ((events (ein:$notebook-events ein:notebook)))
-        (setf (ein:$notebook-kernel ein:notebook)
+      (let ((events (ein:$notebook-events ein:%notebook%)))
+        (setf (ein:$notebook-kernel ein:%notebook%)
               (ein:kernel-new 8888 "/kernels" events)))
       (current-buffer))))
 
@@ -107,11 +107,11 @@ is not found."
 (ert-deftest ein:notebook-from-json-simple ()
   (with-current-buffer (eintest:notebook-from-json
                         eintest:notebook-data-simple-json)
-    (should (ein:$notebook-p ein:notebook))
-    (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
-    (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0"))
-    (should (equal (ein:notebook-ncells ein:notebook) 1))
-    (let ((cell (car (ein:notebook-get-cells ein:notebook))))
+    (should (ein:$notebook-p ein:%notebook%))
+    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0"))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 1))
+    (let ((cell (car (ein:notebook-get-cells ein:%notebook%))))
       (should (ein:codecell-p cell))
       (should (equal (oref cell :input) "1 + 1"))
       (should (equal (oref cell :input-prompt-number) 1))
@@ -124,10 +124,10 @@ is not found."
 
 (ert-deftest ein:notebook-from-json-empty ()
   (with-current-buffer (eintest:notebook-make-empty)
-    (should (ein:$notebook-p ein:notebook))
-    (should (equal (ein:$notebook-notebook-id ein:notebook) "NOTEBOOK-ID"))
-    (should (equal (ein:$notebook-notebook-name ein:notebook) "Dummy Name"))
-    (should (equal (ein:notebook-ncells ein:notebook) 0))))
+    (should (ein:$notebook-p ein:%notebook%))
+    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 0))))
 
 
 ;; Notebook commands
@@ -137,23 +137,23 @@ is not found."
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
     (ein:notebook-insert-cell-below-command)
-    (should (equal (ein:notebook-ncells ein:notebook) 3))))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 3))))
 
 (ert-deftest ein:notebook-insert-cell-above-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
     (ein:notebook-insert-cell-above-command)
-    (should (equal (ein:notebook-ncells ein:notebook) 3))))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 3))))
 
 (ert-deftest ein:notebook-delete-cell-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (loop repeat 3
           do (ein:notebook-insert-cell-above-command))
-    (should (equal (ein:notebook-ncells ein:notebook) 3))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 3))
     (loop repeat 3
           do (ein:notebook-delete-cell-command))
-    (should (equal (ein:notebook-ncells ein:notebook) 0))))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 0))))
 
 (ert-deftest ein:notebook-delete-cell-command-no-undo ()
   (with-current-buffer (eintest:notebook-make-empty)
@@ -174,21 +174,21 @@ some text
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (ein:notebook-insert-cell-above-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 3))
       (loop for i from 1 to 3
             do (ein:notebook-kill-cell-command)
             do (should (equal (length ein:kill-ring) i))
-            do (should (equal (ein:notebook-ncells ein:notebook) (- 3 i)))))))
+            do (should (equal (ein:notebook-ncells ein:%notebook%) (- 3 i)))))))
 
 (ert-deftest ein:notebook-copy-cell-command-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (ein:notebook-insert-cell-above-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 3))
       (loop repeat 3
             do (ein:notebook-copy-cell-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 3))
       (should (equal (length ein:kill-ring) 3)))))
 
 (ert-deftest ein:notebook-yank-cell-command-simple ()
@@ -196,15 +196,15 @@ some text
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (ein:notebook-insert-cell-above-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 3))
       (loop repeat 3
             do (ein:notebook-kill-cell-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 0))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 0))
       (should (equal (length ein:kill-ring) 3))
       (loop repeat 3
             do (ein:notebook-yank-cell-command))
-      (should (equal (ein:notebook-ncells ein:notebook) 3))
-      (loop for cell in (ein:notebook-get-cells ein:notebook)
+      (should (equal (ein:notebook-ncells ein:%notebook%) 3))
+      (loop for cell in (ein:notebook-get-cells ein:%notebook%)
             do (should (ein:codecell-p cell))
             do (should (slot-boundp cell :kernel))
             do (should (slot-boundp cell :events))))))
@@ -213,16 +213,16 @@ some text
   (let (ein:kill-ring ein:kill-ring-yank-pointer)
     (with-current-buffer (eintest:notebook-make-empty "NB1")
       (ein:notebook-insert-cell-above-command)
-      (should (equal (ein:notebook-ncells ein:notebook) 1))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 1))
       (ein:notebook-kill-cell-command)
-      (should (equal (ein:notebook-ncells ein:notebook) 0))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 0))
       (flet ((y-or-n-p (&rest ignore) t)
              (ein:notebook-del (&rest ignore)))
         ;; FIXME: are there anyway to skip confirmation?
         (kill-buffer)))
     (with-current-buffer (eintest:notebook-make-empty "NB2")
       (ein:notebook-yank-cell-command)
-      (should (equal (ein:notebook-ncells ein:notebook) 1)))))
+      (should (equal (ein:notebook-ncells ein:%notebook%) 1)))))
 
 (ert-deftest ein:notebook-toggle-cell-type-simple ()
   (with-current-buffer (eintest:notebook-make-empty)
@@ -334,7 +334,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (loop for i downfrom 2 to 0
           do (ein:notebook-insert-cell-above-command)
           do (insert (format "Cell %s" i)))
-    (should (equal (ein:notebook-ncells ein:notebook) 3))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 3))
     ;; (message "%s" (buffer-string))
     (loop for i from 0 below 2
           do (beginning-of-line) ; This is required, I need to check why
@@ -347,7 +347,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (loop for i from 0 below 3
           do (ein:notebook-insert-cell-below-command)
           do (insert (format "Cell %s" i)))
-    (should (equal (ein:notebook-ncells ein:notebook) 3))
+    (should (equal (ein:notebook-ncells ein:%notebook%) 3))
     ;; (message "%s" (buffer-string))
     (loop for i downfrom 2 to 1
           do (beginning-of-line) ; This is required, I need to check why
@@ -407,7 +407,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (ein:notebook-insert-cell-below-command)
     (let* ((text "print 'Hello World'")
            (cell (ein:notebook-get-current-cell))
-           (kernel (ein:$notebook-kernel ein:notebook))
+           (kernel (ein:$notebook-kernel ein:%notebook%))
            (msg-id "DUMMY-MSG-ID")
            (callbacks (ein:cell-make-callbacks cell)))
       (eintest:notebook-check-kernel-and-codecell kernel cell)
@@ -544,7 +544,7 @@ In [ ]:
     (let* ((text "print 'Hello World'")
            (output-text "Hello World\n")
            (cell (ein:notebook-get-current-cell))
-           (kernel (ein:$notebook-kernel ein:notebook))
+           (kernel (ein:$notebook-kernel ein:%notebook%))
            (msg-id "DUMMY-MSG-ID")
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
@@ -579,7 +579,7 @@ In [ ]:
             (apply #'concat (loop repeat 10 collect "Hello World\n")))
            (cell (ein:notebook-get-current-cell))
            (next-cell (ein:cell-next cell))
-           (kernel (ein:$notebook-kernel ein:notebook))
+           (kernel (ein:$notebook-kernel ein:%notebook%))
            (msg-id "DUMMY-MSG-ID")
            (callbacks (ein:cell-make-callbacks cell))
            (check-output
@@ -646,11 +646,11 @@ value of `ein:notebook-enable-undo'."
 
 (ert-deftest ein:get-notebook--notebook ()
   (with-current-buffer (eintest:notebook-make-empty)
-    (should (eq (ein:get-notebook) ein:notebook))))
+    (should (eq (ein:get-notebook) ein:%notebook%))))
 
 (ert-deftest ein:get-kernel--notebook ()
   (with-current-buffer (eintest:notebook-make-empty)
-    (let ((kernel (ein:$notebook-kernel ein:notebook)))
+    (let ((kernel (ein:$notebook-kernel ein:%notebook%)))
       (should (ein:$kernel-p kernel))
       (should (eq (ein:get-kernel) kernel)))))
 

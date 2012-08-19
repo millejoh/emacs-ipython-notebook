@@ -126,7 +126,7 @@ first candidate when the `ac-menu' pops up."
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
 dotty completion."
-  (if (or ein:notebook (ein:eval-if-bound 'ein:@connect))
+  (if (or ein:%notebook% (ein:eval-if-bound 'ein:%connect%))
       (with-syntax-table ein:ac-syntax-table
         ad-do-it)
     ad-do-it))
@@ -172,7 +172,7 @@ dotty completion."
    Adding `ac-sources' to them makes it impossible to different
    `ac-sources' between chunks, which is good for EIN but may not
    for other package."
-  (and ein:notebook
+  (and ein:%notebook%
        (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
        (ein:ac-setup)))

@@ -29,7 +29,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   ;; `eintest:wait-until' works properly.
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
-    (eintest:wait-until (lambda () ein:notebooklist))
+    (eintest:wait-until (lambda () ein:%notebooklist%))
     (ein:notebooklist-open-notebook-by-name notebook-name)))
 
 (defun eintest:get-untitled0-or-create (url-or-port)
@@ -37,8 +37,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (if notebook
         notebook
       (with-current-buffer (ein:notebooklist-open url-or-port t)
-        (setq ein:notebooklist nil)
-        (eintest:wait-until (lambda () ein:notebooklist))
+        (setq ein:%notebooklist% nil)
+        (eintest:wait-until (lambda () ein:%notebooklist%))
         (ein:notebooklist-new-notebook url-or-port)
         (eintest:wait-until
          (lambda () (eintest:get-notebook-by-name url-or-port "Untitled0"))))
@@ -46,7 +46,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 
 (defun eintest:delete-notebook-by-name (url-or-port notebook-name)
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
-    (eintest:wait-until (lambda () ein:notebooklist))
+    (eintest:wait-until (lambda () ein:%notebooklist%))
     (save-excursion
       (goto-char (point-min))
       (search-forward notebook-name)
@@ -54,15 +54,15 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (search-forward "Delete")
       (flet ((y-or-n-p (ignore) t))
         (widget-button-press (point))))
-    (setq ein:notebooklist nil)
-    (eintest:wait-until (lambda () ein:notebooklist))))
+    (setq ein:%notebooklist% nil)
+    (eintest:wait-until (lambda () ein:%notebooklist%))))
 
 (ert-deftest eintest:get-untitled0-or-create ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
     (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
                                              (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
-      (should (equal (ein:$notebook-notebook-name ein:notebook) "Untitled0")))))
+      (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0")))))
 
 (ert-deftest eintest:delete-untitled0 ()
   (loop
@@ -127,7 +127,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (insert "range?")
       (let ((cell (ein:notebook-execute-current-cell)))
         (eintest:wait-until (lambda () (not (oref cell :running)))))
-      (with-current-buffer (get-buffer (ein:$notebook-pager ein:notebook))
+      (with-current-buffer (get-buffer (ein:$notebook-pager ein:%notebook%))
         (should (search-forward "Docstring:\nrange"))))))
 
 (ert-deftest ein:notebook-request-help ()
@@ -136,7 +136,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                                              (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (ein:notebook-insert-cell-below-command)
-      (let ((pager-name (ein:$notebook-pager ein:notebook)))
+      (let ((pager-name (ein:$notebook-pager ein:%notebook%)))
         (ein:aif (get-buffer pager-name)
             (kill-buffer it))
         (insert "file")

@@ -57,8 +57,9 @@ is opened at first time.::
   url-or-port
   data)
 
-(ein:deflocal ein:notebooklist nil
+(ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
+(define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 
@@ -92,7 +93,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'.
 To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (loop with nblist = (if url-or-port
                           (ein:notebooklist-list-get url-or-port)
-                        ein:notebooklist)
+                        ein:%notebooklist%)
         for note in (ein:$notebooklist-data nblist)
         for notebook-name = (plist-get note :name)
         for notebook-id = (plist-get note :notebook_id)
@@ -115,7 +116,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
                                    ein:url-or-port))
          (default (format "%s" (ein:aif (ein:get-notebook)
                                    (ein:$notebook-url-or-port it)
-                                 (ein:aif ein:notebooklist
+                                 (ein:aif ein:%notebooklist%
                                      (ein:$notebooklist-url-or-port it)
                                    (ein:default-url-or-port)))))
          (url-or-port
@@ -160,10 +161,10 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (let ((already-opened-p (ein:notebooklist-list-get url-or-port))
           (orig-point (point)))
-      (setq ein:notebooklist
+      (setq ein:%notebooklist%
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :data data))
-      (ein:notebooklist-list-add ein:notebooklist)
+      (ein:notebooklist-list-add ein:%notebooklist%)
       (ein:notebooklist-render)
       (goto-char orig-point)
       (message "Opened notebook list at %s" url-or-port)
@@ -181,7 +182,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
 (defun ein:notebooklist-reload ()
   "Reload current Notebook list."
   (interactive)
-  (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:notebooklist) t))
+  (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:%notebooklist%) t))
 
 (defun ein:notebooklist-refresh-related ()
   "Reload notebook list in which current notebook locates.
@@ -210,7 +211,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (message "Creating a new notebook...")
   (unless url-or-port
-    (setq url-or-port (ein:$notebooklist-url-or-port ein:notebooklist)))
+    (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
   (assert url-or-port nil
           (concat "URL-OR-PORT is not given and the current buffer "
                   "is not the notebook list buffer."))
@@ -272,9 +273,9 @@ Notebook name is determined based on
   (message "Deleting notebook %s..." name)
   (ein:query-singleton-ajax
    (list 'notebooklist-delete-notebook
-         (ein:$notebooklist-url-or-port ein:notebooklist) notebook-id)
+         (ein:$notebooklist-url-or-port ein:%notebooklist%) notebook-id)
    (ein:notebook-url-from-url-and-id
-    (ein:$notebooklist-url-or-port ein:notebooklist)
+    (ein:$notebooklist-url-or-port ein:%notebooklist%)
     notebook-id)
    :cache nil
    :type "DELETE"
@@ -308,10 +309,10 @@ Notebook list data is passed via the buffer local variable
    'link
    :notify (lambda (&rest ignore)
              (browse-url
-              (ein:url (ein:$notebooklist-url-or-port ein:notebooklist))))
+              (ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
    "Open In Browser")
   (widget-insert "\n")
-  (loop for note in (ein:$notebooklist-data ein:notebooklist)
+  (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
         for name = (plist-get note :name)
         for notebook-id = (plist-get note :notebook_id)
         do (progn (widget-create
@@ -320,7 +321,7 @@ Notebook list data is passed via the buffer local variable
                                          (notebook-id notebook-id))
                              (lambda (&rest ignore)
                                (ein:notebooklist-open-notebook
-                                ein:notebooklist notebook-id name)))
+                                ein:%notebooklist% notebook-id name)))
                    "Open")
                   (widget-insert " ")
                   (widget-create
@@ -379,8 +380,8 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
 ;;; Generic getter
 
 (defun ein:get-url-or-port--notebooklist ()
-  (when (ein:$notebooklist-p ein:notebooklist)
-    (ein:$notebooklist-url-or-port ein:notebooklist)))
+  (when (ein:$notebooklist-p ein:%notebooklist%)
+    (ein:$notebooklist-url-or-port ein:%notebooklist%)))
 
 
 ;;; Notebook list mode

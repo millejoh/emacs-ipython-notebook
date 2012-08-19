@@ -115,10 +115,11 @@ as `ein:cell-autoexec-prompt'."
 
 ;;; Class
 
-(ein:deflocal ein:@connect nil
-  "Buffer local variable to store an instance of `ein:$connect'")
+(ein:deflocal ein:%connect% nil
+  "Buffer local variable to store an instance of `ein:connect'")
+(define-obsolete-variable-alias 'ein:@connect 'ein:%connect% "0.1.2")
 
-(defclass ein:$connect ()
+(defclass ein:connect ()
   ((notebook :initarg :notebook :type ein:$notebook)
    (buffer :initarg :buffer :type buffer)
    (autoexec :initarg :autoexec :initform nil :type boolean
@@ -129,9 +130,9 @@ class.")))
 
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
-    (setq ein:@connect
-          (ein:$connect "Connect" :notebook notebook :buffer buffer))
-    ein:@connect))
+    (setq ein:%connect%
+          (ein:connect "Connect" :notebook notebook :buffer buffer))
+    ein:%connect%))
 
 
 ;;; Methods
@@ -175,7 +176,7 @@ notebooks."
   (unless buffer
     (setq buffer (current-buffer)))
   (if (or (not no-reconnection)
-          (not ein:@connect))
+          (not ein:%connect%))
       (let ((connection (ein:connect-setup notebook buffer)))
         (when (ein:eval-if-bound 'ac-sources)
           (push 'ac-source-ein-cached ac-sources))
@@ -187,7 +188,7 @@ notebooks."
     (ein:log 'info "Buffer is already connected to notebook.")))
 
 (defun ein:connect-get-notebook ()
-  (oref ein:@connect :notebook))
+  (oref ein:%connect% :notebook))
 
 (defun ein:connect-get-kernel ()
   (ein:$notebook-kernel (ein:connect-get-notebook)))
@@ -289,8 +290,8 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (ein:aand (ein:get-notebook--connect) (ein:$notebook-url-or-port it)))
 
 (defun ein:get-notebook--connect ()
-  (when (ein:$connect-p ein:@connect)
-    (oref ein:@connect :notebook)))
+  (when (ein:connect-p ein:%connect%)
+    (oref ein:%connect% :notebook)))
 
 (defun ein:get-kernel--connect ()
   (ein:aand (ein:get-notebook--connect) (ein:$notebook-kernel it)))
@@ -305,7 +306,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 ;;; Auto-execution
 
 (defun ein:connect-assert-connected ()
-  (assert (ein:$connect-p ein:@connect) nil
+  (assert (ein:connect-p ein:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
           (buffer-name)))
 
@@ -325,8 +326,8 @@ Use the `ein:notebook-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
-  (oset ein:@connect :autoexec (not (oref ein:@connect :autoexec)))
-  (let ((autoexec-p (oref ein:@connect :autoexec)))
+  (oset ein:%connect% :autoexec (not (oref ein:%connect% :autoexec)))
+  (let ((autoexec-p (oref ein:%connect% :autoexec)))
     (if autoexec-p
         (add-hook 'after-save-hook 'ein:connect-execute-autoexec-cells nil t)
       (remove-hook 'after-save-hook 'ein:connect-execute-autoexec-cells t))
@@ -356,7 +357,7 @@ change the cells to run."
   map)
 
 (defun ein:connect-mode-get-lighter ()
-  (if (oref ein:@connect :autoexec)
+  (if (oref ein:%connect% :autoexec)
       (format " ein:c%s" (or ein:connect-aotoexec-lighter
                              ein:cell-autoexec-prompt))
     " ein:c"))

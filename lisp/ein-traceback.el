@@ -39,7 +39,7 @@
    (buffer :initarg :buffer :type buffer)
    (ewoc :initarg :ewoc :type ewoc)))
 
-(ein:deflocal ein:@traceback nil
+(ein:deflocal ein:%traceback% nil
   "Buffer local variable to store an instance of `ein:traceback'.")
 
 (defvar ein:tb-buffer-name-template "*ein:tb %s/%s*")
@@ -59,7 +59,7 @@
 
 (defmethod ein:tb-render ((traceback ein:traceback) tb-data)
   (with-current-buffer (ein:tb-get-buffer traceback)
-    (setq ein:@traceback traceback)
+    (setq ein:%traceback% traceback)
     (setq buffer-read-only t)
     (let ((inhibit-read-only t)
           (ewoc (ein:ewoc-create #'ein:tb-pp)))
@@ -129,18 +129,18 @@
 
 (defun ein:tb-jump-to-source-at-point-command (&optional select)
   (interactive "P")
-  (ein:tb-jump-to-source-at-point ein:@traceback select))
+  (ein:tb-jump-to-source-at-point ein:%traceback% select))
 
 
 ;;; ein:traceback-mode
 
 (defun ein:tb-prev-item ()
   (interactive)
-  (ewoc-goto-prev (oref ein:@traceback :ewoc) 1))
+  (ewoc-goto-prev (oref ein:%traceback% :ewoc) 1))
 
 (defun ein:tb-next-item ()
   (interactive)
-  (ewoc-goto-next (oref ein:@traceback :ewoc) 1))
+  (ewoc-goto-next (oref ein:%traceback% :ewoc) 1))
 
 (define-derived-mode ein:traceback-mode fundamental-mode "ein:tb"
   (font-lock-mode))
