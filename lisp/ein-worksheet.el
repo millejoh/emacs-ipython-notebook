@@ -38,6 +38,7 @@
 (eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
+(declare-function ein:notebook-discard-output-p "ein-notebook")
 
 
 ;;; Class and variable
@@ -137,6 +138,14 @@
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (oset ws :data data)
   ws)
+
+(defmethod ein:worksheet-to-json ((ws ein:worksheet))
+  (let* ((notebook (oref ws :notebook))
+         (cells (mapcar (lambda (c)
+                          (ein:cell-to-json
+                           c (ein:notebook-discard-output-p notebook c)))
+                        (ein:worksheet-get-cells ws))))
+    `((cells . ,(apply #'vector cells)))))
 
 
 ;;; Cell indexing, retrieval, etc.

@@ -987,11 +987,9 @@ command."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (let ((cells (mapcar (lambda (c)
-                         (ein:cell-to-json
-                          c (ein:notebook-discard-output-p notebook c)))
-                       (ein:notebook-get-cells notebook))))
-    `((worksheets . [((cells . ,(apply #'vector cells)))])
+  (let ((worksheets (mapcar #'ein:worksheet-to-json
+                            (ein:$notebook-worksheets notebook))))
+    `((worksheets . ,(apply #'vector worksheets))
       (metadata . ,(ein:$notebook-metadata notebook)))))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
