@@ -404,6 +404,32 @@ an integer used only when the TYPE is \"heading\"."
     (ein:notebook-empty-undo-maybe)
     (when focus (ein:cell-goto new relpos))))
 
+(defun ein:worksheet-split-cell-at-point (ws cell &optional no-trim focus)
+  "Split cell at current position. Newlines at the splitting
+point will be removed. This can be omitted by giving a prefix
+argument \(C-u)."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     prefix-arg
+                     t))
+  ;; FIXME: should I inhibit undo?
+  (let* ((beg (set-marker (make-marker) (ein:cell-input-pos-min cell)))
+         (pos (point-marker))
+         (head (buffer-substring beg pos))
+         (new (ein:worksheet-insert-cell-above ws
+                                               (oref cell :cell-type)
+                                               cell)))
+    (delete-region beg pos)
+    (unless no-trim
+      (setq head (ein:trim-right head "\n"))
+      (save-excursion
+        (goto-char pos)
+        (while (looking-at-p "\n")
+          (delete-char 1))))
+    (ein:cell-set-text new head)
+    (ein:notebook-empty-undo-maybe)
+    (when focus (ein:cell-goto cell))))
+
 
 ;;; Cell selection.
 

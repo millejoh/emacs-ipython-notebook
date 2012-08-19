@@ -407,30 +407,6 @@ of minor mode."
 
 ;; Insertion and deletion of cells
 
-(defun ein:notebook-split-cell-at-point (&optional no-trim)
-  "Split cell at current position. Newlines at the splitting
-point will be removed. This can be omitted by giving a prefix
-argument \(C-u)."
-  (interactive "P")
-  (ein:notebook-with-cell nil
-    ;; FIXME: should I inhibit undo?
-    (let* ((beg (set-marker (make-marker) (ein:cell-input-pos-min cell)))
-           (pos (point-marker))
-           (head (buffer-substring beg pos))
-           (new (ein:notebook-insert-cell-above ein:%notebook%
-                                                (oref cell :cell-type)
-                                                cell)))
-      (delete-region beg pos)
-      (unless no-trim
-        (setq head (ein:trim-right head "\n"))
-        (save-excursion
-          (goto-char pos)
-          (while (looking-at-p "\n")
-            (delete-char 1))))
-      (ein:cell-set-text new head)
-      (ein:notebook-empty-undo-maybe)
-      (ein:cell-goto cell))))
-
 (defun ein:notebook-merge-cell-command (&optional next)
   "Merge previous cell into current cell.
 If prefix is given, merge current cell into next cell."
