@@ -246,38 +246,9 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   'ein:connect-eval-string-internal
   'ein:shared-output-eval-string "0.1.2")
 
-(defun ein:connect-request-tool-tip-command ()
-  (interactive)
-  (let ((notebook (ein:connect-get-notebook)))
-    (ein:kernel-if-ready (ein:$notebook-kernel notebook)
-      (let ((func (ein:object-at-point)))
-        ;; Set cell=nil.  In fact, the argument cell is not used.
-        ;; FIXME: refactor `ein:notebook-request-tool-tip'
-        (ein:notebook-request-tool-tip notebook nil func)))))
-
-(defun ein:connect-request-help-command ()
-  (interactive)
-  (ein:notebook-request-help (ein:connect-get-notebook)))
-
-(defun ein:connect-request-tool-tip-or-help-command (&optional pager)
-  (interactive "P")
-  (if pager
-      (ein:connect-request-help-command)
-    (ein:connect-request-tool-tip-command)))
-
-(defun ein:connect-complete-command ()
-  (interactive)
-  (ein:notebook-complete-at-point (ein:connect-get-notebook)))
-
-(defun ein:connect-complete-dot ()
-  "Insert dot and request completion."
-  (interactive)
-  (insert ".")
-  (let ((notebook (ein:connect-get-notebook)))
-    (when (and notebook
-               (not (ac-cursor-on-diable-face-p))
-               (ein:kernel-live-p (ein:$notebook-kernel notebook)))
-      (ein:notebook-complete-at-point notebook))))
+(define-obsolete-function-alias
+  'ein:connect-request-tool-tip-or-help-command
+  'ein:pytools-request-tooltip-or-help "0.1.2")
 
 (defun ein:connect-pop-to-notebook ()
   (interactive)
@@ -344,8 +315,8 @@ change the cells to run."
   (define-key map "\C-c\C-l" 'ein:connect-reload-buffer)
   (define-key map "\C-c\C-r" 'ein:connect-eval-region)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (define-key map "\C-c\C-f" 'ein:connect-request-tool-tip-or-help-command)
-  (define-key map "\C-c\C-i" 'ein:connect-complete-command)
+  (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
+  (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
   (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
   (define-key map "\C-c\C-o" 'ein:console-open)
@@ -369,7 +340,7 @@ change the cells to run."
   :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
   :group 'ein
-  (ein:complete-on-dot-install ein:connect-mode-map 'ein:connect-complete-dot))
+  (ein:complete-on-dot-install ein:connect-mode-map))
 
 
 (provide 'ein-connect)

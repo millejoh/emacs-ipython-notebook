@@ -198,6 +198,9 @@ before previous opening parenthesis."
             (search-backward "(" (point-at-bol) t))
           (thing-at-point 'word))))))
 
+(defun ein:object-at-point-or-error ()
+  (or (ein:object-at-point) (error "No object found at the point")))
+
 
 ;;; URL utils
 

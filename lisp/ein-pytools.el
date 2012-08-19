@@ -61,6 +61,56 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
 
+
+;;; Tooltip and help
+
+(defun ein:pytools-request-tooltip (kernel func)
+  (interactive (list (ein:get-kernel-or-error)
+                     (ein:object-at-point-or-error)))
+  (ein:kernel-object-info-request
+   kernel func (list :object_info_reply
+                     (cons #'ein:pytools-finish-tooltip nil))))
+
+(declare-function pos-tip-show "pos-tip")
+(declare-function popup-tip "popup")
+
+(defun ein:pytools-finish-tooltip (-ignore- content -metadata-not-used-)
+  ;; See: Tooltip.prototype._show (tooltip.js)
+  (let ((tooltip (ein:kernel-construct-help-string content))
+        (defstring (ein:kernel-construct-defstring content))
+        (name (plist-get content :name)))
+    (if tooltip
+        (cond
+         ((and window-system (featurep 'pos-tip))
+          (pos-tip-show tooltip 'ein:pos-tip-face nil nil 0))
+         ((featurep 'popup)
+          (popup-tip tooltip))
+         (t (when (stringp defstring)
+              (message (ein:trim (ansi-color-apply defstring))))))
+      (ein:log 'info "no info for %s" name))))
+
+(defun ein:pytools-request-help (kernel func)
+  (interactive (list (ein:get-kernel-or-error)
+                     (ein:object-at-point-or-error)))
+  (ein:kernel-execute kernel
+                      (format "%s?" func) ; = code
+                      nil                 ; = callbacks
+                      ;; It looks like that magic command does
+                      ;; not work in silent mode.
+                      :silent nil))
+
+(defun ein:pytools-request-tooltip-or-help (&optional pager)
+  "Show the help for the object at point using tooltip.
+When the prefix argument ``C-u`` is given, open the help in the
+pager buffer.  You can explicitly specify the object by selecting it."
+  (interactive "P")
+  (call-interactively (if pager
+                          #'ein:pytools-request-help
+                        #'ein:pytools-request-tooltip)))
+
+
+;;; Source jump
+
 (defvar ein:pytools-jump-stack nil)
 
 (defvar ein:pytools-jump-to-source-not-found-regexp

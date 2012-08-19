@@ -625,24 +625,6 @@ Return `nil' always for non-code cells."
 prompt EWOC node."
   (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
-(declare-function pos-tip-show "pos-tip")
-(declare-function popup-tip "popup")
-
-(defun ein:cell-finish-tooltip (cell content -metadata-not-used-)
-  ;; See: Tooltip.prototype._show (tooltip.js)
-  (let ((tooltip (ein:kernel-construct-help-string content))
-        (defstring (ein:kernel-construct-defstring content))
-        (name (plist-get content :name)))
-    (if tooltip
-        (cond
-         ((and window-system (featurep 'pos-tip))
-          (pos-tip-show tooltip 'ein:pos-tip-face nil nil 0))
-         ((featurep 'popup)
-          (popup-tip tooltip))
-         (t (when (stringp defstring)
-              (message (ein:trim (ansi-color-apply defstring))))))
-      (ein:log 'info "no info for %s" name))))
-
 (defmethod ein:cell-goto ((cell ein:basecell) &optional relpos)
   "Go to the input area of the given CELL.
 RELPOS is the position relative to the input area.  Default is 0."

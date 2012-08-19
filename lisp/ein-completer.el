@@ -25,9 +25,13 @@
 
 ;;; Code:
 
+(declare-function ac-cursor-on-diable-face-p "auto-complete")
+
+(require 'ein)
 (require 'ein-utils)
 (require 'ein-log)
 (require 'ein-subpackages)
+(require 'ein-kernel)
 
 (defun ein:completer-choose ()
   (when (require 'auto-complete nil t)
@@ -63,6 +67,41 @@
       (delete-region beg end)
       (insert word))))
 
+(defun ein:completer-complete (kernel)
+  (interactive (list (ein:get-kernel)))
+  (let ((callbacks (list :complete_reply
+                         (cons #'ein:completer-finish-completing nil))))
+    (ein:kernel-complete kernel
+                         (thing-at-point 'line)
+                         (current-column)
+                         callbacks)))
+
+(defun ein:completer-dot-complete ()
+  "Insert dot and request completion."
+  (interactive)
+  (insert ".")
+  (ein:and-let* ((kernel (ein:get-kernel))
+                 ((not (ac-cursor-on-diable-face-p)))
+                 ((ein:kernel-live-p kernel)))
+    (ein:completer-complete kernel)))
+
+(defcustom ein:complete-on-dot t
+  "Start completion when inserting a dot.  Note that
+`ein:use-auto-complete' (or `ein:use-auto-complete-superpack')
+must be `t' to enable this option.  This variable has effect on
+notebook buffers and connected buffers."
+  :type 'boolean
+  :group 'ein)
+
+(defun ein:complete-on-dot-install (map &optional func)
+  (if (and ein:complete-on-dot
+           (featurep 'auto-complete)
+           (or ein:use-auto-complete
+               ein:use-auto-complete-superpack))
+      (define-key map "." (or func #'ein:completer-dot-complete))
+    (define-key map "." nil)))
+
 (provide 'ein-completer)
+
 
 ;;; ein-completer.el ends here
