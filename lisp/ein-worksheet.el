@@ -34,11 +34,13 @@
 (require 'ein-utils)
 (require 'ein-cell)
 (require 'ein-notification)
+(require 'ein-kill-ring)
 
 (eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
+(declare-function ein:notebook-empty-undo-maybe "ein-notebook")
 
 
 ;;; Class and variable
@@ -150,13 +152,200 @@
 
 ;;; Cell indexing, retrieval, etc.
 
+(defmethod ein:worksheet-cell-from-type ((ws ein:worksheet) type &rest args)
+  "Create a cell of TYPE (symbol or string)."
+  ;; FIXME: unify type of TYPE to symbol or string.
+  (apply #'ein:cell-from-type
+         (format "%s" type)
+         :ewoc (oref ws :ewoc)
+         :events (oref ws :events)
+         args))
+
 (defmethod ein:worksheet-get-cells ((ws ein:worksheet))
   (let* ((ewoc (oref ws :ewoc))
          (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
     (mapcar #'ein:$node-data nodes)))
 
+(defmethod ein:worksheet-ncells ((ws ein:worksheet))
+  (length (ein:worksheet-get-cells ws)))
+
+(defun ein:worksheet-get-current-ewoc-node (&optional pos)
+  (ein:aand ein:%worksheet% (oref it :ewoc) (ewoc-locate it pos)))
+
+(defun ein:worksheet-get-nearest-cell-ewoc-node (&optional pos max cell-p)
+  (ein:and-let* ((ewoc-node (ein:worksheet-get-current-ewoc-node pos)))
+    ;; FIXME: can be optimized using the argument `max'
+    (while (and ewoc-node
+                (not (and (ein:cell-ewoc-node-p ewoc-node)
+                          (if cell-p
+                              (funcall cell-p
+                                       (ein:cell-from-ewoc-node ewoc-node))
+                            t))))
+      (setq ewoc-node (ewoc-next (oref ein:%worksheet% :ewoc) ewoc-node)))
+    ewoc-node))
+
+(defun ein:worksheet-get-current-cell (&optional pos noerror)
+  "Return a cell at POS.  If POS is not given, it is assumed be the
+current cursor position.  When the current buffer is not worksheet
+buffer or there is no cell in the current buffer, return `nil'."
+  (let ((cell (ein:cell-from-ewoc-node
+               (ein:worksheet-get-current-ewoc-node pos))))
+    (if (ein:basecell-child-p cell)
+        cell
+      (unless noerror
+        (error "No cell found at pos=%s" pos)))))
+
+(defun ein:worksheet-get-cells-in-region (beg end)
+  (ein:clip-list (ein:aand ein:%worksheet% (ein:worksheet-get-cells it))
+                 (ein:worksheet-get-current-cell beg)
+                 (ein:worksheet-get-current-cell end)))
+
+(defun ein:worksheet-get-cells-in-region-or-at-point ()
+  (if (region-active-p)
+      (ein:worksheet-get-cells-in-region (region-beginning) (region-end))
+    (list (ein:worksheet-get-current-cell))))
+
 
 ;;; Insertion and deletion of cells
+
+(defun ein:worksheet--get-ws-or-error ()
+  (or ein:%worksheet% (error "Not in worksheet buffer.")))
+
+(defun ein:worksheet-focus-cell ()
+  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-goto it)))
+
+(defun ein:worksheet-delete-cell (ws cell &optional focus)
+  "Delete a cell.  \(WARNING: no undo!)
+This command has no key binding because there is no way to undo
+deletion.  Use kill to play on the safe side.
+
+If you really want use this command, you can do something like this
+\(but be careful when using it!)::
+
+  \(define-key ein:notebook-mode-map \"\\C-c\\C-d\"
+              'ein:worksheet-delete-cell)"
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     t))
+  (let ((inhibit-read-only t)
+        (buffer-undo-list t))        ; disable undo recording
+    (apply #'ewoc-delete
+           (oref ws :ewoc)
+           (ein:cell-all-element cell)))
+  (oset ws :dirty t)
+  (ein:notebook-empty-undo-maybe)
+  (when focus (ein:worksheet-focus-cell)))
+
+(defun ein:worksheet-kill-cells (ws cells &optional focus)
+  "Kill (\"cut\") the cell at point or cells in region.
+Note that the kill-ring for cells is not shared with the default
+kill-ring of Emacs (kill-ring for texts)."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-cells-in-region-or-at-point)
+                     t))
+  (when cells
+    (mapc (lambda (c)
+            (ein:cell-save-text c)
+            (ein:worksheet-delete-cell ws c)
+            (ein:cell-deactivate c))
+          cells)
+    (ein:kill-new cells)
+    (when focus
+      (deactivate-mark)
+      (ein:worksheet-focus-cell))))
+
+(defun ein:worksheet-copy-cell (cells)
+  "Copy the cell at point.  (Put the current cell into the kill-ring.)"
+  (interactive
+   (list (when (ein:worksheet--get-ws-or-error)
+           (prog1 (ein:worksheet-get-cells-in-region-or-at-point)
+             (deactivate-mark)))))
+  (let ((cells (mapcar
+                (lambda (c)
+                  (ein:cell-deactivate (ein:cell-copy c))) cells)))
+    (ein:log 'info "%s cells are copied." (length  cells))
+    (ein:kill-new cells)))
+
+(defun ein:worksheet-insert-clone-below (ws cell pivot)
+  (let ((clone (ein:cell-copy cell)))
+    ;; Cell can be from another buffer, so reset `ewoc'.
+    (oset clone :ewoc (oref ws :ewoc))
+    (ein:worksheet-insert-cell-below ws clone pivot)
+    clone))
+
+(defun ein:worksheet-yank-cell (ws &optional n)
+  "Insert (\"paste\") the latest killed cell.
+Prefixes are act same as the normal `yank' command."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (let ((arg current-prefix-arg))
+                       (cond ((listp arg) 0)
+                             ((eq arg '-) -2)
+                             (t (1- arg))))))
+  (let* ((cell (ein:worksheet-get-current-cell)) ; can be nil
+         (killed (ein:current-kill n)))
+    (loop for c in killed
+          with last = cell
+          do (setq last (ein:worksheet-insert-clone-below ws c last))
+          finally (ein:cell-goto last))))
+
+(defun ein:worksheet-maybe-new-cell (ws type-or-cell)
+  "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
+  (let ((cell (if (ein:basecell-child-p type-or-cell)
+                  type-or-cell
+                (ein:worksheet-cell-from-type ws type-or-cell))))
+    ;; When newly created or copied, kernel is not attached or not the
+    ;; kernel of this worksheet.  So reset it here.
+    (when (ein:codecell-p cell)
+      (oset cell :kernel (oref ws :kernel)))
+    (oset cell :events (oref ws :events))
+    cell))
+
+(defun ein:worksheet-insert-cell-below (ws type-or-cell pivot &optional focus)
+  "Insert cell below.  Insert markdown cell instead of code cell
+when the prefix argument is given.
+
+When used as a lisp function, insert a cell of TYPE-OR-CELL just
+after PIVOT and return the new cell."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (if prefix-arg 'markdown 'code)
+                     (ein:worksheet-get-current-cell nil t) ; can be nil
+                     t))
+  (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
+    (cond
+     ((= (ein:worksheet-ncells ws) 0)
+      (ein:cell-enter-last cell))
+     (pivot
+      (ein:cell-insert-below pivot cell))
+     (t (error
+         "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
+    (ein:notebook-empty-undo-maybe)
+    (oset ws :dirty t)
+    (when focus (ein:cell-goto cell))
+    cell))
+
+(defun ein:worksheet-insert-cell-above (ws type-or-cell pivot &optional focus)
+  "Insert cell above.  Insert markdown cell instead of code cell
+when the prefix argument is given.
+See also: `ein:worksheet-insert-cell-below'."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (if prefix-arg 'markdown 'code)
+                     (ein:worksheet-get-current-cell nil t) ; can be nil
+                     t))
+  (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
+    (cond
+     ((< (ein:worksheet-ncells ws) 2)
+      (ein:cell-enter-first cell))
+     (pivot
+      (let ((prev-cell (ein:cell-prev pivot)))
+        (if prev-cell
+            (ein:cell-insert-below prev-cell cell)
+          (ein:cell-enter-first cell))))
+     (t (error
+         "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
+    (ein:notebook-empty-undo-maybe)
+    (oset ws :dirty t)
+    (when focus (ein:cell-goto cell))
+    cell))
 
 
 ;;; Cell selection.
