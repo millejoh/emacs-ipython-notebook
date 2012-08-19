@@ -373,10 +373,6 @@ of minor mode."
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
   (ein:events-on events
-                 'set_next_input.Notebook
-                 #'ein:notebook--set-next-input
-                 notebook)
-  (ein:events-on events
                  'set_dirty.Notebook
                  (lambda (notebook data)
                    (setf (ein:$notebook-dirty notebook)
@@ -395,14 +391,6 @@ of minor mode."
                  (ein:$notebook-url-or-port notebook)
                  (ein:$notebook-notebook-name notebook))
          (ein:$notebook-events notebook))))
-
-(defun ein:notebook--set-next-input (notebook data)
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (let* ((cell (plist-get data :cell))
-           (text (plist-get data :text))
-           (new-cell (ein:notebook-insert-cell-below notebook 'code cell)))
-      (ein:cell-set-text new-cell text)
-      (setf (ein:$notebook-dirty notebook) t))))
 
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output

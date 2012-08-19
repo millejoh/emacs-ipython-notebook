@@ -71,11 +71,24 @@
          args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
-  ;; Bind events for sub components:
   (with-slots (events) ws
+    (ein:events-on events
+                   'set_next_input.Worksheet
+                   #'ein:worksheet--set-next-input
+                   ws)
+    ;; Bind events for sub components:
     (ein:notification-bind-events (oref ws :notification) events)
     (mapc (lambda (cell) (oset cell :events events))
           (ein:worksheet-get-cells ws))))
+
+(defmethod ein:worksheet--set-next-input ((ws ein:worksheet) data)
+  (destructuring-bind (&key cell text) data
+    (if (eq (oref cell :ewoc) (oref ws :ewoc)) ; CELL is in this WS
+        (let ((new-cell (ein:worksheet-insert-cell-below ws 'code cell)))
+          (ein:cell-set-text new-cell text)
+          (oset ws :dirty t))
+      (ein:log 'debug
+        "WORKSHEET--SET-NEXT-INPUT: CELL is not in this buffer."))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))
