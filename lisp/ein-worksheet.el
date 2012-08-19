@@ -584,6 +584,21 @@ next cell, or insert if none."
 
 ;;; Generic getter
 
+(defun ein:get-url-or-port--worksheet ()
+  (when (ein:worksheet-p ein:%worksheet%)
+    (ein:worksheet-url-or-port ein:%worksheet%)))
+
+(defun ein:get-notebook--worksheet ()
+  (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :notebook)))
+
+(defun ein:get-kernel--worksheet ()
+  (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))
+
+(defalias 'ein:get-cell-at-point--worksheet 'ein:worksheet-get-current-cell)
+
+(defun ein:get-traceback-data--worksheet ()
+  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-get-tb-data it)))
+
 
 ;;; Buffer
 

@@ -523,16 +523,19 @@ but can operate in different contexts."
 (defun ein:get-url-or-port ()
   (ein:generic-getter '(ein:get-url-or-port--notebooklist
                         ein:get-url-or-port--notebook
+                        ein:get-url-or-port--worksheet
                         ein:get-url-or-port--shared-output
                         ein:get-url-or-port--connect)))
 
 (defun ein:get-notebook ()
   (ein:generic-getter '(ein:get-notebook--notebook
+                        ein:get-notebook--worksheet
                         ;; ein:get-notebook--shared-output
                         ein:get-notebook--connect)))
 
 (defun ein:get-kernel ()
   (ein:generic-getter '(ein:get-kernel--notebook
+                        ein:get-kernel--worksheet
                         ein:get-kernel--shared-output
                         ein:get-kernel--connect)))
 
@@ -542,10 +545,12 @@ but can operate in different contexts."
 
 (defun ein:get-cell-at-point ()
   (ein:generic-getter '(ein:get-cell-at-point--notebook
+                        ein:get-cell-at-point--worksheet
                         ein:get-cell-at-point--shared-output)))
 
 (defun ein:get-traceback-data ()
   (ein:generic-getter '(ein:get-traceback-data--notebook
+                        ein:get-traceback-data--worksheet
                         ein:get-traceback-data--shared-output
                         ein:get-traceback-data--connect)))
 
