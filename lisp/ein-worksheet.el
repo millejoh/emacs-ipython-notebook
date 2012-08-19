@@ -529,6 +529,17 @@ This does not alter the actual data stored in the cell."
   (ein:notebook-empty-undo-maybe)
   (oset ws :dirty t))
 
+(defun ein:worksheet-clear-output (cell &optional preserve-input-prompt)
+  "Clear output from the current cell at point.
+Do not clear input prompt when the prefix argument is given."
+  (interactive (list (ein:worksheet-get-current-cell
+                      :cell-p #'ein:codecell-p)
+                     prefix-arg))
+  (ein:cell-clear-output cell t t t)
+  (unless preserve-input-prompt
+    (ein:cell-set-input-prompt cell))
+  (ein:notebook-empty-undo-maybe))
+
 
 ;;; Kernel related things
 

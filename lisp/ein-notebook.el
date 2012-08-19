@@ -407,16 +407,6 @@ of minor mode."
 
 ;;; Cell collapsing and output clearing
 
-(defun ein:notebook-clear-output-command (&optional preserve-input-prompt)
-  "Clear output from the current cell at point.
-Do not clear input prompt when the prefix argument is given."
-  (interactive "P")
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:cell-clear-output cell t t t)
-    (unless preserve-input-prompt
-      (ein:cell-set-input-prompt cell))
-    (ein:notebook-empty-undo-maybe)))
-
 (defun ein:notebook-clear-all-output-command (&optional preserve-input-prompt)
   "Clear output from all cells.
 Do not clear input prompts when the prefix argument is given."
