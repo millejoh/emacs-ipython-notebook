@@ -1429,12 +1429,16 @@ Note that print page is not supported in IPython 0.12.1."
     (message "Opening %s in browser" url)
     (browse-url url)))
 
+
+;;; Buffer and kill hooks
+
 (defcustom ein:notebook-kill-buffer-ask t
   "Whether EIN should ask before killing unsaved notebook buffer."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil))
   :group 'ein)
 
+;; -- `kill-buffer-query-functions'
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
@@ -1444,6 +1448,7 @@ Called via `kill-buffer-query-functions'."
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
+;; -- `kill-emacs-query-functions'
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
@@ -1462,6 +1467,7 @@ Called via `kill-emacs-query-functions'."
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 
+;; -- `kill-buffer-hook'
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   (when (ein:$notebook-p ein:%notebook%)
@@ -1473,6 +1479,7 @@ Called via `kill-emacs-query-functions'."
 
 (add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 
+;; Useful command to close notebooks.
 (defun ein:notebook-kill-all-buffers ()
   "Close all opened notebooks."
   (interactive)
