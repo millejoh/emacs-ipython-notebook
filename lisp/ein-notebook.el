@@ -941,43 +941,9 @@ next cell, or insert if none."
           do (ein:cell-execute cell))
     (ein:log 'error "Not in notebook buffer!")))
 
-(defun ein:notebook-request-tool-tip (notebook cell func)
-  (let ((kernel (ein:$notebook-kernel notebook))
-        (callbacks
-         (list :object_info_reply
-               (cons #'ein:cell-finish-tooltip cell))))
-    (ein:kernel-object-info-request kernel func callbacks)))
-
-(defun ein:notebook-request-tool-tip-command ()
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:kernel-if-ready (ein:$notebook-kernel ein:%notebook%)
-      (let ((func (ein:object-at-point)))
-        (ein:notebook-request-tool-tip ein:%notebook% cell func)))))
-
-(defun ein:notebook-request-help (notebook)
-  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
-    (let ((func (ein:object-at-point)))
-      (when func
-        (ein:kernel-execute (ein:$notebook-kernel notebook)
-                            (format "%s?" func) ; = code
-                            nil                 ; = callbacks
-                            ;; It looks like that magic command does
-                            ;; not work in silent mode.
-                            :silent nil)))))
-
-(defun ein:notebook-request-help-command ()
-  (interactive)
-  (ein:notebook-request-help ein:%notebook%))
-
-(defun ein:notebook-request-tool-tip-or-help-command (&optional pager)
-  "Show the help for the object at point using tooltip.
-When the prefix argument ``C-u`` is given, open the help in the
-pager buffer.  You can explicitly specify the object by selecting it."
-  (interactive "P")
-  (if pager
-      (ein:notebook-request-help-command)
-    (ein:notebook-request-tool-tip-command)))
+(define-obsolete-function-alias
+  'ein:notebook-request-tool-tip-or-help-command
+  'ein:pytools-request-tooltip-or-help "0.1.2")
 
 (defun ein:notebook-complete-at-point (notebook)
   (let ((kernel (ein:$notebook-kernel notebook))
@@ -1385,7 +1351,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c <down>") 'ein:notebook-move-cell-down-command)
   (define-key map (kbd "M-<up>") 'ein:notebook-move-cell-up-command)
   (define-key map (kbd "M-<down>") 'ein:notebook-move-cell-down-command)
-  (define-key map "\C-c\C-f" 'ein:notebook-request-tool-tip-or-help-command)
+  (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:notebook-complete-command)
   (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)

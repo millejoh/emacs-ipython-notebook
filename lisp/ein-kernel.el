@@ -530,14 +530,14 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 
 (defun ein:kernel-construct-defstring (content)
   "Construct call signature from CONTENT of ``:object_info_reply``.
-Used in `ein:cell-finish-tooltip', etc."
+Used in `ein:pytools-finish-tooltip', etc."
   (or (plist-get content :call_def)
       (plist-get content :init_definition)
       (plist-get content :definition)))
 
 (defun ein:kernel-construct-help-string (content)
   "Construct help string from CONTENT of ``:object_info_reply``.
-Used in `ein:cell-finish-tooltip', etc."
+Used in `ein:pytools-finish-tooltip', etc."
   (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING")
   (let* ((defstring (ein:aand
                      (ein:kernel-construct-defstring content)
