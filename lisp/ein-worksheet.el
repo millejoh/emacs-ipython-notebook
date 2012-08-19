@@ -600,10 +600,23 @@ next cell, or insert if none."
   (ein:aand (ein:worksheet-get-current-cell) (ein:cell-get-tb-data it)))
 
 
-;;; Buffer
-
-
 ;;; Imenu
+
+(defun ein:worksheet-imenu-create-index ()
+  "`imenu-create-index-function' for notebook buffer."
+  ;; As Imenu does not provide the way to represent level *and*
+  ;; position, use #'s to do that.
+  (loop for cell in (when (ein:worksheet-p ein:%worksheet%)
+                      (ein:filter #'ein:headingcell-p
+                                  (ein:worksheet-get-cells ein:%worksheet%)))
+        for sharps = (loop repeat (oref cell :level) collect "#")
+        for text = (ein:cell-get-text cell)
+        for name = (ein:join-str "" (append sharps (list " " text)))
+        collect (cons name (ein:cell-input-pos-min cell))))
+
+(defun ein:worksheet-imenu-setup ()
+  "Called via notebook mode hooks."
+  (setq imenu-create-index-function #'ein:worksheet-imenu-create-index))
 
 (provide 'ein-worksheet)
 
