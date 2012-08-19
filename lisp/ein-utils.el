@@ -163,6 +163,13 @@ INITVALUE and DOCSTRING are passed to `defvar'."
        (let ((inhibit-read-only t))
          ,@body))))
 
+(defmacro ein:with-live-buffer (buffer &rest body)
+  "Execute BODY in BUFFER if BUFFER is alive."
+  (declare (indent 1) (debug t))
+  `(when (buffer-live-p ,buffer)
+     (with-current-buffer ,buffer
+       ,@body)))
+
 (defvar ein:dotty-syntax-table
   (let ((table (make-syntax-table c-mode-syntax-table)))
     (modify-syntax-entry ?. "w" table)

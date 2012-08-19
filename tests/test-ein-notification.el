@@ -33,8 +33,7 @@
   (let* ((notification (ein:notification "NotificationTest"))
          (kernel (oref notification :kernel))
          (notebook (oref notification :notebook))
-         (events (ein:events "EventsTest"
-                             :buffer (get-buffer-create "*dummy buffer*"))))
+         (events (ein:events-new)))
     (ein:notification-bind-events notification events)
     (should (= (hash-table-count (oref events :callbacks)) 7))
     (should (equal (oref kernel :status) nil))
