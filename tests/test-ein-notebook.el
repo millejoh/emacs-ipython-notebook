@@ -46,13 +46,12 @@
   (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
   (flet ((pop-to-buffer (buf) buf)
          (ein:notebook-start-kernel ()))
-    (with-current-buffer (ein:notebook-request-open-callback
-                          (ein:notebook-new "DUMMY-URL" notebook-id)
-                          :data (ein:json-read-from-string json-string))
-      (let ((events (ein:$notebook-events ein:%notebook%)))
-        (setf (ein:$notebook-kernel ein:%notebook%)
-              (ein:kernel-new 8888 "/kernels" events)))
-      (current-buffer))))
+    (let ((notebook (ein:notebook-new "DUMMY-URL" notebook-id)))
+      (ein:notebook-request-open-callback
+       notebook :data (ein:json-read-from-string json-string))
+      (setf (ein:$notebook-kernel notebook)
+            (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook)))
+      (ein:notebook-buffer notebook))))
 
 (defun eintest:notebook-make-data (cells &optional name)
   (unless name (setq name "Dummy Name"))
@@ -667,7 +666,7 @@ value of `ein:notebook-enable-undo'."
 ;; Notebook mode
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
-  (let ((ein:notebook-opened-map (make-hash-table :test 'equal)))
+  (let ((ein:notebook--opened-map (make-hash-table :test 'equal)))
     (should (ein:notebook-ask-before-kill-emacs))
     (with-current-buffer
         (eintest:notebook-enable-mode
@@ -683,7 +682,7 @@ value of `ein:notebook-enable-undo'."
       (kill-buffer
        (eintest:notebook-enable-mode
         (eintest:notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
-    (should (= (hash-table-count ein:notebook-opened-map) 3))
+    (should (= (hash-table-count ein:notebook--opened-map) 3))
     (mocker-let ((y-or-n-p
                   (prompt)
                   ((:input '("You have 1 unsaved notebook(s). Discard changes?")
