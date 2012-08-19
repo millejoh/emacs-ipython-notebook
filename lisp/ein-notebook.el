@@ -325,13 +325,11 @@ See `ein:notebook-open' for more information."
            (ein:$notebook-notebook-id notebook)
            status)
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
+    (ein:notebook-bind-events notebook (ein:events-new))
+    (ein:notebook-start-kernel notebook)
     (ein:notebook-from-json notebook data)
-    (with-current-buffer (ein:notebook-buffer notebook)
-      (ein:notebook-bind-events notebook (ein:events-new (current-buffer)))
-      (setq ein:%notebook% notebook))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat data)
-    (ein:notebook-start-kernel)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
 
@@ -373,7 +371,7 @@ of minor mode."
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
-  (setf (ein:$notebook-events ein:%notebook%) events)
+  (setf (ein:$notebook-events notebook) events)
   (ein:events-on events
                  'set_next_input.Notebook
                  #'ein:notebook--set-next-input
@@ -788,20 +786,17 @@ Do not clear input prompts when the prefix argument is given."
 
 ;;; Kernel related things
 
-(defun ein:notebook-start-kernel ()
+(defun ein:notebook-start-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
-         (kernel (ein:kernel-new (ein:$notebook-url-or-port ein:%notebook%)
+         (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  base-url
-                                 (ein:$notebook-events ein:%notebook%))))
-    (setf (ein:$notebook-kernel ein:%notebook%) kernel)
+                                 (ein:$notebook-events notebook))))
+    (setf (ein:$notebook-kernel notebook) kernel)
     (ein:kernelinfo-init (ein:$kernel-kernelinfo kernel) (current-buffer))
     (ein:kernelinfo-setup-hooks kernel)
     (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id ein:%notebook%))
-    (loop for cell in (ein:notebook-get-cells ein:%notebook%)
-          do (when (ein:codecell-p cell)
-               (ein:cell-set-kernel cell kernel)))))
+                      (ein:$notebook-notebook-id notebook))))
 
 (defun ein:notebook-restart-kernel (notebook)
   (ein:kernel-restart (ein:$notebook-kernel notebook)))
@@ -957,18 +952,6 @@ command."
   (when ein:%notebook% (ein:notebook-sync-directory ein:%notebook%)))
 
 
-;;; Worksheet
-
-(defun ein:notebook--worksheet-render (notebook ws)
-  (ein:worksheet-render ws)
-  (ein:worksheet-bind-events ws (ein:$notebook-events notebook))
-  (ein:worksheet-set-kernel ws (ein:$notebook-kernel notebook)))
-
-(defun ein:notebook-worksheet-render-nth (notebook nth)
-  (ein:notebook--worksheet-render
-   notebook (nth 0 (ein:$notebook-worksheets notebook))))
-
-
 ;;; Persistance and loading
 
 (defun ein:notebook-set-notebook-name (notebook name)
@@ -993,11 +976,14 @@ command."
     (setf (ein:$notebook-notebook-name notebook) (plist-get metadata :name)))
   (setf (ein:$notebook-worksheets notebook)
         (mapcar (lambda (ws-data)
-                  (ein:worksheet-from-json (ein:worksheet-new notebook)
+                  (ein:worksheet-from-json (ein:worksheet-new
+                                            notebook
+                                            (ein:$notebook-kernel notebook)
+                                            (ein:$notebook-events notebook))
                                            ws-data))
                 (or (plist-get data :worksheets)
                     (list :cells nil))))
-  (ein:notebook-worksheet-render-nth notebook 0))
+  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook))))
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."

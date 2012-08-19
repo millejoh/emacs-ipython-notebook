@@ -61,15 +61,17 @@
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook &rest args)
-  (apply #'make-instance 'ein:worksheet :notebook notebook args))
+(defun ein:worksheet-new (notebook kernel events &rest args)
+  (apply #'make-instance 'ein:worksheet
+         :notebook notebook :kernel kernel :events events
+         args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   ;; Bind events for sub components:
-  (ein:notification-bind-events (oref ws :notification)
-                                (oref ws :events))
-  (mapc (lambda (cell) (oset cell :events (oref ws :events)))
-        (ein:worksheet-get-cells ws)))
+  (with-slots (events) ws
+    (ein:notification-bind-events (oref ws :notification) events)
+    (mapc (lambda (cell) (oset cell :events events))
+          (ein:worksheet-get-cells ws))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))
@@ -108,6 +110,7 @@
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
                                    nil t)))
+        (oset ws :ewoc ewoc)
         (mapc (lambda (cell-data)
                 (ein:cell-enter-last
                  (ein:cell-from-json cell-data :ewoc ewoc)))
@@ -119,6 +122,7 @@
     (ein:notebook-mode)
     (oset ws :notification (ein:notification-setup (current-buffer)))
     (ein:worksheet-bind-events ws)
+    (ein:worksheet-set-kernel ws)
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
 
 (defun ein:worksheet-pp (ewoc-data)
@@ -157,10 +161,9 @@
 
 ;;; Kernel related things
 
-(defmethod ein:worksheet-set-kernel ((ws ein:worksheet) kernel)
-  (oset ws :kernel kernel)
+(defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (oset cell :kernel (oref ws :kernel)))
-        (ein:worksheet-get-cells ws)))
+        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 
 ;;; Generic getter
