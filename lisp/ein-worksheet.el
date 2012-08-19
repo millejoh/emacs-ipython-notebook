@@ -61,14 +61,15 @@
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook kernel events &rest args)
-  (apply #'make-instance 'ein:worksheet
-         :notebook notebook :events events :kernel kernel
-         args))
+(defun ein:worksheet-new (notebook &rest args)
+  (apply #'make-instance 'ein:worksheet :notebook notebook args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
+  ;; Bind events for sub components:
   (ein:notification-bind-events (oref ws :notification)
-                                (oref ws :events)))
+                                (oref ws :events))
+  (mapc (lambda (cell) (oset cell :events (oref ws :events)))
+        (ein:worksheet-get-cells ws)))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))
@@ -87,8 +88,10 @@
 
 (defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
-                 (ewoc (oref ws :ewoc)))
-    (ewoc-buffer ewoc)))
+                 (ewoc (oref ws :ewoc))
+                 (buffer (ewoc-buffer ewoc))
+                 ((buffer-live-p buffer)))
+    buffer))
 
 (defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
   (or (ein:worksheet-buffer ws)
@@ -109,6 +112,7 @@
                 (ein:cell-enter-last
                  (ein:cell-from-json cell-data :ewoc ewoc)))
               (plist-get (oref ws :data) :cells))))
+    (set-buffer-modified-p nil)
     (setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:notebook-enable-undo 'no)
       (setq buffer-undo-list t))
@@ -127,10 +131,16 @@
 ;;; Persistance and loading
 
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
-  (oset ws :data data))
+  (oset ws :data data)
+  ws)
 
 
 ;;; Cell indexing, retrieval, etc.
+
+(defmethod ein:worksheet-get-cells ((ws ein:worksheet))
+  (let* ((ewoc (oref ws :ewoc))
+         (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
+    (mapcar #'ein:$node-data nodes)))
 
 
 ;;; Insertion and deletion of cells
@@ -146,6 +156,11 @@
 
 
 ;;; Kernel related things
+
+(defmethod ein:worksheet-set-kernel ((ws ein:worksheet) kernel)
+  (oset ws :kernel kernel)
+  (mapc (lambda (cell) (oset cell :kernel (oref ws :kernel)))
+        (ein:worksheet-get-cells ws)))
 
 
 ;;; Generic getter

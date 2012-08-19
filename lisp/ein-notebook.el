@@ -42,6 +42,7 @@
 (require 'ein-node)
 (require 'ein-kernel)
 (require 'ein-cell)
+(require 'ein-worksheet)
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
@@ -162,14 +163,6 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-notebook-id' : string
   uuid string
 
-`ein:$notebook-data' - FIXME: remove this!
-  Original notebook JSON data sent from server.  This slot exists
-  first for debugging reason and should be deleted later.
-
-`ein:$notebook-ewoc' : `ewoc'
-  An instance of `ewoc'.  Notebook is rendered using `ewoc'.
-  Also `ewoc' nodes are used for saving cell data.
-
 `ein:$notebook-kernel' : `ein:$kernel'
   `ein:$kernel' instance.
 
@@ -194,13 +187,11 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-events' : `ein:$events'
   Event handler instance.
 
-`ein:$notebook-notification' : `ein:notification'
-  Notification widget.
+`ein:$notebook-worksheets' : list of `ein:worksheet'
+  List of worksheets.
 "
   url-or-port
   notebook-id
-  data
-  ewoc
   kernel
   pager
   dirty
@@ -209,9 +200,10 @@ Current buffer for these functions is set to the notebook buffer.")
   nbformat
   nbformat-minor
   events
-  notification
+  worksheets
   )
 
+;; FIXME: Remove `ein:%notebook%' when worksheet is fully implemented.
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
@@ -250,33 +242,16 @@ Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
                          args)))
     notebook))
 
-(defun ein:notebook-init (notebook data)
-  "Initialize NOTEBOOK with DATA from the server."
-  (setf (ein:$notebook-data notebook) data)
-  (let* ((metadata (plist-get data :metadata))
-         (notebook-name (plist-get metadata :name)))
-    (setf (ein:$notebook-metadata notebook) metadata)
-    (setf (ein:$notebook-nbformat notebook) (plist-get data :nbformat))
-    (setf (ein:$notebook-nbformat-minor notebook)
-          (plist-get data :nbformat_minor))
-    (setf (ein:$notebook-notebook-name notebook) notebook-name)))
-
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
   (ein:log-ignore-errors
     (ein:kernel-del (ein:$notebook-kernel notebook))))
 
-(defun ein:notebook-get-buffer-name (notebook)
-  (format ein:notebook-buffer-name-template
-          (ein:$notebook-url-or-port notebook)
-          (ein:$notebook-notebook-name notebook)))
-
-(defun ein:notebook-get-buffer (notebook)
-  (get-buffer-create (ein:notebook-get-buffer-name notebook)))
-
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
-  (ewoc-buffer (ein:$notebook-ewoc notebook)))
+  ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
+  (loop for ws in (ein:$notebook-worksheets notebook)
+        if (ein:worksheet-buffer ws) return it))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
@@ -341,7 +316,7 @@ See `ein:notebook-open' for more information."
         (cbargs (nth 2 packed)))
     (apply #'ein:notebook-request-open-callback notebook args)
     (when callback
-      (with-current-buffer (ein:notebook-get-buffer notebook)
+      (with-current-buffer (ein:notebook-buffer notebook)
         (apply callback notebook t cbargs)))))
 
 (defun* ein:notebook-request-open-callback (notebook &key status data
@@ -350,29 +325,15 @@ See `ein:notebook-open' for more information."
            (ein:$notebook-notebook-id notebook)
            status)
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
-    (ein:notebook-init notebook data)
-    (with-current-buffer (ein:notebook-get-buffer notebook)
-      (setq ein:%notebook% notebook)
-      (ein:notebook-render)
-      (set-buffer-modified-p nil)
-      (ein:notebook-put-opened-notebook notebook))))
-
-(defun ein:notebook-render ()
-  "(Re-)Render the notebook."
-  (interactive)
-  (assert ein:%notebook%)  ; make sure in a notebook buffer
-  (ein:notebook-from-json ein:%notebook% (ein:$notebook-data ein:%notebook%))
-  (setq buffer-undo-list nil)  ; clear undo history
-  (when (eq ein:notebook-enable-undo 'no)
-    (setq buffer-undo-list t))
-  (ein:notebook-mode)
-  (setf (ein:$notebook-notification ein:%notebook%)
-        (ein:notification-setup (current-buffer)))
-  (ein:notebook-bind-events ein:%notebook% (ein:events-new))
-  (ein:notebook--check-nbformat (ein:$notebook-data ein:%notebook%))
-  (ein:notebook-start-kernel)
-  (ein:log 'info "Notebook %s is ready"
-           (ein:$notebook-notebook-name ein:%notebook%)))
+    (ein:notebook-from-json notebook data)
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (ein:notebook-bind-events notebook (ein:events-new (current-buffer)))
+      (setq ein:%notebook% notebook))
+    (ein:notebook-put-opened-notebook notebook)
+    (ein:notebook--check-nbformat data)
+    (ein:notebook-start-kernel)
+    (ein:log 'info "Notebook %s is ready"
+             (ein:$notebook-notebook-name notebook))))
 
 (defun ein:notebook-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
@@ -430,10 +391,6 @@ of minor mode."
                      (ein:notebook-empty-undo-maybe)))
                  notebook)
   ;; Bind events for sub components:
-  (mapc (lambda (cell) (oset cell :events (ein:$notebook-events notebook)))
-        (ein:notebook-get-cells notebook))
-  (ein:notification-bind-events (ein:$notebook-notification ein:%notebook%)
-                                events)
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
          (format ein:notebook-pager-buffer-name-template
@@ -1000,6 +957,18 @@ command."
   (when ein:%notebook% (ein:notebook-sync-directory ein:%notebook%)))
 
 
+;;; Worksheet
+
+(defun ein:notebook--worksheet-render (notebook ws)
+  (ein:worksheet-render ws)
+  (ein:worksheet-bind-events ws (ein:$notebook-events notebook))
+  (ein:worksheet-set-kernel ws (ein:$notebook-kernel notebook)))
+
+(defun ein:notebook-worksheet-render-nth (notebook nth)
+  (ein:notebook--worksheet-render
+   notebook (nth 0 (ein:$notebook-worksheets notebook))))
+
+
 ;;; Persistance and loading
 
 (defun ein:notebook-set-notebook-name (notebook name)
@@ -1015,19 +984,20 @@ command."
        (not (string-match "[\\/\\\\]" name))))
 
 (defun ein:notebook-from-json (notebook data)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    ;; Enable nonsep for ewoc object (the last argument is non-nil).
-    ;; This is for putting read-only text properties to the newlines.
-    (setf (ein:$notebook-ewoc notebook)
-          (ein:ewoc-create 'ein:notebook-pp
-                           (ein:propertize-read-only "\n")
-                           nil t))
-    (mapc (lambda (cell-data)
-            (ein:cell-enter-last
-             (ein:notebook-cell-from-json ein:%notebook% cell-data)))
-          ;; Only handle 1 worksheet for now, as in notebook.js
-          (plist-get (nth 0 (plist-get data :worksheets)) :cells))))
+  (destructuring-bind (&key metadata nbformat nbformat_minor
+                            &allow-other-keys)
+      data
+    (setf (ein:$notebook-metadata notebook) metadata)
+    (setf (ein:$notebook-nbformat notebook) nbformat)
+    (setf (ein:$notebook-nbformat-minor notebook) nbformat_minor)
+    (setf (ein:$notebook-notebook-name notebook) (plist-get metadata :name)))
+  (setf (ein:$notebook-worksheets notebook)
+        (mapcar (lambda (ws-data)
+                  (ein:worksheet-from-json (ein:worksheet-new notebook)
+                                           ws-data))
+                (or (plist-get data :worksheets)
+                    (list :cells nil))))
+  (ein:notebook-worksheet-render-nth notebook 0))
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
