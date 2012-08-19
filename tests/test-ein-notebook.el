@@ -636,6 +636,18 @@ value of `ein:notebook-enable-undo'."
 (eintest:notebook-undo-make-tests notebook-undo-after-execution-1-cell)
 (eintest:notebook-undo-make-tests notebook-undo-after-execution-2-cells)
 
+(ert-deftest ein:notebook-undo-via-events ()
+  (with-current-buffer (eintest:notebook-make-empty)
+    (loop with events = (ein:$notebook-events ein:%notebook%)
+          for ein:notebook-enable-undo in '(no yes full) do
+          (let ((buffer-undo-list '(dummy)))
+            (with-temp-buffer
+              (should-not (equal buffer-undo-list '(dummy)))
+              (ein:events-trigger events 'maybe_reset_undo.Notebook))
+            (if (eq ein:notebook-enable-undo 'yes)
+                (should (equal buffer-undo-list nil))
+              (should (equal buffer-undo-list '(dummy))))))))
+
 
 ;; Generic getter
 
