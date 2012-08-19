@@ -370,6 +370,40 @@ directly."
         (oset new :kernel (oref ws :kernel)))
       (ein:notebook-empty-undo-maybe)
       (when focus (ein:cell-goto new relpos)))))
+
+(defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
+  "Change the cell type of the current cell.
+Prompt will appear in the minibuffer.
+
+When used in as a Lisp function, TYPE (string) should be chose
+from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
+an integer used only when the TYPE is \"heading\"."
+  (interactive
+   (let* ((ws (ein:worksheet--get-ws-or-error))
+          (cell (ein:worksheet-get-current-cell))
+          (choices (case (ein:$worksheet-nbformat (oref ws :notebook))
+                     (2 "cm")
+                     (3 "cmr123456")))
+          (key (ein:ask-choice-char
+                (format "Cell type [%s]: " choices) choices))
+          (type (case key
+                  (?c "code")
+                  (?m "markdown")
+                  (?r "raw")
+                  (t "heading")))
+          (level (when (equal type "heading")
+                   (string-to-number (char-to-string key)))))
+     (list ws cell type level t)))
+
+  (let ((relpos (ein:cell-relative-point cell))
+        (new (ein:cell-convert-inplace cell type)))
+    (when (ein:codecell-p new)
+      (oset new :kernel (oref ws :kernel)))
+    (when level
+      (ein:cell-change-level new level))
+    (ein:notebook-empty-undo-maybe)
+    (when focus (ein:cell-goto new relpos))))
+
 
 ;;; Cell selection.
 
