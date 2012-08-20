@@ -28,23 +28,28 @@
 (require 'smartrep nil t)
 (require 'ein-notebook)
 
+(defcustom ein:smartrep-notebook-mode-alist
+  '(("C-t" . ein:worksheet-toggle-cell-type)
+    ("C-l" . ein:worksheet-clear-output)
+    ("C-k" . ein:worksheet-kill-cells)
+    ("C-y" . ein:worksheet-yank-cell)
+    ("C-a" . ein:worksheet-insert-cell-above)
+    ("C-b" . ein:worksheet-insert-cell-below)
+    ("C-n" . ein:worksheet-goto-next-input)
+    ("C-p" . ein:worksheet-goto-prev-input)
+    ("C-m" . ein:worksheet-merge-cell)
+    ("<up>" . ein:worksheet-move-cell-up)
+    ("<down>" . ein:worksheet-move-cell-down)
+    )
+  "alist passed to `smartrep-define-key'."
+  :group 'ein)
+
 (defun ein:smartrep-config ()
   (interactive)
   (smartrep-define-key
       ein:notebook-mode-map
       "C-c"
-    '(("C-t" . ein:worksheet-toggle-cell-type)
-      ("C-l" . ein:worksheet-clear-output)
-      ("C-k" . ein:worksheet-kill-cells)
-      ("C-y" . ein:worksheet-yank-cell)
-      ("C-a" . ein:worksheet-insert-cell-above)
-      ("C-b" . ein:worksheet-insert-cell-below)
-      ("C-n" . ein:worksheet-goto-next-input)
-      ("C-p" . ein:worksheet-goto-prev-input)
-      ("C-m" . ein:worksheet-merge-cell)
-      ("<up>" . ein:worksheet-move-cell-up)
-      ("<down>" . ein:worksheet-move-cell-down)
-      )))
+    ein:smartrep-notebook-mode-alist))
 
 
 (defvar ein:smartrep-config-once-called nil)
