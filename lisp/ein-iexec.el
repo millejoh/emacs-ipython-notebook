@@ -25,7 +25,7 @@
 
 ;;; Code:
 
-(require 'ein-notebook)
+(require 'ein-worksheet)
 
 (defcustom ein:iexec-delay 0.3
   "Delay before executing cell after change in second."
@@ -41,8 +41,8 @@ If the previous execution timer is not fired yet, cancel the timer."
     (cancel-timer ein:iexec-timer))
   (setq ein:iexec-timer
         (run-with-idle-timer ein:iexec-delay nil
-                             #'ein:notebook-execute-cell
-                             ein:%notebook% cell)))
+                             #'ein:worksheet-execute-cell
+                             ein:%worksheet% cell)))
 
 (defun ein:iexec-should-execute-p (cell beg end)
   "Return non-`nil' if CELL should be executed by the change within
@@ -54,7 +54,7 @@ BEG and END."
 
 (defun ein:iexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."
-  (let ((cell (ein:notebook-get-current-cell beg)))
+  (let ((cell (ein:worksheet-get-current-cell :pos beg)))
     (when (ein:iexec-should-execute-p cell beg end)
       (ein:iexec-execute-cell cell))))
 
