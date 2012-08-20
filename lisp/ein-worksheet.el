@@ -454,8 +454,9 @@ argument \(C-u)."
       (setq head (ein:trim-right head "\n"))
       (save-excursion
         (goto-char pos)
-        (while (looking-at-p "\n")
-          (delete-char 1))))
+        (let ((end (set-marker (make-marker) (ein:cell-input-pos-max cell))))
+          (while (and (looking-at-p "\n") (< (point) end))
+            (delete-char 1)))))
     (ein:cell-set-text new head)
     (ein:notebook-empty-undo-maybe)
     (when focus (ein:cell-goto cell))))

@@ -279,7 +279,8 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (with-current-buffer (eintest:notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert insert-text)
-    (search-backward search-text)
+    (when search-text
+      (search-backward search-text))
     ;; do it
     (let ((prefix-arg no-trim))
       (call-interactively #'ein:worksheet-split-cell-at-point))
@@ -312,6 +313,14 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 (ert-deftest ein:notebook-split-cell-at-point-after-newline-no-trim ()
   (eintest:notebook-split-cell-at-point
    "some\ntext" "\ntext" "some" "\ntext" t))
+
+(ert-deftest ein:notebook-split-cell-at-point-no-head ()
+  (eintest:notebook-split-cell-at-point
+   "some" "some" "" "some"))
+
+(ert-deftest ein:notebook-split-cell-at-point-no-tail ()
+  (eintest:notebook-split-cell-at-point
+   "some" nil "some" ""))
 
 (ert-deftest ein:notebook-merge-cell-command-next ()
   (with-current-buffer (eintest:notebook-make-empty)
