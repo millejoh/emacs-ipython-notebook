@@ -578,7 +578,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                         (unless (string-match "Untitled[0-9]+" name)
                           name)))))
   (ein:notebook-set-notebook-name ein:%notebook% name)
-  (rename-buffer (ein:notebook-get-buffer-name ein:%notebook%))
+  (mapc #'ein:worksheet-set-buffer-name
+        (ein:$notebook-worksheets ein:%notebook%))
   (ein:notebook-save-notebook
    ein:%notebook% 0
    (lambda (notebook &rest ignore)
