@@ -204,11 +204,8 @@
       (setq ewoc-node (ewoc-next (oref ein:%worksheet% :ewoc) ewoc-node)))
     ewoc-node))
 
-(defun* ein:worksheet-get-current-cell (&optional
-                                        pos
-                                        &key
-                                        noerror
-                                        (cell-p #'ein:basecell-child-p))
+(defun* ein:worksheet-get-current-cell (&key pos noerror
+                                             (cell-p #'ein:basecell-child-p))
   "Return a cell at POS.  If POS is not given, it is assumed be the
 current cursor position.  When the current buffer is not worksheet
 buffer or there is no cell in the current buffer, return `nil'."
@@ -221,8 +218,8 @@ buffer or there is no cell in the current buffer, return `nil'."
 
 (defun ein:worksheet-get-cells-in-region (beg end)
   (ein:clip-list (ein:aand ein:%worksheet% (ein:worksheet-get-cells it))
-                 (ein:worksheet-get-current-cell beg)
-                 (ein:worksheet-get-current-cell end)))
+                 (ein:worksheet-get-current-cell :pos beg)
+                 (ein:worksheet-get-current-cell :pos end)))
 
 (defun* ein:worksheet-get-cells-in-region-or-at-point
     (&key noerror (cell-p #'ein:basecell-child-p))
