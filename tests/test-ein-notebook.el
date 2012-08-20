@@ -278,7 +278,8 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (insert insert-text)
     (search-backward search-text)
     ;; do it
-    (ein:notebook-split-cell-at-point no-trim)
+    (let ((prefix-arg no-trim))
+      (call-interactively #'ein:worksheet-split-cell-at-point))
     ;; check the "tail" cell
     (let ((cell (ein:worksheet-get-current-cell)))
       (ein:cell-goto cell)
