@@ -14,8 +14,8 @@
 The new cell is bound to a variable `cell'."
   (declare (indent 1))
   `(with-current-buffer (eintest:notebook-make-empty)
-     (let ((cell (ein:notebook-insert-cell-below ein:%notebook% ,cell-type nil)))
-       (ein:cell-goto cell)
+     (let ((cell (ein:worksheet-insert-cell-below ein:%worksheet%
+                                                  ,cell-type nil t)))
        ,@body)))
 
 (defvar eintest:example-svg "\
