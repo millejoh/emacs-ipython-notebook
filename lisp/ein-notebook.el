@@ -482,7 +482,9 @@ This is equivalent to do ``C-c`` in the console program."
                                            ws-data))
                 (or (plist-get data :worksheets)
                     (list :cells nil))))
-  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook))))
+  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (setq ein:%notebook% notebook)))
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
