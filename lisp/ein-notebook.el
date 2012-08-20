@@ -452,9 +452,7 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook-execute-autoexec-cells (notebook)
   "Execute cells of which auto-execution flag is on."
-  (interactive (if ein:%notebook%
-                   (list ein:%notebook%)
-                 (error "Not in notebook buffer!")))
+  (interactive (list (or ein:%notebook% (error "Not in notebook buffer!"))))
   (mapc #'ein:worksheet-execute-autoexec-cells
         (ein:$notebook-worksheets notebook)))
 
