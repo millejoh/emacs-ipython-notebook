@@ -64,7 +64,7 @@ The new cell is bound to a variable `cell'."
        (list :cell_type "code"
              :input "some input"
              :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:%notebook%))
+       :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
 In \\[111\\]:
@@ -77,7 +77,7 @@ some input
        (list :cell_type "code"
              :input "some input"
              :prompt_number "*")
-       :ewoc (ein:$notebook-ewoc ein:%notebook%))
+       :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
 In \\[\\*\\]:
@@ -89,7 +89,7 @@ some input
       (ein:cell-from-json
        (list :cell_type "code"
              :input "some input")
-       :ewoc (ein:$notebook-ewoc ein:%notebook%))
+       :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
 In \\[ \\]:
@@ -106,7 +106,7 @@ some input
              :outputs outputs
              :input "some input"
              :prompt_number 111)
-       :ewoc (ein:$notebook-ewoc ein:%notebook%))
+       :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at (format "\
 In \\[111\\]:
