@@ -250,8 +250,11 @@ some text
            (lambda (type &optional level)
              (let ((cell-p (intern (format "ein:%scell-p" type)))
                    (cell (ein:worksheet-get-current-cell)))
-               (ein:worksheet-change-cell-type ein:%worksheet% cell type level)
-               (should (funcall cell-p cell))
+               (ein:worksheet-change-cell-type ein:%worksheet% cell
+                                               type level t)
+               (let ((new (ein:worksheet-get-current-cell)))
+                 (should-not (eq new cell))
+                 (should (funcall cell-p new)))
                (should (looking-back "some text"))))))
       ;; change type: code (no change) -> markdown -> raw
       (loop for type in '("code" "markdown" "raw")
