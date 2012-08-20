@@ -670,6 +670,7 @@ value of `ein:notebook-enable-undo'."
 
 (ert-deftest ein:get-cell-at-point--notebook ()
   (with-current-buffer (eintest:notebook-make-empty)
+    ;; FIXME: write test with non-empty worksheet
     (should-not (ein:get-cell-at-point))))
 
 (ert-deftest ein:get-traceback-data--notebook ()

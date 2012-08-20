@@ -615,10 +615,11 @@ next cell, or insert if none."
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))
 
-(defalias 'ein:get-cell-at-point--worksheet 'ein:worksheet-get-current-cell)
+(defun ein:get-cell-at-point--worksheet ()
+  (ein:worksheet-get-current-cell :noerror t))
 
 (defun ein:get-traceback-data--worksheet ()
-  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-get-tb-data it)))
+  (ein:aand (ein:get-cell-at-point--worksheet) (ein:cell-get-tb-data it)))
 
 
 ;;; Predicate
