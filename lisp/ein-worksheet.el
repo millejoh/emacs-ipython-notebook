@@ -122,7 +122,7 @@
       (generate-new-buffer (ein:worksheet--buffer-name ws))))
 
 (defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
-  (ein:with-live-buffer (ein:worksheet-buffer)
+  (ein:with-live-buffer (ein:worksheet-buffer ws)
     (rename-buffer (ein:worksheet--buffer-name ws))))
 
 (defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
