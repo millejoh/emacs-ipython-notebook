@@ -112,7 +112,7 @@ To make the workaround less aggressive, you can set a newline
   (around ein:mumamo-indent-line-function-workaround)
   "Workaround the indentation problem when the cursor is in the
 code cell."
-  (let ((cell (ein:notebook-get-current-cell)))
+  (let ((cell (ein:worksheet-get-current-cell)))
     ;; Check if the current buffer is notebook AND the current cell is
     ;; code cell.
     (if (ein:codecell-p cell)
@@ -155,7 +155,7 @@ the variable every time visiting the different chunks.
 
 This is the same workaround as `ein:ac-setup-maybe'."
   (when ein:%notebook%
-    (ein:notebook-imenu-setup)))
+    (ein:worksheet-imenu-setup)))
 
 (add-hook 'after-change-major-mode-hook 'ein:mumamo-imenu-setup-maybe)
 
@@ -223,7 +223,7 @@ MAX.  If END is non-`nil', end of the input element is returned."
   (ein:log 'blather "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
            pos max end cell-p)
   (let* ((ewoc-node
-          (ein:notebook-get-nearest-cell-ewoc-node pos max cell-p))
+          (ein:worksheet-get-nearest-cell-ewoc-node pos max cell-p))
          (_ (ein:log 'blather "(null ewoc-node) = %s" (null ewoc-node)))
          (cell (ein:aand ewoc-node
                          (ein:$node-data (ewoc-data it))))
