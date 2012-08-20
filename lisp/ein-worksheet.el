@@ -112,12 +112,18 @@
                  ((buffer-live-p buffer)))
     buffer))
 
+(defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
+  (format ein:worksheet-buffer-name-template
+          (ein:worksheet-url-or-port ws)
+          (ein:worksheet-full-name ws)))
+
 (defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
   (or (ein:worksheet-buffer ws)
-      (generate-new-buffer
-       (format ein:worksheet-buffer-name-template
-               (ein:worksheet-url-or-port ws)
-               (ein:worksheet-full-name ws)))))
+      (generate-new-buffer (ein:worksheet--buffer-name ws))))
+
+(defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
+  (ein:with-live-buffer (ein:worksheet-buffer)
+    (rename-buffer (ein:worksheet--buffer-name ws))))
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
