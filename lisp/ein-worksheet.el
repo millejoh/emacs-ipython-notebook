@@ -38,7 +38,7 @@
 
 (eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
-(declare-function ein:$worksheet-nbformat "ein-notebook")
+(declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
 (declare-function ein:notebook-empty-undo-maybe "ein-notebook")
@@ -54,7 +54,7 @@
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
-   (dirty :initarg :dirty :type boolean)
+   (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
    (events :initarg :events)
    (notification :initarg :notification)))
@@ -238,7 +238,7 @@ buffer or there is no cell in the current buffer, return `nil'."
   (or ein:%worksheet% (error "Not in worksheet buffer.")))
 
 (defun ein:worksheet-focus-cell ()
-  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-goto it)))
+  (ein:aand (ein:worksheet-get-current-cell :noerror t) (ein:cell-goto it)))
 
 (defun ein:worksheet-delete-cell (ws cell &optional focus)
   "Delete a cell.  \(WARNING: no undo!)
@@ -380,7 +380,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (ein:$worksheet-nbformat (oref ws :notebook))
+  (let ((type (case (ein:$notebook-nbformat (oref ws :notebook))
                 (2 (ein:case-equal (oref cell :cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
@@ -406,7 +406,7 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (ein:$worksheet-nbformat (oref ws :notebook))
+          (choices (case (ein:$notebook-nbformat (oref ws :notebook))
                      (2 "cm")
                      (3 "cmr123456")))
           (key (ein:ask-choice-char
@@ -615,10 +615,11 @@ next cell, or insert if none."
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))
 
-(defalias 'ein:get-cell-at-point--worksheet 'ein:worksheet-get-current-cell)
+(defun ein:get-cell-at-point--worksheet ()
+  (ein:worksheet-get-current-cell :noerror t))
 
 (defun ein:get-traceback-data--worksheet ()
-  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-get-tb-data it)))
+  (ein:aand (ein:get-cell-at-point--worksheet) (ein:cell-get-tb-data it)))
 
 
 ;;; Predicate

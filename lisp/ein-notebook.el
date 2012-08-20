@@ -482,7 +482,9 @@ This is equivalent to do ``C-c`` in the console program."
                                            ws-data))
                 (or (plist-get data :worksheets)
                     (list :cells nil))))
-  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook))))
+  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (setq ein:%notebook% notebook)))
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
@@ -773,12 +775,11 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
-(add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-imenu-setup)
-
 (define-derived-mode ein:notebook-python-mode python-mode "ein:python"
   "Use `python-mode' for whole notebook buffer.")
 
-(add-hook 'ein:notebook-python-mode-hook 'ein:notebook-imenu-setup)
+(add-hook 'ein:notebook-plain-mode-hook  'ein:worksheet-imenu-setup)
+(add-hook 'ein:notebook-python-mode-hook 'ein:worksheet-imenu-setup)
 
 (set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
 (set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
