@@ -45,12 +45,12 @@
 (defun eintest:notebook-from-json (json-string &optional notebook-id)
   (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
   (flet ((pop-to-buffer (buf) buf)
-         (ein:notebook-start-kernel ()))
+         (ein:notebook-start-kernel (notebook)))
     (let ((notebook (ein:notebook-new "DUMMY-URL" notebook-id)))
-      (ein:notebook-request-open-callback
-       notebook :data (ein:json-read-from-string json-string))
       (setf (ein:$notebook-kernel notebook)
             (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook)))
+      (ein:notebook-request-open-callback
+       notebook :data (ein:json-read-from-string json-string))
       (ein:notebook-buffer notebook))))
 
 (defun eintest:notebook-make-data (cells &optional name)
