@@ -284,9 +284,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
   (ein:connect-assert-connected)
-  (let ((notebook (ein:connect-get-notebook)))
-    (ein:notebook-with-buffer notebook
-      (ein:notebook-execute-autoexec-cells notebook))))
+  (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook)))
 
 (defun ein:connect-toggle-autoexec ()
   "Toggle auto-execution mode of the current connected buffer.

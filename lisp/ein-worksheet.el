@@ -659,12 +659,15 @@ command."
            (length cells)))
 
 (defun ein:worksheet-execute-autoexec-cells (ws)
-  "Execute cells of which auto-execution flag is on."
+  "Execute cells of which auto-execution flag is on.
+Note that you don't need to set current buffer to call this
+function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (ein:kernel-if-ready (oref ws :kernel)
-    (mapc #'ein:cell-execute
-          (ein:filter #'ein:cell-autoexec-p
-                      (ein:worksheet-get-cells ws)))))
+  (ein:with-live-buffer (ein:worksheet-buffer)
+    (ein:kernel-if-ready (oref ws :kernel)
+      (mapc #'ein:cell-execute
+            (ein:filter #'ein:cell-autoexec-p
+                        (ein:worksheet-get-cells ws))))))
 
 
 ;;; Imenu
