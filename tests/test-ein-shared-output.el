@@ -17,7 +17,9 @@
 (ert-deftest ein:get-cell-at-point--shared-output ()
   (eintest:shared-output-with-buffer
     (should (equal (ein:get-cell-at-point)
-                   (ein:shared-output-get-cell)))))
+                   (ein:shared-output-get-cell))))
+  (with-temp-buffer
+    (should-not (ein:get-cell-at-point--shared-output))))
 
 ;; FIXME: Add tests with non-empty shared output buffer.
 (eintest:shared-output-is-empty-context-of ein:get-url-or-port)
