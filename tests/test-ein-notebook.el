@@ -163,7 +163,7 @@ In [ ]:
 some text
 
 "))
-    (call-interactively #'ein:worksheet-kill-cells)
+    (call-interactively #'ein:worksheet-delete-cell)
     (should (equal (buffer-string) "\n"))
     (should-error (undo))               ; should be ignore-error?
     (should (equal (buffer-string) "\n"))))
