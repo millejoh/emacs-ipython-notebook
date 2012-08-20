@@ -613,6 +613,15 @@ next cell, or insert if none."
   (ein:aand (ein:worksheet-get-current-cell) (ein:cell-get-tb-data it)))
 
 
+;;; Predicate
+
+(defmethod ein:worksheet-modified-p ((ws ein:worksheet))
+  (let ((buffer (ein:worksheet-buffer ws)))
+    (and (buffer-live-p buffer)
+         (or (oref ws :dirty)
+             (buffer-modified-p buffer)))))
+
+
 ;;; Imenu
 
 (defun ein:worksheet-imenu-create-index ()

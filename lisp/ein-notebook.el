@@ -372,6 +372,9 @@ of minor mode."
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
+  ;; As IPython support only supports whole-notebook saving, there is
+  ;; no need for finer-level `set_dirty.Notebook'.  Keep this until
+  ;; IPython supports finer-level saving.
   (ein:events-on events
                  'set_dirty.Notebook
                  (lambda (notebook data)
@@ -713,7 +716,7 @@ as usual."
   (ein:aand (ein:notebook-get-current-cell) (ein:cell-get-tb-data it)))
 
 
-;;; API
+;;; Predicate
 
 (defun ein:notebook-buffer-p ()
   "Return non-`nil' if current buffer is notebook buffer."
@@ -728,7 +731,9 @@ as usual."
   (and (ein:$notebook-p notebook)
        (ein:notebook-live-p notebook)
        (or (ein:$notebook-dirty notebook)
-           (buffer-modified-p (ein:notebook-buffer notebook)))))
+           (loop for ws in (ein:$notebook-worksheets notebook)
+                 when (ein:worksheet-modified-p ws)
+                 return t))))
 
 
 ;;; Notebook mode
