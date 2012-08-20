@@ -62,6 +62,13 @@
   (ein:load-files "^ein-.*\\.el$")
   (ein:subpackages-reload))
 
+(defun ein:dev-require-all ()
+  (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
+        unless (equal f "ein-pkg.el")
+        do (require (intern (file-name-sans-extension f)) nil t))
+  ;; For `widget-button-press':
+  (require 'wid-edit nil t))
+
 (defadvice backtrace (around ein:dev-short-backtrace)
   "A hack to shorten backtrace.
 
