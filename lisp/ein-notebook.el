@@ -661,11 +661,6 @@ as usual."
   (when (ein:$notebook-p ein:%notebook%)
     (ein:$notebook-kernel ein:%notebook%)))
 
-(defalias 'ein:get-cell-at-point--notebook 'ein:notebook-get-current-cell)
-
-(defun ein:get-traceback-data--notebook ()
-  (ein:aand (ein:notebook-get-current-cell) (ein:cell-get-tb-data it)))
-
 
 ;;; Predicate
 

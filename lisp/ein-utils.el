@@ -544,13 +544,11 @@ but can operate in different contexts."
       (error "No kernel related to the current buffer.")))
 
 (defun ein:get-cell-at-point ()
-  (ein:generic-getter '(ein:get-cell-at-point--notebook
-                        ein:get-cell-at-point--worksheet
+  (ein:generic-getter '(ein:get-cell-at-point--worksheet
                         ein:get-cell-at-point--shared-output)))
 
 (defun ein:get-traceback-data ()
-  (ein:generic-getter '(ein:get-traceback-data--notebook
-                        ein:get-traceback-data--worksheet
+  (ein:generic-getter '(ein:get-traceback-data--worksheet
                         ein:get-traceback-data--shared-output
                         ein:get-traceback-data--connect)))
 
