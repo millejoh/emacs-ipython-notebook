@@ -932,8 +932,9 @@ next cell, or insert if none."
 (defun ein:notebook-complete-dot ()
   "Insert dot and request completion."
   (interactive)
-  (when (and ein:%notebook% (ein:codecell-p (ein:notebook-get-current-cell)))
-    (ein:completer-dot-complete)))
+  (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
+      (ein:completer-dot-complete)
+    (insert ".")))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
