@@ -218,10 +218,15 @@ buffer or there is no cell in the current buffer, return `nil'."
                  (ein:worksheet-get-current-cell beg)
                  (ein:worksheet-get-current-cell end)))
 
-(defun ein:worksheet-get-cells-in-region-or-at-point ()
-  (if (region-active-p)
-      (ein:worksheet-get-cells-in-region (region-beginning) (region-end))
-    (list (ein:worksheet-get-current-cell))))
+(defun* ein:worksheet-get-cells-in-region-or-at-point
+    (&key noerror (cell-p #'ein:basecell-child-p))
+  (or (ein:filter cell-p
+                  (if (region-active-p)
+                      (ein:worksheet-get-cells-in-region (region-beginning)
+                                                         (region-end))
+                    (list (ein:worksheet-get-current-cell))))
+      (unless noerror
+        (error "Cell not found"))))
 
 
 ;;; Insertion and deletion of cells
@@ -620,6 +625,37 @@ next cell, or insert if none."
     (and (buffer-live-p buffer)
          (or (oref ws :dirty)
              (buffer-modified-p buffer)))))
+
+
+;;; Auto-execution
+
+(defun ein:worksheet-toggle-autoexec (cell)
+  "Toggle auto-execution flag of the cell at point."
+  (interactive (list (ein:worksheet-get-current-cell #'ein:codecell-p)))
+  (ein:cell-toggle-autoexec cell))
+
+(defun ein:worksheet-turn-on-autoexec (cells &optional off)
+  "Turn on auto-execution flag of the cells in region or cell at point.
+When the prefix argument is given, turn off the flag instead.
+
+To use autoexec feature, you need to turn on auto-execution mode
+in connected buffers, using the `ein:connect-toggle-autoexec'
+command."
+  (interactive
+   (list (ein:worksheet-get-cells-in-region-or-at-point #'ein:codecell-p)
+         current-prefix-arg))
+  (mapc (lambda (c) (ein:cell-set-autoexec c (not off))) cells)
+  (ein:log 'info "Turn %s auto-execution flag of %s cells."
+           (if off "off" "on")
+           (length cells)))
+
+(defun ein:worksheet-execute-autoexec-cells (ws)
+  "Execute cells of which auto-execution flag is on."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (ein:kernel-if-ready (oref ws :kernel)
+    (mapc #'ein:cell-execute
+          (ein:filter #'ein:cell-autoexec-p
+                      (ein:worksheet-get-cells ws)))))
 
 
 ;;; Imenu

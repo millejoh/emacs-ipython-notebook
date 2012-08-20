@@ -450,41 +450,13 @@ This is equivalent to do ``C-c`` in the console program."
 
 ;; autoexec
 
-(defun ein:notebook-toggle-autoexec ()
-  "Toggle auto-execution flag of the cell at point."
-  (interactive)
-  (ein:notebook-with-cell #'ein:codecell-p
-    (ein:cell-toggle-autoexec cell)))
-
-(defun ein:notebook-turn-on-autoexec (cells &optional off)
-  "Turn on auto-execution flag of the cells in region or cell at point.
-When the prefix argument is given, turn off the flag instead.
-
-To use autoexec feature, you need to turn on auto-execution mode
-in connected buffers, using the `ein:connect-toggle-autoexec'
-command."
-  (interactive
-   (list (let ((cells
-                (ein:filter #'ein:codecell-p
-                            (ein:notebook-get-cells-in-region-or-at-point))))
-           (if cells
-               cells
-             (error "Cell note found.")))
-         current-prefix-arg))
-  (mapc (lambda (c) (ein:cell-set-autoexec c (not off))) cells)
-  (ein:log 'info "Turn %s auto-execution flag of %s cells."
-           (if off "off" "on")
-           (length cells)))
-
 (defun ein:notebook-execute-autoexec-cells (notebook)
   "Execute cells of which auto-execution flag is on."
   (interactive (if ein:%notebook%
                    (list ein:%notebook%)
                  (error "Not in notebook buffer!")))
-  (ein:kernel-if-ready (ein:$notebook-kernel notebook)
-    (mapc #'ein:cell-execute
-          (ein:filter #'ein:cell-autoexec-p
-                      (ein:notebook-get-cells notebook)))))
+  (mapc #'ein:worksheet-execute-autoexec-cells
+        (ein:$notebook-worksheets notebook)))
 
 (define-obsolete-function-alias
   'ein:notebook-eval-string
