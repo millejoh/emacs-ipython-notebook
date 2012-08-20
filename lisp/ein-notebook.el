@@ -381,12 +381,13 @@ of minor mode."
                    (setf (ein:$notebook-dirty notebook)
                          (plist-get data :value)))
                  notebook)
+  ;; As calling multiple callbacks for this event does not make sense,
+  ;; I amadding this in notebook instead of worksheet.
   (ein:events-on events
                  'maybe_reset_undo.Notebook
-                 (lambda (notebook -ignore-)
-                   (with-current-buffer (ein:notebook-buffer notebook)
-                     (ein:notebook-empty-undo-maybe)))
-                 notebook)
+                 (lambda (-ignore- cell)
+                   (ein:with-live-buffer (ein:cell-buffer cell)
+                     (ein:notebook-empty-undo-maybe))))
   ;; Bind events for sub components:
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
