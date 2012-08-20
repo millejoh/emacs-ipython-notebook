@@ -557,8 +557,8 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (set-buffer-modified-p nil))
+  (mapc (lambda (ws) (ein:worksheet-set-modified-p ws nil))
+        (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook))
 

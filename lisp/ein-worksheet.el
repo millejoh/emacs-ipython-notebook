@@ -125,6 +125,11 @@
   (ein:with-live-buffer (ein:worksheet-buffer)
     (rename-buffer (ein:worksheet--buffer-name ws))))
 
+(defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
+  (ein:with-live-buffer (ein:worksheet-buffer ws)
+    (set-buffer-modified-p dirty))
+  (oset ws :dirty dirty))
+
 (defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
     (setq ein:%worksheet% ws)
