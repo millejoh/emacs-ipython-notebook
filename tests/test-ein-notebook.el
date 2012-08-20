@@ -316,7 +316,8 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (insert "Cell 1")
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "Cell 0")
-    (ein:notebook-merge-cell-command t)
+    (let ((prefix-arg t))
+      (call-interactively #'ein:worksheet-merge-cell))
     (ein:cell-goto (ein:worksheet-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
@@ -400,7 +401,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
                (ein:kernel-live-p
                 (kernel)
                 ((:input (list kernel) :output t))))
-    (ein:notebook-execute-current-cell))
+    (call-interactively #'ein:worksheet-execute-cell))
   (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))
 
 (ert-deftest ein:notebook-execute-current-cell ()
@@ -464,7 +465,7 @@ In [ ]:
       (insert line-1 "\n" line-2)
       (undo-boundary)
       (move-beginning-of-line 1)
-      (ein:notebook-split-cell-at-point)
+      (call-interactively #'ein:worksheet-split-cell-at-point)
       (undo-boundary)
       (should (equal (ein:cell-get-text (ein:worksheet-get-current-cell))
                      line-2))
