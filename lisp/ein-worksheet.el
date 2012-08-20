@@ -38,7 +38,7 @@
 
 (eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
-(declare-function ein:$worksheet-nbformat "ein-notebook")
+(declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
 (declare-function ein:notebook-empty-undo-maybe "ein-notebook")
@@ -380,7 +380,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (ein:$worksheet-nbformat (oref ws :notebook))
+  (let ((type (case (ein:$notebook-nbformat (oref ws :notebook))
                 (2 (ein:case-equal (oref cell :cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
@@ -406,7 +406,7 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (ein:$worksheet-nbformat (oref ws :notebook))
+          (choices (case (ein:$notebook-nbformat (oref ws :notebook))
                      (2 "cm")
                      (3 "cmr123456")))
           (key (ein:ask-choice-char
