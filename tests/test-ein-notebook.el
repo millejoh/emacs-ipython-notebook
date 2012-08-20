@@ -175,7 +175,7 @@ some text
             do (call-interactively #'ein:worksheet-insert-cell-above))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
       (loop for i from 1 to 3
-            do (call-interactively #'ein:worksheet-kill-cells)
+            do (call-interactively #'ein:worksheet-kill-cell)
             do (should (equal (length ein:kill-ring) i))
             do (should (equal (ein:worksheet-ncells ein:%worksheet%) (- 3 i)))))))
 
@@ -197,7 +197,7 @@ some text
             do (call-interactively #'ein:worksheet-insert-cell-above))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
       (loop repeat 3
-            do (call-interactively #'ein:worksheet-kill-cells))
+            do (call-interactively #'ein:worksheet-kill-cell))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))
       (should (equal (length ein:kill-ring) 3))
       (loop repeat 3
@@ -213,7 +213,7 @@ some text
     (with-current-buffer (eintest:notebook-make-empty "NB1")
       (call-interactively #'ein:worksheet-insert-cell-above)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 1))
-      (call-interactively #'ein:worksheet-kill-cells)
+      (call-interactively #'ein:worksheet-kill-cell)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))
       (flet ((y-or-n-p (&rest ignore) t)
              (ein:notebook-del (&rest ignore)))

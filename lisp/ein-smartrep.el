@@ -31,7 +31,7 @@
 (defcustom ein:smartrep-notebook-mode-alist
   '(("C-t" . ein:worksheet-toggle-cell-type)
     ("C-l" . ein:worksheet-clear-output)
-    ("C-k" . ein:worksheet-kill-cells)
+    ("C-k" . ein:worksheet-kill-cell)
     ("C-y" . ein:worksheet-yank-cell)
     ("C-a" . ein:worksheet-insert-cell-above)
     ("C-b" . ein:worksheet-insert-cell-below)

@@ -262,7 +262,7 @@ If you really want use this command, you can do something like this
   (ein:notebook-empty-undo-maybe)
   (when focus (ein:worksheet-focus-cell)))
 
-(defun ein:worksheet-kill-cells (ws cells &optional focus)
+(defun ein:worksheet-kill-cell (ws cells &optional focus)
   "Kill (\"cut\") the cell at point or cells in region.
 Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts)."
