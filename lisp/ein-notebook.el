@@ -474,7 +474,7 @@ This is equivalent to do ``C-c`` in the console program."
                                             (ein:$notebook-events notebook))
                                            ws-data))
                 (or (plist-get data :worksheets)
-                    (list :cells nil))))
+                    (list nil))))
   (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
   (with-current-buffer (ein:notebook-buffer notebook)
     (setq ein:%notebook% notebook)))
