@@ -54,7 +54,7 @@
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
-   (dirty :initarg :dirty :type boolean)
+   (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
    (events :initarg :events)
    (notification :initarg :notification)))
