@@ -600,7 +600,7 @@ next cell, or insert if none."
     (ein:worksheet-execute-cell ws cell))
   (ein:aif (ein:cell-next cell)
       (ein:cell-goto it)
-    (ein:worksheet-insert-cell-below ws 'code cell)))
+    (ein:worksheet-insert-cell-below ws 'code cell t)))
 
 (defun ein:worksheet-execute-all-cell (ws)
   "Execute all cells in the current worksheet buffer."
