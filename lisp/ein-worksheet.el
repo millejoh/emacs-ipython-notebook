@@ -238,7 +238,7 @@ buffer or there is no cell in the current buffer, return `nil'."
   (or ein:%worksheet% (error "Not in worksheet buffer.")))
 
 (defun ein:worksheet-focus-cell ()
-  (ein:aand (ein:worksheet-get-current-cell) (ein:cell-goto it)))
+  (ein:aand (ein:worksheet-get-current-cell :noerror t) (ein:cell-goto it)))
 
 (defun ein:worksheet-delete-cell (ws cell &optional focus)
   "Delete a cell.  \(WARNING: no undo!)
