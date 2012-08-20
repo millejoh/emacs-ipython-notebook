@@ -208,26 +208,6 @@ Current buffer for these functions is set to the notebook buffer.")
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
-(defmacro ein:notebook-with-cell (cell-p &rest body)
-  "Execute BODY if in cell with a dynamically bound variable `cell'.
-When CELL-P is non-`nil', it is called with the current cell object
-and BODY will be executed only when it returns non-`nil'.  If CELL-P
-is `nil', BODY is executed with any cell types."
-  (declare (indent 1))
-  `(let ((cell (ein:notebook-get-current-cell)))
-     (if ,(if cell-p `(and cell (funcall ,cell-p cell)) 'cell)
-         (progn ,@body)
-       (ein:log 'warn "Not in cell"))))
-
-(defmacro ein:notebook-with-cells-in-region (&rest body)
-  "Similar to `ein:notebook-with-cell' but sets a list of cells to `cells'.
-Cells are fetched by `ein:notebook-get-cells-in-region-or-at-point'."
-  (declare (indent 0))
-  `(let* ((cells (ein:notebook-get-cells-in-region-or-at-point)))
-     (if cells
-         (progn ,@body)
-       (ein:log 'warn "Not in cell"))))
-
 (defmacro ein:notebook-with-buffer (notebook &rest body)
   "Execute BODY with current buffer setting at the one of NOTEBOOK."
   ;; FIXME: MANY functions can use this macro.  Refactor them!
