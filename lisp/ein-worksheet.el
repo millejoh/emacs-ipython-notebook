@@ -338,7 +338,7 @@ when the prefix argument is given.
 When used as a lisp function, insert a cell of TYPE-OR-CELL just
 after PIVOT and return the new cell."
   (interactive (list (ein:worksheet--get-ws-or-error)
-                     (if prefix-arg 'markdown 'code)
+                     (if current-prefix-arg 'markdown 'code)
                      (ein:worksheet-get-current-cell :noerror t) ; can be nil
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
@@ -359,7 +359,7 @@ after PIVOT and return the new cell."
 when the prefix argument is given.
 See also: `ein:worksheet-insert-cell-below'."
   (interactive (list (ein:worksheet--get-ws-or-error)
-                     (if prefix-arg 'markdown 'code)
+                     (if current-prefix-arg 'markdown 'code)
                      (ein:worksheet-get-current-cell :noerror t) ; can be nil
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
@@ -440,7 +440,7 @@ point will be removed. This can be omitted by giving a prefix
 argument \(C-u)."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
-                     prefix-arg
+                     current-prefix-arg
                      t))
   ;; FIXME: should I inhibit undo?
   (let* ((beg (set-marker (make-marker) (ein:cell-input-pos-min cell)))
@@ -466,7 +466,7 @@ argument \(C-u)."
 If prefix is given, merge current cell into next cell."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
-                     prefix-arg
+                     current-prefix-arg
                      t))
   (unless next
     (setq cell (ein:cell-prev cell))
@@ -549,7 +549,7 @@ This does not alter the actual data stored in the cell."
 
 (defun ein:worksheet-set-collapsed-all (ws collapsed)
   "Hide all cell output.  When prefix is given, show all cell output."
-  (interactive (list (ein:worksheet--get-ws-or-error) prefix-arg))
+  (interactive (list (ein:worksheet--get-ws-or-error) current-prefix-arg))
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:worksheet-get-cells ws))
@@ -561,7 +561,7 @@ This does not alter the actual data stored in the cell."
 Do not clear input prompt when the prefix argument is given."
   (interactive (list (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)
-                     prefix-arg))
+                     current-prefix-arg))
   (ein:cell-clear-output cell t t t)
   (unless preserve-input-prompt
     (ein:cell-set-input-prompt cell))
@@ -570,7 +570,7 @@ Do not clear input prompt when the prefix argument is given."
 (defun ein:worksheet-clear-all-output (ws &optional preserve-input-prompt)
   "Clear output from all cells.
 Do not clear input prompts when the prefix argument is given."
-  (interactive (list (ein:worksheet--get-ws-or-error) prefix-arg))
+  (interactive (list (ein:worksheet--get-ws-or-error) current-prefix-arg))
   (mapc (lambda (c) (ein:worksheet-clear-output c preserve-input-prompt))
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 

@@ -282,7 +282,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (when search-text
       (search-backward search-text))
     ;; do it
-    (let ((prefix-arg no-trim))
+    (let ((current-prefix-arg no-trim))
       (call-interactively #'ein:worksheet-split-cell-at-point))
     ;; check the "tail" cell
     (let ((cell (ein:worksheet-get-current-cell)))
@@ -328,7 +328,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (insert "Cell 1")
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "Cell 0")
-    (let ((prefix-arg t))
+    (let ((current-prefix-arg t))
       (call-interactively #'ein:worksheet-merge-cell))
     (ein:cell-goto (ein:worksheet-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
