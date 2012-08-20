@@ -746,7 +746,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map "\C-c\C-x" 'ein:tb-show)
-  (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel)
+  (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
