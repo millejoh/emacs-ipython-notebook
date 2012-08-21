@@ -217,7 +217,7 @@ The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
 
-.. el:function:: ein:notebook-delete-cell-command
+.. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:notebook-rename-to-scratch-command
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
