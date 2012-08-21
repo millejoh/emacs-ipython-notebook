@@ -611,6 +611,8 @@ When no such directory exists, `default-directory' will not be changed."
   (ein:kernelinfo-update-hostname kernel))
 
 (defun ein:kernelinfo-update-ccwd (kernel)
+  "Update cached current working directory (CCWD) and change
+`default-directory' of `ein:$kernelinfo-buffer'."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
@@ -627,6 +629,8 @@ When no such directory exists, `default-directory' will not be changed."
      (list kernel kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
 
 (defun ein:kernelinfo-update-hostname (kernel)
+  "Get hostname in which kernel is running and store it in
+kernelinfo."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').uname()[1])"
