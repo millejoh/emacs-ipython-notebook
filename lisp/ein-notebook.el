@@ -300,7 +300,9 @@ See `ein:notebook-open' for more information."
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-start-kernel notebook)
-    (ein:notebook-from-json notebook data)
+    (ein:notebook-from-json notebook data) ; notebook buffer is created here
+    (ein:kernelinfo-init (ein:$notebook-kernel notebook)
+                         (ein:notebook-buffer notebook))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat data)
     (ein:log 'info "Notebook %s is ready"
@@ -382,7 +384,6 @@ of minor mode."
                                  base-url
                                  (ein:$notebook-events notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (ein:kernelinfo-init (ein:$kernel-kernelinfo kernel) (current-buffer))
     (ein:kernelinfo-setup-hooks kernel)
     (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel

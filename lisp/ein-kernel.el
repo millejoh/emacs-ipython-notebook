@@ -593,8 +593,8 @@ When no such directory exists, `default-directory' will not be changed."
            buffer path))))
    (list kernel buffer)))
 
-(defun ein:kernelinfo-init (kernelinfo buffer)
-  (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
+(defun ein:kernelinfo-init (kernel buffer)
+  (setf (ein:$kernelinfo-buffer (ein:$kernel-kernelinfo kernel)) buffer))
 
 (defun ein:kernelinfo-setup-hooks (kernel)
   "Add `ein:kernelinfo-update-*' to `ein:$kernel-after-*-hook'."
@@ -618,6 +618,7 @@ When no such directory exists, `default-directory' will not be changed."
      (setq cwd (ein:kernel-filename-from-python kernel cwd))
      (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
      ;; sync buffer's `default-directory' with CWD
+     ;; FIXME: Support multiple buffers.
      (when (buffer-live-p buffer)
        (with-current-buffer buffer
          (when (file-accessible-directory-p cwd)
