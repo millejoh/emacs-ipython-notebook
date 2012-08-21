@@ -292,9 +292,20 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-toggle-autoexec ()
   "Toggle auto-execution mode of the current connected buffer.
 
+When auto-execution mode is on, cells in connected notebook will
+be automatically executed whenever run, eval or reload command [#]_
+is called in this buffer.
+
+.. [#] Namely, one of
+
+   * `ein:connect-run-buffer'
+   * `ein:connect-eval-buffer'
+   * `ein:connect-run-or-eval-buffer'
+   * `ein:connect-reload-buffer'
+
 Note that you need to set cells to run in the connecting buffer
 or no cell will be executed.
-Use the `ein:notebook-turn-on-autoexec' command in notebook to
+Use the `ein:worksheet-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
