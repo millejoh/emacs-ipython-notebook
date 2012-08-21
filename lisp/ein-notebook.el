@@ -720,6 +720,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 (let ((map ein:notebook-mode-map))
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
+  (define-key map (kbd "<M-S-return>")
+    'ein:worksheet-execute-cell-and-insert-below)
   (define-key map (kbd "C-c C-'") 'ein:worksheet-turn-on-autoexec)
   (define-key map "\C-c\C-e" 'ein:worksheet-toggle-output)
   (define-key map "\C-c\C-v" 'ein:worksheet-set-collapsed-all)
