@@ -254,6 +254,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:connect-pop-to-notebook ()
   (interactive)
+  (ein:connect-assert-connected)
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
 
 
@@ -281,7 +282,9 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-assert-connected ()
   (assert (ein:connect-p ein:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
-          (buffer-name)))
+          (buffer-name))
+  (assert (ein:notebook-live-p (oref ein:%connect% :notebook)) nil
+          "Connected notebook is not live (probably already closed)."))
 
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
