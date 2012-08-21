@@ -652,7 +652,8 @@ To use autoexec feature, you need to turn on auto-execution mode
 in connected buffers, using the `ein:connect-toggle-autoexec'
 command."
   (interactive
-   (list (ein:worksheet-get-cells-in-region-or-at-point #'ein:codecell-p)
+   (list (ein:worksheet-get-cells-in-region-or-at-point
+          :cell-p #'ein:codecell-p)
          current-prefix-arg))
   (mapc (lambda (c) (ein:cell-set-autoexec c (not off))) cells)
   (ein:log 'info "Turn %s auto-execution flag of %s cells."
