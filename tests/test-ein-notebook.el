@@ -443,6 +443,48 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
         (should (search-forward "\nHello World\n" nil t)) ; stream output
         (should-not (search-forward "Hello World" nil t))))))
 
+(defmacro eintest:worksheet-execute-cell-and-*-deftest
+  (do-this cell-type has-next-p insert-p)
+  "Define:
+ein:worksheet-execute-cell-and-{DO-THIS}/on-{CELL-TYPE}cell-{no,with}-next
+
+For example, when `goto-next', \"code\", `nil', `nil' is given,
+`ein:worksheet-execute-cell-and-goto-next/on-codecell-no-next' is
+defined."
+  (let ((test-name
+         (intern (format "ein:worksheet-execute-cell-and-%s/on-%scell-%s"
+                         do-this cell-type
+                         (if has-next-p "with-next" "no-next"))))
+        (command
+         (intern (format "ein:worksheet-execute-cell-and-%s" do-this))))
+    `(ert-deftest ,test-name ()
+       (with-current-buffer (eintest:notebook-make-empty)
+         (let* ((ws ein:%worksheet%)
+                (current (ein:worksheet-insert-cell-below ws ,cell-type nil t))
+                ,@(when has-next-p
+                    '((next
+                       (ein:worksheet-insert-cell-below ws "code" current)))))
+           (mocker-let ((ein:worksheet-execute-cell
+                         (ws cell)
+                         (,@(when (equal cell-type "code")
+                              '((:input (list ein:%worksheet% current)))))))
+             (call-interactively #',command)
+             (let ((cell (ein:worksheet-get-current-cell)))
+               (should (eq (ein:cell-prev cell) current))
+               ,(when has-next-p
+                  (if insert-p
+                      '(should-not (eq cell next))
+                    '(should (eq cell next)))))))))))
+
+(eintest:worksheet-execute-cell-and-*-deftest goto-next    "code"     nil t  )
+(eintest:worksheet-execute-cell-and-*-deftest goto-next    "code"     t   nil)
+(eintest:worksheet-execute-cell-and-*-deftest goto-next    "markdown" nil t  )
+(eintest:worksheet-execute-cell-and-*-deftest goto-next    "markdown" t   nil)
+(eintest:worksheet-execute-cell-and-*-deftest insert-below "code"     nil t  )
+(eintest:worksheet-execute-cell-and-*-deftest insert-below "code"     t   t  )
+(eintest:worksheet-execute-cell-and-*-deftest insert-below "markdown" nil t  )
+(eintest:worksheet-execute-cell-and-*-deftest insert-below "markdown" t   t  )
+
 
 ;; Notebook undo
 
