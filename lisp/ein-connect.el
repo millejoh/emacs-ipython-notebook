@@ -149,7 +149,7 @@ notebooks."
                           #'ein:connect-to-notebook
                         #'ein:connect-to-notebook-buffer)))
 
-(defun ein:connect-to-notebook (nbpath)
+(defun ein:connect-to-notebook (nbpath &optional buffer no-reconnection)
   "Connect any buffer to notebook and its kernel."
   (interactive
    (list
@@ -158,9 +158,9 @@ notebooks."
      (ein:notebooklist-list-notebooks))))
   (ein:notebooklist-open-notebook-global
    nbpath
-   (lambda (notebook -ignore- buffer)
-     (ein:connect-buffer-to-notebook notebook buffer))
-   (list (current-buffer))))
+   (lambda (notebook -ignore- buffer no-reconnection)
+     (ein:connect-buffer-to-notebook notebook buffer no-reconnection))
+   (list (or buffer (current-buffer)) no-reconnection)))
 
 (defun ein:connect-to-notebook-buffer (buffer-or-name)
   "Connect any buffer to opened notebook and its kernel."
