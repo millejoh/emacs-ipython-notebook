@@ -486,6 +486,7 @@ v0.2
 * Change the timing to trigger auto-execution in connected buffer.
   It was triggered on save before.  Now it is on run, eval or reload.
   See :el:symbol:`ein:connect-toggle-autoexec`.
+* [WIP] Worksheet support.
 
 
 v0.1.2
