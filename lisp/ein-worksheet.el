@@ -665,7 +665,7 @@ command."
 Note that you don't need to set current buffer to call this
 function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (ein:with-live-buffer (ein:worksheet-buffer)
+  (ein:with-live-buffer (ein:worksheet-buffer ws)
     (ein:kernel-if-ready (oref ws :kernel)
       (mapc #'ein:cell-execute
             (ein:filter #'ein:cell-autoexec-p
