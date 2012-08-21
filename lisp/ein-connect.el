@@ -198,6 +198,7 @@ notebooks."
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
   (ein:shared-output-eval-string (buffer-string))
+  (ein:connect-execute-autoexec-cells)
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
@@ -215,6 +216,7 @@ Variable `ein:connect-run-command' sets the default command."
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
               (ein:shared-output-eval-string cmd)
+              (ein:connect-execute-autoexec-cells)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))
     (error (concat "This buffer has no associated file.  "
@@ -284,22 +286,31 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
   (ein:connect-assert-connected)
-  (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook)))
+  (when (oref ein:%connect% :autoexec)
+    (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook))))
 
 (defun ein:connect-toggle-autoexec ()
   "Toggle auto-execution mode of the current connected buffer.
 
+When auto-execution mode is on, cells in connected notebook will
+be automatically executed whenever run, eval or reload command [#]_
+is called in this buffer.
+
+.. [#] Namely, one of
+
+   * `ein:connect-run-buffer'
+   * `ein:connect-eval-buffer'
+   * `ein:connect-run-or-eval-buffer'
+   * `ein:connect-reload-buffer'
+
 Note that you need to set cells to run in the connecting buffer
 or no cell will be executed.
-Use the `ein:notebook-turn-on-autoexec' command in notebook to
+Use the `ein:worksheet-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
-  (oset ein:%connect% :autoexec (not (oref ein:%connect% :autoexec)))
-  (let ((autoexec-p (oref ein:%connect% :autoexec)))
-    (if autoexec-p
-        (add-hook 'after-save-hook 'ein:connect-execute-autoexec-cells nil t)
-      (remove-hook 'after-save-hook 'ein:connect-execute-autoexec-cells t))
+  (let ((autoexec-p (not (oref ein:%connect% :autoexec))))
+    (oset ein:%connect% :autoexec autoexec-p)
     (ein:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
 
