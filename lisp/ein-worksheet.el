@@ -449,6 +449,8 @@ argument \(C-u)."
          (new (ein:worksheet-insert-cell-above ws
                                                (oref cell :cell-type)
                                                cell)))
+    (when (ein:headingcell-p cell)
+      (ein:cell-change-level new (oref cell :level)))
     (delete-region beg pos)
     (unless no-trim
       (setq head (ein:trim-right head "\n"))
