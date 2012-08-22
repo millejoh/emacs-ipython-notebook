@@ -368,6 +368,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
       (setq url-or-port (string-to-number url-or-port)))
     (let ((notebook-id
            (loop for nblist in (ein:notebooklist-list)
+                 when (equal (ein:$notebooklist-url-or-port nblist) url-or-port)
                  if (loop for note in (ein:$notebooklist-data nblist)
                           when (equal (plist-get note :name) name)
                           return (plist-get note :notebook_id))
