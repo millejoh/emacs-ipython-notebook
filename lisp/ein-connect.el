@@ -205,9 +205,8 @@ inside the ``if __name__ == \"__main__\":`` block."
   "Run buffer using ``%run``.  Ask for command if the prefix ``C-u`` is given.
 Variable `ein:connect-run-command' sets the default command."
   (interactive "P")
-  ;; FIXME: this should be more intelligent than just `buffer-file-name'
-  ;;        to support connecting IPython over ssh.
-  (ein:aif (buffer-file-name)
+  (ein:aif (ein:aand (ein:get-url-or-port)
+                     (ein:filename-to-python it (buffer-file-name)))
       (let* ((default-command (ein:connect-run-command-get))
              (command (if ask-command
                           (read-from-minibuffer "Command: " default-command)
