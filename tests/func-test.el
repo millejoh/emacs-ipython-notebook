@@ -19,6 +19,7 @@
   "Wait until PREDICATE function returns non-`nil'.
 PREDARGS is argument list for the PREDICATE function.
 Make MAX-COUNT larger \(default 50) to wait longer before timeout."
+  (ein:log 'debug "EINTEST:WAIT-UNTIL start")
   (unless (setq max-count 50))
   (unless (loop repeat max-count
                 when (apply predicate predargs)
@@ -26,27 +27,36 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                 ;; borrowed from `deferred:sync!':
                 do (sit-for 0.05)
                 do (sleep-for 0.05))
-    (error "Timeout")))
+    (error "Timeout"))
+  (ein:log 'debug "EINTEST:WAIT-UNTIL end"))
 
 (defun eintest:get-notebook-by-name (url-or-port notebook-name)
+  (ein:log 'debug "EINTEST:GET-NOTEBOOK-BY-NAME start")
   ;; Kill notebook list buffer here to make sure next
   ;; `eintest:wait-until' works properly.
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
     (eintest:wait-until (lambda () ein:%notebooklist%))
-    (ein:notebooklist-open-notebook-by-name notebook-name)))
+    (prog1
+        (ein:notebooklist-open-notebook-by-name notebook-name)
+      (ein:log 'debug "EINTEST:GET-NOTEBOOK-BY-NAME end"))))
 
 (defun eintest:get-untitled0-or-create (url-or-port)
+  (ein:log 'debug "EINTEST:GET-UNTITLED0-OR-CREATE start")
   (let ((notebook (eintest:get-notebook-by-name url-or-port "Untitled0")))
     (if notebook
-        notebook
+        (progn (ein:log 'debug
+                 "EINTEST:GET-UNTITLED0-OR-CREATE notebook already exists")
+               notebook)
       (with-current-buffer (ein:notebooklist-open url-or-port t)
         (setq ein:%notebooklist% nil)
         (eintest:wait-until (lambda () ein:%notebooklist%))
         (ein:notebooklist-new-notebook url-or-port)
         (eintest:wait-until
          (lambda () (eintest:get-notebook-by-name url-or-port "Untitled0"))))
-      (eintest:get-notebook-by-name url-or-port "Untitled0"))))
+      (prog1
+          (eintest:get-notebook-by-name url-or-port "Untitled0")
+        (ein:log 'debug "EINTEST:GET-UNTITLED0-OR-CREATE end")))))
 
 (defun eintest:delete-notebook-by-name (url-or-port notebook-name)
   (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME start")
@@ -60,7 +70,6 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (flet ((y-or-n-p (ignore) t))
         (widget-button-press (point))))
     (setq ein:%notebooklist% nil)
-    (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME waiting..")
     (eintest:wait-until (lambda () ein:%notebooklist%))
     (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME end")))
 
