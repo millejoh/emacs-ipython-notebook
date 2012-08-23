@@ -79,6 +79,10 @@
   "Get the buffer associated with `ein:%shared-output%'."
   (ewoc-buffer (oref ein:%shared-output% :ewoc)))
 
+(defun ein:shared-output-buffer-p (&optional buffer)
+  "Return non-`nil' when BUFFER (or current buffer) is shared-output buffer."
+  (eq (or buffer (current-buffer)) (ein:shared-output-buffer)))
+
 (defun ein:shared-output-healthy-p ()
   (and (ein:shared-output-p ein:%shared-output%)
        (buffer-live-p (ein:shared-output-buffer))))
@@ -194,7 +198,8 @@ shared output buffer.  You can open the buffer by the command
       (oref cell :kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
-  (when (ein:shared-output-p ein:%shared-output%)
+  (when (and (ein:shared-output-p ein:%shared-output%)
+             (ein:shared-output-buffer-p))
     (oref ein:%shared-output% :cell)))
 
 (defun ein:get-traceback-data--shared-output ()

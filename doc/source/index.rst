@@ -217,7 +217,7 @@ The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
 
-.. el:function:: ein:notebook-delete-cell-command
+.. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:notebook-rename-to-scratch-command
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
@@ -479,6 +479,16 @@ with :el:symbol:`ein:dev-stop-debug`.
 
 Change Log
 ==========
+
+v0.2
+----
+
+* Add :el:symbol:`ein:worksheet-execute-cell-and-insert-below`.
+* Change the timing to trigger auto-execution in connected buffer.
+  It was triggered on save before.  Now it is on run, eval or reload.
+  See :el:symbol:`ein:connect-toggle-autoexec`.
+* [WIP] Worksheet support.
+
 
 v0.1.2
 ------

@@ -149,7 +149,7 @@ notebooks."
                           #'ein:connect-to-notebook
                         #'ein:connect-to-notebook-buffer)))
 
-(defun ein:connect-to-notebook (nbpath)
+(defun ein:connect-to-notebook (nbpath &optional buffer no-reconnection)
   "Connect any buffer to notebook and its kernel."
   (interactive
    (list
@@ -158,9 +158,9 @@ notebooks."
      (ein:notebooklist-list-notebooks))))
   (ein:notebooklist-open-notebook-global
    nbpath
-   (lambda (notebook -ignore- buffer)
-     (ein:connect-buffer-to-notebook notebook buffer))
-   (list (current-buffer))))
+   (lambda (notebook -ignore- buffer no-reconnection)
+     (ein:connect-buffer-to-notebook notebook buffer no-reconnection))
+   (list (or buffer (current-buffer)) no-reconnection)))
 
 (defun ein:connect-to-notebook-buffer (buffer-or-name)
   "Connect any buffer to opened notebook and its kernel."
@@ -198,15 +198,15 @@ notebooks."
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
   (ein:shared-output-eval-string (buffer-string))
+  (ein:connect-execute-autoexec-cells)
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
   "Run buffer using ``%run``.  Ask for command if the prefix ``C-u`` is given.
 Variable `ein:connect-run-command' sets the default command."
   (interactive "P")
-  ;; FIXME: this should be more intelligent than just `buffer-file-name'
-  ;;        to support connecting IPython over ssh.
-  (ein:aif (buffer-file-name)
+  (ein:aif (ein:aand (ein:get-url-or-port)
+                     (ein:filename-to-python it (buffer-file-name)))
       (let* ((default-command (ein:connect-run-command-get))
              (command (if ask-command
                           (read-from-minibuffer "Command: " default-command)
@@ -215,6 +215,7 @@ Variable `ein:connect-run-command' sets the default command."
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
               (ein:shared-output-eval-string cmd)
+              (ein:connect-execute-autoexec-cells)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))
     (error (concat "This buffer has no associated file.  "
@@ -252,6 +253,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:connect-pop-to-notebook ()
   (interactive)
+  (ein:connect-assert-connected)
   (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
 
 
@@ -279,29 +281,38 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-assert-connected ()
   (assert (ein:connect-p ein:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
-          (buffer-name)))
+          (buffer-name))
+  (assert (ein:notebook-live-p (oref ein:%connect% :notebook)) nil
+          "Connected notebook is not live (probably already closed)."))
 
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
   (ein:connect-assert-connected)
-  (let ((notebook (ein:connect-get-notebook)))
-    (ein:notebook-with-buffer notebook
-      (ein:notebook-execute-autoexec-cells notebook))))
+  (when (oref ein:%connect% :autoexec)
+    (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook))))
 
 (defun ein:connect-toggle-autoexec ()
   "Toggle auto-execution mode of the current connected buffer.
 
+When auto-execution mode is on, cells in connected notebook will
+be automatically executed whenever run, eval or reload command [#]_
+is called in this buffer.
+
+.. [#] Namely, one of
+
+   * `ein:connect-run-buffer'
+   * `ein:connect-eval-buffer'
+   * `ein:connect-run-or-eval-buffer'
+   * `ein:connect-reload-buffer'
+
 Note that you need to set cells to run in the connecting buffer
 or no cell will be executed.
-Use the `ein:notebook-turn-on-autoexec' command in notebook to
+Use the `ein:worksheet-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
-  (oset ein:%connect% :autoexec (not (oref ein:%connect% :autoexec)))
-  (let ((autoexec-p (oref ein:%connect% :autoexec)))
-    (if autoexec-p
-        (add-hook 'after-save-hook 'ein:connect-execute-autoexec-cells nil t)
-      (remove-hook 'after-save-hook 'ein:connect-execute-autoexec-cells t))
+  (let ((autoexec-p (not (oref ein:%connect% :autoexec))))
+    (oset ein:%connect% :autoexec autoexec-p)
     (ein:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
 

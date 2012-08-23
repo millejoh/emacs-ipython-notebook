@@ -593,8 +593,8 @@ When no such directory exists, `default-directory' will not be changed."
            buffer path))))
    (list kernel buffer)))
 
-(defun ein:kernelinfo-init (kernelinfo buffer)
-  (setf (ein:$kernelinfo-buffer kernelinfo) buffer))
+(defun ein:kernelinfo-init (kernel buffer)
+  (setf (ein:$kernelinfo-buffer (ein:$kernel-kernelinfo kernel)) buffer))
 
 (defun ein:kernelinfo-setup-hooks (kernel)
   "Add `ein:kernelinfo-update-*' to `ein:$kernel-after-*-hook'."
@@ -611,6 +611,8 @@ When no such directory exists, `default-directory' will not be changed."
   (ein:kernelinfo-update-hostname kernel))
 
 (defun ein:kernelinfo-update-ccwd (kernel)
+  "Update cached current working directory (CCWD) and change
+`default-directory' of `ein:$kernelinfo-buffer'."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').getcwd())"
@@ -618,6 +620,7 @@ When no such directory exists, `default-directory' will not be changed."
      (setq cwd (ein:kernel-filename-from-python kernel cwd))
      (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
      ;; sync buffer's `default-directory' with CWD
+     ;; FIXME: Support multiple buffers.
      (when (buffer-live-p buffer)
        (with-current-buffer buffer
          (when (file-accessible-directory-p cwd)
@@ -626,6 +629,8 @@ When no such directory exists, `default-directory' will not be changed."
      (list kernel kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
 
 (defun ein:kernelinfo-update-hostname (kernel)
+  "Get hostname in which kernel is running and store it in
+kernelinfo."
   (ein:kernel-request-stream
    kernel
    "__import__('sys').stdout.write(__import__('os').uname()[1])"
