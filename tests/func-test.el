@@ -49,6 +49,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (eintest:get-notebook-by-name url-or-port "Untitled0"))))
 
 (defun eintest:delete-notebook-by-name (url-or-port notebook-name)
+  (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME start")
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
     (eintest:wait-until (lambda () ein:%notebooklist%))
     (save-excursion
@@ -59,7 +60,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (flet ((y-or-n-p (ignore) t))
         (widget-button-press (point))))
     (setq ein:%notebooklist% nil)
-    (eintest:wait-until (lambda () ein:%notebooklist%))))
+    (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME waiting..")
+    (eintest:wait-until (lambda () ein:%notebooklist%))
+    (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME end")))
 
 (ert-deftest eintest:get-untitled0-or-create ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
@@ -69,16 +72,23 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0")))))
 
 (ert-deftest eintest:delete-untitled0 ()
+  (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 started")
   (loop
-   repeat 2
+   for i from 0 to 1
+   do (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 i=%s" i)
+   do (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 creating notebook")
    do (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
         (eintest:wait-until
          (lambda () (ein:aand (ein:$notebook-kernel notebook)
                               (ein:kernel-live-p it)))))
+   do (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 delete notebook")
    do (eintest:delete-notebook-by-name eintest:port "Untitled0")
+   do (ein:log 'debug
+        "ERT EINTEST:DELETE-UNTITLED0 check the notebook is delete")
    do (let ((num-notebook
              (length (eintest:get-notebook-by-name eintest:port "Untitled0"))))
-        (should (= num-notebook 0)))))
+        (should (= num-notebook 0))))
+  (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 finished"))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
