@@ -120,7 +120,7 @@ Usage
 
 1. Install module.
    Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
-   load path.
+   load path.  See `online documentation`_ for more information.
 
 2. Require module::
 

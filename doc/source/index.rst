@@ -113,6 +113,11 @@ EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 Install
 -------
 
+.. warning:: As EIN relies on many packages and it will not work
+   properly with outdated versions, installing it using el-get or
+   MELPA is highly recommended.
+
+
 Using el-get
 ^^^^^^^^^^^^
 
