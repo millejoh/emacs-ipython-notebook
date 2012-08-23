@@ -3,8 +3,8 @@ Welcome to Emacs IPython Notebook's documentation!
 
 .. el:package:: ein
 
-Emacs IPython Notebook (EIN) provides fully featured IPython Notebook
-client and integrated REPL (like SLIME_).  While EIN makes notebook
+Emacs IPython Notebook (EIN) provides a IPython Notebook client and
+integrated REPL (like SLIME_) in Emacs.  While EIN makes notebook
 editing very powerful by allowing you to use any Emacs features, it
 also expose IPython features such as code evaluation, object
 inspection and code completion to the Emacs side.  These features can
@@ -42,8 +42,15 @@ Links:
 
 * `Online Documentation
   <http://tkf.github.com/emacs-ipython-notebook/>`_
-* `Screenshots
-  <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+
+* `Wiki
+  <https://github.com/tkf/emacs-ipython-notebook/wiki>`_
+
+  + `Screenshots
+    <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+  + `Tips
+    <https://github.com/tkf/emacs-ipython-notebook/wiki/Tips>`_
+
 * `Downloads
   <https://github.com/tkf/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
@@ -51,7 +58,7 @@ Links:
 * `Issue Tracker at GitHub
   <https://github.com/tkf/emacs-ipython-notebook/issues>`_
 
-.. [#] You need to setup :el:symbol:`ein:notebook-console-args` properly
+.. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
 .. contents::
@@ -84,7 +91,7 @@ Requirements
 * (optional) python-mode:
   It should work with either python.el or `python-mode.el`_ [#]_.
   Fabian Gallina's `python.el`_ is required to use
-  :el:symbol:`ein:notebook-console-open` command.
+  :el:symbol:`ein:console-open` command.
 * (optional) `auto-complete.el`_
   You need to configure :el:symbol:`ein:use-auto-complete` to enable
   this feature.
@@ -112,6 +119,11 @@ EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
 
 Install
 -------
+
+.. warning:: As EIN relies on many packages and it will not work
+   properly with outdated versions, installing it using el-get or
+   MELPA is highly recommended.
+
 
 Using el-get
 ^^^^^^^^^^^^
@@ -217,7 +229,7 @@ The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
 
-.. el:function:: ein:notebook-delete-cell-command
+.. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:notebook-rename-to-scratch-command
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
@@ -310,19 +322,24 @@ Notebook
 .. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
-.. el:variable:: ein:notebook-console-security-dir
-.. el:variable:: ein:notebook-console-executable
-.. el:variable:: ein:notebook-console-args
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-autoexec-prompt
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
 
+Console
+^^^^^^^
+
+.. el:variable:: ein:console-security-dir
+.. el:variable:: ein:console-executable
+.. el:variable:: ein:console-args
+
 Connect
 ^^^^^^^
 
 .. el:variable:: ein:connect-run-command
+.. el:variable:: ein:connect-reload-command
 .. el:variable:: ein:connect-save-before-run
 .. el:variable:: ein:propagate-connect
 .. el:variable:: ein:connect-aotoexec-lighter
@@ -474,6 +491,29 @@ with :el:symbol:`ein:dev-stop-debug`.
 
 Change Log
 ==========
+
+v0.2
+----
+
+* Add :el:symbol:`ein:worksheet-execute-cell-and-insert-below`.
+* Change the timing to trigger auto-execution in connected buffer.
+  It was triggered on save before.  Now it is on run, eval or reload.
+  See :el:symbol:`ein:connect-toggle-autoexec`.
+* [WIP] Worksheet support.
+
+
+v0.1.2
+------
+
+* Mostly refactoring for worksheet support in v0.2.
+* Rename command :el:symbol:`ein:notebook-console-open` to
+  :el:symbol:`ein:console-open`.  It is available from non-notebook
+  buffer such as connected buffer now.
+* Add :el:symbol:`ein:connect-reload-buffer`.
+  Old default :el:symbol:`ein:connect-run-buffer` behavior is
+  replaced by this function.  :el:symbol:`ein:connect-run-buffer`
+  now actually runs buffer instead of loading it.
+
 
 v0.1.1
 ------
