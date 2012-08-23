@@ -127,7 +127,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (insert "range?")
       (let ((cell (ein:notebook-execute-current-cell)))
         (eintest:wait-until (lambda () (not (oref cell :running)))))
-      (with-current-buffer (get-buffer (ein:$notebook-pager ein:%notebook%))
+      (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
         (should (search-forward "Docstring:\nrange"))))))
 
 (ert-deftest ein:notebook-request-help ()
