@@ -163,50 +163,51 @@ Keybinds - Notebook
    ESC             Prefix Command
    .               ein:notebook-complete-dot
    C-:             ein:shared-output-eval-string
-   <C-down>        ein:notebook-goto-next-input-command
-   <C-up>          ein:notebook-goto-prev-input-command
-   <M-down>        ein:notebook-move-cell-down-command
-   <M-up>          ein:notebook-move-cell-up-command
+   <C-down>        ein:worksheet-goto-next-input
+   <C-up>          ein:worksheet-goto-prev-input
+   <M-S-return>    ein:worksheet-execute-cell-and-insert-below
+   <M-down>        ein:worksheet-move-cell-down
+   <M-up>          ein:worksheet-move-cell-up
 
    C-x C-s         ein:notebook-save-notebook-command
    C-x C-w         ein:notebook-rename-command
 
-   M-RET           ein:notebook-execute-current-cell-and-goto-next
+   M-RET           ein:worksheet-execute-cell-and-goto-next
    M-,             ein:pytools-jump-back-command
    M-.             ein:pytools-jump-to-source-command
 
-   C-c C-a         ein:notebook-insert-cell-above-command
-   C-c C-b         ein:notebook-insert-cell-below-command
-   C-c C-c         ein:notebook-execute-current-cell
-   C-c C-e         ein:notebook-toggle-output-command
-   C-c C-f         ein:notebook-request-tool-tip-or-help-command
-   C-c TAB         ein:notebook-complete-command
-   C-c C-k         ein:notebook-kill-cell-command
-   C-c C-l         ein:notebook-clear-output-command
-   C-c RET         ein:notebook-merge-cell-command
-   C-c C-n         ein:notebook-goto-next-input-command
+   C-c C-a         ein:worksheet-insert-cell-above
+   C-c C-b         ein:worksheet-insert-cell-below
+   C-c C-c         ein:worksheet-execute-cell
+   C-c C-e         ein:worksheet-toggle-output
+   C-c C-f         ein:pytools-request-tooltip-or-help
+   C-c TAB         ein:completer-complete
+   C-c C-k         ein:worksheet-kill-cell
+   C-c C-l         ein:worksheet-clear-output
+   C-c RET         ein:worksheet-merge-cell
+   C-c C-n         ein:worksheet-goto-next-input
    C-c C-o         ein:console-open
-   C-c C-p         ein:notebook-goto-prev-input-command
+   C-c C-p         ein:worksheet-goto-prev-input
    C-c C-q         ein:notebook-kill-kernel-then-close-command
    C-c C-r         ein:notebook-restart-kernel-command
-   C-c C-s         ein:notebook-split-cell-at-point
-   C-c C-t         ein:notebook-toggle-cell-type
-   C-c C-u         ein:notebook-change-cell-type
-   C-c C-v         ein:notebook-set-collapsed-all-command
-   C-c C-w         ein:notebook-copy-cell-command
+   C-c C-s         ein:worksheet-split-cell-at-point
+   C-c C-t         ein:worksheet-toggle-cell-type
+   C-c C-u         ein:worksheet-change-cell-type
+   C-c C-v         ein:worksheet-set-collapsed-all
+   C-c C-w         ein:worksheet-copy-cell
    C-c C-x         ein:tb-show
-   C-c C-y         ein:notebook-yank-cell-command
+   C-c C-y         ein:worksheet-yank-cell
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
-   C-c C-S-l       ein:notebook-clear-all-output-command
-   C-c C-'         ein:notebook-turn-on-autoexec
+   C-c C-S-l       ein:worksheet-clear-all-output
+   C-c C-'         ein:worksheet-turn-on-autoexec
    C-c C-,         ein:pytools-jump-back-command
    C-c C-.         ein:pytools-jump-to-source-command
    C-c C-;         ein:shared-output-show-code-cell-at-point
-   C-c <down>      ein:notebook-move-cell-down-command
-   C-c <up>        ein:notebook-move-cell-up-command
+   C-c <down>      ein:worksheet-move-cell-down
+   C-c <up>        ein:worksheet-move-cell-up
 
-   C-c M-w         ein:notebook-copy-cell-command
+   C-c M-w         ein:worksheet-copy-cell
 
 .. // KEYS END //
 
@@ -228,7 +229,7 @@ commands are available.
 
    C-c             Prefix Command
    ESC             Prefix Command
-   .               ein:connect-complete-dot
+   .               ein:completer-dot-complete
    C-:             ein:shared-output-eval-string
 
    M-,             ein:pytools-jump-back-command
@@ -236,9 +237,10 @@ commands are available.
 
    C-c C-a         ein:connect-toggle-autoexec
    C-c C-c         ein:connect-run-or-eval-buffer
-   C-c C-f         ein:connect-request-tool-tip-or-help-command
-   C-c TAB         ein:connect-complete-command
+   C-c C-f         ein:pytools-request-tooltip-or-help
+   C-c TAB         ein:completer-complete
    C-c C-l         ein:connect-reload-buffer
+   C-c C-o         ein:console-open
    C-c C-r         ein:connect-eval-region
    C-c C-x         ein:tb-show
    C-c C-z         ein:connect-pop-to-notebook
