@@ -155,17 +155,24 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
+# Check if build/html is really a git repository.  Otherwise,
+# committing files in there is pretty dangerous as it might goes into
+# EIN's master branch.
+_gh-pages-assert-repo:
+	test -d build/html/.git
+
 gh-pages-clone:
+	rm -rf build/html
 	git clone --branch gh-pages \
 		git@github.com:tkf/emacs-ipython-notebook.git \
 		build/html
 
-gh-pages-pull:
+gh-pages-pull: _gh-pages-assert-repo
 	cd build/html && git pull
 
-gh-pages-update: clean html
+gh-pages-update: _gh-pages-assert-repo clean html
 	@echo "Update gh-pages"
 	./update-gh-pages.sh
 
-gh-pages-push:
+gh-pages-push: _gh-pages-assert-repo
 	cd build/html && git push origin gh-pages
