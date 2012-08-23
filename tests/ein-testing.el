@@ -66,7 +66,7 @@
 is not run in batch mode before Emacs 24.1."
   (ein:testing-dump-logs-noerror))
 
-;; (add-hook 'kill-emacs-hook #'ein:testing-dump-logs-noerror)
+(add-hook 'kill-emacs-hook #'ein:testing-dump-logs-noerror)
 
 (provide 'ein-testing)
 
