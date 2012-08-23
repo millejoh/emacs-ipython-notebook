@@ -4,15 +4,8 @@
 (add-to-list 'load-path "~/.emacs.d/el-get/auto-complete/")
 (add-to-list 'load-path "~/.emacs.d/el-get/popup/") ; for auto-complete
 
-(require 'ein-notebooklist)
-(require 'ein-console)
-(require 'ein-shared-output)
-(require 'ein-traceback)
-(require 'ein-mumamo)
-(require 'ein-ac)
-(require 'ein-connect)
-(require 'ein-iexec)
-(require 'ein-helm)
+(require 'ein-dev)
+(ein:dev-require-all)
 
 ;; Load `wid-edit'.  Otherwise the following error will be raised:
 ;;    Symbol's function definition is void: widget-button-press
