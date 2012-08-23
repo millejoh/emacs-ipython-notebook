@@ -11,7 +11,8 @@
     (setq assert-fboundp
           (lambda (event value) (if (keymapp value)
                                     (map-keymap assert-fboundp value)
-                                  (should (commandp value)))))
+                                  (when value ; nil is also valid in keymap
+                                    (should (commandp value))))))
     (map-keymap assert-fboundp keymap)))
 
 (defmacro eintest:test-keymap (keymap)
