@@ -56,8 +56,15 @@ Links:
 
 * `Online Documentation
   <http://tkf.github.com/emacs-ipython-notebook/>`_
-* `Screenshots
-  <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+
+* `Wiki
+  <https://github.com/tkf/emacs-ipython-notebook/wiki>`_
+
+  + `Screenshots
+    <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+  + `Tips
+    <https://github.com/tkf/emacs-ipython-notebook/wiki/Tips>`_
+
 * `Downloads
   <https://github.com/tkf/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
