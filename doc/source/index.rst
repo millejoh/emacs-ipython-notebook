@@ -493,6 +493,7 @@ v0.2
 v0.1.2
 ------
 
+* Mostly refactoring for worksheet support in v0.2.
 * Rename command :el:symbol:`ein:notebook-console-open` to
   :el:symbol:`ein:console-open`.  It is available from non-notebook
   buffer such as connected buffer now.
