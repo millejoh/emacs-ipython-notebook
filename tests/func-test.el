@@ -74,14 +74,16 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (ein:log 'debug "EINTEST:DELETE-NOTEBOOK-BY-NAME end")))
 
 (ert-deftest eintest:get-untitled0-or-create ()
+  (ein:log 'verbose "ERT EINTEST:GET-UNTITLED0-OR-CREATE start")
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
     (eintest:wait-until (lambda () (ein:aand (ein:$notebook-kernel notebook)
                                              (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
-      (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0")))))
+      (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0"))))
+  (ein:log 'verbose "ERT EINTEST:GET-UNTITLED0-OR-CREATE end"))
 
 (ert-deftest eintest:delete-untitled0 ()
-  (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 started")
+  (ein:log 'verbose "ERT EINTEST:DELETE-UNTITLED0 start")
   (loop
    for i from 0 to 1
    do (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 i=%s" i)
@@ -97,7 +99,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
    do (let ((num-notebook
              (length (eintest:get-notebook-by-name eintest:port "Untitled0"))))
         (should (= num-notebook 0))))
-  (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 finished"))
+  (ein:log 'debug "ERT EINTEST:DELETE-UNTITLED0 end"))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (eintest:get-untitled0-or-create eintest:port)))
