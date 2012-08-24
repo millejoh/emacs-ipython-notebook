@@ -105,6 +105,24 @@ is not found."
     (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))))
 
+(ert-deftest ein:notebook-from-json-all-cell-types ()
+  (with-current-buffer
+      (ein:testing-notebook-make-new
+       nil nil (list (ein:testing-codecell-data "import numpy")
+                     (ein:testing-markdowncell-data "*markdown* text")
+                     (ein:testing-rawcell-data "`raw` cell text")
+                     (ein:testing-htmlcell-data "<b>HTML</b> text")
+                     (ein:testing-headingcell-data "Heading 1" 1)
+                     (ein:testing-headingcell-data "Heading 2" 2)
+                     (ein:testing-headingcell-data "Heading 3" 3)
+                     (ein:testing-headingcell-data "Heading 4" 4)
+                     (ein:testing-headingcell-data "Heading 5" 5)
+                     (ein:testing-headingcell-data "Heading 6" 6)))
+    (should (ein:$notebook-p ein:%notebook%))
+    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
+    (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))))
+
 
 ;; Notebook commands
 
