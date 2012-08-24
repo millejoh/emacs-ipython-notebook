@@ -724,13 +724,17 @@ value of `ein:notebook-enable-undo'."
       (should (ein:notebook-modified-p)))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (ein:testing-notebook-make-empty "Unmodified Notebook" "NOTEBOOK-ID-2"))
+         (ein:testing-notebook-make-empty "Saved Notebook" "NOTEBOOK-ID-2"))
+      (ein:notebook-save-notebook-success ein:%notebook%)
       (should-not (ein:notebook-modified-p)))
     (flet ((y-or-n-p (&rest ignore) t)
            (ein:notebook-del (&rest ignore)))
       (kill-buffer
        (eintest:notebook-enable-mode
         (ein:testing-notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-1") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-2") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-3") ein:notebook--opened-map))
     (should (= (hash-table-count ein:notebook--opened-map) 3))
     (mocker-let ((y-or-n-p
                   (prompt)

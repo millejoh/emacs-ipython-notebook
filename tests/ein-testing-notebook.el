@@ -46,10 +46,18 @@
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
 
-(defun ein:testing-notebook-make-empty (&optional name notebook-id)
-  "Make empty notebook and return its buffer."
+(defun ein:testing-notebook-make-new (&optional name notebook-id)
+  "Make new notebook.  One empty cell is inserted automatically."
   (ein:testing-notebook-from-json
    (json-encode (ein:testing-notebook-make-data nil name)) notebook-id))
+
+(defun ein:testing-notebook-make-empty (&optional name notebook-id)
+  "Make empty notebook and return its buffer.
+Automatically inserted cell for new notebook is deleted."
+  (let ((buffer (ein:testing-notebook-make-new name notebook-id)))
+    (with-current-buffer buffer
+      (call-interactively #'ein:worksheet-delete-cell))
+    buffer))
 
 (defmacro ein:testing-with-one-cell (cell-type &rest body)
   "Insert new cell of CELL-TYPE in a clean notebook and execute BODY.
