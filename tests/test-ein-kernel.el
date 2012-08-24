@@ -2,6 +2,7 @@
 (require 'ert)
 
 (require 'ein-kernel)
+(require 'ein-testing-kernel)
 
 
 (defun eintest:kernel-new (port)
@@ -70,58 +71,10 @@
 
 ;;; Test `ein:kernel-construct-help-string'
 
-(defvar eintest:kernel-construct-help-string-pcallsig-list
-  '(nil :call_def :init_definition :definition))
-
-(defvar eintest:kernel-construct-help-string-pdocstring-list
-  '(nil :call_docstring :init_docstring :docstring))
-
-(defun eintest:kernel-construct-help-string-test-func (content result)
-  (should (equal (ein:kernel-construct-help-string content) result)))
-
-(defun eintest:kernel-construct-help-string-loop (&optional test
-                                                            pcallsig-list
-                                                            pdocstring-list)
-  "Run tests for `ein:kernel-construct-help-string-loop'.
-
-TEST
-   A function takes two arguments, namely CONTENT and RESULT.
-   CONTENT is the argument to `ein:kernel-construct-help-string' and
-   RESULT must match to its returned value.  Use `should' to test
-   equality.
-PCALLSIG-LIST
-   `nil' or (subset of) `eintest:kernel-construct-help-string-pcallsig-list'.
-PDOCSTRING-LIST
-   `nil' or (subset of) `eintest:kernel-construct-help-string-pdocstring-list'.
-
-All combinations of PCALLSIG-LIST and PDOCSTRING-LIST are used to
-construct CONTENT and RESULT."
-  (unless test (setq test #'eintest:kernel-construct-help-string-test-func))
-  (unless pcallsig-list
-    (setq pcallsig-list
-          eintest:kernel-construct-help-string-pcallsig-list))
-  (unless pdocstring-list
-    (setq pdocstring-list
-          eintest:kernel-construct-help-string-pdocstring-list))
-  (loop with callsig = "function(a=1, b=2, c=d)"
-        with docstring = "This function does what."
-        for pcallsig in pcallsig-list
-        do (loop for pdoc in pdocstring-list
-                 for content = (append
-                                (when pcallsig (list pcallsig callsig))
-                                (when pdoc (list pdoc docstring)))
-                 for result = (ein:aif (append
-                                        (when pcallsig (list callsig))
-                                        (when pdoc (list docstring)))
-                                  (ein:join-str "\n" it))
-                 do (funcall test content result))))
-
 (ert-deftest ein:kernel-construct-help-string-when-found ()
-  (eintest:kernel-construct-help-string-loop))
+  (ein:testing-kernel-construct-help-string-loop))
 
 (ert-deftest ein:kernel-construct-help-string-when-not-found ()
   (should (equal (ein:kernel-construct-help-string nil) nil)))
 ;; Included in `ein:kernel-construct-help-string-when-found', but test
 ;; it explicitly to be sure.
-
-(provide 'test-ein-kernel)
