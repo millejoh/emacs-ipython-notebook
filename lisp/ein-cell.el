@@ -217,7 +217,8 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (("raw") 'ein:rawcell)
     (("heading") 'ein:headingcell)
     ;; Defined in ein-shared-output.el:
-    (("shared-output") 'ein:shared-output-cell)))
+    (("shared-output") 'ein:shared-output-cell)
+    (t (error "No cell type called %S" type))))
 
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) "Cell" args))
