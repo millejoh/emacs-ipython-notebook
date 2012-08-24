@@ -2,13 +2,13 @@
 (require 'ert)
 
 (require 'ein-ac)
-(require 'test-ein-kernel)
+(require 'ein-testing-kernel)
 
 
 (ert-deftest ein:ac-set-document ()
   (let ((string "candidate string"))
     (should-not (get-text-property 0 'document string))
-    (eintest:kernel-construct-help-string-loop
+    (ein:testing-kernel-construct-help-string-loop
      (lambda (content result)
        (ein:ac-set-document string content '-not-used-)
        (let ((props (text-properties-at 0 string)))

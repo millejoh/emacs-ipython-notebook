@@ -5,11 +5,12 @@
                (concat (file-name-directory load-file-name) "mocker")))
 (require 'mocker)
 
-(require 'test-ein-kernel)
+(require 'ein-pytools)
+(require 'ein-testing-kernel)
 
 
 (ert-deftest ein:pytools-finish-tooltip ()
-  (eintest:kernel-construct-help-string-loop
+  (ein:testing-kernel-construct-help-string-loop
    (lambda (content result)
      (if result
          (mocker-let

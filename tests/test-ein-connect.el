@@ -1,9 +1,9 @@
 (require 'ein-connect)
-(require 'test-ein-notebook)
+(require 'ein-testing-notebook)
 
 (defmacro eintest:with-connected-buffer (&rest body)
   (declare (indent 0))
-  `(let* ((notebook-buffer (eintest:notebook-make-empty))
+  `(let* ((notebook-buffer (ein:testing-notebook-make-empty))
           (notebook (buffer-local-value 'ein:notebook notebook-buffer)))
      (with-temp-buffer
        (erase-buffer)
