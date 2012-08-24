@@ -69,31 +69,6 @@ The new cell is bound to a variable `cell'."
                                                   ,cell-type nil t)))
        ,@body)))
 
-(defun ein:testing-codecell-data (&optional input prompt-number outputs)
-  (list :cell_type "code"
-        :input (or input "")
-        :language "python"
-        :outputs outputs
-        :collapsed json-false
-        :prompt_number prompt-number))
-
-(defun ein:testing-textcell-data (&optional source cell-type)
-  (list :cell_type cell-type
-        :source (or source "")))
-
-(defun ein:testing-markdowncell-data (&optional source)
-  (ein:testing-textcell-data source "markdown"))
-
-(defun ein:testing-rawcell-data (&optional source)
-  (ein:testing-textcell-data source "raw"))
-
-(defun ein:testing-htmlcell-data (&optional source)
-  (ein:testing-textcell-data source "html"))
-
-(defun ein:testing-headingcell-data (&optional source level)
-  (append (ein:testing-textcell-data source "heading")
-          (list :level (or level 1))))
-
 (provide 'ein-testing-notebook)
 
 ;;; ein-testing-notebook.el ends here

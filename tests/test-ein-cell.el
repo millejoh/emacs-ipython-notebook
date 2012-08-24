@@ -7,17 +7,10 @@
 (require 'mocker)
 
 (require 'ein-cell)
+(require 'ein-testing-cell)
 
 
 ;;; ein:cell-from-json
-
-(defun eintest:cell-json-data-code (prompt-number input &optional outputs)
-  (list :cell_type "code"
-        :input input
-        :language "python"
-        :outputs outputs
-        :collapsed json-false
-        :prompt_number prompt-number))
 
 (defun eintest:cell-from-json (data &rest args)
   (let ((cell (apply #'ein:cell-from-json data args)))
@@ -32,8 +25,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (eintest:cell-json-data-code
-                input-prompt-number input (list output-0)))
+         (data (ein:testing-codecell-data
+                input input-prompt-number (list output-0)))
          (cell (eintest:cell-from-json data)))
     (should (ein:codecell-p cell))
     (should (equal (oref cell :input-prompt-number) input-prompt-number))
@@ -93,8 +86,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (eintest:cell-json-data-code
-                input-prompt-number input (list output-0)))
+         (data (ein:testing-codecell-data
+                input input-prompt-number (list output-0)))
          (cell (eintest:cell-from-json data))
          (alist (eintest:cell-to-json cell input)))
     (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
@@ -111,8 +104,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (eintest:cell-json-data-code
-                input-prompt-number input (list output-0)))
+         (data (ein:testing-codecell-data
+                input input-prompt-number (list output-0)))
          (cell (eintest:cell-from-json data))
          (alist (eintest:cell-to-json cell input t)))
     (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
@@ -173,8 +166,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (eintest:cell-json-data-code
-                input-prompt-number input (list output-0)))
+         (data (ein:testing-codecell-data
+                input input-prompt-number (list output-0)))
          (dummy-ewoc (ewoc-create 'dummy))
          (old (eintest:cell-from-json data :ewoc dummy-ewoc))
          (new (ein:cell-convert old "markdown")))
@@ -200,8 +193,8 @@
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
-         (data (eintest:cell-json-data-code
-                input-prompt-number input (list output-0)))
+         (data (ein:testing-codecell-data
+                input input-prompt-number (list output-0)))
          (dummy-ewoc (ewoc-create 'dummy))
          (old (eintest:cell-from-json data :ewoc dummy-ewoc))
          (new (ein:cell-copy old)))

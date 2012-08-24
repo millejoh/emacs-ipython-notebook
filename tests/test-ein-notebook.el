@@ -8,6 +8,7 @@
 
 (require 'ein-notebook)
 (require 'ein-testing-notebook)
+(require 'ein-testing-cell)
 
 
 ;; Test utils
