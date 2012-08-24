@@ -121,7 +121,23 @@ is not found."
     (should (ein:$notebook-p ein:%notebook%))
     (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
-    (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))))
+    (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))
+    (let ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (should (ein:codecell-p     (nth 0 cells)))
+      (should (ein:markdowncell-p (nth 1 cells)))
+      (should (ein:rawcell-p      (nth 2 cells)))
+      (should (ein:htmlcell-p     (nth 3 cells)))
+      (should (equal (ein:cell-get-text (nth 0 cells)) "import numpy"))
+      (should (equal (ein:cell-get-text (nth 1 cells)) "*markdown* text"))
+      (should (equal (ein:cell-get-text (nth 2 cells)) "`raw` cell text"))
+      (should (equal (ein:cell-get-text (nth 3 cells)) "<b>HTML</b> text"))
+      (loop for i from 4 to 9
+            for level from 1
+            for cell = (nth i cells)
+            do (should (ein:headingcell-p cell))
+            do (should (equal (ein:cell-get-text cell)
+                              (format "Heading %s" level)))
+            do (should (= (oref cell :level) level))))))
 
 
 ;; Notebook commands
