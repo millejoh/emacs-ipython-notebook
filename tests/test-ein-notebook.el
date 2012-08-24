@@ -105,6 +105,40 @@ is not found."
     (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))))
 
+(ert-deftest ein:notebook-from-json-all-cell-types ()
+  (with-current-buffer
+      (ein:testing-notebook-make-new
+       nil nil (list (ein:testing-codecell-data "import numpy")
+                     (ein:testing-markdowncell-data "*markdown* text")
+                     (ein:testing-rawcell-data "`raw` cell text")
+                     (ein:testing-htmlcell-data "<b>HTML</b> text")
+                     (ein:testing-headingcell-data "Heading 1" 1)
+                     (ein:testing-headingcell-data "Heading 2" 2)
+                     (ein:testing-headingcell-data "Heading 3" 3)
+                     (ein:testing-headingcell-data "Heading 4" 4)
+                     (ein:testing-headingcell-data "Heading 5" 5)
+                     (ein:testing-headingcell-data "Heading 6" 6)))
+    (should (ein:$notebook-p ein:%notebook%))
+    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
+    (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))
+    (let ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (should (ein:codecell-p     (nth 0 cells)))
+      (should (ein:markdowncell-p (nth 1 cells)))
+      (should (ein:rawcell-p      (nth 2 cells)))
+      (should (ein:htmlcell-p     (nth 3 cells)))
+      (should (equal (ein:cell-get-text (nth 0 cells)) "import numpy"))
+      (should (equal (ein:cell-get-text (nth 1 cells)) "*markdown* text"))
+      (should (equal (ein:cell-get-text (nth 2 cells)) "`raw` cell text"))
+      (should (equal (ein:cell-get-text (nth 3 cells)) "<b>HTML</b> text"))
+      (loop for i from 4 to 9
+            for level from 1
+            for cell = (nth i cells)
+            do (should (ein:headingcell-p cell))
+            do (should (equal (ein:cell-get-text cell)
+                              (format "Heading %s" level)))
+            do (should (= (oref cell :level) level))))))
+
 
 ;; Notebook commands
 
@@ -724,13 +758,17 @@ value of `ein:notebook-enable-undo'."
       (should (ein:notebook-modified-p)))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (ein:testing-notebook-make-empty "Unmodified Notebook" "NOTEBOOK-ID-2"))
+         (ein:testing-notebook-make-empty "Saved Notebook" "NOTEBOOK-ID-2"))
+      (ein:notebook-save-notebook-success ein:%notebook%)
       (should-not (ein:notebook-modified-p)))
     (flet ((y-or-n-p (&rest ignore) t)
            (ein:notebook-del (&rest ignore)))
       (kill-buffer
        (eintest:notebook-enable-mode
         (ein:testing-notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-1") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-2") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-3") ein:notebook--opened-map))
     (should (= (hash-table-count ein:notebook--opened-map) 3))
     (mocker-let ((y-or-n-p
                   (prompt)

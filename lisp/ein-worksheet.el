@@ -137,12 +137,14 @@
       (erase-buffer)
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
-                                   nil t)))
+                                   nil t))
+            (cells (plist-get (oref ws :data) :cells)))
         (oset ws :ewoc ewoc)
-        (mapc (lambda (cell-data)
-                (ein:cell-enter-last
-                 (ein:cell-from-json cell-data :ewoc ewoc)))
-              (plist-get (oref ws :data) :cells))))
+        (if cells
+            (mapc (lambda (data)
+                    (ein:cell-enter-last (ein:cell-from-json data :ewoc ewoc)))
+                  cells)
+          (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
     (setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:notebook-enable-undo 'no)
