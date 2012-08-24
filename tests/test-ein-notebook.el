@@ -7,6 +7,7 @@
 (require 'mocker)
 
 (require 'ein-notebook)
+(require 'ein-testing-notebook)
 
 
 ;; Test utils
@@ -40,30 +41,6 @@
  ]
 }
 ")
-
-
-(defun eintest:notebook-from-json (json-string &optional notebook-id)
-  (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
-  (flet ((pop-to-buffer (buf) buf)
-         (ein:notebook-start-kernel (notebook)))
-    (let ((notebook (ein:notebook-new "DUMMY-URL" notebook-id)))
-      (setf (ein:$notebook-kernel notebook)
-            (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook)))
-      (ein:notebook-request-open-callback
-       notebook :data (ein:json-read-from-string json-string))
-      (ein:notebook-buffer notebook))))
-
-(defun eintest:notebook-make-data (cells &optional name)
-  (unless name (setq name "Dummy Name"))
-  `((metadata . ((name . ,name)))
-    (nbformat . 2)
-    (name . ,name)
-    (worksheets . [((cells . ,(apply #'vector cells)))])))
-
-(defun eintest:notebook-make-empty (&optional name notebook-id)
-  "Make empty notebook and return its buffer."
-  (eintest:notebook-from-json
-   (json-encode (eintest:notebook-make-data nil name)) notebook-id))
 
 (defun eintest:notebook-enable-mode (buffer)
   (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
@@ -104,7 +81,7 @@ is not found."
 ;; from-json
 
 (ert-deftest ein:notebook-from-json-simple ()
-  (with-current-buffer (eintest:notebook-from-json
+  (with-current-buffer (ein:testing-notebook-from-json
                         eintest:notebook-data-simple-json)
     (should (ein:$notebook-p ein:%notebook%))
     (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
@@ -122,7 +99,7 @@ is not found."
           (should (equal (plist-get o1 :text) "2")))))))
 
 (ert-deftest ein:notebook-from-json-empty ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (should (ein:$notebook-p ein:%notebook%))
     (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
     (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
@@ -132,21 +109,21 @@ is not found."
 ;; Notebook commands
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))))
 
 (ert-deftest ein:notebook-insert-cell-above-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))))
 
 (ert-deftest ein:notebook-delete-cell-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (loop repeat 3
           do (call-interactively #'ein:worksheet-insert-cell-above))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
@@ -155,7 +132,7 @@ is not found."
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))))
 
 (ert-deftest ein:notebook-delete-cell-command-no-undo ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "some text")
     (should (equal (buffer-string) "
@@ -169,7 +146,7 @@ some text
     (should (equal (buffer-string) "\n"))))
 
 (ert-deftest ein:notebook-kill-cell-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
@@ -180,7 +157,7 @@ some text
             do (should (equal (ein:worksheet-ncells ein:%worksheet%) (- 3 i)))))))
 
 (ert-deftest ein:notebook-copy-cell-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
@@ -191,7 +168,7 @@ some text
       (should (equal (length ein:kill-ring) 3)))))
 
 (ert-deftest ein:notebook-yank-cell-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
       (loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
@@ -210,7 +187,7 @@ some text
 
 (ert-deftest ein:notebook-yank-cell-command-two-buffers ()
   (let (ein:kill-ring ein:kill-ring-yank-pointer)
-    (with-current-buffer (eintest:notebook-make-empty "NB1")
+    (with-current-buffer (ein:testing-notebook-make-empty "NB1")
       (call-interactively #'ein:worksheet-insert-cell-above)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 1))
       (call-interactively #'ein:worksheet-kill-cell)
@@ -219,12 +196,12 @@ some text
              (ein:notebook-del (&rest ignore)))
         ;; FIXME: are there anyway to skip confirmation?
         (kill-buffer)))
-    (with-current-buffer (eintest:notebook-make-empty "NB2")
+    (with-current-buffer (ein:testing-notebook-make-empty "NB2")
       (call-interactively #'ein:worksheet-yank-cell)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 1)))))
 
 (ert-deftest ein:notebook-toggle-cell-type-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "some text")
     (should (ein:codecell-p (ein:worksheet-get-current-cell)))
@@ -240,7 +217,7 @@ some text
     (should (looking-back "some text"))))
 
 (ert-deftest ein:notebook-change-cell-type-cycle-through ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "some text")
     ;; start with code cell
@@ -276,7 +253,7 @@ some text
 4. Check that tail cell has TAIL-TEXT.
 
 NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert insert-text)
     (when search-text
@@ -323,7 +300,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
    "some" nil "some" ""))
 
 (ert-deftest ein:notebook-merge-cell-command-next ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (insert "Cell 1")
     (call-interactively #'ein:worksheet-insert-cell-above)
@@ -334,7 +311,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (should (looking-at "Cell 0\nCell 1"))))
 
 (ert-deftest ein:notebook-merge-cell-command-prev ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (insert "Cell 0")
     (call-interactively #'ein:worksheet-insert-cell-below)
@@ -344,7 +321,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (should (looking-at "Cell 0\nCell 1"))))
 
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i downfrom 2 to 0
           do (call-interactively #'ein:worksheet-insert-cell-above)
           do (insert (format "Cell %s" i)))
@@ -357,7 +334,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (should (looking-at (format "Cell %s" (1+ i)))))))
 
 (ert-deftest ein:notebook-goto-prev-input-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-below)
           do (insert (format "Cell %s" i)))
@@ -370,7 +347,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (should (looking-at (format "Cell %s" (1- i)))))))
 
 (ert-deftest ein:notebook-move-cell-up-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-below)
           do (insert (format "Cell %s" i)))
@@ -386,7 +363,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (should-not (search-forward "Cell 2" nil t))))
 
 (ert-deftest ein:notebook-move-cell-down-command-simple ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-above)
           do (insert (format "Cell %s" i)))
@@ -417,7 +394,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))
 
 (ert-deftest ein:notebook-execute-current-cell ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (let* ((text "print 'Hello World'")
            (cell (ein:worksheet-get-current-cell))
@@ -458,7 +435,7 @@ defined."
         (command
          (intern (format "ein:worksheet-execute-cell-and-%s" do-this))))
     `(ert-deftest ,test-name ()
-       (with-current-buffer (eintest:notebook-make-empty)
+       (with-current-buffer (ein:testing-notebook-make-empty)
          (let* ((ws ein:%worksheet%)
                 (current (ein:worksheet-insert-cell-below ws ,cell-type nil t))
                 ,@(when has-next-p
@@ -489,7 +466,7 @@ defined."
 ;; Notebook undo
 
 (defun eintest:notebook-undo-after-insert-above ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let ((text "some text"))
       (call-interactively #'ein:worksheet-insert-cell-above)
       (insert text)
@@ -512,7 +489,7 @@ In [ ]:
 ")))))))
 
 (defun eintest:notebook-undo-after-split ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let ((line-1 "first line")
           (line-2 "second line"))
       (call-interactively #'ein:worksheet-insert-cell-below)
@@ -538,7 +515,7 @@ second line
 "))))))
 
 (defun eintest:notebook-undo-after-merge ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let ((line-1 "first line")
           (line-2 "second line"))
       (call-interactively #'ein:worksheet-insert-cell-below)
@@ -595,7 +572,7 @@ In [ ]:
 ")))))))
 
 (defun eintest:notebook-undo-after-execution-1-cell ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (let* ((text "print 'Hello World'")
            (output-text "Hello World\n")
@@ -626,7 +603,7 @@ In [ ]:
         (should-error (funcall check-output))))))
 
 (defun eintest:notebook-undo-after-execution-2-cells ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (call-interactively #'ein:worksheet-insert-cell-above)
     (let* ((text "print 'Hello World\\n' * 10")
@@ -694,7 +671,7 @@ value of `ein:notebook-enable-undo'."
 (eintest:notebook-undo-make-tests notebook-undo-after-execution-2-cells)
 
 (ert-deftest ein:notebook-undo-via-events ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (call-interactively #'ein:worksheet-insert-cell-below)
     (loop with events = (ein:$notebook-events ein:%notebook%)
           for ein:notebook-enable-undo in '(no yes full) do
@@ -711,26 +688,26 @@ value of `ein:notebook-enable-undo'."
 ;; Generic getter
 
 (ert-deftest ein:get-url-or-port--notebook ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (should (equal (ein:get-url-or-port) "DUMMY-URL"))))
 
 (ert-deftest ein:get-notebook--notebook ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (should (eq (ein:get-notebook) ein:%notebook%))))
 
 (ert-deftest ein:get-kernel--notebook ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     (let ((kernel (ein:$notebook-kernel ein:%notebook%)))
       (should (ein:$kernel-p kernel))
       (should (eq (ein:get-kernel) kernel)))))
 
 (ert-deftest ein:get-cell-at-point--notebook ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     ;; FIXME: write test with non-empty worksheet
     (should-not (ein:get-cell-at-point))))
 
 (ert-deftest ein:get-traceback-data--notebook ()
-  (with-current-buffer (eintest:notebook-make-empty)
+  (with-current-buffer (ein:testing-notebook-make-empty)
     ;; FIXME: write test with non-empty TB
     (should-not (ein:get-traceback-data))))
 
@@ -742,18 +719,18 @@ value of `ein:notebook-enable-undo'."
     (should (ein:notebook-ask-before-kill-emacs))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (eintest:notebook-make-empty "Modified Notebook" "NOTEBOOK-ID-1"))
+         (ein:testing-notebook-make-empty "Modified Notebook" "NOTEBOOK-ID-1"))
       (call-interactively #'ein:worksheet-insert-cell-below)
       (should (ein:notebook-modified-p)))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (eintest:notebook-make-empty "Unmodified Notebook" "NOTEBOOK-ID-2"))
+         (ein:testing-notebook-make-empty "Unmodified Notebook" "NOTEBOOK-ID-2"))
       (should-not (ein:notebook-modified-p)))
     (flet ((y-or-n-p (&rest ignore) t)
            (ein:notebook-del (&rest ignore)))
       (kill-buffer
        (eintest:notebook-enable-mode
-        (eintest:notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
+        (ein:testing-notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
     (should (= (hash-table-count ein:notebook--opened-map) 3))
     (mocker-let ((y-or-n-p
                   (prompt)
@@ -806,5 +783,3 @@ value of `ein:notebook-enable-undo'."
 (ert-deftest ein:notebook--check-nbformat-warn-minor ()
   (ein:notebook--check-nbformat-assert-match
    "version v2\\.1, [^\\.]* up to v2.0" 2 1 2 0))
-
-(provide 'test-ein-notebook)

@@ -4,19 +4,10 @@
 (require 'ert)
 
 (require 'ein-notebook)
-(require 'test-ein-notebook)
+(require 'ein-testing-notebook)
 
 
 ;; Test utils
-
-(defmacro eintest:with-one-cell (cell-type &rest body)
-  "Insert new cell of CELL-TYPE in a clean notebook and execute BODY.
-The new cell is bound to a variable `cell'."
-  (declare (indent 1))
-  `(with-current-buffer (eintest:notebook-make-empty)
-     (let ((cell (ein:worksheet-insert-cell-below ein:%worksheet%
-                                                  ,cell-type nil t)))
-       ,@body)))
 
 (defvar eintest:example-svg "\
 <?xml version=\"1.0\" standalone=\"no\"?>
@@ -31,7 +22,7 @@ The new cell is bound to a variable `cell'."
 ;; ein:cell-location
 
 (ert-deftest ein:cell-location-codecell-prompt-beg ()
-  (eintest:with-one-cell 'code
+  (ein:testing-with-one-cell 'code
     (should (equal (marker-position (ein:cell-location cell :prompt))
                    (save-excursion
                      (goto-char (point-max))
@@ -39,18 +30,18 @@ The new cell is bound to a variable `cell'."
                      (point))))))
 
 (ert-deftest ein:cell-location-codecell-prompt-end ()
-  (eintest:with-one-cell 'code
+  (ein:testing-with-one-cell 'code
     (should (equal (marker-position (ein:cell-location cell :prompt t))
                    (1- (point))))))
 
 (ert-deftest ein:cell-location-codecell-input-beg ()
-  (eintest:with-one-cell 'code
+  (ein:testing-with-one-cell 'code
     (insert "some text")
     (should (equal (marker-position (ein:cell-location cell :input))
                    (1- (point-at-bol))))))
 
 (ert-deftest ein:cell-location-codecell-input-end ()
-  (eintest:with-one-cell 'code
+  (ein:testing-with-one-cell 'code
     (insert "some text")
     (should (equal (marker-position (ein:cell-location cell :input t))
                    (1+ (point))))))
@@ -59,7 +50,7 @@ The new cell is bound to a variable `cell'."
 ;; from-json
 
 (ert-deftest eintest:cell-input-prompt-number ()
-  (eintest:with-one-cell
+  (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
              :input "some input"
@@ -72,7 +63,7 @@ some input
 "))))
 
 (ert-deftest eintest:cell-input-prompt-star ()
-  (eintest:with-one-cell
+  (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
              :input "some input"
@@ -85,7 +76,7 @@ some input
 "))))
 
 (ert-deftest eintest:cell-input-prompt-empty ()
-  (eintest:with-one-cell
+  (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
              :input "some input")
@@ -100,7 +91,7 @@ some input
 ;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
-  (eintest:with-one-cell
+  (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
              :outputs outputs
@@ -255,5 +246,3 @@ some stderr 1
 some stdout 2
 some stderr 2
 "))
-
-(provide 'test-ein-cell-notebook)
