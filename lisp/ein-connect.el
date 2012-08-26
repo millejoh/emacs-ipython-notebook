@@ -341,15 +341,11 @@ change the cells to run."
 to automatically connect any python-mode buffer to the
 notebook."
   (ein:log 'verbose "CONNECT-TO-DEFAULT-NOTEBOOK")
-  (unless (or (ein:worksheet-buffer-p)
-              ;; Called from `ein:pytools-jump-to-source'
-              (and (boundp '-metadata-not-used-)
-                   (boundp 'filename)
-                   (boundp 'lineno)))
-    (ein:and-let* ((nbpath ein:connect-default-notebook))
-      (when (functionp nbpath)
-        (setq nbpath (funcall nbpath)))
-      (ein:connect-to-notebook nbpath nil t))))
+  (ein:and-let* ((nbpath ein:connect-default-notebook)
+                 ((not (ein:worksheet-buffer-p))))
+    (when (functionp nbpath)
+      (setq nbpath (funcall nbpath)))
+    (ein:connect-to-notebook nbpath nil t)))
 
 
 
