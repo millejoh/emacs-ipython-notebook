@@ -308,12 +308,6 @@ See `ein:notebook-open' for more information."
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
 
-(defun ein:notebook-pp (ewoc-data)
-  (let ((path (ein:$node-path ewoc-data))
-        (data (ein:$node-data ewoc-data)))
-    (case (car path)
-      (cell (ein:cell-pp (cdr path) data)))))
-
 (defun ein:notebook--different-number (n1 n2)
   (and (numberp n1) (numberp n2) (not (= n1 n2))))
 

@@ -91,13 +91,12 @@
   (if (ein:shared-output-healthy-p)
       ein:%shared-output%
     (with-current-buffer (ein:shared-output-create-buffer)
-      ;; FIXME: This is a duplication of `ein:notebook-from-json'.
+      ;; FIXME: This is a duplication of `ein:worksheet-render'.
       ;;        Must be merged.
       (let* ((inhibit-read-only t)
              ;; Enable nonsep for ewoc object (the last argument is non-nil).
              ;; This is for putting read-only text properties to the newlines.
-             ;; FIXME: Do not depend on `ein:notebook-pp'!
-             (ewoc (ein:ewoc-create 'ein:notebook-pp
+             (ewoc (ein:ewoc-create 'ein:worksheet-pp
                                     (ein:propertize-read-only "\n")
                                     nil t))
              (events (ein:events-new))
