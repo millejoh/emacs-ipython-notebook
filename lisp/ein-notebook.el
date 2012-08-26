@@ -314,8 +314,8 @@ See `ein:notebook-open' for more information."
     (ein:notebook-start-kernel notebook)
     (ein:notebook-from-json notebook data) ; notebook buffer is created here
     (setf (ein:$notebook-kernelinfo notebook)
-          (ein:kernelinfo-setup (ein:$notebook-kernel notebook)
-                                (cons #'ein:notebook-buffer-list notebook)))
+          (ein:kernelinfo-new (ein:$notebook-kernel notebook)
+                              (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat data)
     (ein:log 'info "Notebook %s is ready"

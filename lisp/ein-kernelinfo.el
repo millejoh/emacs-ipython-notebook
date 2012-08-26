@@ -46,7 +46,7 @@ in these buffer will be synced with the kernel's cwd.")
     :documentation "cached CWD (last time checked CWD)."))
   :documentation "Info related (but unimportant) to kernel")
 
-(defun ein:kernelinfo-setup (kernel get-buffers)
+(defun ein:kernelinfo-new (kernel get-buffers)
   "Make a new `ein:kernelinfo' instance based on KERNEL and GET-BUFFERS."
   (let ((kerinfo (make-instance 'ein:kernelinfo)))
     (oset kerinfo :kernel kernel)
