@@ -827,8 +827,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (insert-image (create-image (base64-decode-string value) key t))))))
 
 (defun ein:cell-append-text (data &rest properties)
-  ;; FIXME: implement HTML special escaping
-  ;; escape ANSI & HTML specials in plaintext:
+  ;; escape ANSI in plaintext:
   (apply #'ein:insert-read-only (ansi-color-apply data) properties))
 
 (defun ein:cell-safe-read-eval-insert (text)
