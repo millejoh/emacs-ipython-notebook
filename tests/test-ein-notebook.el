@@ -506,6 +506,27 @@ notebook."
       (ein:testing-assert-cell-output-num (nth 0 cells) 0)  ; cleared
       (ein:testing-assert-cell-output-num (nth 1 cells) 1))))
 
+(ert-deftest ein:worksheet-clear-output/preserve-input-prompt ()
+  (with-current-buffer
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")
+                                                ("'cell output'")))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 3))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:cell-set-input-prompt (nth 0 cells) 111)
+      (ein:cell-set-input-prompt (nth 1 cells) 222)
+      (ein:cell-set-input-prompt (nth 2 cells) 333)
+      ;; Call `ein:worksheet-clear-output' with/without prefix argument.
+      (ein:cell-goto (nth 0 cells))
+      (call-interactively #'ein:worksheet-clear-output)
+      (ein:cell-goto (nth 2 cells))
+      (let ((current-prefix-arg '(4)))
+        (call-interactively #'ein:worksheet-clear-output))
+      ;; Check cells' prompt number
+      (should (eq (oref (nth 0 cells) :input-prompt-number) nil))
+      (should (eq (oref (nth 1 cells) :input-prompt-number) 222))
+      (should (eq (oref (nth 2 cells) :input-prompt-number) 333)))))
+
 (ert-deftest ein:worksheet-clear-all-output/simple ()
   (with-current-buffer
       (ein:testing-make-notebook-with-outputs '(("'cell output'")
