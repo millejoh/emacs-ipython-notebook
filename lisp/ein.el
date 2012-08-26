@@ -57,6 +57,8 @@
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist"
   "Ask server to create a new notebook and open it in a new buffer." t)
 
+(autoload 'ein:notebooklist-load "ein-notebooklist")
+
 (autoload 'ein:notebook-name "ein-notebook")
 (autoload 'ein:kernel-id "ein-kernel")
 
@@ -66,6 +68,7 @@
 (autoload 'ein:connect-to-notebook         "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
 (autoload 'ein:connect-buffer-to-notebook  "ein-connect")
+(autoload 'ein:connect-to-default-notebook "ein-connect")
 
 (autoload 'ein:shared-output-eval-string "ein-shared-output" nil t)
 (autoload 'ein:shared-output-show-code-cell-at-point "ein-shared-output" nil t)

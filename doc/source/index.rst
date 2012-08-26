@@ -312,6 +312,7 @@ Notebook list
 
 .. el:variable:: ein:url-or-port
 .. el:variable:: ein:default-url-or-port
+.. el:function:: ein:notebooklist-load
 
 Notebook
 ^^^^^^^^
@@ -343,6 +344,8 @@ Connect
 .. el:variable:: ein:connect-save-before-run
 .. el:variable:: ein:propagate-connect
 .. el:variable:: ein:connect-aotoexec-lighter
+.. el:variable:: ein:connect-default-notebook
+.. el:function:: ein:connect-to-default-notebook
 
 MuMaMo
 ^^^^^^
@@ -495,6 +498,12 @@ Change Log
 v0.2
 ----
 
+* Auto-connection support.
+  The new function :el:symbol:`ein:connect-to-default-notebook` can be
+  added to :el:symbol:`python-mode-hook` to automatically connect
+  python-mode buffers to default notebook specified by
+  :el:symbol:`ein:connect-default-notebook`.  See also
+  :el:symbol:`ein:notebooklist-load`.
 * Add :el:symbol:`ein:worksheet-execute-cell-and-insert-below`.
 * Change the timing to trigger auto-execution in connected buffer.
   It was triggered on save before.  Now it is on run, eval or reload.

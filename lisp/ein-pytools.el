@@ -149,7 +149,10 @@ pager buffer.  You can explicitly specify the object by selecting it."
                     (setq lineno (string-to-number lineno))
                     (setq filename
                           (ein:kernel-filename-from-python kernel filename))
-                    (ein:goto-file filename lineno other-window)
+                    (let ((ein:connect-default-notebook nil))
+                      ;; Avoid auto connection to connect to the
+                      ;; NOTEBOOK instead of the default one.
+                      (ein:goto-file filename lineno other-window))
                     ;; Connect current buffer to NOTEBOOK. No reconnection.
                     (ein:connect-buffer-to-notebook notebook nil t)
                     (push (point-marker) ein:pytools-jump-stack)

@@ -377,6 +377,26 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
           (ein:notebook-open url-or-port notebook-id callback cbargs)
         (message "Notebook '%s' not found" nbpath)))))
 
+(defun ein:notebooklist-load (&optional url-or-port)
+  "Load notebook list but do not pop-up the notebook list buffer.
+
+For example, if you want to load notebook list when Emacs starts,
+add this in the Emacs initialization file::
+
+  (add-to-hook 'after-init-hook 'ein:notebooklist-load)
+
+or even this (if you want fast Emacs start-up)::
+
+  ;; load notebook list if Emacs is idle for 3 sec after start-up
+  (run-with-idle-timer 3 nil #'ein:notebooklist-load)
+
+You should setup `ein:url-or-port' or `ein:default-url-or-port'
+in order to make this code work.
+
+See also:
+`ein:connect-to-default-notebook', `ein:connect-default-notebook'."
+  (ein:notebooklist-open url-or-port t))
+
 
 ;;; Generic getter
 
