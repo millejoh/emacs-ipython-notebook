@@ -637,15 +637,18 @@ as usual."
       (setq ein:%notebook% notebook))
     ss))
 
-(defun ein:notebook-scratchsheet-open (notebook &optional popup)
-  "Open new \"scratch sheet\".
+(defun ein:notebook-scratchsheet-open (notebook &optional new popup)
+  "Open \"scratch sheet\".
+Open a new one when prefix argument is given.
 Scratch sheet is almost identical to worksheet.  However, EIN
 will not save the buffer.  Use this buffer like of normal IPython
 console.  Note that you can always copy cells into the normal
 worksheet to save result."
   (interactive (list (ein:notebook--get-nb-or-error)
+                     current-prefix-arg
                      t))
-  (let ((ss (or (car (ein:$notebook-worksheets notebook))
+  (let ((ss (or (unless new
+                  (car (ein:$notebook-worksheets notebook)))
                 (ein:notebook-scratchsheet-new notebook))))
     (when popup
       (pop-to-buffer (ein:worksheet-buffer ss)))
