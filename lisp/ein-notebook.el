@@ -225,6 +225,14 @@ Current buffer for these functions is set to the notebook buffer.")
   (ein:log-ignore-errors
     (ein:kernel-del (ein:$notebook-kernel notebook))))
 
+(defun ein:notebook-close-worksheet (notebook ws)
+  "Close worksheet WS in NOTEBOOK.  If WS is the last worksheet,
+call notebook destructor `ein:notebook-del'."
+  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook)))
+    (setq worksheets (delq ws worksheets))
+    (unless worksheets
+      (ein:notebook-del notebook))))
+
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
@@ -830,7 +838,7 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   (when (ein:$notebook-p ein:%notebook%)
-    (ein:notebook-del ein:%notebook%)))
+    (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
   "Add \"notebook destructor\" to `kill-buffer-hook'."
