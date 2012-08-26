@@ -674,6 +674,9 @@ as usual."
   (buffer-live-p (ein:notebook-buffer notebook)))
 
 (defun ein:notebook-modified-p (&optional notebook)
+  "Return non-nil if NOTEBOOK is modified.
+If NOTEBOOK is not given or nil then consider the notebook
+associated with current buffer (if any)."
   (unless notebook (setq notebook ein:%notebook%))
   (and (ein:$notebook-p notebook)
        (ein:notebook-live-p notebook)
