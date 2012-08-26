@@ -648,7 +648,7 @@ worksheet to save result."
                      current-prefix-arg
                      t))
   (let ((ss (or (unless new
-                  (car (ein:$notebook-worksheets notebook)))
+                  (car (ein:$notebook-scratchsheets notebook)))
                 (ein:notebook-scratchsheet-new notebook))))
     (when popup
       (pop-to-buffer (ein:worksheet-buffer ss)))
