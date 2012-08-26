@@ -231,6 +231,13 @@ Current buffer for these functions is set to the notebook buffer.")
   (loop for ws in (ein:$notebook-worksheets notebook)
         if (ein:worksheet-buffer ws) return it))
 
+(defun ein:notebook-buffer-list (notebook)
+  "Return the buffers associated with NOTEBOOK's kernel.
+The buffer local variable `default-directory' of these buffers
+will be updated with kernel's cwd."
+  (ein:filter #'identity (mapcar #'ein:worksheet-buffer
+                                 (ein:$notebook-worksheets notebook))))
+
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
 (defun ein:notebook-url (notebook)
@@ -308,7 +315,7 @@ See `ein:notebook-open' for more information."
     (ein:notebook-from-json notebook data) ; notebook buffer is created here
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-setup (ein:$notebook-kernel notebook)
-                                (ein:notebook-buffer notebook)))
+                                (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat data)
     (ein:log 'info "Notebook %s is ready"

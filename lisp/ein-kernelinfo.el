@@ -32,9 +32,12 @@
   ((kernel
     :initarg :kernel :type ein:$kernel
     :documentation "Kernel instance.")
-   (buffer
-    :initarg :buffer
-    :documentation "Notebook buffer that the kernel associated with.")
+   ;; Probably it's better to use events for this kind of purpose?:
+   (get-buffers
+    :initarg :get-buffers
+    :documentation "A packed function to get buffers associated
+with the kernel.  The buffer local `default-directory' variable
+in these buffer will be synced with the kernel's cwd.")
    (hostname
     :initarg :hostname :type string
     :documentation "Host name of the machine where the kernel is running on.")
@@ -43,10 +46,10 @@
     :documentation "cached CWD (last time checked CWD)."))
   :documentation "Info related (but unimportant) to kernel")
 
-(defun ein:kernelinfo-setup (kernel buffer)
+(defun ein:kernelinfo-setup (kernel get-buffers)
   (let ((kerinfo (make-instance 'ein:kernelinfo)))
     (oset kerinfo :kernel kernel)
-    (oset kerinfo :buffer buffer)
+    (oset kerinfo :get-buffers get-buffers)
     (ein:kernelinfo-setup-hooks kerinfo)
     kerinfo))
 
@@ -67,20 +70,21 @@
 
 (defun ein:kernelinfo-update-ccwd (kerinfo)
   "Update cached current working directory (CCWD) and change
-`default-directory' of `ein:$kernelinfo-buffer'."
+`default-directory' of kernel related buffers."
   (ein:kernel-request-stream
    (oref kerinfo :kernel)
    "__import__('sys').stdout.write(__import__('os').getcwd())"
    (lambda (cwd kerinfo)
-     (with-slots (kernel buffer) kerinfo
+     (with-slots (kernel get-buffers) kerinfo
        (setq cwd (ein:kernel-filename-from-python kernel cwd))
        (oset kerinfo :ccwd cwd)
        ;; sync buffer's `default-directory' with CWD
-       ;; FIXME: Support multiple buffers.
-       (when (buffer-live-p buffer)
-         (with-current-buffer buffer
-           (when (file-accessible-directory-p cwd)
-             (setq default-directory (file-name-as-directory cwd)))))))
+       (when (file-accessible-directory-p cwd)
+         (mapc (lambda (buffer)
+                 (with-current-buffer buffer
+                   (setq default-directory (file-name-as-directory cwd))))
+               (ein:filter #'buffer-live-p
+                           (ein:funcall-packed get-buffers))))))
    (list kerinfo)))
 
 (defun ein:kernelinfo-update-hostname (kerinfo)
