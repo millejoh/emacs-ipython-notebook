@@ -819,18 +819,22 @@ Called via `kill-buffer-query-functions'."
 (defun ein:notebook-ask-before-kill-emacs ()
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
-  (let ((unsaved (ein:filter #'ein:notebook-modified-p
-                             (ein:notebook-opened-notebooks))))
-    (if (null unsaved)
-        t
-      (let ((answer
-             (y-or-n-p
-              (format "You have %s unsaved notebook(s). Discard changes?"
-                      (length unsaved)))))
-        ;; kill all unsaved buffers forcefully
-        (when answer
-          (mapc #'ein:notebook-close unsaved))
-        answer))))
+  (condition-case err
+      (let ((unsaved (ein:filter #'ein:notebook-modified-p
+                                 (ein:notebook-opened-notebooks))))
+        (if (null unsaved)
+            t
+          (let ((answer
+                 (y-or-n-p
+                  (format "You have %s unsaved notebook(s). Discard changes?"
+                          (length unsaved)))))
+            ;; kill all unsaved buffers forcefully
+            (when answer
+              (mapc #'ein:notebook-close unsaved))
+            answer)))
+    ((debug error)
+     (ein:log 'error "Got error: %S" err)
+     (y-or-n-p "Error while examine notebooks.  Kill Emacs anyway? "))))
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
 
