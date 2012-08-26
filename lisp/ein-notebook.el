@@ -167,8 +167,8 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-kernel' : `ein:$kernel'
   `ein:$kernel' instance.
 
-`ein:$notebook-kernelinfo' : `ein:$kernelinfo'
-  `ein:$kernelinfo' instance.
+`ein:$notebook-kernelinfo' : `ein:kernelinfo'
+  `ein:kernelinfo' instance.
 
 `ein:$notebook-pager'
   Variable for `ein:pager-*' functions. See ein-pager.el.
