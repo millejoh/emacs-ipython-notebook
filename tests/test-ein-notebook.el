@@ -495,13 +495,16 @@ notebook."
 
 (ert-deftest ein:worksheet-clear-output/simple ()
   (with-current-buffer
-      (ein:testing-make-notebook-with-outputs '(("'cell output'")))
-    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%))
-           (cell (car cells)))
-      (should (= (length cells) 1))
-      (ein:testing-assert-cell-output-num cell 1)
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:testing-assert-cell-output-num (nth 0 cells) 1)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1)
+      (ein:cell-goto (nth 0 cells))
       (call-interactively #'ein:worksheet-clear-output)
-      (ein:testing-assert-cell-output-num cell 0))))
+      (ein:testing-assert-cell-output-num (nth 0 cells) 0)  ; cleared
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1))))
 
 (ert-deftest ein:worksheet-clear-all-output/simple ()
   (with-current-buffer
