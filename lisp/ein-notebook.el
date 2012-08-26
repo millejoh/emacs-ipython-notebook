@@ -730,7 +730,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
     'ein:worksheet-execute-cell-and-insert-below)
   (define-key map (kbd "C-c C-'") 'ein:worksheet-turn-on-autoexec)
   (define-key map "\C-c\C-e" 'ein:worksheet-toggle-output)
-  (define-key map "\C-c\C-v" 'ein:worksheet-set-collapsed-all)
+  (define-key map "\C-c\C-v" 'ein:worksheet-set-output-visibility-all)
   (define-key map "\C-c\C-l" 'ein:worksheet-clear-output)
   (define-key map (kbd "C-c C-S-l") 'ein:worksheet-clear-all-output)
   (define-key map (kbd "C-c C-;") 'ein:shared-output-show-code-cell-at-point)

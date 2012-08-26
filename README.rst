@@ -200,7 +200,7 @@ Keybinds - Notebook
    C-c C-s         ein:worksheet-split-cell-at-point
    C-c C-t         ein:worksheet-toggle-cell-type
    C-c C-u         ein:worksheet-change-cell-type
-   C-c C-v         ein:worksheet-set-collapsed-all
+   C-c C-v         ein:worksheet-set-output-visibility-all
    C-c C-w         ein:worksheet-copy-cell
    C-c C-x         ein:tb-show
    C-c C-y         ein:worksheet-yank-cell
