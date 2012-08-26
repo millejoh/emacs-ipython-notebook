@@ -55,25 +55,9 @@ FIXME: document other slots."
   session-id
   msg-callbacks
   after-start-hook
-  after-execute-hook
-  kernelinfo)
+  after-execute-hook)
 
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
-
-(defstruct ein:$kernelinfo
-  "Info related (but unimportant) to kernel
-
-`ein:$kernelinfo-buffer'
-  Notebook buffer that the kernel associated with.
-
-`ein:$kernelinfo-hostname'
-  Host name of the machine where the kernel is running on.
-
-`ein:$kernelinfo-ccwd'
-  cached CWD (last time checked CWD)."
-  buffer
-  hostname
-  ccwd)
 
 
 ;;; Initialization and connection.
@@ -89,8 +73,7 @@ FIXME: document other slots."
    :running nil
    :username "username"
    :session-id (ein:utils-uuid)
-   :msg-callbacks (make-hash-table :test 'equal)
-   :kernelinfo (make-ein:$kernelinfo)))
+   :msg-callbacks (make-hash-table :test 'equal)))
 
 
 (defun ein:kernel-del (kernel)
@@ -592,51 +575,6 @@ When no such directory exists, `default-directory' will not be changed."
            "Syncing directory of %s with kernel...FAILED (no dir: %s)"
            buffer path))))
    (list kernel buffer)))
-
-(defun ein:kernelinfo-init (kernel buffer)
-  (setf (ein:$kernelinfo-buffer (ein:$kernel-kernelinfo kernel)) buffer))
-
-(defun ein:kernelinfo-setup-hooks (kernel)
-  "Add `ein:kernelinfo-update-*' to `ein:$kernel-after-*-hook'."
-  (push (cons #'ein:kernelinfo-update-all kernel)
-        (ein:$kernel-after-start-hook kernel))
-  (push (cons #'ein:kernelinfo-update-ccwd kernel)
-        (ein:$kernel-after-execute-hook kernel)))
-
-(defun ein:kernelinfo-update-all (kernel)
-  (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
-  (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
-           (ein:kernel-live-p kernel))
-  (ein:kernelinfo-update-ccwd kernel)
-  (ein:kernelinfo-update-hostname kernel))
-
-(defun ein:kernelinfo-update-ccwd (kernel)
-  "Update cached current working directory (CCWD) and change
-`default-directory' of `ein:$kernelinfo-buffer'."
-  (ein:kernel-request-stream
-   kernel
-   "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (lambda (cwd kernel kernelinfo buffer)
-     (setq cwd (ein:kernel-filename-from-python kernel cwd))
-     (setf (ein:$kernelinfo-ccwd kernelinfo) cwd)
-     ;; sync buffer's `default-directory' with CWD
-     ;; FIXME: Support multiple buffers.
-     (when (buffer-live-p buffer)
-       (with-current-buffer buffer
-         (when (file-accessible-directory-p cwd)
-           (setq default-directory (file-name-as-directory cwd))))))
-   (let ((kernelinfo (ein:$kernel-kernelinfo kernel)))
-     (list kernel kernelinfo (ein:$kernelinfo-buffer kernelinfo)))))
-
-(defun ein:kernelinfo-update-hostname (kernel)
-  "Get hostname in which kernel is running and store it in
-kernelinfo."
-  (ein:kernel-request-stream
-   kernel
-   "__import__('sys').stdout.write(__import__('os').uname()[1])"
-   (lambda (hostname kernelinfo)
-     (setf (ein:$kernelinfo-hostname kernelinfo) hostname))
-   (list (ein:$kernel-kernelinfo kernel))))
 
 (provide 'ein-kernel)
 

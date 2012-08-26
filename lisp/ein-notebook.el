@@ -41,6 +41,7 @@
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-kernel)
+(require 'ein-kernelinfo)
 (require 'ein-cell)
 (require 'ein-worksheet)
 (require 'ein-completer)
@@ -166,6 +167,9 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-kernel' : `ein:$kernel'
   `ein:$kernel' instance.
 
+`ein:$notebook-kernelinfo' : `ein:kernelinfo'
+  `ein:kernelinfo' instance.
+
 `ein:$notebook-pager'
   Variable for `ein:pager-*' functions. See ein-pager.el.
 
@@ -193,6 +197,7 @@ Current buffer for these functions is set to the notebook buffer.")
   url-or-port
   notebook-id
   kernel
+  kernelinfo
   pager
   dirty
   metadata
@@ -225,6 +230,13 @@ Current buffer for these functions is set to the notebook buffer.")
   ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
   (loop for ws in (ein:$notebook-worksheets notebook)
         if (ein:worksheet-buffer ws) return it))
+
+(defun ein:notebook-buffer-list (notebook)
+  "Return the buffers associated with NOTEBOOK's kernel.
+The buffer local variable `default-directory' of these buffers
+will be updated with kernel's cwd."
+  (ein:filter #'identity (mapcar #'ein:worksheet-buffer
+                                 (ein:$notebook-worksheets notebook))))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
@@ -301,8 +313,9 @@ See `ein:notebook-open' for more information."
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-start-kernel notebook)
     (ein:notebook-from-json notebook data) ; notebook buffer is created here
-    (ein:kernelinfo-init (ein:$notebook-kernel notebook)
-                         (ein:notebook-buffer notebook))
+    (setf (ein:$notebook-kernelinfo notebook)
+          (ein:kernelinfo-new (ein:$notebook-kernel notebook)
+                              (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat data)
     (ein:log 'info "Notebook %s is ready"
@@ -378,7 +391,6 @@ of minor mode."
                                  base-url
                                  (ein:$notebook-events notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (ein:kernelinfo-setup-hooks kernel)
     (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel
                       (ein:$notebook-notebook-id notebook))))
