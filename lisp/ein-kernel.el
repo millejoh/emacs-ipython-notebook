@@ -555,27 +555,6 @@ as a string and the rest of the argument is the optional ARGS."
                                  (apply func it args)))))
                        (cons func args)))))
 
-(defun ein:kernel-sync-directory (kernel buffer)
-  "Sync `default-directory' of BUFFER with cwd of KERNEL.
-When no such directory exists, `default-directory' will not be changed."
-  (ein:log 'info "Syncing directory of %s with kernel..." buffer)
-  (ein:kernel-request-stream
-   kernel
-   "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (lambda (path kernel buffer)
-     (with-current-buffer buffer
-       (setq path (ein:kernel-filename-from-python kernel path))
-       (if (file-accessible-directory-p path)
-           (progn
-             (setq default-directory path)
-             (ein:log 'info
-               "Syncing directory of %s with kernel...DONE (%s)"
-               buffer path))
-         (ein:log 'info
-           "Syncing directory of %s with kernel...FAILED (no dir: %s)"
-           buffer path))))
-   (list kernel buffer)))
-
 (provide 'ein-kernel)
 
 ;;; ein-kernel.el ends here

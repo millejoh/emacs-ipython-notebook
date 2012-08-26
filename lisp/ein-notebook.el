@@ -440,16 +440,6 @@ This is equivalent to do ``C-c`` in the console program."
   'ein:notebook-eval-string
   'ein:shared-output-eval-string "0.1.2")
 
-;; Followings are kernel related, but EIN specific
-
-(defun ein:notebook-sync-directory (notebook)
-  (ein:kernel-sync-directory (ein:$notebook-kernel notebook)
-                             (ein:notebook-buffer notebook)))
-
-(defun ein:notebook-sync-directory-command ()
-  (interactive)
-  (when ein:%notebook% (ein:notebook-sync-directory ein:%notebook%)))
-
 
 ;;; Persistance and loading
 
