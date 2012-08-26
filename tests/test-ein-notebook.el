@@ -477,6 +477,21 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     ;; Check it worked
     (ein:testing-test-output-visibility-all t)))
 
+(ert-deftest ein:worksheet-clear-output/simple ()
+  (with-current-buffer
+      (ein:testing-notebook-make-new
+       nil nil (list (ein:testing-codecell-data
+                      nil nil
+                      (list
+                       (ein:testing-codecell-pyout-data "'cell output'")))))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%))
+           (cell (car cells)))
+      (should (= (length cells) 1))
+      (should (ein:codecell-p cell))
+      (should (= (length (oref cell :outputs)) 1))
+      (ein:worksheet-clear-output cell)
+      (should (= (length (oref cell :outputs)) 0)))))
+
 
 ;; Kernel related things
 
