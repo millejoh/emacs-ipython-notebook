@@ -808,6 +808,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ,@(ein:generate-menu
@@ -854,7 +855,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
            ("Rename notebook" ein:notebook-rename-command)
            ("Jump to definition" ein:pytools-jump-to-source-command)
            ("Go back to the previous jump point"
-            ein:pytools-jump-back-command)))
+            ein:pytools-jump-back-command)
+           ("Open scratch sheet" ein:notebook-scratchsheet-open)))
       ["Popup traceback viewer" ein:tb-show
        :help "Show full traceback in different buffer"]
       ["Evaluate code in minibuffer" ein:shared-output-eval-string
