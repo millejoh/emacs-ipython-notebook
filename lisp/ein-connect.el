@@ -113,7 +113,17 @@ as `ein:cell-autoexec-prompt'."
   :group 'ein)
 
 (defcustom ein:connect-default-notebook nil
-  "Setting for `ein:connect-to-default-notebook'."
+  "Notebook to be connect when `ein:connect-to-default-notebook' is called.
+
+Example setting to connect to \"My_Notebook\" in the server at
+port 8888 when opening any buffer in `python-mode'::
+
+  (setq ein:connect-default-notebook \"8888/My_Notebook\")
+  (add-hook 'python-mode-hook 'ein:connect-to-default-notebook)
+
+`ein:connect-default-notebook' can also be a function without any
+argument.  This function must return a string (notebook path of
+the form \"URL-OR-PORT/NOTEBOOK-NAME\")."
   :type '(choice (string :tag "URL-OR-PORT/NOTEBOOK-NAME")
                  (function :tag "Notebook path getter"))
   :group 'ein)
