@@ -477,6 +477,10 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     ;; Check it worked
     (ein:testing-test-output-visibility-all t)))
 
+(defun ein:testing-assert-cell-output-num (cell num-outputs)
+  (should (ein:codecell-p cell))
+  (should (= (length (oref cell :outputs)) num-outputs)))
+
 (ert-deftest ein:worksheet-clear-output/simple ()
   (with-current-buffer
       (ein:testing-notebook-make-new
@@ -487,10 +491,24 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (let* ((cells (ein:worksheet-get-cells ein:%worksheet%))
            (cell (car cells)))
       (should (= (length cells) 1))
-      (should (ein:codecell-p cell))
-      (should (= (length (oref cell :outputs)) 1))
+      (ein:testing-assert-cell-output-num cell 1)
       (ein:worksheet-clear-output cell)
-      (should (= (length (oref cell :outputs)) 0)))))
+      (ein:testing-assert-cell-output-num cell 0))))
+
+(ert-deftest ein:worksheet-clear-all-output/simple ()
+  (with-current-buffer
+      (let ((outputs (list
+                      (ein:testing-codecell-pyout-data "'cell output'"))))
+        (ein:testing-notebook-make-new
+         nil nil (list (ein:testing-codecell-data nil nil outputs)
+                       (ein:testing-codecell-data nil nil outputs))))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:testing-assert-cell-output-num (nth 0 cells) 1)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1)
+      (call-interactively #'ein:worksheet-clear-all-output)
+      (ein:testing-assert-cell-output-num (nth 0 cells) 0)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 0))))
 
 
 ;; Kernel related things
