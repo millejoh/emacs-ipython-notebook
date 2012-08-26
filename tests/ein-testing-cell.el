@@ -28,7 +28,16 @@
 
 (require 'json)
 
+(defun ein:testing-codecell-pyout-data (text &optional prompt-number)
+  "Create a plist representing JSON data for code-cell output.
+TEXT is a string and PROMPT-NUMBER is an integer."
+  (list :output_type "pyout"
+        :prompt_number (or prompt-number 0)
+        :text text))
+
 (defun ein:testing-codecell-data (&optional input prompt-number outputs)
+  "Create a plist representing JSON data for code-type cell.
+To make OUTPUTS data, use `ein:testing-codecell-pyout-data'."
   (list :cell_type "code"
         :input (or input "")
         :language "python"

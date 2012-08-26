@@ -551,9 +551,10 @@ This does not alter the actual data stored in the cell."
   (ein:notebook-empty-undo-maybe)
   (oset ws :dirty t))
 
-(defun ein:worksheet-set-collapsed-all (ws collapsed)
-  "Hide all cell output.  When prefix is given, show all cell output."
+(defun ein:worksheet-set-output-visibility-all (ws &optional collapsed)
+  "Show all cell output.  When prefix is given, hide all cell output."
   (interactive (list (ein:worksheet--get-ws-or-error) current-prefix-arg))
+  (when collapsed (setq collapsed t))   ; force it to be a boolean
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:worksheet-get-cells ws))

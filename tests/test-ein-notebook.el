@@ -411,6 +411,135 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (should-not (search-backward "Cell 2" nil t))))
 
 
+;;; Cell collapsing and output clearing
+
+(ert-deftest ein:worksheet-toggle-output ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (let ((cell (call-interactively #'ein:worksheet-insert-cell-below)))
+      (should-not (oref cell :collapsed))
+      (call-interactively #'ein:worksheet-toggle-output)
+      (should (oref cell :collapsed))
+      (call-interactively #'ein:worksheet-toggle-output)
+      (should-not (oref cell :collapsed)))))
+
+(defun ein:testing-insert-cells (list-type-or-cell &optional pivot)
+  (loop with ws = ein:%worksheet%
+        with cell = pivot
+        for type in list-type-or-cell
+        do (setq cell (ein:worksheet-insert-cell-below ws type cell))))
+
+(defun ein:testing-test-output-visibility-all (collapsed)
+  (mapc (lambda (cell) (should (eq (oref cell :collapsed) collapsed)))
+        (ein:worksheet-get-cells ein:%worksheet%)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/visible-from-all-hidden ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (mapcar (lambda (cell) (ein:cell-set-collapsed cell nil))
+            (ein:worksheet-get-cells ein:%worksheet%))
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all nil)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/hidden-from-all-visible ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    ;; Call the command
+    (let ((current-prefix-arg t))
+      (call-interactively #'ein:worksheet-set-output-visibility-all))
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all t)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/visible-from-part-hidden ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (ein:cell-set-collapsed
+     (nth 1 (ein:worksheet-get-cells ein:%worksheet%)) nil)
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all nil)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/hidden-from-part-visible ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (ein:cell-set-collapsed
+     (nth 1 (ein:worksheet-get-cells ein:%worksheet%)) nil)
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    (let ((current-prefix-arg t))
+      (call-interactively #'ein:worksheet-set-output-visibility-all))
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all t)))
+
+(defun ein:testing-make-notebook-with-outputs (list-outputs)
+  "Make a new notebook with cells with output.
+LIST-OUTPUTS is a list of list of strings (pyout text).  Number
+of LIST-OUTPUTS equals to the number cells to be contained in the
+notebook."
+  (ein:testing-notebook-make-new
+   nil nil
+   (mapcar (lambda (outputs)
+             (ein:testing-codecell-data
+              nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))
+           list-outputs)))
+
+(defun ein:testing-assert-cell-output-num (cell num-outputs)
+  (should (ein:codecell-p cell))
+  (should (= (length (oref cell :outputs)) num-outputs)))
+
+(ert-deftest ein:worksheet-clear-output/simple ()
+  (with-current-buffer
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:testing-assert-cell-output-num (nth 0 cells) 1)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1)
+      (ein:cell-goto (nth 0 cells))
+      (call-interactively #'ein:worksheet-clear-output)
+      (ein:testing-assert-cell-output-num (nth 0 cells) 0)  ; cleared
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1))))
+
+(ert-deftest ein:worksheet-clear-output/preserve-input-prompt ()
+  (with-current-buffer
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")
+                                                ("'cell output'")))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 3))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:cell-set-input-prompt (nth 0 cells) 111)
+      (ein:cell-set-input-prompt (nth 1 cells) 222)
+      (ein:cell-set-input-prompt (nth 2 cells) 333)
+      ;; Call `ein:worksheet-clear-output' with/without prefix argument.
+      (ein:cell-goto (nth 0 cells))
+      (call-interactively #'ein:worksheet-clear-output)
+      (ein:cell-goto (nth 2 cells))
+      (let ((current-prefix-arg '(4)))
+        (call-interactively #'ein:worksheet-clear-output))
+      ;; Check cells' prompt number
+      (should (eq (oref (nth 0 cells) :input-prompt-number) nil))
+      (should (eq (oref (nth 1 cells) :input-prompt-number) 222))
+      (should (eq (oref (nth 2 cells) :input-prompt-number) 333)))))
+
+(ert-deftest ein:worksheet-clear-all-output/simple ()
+  (with-current-buffer
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")))
+    (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+    (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
+      (ein:testing-assert-cell-output-num (nth 0 cells) 1)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 1)
+      (call-interactively #'ein:worksheet-clear-all-output)
+      (ein:testing-assert-cell-output-num (nth 0 cells) 0)
+      (ein:testing-assert-cell-output-num (nth 1 cells) 0))))
+
+
 ;; Kernel related things
 
 (defun eintest:notebook-check-kernel-and-codecell (kernel cell)
