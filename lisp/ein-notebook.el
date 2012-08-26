@@ -193,6 +193,9 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-worksheets' : list of `ein:worksheet'
   List of worksheets.
+
+`ein:$notebook-scratchsheets' : list of `ein:worksheet'
+  List of scratch worksheets.
 "
   url-or-port
   notebook-id
@@ -206,6 +209,7 @@ Current buffer for these functions is set to the notebook buffer.")
   nbformat-minor
   events
   worksheets
+  scratchsheets
   )
 
 ;; FIXME: Remove `ein:%notebook%' when worksheet is fully implemented.
