@@ -247,8 +247,10 @@ call notebook destructor `ein:notebook-del'."
   "Return the buffers associated with NOTEBOOK's kernel.
 The buffer local variable `default-directory' of these buffers
 will be updated with kernel's cwd."
-  (ein:filter #'identity (mapcar #'ein:worksheet-buffer
-                                 (ein:$notebook-worksheets notebook))))
+  (ein:filter #'identity
+              (mapcar #'ein:worksheet-buffer
+                      (append (ein:$notebook-worksheets notebook)
+                              (ein:$notebook-scratchsheets notebook)))))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
