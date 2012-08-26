@@ -642,6 +642,10 @@ cell bellow."
 
 ;;; Predicate
 
+(defun ein:worksheet-buffer-p ()
+  "Return non-`nil' if the current buffer is a worksheet buffer."
+  ein:%worksheet%)
+
 (defmethod ein:worksheet-modified-p ((ws ein:worksheet))
   (let ((buffer (ein:worksheet-buffer ws)))
     (and (buffer-live-p buffer)

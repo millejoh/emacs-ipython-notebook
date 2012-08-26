@@ -112,6 +112,12 @@ as `ein:cell-autoexec-prompt'."
                  (const :tag "Use `ein:cell-autoexec-prompt'." nil))
   :group 'ein)
 
+(defcustom ein:connect-default-notebook nil
+  "Setting for `ein:connect-to-default-notebook'."
+  :type '(choice (string :tag "URL-OR-PORT/NOTEBOOK-NAME")
+                 (function :tag "Notebook path getter"))
+  :group 'ein)
+
 
 ;;; Class
 
@@ -315,6 +321,26 @@ change the cells to run."
     (oset ein:%connect% :autoexec autoexec-p)
     (ein:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
+
+
+;;; Auto-connect
+
+(defun ein:connect-to-default-notebook ()
+  "Connect to the default notebook specified by
+`ein:connect-default-notebook'.  Set this to `python-mode-hook'
+to automatically connect any python-mode buffer to the
+notebook."
+  (ein:log 'verbose "CONNECT-TO-DEFAULT-NOTEBOOK")
+  (unless (or (ein:worksheet-buffer-p)
+              ;; Called from `ein:pytools-jump-to-source'
+              (and (boundp '-metadata-not-used-)
+                   (boundp 'filename)
+                   (boundp 'lineno)))
+    (ein:and-let* ((nbpath ein:connect-default-notebook))
+      (when (functionp nbpath)
+        (setq nbpath (funcall nbpath)))
+      (ein:connect-to-notebook nbpath nil t))))
+
 
 
 ;;; ein:connect-mode
