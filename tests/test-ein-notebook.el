@@ -413,6 +413,15 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 ;;; Cell collapsing and output clearing
 
+(ert-deftest ein:worksheet-toggle-output ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (let ((cell (call-interactively #'ein:worksheet-insert-cell-below)))
+      (should-not (oref cell :collapsed))
+      (call-interactively #'ein:worksheet-toggle-output)
+      (should (oref cell :collapsed))
+      (call-interactively #'ein:worksheet-toggle-output)
+      (should-not (oref cell :collapsed)))))
+
 (defun ein:testing-insert-cells (list-type-or-cell &optional pivot)
   (loop with ws = ein:%worksheet%
         with cell = pivot
