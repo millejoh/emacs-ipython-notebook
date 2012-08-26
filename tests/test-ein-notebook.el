@@ -483,16 +483,15 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:worksheet-clear-output/simple ()
   (with-current-buffer
-      (ein:testing-notebook-make-new
-       nil nil (list (ein:testing-codecell-data
-                      nil nil
-                      (list
-                       (ein:testing-codecell-pyout-data "'cell output'")))))
+      (let ((outputs (list
+                      (ein:testing-codecell-pyout-data "'cell output'"))))
+        (ein:testing-notebook-make-new
+         nil nil (list (ein:testing-codecell-data nil nil outputs))))
     (let* ((cells (ein:worksheet-get-cells ein:%worksheet%))
            (cell (car cells)))
       (should (= (length cells) 1))
       (ein:testing-assert-cell-output-num cell 1)
-      (ein:worksheet-clear-output cell)
+      (call-interactively #'ein:worksheet-clear-output)
       (ein:testing-assert-cell-output-num cell 0))))
 
 (ert-deftest ein:worksheet-clear-all-output/simple ()
