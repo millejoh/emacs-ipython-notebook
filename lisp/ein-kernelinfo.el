@@ -47,6 +47,7 @@ in these buffer will be synced with the kernel's cwd.")
   :documentation "Info related (but unimportant) to kernel")
 
 (defun ein:kernelinfo-setup (kernel get-buffers)
+  "Make a new `ein:kernelinfo' instance based on KERNEL and GET-BUFFERS."
   (let ((kerinfo (make-instance 'ein:kernelinfo)))
     (oset kerinfo :kernel kernel)
     (oset kerinfo :get-buffers get-buffers)
@@ -62,6 +63,7 @@ in these buffer will be synced with the kernel's cwd.")
           (ein:$kernel-after-execute-hook kernel))))
 
 (defun ein:kernelinfo-update-all (kerinfo)
+  "Update KERINFO slots by triggering all update functions."
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
   (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
            (ein:kernel-live-p (oref kerinfo :kernel)))
