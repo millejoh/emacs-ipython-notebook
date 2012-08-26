@@ -181,7 +181,6 @@ This is the same workaround as `ein:ac-setup-maybe'."
 
 (set-keymap-parent ein:notebook-mumamo-mode-map ein:notebook-mode-map)
 
-(add-hook 'ein:notebook-mumamo-mode-hook 'ein:notebook-setup-kill-buffer-hook)
 (add-hook 'ein:notebook-mumamo-mode-hook
           'ein:mumamo-indent-line-function-workaround-turn-on)
 

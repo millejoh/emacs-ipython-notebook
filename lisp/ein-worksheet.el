@@ -40,6 +40,7 @@
 (declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
+(declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
 (declare-function ein:notebook-empty-undo-maybe "ein-notebook")
 
@@ -150,6 +151,7 @@
     (when (eq ein:notebook-enable-undo 'no)
       (setq buffer-undo-list t))
     (ein:notebook-mode)
+    (ein:notebook-setup-kill-buffer-hook)
     (oset ws :notification (ein:notification-setup (current-buffer)))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)

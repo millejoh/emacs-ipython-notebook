@@ -848,9 +848,6 @@ Called via `kill-emacs-query-functions'."
   "Add \"notebook destructor\" to `kill-buffer-hook'."
   (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback))
 
-(add-hook 'ein:notebook-plain-mode-hook 'ein:notebook-setup-kill-buffer-hook)
-(add-hook 'ein:notebook-python-mode-hook 'ein:notebook-setup-kill-buffer-hook)
-
 ;; Useful command to close notebooks.
 (defun ein:notebook-kill-all-buffers ()
   "Close all opened notebooks."
