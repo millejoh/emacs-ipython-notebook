@@ -44,6 +44,7 @@
 (require 'ein-kernelinfo)
 (require 'ein-cell)
 (require 'ein-worksheet)
+(require 'ein-scratchsheet)
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
@@ -251,6 +252,9 @@ will be updated with kernel's cwd."
               (mapcar #'ein:worksheet-buffer
                       (append (ein:$notebook-worksheets notebook)
                               (ein:$notebook-scratchsheets notebook)))))
+
+(defun ein:notebook--get-nb-or-error ()
+  (or ein:%notebook% (error "Not in notebook buffer.")))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
@@ -618,6 +622,34 @@ as usual."
       (if (ein:kernel-live-p kernel)
           (ein:kernel-kill kernel #'ein:notebook-close (list ein:%notebook%))
         (ein:notebook-close ein:%notebook%)))))
+
+
+;;; Scratch sheet
+
+(defun ein:notebook-scratchsheet-new (notebook)
+  "Create new scratchsheet in NOTEBOOK."
+  (let ((ss (ein:scratchsheet-new
+             notebook
+             (ein:$notebook-kernel notebook)
+             (ein:$notebook-events notebook))))
+    (ein:worksheet-render ss)
+    (with-current-buffer (ein:worksheet-buffer ss)
+      (setq ein:%notebook% notebook))
+    ss))
+
+(defun ein:notebook-scratchsheet-open (notebook &optional popup)
+  "Open new \"scratch sheet\".
+Scratch sheet is almost identical to worksheet.  However, EIN
+will not save the buffer.  Use this buffer like of normal IPython
+console.  Note that you can always copy cells into the normal
+worksheet to save result."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     t))
+  (let ((ss (or (car (ein:$notebook-worksheets notebook))
+                (ein:notebook-scratchsheet-new notebook))))
+    (when popup
+      (pop-to-buffer (ein:worksheet-buffer ss)))
+    ss))
 
 
 ;;; Opened notebooks

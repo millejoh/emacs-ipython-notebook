@@ -34,6 +34,11 @@
   :documentation
   "Worksheet without needs for saving.")
 
+(defun ein:scratchsheet-new (notebook kernel events &rest args)
+  (apply #'make-instance 'ein:scratchsheet
+         :notebook notebook :kernel kernel :events events
+         args))
+
 (defmethod ein:worksheet--buffer-name ((ws ein:scratchsheet))
   (format ein:scratchsheet-buffer-name-template
           (ein:worksheet-url-or-port ws)
