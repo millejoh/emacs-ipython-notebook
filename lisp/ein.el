@@ -57,6 +57,8 @@
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist"
   "Ask server to create a new notebook and open it in a new buffer." t)
 
+(autoload 'ein:notebooklist-load "ein-notebooklist")
+
 (autoload 'ein:notebook-name "ein-notebook")
 (autoload 'ein:kernel-id "ein-kernel")
 

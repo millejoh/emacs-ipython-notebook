@@ -123,7 +123,12 @@ port 8888 when opening any buffer in `python-mode'::
 
 `ein:connect-default-notebook' can also be a function without any
 argument.  This function must return a string (notebook path of
-the form \"URL-OR-PORT/NOTEBOOK-NAME\")."
+the form \"URL-OR-PORT/NOTEBOOK-NAME\").
+
+As `ein:connect-to-default-notebook' requires notebook list to be
+loaded, consider using `ein:notebooklist-load' to load notebook
+list if you want to connect to notebook without manually opening
+notebook list."
   :type '(choice (string :tag "URL-OR-PORT/NOTEBOOK-NAME")
                  (function :tag "Notebook path getter"))
   :group 'ein)
