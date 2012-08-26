@@ -477,16 +477,25 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     ;; Check it worked
     (ein:testing-test-output-visibility-all t)))
 
+(defun ein:testing-make-notebook-with-outputs (list-outputs)
+  "Make a new notebook with cells with output.
+LIST-OUTPUTS is a list of list of strings (pyout text).  Number
+of LIST-OUTPUTS equals to the number cells to be contained in the
+notebook."
+  (ein:testing-notebook-make-new
+   nil nil
+   (mapcar (lambda (outputs)
+             (ein:testing-codecell-data
+              nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))
+           list-outputs)))
+
 (defun ein:testing-assert-cell-output-num (cell num-outputs)
   (should (ein:codecell-p cell))
   (should (= (length (oref cell :outputs)) num-outputs)))
 
 (ert-deftest ein:worksheet-clear-output/simple ()
   (with-current-buffer
-      (let ((outputs (list
-                      (ein:testing-codecell-pyout-data "'cell output'"))))
-        (ein:testing-notebook-make-new
-         nil nil (list (ein:testing-codecell-data nil nil outputs))))
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")))
     (let* ((cells (ein:worksheet-get-cells ein:%worksheet%))
            (cell (car cells)))
       (should (= (length cells) 1))
@@ -496,11 +505,8 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:worksheet-clear-all-output/simple ()
   (with-current-buffer
-      (let ((outputs (list
-                      (ein:testing-codecell-pyout-data "'cell output'"))))
-        (ein:testing-notebook-make-new
-         nil nil (list (ein:testing-codecell-data nil nil outputs)
-                       (ein:testing-codecell-data nil nil outputs))))
+      (ein:testing-make-notebook-with-outputs '(("'cell output'")
+                                                ("'cell output'")))
     (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
     (let* ((cells (ein:worksheet-get-cells ein:%worksheet%)))
       (ein:testing-assert-cell-output-num (nth 0 cells) 1)
