@@ -411,6 +411,64 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (should-not (search-backward "Cell 2" nil t))))
 
 
+;;; Cell collapsing and output clearing
+
+(defun ein:testing-insert-cells (list-type-or-cell &optional pivot)
+  (loop with ws = ein:%worksheet%
+        with cell = pivot
+        for type in list-type-or-cell
+        do (setq cell (ein:worksheet-insert-cell-below ws type cell))))
+
+(defun ein:testing-test-output-visibility-all (collapsed)
+  (mapc (lambda (cell) (should (eq (oref cell :collapsed) collapsed)))
+        (ein:worksheet-get-cells ein:%worksheet%)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/visible-from-all-hidden ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (mapcar (lambda (cell) (ein:cell-set-collapsed cell nil))
+            (ein:worksheet-get-cells ein:%worksheet%))
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all nil)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/hidden-from-all-visible ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    ;; Call the command
+    (let ((current-prefix-arg t))
+      (call-interactively #'ein:worksheet-set-output-visibility-all))
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all t)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/visible-from-part-hidden ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (ein:cell-set-collapsed
+     (nth 1 (ein:worksheet-get-cells ein:%worksheet%)) nil)
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all nil)))
+
+(ert-deftest ein:worksheet-set-output-visibility-all/hidden-from-part-visible ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    ;; Prepare cells
+    (ein:testing-insert-cells '(code code code))
+    (ein:cell-set-collapsed
+     (nth 1 (ein:worksheet-get-cells ein:%worksheet%)) nil)
+    ;; Call the command
+    (call-interactively #'ein:worksheet-set-output-visibility-all)
+    (let ((current-prefix-arg t))
+      (call-interactively #'ein:worksheet-set-output-visibility-all))
+    ;; Check it worked
+    (ein:testing-test-output-visibility-all t)))
+
+
 ;; Kernel related things
 
 (defun eintest:notebook-check-kernel-and-codecell (kernel cell)
