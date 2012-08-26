@@ -873,6 +873,7 @@ Note that print page is not supported in IPython 0.12.1."
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
   (not (and ein:notebook-kill-buffer-ask
+            (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
             (ein:notebook-modified-p)
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 
