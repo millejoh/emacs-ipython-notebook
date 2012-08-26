@@ -74,16 +74,17 @@
   (ein:kernel-request-stream
    (oref kerinfo :kernel)
    "__import__('sys').stdout.write(__import__('os').getcwd())"
-   (lambda (cwd kernel kerinfo buffer)
-     (setq cwd (ein:kernel-filename-from-python kernel cwd))
-     (oset kerinfo :ccwd cwd)
-     ;; sync buffer's `default-directory' with CWD
-     ;; FIXME: Support multiple buffers.
-     (when (buffer-live-p buffer)
-       (with-current-buffer buffer
-         (when (file-accessible-directory-p cwd)
-           (setq default-directory (file-name-as-directory cwd))))))
-   (list (oref kerinfo :kernel) kerinfo (oref kerinfo :buffer))))
+   (lambda (cwd kerinfo)
+     (with-slots (kernel buffer) kerinfo
+       (setq cwd (ein:kernel-filename-from-python kernel cwd))
+       (oset kerinfo :ccwd cwd)
+       ;; sync buffer's `default-directory' with CWD
+       ;; FIXME: Support multiple buffers.
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           (when (file-accessible-directory-p cwd)
+             (setq default-directory (file-name-as-directory cwd)))))))
+   (list kerinfo)))
 
 (defun ein:kernelinfo-update-hostname (kerinfo)
   "Get hostname in which kernel is running and store it in KERINFO."
