@@ -41,7 +41,7 @@ To make OUTPUTS data, use `ein:testing-codecell-pyout-data'."
   (list :cell_type "code"
         :input (or input "")
         :language "python"
-        :outputs (apply #'vector outputs)
+        :outputs outputs
         :collapsed json-false
         :prompt_number prompt-number))
 

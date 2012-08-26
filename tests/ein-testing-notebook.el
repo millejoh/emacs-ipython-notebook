@@ -40,11 +40,23 @@
       (ein:notebook-buffer notebook))))
 
 (defun ein:testing-notebook-make-data (cells &optional name)
+  (setq cells
+        (ein:testing-notebook--preprocess-cells-data-for-json-encode cells))
   (unless name (setq name "Dummy Name"))
   `((metadata . ((name . ,name)))
     (nbformat . 2)
     (name . ,name)
     (worksheets . [((cells . ,(apply #'vector cells)))])))
+
+(defun ein:testing-notebook--preprocess-cells-data-for-json-encode (cells)
+  "Preprocess CELLS data to make it work nice with `json-encode'."
+  (mapcar (lambda (c)
+            (cond
+             ((equal (plist-get c :cell_type) "code")
+              ;; turn `:outputs' into an array.
+              (plist-put c :outputs (apply #'vector (plist-get c :outputs))))
+             (t c)))
+          cells))
 
 (defun ein:testing-notebook-make-new (&optional name notebook-id cells-data)
   "Make new notebook.  One empty cell will be inserted
