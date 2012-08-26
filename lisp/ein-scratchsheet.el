@@ -30,7 +30,10 @@
 
 (defvar ein:scratchsheet-buffer-name-template "*ein:scratch %s/%s*")
 
-(defclass ein:scratchsheet (ein:worksheet) ()
+(defclass ein:scratchsheet (ein:worksheet)
+  ;; Note that `data' slot is accessed when rendering worksheet.
+  ;; So, set valid empty data (`nil') here.
+  ((data :initarg :data :initform nil))
   :documentation
   "Worksheet without needs for saving.")
 
