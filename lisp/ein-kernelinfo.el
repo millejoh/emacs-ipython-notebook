@@ -46,12 +46,9 @@
 (defun ein:kernelinfo-setup (kernel buffer)
   (let ((kerinfo (make-instance 'ein:kernelinfo)))
     (oset kerinfo :kernel kernel)
+    (oset kerinfo :buffer buffer)
     (ein:kernelinfo-setup-hooks kerinfo)
-    (ein:kernelinfo-init kerinfo buffer)
     kerinfo))
-
-(defun ein:kernelinfo-init (kerinfo buffer)
-  (oset kerinfo :buffer buffer))
 
 (defun ein:kernelinfo-setup-hooks (kerinfo)
   "Add `ein:kernelinfo-update-*' to `ein:$kernel-after-*-hook'."
