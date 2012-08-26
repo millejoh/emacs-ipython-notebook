@@ -601,7 +601,7 @@ and save it immediately."
   "Close NOTEBOOK and kill its buffer."
   (let ((ein:notebook-kill-buffer-ask nil))
     ;; Let `ein:notebook-kill-buffer-callback' do its job.
-    (kill-buffer (ein:notebook-buffer notebook))))
+    (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
 
 (defun ein:notebook-kill-kernel-then-close-command ()
   "Kill kernel and then kill notebook buffer.
