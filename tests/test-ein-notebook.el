@@ -982,6 +982,28 @@ value of `ein:notebook-enable-undo'."
       (should (ein:notebook-ask-before-kill-emacs)))))
 
 
+;;; Buffer and kill hooks
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/no-ein-buffer ()
+  (with-temp-buffer
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/new-notebook ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (call-interactively #'ein:worksheet-insert-cell-below)
+    (mocker-let ((y-or-n-p
+                  (prompt)
+                  ((:input '("You have unsaved changes. Discard changes?")
+                           :output t))))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+
 ;; Misc unit tests
 
 (ert-deftest ein:notebook-test-notebook-name-simple ()
