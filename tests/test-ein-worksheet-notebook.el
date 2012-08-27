@@ -7,26 +7,41 @@
 
 ;;; Event handler
 
-(defun ein:testing-worksheet-set-dirty (pre-dirty post-dirty)
+(defun ein:testing-worksheet-set-dirty
+  (pre-dirty value post-dirty fired-in)
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (let ((events (oref ein:%worksheet% :events))
-          (cell (ein:worksheet-get-current-cell)))
-      (when pre-dirty
-        (ein:cell-goto cell)
-        (insert "something"))
-      (should (equal (ein:worksheet-modified-p ein:%worksheet%) pre-dirty))
-      (ein:events-trigger events 'set_dirty.Worksheet
-                          (list :cell cell :value post-dirty))
-      (should (equal (ein:worksheet-modified-p ein:%worksheet%) post-dirty)))))
+    (when pre-dirty
+      (ein:cell-goto (ein:worksheet-get-current-cell))
+      (insert "something"))
+    (should (equal (ein:worksheet-modified-p ein:%worksheet%) pre-dirty))
+    (with-current-buffer (funcall fired-in)
+      (let ((events (oref ein:%worksheet% :events))
+            (cell (ein:worksheet-get-current-cell)))
+        (ein:events-trigger events 'set_dirty.Worksheet
+                            (list :cell cell :value value))))
+    (should (equal (ein:worksheet-modified-p ein:%worksheet%) post-dirty))))
 
-(ert-deftest ein:worksheet-set-dirty/t-to-t ()
-  (ein:testing-worksheet-set-dirty t t))
+(defun ein:testing-scratchsheet-buffer ()
+  (ein:worksheet-buffer (ein:notebook-scratchsheet-open ein:%notebook%)))
 
-(ert-deftest ein:worksheet-set-dirty/t-to-nil ()
-  (ein:testing-worksheet-set-dirty t nil))
+(defmacro ein:testing-worksheet-set-dirty-deftest
+  (pre-dirty value post-dirty &optional fired-in)
+  (let ((name (intern (format "ein:worksheet-set-dirty/%s-to-%s-fired-in-%s"
+                              pre-dirty value
+                              (or fired-in "current-buffer"))))
+        (fired-in-defun
+         (case fired-in
+           (scratchsheet 'ein:testing-scratchsheet-buffer)
+           (t 'current-buffer))))
+    `(ert-deftest ,name ()
+       (ein:testing-worksheet-set-dirty ,pre-dirty ,value ,post-dirty
+                                        #',fired-in-defun))))
 
-(ert-deftest ein:worksheet-set-dirty/nil-to-t ()
-  (ein:testing-worksheet-set-dirty nil t))
-
-(ert-deftest ein:worksheet-set-dirty/nil-to-nil ()
-  (ein:testing-worksheet-set-dirty nil nil))
+(ein:testing-worksheet-set-dirty-deftest t   nil nil)
+(ein:testing-worksheet-set-dirty-deftest t   t   t  )
+(ein:testing-worksheet-set-dirty-deftest nil nil nil)
+(ein:testing-worksheet-set-dirty-deftest nil t   t  )
+(ein:testing-worksheet-set-dirty-deftest t   nil t   scratchsheet)
+(ein:testing-worksheet-set-dirty-deftest t   t   t   scratchsheet)
+(ein:testing-worksheet-set-dirty-deftest nil nil nil scratchsheet)
+(ein:testing-worksheet-set-dirty-deftest nil t   nil scratchsheet)
