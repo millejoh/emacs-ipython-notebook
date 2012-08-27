@@ -1003,6 +1003,20 @@ value of `ein:notebook-enable-undo'."
                            :output t))))
       (should (ein:notebook-ask-before-kill-buffer)))))
 
+(ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (with-current-buffer (ein:worksheet-buffer
+                          (ein:notebook-scratchsheet-open ein:%notebook%))
+      (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
+      (call-interactively #'ein:worksheet-insert-cell-below)
+      (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+      (should (ein:worksheet-modified-p ein:%worksheet%))
+      (mocker-let ((y-or-n-p (prompt) ()))
+        (should (ein:notebook-ask-before-kill-buffer))))
+    (should-not (ein:worksheet-modified-p ein:%worksheet%))
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
 
 ;; Misc unit tests
 
