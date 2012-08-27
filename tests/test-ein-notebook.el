@@ -676,6 +676,32 @@ defined."
 (eintest:worksheet-execute-cell-and-*-deftest insert-below "markdown" t   t  )
 
 
+;;; Persistence and loading
+
+(defun ein:testin-notebook-close (num-ws num-ss)
+  (should (= num-ws 1))             ; currently EIN only supports 1 WS
+  (should (>= num-ss 0))
+  (let ((notebook (buffer-local-value 'ein:%notebook%
+                                      (ein:testing-notebook-make-empty)))
+        ein:testing-notebook-del-args-log)
+    (dotimes (_ num-ss)
+      (ein:notebook-scratchsheet-new notebook))
+    (let ((buffers (ein:notebook-buffer-list notebook)))
+      (should (= (length buffers) (+ num-ws num-ss)))
+      (ein:notebook-close notebook)
+      (mapc (lambda (b) (should-not (buffer-live-p b))) buffers)
+      (ein:testing-assert-notebook-del-called-once))))
+
+(ert-deftest ein:notebook-close/one-ws-no-ss ()
+  (ein:testin-notebook-close 1 0))
+
+(ert-deftest ein:notebook-close/one-ws-one-ss ()
+  (ein:testin-notebook-close 1 1))
+
+(ert-deftest ein:notebook-close/one-ws-five-ss ()
+  (ein:testin-notebook-close 1 5))
+
+
 ;; Notebook undo
 
 (defun eintest:notebook-undo-after-insert-above ()
