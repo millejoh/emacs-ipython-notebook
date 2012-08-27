@@ -908,7 +908,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
   (let ((events (oref cell :events)))
-    (ein:events-trigger events 'set_dirty.Notebook '(:value t))
+    (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
     (ein:events-trigger events 'maybe_reset_undo.Notebook cell)))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)

@@ -82,6 +82,10 @@
     (mapc (lambda (cell) (oset cell :events events))
           (ein:worksheet-get-cells ws))))
 
+(defun ein:worksheet-class-bind-events (events)
+  "Binds event handlers which are not needed to be bound per instance."
+  (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
+
 (defmethod ein:worksheet--set-next-input ((ws ein:worksheet) data)
   (destructuring-bind (&key cell text) data
     (if (eq (oref cell :ewoc) (oref ws :ewoc)) ; CELL is in this WS
@@ -90,6 +94,12 @@
           (oset ws :dirty t))
       (ein:log 'debug
         "WORKSHEET--SET-NEXT-INPUT: CELL is not in this buffer."))))
+
+(defun ein:worksheet--set-dirty (-ignore- data)
+  "Set dirty flag of worksheet in which CELL in DATA locates."
+  (destructuring-bind (&key value cell) data
+    (ein:with-live-buffer (ein:cell-buffer cell)
+      (oset ein:%worksheet% :dirty value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))

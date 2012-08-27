@@ -384,15 +384,7 @@ of minor mode."
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
-  ;; As IPython support only supports whole-notebook saving, there is
-  ;; no need for finer-level `set_dirty.Notebook'.  Keep this until
-  ;; IPython supports finer-level saving.
-  (ein:events-on events
-                 'set_dirty.Notebook
-                 (lambda (notebook data)
-                   (setf (ein:$notebook-dirty notebook)
-                         (plist-get data :value)))
-                 notebook)
+  (ein:worksheet-class-bind-events events)
   ;; As calling multiple callbacks for this event does not make sense,
   ;; I amadding this in notebook instead of worksheet.
   (ein:events-on events
