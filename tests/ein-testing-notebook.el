@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'ein-notebook)
+(require 'ein-testing-cell)
 
 (defun ein:testing-notebook-from-json (json-string &optional notebook-id)
   (unless notebook-id (setq notebook-id "NOTEBOOK-ID"))
@@ -80,6 +81,18 @@ The new cell is bound to a variable `cell'."
      (let ((cell (ein:worksheet-insert-cell-below ein:%worksheet%
                                                   ,cell-type nil t)))
        ,@body)))
+
+(defun ein:testing-make-notebook-with-outputs (list-outputs)
+  "Make a new notebook with cells with output.
+LIST-OUTPUTS is a list of list of strings (pyout text).  Number
+of LIST-OUTPUTS equals to the number cells to be contained in the
+notebook."
+  (ein:testing-notebook-make-new
+   nil nil
+   (mapcar (lambda (outputs)
+             (ein:testing-codecell-data
+              nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))
+           list-outputs)))
 
 (provide 'ein-testing-notebook)
 

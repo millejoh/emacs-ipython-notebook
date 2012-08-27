@@ -526,18 +526,6 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     ;; Check it worked
     (ein:testing-test-output-visibility-all t)))
 
-(defun ein:testing-make-notebook-with-outputs (list-outputs)
-  "Make a new notebook with cells with output.
-LIST-OUTPUTS is a list of list of strings (pyout text).  Number
-of LIST-OUTPUTS equals to the number cells to be contained in the
-notebook."
-  (ein:testing-notebook-make-new
-   nil nil
-   (mapcar (lambda (outputs)
-             (ein:testing-codecell-data
-              nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))
-           list-outputs)))
-
 (defun ein:testing-assert-cell-output-num (cell num-outputs)
   (should (ein:codecell-p cell))
   (should (= (length (oref cell :outputs)) num-outputs)))
