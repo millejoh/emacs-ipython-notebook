@@ -239,9 +239,11 @@ Current buffer for these functions is set to the notebook buffer.")
 (defun ein:notebook-close-worksheet (notebook ws)
   "Close worksheet WS in NOTEBOOK.  If WS is the last worksheet,
 call notebook destructor `ein:notebook-del'."
-  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook)))
+  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
+                    (scratchsheets (ein:$notebook-scratchsheets notebook)))
     (setq worksheets (delq ws worksheets))
-    (unless worksheets
+    (setq scratchsheets (delq ws scratchsheets))
+    (unless (or worksheets scratchsheets)
       (ein:notebook-del notebook))))
 
 
