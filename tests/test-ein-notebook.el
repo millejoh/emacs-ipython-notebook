@@ -150,6 +150,15 @@ is not found."
   (when (listp ein:testing-notebook-del-args-log)
     (push (ad-get-args 0) ein:testing-notebook-del-args-log)))
 
+(defun ein:testing-assert-notebook-del-not-called ()
+  (should-not ein:testing-notebook-del-args-log))
+
+(defun ein:testing-assert-notebook-del-called-once ()
+  (should (= (length ein:testing-notebook-del-args-log) 1))
+  (mapc (lambda (arg) (should (= (length arg) 1)))
+        ein:testing-notebook-del-args-log)
+  (should (eq (caar ein:testing-notebook-del-args-log) notebook)))
+
 (defun ein:testing-notebook-close-worksheet-open-and-close (num-open num-close)
   (should (> num-open 0))
   (let ((notebook (buffer-local-value 'ein:%notebook%
@@ -167,12 +176,9 @@ is not found."
         (ein:notebook-close-worksheet notebook (car ws-list)))
       ;; Actual tests:
       (should (= (length ws-list) (- num-open num-close)))
-      (if (not (= num-open num-close))
-          (should-not ein:testing-notebook-del-args-log)
-        (should (= (length ein:testing-notebook-del-args-log) 1))
-        (mapc (lambda (arg) (should (= (length arg) 1)))
-              ein:testing-notebook-del-args-log)
-        (should (eq (caar ein:testing-notebook-del-args-log) notebook))))))
+      (if (= num-open num-close)
+          (ein:testing-assert-notebook-del-called-once)
+        (ein:testing-assert-notebook-del-not-called)))))
 
 (ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
   (ein:testing-notebook-close-worksheet-open-and-close 1 1))
