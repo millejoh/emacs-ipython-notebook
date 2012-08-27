@@ -9,10 +9,14 @@
 (defun eintest:assert-keymap-fboundp (keymap)
   (let (assert-fboundp)
     (setq assert-fboundp
-          (lambda (event value) (if (keymapp value)
-                                    (map-keymap assert-fboundp value)
-                                  (when value ; nil is also valid in keymap
-                                    (should (commandp value))))))
+          (lambda (event value)
+            (cond
+             ((keymapp value)
+              (map-keymap assert-fboundp value))
+             ((and (listp value) (eq (car value) 'menu-item))
+              (funcall assert-fboundp (cadr value) (caddr value)))
+             (value  ; nil is also valid in keymap
+              (should (commandp value))))))
     (map-keymap assert-fboundp keymap)))
 
 (defmacro eintest:test-keymap (keymap)
