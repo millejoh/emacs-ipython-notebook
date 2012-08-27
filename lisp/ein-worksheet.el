@@ -73,10 +73,6 @@
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   (with-slots (events) ws
-    (ein:events-on events
-                   'set_next_input.Worksheet
-                   #'ein:worksheet--set-next-input
-                   ws)
     ;; Bind events for sub components:
     (ein:notification-bind-events (oref ws :notification) events)
     (mapc (lambda (cell) (oset cell :events events))
@@ -84,16 +80,18 @@
 
 (defun ein:worksheet-class-bind-events (events)
   "Binds event handlers which are not needed to be bound per instance."
+  (ein:events-on events 'set_next_input.Worksheet
+                 #'ein:worksheet--set-next-input)
   (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
 
-(defmethod ein:worksheet--set-next-input ((ws ein:worksheet) data)
+(defun ein:worksheet--set-next-input (-ignore- data)
   (destructuring-bind (&key cell text) data
-    (if (eq (oref cell :ewoc) (oref ws :ewoc)) ; CELL is in this WS
-        (let ((new-cell (ein:worksheet-insert-cell-below ws 'code cell)))
-          (ein:cell-set-text new-cell text)
-          (oset ws :dirty t))
-      (ein:log 'debug
-        "WORKSHEET--SET-NEXT-INPUT: CELL is not in this buffer."))))
+    (ein:with-live-buffer (ein:cell-buffer cell)
+      (ein:and-let* ((ws ein:%worksheet%)
+                     (new-cell
+                      (ein:worksheet-insert-cell-below ws 'code cell)))
+        (ein:cell-set-text new-cell text)
+        (oset ws :dirty t)))))
 
 (defun ein:worksheet--set-dirty (-ignore- data)
   "Set dirty flag of worksheet in which CELL in DATA locates."
