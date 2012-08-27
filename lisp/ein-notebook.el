@@ -636,6 +636,7 @@ as usual."
              notebook
              (ein:$notebook-kernel notebook)
              (ein:$notebook-events notebook))))
+    (push ss (ein:$notebook-scratchsheets notebook))
     (ein:worksheet-render ss)
     (with-current-buffer (ein:worksheet-buffer ss)
       (setq ein:%notebook% notebook))
