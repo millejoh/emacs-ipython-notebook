@@ -770,16 +770,22 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ,@(ein:generate-menu
-         '(("Execute cell" ein:worksheet-execute-cell)
+         '(("Execute cell" ein:worksheet-execute-cell
+            :active (ein:worksheet-at-codecell-p))
            ("Execute cell and go to next"
-            ein:worksheet-execute-cell-and-goto-next)
+            ein:worksheet-execute-cell-and-goto-next
+            :active (ein:worksheet-at-codecell-p))
            ("Execute cell and insert below"
-            ein:worksheet-execute-cell-and-insert-below)
-           ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec)
-           ("Toggle output visibility" ein:worksheet-toggle-output)
+            ein:worksheet-execute-cell-and-insert-below
+            :active (ein:worksheet-at-codecell-p))
+           ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
+            :active (ein:worksheet-at-codecell-p))
+           ("Toggle output visibility" ein:worksheet-toggle-output
+            :active (ein:worksheet-at-codecell-p))
            ("Set output visibility of all cells"
             ein:worksheet-set-output-visibility-all)
-           ("Discard output" ein:worksheet-clear-output)
+           ("Discard output" ein:worksheet-clear-output
+            :active (ein:worksheet-at-codecell-p))
            ("Discard output of all cells" ein:worksheet-clear-all-output)
            ("Kill cell" ein:worksheet-kill-cell)
            ("Copy cell" ein:worksheet-copy-cell)
@@ -796,7 +802,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
            ("Move cell down" ein:worksheet-move-cell-down)
            ("Show help of the object at point"
             ein:pytools-request-tooltip-or-help)
-           ("Complete code" ein:completer-complete)
+           ("Complete code" ein:completer-complete
+            :active (ein:worksheet-at-codecell-p))
            ("Restart kernel" ein:notebook-restart-kernel-command)
            ("Interrupt kernel" ein:notebook-kernel-interrupt-command)
            ("Kill kernel then close notebook"
