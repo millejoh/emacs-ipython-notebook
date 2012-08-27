@@ -218,12 +218,18 @@ Current buffer for these functions is set to the notebook buffer.")
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
+
+;;; Constructor
+
 (defun ein:notebook-new (url-or-port notebook-id &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
                          :notebook-id notebook-id
                          args)))
     notebook))
+
+
+;;; Destructor
 
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
@@ -237,6 +243,9 @@ call notebook destructor `ein:notebook-del'."
     (setq worksheets (delq ws worksheets))
     (unless worksheets
       (ein:notebook-del notebook))))
+
+
+;;; Notebook utility functions
 
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
@@ -257,6 +266,9 @@ will be updated with kernel's cwd."
   (or ein:%notebook% (error "Not in notebook buffer.")))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
+
+
+;;; Open notebook
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
@@ -459,7 +471,7 @@ This is equivalent to do ``C-c`` in the console program."
   'ein:shared-output-eval-string "0.1.2")
 
 
-;;; Persistance and loading
+;;; Persistence and loading
 
 (defun ein:notebook-set-notebook-name (notebook name)
   "Check NAME and change the name of NOTEBOOK to it."
