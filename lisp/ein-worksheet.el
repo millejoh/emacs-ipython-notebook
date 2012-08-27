@@ -97,7 +97,7 @@
   "Set dirty flag of worksheet in which CELL in DATA locates."
   (destructuring-bind (&key value cell) data
     (ein:with-live-buffer (ein:cell-buffer cell)
-      (oset ein:%worksheet% :dirty value))))
+      (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:notebook-name (oref ws :notebook)))
