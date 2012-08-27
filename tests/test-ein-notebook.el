@@ -141,6 +141,49 @@ is not found."
             do (should (= (oref cell :level) level))))))
 
 
+;;; Destructor
+
+(defvar ein:testing-notebook-del-args-log 'nolog)
+
+(defadvice ein:notebook-del (before ein:testing-notebook-del activate)
+  "Log argument passed to"
+  (when (listp ein:testing-notebook-del-args-log)
+    (push (ad-get-args 0) ein:testing-notebook-del-args-log)))
+
+(defun ein:testing-notebook-close-worksheet-open-and-close (num-open num-close)
+  (should (> num-open 0))
+  (let ((notebook (buffer-local-value 'ein:%notebook%
+                                      (ein:testing-notebook-make-empty)))
+        ein:testing-notebook-del-args-log)
+    (symbol-macrolet ((ws-list (ein:$notebook-worksheets notebook)))
+      ;; Add worksheets.  They can be just empty instance for this test.
+      (dotimes (_ (1- num-open))
+        (setq ws-list (append ws-list (list (make-instance 'ein:worksheet)))))
+      ;; Make sure adding worksheet work.
+      (should (= (length ws-list) num-open))
+      (mapc (lambda (ws) (should (ein:worksheet-p ws))) ws-list)
+      ;; Close worksheets
+      (dotimes (_ num-close)
+        (ein:notebook-close-worksheet notebook (car ws-list)))
+      ;; Actual tests:
+      (should (= (length ws-list) (- num-open num-close)))
+      (if (not (= num-open num-close))
+          (should-not ein:testing-notebook-del-args-log)
+        (should (= (length ein:testing-notebook-del-args-log) 1))
+        (mapc (lambda (arg) (should (= (length arg) 1)))
+              ein:testing-notebook-del-args-log)
+        (should (eq (caar ein:testing-notebook-del-args-log) notebook))))))
+
+(ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
+  (ein:testing-notebook-close-worksheet-open-and-close 1 1))
+
+(ert-deftest ein:notebook-close-worksheet/open-two-close-two ()
+  (ein:testing-notebook-close-worksheet-open-and-close 2 2))
+
+(ert-deftest ein:notebook-close-worksheet/open-two-close-one ()
+  (ein:testing-notebook-close-worksheet-open-and-close 2 1))
+
+
 ;; Notebook commands
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
