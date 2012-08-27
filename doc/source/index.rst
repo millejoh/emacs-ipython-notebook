@@ -498,6 +498,7 @@ Change Log
 v0.2
 ----
 
+* Menu support in notebook mode.
 * Auto-connection support.
   The new function :el:symbol:`ein:connect-to-default-notebook` can be
   added to :el:symbol:`python-mode-hook` to automatically connect

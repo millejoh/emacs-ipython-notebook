@@ -499,6 +499,25 @@ Use `ein:log' for debugging and logging."
   ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
   (display-warning 'ein message level))
 
+(defun ein:get-docstring (function)
+  "Return docstring of FUNCTION."
+  ;; Borrowed from `ac-symbol-documentation'.
+  (with-temp-buffer
+    ;; import help-xref-following
+    (require 'help-mode)
+    (erase-buffer)
+    (let ((standard-output (current-buffer))
+          (help-xref-following t)
+          (major-mode 'help-mode)) ; avoid error in Emacs 24
+      (describe-function-1 function))
+    (buffer-string)))
+
+(defun ein:generate-menu (list-name-callback)
+  (mapcar (lambda (name-callback)
+            (destructuring-bind (name callback &rest args) name-callback
+              `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
+          list-name-callback))
+
 
 ;;; Generic getter
 

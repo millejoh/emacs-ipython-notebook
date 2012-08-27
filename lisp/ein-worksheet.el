@@ -225,6 +225,9 @@ buffer or there is no cell in the current buffer, return `nil'."
       (unless noerror
         (error "No cell found at pos=%s" pos)))))
 
+(defun ein:worksheet-at-codecell-p ()
+  (ein:worksheet-get-current-cell :noerror t :cell-p #'ein:codecell-p))
+
 (defun ein:worksheet-get-cells-in-region (beg end)
   (ein:clip-list (ein:aand ein:%worksheet% (ein:worksheet-get-cells it))
                  (ein:worksheet-get-current-cell :pos beg)
