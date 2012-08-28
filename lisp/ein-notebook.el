@@ -451,9 +451,12 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun* ein:notebook--worksheet-new (notebook
                                      &optional (func #'ein:worksheet-new))
-  (funcall func notebook
+  (funcall func
            (ein:$notebook-nbformat notebook)
            (ein:notebook-name-getter notebook)
+           (cons (lambda (notebook cell)
+                   (ein:notebook-discard-output-p notebook cell))
+                 notebook)
            (ein:$notebook-kernel notebook)
            (ein:$notebook-events notebook)))
 

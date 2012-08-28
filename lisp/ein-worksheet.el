@@ -35,8 +35,6 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 
-(declare-function ein:notebook-discard-output-p "ein-notebook")
-
 
 ;;; Configuration
 
@@ -80,10 +78,9 @@ this value."
 (defvar ein:worksheet-buffer-name-template "*ein: %s/%s*")
 
 (defclass ein:worksheet ()
-  (;; Recursive reference to notebook... but needs notebook name here.
-   (notebook :initarg :notebook :type ein:$notebook)
-   (nbformat :initarg :nbformat :type integer)
+  ((nbformat :initarg :nbformat :type integer)
    (get-notebook-name :initarg :get-notebook-name :type cons)
+   (discard-output-p :initarg :discard-output-p)
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
@@ -98,11 +95,11 @@ this value."
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook nbformat get-notebook-name
+(defun ein:worksheet-new (nbformat get-notebook-name discard-output-p
                                    kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
          :nbformat nbformat :get-notebook-name get-notebook-name
-         :notebook notebook :kernel kernel :events events
+         :discard-output-p discard-output-p :kernel kernel :events events
          args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
@@ -216,10 +213,10 @@ this value."
   ws)
 
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
-  (let* ((notebook (oref ws :notebook))
+  (let* ((discard-output-p (oref ws :discard-output-p))
          (cells (mapcar (lambda (c)
                           (ein:cell-to-json
-                           c (ein:notebook-discard-output-p notebook c)))
+                           c (ein:funcall-packed discard-output-p c)))
                         (ein:worksheet-get-cells ws))))
     `((cells . ,(apply #'vector cells)))))
 
@@ -736,9 +733,6 @@ in the history."
 (defun ein:get-url-or-port--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%)
     (ein:worksheet-url-or-port ein:%worksheet%)))
-
-(defun ein:get-notebook--worksheet ()
-  (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :notebook)))
 
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))

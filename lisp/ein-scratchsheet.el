@@ -37,11 +37,11 @@
   :documentation
   "Worksheet without needs for saving.")
 
-(defun ein:scratchsheet-new (notebook nbformat get-notebook-name
+(defun ein:scratchsheet-new (nbformat get-notebook-name discard-output-p
                                       kernel events &rest args)
   (apply #'make-instance 'ein:scratchsheet
          :nbformat nbformat :get-notebook-name get-notebook-name
-         :notebook notebook :kernel kernel :events events
+         :discard-output-p discard-output-p :kernel kernel :events events
          args))
 
 (defmethod ein:worksheet--buffer-name ((ws ein:scratchsheet))
