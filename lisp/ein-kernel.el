@@ -28,8 +28,8 @@
 (eval-when-compile (require 'cl))
 (require 'ansi-color)
 
+(require 'ein-core)
 (require 'ein-log)
-(require 'ein-utils)
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)

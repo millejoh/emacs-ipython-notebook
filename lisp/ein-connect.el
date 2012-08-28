@@ -33,7 +33,6 @@
 (require 'eieio)
 (eval-when-compile (require 'auto-complete nil t))
 
-(require 'ein)
 (require 'ein-notebook)
 
 (declare-function ein:notebooklist-list-notebooks "ein-notebooklist")

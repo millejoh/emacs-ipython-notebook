@@ -36,8 +36,8 @@
 (require 'ansi-color)
 (require 'comint)
 
+(require 'ein-core)
 (require 'ein-log)
-(require 'ein-utils)
 (require 'ein-node)
 (require 'ein-kernel)
 

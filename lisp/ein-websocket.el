@@ -28,7 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'websocket)
 
-(require 'ein-utils)
+(require 'ein-core)
 
 
 (defstruct ein:$websocket

@@ -28,7 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'auto-complete nil t)
 
-(require 'ein-utils)
+(require 'ein-core)
 (eval-when-compile (require 'ein-notebook)
                    (defvar ein:mumamo-codecell-mode))
 

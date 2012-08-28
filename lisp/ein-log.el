@@ -26,7 +26,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'ein-utils)
+(require 'ein-core)
 
 
 (defvar ein:log-all-buffer-name " *ein:log-all*")
