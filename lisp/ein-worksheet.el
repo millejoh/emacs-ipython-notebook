@@ -655,23 +655,23 @@ cell bellow."
    :start (- index)
    :stop (- 1 index)))
 
-(defvar ein:worksheet--history-index 0)
+(defvar ein:worksheet--history-index 1)
 
 (defun ein:worksheet--get-history-index (inc)
   "Increment history index by (possibly negative) INC.
 Get history index for `ein:worksheet-previous-input-history' and
 `ein:worksheet-next-input-history'.  Raise error if caller tries
-to decrement to the negative index."
+to decrement index to less than or equal to 1."
   (if (or (eq last-command 'ein:worksheet-previous-input-history)
           (eq last-command 'ein:worksheet-next-input-history))
       (progn
         (setq ein:worksheet--history-index
               (+ ein:worksheet--history-index inc))
-        (when (< ein:worksheet--history-index 0)
-          (setq ein:worksheet--history-index 0)
+        (when (< ein:worksheet--history-index 1)
+          (setq ein:worksheet--history-index 1)
           (error "This is the latest input"))
         ein:worksheet--history-index)
-    (setq ein:worksheet--history-index 0)))
+    (setq ein:worksheet--history-index 1)))
 
 (defun ein:worksheet-previous-input-history (ws cell index)
   "Insert the previous input in the execution history.
