@@ -35,13 +35,14 @@
 (require 'ein-query)
 
 
+;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
+;;        testing since I can mock I/O using method overriding.
 (defstruct ein:$kernel
   "Hold kernel variables.
 
 `ein:$kernel-url-or-port'
   URL or port of IPython server.
-
-FIXME: document other slots."
+"
   url-or-port
   events
   kernel-id
@@ -54,6 +55,7 @@ FIXME: document other slots."
   username
   session-id
   msg-callbacks
+  ;; FIXME: Use event instead of hook.
   after-start-hook
   after-execute-hook)
 
