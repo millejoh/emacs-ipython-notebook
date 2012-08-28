@@ -243,6 +243,9 @@ will be updated with kernel's cwd."
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
+(defun ein:notebook-name-getter (notebook)
+  (cons #'ein:notebook-name notebook))
+
 
 ;;; Open notebook
 
@@ -450,6 +453,7 @@ This is equivalent to do ``C-c`` in the console program."
                                      &optional (func #'ein:worksheet-new))
   (funcall func notebook
            (ein:$notebook-nbformat notebook)
+           (ein:notebook-name-getter notebook)
            (ein:$notebook-kernel notebook)
            (ein:$notebook-events notebook)))
 

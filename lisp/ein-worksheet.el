@@ -86,6 +86,7 @@ this value."
   (;; Recursive reference to notebook... but needs notebook name here.
    (notebook :initarg :notebook :type ein:$notebook)
    (nbformat :initarg :nbformat :type integer)
+   (get-notebook-name :initarg :get-notebook-name :type cons)
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
@@ -100,9 +101,10 @@ this value."
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook nbformat kernel events &rest args)
+(defun ein:worksheet-new (notebook nbformat get-notebook-name
+                                   kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
-         :nbformat nbformat
+         :nbformat nbformat :get-notebook-name get-notebook-name
          :notebook notebook :kernel kernel :events events
          args))
 
@@ -140,7 +142,7 @@ this value."
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
-  (ein:notebook-name (oref ws :notebook)))
+  (ein:funcall-packed (oref ws :get-notebook-name)))
 
 (defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
   (ein:$notebook-url-or-port (oref ws :notebook)))
