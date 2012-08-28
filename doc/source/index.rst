@@ -498,6 +498,7 @@ Change Log
 v0.2
 ----
 
+* Add :el:symbol:`ein:pseudo-console-mode`.
 * Add "scratch sheet".  This acts almost as same as worksheet, but you
   don't need to save it.  You can use try any code without saving
   junks in your notebook.  Use the command

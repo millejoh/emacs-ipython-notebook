@@ -866,6 +866,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
            ("Open scratch sheet" ein:notebook-scratchsheet-open)))
       ["Popup traceback viewer" ein:tb-show
        :help "Show full traceback in different buffer"]
+      ["Toggle pseudo console mode" ein:pseudo-console-mode
+       :help "Hit RET to execute code"]
       ["Evaluate code in minibuffer" ein:shared-output-eval-string
        :help "Result will appear in the shared output buffer"]
       ["Show code cell with full output"

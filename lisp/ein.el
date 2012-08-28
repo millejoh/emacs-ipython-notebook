@@ -64,6 +64,8 @@
 
 (autoload 'ein:console-open "ein-console" nil t)
 
+(autoload 'ein:pseudo-console-mode "ein-pseudo-console" nil t)
+
 (autoload 'ein:connect-to-notebook-command "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook         "ein-connect" nil t)
 (autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
