@@ -45,6 +45,7 @@
 (require 'ein-cell)
 (require 'ein-worksheet)
 (require 'ein-scratchsheet)
+(require 'ein-notification)
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
@@ -463,6 +464,8 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
+    (ein:notification-bind-events (ein:notification-setup (current-buffer))
+                                  (ein:$notebook-events notebook))
     (ein:notebook-setup-kill-buffer-hook)
     (setq ein:%notebook% notebook)))
 

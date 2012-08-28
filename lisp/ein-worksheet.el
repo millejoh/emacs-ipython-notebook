@@ -32,7 +32,6 @@
 
 (require 'ein-core)
 (require 'ein-cell)
-(require 'ein-notification)
 (require 'ein-kill-ring)
 
 
@@ -89,8 +88,7 @@ this value."
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
-   (events :initarg :events)
-   (notification :initarg :notification)))
+   (events :initarg :events)))
 
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
@@ -108,7 +106,6 @@ this value."
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   (with-slots (events) ws
     ;; Bind events for sub components:
-    (ein:notification-bind-events (oref ws :notification) events)
     (mapc (lambda (cell) (oset cell :events events))
           (ein:worksheet-get-cells ws))))
 
@@ -197,7 +194,6 @@ this value."
     (setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
-    (oset ws :notification (ein:notification-setup (current-buffer)))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
