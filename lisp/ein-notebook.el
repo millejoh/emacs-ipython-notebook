@@ -361,13 +361,6 @@ of minor mode."
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
   (ein:worksheet-class-bind-events events)
-  ;; As calling multiple callbacks for this event does not make sense,
-  ;; I amadding this in notebook instead of worksheet.
-  (ein:events-on events
-                 'maybe_reset_undo.Notebook
-                 (lambda (-ignore- cell)
-                   (ein:with-live-buffer (ein:cell-buffer cell)
-                     (ein:notebook-empty-undo-maybe))))
   ;; Bind events for sub components:
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new
