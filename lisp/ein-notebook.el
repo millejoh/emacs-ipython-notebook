@@ -71,6 +71,8 @@ a function
 
 Note that using function needs EIN lisp API, which is not determined
 yet.  So be careful when using EIN functions.  They may change."
+  ;; FIXME: Change call signature of the function.  Like this:
+  ;;          (funcall FUNC :cell cell :worksheet ws :notebook notebook)
   :type '(choice (const :tag "No" 'no)
                  (const :tag "Yes" 'yes)
                  ;; FIXME: this must be go to the customize UI after
