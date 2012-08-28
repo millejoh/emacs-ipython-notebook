@@ -28,8 +28,8 @@
 (eval-when-compile (require 'cl))
 (require 'eieio)
 
+(require 'ein-core)
 (require 'ein-log)
-(require 'ein-utils)
 
 
 ;;; Events handling class

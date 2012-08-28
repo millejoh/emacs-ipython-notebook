@@ -28,7 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'url)
 
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-log)
 
 

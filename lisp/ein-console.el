@@ -26,8 +26,7 @@
 ;;; Code:
 
 
-(require 'ein)
-(require 'ein-utils)
+(require 'ein-core)
 
 ;; Functions from `Fabian Gallina's python.el`_
 ;; NOTE: Do *not* load python.el here, since user may be using the other

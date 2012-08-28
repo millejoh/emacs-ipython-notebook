@@ -37,7 +37,7 @@
 (require 'ewoc)
 (eval-when-compile (require 'auto-complete nil t))
 
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-kernel)

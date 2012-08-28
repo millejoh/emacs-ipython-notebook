@@ -27,8 +27,7 @@
 
 (declare-function ac-cursor-on-diable-face-p "auto-complete")
 
-(require 'ein)
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
 (require 'ein-kernel)

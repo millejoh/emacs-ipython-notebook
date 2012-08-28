@@ -28,7 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'widget)
 
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-notebook)
 (require 'ein-subpackages)
 

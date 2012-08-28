@@ -31,7 +31,6 @@
 (declare-function ses-yank-tsf "ses")
 (declare-function ses-command-hook "ses")
 
-(require 'ein)
 (require 'ein-kernel)
 
 (defun ein:goto-file (filename lineno &optional other-window)

@@ -27,7 +27,7 @@
 
 (require 'ansi-color)
 
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-events)
 
 (defun ein:pager-new (name events)

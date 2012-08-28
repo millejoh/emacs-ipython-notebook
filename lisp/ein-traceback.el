@@ -30,8 +30,7 @@
 (require 'ewoc)
 (require 'ansi-color)
 
-(require 'ein)
-(require 'ein-utils)
+(require 'ein-core)
 
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)

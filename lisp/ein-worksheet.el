@@ -30,8 +30,7 @@
 (require 'eieio)
 (require 'ewoc)
 
-(require 'ein)
-(require 'ein-utils)
+(require 'ein-core)
 (require 'ein-cell)
 (require 'ein-notification)
 (require 'ein-kill-ring)

@@ -28,7 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'ewoc)
 
-(require 'ein-utils)
+(require 'ein-core)
 
 
 (defstruct ein:$node
