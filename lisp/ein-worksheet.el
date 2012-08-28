@@ -634,6 +634,7 @@ cell bellow."
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 (defun ein:worksheet-insert-last-input-history (ws cell index)
+  "Insert INDEX-th previous history into CELL in worksheet WS."
   (ein:kernel-history-request
    (oref ws :kernel)
    (list
@@ -657,6 +658,10 @@ cell bellow."
 (defvar ein:worksheet--history-index 0)
 
 (defun ein:worksheet--get-history-index (inc)
+  "Increment history index by (possibly negative) INC.
+Get history index for `ein:worksheet-previous-input-history' and
+`ein:worksheet-next-input-history'.  Raise error if caller tries
+to decrement to the negative index."
   (if (or (eq last-command 'ein:worksheet-previous-input-history)
           (eq last-command 'ein:worksheet-next-input-history))
       (progn
@@ -669,12 +674,20 @@ cell bellow."
     (setq ein:worksheet--history-index 0)))
 
 (defun ein:worksheet-previous-input-history (ws cell index)
+  "Insert the previous input in the execution history.
+You can go back further in the history by repeating this command.
+Use `ein:worksheet-previous-input-history' to go forward in the
+history."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      (ein:worksheet--get-history-index +1)))
   (ein:worksheet-insert-last-input-history ws cell index))
 
 (defun ein:worksheet-next-input-history (ws cell index)
+  "Insert next input in the execution history.
+You can go forward further in the history by repeating this
+command.  Use `ein:worksheet-next-input-history' to go back in
+the history."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      (ein:worksheet--get-history-index -1)))
