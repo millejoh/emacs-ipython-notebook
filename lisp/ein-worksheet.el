@@ -676,7 +676,7 @@ to decrement to the negative index."
 (defun ein:worksheet-previous-input-history (ws cell index)
   "Insert the previous input in the execution history.
 You can go back further in the history by repeating this command.
-Use `ein:worksheet-previous-input-history' to go forward in the
+Use `ein:worksheet-next-input-history' to go forward in the
 history."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
@@ -686,8 +686,8 @@ history."
 (defun ein:worksheet-next-input-history (ws cell index)
   "Insert next input in the execution history.
 You can go forward further in the history by repeating this
-command.  Use `ein:worksheet-next-input-history' to go back in
-the history."
+command.  Use `ein:worksheet-previous-input-history' to go back
+in the history."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      (ein:worksheet--get-history-index -1)))
