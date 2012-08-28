@@ -153,7 +153,7 @@ is not found."
 (defun ein:testing-assert-notebook-del-not-called ()
   (should-not ein:testing-notebook-del-args-log))
 
-(defun ein:testing-assert-notebook-del-called-once ()
+(defun ein:testing-assert-notebook-del-called-once-with (notebook)
   (should (= (length ein:testing-notebook-del-args-log) 1))
   (mapc (lambda (arg) (should (= (length arg) 1)))
         ein:testing-notebook-del-args-log)
@@ -177,7 +177,7 @@ is not found."
       ;; Actual tests:
       (should (= (length ws-list) (- num-open num-close)))
       (if (= num-open num-close)
-          (ein:testing-assert-notebook-del-called-once)
+          (ein:testing-assert-notebook-del-called-once-with notebook)
         (ein:testing-assert-notebook-del-not-called)))))
 
 (ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
@@ -485,8 +485,8 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
   (with-current-buffer (ein:testing-notebook-make-empty)
     ;; Prepare cells
     (ein:testing-insert-cells '(code code code))
-    (mapcar (lambda (cell) (ein:cell-set-collapsed cell nil))
-            (ein:worksheet-get-cells ein:%worksheet%))
+    (mapc (lambda (cell) (ein:cell-set-collapsed cell nil))
+          (ein:worksheet-get-cells ein:%worksheet%))
     ;; Call the command
     (call-interactively #'ein:worksheet-set-output-visibility-all)
     ;; Check it worked
@@ -678,7 +678,7 @@ defined."
       (should (= (length buffers) (+ num-ws num-ss)))
       (ein:notebook-close notebook)
       (mapc (lambda (b) (should-not (buffer-live-p b))) buffers)
-      (ein:testing-assert-notebook-del-called-once))))
+      (ein:testing-assert-notebook-del-called-once-with notebook))))
 
 (ert-deftest ein:notebook-close/one-ws-no-ss ()
   (ein:testin-notebook-close 1 0))
