@@ -864,6 +864,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
            ("Go back to the previous jump point"
             ein:pytools-jump-back-command)
            ("Open scratch sheet" ein:notebook-scratchsheet-open)))
+      ["Toggle instant cell execution mode" ein:iexec-mode
+       :help "Automatically executed code cell after any change."]
       ["Popup traceback viewer" ein:tb-show
        :help "Show full traceback in different buffer"]
       ["Toggle pseudo console mode" ein:pseudo-console-mode
