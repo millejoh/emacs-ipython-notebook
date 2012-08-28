@@ -32,8 +32,11 @@
 (declare-function tramp-make-tramp-file-name "tramp")
 (declare-function tramp-file-name-localname "tramp")
 (declare-function tramp-dissect-file-name "tramp")
+
+
 (require 'ein)  ; get autoloaded functions into namespace
 (require 'ein-utils)
+
 
 (defgroup ein nil
   "IPython notebook client in Emacs"
@@ -106,7 +109,12 @@ pair of TO-PYTHON and FROM-PYTHON."
           (function :tag "Translations getter"))
   :group 'ein)
 
-(defvar ein:source-dir (file-name-directory load-file-name))
+
+
+;;; Constants
+
+(defvar ein:source-dir (file-name-directory load-file-name)
+  "Directory in which ``ein*.el`` locate.")
 
 
 
