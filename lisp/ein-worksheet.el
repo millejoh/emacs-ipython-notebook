@@ -35,7 +35,6 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 
-(declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
@@ -145,7 +144,7 @@ this value."
   (ein:funcall-packed (oref ws :get-notebook-name)))
 
 (defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
-  (ein:$notebook-url-or-port (oref ws :notebook)))
+  (ein:kernel-url-or-port (oref ws :kernel)))
 
 (defmethod ein:worksheet-name ((ws ein:worksheet))
   (plist-get (oref ws :metadata) :name))
