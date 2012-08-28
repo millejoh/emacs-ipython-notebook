@@ -906,7 +906,7 @@ value of `ein:notebook-enable-undo'."
                 (cell (ein:worksheet-get-current-cell)))
             (with-temp-buffer
               (should-not (equal buffer-undo-list '(dummy)))
-              (ein:events-trigger events 'maybe_reset_undo.Notebook cell))
+              (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))
             (if (eq ein:notebook-enable-undo 'yes)
                 (should (equal buffer-undo-list nil))
               (should (equal buffer-undo-list '(dummy))))))))

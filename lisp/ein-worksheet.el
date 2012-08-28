@@ -115,7 +115,7 @@ this value."
 (defun ein:worksheet-class-bind-events (events)
   "Binds event handlers which are not needed to be bound per instance."
   (ein:events-on events
-                 'maybe_reset_undo.Notebook
+                 'maybe_reset_undo.Worksheet
                  (lambda (-ignore- cell)
                    (ein:with-live-buffer (ein:cell-buffer cell)
                      (ein:worksheet-empty-undo-maybe))))
