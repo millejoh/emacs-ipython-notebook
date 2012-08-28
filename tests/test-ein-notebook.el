@@ -141,6 +141,55 @@ is not found."
             do (should (= (oref cell :level) level))))))
 
 
+;;; Destructor
+
+(defvar ein:testing-notebook-del-args-log 'nolog)
+
+(defadvice ein:notebook-del (before ein:testing-notebook-del activate)
+  "Log argument passed to"
+  (when (listp ein:testing-notebook-del-args-log)
+    (push (ad-get-args 0) ein:testing-notebook-del-args-log)))
+
+(defun ein:testing-assert-notebook-del-not-called ()
+  (should-not ein:testing-notebook-del-args-log))
+
+(defun ein:testing-assert-notebook-del-called-once ()
+  (should (= (length ein:testing-notebook-del-args-log) 1))
+  (mapc (lambda (arg) (should (= (length arg) 1)))
+        ein:testing-notebook-del-args-log)
+  (should (eq (caar ein:testing-notebook-del-args-log) notebook)))
+
+(defun ein:testing-notebook-close-worksheet-open-and-close (num-open num-close)
+  (should (> num-open 0))
+  (let ((notebook (buffer-local-value 'ein:%notebook%
+                                      (ein:testing-notebook-make-empty)))
+        ein:testing-notebook-del-args-log)
+    (symbol-macrolet ((ws-list (ein:$notebook-worksheets notebook)))
+      ;; Add worksheets.  They can be just empty instance for this test.
+      (dotimes (_ (1- num-open))
+        (setq ws-list (append ws-list (list (make-instance 'ein:worksheet)))))
+      ;; Make sure adding worksheet work.
+      (should (= (length ws-list) num-open))
+      (mapc (lambda (ws) (should (ein:worksheet-p ws))) ws-list)
+      ;; Close worksheets
+      (dotimes (_ num-close)
+        (ein:notebook-close-worksheet notebook (car ws-list)))
+      ;; Actual tests:
+      (should (= (length ws-list) (- num-open num-close)))
+      (if (= num-open num-close)
+          (ein:testing-assert-notebook-del-called-once)
+        (ein:testing-assert-notebook-del-not-called)))))
+
+(ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
+  (ein:testing-notebook-close-worksheet-open-and-close 1 1))
+
+(ert-deftest ein:notebook-close-worksheet/open-two-close-two ()
+  (ein:testing-notebook-close-worksheet-open-and-close 2 2))
+
+(ert-deftest ein:notebook-close-worksheet/open-two-close-one ()
+  (ein:testing-notebook-close-worksheet-open-and-close 2 1))
+
+
 ;; Notebook commands
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
@@ -477,18 +526,6 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     ;; Check it worked
     (ein:testing-test-output-visibility-all t)))
 
-(defun ein:testing-make-notebook-with-outputs (list-outputs)
-  "Make a new notebook with cells with output.
-LIST-OUTPUTS is a list of list of strings (pyout text).  Number
-of LIST-OUTPUTS equals to the number cells to be contained in the
-notebook."
-  (ein:testing-notebook-make-new
-   nil nil
-   (mapcar (lambda (outputs)
-             (ein:testing-codecell-data
-              nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))
-           list-outputs)))
-
 (defun ein:testing-assert-cell-output-num (cell num-outputs)
   (should (ein:codecell-p cell))
   (should (= (length (oref cell :outputs)) num-outputs)))
@@ -625,6 +662,32 @@ defined."
 (eintest:worksheet-execute-cell-and-*-deftest insert-below "code"     t   t  )
 (eintest:worksheet-execute-cell-and-*-deftest insert-below "markdown" nil t  )
 (eintest:worksheet-execute-cell-and-*-deftest insert-below "markdown" t   t  )
+
+
+;;; Persistence and loading
+
+(defun ein:testin-notebook-close (num-ws num-ss)
+  (should (= num-ws 1))             ; currently EIN only supports 1 WS
+  (should (>= num-ss 0))
+  (let ((notebook (buffer-local-value 'ein:%notebook%
+                                      (ein:testing-notebook-make-empty)))
+        ein:testing-notebook-del-args-log)
+    (dotimes (_ num-ss)
+      (ein:notebook-scratchsheet-new notebook))
+    (let ((buffers (ein:notebook-buffer-list notebook)))
+      (should (= (length buffers) (+ num-ws num-ss)))
+      (ein:notebook-close notebook)
+      (mapc (lambda (b) (should-not (buffer-live-p b))) buffers)
+      (ein:testing-assert-notebook-del-called-once))))
+
+(ert-deftest ein:notebook-close/one-ws-no-ss ()
+  (ein:testin-notebook-close 1 0))
+
+(ert-deftest ein:notebook-close/one-ws-one-ss ()
+  (ein:testin-notebook-close 1 1))
+
+(ert-deftest ein:notebook-close/one-ws-five-ss ()
+  (ein:testin-notebook-close 1 5))
 
 
 ;; Notebook undo
@@ -905,6 +968,42 @@ value of `ein:notebook-enable-undo'."
                   ((:input '("You have 1 unsaved notebook(s). Discard changes?")
                            :output t))))
       (should (ein:notebook-ask-before-kill-emacs)))))
+
+
+;;; Buffer and kill hooks
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/no-ein-buffer ()
+  (with-temp-buffer
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/new-notebook ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (call-interactively #'ein:worksheet-insert-cell-below)
+    (mocker-let ((y-or-n-p
+                  (prompt)
+                  ((:input '("You have unsaved changes. Discard changes?")
+                           :output t))))
+      (should (ein:notebook-ask-before-kill-buffer)))))
+
+(ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
+  (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
+    (with-current-buffer (ein:worksheet-buffer
+                          (ein:notebook-scratchsheet-open ein:%notebook%))
+      (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
+      (call-interactively #'ein:worksheet-insert-cell-below)
+      (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+      (should (ein:worksheet-modified-p ein:%worksheet%))
+      (mocker-let ((y-or-n-p (prompt) ()))
+        (should (ein:notebook-ask-before-kill-buffer))))
+    (should-not (ein:worksheet-modified-p ein:%worksheet%))
+    (mocker-let ((y-or-n-p (prompt) ()))
+      (should (ein:notebook-ask-before-kill-buffer)))))
 
 
 ;; Misc unit tests

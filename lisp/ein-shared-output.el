@@ -115,7 +115,7 @@
 
 (defun ein:shared-output-bind-events (events)
   "Add dummy event handlers."
-  (ein:events-on events 'set_dirty.Notebook #'ignore)
+  (ein:events-on events 'set_dirty.Worksheet #'ignore)
   (ein:events-on events 'maybe_reset_undo.Notebook #'ignore))
 
 (defun ein:shared-output-get-cell ()

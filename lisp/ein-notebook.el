@@ -44,6 +44,7 @@
 (require 'ein-kernelinfo)
 (require 'ein-cell)
 (require 'ein-worksheet)
+(require 'ein-scratchsheet)
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
@@ -193,6 +194,9 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-worksheets' : list of `ein:worksheet'
   List of worksheets.
+
+`ein:$notebook-scratchsheets' : list of `ein:worksheet'
+  List of scratch worksheets.
 "
   url-or-port
   notebook-id
@@ -206,6 +210,7 @@ Current buffer for these functions is set to the notebook buffer.")
   nbformat-minor
   events
   worksheets
+  scratchsheets
   )
 
 ;; FIXME: Remove `ein:%notebook%' when worksheet is fully implemented.
@@ -213,12 +218,18 @@ Current buffer for these functions is set to the notebook buffer.")
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
+
+;;; Constructor
+
 (defun ein:notebook-new (url-or-port notebook-id &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
                          :notebook-id notebook-id
                          args)))
     notebook))
+
+
+;;; Destructor
 
 (defun ein:notebook-del (notebook)
   "Destructor for `ein:$notebook'."
@@ -228,10 +239,15 @@ Current buffer for these functions is set to the notebook buffer.")
 (defun ein:notebook-close-worksheet (notebook ws)
   "Close worksheet WS in NOTEBOOK.  If WS is the last worksheet,
 call notebook destructor `ein:notebook-del'."
-  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook)))
+  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
+                    (scratchsheets (ein:$notebook-scratchsheets notebook)))
     (setq worksheets (delq ws worksheets))
-    (unless worksheets
+    (setq scratchsheets (delq ws scratchsheets))
+    (unless (or worksheets scratchsheets)
       (ein:notebook-del notebook))))
+
+
+;;; Notebook utility functions
 
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
@@ -243,10 +259,18 @@ call notebook destructor `ein:notebook-del'."
   "Return the buffers associated with NOTEBOOK's kernel.
 The buffer local variable `default-directory' of these buffers
 will be updated with kernel's cwd."
-  (ein:filter #'identity (mapcar #'ein:worksheet-buffer
-                                 (ein:$notebook-worksheets notebook))))
+  (ein:filter #'identity
+              (mapcar #'ein:worksheet-buffer
+                      (append (ein:$notebook-worksheets notebook)
+                              (ein:$notebook-scratchsheets notebook)))))
+
+(defun ein:notebook--get-nb-or-error ()
+  (or ein:%notebook% (error "Not in notebook buffer.")))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
+
+
+;;; Open notebook
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
@@ -362,15 +386,7 @@ of minor mode."
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
-  ;; As IPython support only supports whole-notebook saving, there is
-  ;; no need for finer-level `set_dirty.Notebook'.  Keep this until
-  ;; IPython supports finer-level saving.
-  (ein:events-on events
-                 'set_dirty.Notebook
-                 (lambda (notebook data)
-                   (setf (ein:$notebook-dirty notebook)
-                         (plist-get data :value)))
-                 notebook)
+  (ein:worksheet-class-bind-events events)
   ;; As calling multiple callbacks for this event does not make sense,
   ;; I amadding this in notebook instead of worksheet.
   (ein:events-on events
@@ -449,7 +465,7 @@ This is equivalent to do ``C-c`` in the console program."
   'ein:shared-output-eval-string "0.1.2")
 
 
-;;; Persistance and loading
+;;; Persistence and loading
 
 (defun ein:notebook-set-notebook-name (notebook name)
   "Check NAME and change the name of NOTEBOOK to it."
@@ -614,6 +630,38 @@ as usual."
         (ein:notebook-close ein:%notebook%)))))
 
 
+;;; Scratch sheet
+
+(defun ein:notebook-scratchsheet-new (notebook)
+  "Create new scratchsheet in NOTEBOOK."
+  (let ((ss (ein:scratchsheet-new
+             notebook
+             (ein:$notebook-kernel notebook)
+             (ein:$notebook-events notebook))))
+    (push ss (ein:$notebook-scratchsheets notebook))
+    (ein:worksheet-render ss)
+    (with-current-buffer (ein:worksheet-buffer ss)
+      (setq ein:%notebook% notebook))
+    ss))
+
+(defun ein:notebook-scratchsheet-open (notebook &optional new popup)
+  "Open \"scratch sheet\".
+Open a new one when prefix argument is given.
+Scratch sheet is almost identical to worksheet.  However, EIN
+will not save the buffer.  Use this buffer like of normal IPython
+console.  Note that you can always copy cells into the normal
+worksheet to save result."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     current-prefix-arg
+                     t))
+  (let ((ss (or (unless new
+                  (car (ein:$notebook-scratchsheets notebook)))
+                (ein:notebook-scratchsheet-new notebook))))
+    (when popup
+      (pop-to-buffer (ein:worksheet-buffer ss)))
+    ss))
+
+
 ;;; Opened notebooks
 
 (defvar ein:notebook--opened-map (make-hash-table :test 'equal)
@@ -767,6 +815,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ,@(ein:generate-menu
@@ -813,7 +862,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
            ("Rename notebook" ein:notebook-rename-command)
            ("Jump to definition" ein:pytools-jump-to-source-command)
            ("Go back to the previous jump point"
-            ein:pytools-jump-back-command)))
+            ein:pytools-jump-back-command)
+           ("Open scratch sheet" ein:notebook-scratchsheet-open)))
       ["Popup traceback viewer" ein:tb-show
        :help "Show full traceback in different buffer"]
       ["Evaluate code in minibuffer" ein:shared-output-eval-string
@@ -867,6 +917,7 @@ Note that print page is not supported in IPython 0.12.1."
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
   (not (and ein:notebook-kill-buffer-ask
+            (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
             (ein:notebook-modified-p)
             (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
 

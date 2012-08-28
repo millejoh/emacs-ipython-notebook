@@ -498,6 +498,10 @@ Change Log
 v0.2
 ----
 
+* Add "scratch sheet".  This acts almost as same as worksheet, but you
+  don't need to save it.  You can use try any code without saving
+  junks in your notebook.  Use the command
+  :el:symbol:`ein:notebook-scratchsheet-open` to open scratch sheet.
 * Menu support in notebook mode.
 * Auto-connection support.
   The new function :el:symbol:`ein:connect-to-default-notebook` can be
