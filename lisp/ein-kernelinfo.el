@@ -33,7 +33,6 @@
   ((kernel
     :initarg :kernel :type ein:$kernel
     :documentation "Kernel instance.")
-   ;; Probably it's better to use events for this kind of purpose?:
    (get-buffers
     :initarg :get-buffers
     :documentation "A packed function to get buffers associated

@@ -24,7 +24,20 @@
 
 ;;; Commentary:
 
-;; # Development
+;; Development
+;; ===========
+
+;; Event vs hook vs callback
+;; -------------------------
+;;
+;; * Use events (`ein:events') for calling (possibly multiple) functions
+;;   for its side effect.
+;; * Use hooks for global/configurable setting.
+;; * Use callback when caller needs returned value.
+;;   (e.g., `:get-buffers' slot in `ein:kernelinfo')
+
+;; Naming
+;; ------
 ;;
 ;; Variable named `ein:%VAR-NAME%' is a permanent buffer local
 ;; variable defined by `ein:deflocal'.  It is often an instance of a
