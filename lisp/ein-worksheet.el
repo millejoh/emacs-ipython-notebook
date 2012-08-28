@@ -35,13 +35,48 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 
-(eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
-(declare-function ein:notebook-empty-undo-maybe "ein-notebook")
+
+
+;;; Configuration
+
+(define-obsolete-variable-alias
+  'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
+
+(defcustom ein:worksheet-enable-undo 'yes
+  "Configure undo in notebook buffers.
+
+`no' : symbol
+    Do not use undo in notebook buffers.  It is the safest option.
+`yes' : symbol
+    Enable undo in notebook buffers.  You can't undo after
+    modification of cell (execution, add, remove, etc.).  This
+    is default.
+`full' : symbol
+    Enable full undo in notebook buffers.  It is powerful but
+    sometime (typically after the cell specific commands) undo
+    mess up notebook buffer.  Use it on your own risk.  When the
+    buffer is messed up, you can just redo and continue editing,
+    or save it once and reopen it if you want to be careful.
+
+You need to reopen the notebook buffer to reflect the change of
+this value."
+  :type '(choice (const :tag "No" no)
+                 (const :tag "Yes" yes)
+                 (const :tag "Full" full))
+  :group 'ein)
+
+
+;;; Configuration getter
+
+(defun ein:notebook-empty-undo-maybe ()
+  "Empty `buffer-undo-list' if `ein:worksheet-enable-undo' is `yes'."
+  (when (eq ein:worksheet-enable-undo 'yes)
+    (setq buffer-undo-list nil)))
 
 
 ;;; Class and variable
@@ -155,7 +190,7 @@
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
     (setq buffer-undo-list nil)  ; clear undo history
-    (when (eq ein:notebook-enable-undo 'no)
+    (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
     (ein:notebook-mode)
     (ein:notebook-setup-kill-buffer-hook)
