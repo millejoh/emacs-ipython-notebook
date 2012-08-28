@@ -36,7 +36,6 @@
 (require 'ein-kill-ring)
 
 (declare-function ein:$notebook-url-or-port "ein-notebook")
-(declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
@@ -86,6 +85,7 @@ this value."
 (defclass ein:worksheet ()
   (;; Recursive reference to notebook... but needs notebook name here.
    (notebook :initarg :notebook :type ein:$notebook)
+   (nbformat :initarg :nbformat :type integer)
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
@@ -100,8 +100,9 @@ this value."
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook kernel events &rest args)
+(defun ein:worksheet-new (notebook nbformat kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
+         :nbformat nbformat
          :notebook notebook :kernel kernel :events events
          args))
 
@@ -439,7 +440,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (ein:$notebook-nbformat (oref ws :notebook))
+  (let ((type (case (oref ws :nbformat)
                 (2 (ein:case-equal (oref cell :cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
@@ -465,7 +466,7 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (ein:$notebook-nbformat (oref ws :notebook))
+          (choices (case (oref ws :nbformat)
                      (2 "cm")
                      (3 "cmr123456")))
           (key (ein:ask-choice-char

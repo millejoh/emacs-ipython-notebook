@@ -458,6 +458,7 @@ This is equivalent to do ``C-c`` in the console program."
         (mapcar (lambda (ws-data)
                   (ein:worksheet-from-json (ein:worksheet-new
                                             notebook
+                                            (ein:$notebook-nbformat notebook)
                                             (ein:$notebook-kernel notebook)
                                             (ein:$notebook-events notebook))
                                            ws-data))
