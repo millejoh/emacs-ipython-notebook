@@ -56,34 +56,6 @@
 
 ;;; Configuration
 
-(defcustom ein:notebook-enable-undo 'yes
-  "Configure undo in notebook buffers.
-
-`no' : symbol
-    Do not use undo in notebook buffers.  It is the safest option.
-`yes' : symbol
-    Enable undo in notebook buffers.  You can't undo after
-    modification of cell (execution, add, remove, etc.).  This
-    is default.
-`full' : symbol
-    Enable full undo in notebook buffers.  It is powerful but
-    sometime (typically after the cell specific commands) undo
-    mess up notebook buffer.  Use it on your own risk.  When the
-    buffer is messed up, you can just redo and continue editing,
-    or save it once and reopen it if you want to be careful.
-
-You need to reopen the notebook buffer to reflect the change of
-this value."
-  :type '(choice (const :tag "No" no)
-                 (const :tag "Yes" yes)
-                 (const :tag "Full" full))
-  :group 'ein)
-
-(defun ein:notebook-empty-undo-maybe ()
-  "Empty `buffer-undo-list' if `ein:notebook-enable-undo' is `yes'."
-  (when (eq ein:notebook-enable-undo 'yes)
-    (setq buffer-undo-list nil)))
-
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
@@ -99,6 +71,8 @@ a function
 
 Note that using function needs EIN lisp API, which is not determined
 yet.  So be careful when using EIN functions.  They may change."
+  ;; FIXME: Change call signature of the function.  Like this:
+  ;;          (funcall FUNC :cell cell :worksheet ws :notebook notebook)
   :type '(choice (const :tag "No" 'no)
                  (const :tag "Yes" 'yes)
                  ;; FIXME: this must be go to the customize UI after
@@ -387,13 +361,6 @@ of minor mode."
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
   (ein:worksheet-class-bind-events events)
-  ;; As calling multiple callbacks for this event does not make sense,
-  ;; I amadding this in notebook instead of worksheet.
-  (ein:events-on events
-                 'maybe_reset_undo.Notebook
-                 (lambda (-ignore- cell)
-                   (ein:with-live-buffer (ein:cell-buffer cell)
-                     (ein:notebook-empty-undo-maybe))))
   ;; Bind events for sub components:
   (setf (ein:$notebook-pager notebook)
         (ein:pager-new

@@ -35,13 +35,48 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 
-(eval-when-compile (defvar ein:notebook-enable-undo))
 (declare-function ein:$notebook-url-or-port "ein-notebook")
 (declare-function ein:$notebook-nbformat "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
 (declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
-(declare-function ein:notebook-empty-undo-maybe "ein-notebook")
+
+
+;;; Configuration
+
+(define-obsolete-variable-alias
+  'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
+
+(defcustom ein:worksheet-enable-undo 'yes
+  "Configure undo in notebook buffers.
+
+`no' : symbol
+    Do not use undo in notebook buffers.  It is the safest option.
+`yes' : symbol
+    Enable undo in notebook buffers.  You can't undo after
+    modification of cell (execution, add, remove, etc.).  This
+    is default.
+`full' : symbol
+    Enable full undo in notebook buffers.  It is powerful but
+    sometime (typically after the cell specific commands) undo
+    mess up notebook buffer.  Use it on your own risk.  When the
+    buffer is messed up, you can just redo and continue editing,
+    or save it once and reopen it if you want to be careful.
+
+You need to reopen the notebook buffer to reflect the change of
+this value."
+  :type '(choice (const :tag "No" no)
+                 (const :tag "Yes" yes)
+                 (const :tag "Full" full))
+  :group 'ein)
+
+
+;;; Configuration getter
+
+(defun ein:worksheet-empty-undo-maybe ()
+  "Empty `buffer-undo-list' if `ein:worksheet-enable-undo' is `yes'."
+  (when (eq ein:worksheet-enable-undo 'yes)
+    (setq buffer-undo-list nil)))
 
 
 ;;; Class and variable
@@ -79,6 +114,11 @@
 
 (defun ein:worksheet-class-bind-events (events)
   "Binds event handlers which are not needed to be bound per instance."
+  (ein:events-on events
+                 'maybe_reset_undo.Worksheet
+                 (lambda (-ignore- cell)
+                   (ein:with-live-buffer (ein:cell-buffer cell)
+                     (ein:worksheet-empty-undo-maybe))))
   (ein:events-on events 'set_next_input.Worksheet
                  #'ein:worksheet--set-next-input)
   (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
@@ -155,7 +195,7 @@
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
     (setq buffer-undo-list nil)  ; clear undo history
-    (when (eq ein:notebook-enable-undo 'no)
+    (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
     (ein:notebook-mode)
     (ein:notebook-setup-kill-buffer-hook)
@@ -278,7 +318,7 @@ If you really want use this command, you can do something like this
            (oref ws :ewoc)
            (ein:cell-all-element cell)))
   (oset ws :dirty t)
-  (ein:notebook-empty-undo-maybe)
+  (ein:worksheet-empty-undo-maybe)
   (when focus (ein:worksheet-focus-cell)))
 
 (defun ein:worksheet-kill-cell (ws cells &optional focus)
@@ -363,7 +403,7 @@ after PIVOT and return the new cell."
       (ein:cell-insert-below pivot cell))
      (t (error
          "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
-    (ein:notebook-empty-undo-maybe)
+    (ein:worksheet-empty-undo-maybe)
     (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
@@ -387,7 +427,7 @@ See also: `ein:worksheet-insert-cell-below'."
           (ein:cell-enter-first cell))))
      (t (error
          "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
-    (ein:notebook-empty-undo-maybe)
+    (ein:worksheet-empty-undo-maybe)
     (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
@@ -412,7 +452,7 @@ directly."
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
         (oset new :kernel (oref ws :kernel)))
-      (ein:notebook-empty-undo-maybe)
+      (ein:worksheet-empty-undo-maybe)
       (when focus (ein:cell-goto new relpos)))))
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
@@ -445,7 +485,7 @@ an integer used only when the TYPE is \"heading\"."
       (oset new :kernel (oref ws :kernel)))
     (when level
       (ein:cell-change-level new level))
-    (ein:notebook-empty-undo-maybe)
+    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto new relpos))))
 
 (defun ein:worksheet-split-cell-at-point (ws cell &optional no-trim focus)
@@ -474,7 +514,7 @@ argument \(C-u)."
           (while (and (looking-at-p "\n") (< (point) end))
             (delete-char 1)))))
     (ein:cell-set-text new head)
-    (ein:notebook-empty-undo-maybe)
+    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto cell))))
 
 (defun ein:worksheet-merge-cell (ws cell &optional next focus)
@@ -495,7 +535,7 @@ If prefix is given, merge current cell into next cell."
     (save-excursion
       (goto-char (ein:cell-input-pos-min next-cell))
       (insert head "\n"))
-    (ein:notebook-empty-undo-maybe)
+    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto next-cell))))
 
 
@@ -560,7 +600,7 @@ This does not alter the actual data stored in the cell."
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:cell-toggle-output cell)
-  (ein:notebook-empty-undo-maybe)
+  (ein:worksheet-empty-undo-maybe)
   (oset ws :dirty t))
 
 (defun ein:worksheet-set-output-visibility-all (ws &optional collapsed)
@@ -570,7 +610,7 @@ This does not alter the actual data stored in the cell."
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:worksheet-get-cells ws))
-  (ein:notebook-empty-undo-maybe)
+  (ein:worksheet-empty-undo-maybe)
   (oset ws :dirty t))
 
 (defun ein:worksheet-clear-output (cell &optional preserve-input-prompt)
@@ -582,7 +622,7 @@ Do not clear input prompt when the prefix argument is given."
   (ein:cell-clear-output cell t t t)
   (unless preserve-input-prompt
     (ein:cell-set-input-prompt cell))
-  (ein:notebook-empty-undo-maybe))
+  (ein:worksheet-empty-undo-maybe))
 
 (defun ein:worksheet-clear-all-output (ws &optional preserve-input-prompt)
   "Clear output from all cells.

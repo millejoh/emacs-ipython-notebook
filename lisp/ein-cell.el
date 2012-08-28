@@ -909,13 +909,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-running-set cell nil)
   (let ((events (oref cell :events)))
     (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
-    (ein:events-trigger events 'maybe_reset_undo.Notebook cell)))
+    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
   (let ((events (oref cell :events)))
     (ein:events-trigger events 'set_next_input.Worksheet
                         (list :cell cell :text text))
-    (ein:events-trigger events 'maybe_reset_undo.Notebook cell)))
+    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
 
 
 
@@ -943,7 +943,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
        (plist-put json :traceback (plist-get content :traceback))))
     (ein:cell-append-output cell json t)
     ;; (oset cell :dirty t)
-    (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook cell)))
+    (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Worksheet cell)))
 
 
 (defun ein:output-area-convert-mime-types (json data)
@@ -967,7 +967,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                          (plist-get content :stdout)
                          (plist-get content :stderr)
                          (plist-get content :other))
-  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Notebook cell))
+  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Worksheet cell))
 
 
 ;;; Misc.
