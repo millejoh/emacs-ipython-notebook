@@ -399,6 +399,50 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
     msg-id))
 
 
+(defun* ein:kernel-history-request (kernel callbacks
+                                           &key
+                                           (output nil)
+                                           (raw t)
+                                           (hist-access-type "tail")
+                                           session
+                                           start
+                                           stop
+                                           (n 1)
+                                           pattern)
+  "Request execution history to KERNEL.
+
+When calling this method pass a CALLBACKS structure of the form:
+
+    (:history_reply (FUNCTION . ARGUMENT))
+
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `history_reply' message.
+
+`history_reply' message is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#history
+"
+  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (let* ((content (list
+                   :output (ein:json-any-to-bool output)
+                   :raw (ein:json-any-to-bool raw)
+                   :hist_access_type hist-access-type
+                   :session session
+                   :start start
+                   :stop stop
+                   :n n
+                   :pattern pattern))
+         (msg (ein:kernel--get-msg kernel "history_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:websocket-send
+     (ein:$kernel-shell-channel kernel)
+     (json-encode msg))
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    msg-id))
+
+
 (defun ein:kernel-interrupt (kernel)
   (when (ein:$kernel-running kernel)
     (ein:log 'info "Interrupting kernel")

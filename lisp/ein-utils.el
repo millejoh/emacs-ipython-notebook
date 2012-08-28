@@ -244,6 +244,9 @@ See: http://api.jquery.com/jQuery.ajax/"
   (ein:with-json-setting
    (json-read-from-string string)))
 
+(defun ein:json-any-to-bool (obj)
+  (if (and obj (not (eq obj json-false))) t json-false))
+
 (defun ein:json-encode-char (char)
   "Fixed `json-encode-char'."
   (setq char (json-encode-char0 char 'ucs))

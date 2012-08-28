@@ -815,6 +815,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
+  (define-key map "\M-p"          'ein:worksheet-previous-input-history)
+  (define-key map "\M-n"          'ein:worksheet-next-input-history)
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
@@ -878,7 +880,11 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
              :active (ein:worksheet-at-codecell-p))
             ("Jump to definition" ein:pytools-jump-to-source-command)
             ("Go back to the previous jump point"
-             ein:pytools-jump-back-command))))
+             ein:pytools-jump-back-command)
+            ("Previous input history"
+             ein:worksheet-previous-input-history)
+            ("Next input history"
+             ein:worksheet-next-input-history))))
       ("Kernel"
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
