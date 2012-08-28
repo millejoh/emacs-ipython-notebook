@@ -35,8 +35,6 @@
 (require 'ein-notification)
 (require 'ein-kill-ring)
 
-(declare-function ein:notebook-mode "ein-notebook")
-(declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
 (declare-function ein:notebook-discard-output-p "ein-notebook")
 
 
@@ -199,8 +197,6 @@ this value."
     (setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
-    (ein:notebook-mode)
-    (ein:notebook-setup-kill-buffer-hook)
     (oset ws :notification (ein:notification-setup (current-buffer)))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)

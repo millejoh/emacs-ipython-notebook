@@ -457,6 +457,13 @@ This is equivalent to do ``C-c`` in the console program."
            (ein:$notebook-kernel notebook)
            (ein:$notebook-events notebook)))
 
+(defun ein:notebook--worksheet-render (notebook ws)
+  (ein:worksheet-render ws)
+  (with-current-buffer (ein:worksheet-buffer ws)
+    (ein:notebook-mode)
+    (ein:notebook-setup-kill-buffer-hook)
+    (setq ein:%notebook% notebook)))
+
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
                             &allow-other-keys)
@@ -471,9 +478,9 @@ This is equivalent to do ``C-c`` in the console program."
                    (ein:notebook--worksheet-new notebook) ws-data))
                 (or (plist-get data :worksheets)
                     (list nil))))
-  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (setq ein:%notebook% notebook)))
+  (ein:notebook--worksheet-render notebook
+                                  (nth 0 (ein:$notebook-worksheets notebook)))
+  notebook)
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
@@ -611,9 +618,7 @@ as usual."
   "Create new scratchsheet in NOTEBOOK."
   (let ((ss (ein:notebook--worksheet-new notebook #'ein:scratchsheet-new)))
     (push ss (ein:$notebook-scratchsheets notebook))
-    (ein:worksheet-render ss)
-    (with-current-buffer (ein:worksheet-buffer ss)
-      (setq ein:%notebook% notebook))
+    (ein:notebook--worksheet-render notebook ss)
     ss))
 
 (defun ein:notebook-scratchsheet-open (notebook &optional new popup)
