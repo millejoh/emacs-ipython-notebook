@@ -56,8 +56,14 @@
 
 ;;; Configuration
 
+(make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
+
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
+
+.. warning:: This configuration is obsolete now.
+   Use nbconvert (https://github.com/ipython/nbconvert) to
+   strip output.
 
 `no' : symbol
     Save output. This is the default.
@@ -68,16 +74,9 @@ a function
     `t' to discard output and return `nil' to save.  For example,
     if you don't want to save image output but other kind of
     output, use `ein:notebook-cell-has-image-output-p'.
-
-Note that using function needs EIN lisp API, which is not determined
-yet.  So be careful when using EIN functions.  They may change."
-  ;; FIXME: Change call signature of the function.  Like this:
-  ;;          (funcall FUNC :cell cell :worksheet ws :notebook notebook)
+"
   :type '(choice (const :tag "No" 'no)
                  (const :tag "Yes" 'yes)
-                 ;; FIXME: this must be go to the customize UI after
-                 ;; clarifying the notebook lisp API.
-                 ;; (function :tag "Predicate" (lambda () t))
                  )
   :group 'ein)
 

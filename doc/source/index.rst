@@ -318,7 +318,6 @@ Notebook
 ^^^^^^^^
 
 .. el:variable:: ein:worksheet-enable-undo
-.. el:variable:: ein:notebook-discard-output-on-save
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
@@ -498,6 +497,7 @@ Change Log
 v0.2
 ----
 
+* :el:symbol:`ein:notebook-discard-output-on-save` is obsolete now.
 * Support execution history.  Commands
   :el:symbol:`ein:worksheet-previous-input-history` and
   :el:symbol:`ein:worksheet-next-input-history` can be used

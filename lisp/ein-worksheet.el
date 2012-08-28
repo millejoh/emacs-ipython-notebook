@@ -80,6 +80,9 @@ this value."
 (defclass ein:worksheet ()
   ((nbformat :initarg :nbformat :type integer)
    (get-notebook-name :initarg :get-notebook-name :type cons)
+   ;; This slot introduces too much complexity so therefore must be
+   ;; removed later.  This is here only for backward compatible
+   ;; reason.
    (discard-output-p :initarg :discard-output-p)
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
