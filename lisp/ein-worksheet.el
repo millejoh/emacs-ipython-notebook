@@ -633,6 +633,53 @@ cell bellow."
   (mapc #'ein:cell-execute
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
+(defun ein:worksheet-insert-last-input-history (ws cell index)
+  (ein:kernel-history-request
+   (oref ws :kernel)
+   (list
+    :history_reply
+    (cons
+     (lambda (cell content -metadata-not-used-)
+       (destructuring-bind (session line-number input)
+           (car (plist-get content :history))
+         (if (eq (ein:worksheet-get-current-cell) cell)
+             (ein:cell-set-text cell input)
+           (ein:log 'warning
+             "Cursor moved from the cell after history request."))
+         (ein:log 'info "Input history inserted: session:%d line:%d"
+                  session line-number)))
+     cell))
+   :hist-access-type "range"
+   :session 0
+   :start (- index)
+   :stop (- 1 index)))
+
+(defvar ein:worksheet--history-index 0)
+
+(defun ein:worksheet--get-history-index (inc)
+  (if (or (eq last-command 'ein:worksheet-previous-input-history)
+          (eq last-command 'ein:worksheet-next-input-history))
+      (progn
+        (setq ein:worksheet--history-index
+              (+ ein:worksheet--history-index inc))
+        (when (< ein:worksheet--history-index 0)
+          (setq ein:worksheet--history-index 0)
+          (error "This is the latest input"))
+        ein:worksheet--history-index)
+    (setq ein:worksheet--history-index 0)))
+
+(defun ein:worksheet-previous-input-history (ws cell index)
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     (ein:worksheet--get-history-index +1)))
+  (ein:worksheet-insert-last-input-history ws cell index))
+
+(defun ein:worksheet-next-input-history (ws cell index)
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     (ein:worksheet--get-history-index -1)))
+  (ein:worksheet-insert-last-input-history ws cell index))
+
 
 ;;; Generic getter
 
