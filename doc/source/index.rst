@@ -498,6 +498,10 @@ Change Log
 v0.2
 ----
 
+* Support execution history.  Commands
+  :el:symbol:`ein:worksheet-previous-input-history` and
+  :el:symbol:`ein:worksheet-next-input-history` can be used
+  to insert previously executed code into the current cell.
 * Add :el:symbol:`ein:pseudo-console-mode`.
 * Add "scratch sheet".  This acts almost as same as worksheet, but you
   don't need to save it.  You can use try any code without saving
