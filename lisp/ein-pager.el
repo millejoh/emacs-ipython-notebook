@@ -30,6 +30,8 @@
 (require 'ein-core)
 (require 'ein-events)
 
+;; FIXME: Make a class with `:get-notebook-name' slot like `ein:worksheet'
+
 (defun ein:pager-new (name events)
   ;; currently pager = name.
   (ein:pager-bind-events name events)

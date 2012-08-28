@@ -119,7 +119,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  (force-mode-line-update))))
            packed)))
 
-(defun ein:notification-setup (buffer)
+(defun ein:notification-setup (buffer events)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER"
@@ -127,6 +127,7 @@ local variable of the BUFFER"
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
     (setq header-line-format ein:header-line-format)
+    (ein:notification-bind-events ein:%notification% events)
     ein:%notification%))
 
 

@@ -222,7 +222,6 @@ but can operate in different contexts."
 
 (defun ein:get-notebook ()
   (ein:generic-getter '(ein:get-notebook--notebook
-                        ein:get-notebook--worksheet
                         ;; ein:get-notebook--shared-output
                         ein:get-notebook--connect)))
 

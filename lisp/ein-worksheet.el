@@ -32,14 +32,7 @@
 
 (require 'ein-core)
 (require 'ein-cell)
-(require 'ein-notification)
 (require 'ein-kill-ring)
-
-(declare-function ein:$notebook-url-or-port "ein-notebook")
-(declare-function ein:$notebook-nbformat "ein-notebook")
-(declare-function ein:notebook-mode "ein-notebook")
-(declare-function ein:notebook-setup-kill-buffer-hook "ein-notebook")
-(declare-function ein:notebook-discard-output-p "ein-notebook")
 
 
 ;;; Configuration
@@ -84,15 +77,18 @@ this value."
 (defvar ein:worksheet-buffer-name-template "*ein: %s/%s*")
 
 (defclass ein:worksheet ()
-  (;; Recursive reference to notebook... but needs notebook name here.
-   (notebook :initarg :notebook :type ein:$notebook)
+  ((nbformat :initarg :nbformat :type integer)
+   (get-notebook-name :initarg :get-notebook-name :type cons)
+   ;; This slot introduces too much complexity so therefore must be
+   ;; removed later.  This is here only for backward compatible
+   ;; reason.
+   (discard-output-p :initarg :discard-output-p)
    (data :initarg :data)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
-   (events :initarg :events)
-   (notification :initarg :notification)))
+   (events :initarg :events)))
 
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
@@ -100,15 +96,16 @@ this value."
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (notebook kernel events &rest args)
+(defun ein:worksheet-new (nbformat get-notebook-name discard-output-p
+                                   kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
-         :notebook notebook :kernel kernel :events events
+         :nbformat nbformat :get-notebook-name get-notebook-name
+         :discard-output-p discard-output-p :kernel kernel :events events
          args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   (with-slots (events) ws
     ;; Bind events for sub components:
-    (ein:notification-bind-events (oref ws :notification) events)
     (mapc (lambda (cell) (oset cell :events events))
           (ein:worksheet-get-cells ws))))
 
@@ -139,10 +136,10 @@ this value."
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
-  (ein:notebook-name (oref ws :notebook)))
+  (ein:funcall-packed (oref ws :get-notebook-name)))
 
 (defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
-  (ein:$notebook-url-or-port (oref ws :notebook)))
+  (ein:kernel-url-or-port (oref ws :kernel)))
 
 (defmethod ein:worksheet-name ((ws ein:worksheet))
   (plist-get (oref ws :metadata) :name))
@@ -197,9 +194,6 @@ this value."
     (setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
-    (ein:notebook-mode)
-    (ein:notebook-setup-kill-buffer-hook)
-    (oset ws :notification (ein:notification-setup (current-buffer)))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
@@ -218,10 +212,10 @@ this value."
   ws)
 
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
-  (let* ((notebook (oref ws :notebook))
+  (let* ((discard-output-p (oref ws :discard-output-p))
          (cells (mapcar (lambda (c)
                           (ein:cell-to-json
-                           c (ein:notebook-discard-output-p notebook c)))
+                           c (ein:funcall-packed discard-output-p c)))
                         (ein:worksheet-get-cells ws))))
     `((cells . ,(apply #'vector cells)))))
 
@@ -439,7 +433,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (ein:$notebook-nbformat (oref ws :notebook))
+  (let ((type (case (oref ws :nbformat)
                 (2 (ein:case-equal (oref cell :cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
@@ -465,7 +459,7 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (ein:$notebook-nbformat (oref ws :notebook))
+          (choices (case (oref ws :nbformat)
                      (2 "cm")
                      (3 "cmr123456")))
           (key (ein:ask-choice-char
@@ -738,9 +732,6 @@ in the history."
 (defun ein:get-url-or-port--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%)
     (ein:worksheet-url-or-port ein:%worksheet%)))
-
-(defun ein:get-notebook--worksheet ()
-  (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :notebook)))
 
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))

@@ -45,6 +45,7 @@
 (require 'ein-cell)
 (require 'ein-worksheet)
 (require 'ein-scratchsheet)
+(require 'ein-notification)
 (require 'ein-completer)
 (require 'ein-pager)
 (require 'ein-events)
@@ -56,8 +57,14 @@
 
 ;;; Configuration
 
+(make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
+
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
+
+.. warning:: This configuration is obsolete now.
+   Use nbconvert (https://github.com/ipython/nbconvert) to
+   strip output.
 
 `no' : symbol
     Save output. This is the default.
@@ -68,16 +75,9 @@ a function
     `t' to discard output and return `nil' to save.  For example,
     if you don't want to save image output but other kind of
     output, use `ein:notebook-cell-has-image-output-p'.
-
-Note that using function needs EIN lisp API, which is not determined
-yet.  So be careful when using EIN functions.  They may change."
-  ;; FIXME: Change call signature of the function.  Like this:
-  ;;          (funcall FUNC :cell cell :worksheet ws :notebook notebook)
+"
   :type '(choice (const :tag "No" 'no)
                  (const :tag "Yes" 'yes)
-                 ;; FIXME: this must be go to the customize UI after
-                 ;; clarifying the notebook lisp API.
-                 ;; (function :tag "Predicate" (lambda () t))
                  )
   :group 'ein)
 
@@ -242,6 +242,9 @@ will be updated with kernel's cwd."
   (or ein:%notebook% (error "Not in notebook buffer.")))
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
+
+(defun ein:notebook-name-getter (notebook)
+  (cons #'ein:notebook-name notebook))
 
 
 ;;; Open notebook
@@ -446,6 +449,25 @@ This is equivalent to do ``C-c`` in the console program."
        (> (length name) 0)
        (not (string-match "[\\/\\\\]" name))))
 
+(defun* ein:notebook--worksheet-new (notebook
+                                     &optional (func #'ein:worksheet-new))
+  (funcall func
+           (ein:$notebook-nbformat notebook)
+           (ein:notebook-name-getter notebook)
+           (cons (lambda (notebook cell)
+                   (ein:notebook-discard-output-p notebook cell))
+                 notebook)
+           (ein:$notebook-kernel notebook)
+           (ein:$notebook-events notebook)))
+
+(defun ein:notebook--worksheet-render (notebook ws)
+  (ein:worksheet-render ws)
+  (with-current-buffer (ein:worksheet-buffer ws)
+    (ein:notebook-mode)
+    (ein:notification-setup (current-buffer) (ein:$notebook-events notebook))
+    (ein:notebook-setup-kill-buffer-hook)
+    (setq ein:%notebook% notebook)))
+
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
                             &allow-other-keys)
@@ -456,16 +478,13 @@ This is equivalent to do ``C-c`` in the console program."
     (setf (ein:$notebook-notebook-name notebook) (plist-get metadata :name)))
   (setf (ein:$notebook-worksheets notebook)
         (mapcar (lambda (ws-data)
-                  (ein:worksheet-from-json (ein:worksheet-new
-                                            notebook
-                                            (ein:$notebook-kernel notebook)
-                                            (ein:$notebook-events notebook))
-                                           ws-data))
+                  (ein:worksheet-from-json
+                   (ein:notebook--worksheet-new notebook) ws-data))
                 (or (plist-get data :worksheets)
                     (list nil))))
-  (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (setq ein:%notebook% notebook)))
+  (ein:notebook--worksheet-render notebook
+                                  (nth 0 (ein:$notebook-worksheets notebook)))
+  notebook)
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
@@ -601,14 +620,9 @@ as usual."
 
 (defun ein:notebook-scratchsheet-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
-  (let ((ss (ein:scratchsheet-new
-             notebook
-             (ein:$notebook-kernel notebook)
-             (ein:$notebook-events notebook))))
+  (let ((ss (ein:notebook--worksheet-new notebook #'ein:scratchsheet-new)))
     (push ss (ein:$notebook-scratchsheets notebook))
-    (ein:worksheet-render ss)
-    (with-current-buffer (ein:worksheet-buffer ss)
-      (setq ein:%notebook% notebook))
+    (ein:notebook--worksheet-render notebook ss)
     ss))
 
 (defun ein:notebook-scratchsheet-open (notebook &optional new popup)
