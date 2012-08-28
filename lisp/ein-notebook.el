@@ -859,19 +859,20 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Toggle output visibility" ein:worksheet-toggle-output
              :active (ein:worksheet-at-codecell-p))
-            ("Set output visibility of all cells"
+            ("Show all output"
              ein:worksheet-set-output-visibility-all)
             ("Discard output" ein:worksheet-clear-output
              :active (ein:worksheet-at-codecell-p))
-            ("Discard output of all cells" ein:worksheet-clear-all-output)))
-       ["Show code cell with full output"
+            ("Discard all output" ein:worksheet-clear-all-output)))
+       ["Show full output"
         ein:shared-output-show-code-cell-at-point
+        :active (ein:worksheet-at-codecell-p)
         :help "Show code cell at point in the shared output buffer"]
-       ["Popup traceback viewer" ein:tb-show
+       ["Traceback viewer" ein:tb-show
         :help "Show full traceback in different buffer"]
        "---"
        ,@(ein:generate-menu
-          '(("Show help of the object at point"
+          '(("Show object help"
              ein:pytools-request-tooltip-or-help)
             ("Complete code" ein:completer-complete
              :active (ein:worksheet-at-codecell-p))
