@@ -57,6 +57,8 @@ FIXME: document other slots."
   after-start-hook
   after-execute-hook)
 
+;; "Public" getters.  Use them outside of this package.
+(defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
 

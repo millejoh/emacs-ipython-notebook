@@ -187,7 +187,7 @@ shared output buffer.  You can open the buffer by the command
 ;;; Generic getter
 
 (defun ein:get-url-or-port--shared-output ()
-  (ein:aand (ein:get-kernel--shared-output) (ein:$kernel-url-or-port it)))
+  (ein:aand (ein:get-kernel--shared-output) (ein:kernel-url-or-port it)))
 
 ;; (defun ein:get-notebook--shared-output ())
 
