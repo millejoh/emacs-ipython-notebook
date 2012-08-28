@@ -446,6 +446,13 @@ This is equivalent to do ``C-c`` in the console program."
        (> (length name) 0)
        (not (string-match "[\\/\\\\]" name))))
 
+(defun* ein:notebook--worksheet-new (notebook
+                                     &optional (func #'ein:worksheet-new))
+  (funcall func notebook
+           (ein:$notebook-nbformat notebook)
+           (ein:$notebook-kernel notebook)
+           (ein:$notebook-events notebook)))
+
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
                             &allow-other-keys)
@@ -456,12 +463,8 @@ This is equivalent to do ``C-c`` in the console program."
     (setf (ein:$notebook-notebook-name notebook) (plist-get metadata :name)))
   (setf (ein:$notebook-worksheets notebook)
         (mapcar (lambda (ws-data)
-                  (ein:worksheet-from-json (ein:worksheet-new
-                                            notebook
-                                            (ein:$notebook-nbformat notebook)
-                                            (ein:$notebook-kernel notebook)
-                                            (ein:$notebook-events notebook))
-                                           ws-data))
+                  (ein:worksheet-from-json
+                   (ein:notebook--worksheet-new notebook) ws-data))
                 (or (plist-get data :worksheets)
                     (list nil))))
   (ein:worksheet-render (nth 0 (ein:$notebook-worksheets notebook)))
@@ -602,10 +605,7 @@ as usual."
 
 (defun ein:notebook-scratchsheet-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
-  (let ((ss (ein:scratchsheet-new
-             notebook
-             (ein:$notebook-kernel notebook)
-             (ein:$notebook-events notebook))))
+  (let ((ss (ein:notebook--worksheet-new notebook #'ein:scratchsheet-new)))
     (push ss (ein:$notebook-scratchsheets notebook))
     (ein:worksheet-render ss)
     (with-current-buffer (ein:worksheet-buffer ss)
