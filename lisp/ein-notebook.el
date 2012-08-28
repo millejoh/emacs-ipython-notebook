@@ -818,63 +818,76 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
+      ("File"
+       ,@(ein:generate-menu
+          '(("Save notebook" ein:notebook-save-notebook-command)
+            ("Rename notebook" ein:notebook-rename-command)
+            ("Kill kernel then close notebook"
+             ein:notebook-kill-kernel-then-close-command))))
+      ("Edit"
+       ,@(ein:generate-menu
+          '(("Kill cell" ein:worksheet-kill-cell)
+            ("Copy cell" ein:worksheet-copy-cell)
+            ("Yank cell" ein:worksheet-yank-cell)
+            ("Insert cell above" ein:worksheet-insert-cell-above)
+            ("Insert cell below" ein:worksheet-insert-cell-below)
+            ("Toggle cell type" ein:worksheet-toggle-cell-type)
+            ("Change cell type" ein:worksheet-change-cell-type)
+            ("Split cell at point" ein:worksheet-split-cell-at-point)
+            ("Merge cell" ein:worksheet-merge-cell)
+            ("Go to next cell" ein:worksheet-goto-next-input)
+            ("Go to previous cell" ein:worksheet-goto-prev-input)
+            ("Move cell up" ein:worksheet-move-cell-up)
+            ("Move cell down" ein:worksheet-move-cell-down))))
+      ("Cell/Code"
+       ,@(ein:generate-menu
+          '(("Execute cell" ein:worksheet-execute-cell
+             :active (ein:worksheet-at-codecell-p))
+            ("Execute cell and go to next"
+             ein:worksheet-execute-cell-and-goto-next
+             :active (ein:worksheet-at-codecell-p))
+            ("Execute cell and insert below"
+             ein:worksheet-execute-cell-and-insert-below
+             :active (ein:worksheet-at-codecell-p))
+            ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
+             :active (ein:worksheet-at-codecell-p))))
+       ["Evaluate code in minibuffer" ein:shared-output-eval-string
+        :help "Result will appear in the shared output buffer"]
+       ["Toggle instant cell execution mode" ein:iexec-mode
+        :help "Automatically executed code cell after any change."]
+       "---"
+       ,@(ein:generate-menu
+          '(("Toggle output visibility" ein:worksheet-toggle-output
+             :active (ein:worksheet-at-codecell-p))
+            ("Set output visibility of all cells"
+             ein:worksheet-set-output-visibility-all)
+            ("Discard output" ein:worksheet-clear-output
+             :active (ein:worksheet-at-codecell-p))
+            ("Discard output of all cells" ein:worksheet-clear-all-output)))
+       ["Show code cell with full output"
+        ein:shared-output-show-code-cell-at-point
+        :help "Show code cell at point in the shared output buffer"]
+       ["Popup traceback viewer" ein:tb-show
+        :help "Show full traceback in different buffer"]
+       "---"
+       ,@(ein:generate-menu
+          '(("Show help of the object at point"
+             ein:pytools-request-tooltip-or-help)
+            ("Complete code" ein:completer-complete
+             :active (ein:worksheet-at-codecell-p))
+            ("Jump to definition" ein:pytools-jump-to-source-command)
+            ("Go back to the previous jump point"
+             ein:pytools-jump-back-command))))
+      ("Kernel"
+       ,@(ein:generate-menu
+          '(("Restart kernel" ein:notebook-restart-kernel-command)
+            ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
+      ;; Misc:
       ,@(ein:generate-menu
-         '(("Execute cell" ein:worksheet-execute-cell
-            :active (ein:worksheet-at-codecell-p))
-           ("Execute cell and go to next"
-            ein:worksheet-execute-cell-and-goto-next
-            :active (ein:worksheet-at-codecell-p))
-           ("Execute cell and insert below"
-            ein:worksheet-execute-cell-and-insert-below
-            :active (ein:worksheet-at-codecell-p))
-           ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
-            :active (ein:worksheet-at-codecell-p))
-           ("Toggle output visibility" ein:worksheet-toggle-output
-            :active (ein:worksheet-at-codecell-p))
-           ("Set output visibility of all cells"
-            ein:worksheet-set-output-visibility-all)
-           ("Discard output" ein:worksheet-clear-output
-            :active (ein:worksheet-at-codecell-p))
-           ("Discard output of all cells" ein:worksheet-clear-all-output)
-           ("Kill cell" ein:worksheet-kill-cell)
-           ("Copy cell" ein:worksheet-copy-cell)
-           ("Yank cell" ein:worksheet-yank-cell)
-           ("Insert cell above" ein:worksheet-insert-cell-above)
-           ("Insert cell below" ein:worksheet-insert-cell-below)
-           ("Toggle cell type" ein:worksheet-toggle-cell-type)
-           ("Change cell type" ein:worksheet-change-cell-type)
-           ("Split cell at point" ein:worksheet-split-cell-at-point)
-           ("Merge cell" ein:worksheet-merge-cell)
-           ("Go to next cell" ein:worksheet-goto-next-input)
-           ("Go to previous cell" ein:worksheet-goto-prev-input)
-           ("Move cell up" ein:worksheet-move-cell-up)
-           ("Move cell down" ein:worksheet-move-cell-down)
-           ("Show help of the object at point"
-            ein:pytools-request-tooltip-or-help)
-           ("Complete code" ein:completer-complete
-            :active (ein:worksheet-at-codecell-p))
-           ("Restart kernel" ein:notebook-restart-kernel-command)
-           ("Interrupt kernel" ein:notebook-kernel-interrupt-command)
-           ("Kill kernel then close notebook"
-            ein:notebook-kill-kernel-then-close-command)
-           ("Open regular IPython console" ein:console-open)
-           ("Save notebook" ein:notebook-save-notebook-command)
-           ("Rename notebook" ein:notebook-rename-command)
-           ("Jump to definition" ein:pytools-jump-to-source-command)
-           ("Go back to the previous jump point"
-            ein:pytools-jump-back-command)
+         '(("Open regular IPython console" ein:console-open)
            ("Open scratch sheet" ein:notebook-scratchsheet-open)))
-      ["Toggle instant cell execution mode" ein:iexec-mode
-       :help "Automatically executed code cell after any change."]
-      ["Popup traceback viewer" ein:tb-show
-       :help "Show full traceback in different buffer"]
       ["Toggle pseudo console mode" ein:pseudo-console-mode
-       :help "Hit RET to execute code"]
-      ["Evaluate code in minibuffer" ein:shared-output-eval-string
-       :help "Result will appear in the shared output buffer"]
-      ["Show code cell with full output"
-       ein:shared-output-show-code-cell-at-point
-       :help "Show code cell at point in the shared output buffer"]))
+       :help "Hit RET to execute code"]))
   map)
 
 (defun ein:notebook-mode ()
