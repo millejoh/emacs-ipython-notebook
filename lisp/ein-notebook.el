@@ -650,6 +650,45 @@ as usual."
   "Create new worksheet in NOTEBOOK."
   (ein:notebook--worksheet-render-new notebook worksheet))
 
+(defun ein:notebook-worksheet-open-next (notebook ws &optional popup)
+  "Open next worksheet.  Create new if none."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t))
+  (let ((next (if (ein:scratchsheet-p ws)
+                  (car (ein:$notebook-worksheets notebook))
+                (loop with worksheets = (ein:$notebook-worksheets notebook)
+                      for current in worksheets
+                      for next in (cdr worksheets)
+                      when (eq current ws) return next))))
+    (if next
+        (if (ein:worksheet-has-buffer-p next)
+            (ein:log 'verbose "Next worksheet already has a buffer.")
+          (ein:log 'info "Rendering next worksheet...")
+          (ein:notebook--worksheet-render notebook next)
+          (ein:log 'info "Rendering next worksheet... Done."))
+      (ein:log 'info "Creating new worksheet...")
+      (setq next (ein:notebook-worksheet-render-new notebook))
+      (ein:log 'info "Creating new worksheet... Done."))
+    (when popup
+      (pop-to-buffer (ein:worksheet-buffer next)))
+    next))
+
+(defun ein:notebook-worksheet-delete (notebook ws)
+  "Delete the current worksheet.
+When used as a lisp function, delete worksheet WS from NOTEBOOk."
+  (interactive (progn
+                 (unless (y-or-n-p
+                          "Really remove this worksheet? There is no undo.")
+                   (error "Quit deleting the current worksheet."))
+                 (list (ein:notebook--get-nb-or-error)
+                       (ein:worksheet--get-ws-or-error))))
+  (setf (ein:$notebook-worksheets notebook)
+        (delq ws (ein:$notebook-worksheets notebook)))
+  (setf (ein:$notebook-dirty notebook) t)
+  (let ((ein:notebook-kill-buffer-ask nil))
+    (kill-buffer (ein:worksheet-buffer ws))))
+
 
 ;;; Scratch sheet
 
