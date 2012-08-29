@@ -225,6 +225,19 @@ this value."
                         (ein:worksheet-get-cells ws))))
     `((cells . ,(apply #'vector cells)))))
 
+(defmethod ein:worksheet-save-cells ((ws ein:worksheet))
+  "Save cells in worksheet buffer in cache before killing the buffer.
+
+.. warning:: After calling this function, cells in worksheet
+   cannot be used.  Use only just before killing the buffer.
+
+Do nothing when the worksheet WS has no buffer."
+  (when (ein:worksheet-has-buffer-p ws)
+    (let ((cells (ein:worksheet-get-cells ws)))
+      (mapc #'ein:cell-save-text cells)
+      (mapc #'ein:cell-deactivate cells)
+      (oset ws :saved-cells cells))))
+
 
 ;;; Cell indexing, retrieval, etc.
 
