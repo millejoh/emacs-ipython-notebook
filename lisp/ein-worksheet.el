@@ -227,7 +227,8 @@ current buffer."
                             (ein:cell-to-json
                              c (ein:funcall-packed discard-output-p c)))
                           (ein:worksheet-get-cells ws)))))
-    `((cells . ,(apply #'vector cells)))))
+    `((cells . ,(apply #'vector cells))
+      (metadata . ,(oref ws :metadata)))))
 
 (defmethod ein:worksheet-save-cells ((ws ein:worksheet))
   "Save cells in worksheet buffer in cache before killing the buffer.
