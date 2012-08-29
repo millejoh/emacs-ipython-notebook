@@ -650,8 +650,32 @@ as usual."
   "Create new worksheet in NOTEBOOK."
   (ein:notebook--worksheet-render-new notebook worksheet))
 
-(defun ein:notebook-worksheet-open-next (notebook ws &optional popup)
+(defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional popup)
   "Open next worksheet.  Create new if none."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t))
+  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
+    (unless next
+      (ein:log 'info "Creating new worksheet...")
+      (setq next (ein:notebook-worksheet-render-new notebook))
+      (ein:log 'info "Creating new worksheet... Done."))
+    (when popup
+      (pop-to-buffer (ein:worksheet-buffer next)))))
+
+(defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional popup)
+  "Open next or first worksheet."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t))
+  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
+    (unless next
+      (setq next (car (ein:$notebook-worksheets notebook))))
+    (when popup
+      (pop-to-buffer (ein:worksheet-buffer next)))))
+
+(defun ein:notebook-worksheet-open-next (notebook ws &optional popup)
+  "Open next worksheet."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
                      t))
@@ -661,16 +685,14 @@ as usual."
                       for current in worksheets
                       for next in (cdr worksheets)
                       when (eq current ws) return next))))
-    (if next
-        (if (ein:worksheet-has-buffer-p next)
-            (ein:log 'verbose "Next worksheet already has a buffer.")
-          (ein:log 'info "Rendering next worksheet...")
-          (ein:notebook--worksheet-render notebook next)
-          (ein:log 'info "Rendering next worksheet... Done."))
-      (ein:log 'info "Creating new worksheet...")
-      (setq next (ein:notebook-worksheet-render-new notebook))
-      (ein:log 'info "Creating new worksheet... Done."))
+    (when next
+      (if (ein:worksheet-has-buffer-p next)
+          (ein:log 'verbose "Next worksheet already has a buffer.")
+        (ein:log 'info "Rendering next worksheet...")
+        (ein:notebook--worksheet-render notebook next)
+        (ein:log 'info "Rendering next worksheet... Done.")))
     (when popup
+      (assert (ein:worksheet-p next) nil "No next notebook.")
       (pop-to-buffer (ein:worksheet-buffer next)))
     next))
 
