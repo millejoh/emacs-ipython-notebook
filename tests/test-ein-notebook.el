@@ -159,19 +159,33 @@ is not found."
         ein:testing-notebook-del-args-log)
   (should (eq (caar ein:testing-notebook-del-args-log) notebook)))
 
-(defun ein:testing-notebook-close-worksheet-open-and-close (num-open num-close)
+(defun ein:testing-notebook-close-scratchsheet-open-and-close
+  (num-open num-close)
+  "Test for closing scratch sheet using `ein:notebook-close-worksheet'.
+
+1. Open NUM-OPEN scratch sheets.
+2. Close an existing worksheet.
+3. Close NUM-CLOSE scratch sheets.
+
+When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (should (> num-open 0))
   (let ((notebook (buffer-local-value 'ein:%notebook%
                                       (ein:testing-notebook-make-empty)))
         ein:testing-notebook-del-args-log)
-    (symbol-macrolet ((ws-list (ein:$notebook-worksheets notebook)))
-      ;; Add worksheets.  They can be just empty instance for this test.
-      (dotimes (_ (1- num-open))
-        (setq ws-list (append ws-list (list (make-instance 'ein:worksheet)))))
-      ;; Make sure adding worksheet work.
+    (symbol-macrolet ((ws-list (ein:$notebook-scratchsheets notebook)))
+      ;; Add scratchsheets.  They can be just empty instance for this test.
+      (dotimes (_ num-open)
+        (setq ws-list
+              (append ws-list (list (make-instance 'ein:scratchsheet)))))
+      ;; Close worksheet
+      (let ((ws (car (ein:$notebook-worksheets notebook)))
+            (ein:notebook-kill-buffer-ask nil))
+        (ein:notebook-close-worksheet notebook ws)
+        (kill-buffer (ein:worksheet-buffer ws)))
+      ;; Make sure adding scratchsheet work.
       (should (= (length ws-list) num-open))
-      (mapc (lambda (ws) (should (ein:worksheet-p ws))) ws-list)
-      ;; Close worksheets
+      (mapc (lambda (ws) (should (ein:scratchsheet-p ws))) ws-list)
+      ;; Close scratchsheets
       (dotimes (_ num-close)
         (ein:notebook-close-worksheet notebook (car ws-list)))
       ;; Actual tests:
@@ -180,14 +194,14 @@ is not found."
           (ein:testing-assert-notebook-del-called-once-with notebook)
         (ein:testing-assert-notebook-del-not-called)))))
 
-(ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
-  (ein:testing-notebook-close-worksheet-open-and-close 1 1))
+(ert-deftest ein:notebook-close-scratchsheet/open-one-close-one ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 1 1))
 
-(ert-deftest ein:notebook-close-worksheet/open-two-close-two ()
-  (ein:testing-notebook-close-worksheet-open-and-close 2 2))
+(ert-deftest ein:notebook-close-scratchsheet/open-two-close-two ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 2 2))
 
-(ert-deftest ein:notebook-close-worksheet/open-two-close-one ()
-  (ein:testing-notebook-close-worksheet-open-and-close 2 1))
+(ert-deftest ein:notebook-close-scratchsheet/open-two-close-one ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 2 1))
 
 
 ;; Notebook commands
