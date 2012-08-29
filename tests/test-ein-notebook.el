@@ -687,7 +687,7 @@ defined."
                                       (ein:testing-notebook-make-empty)))
         ein:testing-notebook-del-args-log)
     (dotimes (_ num-ss)
-      (ein:notebook-scratchsheet-new notebook))
+      (ein:notebook-scratchsheet-render-new notebook))
     (let ((buffers (ein:notebook-buffer-list notebook)))
       (should (= (length buffers) (+ num-ws num-ss)))
       (ein:notebook-close notebook)

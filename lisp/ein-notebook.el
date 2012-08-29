@@ -653,7 +653,7 @@ as usual."
 
 ;;; Scratch sheet
 
-(defun ein:notebook-scratchsheet-new (notebook)
+(defun ein:notebook-scratchsheet-render-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
   (ein:notebook--worksheet-render-new notebook scratchsheet))
 
@@ -669,7 +669,7 @@ worksheet to save result."
                      t))
   (let ((ss (or (unless new
                   (car (ein:$notebook-scratchsheets notebook)))
-                (ein:notebook-scratchsheet-new notebook))))
+                (ein:notebook-scratchsheet-render-new notebook))))
     (when popup
       (pop-to-buffer (ein:worksheet-buffer ss)))
     ss))
