@@ -159,35 +159,49 @@ is not found."
         ein:testing-notebook-del-args-log)
   (should (eq (caar ein:testing-notebook-del-args-log) notebook)))
 
-(defun ein:testing-notebook-close-worksheet-open-and-close (num-open num-close)
+(defun ein:testing-notebook-close-scratchsheet-open-and-close
+  (num-open num-close)
+  "Test for closing scratch sheet using `ein:notebook-close-worksheet'.
+
+1. Open NUM-OPEN scratch sheets.
+2. Close an existing worksheet.
+3. Close NUM-CLOSE scratch sheets.
+
+When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (should (> num-open 0))
   (let ((notebook (buffer-local-value 'ein:%notebook%
                                       (ein:testing-notebook-make-empty)))
         ein:testing-notebook-del-args-log)
-    (symbol-macrolet ((ws-list (ein:$notebook-worksheets notebook)))
-      ;; Add worksheets.  They can be just empty instance for this test.
-      (dotimes (_ (1- num-open))
-        (setq ws-list (append ws-list (list (make-instance 'ein:worksheet)))))
-      ;; Make sure adding worksheet work.
-      (should (= (length ws-list) num-open))
-      (mapc (lambda (ws) (should (ein:worksheet-p ws))) ws-list)
-      ;; Close worksheets
+    (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets notebook)))
+      ;; Add scratchsheets.  They can be just empty instance for this test.
+      (dotimes (_ num-open)
+        (setq ss-list
+              (append ss-list (list (make-instance 'ein:scratchsheet)))))
+      ;; Close worksheet
+      (let ((ws (car (ein:$notebook-worksheets notebook)))
+            (ein:notebook-kill-buffer-ask nil))
+        (ein:notebook-close-worksheet notebook ws)
+        (kill-buffer (ein:worksheet-buffer ws)))
+      ;; Make sure adding scratchsheet work.
+      (should (= (length ss-list) num-open))
+      (mapc (lambda (ws) (should (ein:scratchsheet-p ws))) ss-list)
+      ;; Close scratchsheets
       (dotimes (_ num-close)
-        (ein:notebook-close-worksheet notebook (car ws-list)))
+        (ein:notebook-close-worksheet notebook (car ss-list)))
       ;; Actual tests:
-      (should (= (length ws-list) (- num-open num-close)))
+      (should (= (length ss-list) (- num-open num-close)))
       (if (= num-open num-close)
           (ein:testing-assert-notebook-del-called-once-with notebook)
         (ein:testing-assert-notebook-del-not-called)))))
 
-(ert-deftest ein:notebook-close-worksheet/open-one-close-one ()
-  (ein:testing-notebook-close-worksheet-open-and-close 1 1))
+(ert-deftest ein:notebook-close-scratchsheet/open-one-close-one ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 1 1))
 
-(ert-deftest ein:notebook-close-worksheet/open-two-close-two ()
-  (ein:testing-notebook-close-worksheet-open-and-close 2 2))
+(ert-deftest ein:notebook-close-scratchsheet/open-two-close-two ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 2 2))
 
-(ert-deftest ein:notebook-close-worksheet/open-two-close-one ()
-  (ein:testing-notebook-close-worksheet-open-and-close 2 1))
+(ert-deftest ein:notebook-close-scratchsheet/open-two-close-one ()
+  (ein:testing-notebook-close-scratchsheet-open-and-close 2 1))
 
 
 ;; Notebook commands
@@ -688,6 +702,36 @@ defined."
 
 (ert-deftest ein:notebook-close/one-ws-five-ss ()
   (ein:testin-notebook-close 1 5))
+
+(ert-deftest ein:notebook-to-json-after-closing-a-worksheet ()
+  (with-current-buffer (ein:testing-notebook-make-new)
+    (let ((buffer (current-buffer))
+          (notebook ein:%notebook%)
+          (test
+           (lambda (notebook)
+             (let* ((data (ein:notebook-to-json notebook))
+                    (worksheets (assoc-default 'worksheets data #'eq))
+                    (cells (assoc-default 'cells (elt worksheets 0) #'eq))
+                    (cell-0 (elt cells 0))
+                    (input (assoc-default 'input cell-0 #'eq)))
+               (should (= (length worksheets) 1))
+               (should (= (length cells) 1))
+               (should (equal input "some text"))))))
+      ;; Edit notebook.
+      (ein:cell-goto (ein:get-cell-at-point))
+      (insert "some text")
+      (funcall test notebook)
+      (should (ein:notebook-modified-p notebook))
+      ;; Open scratch sheet.
+      (ein:notebook-scratchsheet-open notebook)
+      ;; Pretend that notebook is saved
+      (ein:notebook-save-notebook-success notebook)
+      (should-not (ein:notebook-modified-p notebook))
+      ;; Kill a worksheet buffer
+      (kill-buffer buffer)
+      (should (ein:notebook-live-p notebook))
+      ;; to-json should still work
+      (funcall test notebook))))
 
 
 ;; Notebook undo

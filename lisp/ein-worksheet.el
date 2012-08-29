@@ -83,7 +83,9 @@ this value."
    ;; removed later.  This is here only for backward compatible
    ;; reason.
    (discard-output-p :initarg :discard-output-p)
-   (data :initarg :data)
+   (saved-cells :initarg :saved-cells :initform nil
+                :documentation
+                "Slot to cache cells for worksheet without buffer")
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
@@ -183,11 +185,12 @@ this value."
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
                                    nil t))
-            (cells (plist-get (oref ws :data) :cells)))
+            (cells (oref ws :saved-cells)))
         (oset ws :ewoc ewoc)
         (if cells
-            (mapc (lambda (data)
-                    (ein:cell-enter-last (ein:cell-from-json data :ewoc ewoc)))
+            (mapc (lambda (c)
+                    (oset c :ewoc ewoc)
+                    (ein:cell-enter-last c))
                   cells)
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
@@ -208,7 +211,10 @@ this value."
 ;;; Persistance and loading
 
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
-  (oset ws :data data)
+  (destructuring-bind (&key cells metadata &allow-other-keys) data
+    (oset ws :metadata metadata)
+    (oset ws :saved-cells
+          (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
@@ -218,6 +224,19 @@ this value."
                            c (ein:funcall-packed discard-output-p c)))
                         (ein:worksheet-get-cells ws))))
     `((cells . ,(apply #'vector cells)))))
+
+(defmethod ein:worksheet-save-cells ((ws ein:worksheet))
+  "Save cells in worksheet buffer in cache before killing the buffer.
+
+.. warning:: After calling this function, cells in worksheet
+   cannot be used.  Use only just before killing the buffer.
+
+Do nothing when the worksheet WS has no buffer."
+  (when (ein:worksheet-has-buffer-p ws)
+    (let ((cells (ein:worksheet-get-cells ws)))
+      (mapc #'ein:cell-save-text cells)
+      (mapc #'ein:cell-deactivate cells)
+      (oset ws :saved-cells cells))))
 
 
 ;;; Cell indexing, retrieval, etc.
@@ -232,9 +251,12 @@ this value."
          args))
 
 (defmethod ein:worksheet-get-cells ((ws ein:worksheet))
-  (let* ((ewoc (oref ws :ewoc))
-         (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
-    (mapcar #'ein:$node-data nodes)))
+  (if (ein:worksheet-has-buffer-p ws)
+      (let* ((ewoc (oref ws :ewoc))
+             (nodes (ewoc-collect ewoc
+                                  (lambda (n) (ein:cell-node-p n 'prompt)))))
+        (mapcar #'ein:$node-data nodes))
+    (oref ws :saved-cells)))
 
 (defmethod ein:worksheet-ncells ((ws ein:worksheet))
   (length (ein:worksheet-get-cells ws)))
@@ -748,6 +770,9 @@ in the history."
 (defun ein:worksheet-buffer-p ()
   "Return non-`nil' if the current buffer is a worksheet buffer."
   ein:%worksheet%)
+
+(defmethod ein:worksheet-has-buffer-p ((ws ein:worksheet))
+  (ein:aand (ein:worksheet-buffer ws) (buffer-live-p it)))
 
 (defmethod ein:worksheet-modified-p ((ws ein:worksheet))
   (let ((buffer (ein:worksheet-buffer ws)))

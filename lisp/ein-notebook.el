@@ -215,9 +215,14 @@ Current buffer for these functions is set to the notebook buffer.")
 call notebook destructor `ein:notebook-del'."
   (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
                     (scratchsheets (ein:$notebook-scratchsheets notebook)))
-    (setq worksheets (delq ws worksheets))
-    (setq scratchsheets (delq ws scratchsheets))
-    (unless (or worksheets scratchsheets)
+    (cond
+     ((ein:worksheet-p ws) (ein:worksheet-save-cells ws))
+     (t (setq scratchsheets (delq ws scratchsheets))))
+    (unless (or (ein:filter (lambda (x)
+                              (and (not (eq x ws))
+                                   (ein:worksheet-has-buffer-p x)))
+                            worksheets)
+                scratchsheets)
       (ein:notebook-del notebook))))
 
 
@@ -226,8 +231,11 @@ call notebook destructor `ein:notebook-del'."
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
-  (loop for ws in (ein:$notebook-worksheets notebook)
-        if (ein:worksheet-buffer ws) return it))
+  (let ((first-buffer
+         (lambda (ws-list)
+           (loop for ws in ws-list if (ein:worksheet-buffer ws) return it))))
+    (or (funcall first-buffer (ein:$notebook-worksheets    notebook))
+        (funcall first-buffer (ein:$notebook-scratchsheets notebook)))))
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the buffers associated with NOTEBOOK's kernel.

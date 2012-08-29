@@ -556,9 +556,11 @@ If the input area of the CELL does not exist, return `nil'"
 
 (defmethod ein:cell-get-text ((cell ein:basecell))
   "Grab text in the input area of the cell at point."
-  (let* ((beg (ein:cell-input-pos-min cell))
-         (end (ein:cell-input-pos-max cell)))
-    (buffer-substring beg end)))
+  (if (ein:cell-active-p cell)
+      (let* ((beg (ein:cell-input-pos-min cell))
+             (end (ein:cell-input-pos-max cell)))
+        (buffer-substring beg end))
+    (oref cell :input)))
 
 (defmethod ein:cell-set-text ((cell ein:basecell) text)
   (let* ((input-node (ein:cell-element-get cell :input))
