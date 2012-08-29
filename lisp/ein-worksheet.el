@@ -210,6 +210,7 @@ this value."
 
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (destructuring-bind (&key cells metadata &allow-other-keys) data
+    (oset ws :metadata metadata)
     (oset ws :saved-cells
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
