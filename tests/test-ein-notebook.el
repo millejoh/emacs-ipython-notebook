@@ -172,24 +172,24 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (let ((notebook (buffer-local-value 'ein:%notebook%
                                       (ein:testing-notebook-make-empty)))
         ein:testing-notebook-del-args-log)
-    (symbol-macrolet ((ws-list (ein:$notebook-scratchsheets notebook)))
+    (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets notebook)))
       ;; Add scratchsheets.  They can be just empty instance for this test.
       (dotimes (_ num-open)
-        (setq ws-list
-              (append ws-list (list (make-instance 'ein:scratchsheet)))))
+        (setq ss-list
+              (append ss-list (list (make-instance 'ein:scratchsheet)))))
       ;; Close worksheet
       (let ((ws (car (ein:$notebook-worksheets notebook)))
             (ein:notebook-kill-buffer-ask nil))
         (ein:notebook-close-worksheet notebook ws)
         (kill-buffer (ein:worksheet-buffer ws)))
       ;; Make sure adding scratchsheet work.
-      (should (= (length ws-list) num-open))
-      (mapc (lambda (ws) (should (ein:scratchsheet-p ws))) ws-list)
+      (should (= (length ss-list) num-open))
+      (mapc (lambda (ws) (should (ein:scratchsheet-p ws))) ss-list)
       ;; Close scratchsheets
       (dotimes (_ num-close)
-        (ein:notebook-close-worksheet notebook (car ws-list)))
+        (ein:notebook-close-worksheet notebook (car ss-list)))
       ;; Actual tests:
-      (should (= (length ws-list) (- num-open num-close)))
+      (should (= (length ss-list) (- num-open num-close)))
       (if (= num-open num-close)
           (ein:testing-assert-notebook-del-called-once-with notebook)
         (ein:testing-assert-notebook-del-not-called)))))
