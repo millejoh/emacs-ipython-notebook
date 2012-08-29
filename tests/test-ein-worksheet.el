@@ -23,6 +23,9 @@
                   (ein:worksheet-from-json ws-1
                                            (ein:json-read-from-string
                                             (json-encode json-0))))))
+    (let* ((found (assoc 'metadata json-0)))
+      (when found
+        (should (cdr found))))
     (should (equal json-0 json-1))))
 
 (ert-deftest ein:worksheet-to-json/empty ()
