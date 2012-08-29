@@ -236,9 +236,12 @@ this value."
          args))
 
 (defmethod ein:worksheet-get-cells ((ws ein:worksheet))
-  (let* ((ewoc (oref ws :ewoc))
-         (nodes (ewoc-collect ewoc (lambda (n) (ein:cell-node-p n 'prompt)))))
-    (mapcar #'ein:$node-data nodes)))
+  (if (ein:worksheet-has-buffer-p ws)
+      (let* ((ewoc (oref ws :ewoc))
+             (nodes (ewoc-collect ewoc
+                                  (lambda (n) (ein:cell-node-p n 'prompt)))))
+        (mapcar #'ein:$node-data nodes))
+    (oref ws :saved-cells)))
 
 (defmethod ein:worksheet-ncells ((ws ein:worksheet))
   (length (ein:worksheet-get-cells ws)))
@@ -752,6 +755,9 @@ in the history."
 (defun ein:worksheet-buffer-p ()
   "Return non-`nil' if the current buffer is a worksheet buffer."
   ein:%worksheet%)
+
+(defmethod ein:worksheet-has-buffer-p ((ws ein:worksheet))
+  (ein:aand (ein:worksheet-buffer ws) (buffer-live-p it)))
 
 (defmethod ein:worksheet-modified-p ((ws ein:worksheet))
   (let ((buffer (ein:worksheet-buffer ws)))
