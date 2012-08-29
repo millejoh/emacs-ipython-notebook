@@ -83,7 +83,7 @@ this value."
    ;; removed later.  This is here only for backward compatible
    ;; reason.
    (discard-output-p :initarg :discard-output-p)
-   (data :initarg :data)
+   (saved-cells :initarg :saved-cells :initform nil)
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
@@ -183,11 +183,12 @@ this value."
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
                                    nil t))
-            (cells (plist-get (oref ws :data) :cells)))
+            (cells (oref ws :saved-cells)))
         (oset ws :ewoc ewoc)
         (if cells
-            (mapc (lambda (data)
-                    (ein:cell-enter-last (ein:cell-from-json data :ewoc ewoc)))
+            (mapc (lambda (c)
+                    (oset c :ewoc ewoc)
+                    (ein:cell-enter-last c))
                   cells)
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
@@ -208,7 +209,9 @@ this value."
 ;;; Persistance and loading
 
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
-  (oset ws :data data)
+  (destructuring-bind (&key cells metadata &allow-other-keys) data
+    (oset ws :saved-cells
+          (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
