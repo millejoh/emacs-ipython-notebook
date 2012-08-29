@@ -231,8 +231,11 @@ call notebook destructor `ein:notebook-del'."
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
-  (loop for ws in (ein:$notebook-worksheets notebook)
-        if (ein:worksheet-buffer ws) return it))
+  (let ((first-buffer
+         (lambda (ws-list)
+           (loop for ws in ws-list if (ein:worksheet-buffer ws) return it))))
+    (or (funcall first-buffer (ein:$notebook-worksheets    notebook))
+        (funcall first-buffer (ein:$notebook-scratchsheets notebook)))))
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the buffers associated with NOTEBOOK's kernel.

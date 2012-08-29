@@ -729,6 +729,7 @@ defined."
       (should-not (ein:notebook-modified-p notebook))
       ;; Kill a worksheet buffer
       (kill-buffer buffer)
+      (should (ein:notebook-live-p notebook))
       ;; to-json should still work
       (funcall test notebook))))
 
