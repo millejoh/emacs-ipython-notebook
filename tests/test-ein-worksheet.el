@@ -14,9 +14,10 @@
   (make-instance 'ein:worksheet
                  :discard-output-p (cons #'ignore nil)))
 
-(defun ein:testing-worksheet-to-json (cells)
+(defun ein:testing-worksheet-to-json (cells &optional metadata)
   (let* ((ws-0 (ein:worksheet-from-json (ein:testing-worksheet-new)
-                                        (list :cells cells)))
+                                        (list :cells cells
+                                              :metadata metadata)))
          (ws-1 (ein:testing-worksheet-new))
          (json-0 (ein:worksheet-to-json ws-0))
          (json-1 (ein:worksheet-to-json
@@ -33,3 +34,7 @@
 
 (ert-deftest ein:worksheet-to-json/example-data ()
   (ein:testing-worksheet-to-json ein:testing-worksheet-example-data))
+
+(ert-deftest ein:worksheet-to-json/example-data-with-metadata ()
+  (ein:testing-worksheet-to-json ein:testing-worksheet-example-data
+                                 '(:name "Worksheet name")))
