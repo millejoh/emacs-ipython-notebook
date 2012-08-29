@@ -218,11 +218,15 @@ this value."
   ws)
 
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
+  "Convert worksheet WS into JSON ready alist.
+It sets buffer internally so that caller doesn not have to set
+current buffer."
   (let* ((discard-output-p (oref ws :discard-output-p))
-         (cells (mapcar (lambda (c)
-                          (ein:cell-to-json
-                           c (ein:funcall-packed discard-output-p c)))
-                        (ein:worksheet-get-cells ws))))
+         (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
+                  (mapcar (lambda (c)
+                            (ein:cell-to-json
+                             c (ein:funcall-packed discard-output-p c)))
+                          (ein:worksheet-get-cells ws)))))
     `((cells . ,(apply #'vector cells)))))
 
 (defmethod ein:worksheet-save-cells ((ws ein:worksheet))
