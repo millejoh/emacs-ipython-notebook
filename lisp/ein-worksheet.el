@@ -83,7 +83,9 @@ this value."
    ;; removed later.  This is here only for backward compatible
    ;; reason.
    (discard-output-p :initarg :discard-output-p)
-   (saved-cells :initarg :saved-cells :initform nil)
+   (saved-cells :initarg :saved-cells :initform nil
+                :documentation
+                "Slot to cache cells for worksheet without buffer")
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
