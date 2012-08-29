@@ -14,8 +14,9 @@
   (make-instance 'ein:worksheet
                  :discard-output-p (cons #'ignore nil)))
 
-(defun ein:testing-worksheet-to-json (data)
-  (let* ((ws-0 (ein:testing-worksheet-new))
+(defun ein:testing-worksheet-to-json (cells)
+  (let* ((ws-0 (ein:worksheet-from-json (ein:testing-worksheet-new)
+                                        (list :cells cells)))
          (ws-1 (ein:testing-worksheet-new))
          (json-0 (ein:worksheet-to-json ws-0))
          (json-1 (ein:worksheet-to-json
