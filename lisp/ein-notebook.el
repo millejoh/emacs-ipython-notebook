@@ -635,14 +635,27 @@ as usual."
         (ein:notebook-close ein:%notebook%)))))
 
 
+;;; Worksheet
+
+(defmacro ein:notebook--worksheet-render-new (notebook type)
+  "Create new worksheet of TYPE in NOTEBOOK."
+  (let ((func (intern (format "ein:%s-new" type)))
+        (slot (list (intern (format "ein:$notebook-%ss" type)) notebook)))
+    `(let ((ws (ein:notebook--worksheet-new ,notebook #',func)))
+       (setf ,slot (append ,slot (list ws)))
+       (ein:notebook--worksheet-render ,notebook ws)
+       ws)))
+
+(defun ein:notebook-worksheet-render-new (notebook)
+  "Create new worksheet in NOTEBOOK."
+  (ein:notebook--worksheet-render-new notebook worksheet))
+
+
 ;;; Scratch sheet
 
 (defun ein:notebook-scratchsheet-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
-  (let ((ss (ein:notebook--worksheet-new notebook #'ein:scratchsheet-new)))
-    (push ss (ein:$notebook-scratchsheets notebook))
-    (ein:notebook--worksheet-render notebook ss)
-    ss))
+  (ein:notebook--worksheet-render-new notebook scratchsheet))
 
 (defun ein:notebook-scratchsheet-open (notebook &optional new popup)
   "Open \"scratch sheet\".
