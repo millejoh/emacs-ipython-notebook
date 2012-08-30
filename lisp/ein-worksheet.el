@@ -240,19 +240,26 @@ current buffer."
    before killing the buffer.
 
 You don't need to set current buffer to call this function.
-Do nothing when the worksheet WS has no buffer or `:dont-save-cells'
-flag is on (`ein:worksheet-dont-save-cells' is called).  Calling
-this function unconditionally resets `:dont-save-cells' flag.
+Do nothing when the worksheet WS has no buffer.
+
+If the `:dont-save-cells' slot is non-nil (meaning that
+`ein:worksheet-dont-save-cells' has been called), cells in the
+worksheet buffer are not saved.  When the DEACTIVATE option is
+given, cached cells are deactivated instead of the cells in
+buffer.  Calling this function unconditionally resets
+`:dont-save-cells' flag to nil to make caching work when the
+worksheet WS is reopened.
 
 \(fn ws deactivate)"
-  (when (and (ein:worksheet-has-buffer-p ws)
-             (not (oref ws :dont-save-cells)))
-    (let ((cells (ein:worksheet-get-cells ws)))
-      (with-current-buffer (ein:worksheet-buffer ws)
-        (mapc #'ein:cell-save-text cells))
-      (when deactivate
-        (mapc #'ein:cell-deactivate cells))
-      (oset ws :saved-cells cells)))
+  (when (ein:worksheet-has-buffer-p ws)
+    (unless (oref ws :dont-save-cells)
+      (let ((cells (ein:worksheet-get-cells ws)))
+        (with-current-buffer (ein:worksheet-buffer ws)
+          (mapc #'ein:cell-save-text cells))
+        (when deactivate (mapc #'ein:cell-deactivate cells))
+        (oset ws :saved-cells cells)))
+    (when deactivate
+      (mapc #'ein:cell-deactivate (oref ws :saved-cells))))
   (oset ws :dont-save-cells nil))
 
 (defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
