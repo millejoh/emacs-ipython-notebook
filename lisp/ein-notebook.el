@@ -650,63 +650,57 @@ as usual."
   "Create new worksheet in NOTEBOOK."
   (ein:notebook--worksheet-render-new notebook worksheet))
 
-(defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional popup)
+(defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional show)
   "Open next worksheet.  Create new if none.
-
-.. warning:: Not tested enough!  Do not use this function yet.
 
 Try to open the worksheet to the worksheet WS using the function
 `ein:notebook-worksheet-open-next', open a new worksheet if not
 found.
 
-It calls `pop-to-buffer' for worksheet buffer if POPUP is
-non-nil."
+SHOW is a function to be called with the worksheet buffer if
+given."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
-                     t))
+                     #'switch-to-buffer))
   (let ((next (ein:notebook-worksheet-open-next notebook ws)))
     (unless next
       (ein:log 'info "Creating new worksheet...")
       (setq next (ein:notebook-worksheet-render-new notebook))
       (ein:log 'info "Creating new worksheet... Done."))
-    (when popup
-      (pop-to-buffer (ein:worksheet-buffer next)))))
+    (when show
+      (funcall show (ein:worksheet-buffer next)))))
 
-(defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional popup)
+(defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional show)
   "Open next or first worksheet.
-
-.. warning:: Not tested enough!  Do not use this function yet.
 
 Try to open the worksheet to the worksheet WS using the function
 `ein:notebook-worksheet-open-next', open the first worksheet if
 not found.
 
-It calls `pop-to-buffer' for worksheet buffer if POPUP is
-non-nil."
+SHOW is a function to be called with the worksheet buffer if
+given."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
-                     t))
+                     #'switch-to-buffer))
   (let ((next (ein:notebook-worksheet-open-next notebook ws)))
     (unless next
       (setq next (car (ein:$notebook-worksheets notebook))))
-    (when popup
-      (pop-to-buffer (ein:worksheet-buffer next)))))
+    (when show
+      (funcall show (ein:worksheet-buffer next)))))
 
-(defun ein:notebook-worksheet-open-next (notebook ws &optional popup)
+(defun ein:notebook-worksheet-open-next (notebook ws &optional show)
   "Open next worksheet.
-
-.. warning:: Not tested enough!  Do not use this function yet.
 
 Search the worksheet after the worksheet WS, render it if it is
 not yet, then return the worksheet.  If there is no such
 worksheet, return nil.  Open the first worksheet if the worksheet
 WS is an instance of `ein:scratchsheet'.
 
-It calls `pop-to-buffer' for worksheet buffer if POPUP is
-non-nil."
+SHOW is a function to be called with the worksheet buffer if
+given."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
-                     t))
+                     #'switch-to-buffer))
   (let ((next (if (ein:scratchsheet-p ws)
                   (car (ein:$notebook-worksheets notebook))
                 (loop with worksheets = (ein:$notebook-worksheets notebook)
@@ -719,9 +713,9 @@ non-nil."
         (ein:log 'info "Rendering next worksheet...")
         (ein:notebook--worksheet-render notebook next)
         (ein:log 'info "Rendering next worksheet... Done.")))
-    (when popup
+    (when show
       (assert (ein:worksheet-p next) nil "No next worksheet.")
-      (pop-to-buffer (ein:worksheet-buffer next)))
+      (funcall show (ein:worksheet-buffer next)))
     next))
 
 (defun ein:notebook-worksheet-delete (notebook ws)
