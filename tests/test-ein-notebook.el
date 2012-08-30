@@ -703,24 +703,32 @@ defined."
 (ert-deftest ein:notebook-close/one-ws-five-ss ()
   (ein:testin-notebook-close 1 5))
 
+(defun ein:testing-notebook-data-assert-one-worksheet-one-cell (notebook text)
+  (let* ((data (ein:notebook-to-json notebook))
+         (worksheets (assoc-default 'worksheets data #'eq))
+         (cells (assoc-default 'cells (elt worksheets 0) #'eq))
+         (cell-0 (elt cells 0))
+         (input (assoc-default 'input cell-0 #'eq)))
+    (should (= (length worksheets) 1))
+    (should (= (length cells) 1))
+    (should (equal input text))))
+
+(defun ein:testing-notebook-data-assert-one-worksheet-no-cell (notebook)
+  (let* ((data (ein:notebook-to-json notebook))
+         (worksheets (assoc-default 'worksheets data #'eq))
+         (cells (assoc-default 'cells (elt worksheets 0) #'eq)))
+    (should (= (length worksheets) 1))
+    (should (= (length cells) 0))))
+
 (ert-deftest ein:notebook-to-json-after-closing-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
-          (notebook ein:%notebook%)
-          (test
-           (lambda (notebook)
-             (let* ((data (ein:notebook-to-json notebook))
-                    (worksheets (assoc-default 'worksheets data #'eq))
-                    (cells (assoc-default 'cells (elt worksheets 0) #'eq))
-                    (cell-0 (elt cells 0))
-                    (input (assoc-default 'input cell-0 #'eq)))
-               (should (= (length worksheets) 1))
-               (should (= (length cells) 1))
-               (should (equal input "some text"))))))
+          (notebook ein:%notebook%))
       ;; Edit notebook.
       (ein:cell-goto (ein:get-cell-at-point))
       (insert "some text")
-      (funcall test notebook)
+      (ein:testing-notebook-data-assert-one-worksheet-one-cell notebook
+                                                               "some text")
       (should (ein:notebook-modified-p notebook))
       ;; Open scratch sheet.
       (ein:notebook-scratchsheet-open notebook)
@@ -731,7 +739,28 @@ defined."
       (kill-buffer buffer)
       (should (ein:notebook-live-p notebook))
       ;; to-json should still work
-      (funcall test notebook))))
+      (ein:testing-notebook-data-assert-one-worksheet-one-cell notebook
+                                                               "some text"))))
+
+(ert-deftest ein:notebook-to-json-after-discarding-a-worksheet ()
+  (with-current-buffer (ein:testing-notebook-make-new)
+    (let ((buffer (current-buffer))
+          (notebook ein:%notebook%))
+      ;; Edit notebook.
+      (ein:cell-goto (ein:get-cell-at-point))
+      (insert "some text")
+      (ein:testing-notebook-data-assert-one-worksheet-one-cell notebook
+                                                               "some text")
+      (should (ein:notebook-modified-p notebook))
+      ;; Open scratch sheet.
+      (ein:notebook-scratchsheet-open notebook)
+      ;; Discard a worksheet buffer
+      (should (ein:notebook-modified-p notebook))
+      (let (ein:notebook-kill-buffer-ask)
+        (kill-buffer buffer))
+      (should (ein:notebook-live-p notebook))
+      ;; to-json should still work
+      (ein:testing-notebook-data-assert-one-worksheet-no-cell notebook))))
 
 
 ;; Notebook undo

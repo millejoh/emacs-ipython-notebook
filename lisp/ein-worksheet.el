@@ -159,6 +159,11 @@ this value."
                  ((buffer-live-p buffer)))
     buffer))
 
+(defmethod ein:worksheet-detach-from-buffer ((ws ein:worksheet))
+  "Deactivate worksheet WS without killing buffer."
+  (mapc #'ein:cell-deactivate (ein:worksheet-get-cells ws))
+  (slot-makeunbound ws :ewoc))
+
 (defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
   (format ein:worksheet-buffer-name-template
           (ein:worksheet-url-or-port ws)
@@ -230,17 +235,21 @@ current buffer."
     `((cells . ,(apply #'vector cells))
       ,@(ein:aand (oref ws :metadata) `((metadata . ,it))))))
 
-(defmethod ein:worksheet-save-cells ((ws ein:worksheet))
+(defmethod ein:worksheet-save-cells ((ws ein:worksheet) &optional deactivate)
   "Save cells in worksheet buffer in cache before killing the buffer.
 
-.. warning:: After calling this function, cells in worksheet
-   cannot be used.  Use only just before killing the buffer.
+.. warning:: After called with non-nil DEACTIVATE flag is given,
+   cells in worksheet cannot be used anymore.  Use only just
+   before killing the buffer.
 
+You don't need to set current buffer to call this function.
 Do nothing when the worksheet WS has no buffer."
   (when (ein:worksheet-has-buffer-p ws)
     (let ((cells (ein:worksheet-get-cells ws)))
-      (mapc #'ein:cell-save-text cells)
-      (mapc #'ein:cell-deactivate cells)
+      (with-current-buffer (ein:worksheet-buffer ws)
+        (mapc #'ein:cell-save-text cells))
+      (when deactivate
+        (mapc #'ein:cell-deactivate cells))
       (oset ws :saved-cells cells))))
 
 

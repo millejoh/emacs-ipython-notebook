@@ -216,7 +216,7 @@ call notebook destructor `ein:notebook-del'."
   (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
                     (scratchsheets (ein:$notebook-scratchsheets notebook)))
     (cond
-     ((ein:worksheet-p ws) (ein:worksheet-save-cells ws))
+     ((ein:worksheet-p ws) (ein:worksheet-save-cells ws t))
      (t (setq scratchsheets (delq ws scratchsheets))))
     (unless (or (ein:filter (lambda (x)
                               (and (not (eq x ws))
@@ -566,10 +566,20 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
-  (mapc (lambda (ws) (ein:worksheet-set-modified-p ws nil))
+  (mapc (lambda (ws)
+          (ein:worksheet-save-cells ws) ; [#]_
+          (ein:worksheet-set-modified-p ws nil))
         (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook))
+;; .. [#] Consider the following case.
+;;    (1) Open worksheet WS0 and other worksheets.
+;;    (2) Edit worksheet WS0 then save the notebook.
+;;    (3) Edit worksheet WS0.
+;;    (4) Kill WS0 buffer by discarding the edit.
+;;    (5) Save the notebook.
+;;    This should save the latest WS0.  To do so, WS0 at the point (2)
+;;    must be cached in the worksheet slot `:saved-cells'.
 
 (defun* ein:notebook-save-notebook-error (notebook &key symbol-status
                                                    &allow-other-keys)
@@ -930,10 +940,15 @@ Note that print page is not supported in IPython 0.12.1."
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
-  (not (and ein:notebook-kill-buffer-ask
-            (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
-            (ein:notebook-modified-p)
-            (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
+  (not (or (and ein:notebook-kill-buffer-ask
+                (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
+                (ein:notebook-modified-p)
+                (not (y-or-n-p
+                      "You have unsaved changes. Discard changes?")))
+           (when (ein:worksheet-p ein:%worksheet%)
+             ;; To make `ein:worksheet-save-cells' no-op.
+             (ein:worksheet-detach-from-buffer ein:%worksheet%)
+             nil))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
