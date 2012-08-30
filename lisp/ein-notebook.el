@@ -567,11 +567,19 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:log 'info "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
   (mapc (lambda (ws)
-          (ein:worksheet-save-cells ws)
+          (ein:worksheet-save-cells ws) ; [#]_
           (ein:worksheet-set-modified-p ws nil))
         (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook))
+;; .. [#] Consider the following case.
+;;    (1) Open worksheet WS0 and other worksheets.
+;;    (2) Edit worksheet WS0 then save the notebook.
+;;    (3) Edit worksheet WS0.
+;;    (4) Kill WS0 buffer by discarding the edit.
+;;    (5) Save the notebook.
+;;    This should save the latest WS0.  To do so, WS0 at the point (2)
+;;    must be cached in the worksheet slot `:saved-cells'.
 
 (defun* ein:notebook-save-notebook-error (notebook &key symbol-status
                                                    &allow-other-keys)
