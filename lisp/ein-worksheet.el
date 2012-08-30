@@ -241,10 +241,12 @@ current buffer."
    cells in worksheet cannot be used anymore.  Use only just
    before killing the buffer.
 
+You don't need to set current buffer to call this function.
 Do nothing when the worksheet WS has no buffer."
   (when (ein:worksheet-has-buffer-p ws)
     (let ((cells (ein:worksheet-get-cells ws)))
-      (mapc #'ein:cell-save-text cells)
+      (with-current-buffer (ein:worksheet-buffer ws)
+        (mapc #'ein:cell-save-text cells))
       (when deactivate
         (mapc #'ein:cell-deactivate cells))
       (oset ws :saved-cells cells))))
