@@ -78,6 +78,7 @@ Usage::
      (with-temp-buffer
        (erase-buffer)
        (insert html-string)
+       ;; FIXME: If URLs are local, they should be adapted here.
        (libxml-parse-html-region (point-min) (point-max))))
     (setq end (point))
     (put-text-property start end 'read-only t)
