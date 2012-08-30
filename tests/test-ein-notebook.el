@@ -762,6 +762,42 @@ defined."
       ;; to-json should still work
       (ein:testing-notebook-data-assert-one-worksheet-no-cell notebook))))
 
+(defun ein:testing-notebook-should-be-closed (notebook buffer)
+  (should-not (buffer-live-p buffer))
+  (should-not (ein:notebook-live-p notebook)))
+
+(ert-deftest ein:notebook-kill-kernel-then-close-when-its-alive ()
+  (with-current-buffer (ein:testing-notebook-make-new)
+    (let ((buffer (current-buffer))
+          (notebook ein:%notebook%)
+          (kernel (ein:$notebook-kernel ein:%notebook%))
+          (ein:notebook-kill-buffer-ask nil))
+      (mocker-let
+          ((ein:kernel-live-p
+            (kernel)
+            ((:input (list kernel) :output t)))
+           (ein:kernel-kill
+            (kernel &optional callback cbargs)
+            ((:input (list kernel #'ein:notebook-close (list notebook))))))
+        (call-interactively #'ein:notebook-kill-kernel-then-close-command))
+      (should (buffer-live-p buffer))
+      ;; Pretend that `ein:notebook-close' is called.
+      (ein:notebook-close notebook)
+      (ein:testing-notebook-should-be-closed notebook buffer))))
+
+(ert-deftest ein:notebook-kill-kernel-then-close-when-already-dead ()
+  (with-current-buffer (ein:testing-notebook-make-new)
+    (let ((buffer (current-buffer))
+          (notebook ein:%notebook%)
+          (kernel (ein:$notebook-kernel ein:%notebook%))
+          (ein:notebook-kill-buffer-ask nil))
+      (mocker-let
+          ((ein:kernel-live-p
+            (kernel)
+            ((:input (list kernel) :output nil))))
+        (call-interactively #'ein:notebook-kill-kernel-then-close-command))
+      (ein:testing-notebook-should-be-closed notebook buffer))))
+
 
 ;; Notebook undo
 
