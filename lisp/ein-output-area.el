@@ -45,7 +45,19 @@
   '((shr-table-horizontal-line ?-)
     (shr-table-vertical-line ?|)
     (shr-table-corner ?+))
-  "Variables let-bound while calling `shr-insert-document'."
+  "Variables let-bound while calling `shr-insert-document'.
+
+To use default shr setting::
+
+    (setq ein:shr-env nil)
+
+Draw boundaries for table (default)::
+
+    (setq ein:shr-env
+          '((shr-table-horizontal-line ?-)
+            (shr-table-vertical-line ?|)
+            (shr-table-corner ?+)))
+"
   :group 'ein)
 
 (defun ein:shr-insert-document (dom)
