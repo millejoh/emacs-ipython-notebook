@@ -930,10 +930,15 @@ Note that print page is not supported in IPython 0.12.1."
 (defun ein:notebook-ask-before-kill-buffer ()
   "Return `nil' to prevent killing the notebook buffer.
 Called via `kill-buffer-query-functions'."
-  (not (and ein:notebook-kill-buffer-ask
-            (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
-            (ein:notebook-modified-p)
-            (not (y-or-n-p "You have unsaved changes. Discard changes?")))))
+  (not (or (and ein:notebook-kill-buffer-ask
+                (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
+                (ein:notebook-modified-p)
+                (not (y-or-n-p
+                      "You have unsaved changes. Discard changes?")))
+           (when (ein:worksheet-p ein:%worksheet%)
+             ;; To make `ein:worksheet-save-cells' no-op.
+             (ein:worksheet-detach-from-buffer ein:%worksheet%)
+             nil))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
 
