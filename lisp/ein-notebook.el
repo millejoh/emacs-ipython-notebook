@@ -1043,7 +1043,7 @@ Called via `kill-buffer-query-functions'."
                       "You have unsaved changes. Discard changes?")))
            (when (ein:worksheet-p ein:%worksheet%)
              ;; To make `ein:worksheet-save-cells' no-op.
-             (ein:worksheet-detach-from-buffer ein:%worksheet%)
+             (ein:worksheet-dont-save-cells ein:%worksheet%)
              nil))))
 
 (add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
