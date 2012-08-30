@@ -803,9 +803,26 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-append-mime-type json (oref cell :dynamic))
   (ein:insert-read-only "\n"))
 
+(defcustom ein:output-type-preference
+  (if (and (fboundp 'shr-insert-document)
+           (fboundp 'libxml-parse-xml-region))
+      '(emacs-lisp svg png jpeg html text latex javascript)
+    '(emacs-lisp svg png jpeg text html latex javascript))
+  "Output types to be used in notebook.
+First output-type found in this list will be used.
+
+**Example**:
+If you prefer HTML type over text type, you can set it as::
+
+    (setq ein:output-type-preference
+          '(emacs-lisp svg png jpeg html text latex javascript))
+
+Note that ``html`` comes before ``text``."
+  :group 'ein)
+
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(emacs-lisp svg png jpeg html text latex javascript)
+   for key in ein:output-type-preference
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
