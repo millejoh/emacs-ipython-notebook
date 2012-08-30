@@ -651,7 +651,16 @@ as usual."
   (ein:notebook--worksheet-render-new notebook worksheet))
 
 (defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional popup)
-  "Open next worksheet.  Create new if none."
+  "Open next worksheet.  Create new if none.
+
+.. warning:: Not tested enough!  Do not use this function yet.
+
+Try to open the worksheet to the worksheet WS using the function
+`ein:notebook-worksheet-open-next', open a new worksheet if not
+found.
+
+It calls `pop-to-buffer' for worksheet buffer if POPUP is
+non-nil."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
                      t))
@@ -664,7 +673,16 @@ as usual."
       (pop-to-buffer (ein:worksheet-buffer next)))))
 
 (defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional popup)
-  "Open next or first worksheet."
+  "Open next or first worksheet.
+
+.. warning:: Not tested enough!  Do not use this function yet.
+
+Try to open the worksheet to the worksheet WS using the function
+`ein:notebook-worksheet-open-next', open the first worksheet if
+not found.
+
+It calls `pop-to-buffer' for worksheet buffer if POPUP is
+non-nil."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
                      t))
@@ -675,7 +693,17 @@ as usual."
       (pop-to-buffer (ein:worksheet-buffer next)))))
 
 (defun ein:notebook-worksheet-open-next (notebook ws &optional popup)
-  "Open next worksheet."
+  "Open next worksheet.
+
+.. warning:: Not tested enough!  Do not use this function yet.
+
+Search the worksheet after the worksheet WS, render it if it is
+not yet, then return the worksheet.  If there is no such
+worksheet, return nil.  Open the first worksheet if the worksheet
+WS is an instance of `ein:scratchsheet'.
+
+It calls `pop-to-buffer' for worksheet buffer if POPUP is
+non-nil."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
                      t))
