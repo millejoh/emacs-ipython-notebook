@@ -327,6 +327,7 @@ Notebook
 .. el:variable:: ein:scratch-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
+.. el:variable:: ein:output-type-preference
 
 Console
 ^^^^^^^
@@ -497,6 +498,9 @@ Change Log
 v0.2
 ----
 
+* Preferred MIME types to be used can be configured using the variable
+  :el:symbol:`ein:output-type-preference`.
+* HTML content is rendered SHR (Simple HTML Renderer) by default.
 * :el:symbol:`ein:notebook-discard-output-on-save` is obsolete now.
 * Support execution history.  Commands
   :el:symbol:`ein:worksheet-previous-input-history` and
