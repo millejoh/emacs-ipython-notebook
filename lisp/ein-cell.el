@@ -40,6 +40,7 @@
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-kernel)
+(require 'ein-output-area)
 
 
 ;;; Faces
@@ -804,7 +805,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(emacs-lisp svg png jpeg text latex html javascript)
+   for key in '(emacs-lisp svg png jpeg html text latex javascript)
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
@@ -821,7 +822,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      (emacs-lisp
       (when dynamic
         (ein:cell-safe-read-eval-insert (plist-get json type))))
-     ((html latex text)
+     (html
+      (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
+     ((latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
       (insert-image (create-image value key t)))
