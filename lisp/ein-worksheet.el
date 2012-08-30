@@ -86,6 +86,8 @@ this value."
    (saved-cells :initarg :saved-cells :initform nil
                 :documentation
                 "Slot to cache cells for worksheet without buffer")
+   (dont-save-cells :initarg :dont-save-cells :initform nil :type boolean
+                    :documentation "Don't cache cells when this flag is on.")
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
@@ -243,14 +245,27 @@ current buffer."
    before killing the buffer.
 
 You don't need to set current buffer to call this function.
-Do nothing when the worksheet WS has no buffer."
-  (when (ein:worksheet-has-buffer-p ws)
+Do nothing when the worksheet WS has no buffer or `:dont-save-cells'
+flag is on (`ein:worksheet-dont-save-cells' is called).  Calling
+this function unconditionally resets `:dont-save-cells' flag.
+
+\(fn ws deactivate)"
+  (when (and (ein:worksheet-has-buffer-p ws)
+             (not (oref ws :dont-save-cells)))
     (let ((cells (ein:worksheet-get-cells ws)))
       (with-current-buffer (ein:worksheet-buffer ws)
         (mapc #'ein:cell-save-text cells))
       (when deactivate
         (mapc #'ein:cell-deactivate cells))
-      (oset ws :saved-cells cells))))
+      (oset ws :saved-cells cells)))
+  (oset ws :dont-save-cells nil))
+
+(defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
+  "Turn on `:dont-save-cells' flag so that next call on
+`ein:worksheet-save-cells' actually do nothing.
+
+\(fn ws)"
+  (oset ws :dont-save-cells t))
 
 
 ;;; Cell indexing, retrieval, etc.
