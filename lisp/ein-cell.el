@@ -806,10 +806,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (defcustom ein:output-type-preference
   (if (and (fboundp 'shr-insert-document)
            (fboundp 'libxml-parse-xml-region))
-      '(emacs-lisp svg png jpeg html text latex javascript)
+      #'ein:output-type-prefer-pretty-text-over-html
     '(emacs-lisp svg png jpeg text html latex javascript))
   "Output types to be used in notebook.
 First output-type found in this list will be used.
+This variable can be a list or a function returning a list given
+DATA plist.
+See also `ein:output-type-prefer-pretty-text-over-html'.
 
 **Example**:
 If you prefer HTML type over text type, you can set it as::
@@ -820,9 +823,23 @@ If you prefer HTML type over text type, you can set it as::
 Note that ``html`` comes before ``text``."
   :group 'ein)
 
+(defun ein:output-type-prefer-pretty-text-over-html (data)
+  "Use text type if it is a \"prettified\" text instead of HTML.
+This is mostly for *not* using HTML table for pandas but using
+HTML for other object.
+
+If the text type output contains a newline, it is assumed be a
+prettified text thus be used instead of HTML type."
+  (if (ein:aand (plist-get data :text) (string-match-p "\n" it))
+      '(emacs-lisp svg png jpeg text html latex javascript)
+    '(emacs-lisp svg png jpeg html text latex javascript)))
+
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in ein:output-type-preference
+   for key in (cond
+               ((functionp ein:output-type-preference)
+                (funcall ein:output-type-preference json))
+               (t ein:output-type-preference))
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
