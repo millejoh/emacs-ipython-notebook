@@ -635,14 +635,110 @@ as usual."
         (ein:notebook-close ein:%notebook%)))))
 
 
+;;; Worksheet
+
+(defmacro ein:notebook--worksheet-render-new (notebook type)
+  "Create new worksheet of TYPE in NOTEBOOK."
+  (let ((func (intern (format "ein:%s-new" type)))
+        (slot (list (intern (format "ein:$notebook-%ss" type)) notebook)))
+    `(let ((ws (ein:notebook--worksheet-new ,notebook #',func)))
+       (setf ,slot (append ,slot (list ws)))
+       (ein:notebook--worksheet-render ,notebook ws)
+       ws)))
+
+(defun ein:notebook-worksheet-render-new (notebook)
+  "Create new worksheet in NOTEBOOK."
+  (ein:notebook--worksheet-render-new notebook worksheet))
+
+(defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional show)
+  "Open next worksheet.  Create new if none.
+
+Try to open the worksheet to the worksheet WS using the function
+`ein:notebook-worksheet-open-next', open a new worksheet if not
+found.
+
+SHOW is a function to be called with the worksheet buffer if
+given."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
+    (unless next
+      (ein:log 'info "Creating new worksheet...")
+      (setq next (ein:notebook-worksheet-render-new notebook))
+      (ein:log 'info "Creating new worksheet... Done."))
+    (when show
+      (funcall show (ein:worksheet-buffer next)))))
+
+(defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional show)
+  "Open next or first worksheet.
+
+Try to open the worksheet to the worksheet WS using the function
+`ein:notebook-worksheet-open-next', open the first worksheet if
+not found.
+
+SHOW is a function to be called with the worksheet buffer if
+given."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
+    (unless next
+      (setq next (car (ein:$notebook-worksheets notebook))))
+    (when show
+      (funcall show (ein:worksheet-buffer next)))))
+
+(defun ein:notebook-worksheet-open-next (notebook ws &optional show)
+  "Open next worksheet.
+
+Search the worksheet after the worksheet WS, render it if it is
+not yet, then return the worksheet.  If there is no such
+worksheet, return nil.  Open the first worksheet if the worksheet
+WS is an instance of `ein:scratchsheet'.
+
+SHOW is a function to be called with the worksheet buffer if
+given."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((next (if (ein:scratchsheet-p ws)
+                  (car (ein:$notebook-worksheets notebook))
+                (loop with worksheets = (ein:$notebook-worksheets notebook)
+                      for current in worksheets
+                      for next in (cdr worksheets)
+                      when (eq current ws) return next))))
+    (when next
+      (if (ein:worksheet-has-buffer-p next)
+          (ein:log 'verbose "Next worksheet already has a buffer.")
+        (ein:log 'info "Rendering next worksheet...")
+        (ein:notebook--worksheet-render notebook next)
+        (ein:log 'info "Rendering next worksheet... Done.")))
+    (when show
+      (assert (ein:worksheet-p next) nil "No next worksheet.")
+      (funcall show (ein:worksheet-buffer next)))
+    next))
+
+(defun ein:notebook-worksheet-delete (notebook ws)
+  "Delete the current worksheet.
+When used as a lisp function, delete worksheet WS from NOTEBOOk."
+  (interactive (progn
+                 (unless (y-or-n-p
+                          "Really remove this worksheet? There is no undo.")
+                   (error "Quit deleting the current worksheet."))
+                 (list (ein:notebook--get-nb-or-error)
+                       (ein:worksheet--get-ws-or-error))))
+  (setf (ein:$notebook-worksheets notebook)
+        (delq ws (ein:$notebook-worksheets notebook)))
+  (setf (ein:$notebook-dirty notebook) t)
+  (let ((ein:notebook-kill-buffer-ask nil))
+    (kill-buffer (ein:worksheet-buffer ws))))
+
+
 ;;; Scratch sheet
 
-(defun ein:notebook-scratchsheet-new (notebook)
+(defun ein:notebook-scratchsheet-render-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
-  (let ((ss (ein:notebook--worksheet-new notebook #'ein:scratchsheet-new)))
-    (push ss (ein:$notebook-scratchsheets notebook))
-    (ein:notebook--worksheet-render notebook ss)
-    ss))
+  (ein:notebook--worksheet-render-new notebook scratchsheet))
 
 (defun ein:notebook-scratchsheet-open (notebook &optional new popup)
   "Open \"scratch sheet\".
@@ -656,7 +752,7 @@ worksheet to save result."
                      t))
   (let ((ss (or (unless new
                   (car (ein:$notebook-scratchsheets notebook)))
-                (ein:notebook-scratchsheet-new notebook))))
+                (ein:notebook-scratchsheet-render-new notebook))))
     (when popup
       (pop-to-buffer (ein:worksheet-buffer ss)))
     ss))
