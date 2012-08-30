@@ -161,6 +161,7 @@ this value."
 
 (defmethod ein:worksheet-detach-from-buffer ((ws ein:worksheet))
   "Deactivate worksheet WS without killing buffer."
+  (mapc #'ein:cell-deactivate (ein:worksheet-get-cells ws))
   (slot-makeunbound ws :ewoc))
 
 (defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
