@@ -91,18 +91,20 @@ some input
 ;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
-  (ein:testing-with-one-cell
-      (ein:cell-from-json
-       (list :cell_type "code"
-             :outputs outputs
-             :input "some input"
-             :prompt_number 111)
-       :ewoc (oref ein:%worksheet% :ewoc))
-    (goto-char (ein:cell-location cell))
-    (should (looking-at (format "\
+  (let ((ein:output-type-preference
+         '(emacs-lisp svg png jpeg text html latex javascript)))
+    (ein:testing-with-one-cell
+        (ein:cell-from-json
+         (list :cell_type "code"
+               :outputs outputs
+               :input "some input"
+               :prompt_number 111)
+         :ewoc (oref ein:%worksheet% :ewoc))
+      (goto-char (ein:cell-location cell))
+      (should (looking-at (format "\
 In \\[111\\]:
 some input
-%s" regexp)))))
+%s" regexp))))))
 
 (defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data
   (name regexps outputs)

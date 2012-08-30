@@ -40,6 +40,7 @@
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-kernel)
+(require 'ein-output-area)
 
 
 ;;; Faces
@@ -802,9 +803,43 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-append-mime-type json (oref cell :dynamic))
   (ein:insert-read-only "\n"))
 
+(defcustom ein:output-type-preference
+  (if (and (fboundp 'shr-insert-document)
+           (fboundp 'libxml-parse-xml-region))
+      #'ein:output-type-prefer-pretty-text-over-html
+    '(emacs-lisp svg png jpeg text html latex javascript))
+  "Output types to be used in notebook.
+First output-type found in this list will be used.
+This variable can be a list or a function returning a list given
+DATA plist.
+See also `ein:output-type-prefer-pretty-text-over-html'.
+
+**Example**:
+If you prefer HTML type over text type, you can set it as::
+
+    (setq ein:output-type-preference
+          '(emacs-lisp svg png jpeg html text latex javascript))
+
+Note that ``html`` comes before ``text``."
+  :group 'ein)
+
+(defun ein:output-type-prefer-pretty-text-over-html (data)
+  "Use text type if it is a \"prettified\" text instead of HTML.
+This is mostly for *not* using HTML table for pandas but using
+HTML for other object.
+
+If the text type output contains a newline, it is assumed be a
+prettified text thus be used instead of HTML type."
+  (if (ein:aand (plist-get data :text) (string-match-p "\n" it))
+      '(emacs-lisp svg png jpeg text html latex javascript)
+    '(emacs-lisp svg png jpeg html text latex javascript)))
+
 (defun ein:cell-append-mime-type (json dynamic)
   (loop
-   for key in '(emacs-lisp svg png jpeg text latex html javascript)
+   for key in (cond
+               ((functionp ein:output-type-preference)
+                (funcall ein:output-type-preference json))
+               (t ein:output-type-preference))
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
@@ -821,7 +856,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      (emacs-lisp
       (when dynamic
         (ein:cell-safe-read-eval-insert (plist-get json type))))
-     ((html latex text)
+     (html
+      (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
+     ((latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
       (insert-image (create-image value key t)))
