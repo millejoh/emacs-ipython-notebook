@@ -692,7 +692,7 @@ as usual."
         (ein:notebook--worksheet-render notebook next)
         (ein:log 'info "Rendering next worksheet... Done.")))
     (when popup
-      (assert (ein:worksheet-p next) nil "No next notebook.")
+      (assert (ein:worksheet-p next) nil "No next worksheet.")
       (pop-to-buffer (ein:worksheet-buffer next)))
     next))
 
