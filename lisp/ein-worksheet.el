@@ -86,6 +86,8 @@ this value."
    (saved-cells :initarg :saved-cells :initform nil
                 :documentation
                 "Slot to cache cells for worksheet without buffer")
+   (dont-save-cells :initarg :dont-save-cells :initform nil :type boolean
+                    :documentation "Don't cache cells when this flag is on.")
    (ewoc :initarg :ewoc :type ewoc)
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
@@ -158,11 +160,6 @@ this value."
                  (buffer (ewoc-buffer ewoc))
                  ((buffer-live-p buffer)))
     buffer))
-
-(defmethod ein:worksheet-detach-from-buffer ((ws ein:worksheet))
-  "Deactivate worksheet WS without killing buffer."
-  (mapc #'ein:cell-deactivate (ein:worksheet-get-cells ws))
-  (slot-makeunbound ws :ewoc))
 
 (defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
   (format ein:worksheet-buffer-name-template
@@ -243,14 +240,34 @@ current buffer."
    before killing the buffer.
 
 You don't need to set current buffer to call this function.
-Do nothing when the worksheet WS has no buffer."
+Do nothing when the worksheet WS has no buffer.
+
+If the `:dont-save-cells' slot is non-nil (meaning that
+`ein:worksheet-dont-save-cells' has been called), cells in the
+worksheet buffer are not saved.  When the DEACTIVATE option is
+given, cached cells are deactivated instead of the cells in
+buffer.  Calling this function unconditionally resets
+`:dont-save-cells' flag to nil to make caching work when the
+worksheet WS is reopened.
+
+\(fn ws deactivate)"
   (when (ein:worksheet-has-buffer-p ws)
-    (let ((cells (ein:worksheet-get-cells ws)))
-      (with-current-buffer (ein:worksheet-buffer ws)
-        (mapc #'ein:cell-save-text cells))
-      (when deactivate
-        (mapc #'ein:cell-deactivate cells))
-      (oset ws :saved-cells cells))))
+    (unless (oref ws :dont-save-cells)
+      (let ((cells (ein:worksheet-get-cells ws)))
+        (with-current-buffer (ein:worksheet-buffer ws)
+          (mapc #'ein:cell-save-text cells))
+        (when deactivate (mapc #'ein:cell-deactivate cells))
+        (oset ws :saved-cells cells)))
+    (when deactivate
+      (mapc #'ein:cell-deactivate (oref ws :saved-cells))))
+  (oset ws :dont-save-cells nil))
+
+(defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
+  "Turn on `:dont-save-cells' flag so that next call on
+`ein:worksheet-save-cells' actually do nothing.
+
+\(fn ws)"
+  (oset ws :dont-save-cells t))
 
 
 ;;; Cell indexing, retrieval, etc.
