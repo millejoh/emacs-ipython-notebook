@@ -225,6 +225,10 @@ but can operate in different contexts."
                         ;; ein:get-notebook--shared-output
                         ein:get-notebook--connect)))
 
+(defun ein:get-notebook-or-error ()
+  (or (ein:get-notebook)
+      (error "No notebook related to the current buffer.")))
+
 (defun ein:get-kernel ()
   (ein:generic-getter '(ein:get-kernel--notebook
                         ein:get-kernel--worksheet

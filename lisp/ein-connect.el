@@ -372,6 +372,7 @@ notebook."
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   map)
 
 (defun ein:connect-mode-get-lighter ()

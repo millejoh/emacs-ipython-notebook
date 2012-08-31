@@ -747,7 +747,7 @@ Scratch sheet is almost identical to worksheet.  However, EIN
 will not save the buffer.  Use this buffer like of normal IPython
 console.  Note that you can always copy cells into the normal
 worksheet to save result."
-  (interactive (list (ein:notebook--get-nb-or-error)
+  (interactive (list (ein:get-notebook-or-error)
                      current-prefix-arg
                      t))
   (let ((ss (or (unless new
