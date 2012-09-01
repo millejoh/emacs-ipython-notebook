@@ -681,6 +681,18 @@ given."
     (when show
       (funcall show (ein:worksheet-buffer next)))))
 
+(defun* ein:notebook-worksheet--open-new
+    (notebook new &optional (adj "next") show)
+  (when new
+    (if (ein:worksheet-has-buffer-p new)
+        (ein:log 'verbose "The worksheet already has a buffer.")
+      (ein:log 'info "Rendering %s worksheet..." adj)
+      (ein:notebook--worksheet-render notebook new)
+      (ein:log 'info "Rendering %s worksheet... Done." adj)))
+  (when show
+    (assert (ein:worksheet-p new) nil "No %s worksheet." adj)
+    (funcall show (ein:worksheet-buffer new))))
+
 (defun ein:notebook-worksheet-open-next (notebook ws &optional show)
   "Open next worksheet.
 
@@ -700,16 +712,21 @@ given."
                       for current in worksheets
                       for next in (cdr worksheets)
                       when (eq current ws) return next))))
-    (when next
-      (if (ein:worksheet-has-buffer-p next)
-          (ein:log 'verbose "Next worksheet already has a buffer.")
-        (ein:log 'info "Rendering next worksheet...")
-        (ein:notebook--worksheet-render notebook next)
-        (ein:log 'info "Rendering next worksheet... Done.")))
-    (when show
-      (assert (ein:worksheet-p next) nil "No next worksheet.")
-      (funcall show (ein:worksheet-buffer next)))
+    (ein:notebook-worksheet--open-new notebook next "next" show)
     next))
+
+(defun ein:notebook-worksheet-open-prev (notebook ws &optional show)
+  "Open previous worksheet.
+See also `ein:notebook-worksheet-open-next'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((prev (if (ein:scratchsheet-p ws)
+                  (car (last (ein:$notebook-worksheets notebook)))
+                (loop for (prev current) on (ein:$notebook-worksheets notebook)
+                      when (eq current ws) return prev))))
+    (ein:notebook-worksheet--open-new notebook prev "previous" show)
+    prev))
 
 (defun ein:notebook-worksheet-insert-new (notebook ws &optional render show
                                                    inserter)
