@@ -142,7 +142,7 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20546 22294))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20546 25112))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -214,11 +214,11 @@ See also:
 ;;;***
 
 ;;;### (autoloads (ein:pseudo-console-mode) "ein-pseudo-console"
-;;;;;;  "ein-pseudo-console.el" (20546 22425))
+;;;;;;  "ein-pseudo-console.el" (20546 25051))
 ;;; Generated autoloads from ein-pseudo-console.el
 
 (autoload 'ein:pseudo-console-mode "ein-pseudo-console" "\
-Pseudo console mode.
+Pseudo console mode.  Hit RET to execute code.
 
 \(fn &optional ARG)" t nil)
 
@@ -253,11 +253,11 @@ shared output buffer.  You can open the buffer by the command
 ;;;***
 
 ;;;### (autoloads (ein:tb-show) "ein-traceback" "ein-traceback.el"
-;;;;;;  (20546 22642))
+;;;;;;  (20546 25209))
 ;;; Generated autoloads from ein-traceback.el
 
 (autoload 'ein:tb-show "ein-traceback" "\
-Popup traceback viewer.
+Show full traceback in traceback viewer.
 
 \(fn)" t nil)
 
@@ -269,7 +269,7 @@ Popup traceback viewer.
 ;;;;;;  "ein-notification.el" "ein-output-area.el" "ein-pager.el"
 ;;;;;;  "ein-pkg.el" "ein-pytools.el" "ein-query.el" "ein-scratchsheet.el"
 ;;;;;;  "ein-smartrep.el" "ein-subpackages.el" "ein-utils.el" "ein-websocket.el"
-;;;;;;  "ein-worksheet.el" "ein.el") (20546 22950 119162))
+;;;;;;  "ein-worksheet.el" "ein.el") (20546 25881 452248))
 
 ;;;***
 
