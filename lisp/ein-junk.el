@@ -49,14 +49,23 @@ format string which can be passed to `format-time-string'."
 (define-obsolete-function-alias 'ein:notebooklist-new-scratch-notebook
   'ein:junk-new)
 
-(defun ein:junk-new ()
+(defun ein:junk-new (name url-or-port)
   "Open a notebook to try random thing.
 Notebook name is determined based on
-`ein:junk-notebook-name-template'."
-  (interactive)
-  (ein:notebooklist-new-notebook-with-name
-   (ein:junk-notebook-name)
-   (ein:default-url-or-port)))
+`ein:junk-notebook-name-template'.
+
+When any prefix argument is given, this command asks notebook
+name to be used.  When two universal prefix arguments (i.e.,
+``C-u C-u``) are given, this command asks URL or port to use."
+  (interactive (let ((name (ein:junk-notebook-name))
+                     (url-or-port (or (ein:get-url-or-port)
+                                      (ein:default-url-or-port))))
+                 (when current-prefix-arg
+                   (setq name (read-string "Rename notebook: " name)))
+                 (when (equal current-prefix-arg '(16))
+                   (setq url-or-port (ein:notebooklist-ask-url-or-port)))
+                 (list name url-or-port)))
+  (ein:notebooklist-new-notebook-with-name name url-or-port))
 
 
 (define-obsolete-function-alias ' ein:notebook-rename-to-scratch-command
