@@ -45,7 +45,11 @@ format string which can be passed to `format-time-string'."
 `ein:junk-notebook-name-template'."
   (format-time-string ein:junk-notebook-name-template (current-time)))
 
-(defun ein:notebooklist-new-scratch-notebook ()
+
+(define-obsolete-function-alias 'ein:notebooklist-new-scratch-notebook
+  'ein:junk-new)
+
+(defun ein:junk-new ()
   "Open a notebook to try random thing.
 Notebook name is determined based on
 `ein:junk-notebook-name-template'."
@@ -54,7 +58,11 @@ Notebook name is determined based on
    (ein:junk-notebook-name)
    (ein:default-url-or-port)))
 
-(defun ein:notebook-rename-to-scratch-command (name)
+
+(define-obsolete-function-alias ' ein:notebook-rename-to-scratch-command
+  'ein:junk-rename)
+
+(defun ein:junk-rename (name)
   "Rename notebook based on `ein:junk-notebook-name-template'
 and save it immediately."
   (interactive
