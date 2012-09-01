@@ -608,14 +608,6 @@ NAME is any non-empty string that does not contain '/' or '\\'."
        (run-hooks 'ein:notebook-after-rename-hook)))
    ein:%notebook%))
 
-(defun ein:notebook-rename-to-scratch-command (name)
-  "Rename notebook based on `ein:scratch-notebook-name-template'
-and save it immediately."
-  (interactive
-   (list (read-string "Rename notebook: "
-                      (ein:scratch-notebook-name))))
-  (ein:notebook-rename-command name))
-
 (defun ein:notebook-close (notebook)
   "Close NOTEBOOK and kill its buffer."
   (let ((ein:notebook-kill-buffer-ask nil))
