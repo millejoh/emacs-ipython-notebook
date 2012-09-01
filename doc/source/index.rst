@@ -517,7 +517,7 @@ v0.2
   don't need to save it.  You can use try any code without saving
   junks in your notebook.  Use the command
   :el:symbol:`ein:notebook-scratchsheet-open` to open scratch sheet.
-* Menu support in notebook mode.
+* Menu support in notebook mode and notebook list mode.
 * Auto-connection support.
   The new function :el:symbol:`ein:connect-to-default-notebook` can be
   added to :el:symbol:`python-mode-hook` to automatically connect

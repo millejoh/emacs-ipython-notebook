@@ -411,7 +411,15 @@ See also:
   (define-key map "g" 'ein:notebooklist-reload)
   (define-key map "p" 'ein:notebooklist-prev-item)
   (define-key map "n" 'ein:notebooklist-next-item)
-  (define-key map "q" 'bury-buffer))
+  (define-key map "q" 'bury-buffer)
+  (easy-menu-define ein:notebooklist-menu map "EIN Notebook List Mode Menu"
+    `("EIN Notebook List"
+      ,@(ein:generate-menu
+         '(("Reload" ein:notebooklist-reload)
+           ("New Notebook" ein:notebooklist-new-notebook)
+           ("New Notebook (with name)"
+            ein:notebooklist-new-notebook-with-name)
+           ("New Junk Notebook" ein:junk-new))))))
 
 (provide 'ein-notebooklist)
 
