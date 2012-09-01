@@ -681,6 +681,19 @@ given."
     (when show
       (funcall show (ein:worksheet-buffer next)))))
 
+(defun ein:notebook-worksheet-open-prev-or-last (notebook ws &optional show)
+  "Open previous or last worksheet.
+See also `ein:notebook-worksheet-open-next-or-first' and
+`ein:notebook-worksheet-open-prev'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((prev (ein:notebook-worksheet-open-prev notebook ws)))
+    (unless prev
+      (setq prev (car (last (ein:$notebook-worksheets notebook)))))
+    (when show
+      (funcall show (ein:worksheet-buffer prev)))))
+
 (defun* ein:notebook-worksheet--open-new
     (notebook new &optional (adj "next") show)
   (when new
