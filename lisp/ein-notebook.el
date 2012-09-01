@@ -941,11 +941,10 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
              ein:worksheet-execute-cell-and-insert-below
              :active (ein:worksheet-at-codecell-p))
             ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
-             :active (ein:worksheet-at-codecell-p))))
-       ["Evaluate code in minibuffer" ein:shared-output-eval-string
-        :help "Result will appear in the shared output buffer"]
-       ["Toggle instant cell execution mode" ein:iexec-mode
-        :help "Automatically executed code cell after any change."]
+             :active (ein:worksheet-at-codecell-p))
+            ("Evaluate code in minibuffer" ein:shared-output-eval-string)
+            ("Toggle instant cell execution mode" ein:iexec-mode)
+            ))
        "---"
        ,@(ein:generate-menu
           '(("Toggle output visibility" ein:worksheet-toggle-output
@@ -954,13 +953,11 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
              ein:worksheet-set-output-visibility-all)
             ("Discard output" ein:worksheet-clear-output
              :active (ein:worksheet-at-codecell-p))
-            ("Discard all output" ein:worksheet-clear-all-output)))
-       ["Show full output"
-        ein:shared-output-show-code-cell-at-point
-        :active (ein:worksheet-at-codecell-p)
-        :help "Show code cell at point in the shared output buffer"]
-       ["Traceback viewer" ein:tb-show
-        :help "Show full traceback in different buffer"]
+            ("Discard all output" ein:worksheet-clear-all-output)
+            ("Show full output" ein:shared-output-show-code-cell-at-point
+             :active (ein:worksheet-at-codecell-p))
+            ("Traceback viewer" ein:tb-show)
+            ))
        "---"
        ,@(ein:generate-menu
           '(("Show object help"
@@ -985,9 +982,10 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
       ;; Misc:
       ,@(ein:generate-menu
          '(("Open regular IPython console" ein:console-open)
-           ("Open scratch sheet" ein:notebook-scratchsheet-open)))
-      ["Toggle pseudo console mode" ein:pseudo-console-mode
-       :help "Hit RET to execute code"]))
+           ("Open scratch sheet" ein:notebook-scratchsheet-open)
+           ("Toggle pseudo console mode" ein:pseudo-console-mode)
+           ))
+      ))
   map)
 
 (defun ein:notebook-mode ()

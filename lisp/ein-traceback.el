@@ -74,7 +74,7 @@
 
 ;;;###autoload
 (defun ein:tb-show ()
-  "Popup traceback viewer."
+  "Show full traceback in traceback viewer."
   (interactive)
   (unless
       (ein:and-let* ((tb-data (ein:get-traceback-data))
