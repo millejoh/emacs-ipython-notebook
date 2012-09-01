@@ -55,9 +55,6 @@
 
 ;;; Code:
 
-(defvar ein:version "0.2.0alpha0"
-  "Version number for Emacs IPython Notebook (EIN).")
-
 ;; For backward compatibility + providing easy way to load EIN for
 ;; users who prefer manual installation.
 (require 'ein-loaddefs)
