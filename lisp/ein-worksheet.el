@@ -179,7 +179,7 @@ this value."
 
 (defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (rename-buffer (ein:worksheet--buffer-name ws))))
+    (rename-buffer (ein:worksheet--buffer-name ws) t)))
 
 (defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
   (ein:with-live-buffer (ein:worksheet-buffer ws)
