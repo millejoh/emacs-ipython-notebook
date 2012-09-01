@@ -55,53 +55,9 @@
 
 ;;; Code:
 
-(defvar ein:version "0.2.0alpha0"
-  "Version number for Emacs IPython Notebook (EIN).")
-
-(autoload 'ein:notebooklist-open "ein-notebooklist"
-  "Open notebook list buffer." t)
-
-(autoload 'ein:notebooklist-list-notebooks "ein-notebooklist"
-  "Return a list of notebook path (NBPATH)." t)
-
-(autoload 'ein:notebooklist-open-notebook-global "ein-notebooklist"
-  "Choose notebook from all opened notebook list and open it." t)
-
-(autoload 'ein:notebooklist-new-notebook "ein-notebooklist"
-  "Ask server to create a new notebook and open it in a new buffer." t)
-
-(autoload 'ein:notebooklist-load "ein-notebooklist")
-
-(autoload 'ein:notebook-name "ein-notebook")
-(autoload 'ein:kernel-id "ein-kernel")
-
-(autoload 'ein:console-open "ein-console" nil t)
-
-(autoload 'ein:pseudo-console-mode "ein-pseudo-console" nil t)
-
-(autoload 'ein:connect-to-notebook-command "ein-connect" nil t)
-(autoload 'ein:connect-to-notebook         "ein-connect" nil t)
-(autoload 'ein:connect-to-notebook-buffer  "ein-connect" nil t)
-(autoload 'ein:connect-buffer-to-notebook  "ein-connect")
-(autoload 'ein:connect-to-default-notebook "ein-connect")
-
-(autoload 'ein:shared-output-eval-string "ein-shared-output" nil t)
-(autoload 'ein:shared-output-show-code-cell-at-point "ein-shared-output" nil t)
-
-(autoload 'ein:tb-show "ein-traceback" nil t)
-
-(autoload 'ein:iexec-mode "ein-iexec"
-  "Instant cell execution minor mode." t)
-
-(autoload 'ein:junk-new "ein-junk" nil t)
-(autoload 'ein:junk-rename "ein-junk" nil t)
-
-(autoload 'anything-ein-notebook-buffers "ein-helm" nil t)
-(autoload 'helm-ein-notebook-buffers "ein-helm" nil t)
-
-(autoload 'ein:dev-insert-mode-map "ein-dev")
-(autoload 'ein:dev-start-debug "ein-dev" "Enable debugging support." t)
-(autoload 'ein:dev-stop-debug "ein-dev" "Disable debugging support." t)
+;; For backward compatibility + providing easy way to load EIN for
+;; users who prefer manual installation.
+(require 'ein-loaddefs)
 
 (provide 'ein)
 

@@ -58,6 +58,7 @@ BEG and END."
     (when (ein:iexec-should-execute-p cell beg end)
       (ein:iexec-execute-cell cell))))
 
+;;;###autoload
 (define-minor-mode ein:iexec-mode
   "Instant cell execution minor mode.
 Code cell at point will be automatically executed after any

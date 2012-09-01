@@ -49,6 +49,7 @@ format string which can be passed to `format-time-string'."
 (define-obsolete-function-alias 'ein:notebooklist-new-scratch-notebook
   'ein:junk-new)
 
+;;;###autoload
 (defun ein:junk-new (name url-or-port)
   "Open a notebook to try random thing.
 Notebook name is determined based on
@@ -71,6 +72,7 @@ name to be used.  When two universal prefix arguments (i.e.,
 (define-obsolete-function-alias ' ein:notebook-rename-to-scratch-command
   'ein:junk-rename)
 
+;;;###autoload
 (defun ein:junk-rename (name)
   "Rename the current notebook based on `ein:junk-notebook-name-template'
 and save it immediately."

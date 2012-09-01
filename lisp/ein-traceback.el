@@ -72,8 +72,9 @@
   (ein:tb-render traceback tb-data)
   (pop-to-buffer (ein:tb-get-buffer traceback)))
 
+;;;###autoload
 (defun ein:tb-show ()
-  "Popup traceback viewer."
+  "Show full traceback in traceback viewer."
   (interactive)
   (unless
       (ein:and-let* ((tb-data (ein:get-traceback-data))

@@ -159,6 +159,7 @@ class.")))
 
 ;; FIXME: Clarify names of these `connect-to-*' functions:
 
+;;;###autoload
 (defun ein:connect-to-notebook-command (&optional not-yet-opened)
   "Connect to notebook.  When the prefix argument is given,
 you can choose any notebook on your server including the ones
@@ -169,6 +170,7 @@ notebooks."
                           #'ein:connect-to-notebook
                         #'ein:connect-to-notebook-buffer)))
 
+;;;###autoload
 (defun ein:connect-to-notebook (nbpath &optional buffer no-reconnection)
   "Connect any buffer to notebook and its kernel."
   (interactive
@@ -182,6 +184,7 @@ notebooks."
      (ein:connect-buffer-to-notebook notebook buffer no-reconnection))
    (list (or buffer (current-buffer)) no-reconnection)))
 
+;;;###autoload
 (defun ein:connect-to-notebook-buffer (buffer-or-name)
   "Connect any buffer to opened notebook and its kernel."
   (interactive (list (completing-read "Notebook buffer to connect: "
@@ -190,6 +193,7 @@ notebooks."
          (buffer-local-value 'ein:%notebook% (get-buffer buffer-or-name))))
     (ein:connect-buffer-to-notebook notebook)))
 
+;;;###autoload
 (defun ein:connect-buffer-to-notebook (notebook &optional buffer
                                                 no-reconnection)
   "Connect BUFFER to NOTEBOOK."
@@ -339,6 +343,7 @@ change the cells to run."
 
 ;;; Auto-connect
 
+;;;###autoload
 (defun ein:connect-to-default-notebook ()
   "Connect to the default notebook specified by
 `ein:connect-default-notebook'.  Set this to `python-mode-hook'
