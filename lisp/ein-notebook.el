@@ -711,6 +711,42 @@ given."
       (funcall show (ein:worksheet-buffer next)))
     next))
 
+(defun ein:notebook-worksheet-insert-new (notebook ws &optional render show
+                                                   inserter)
+  (let ((new (ein:notebook--worksheet-new notebook)))
+    (setf (ein:$notebook-worksheets notebook)
+          (funcall inserter (ein:$notebook-worksheets notebook) ws new))
+    (when (or render show)
+      (ein:notebook--worksheet-render notebook new))
+    (when show
+      (funcall show (ein:worksheet-buffer new)))
+    new))
+
+(defun ein:notebook-worksheet-insert-next (notebook ws &optional render show)
+  "Insert a new worksheet after this worksheet and open it.
+See also `ein:notebook-worksheet-insert-prev'.
+
+.. The worksheet WS is searched in the worksheets slot of
+   NOTEBOOK and a newly created worksheet is inserted after WS.
+   Worksheet buffer is created when RENDER or SHOW is non-`nil'.
+   SHOW is a function which take a buffer."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t
+                     #'switch-to-buffer))
+  (ein:notebook-worksheet-insert-new notebook ws render show
+                                     #'ein:list-insert-after))
+
+(defun ein:notebook-worksheet-insert-prev (notebook ws &optional render show)
+  "Insert a new worksheet before this worksheet and open it.
+See also `ein:notebook-worksheet-insert-next'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t
+                     #'switch-to-buffer))
+  (ein:notebook-worksheet-insert-new notebook ws render show
+                                     #'ein:list-insert-before))
+
 (defun ein:notebook-worksheet-delete (notebook ws)
   "Delete the current worksheet.
 When used as a lisp function, delete worksheet WS from NOTEBOOk."
