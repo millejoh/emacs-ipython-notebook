@@ -977,6 +977,10 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
+      ("Junk notebook"
+       ,@(ein:generate-menu
+          '(("Junk this notebook" ein:junk-rename)
+            ("Open new junk" ein:junk-new))))
       ;; Misc:
       ,@(ein:generate-menu
          '(("Open regular IPython console" ein:console-open)
