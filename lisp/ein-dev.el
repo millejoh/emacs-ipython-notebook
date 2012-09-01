@@ -25,6 +25,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 (declare-function rst-shift-region "rst")
 
 (require 'ein-notebook)
