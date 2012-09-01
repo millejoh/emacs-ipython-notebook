@@ -63,7 +63,7 @@ Notebook name is determined based on
   'ein:junk-rename)
 
 (defun ein:junk-rename (name)
-  "Rename notebook based on `ein:junk-notebook-name-template'
+  "Rename the current notebook based on `ein:junk-notebook-name-template'
 and save it immediately."
   (interactive
    (list (read-string "Rename notebook: "
