@@ -81,3 +81,17 @@ def func():
 
 "))
     (should (equal (ein:trim-indent original) trimmed))))
+
+(ert-deftest ein:list-insert-after ()
+  (should (equal (ein:list-insert-after '(a) 'a 'X) '(a X)))
+  (should (equal (ein:list-insert-after '(a b c) 'a 'X) '(a X b c)))
+  (should (equal (ein:list-insert-after '(a b c) 'b 'X) '(a b X c)))
+  (should (equal (ein:list-insert-after '(a b c) 'c 'X) '(a b c X)))
+  (should-error  (ein:list-insert-after '(a b c) 'd 'X)))
+
+(ert-deftest ein:list-insert-before ()
+  (should (equal (ein:list-insert-before '(a) 'a 'X) '(X a)))
+  (should (equal (ein:list-insert-before '(a b c) 'a 'X) '(X a b c)))
+  (should (equal (ein:list-insert-before '(a b c) 'b 'X) '(a X b c)))
+  (should (equal (ein:list-insert-before '(a b c) 'c 'X) '(a b X c)))
+  (should-error  (ein:list-insert-before '(a b c) 'd 'X)))
