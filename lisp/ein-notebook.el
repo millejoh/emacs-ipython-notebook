@@ -1005,6 +1005,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\M-n"          'ein:worksheet-next-input-history)
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
   ;; Worksheets
+  (define-key map (kbd "C-c !")     'ein:worksheet-rename-sheet)
   (define-key map (kbd "C-c {")     'ein:notebook-worksheet-open-prev-or-last)
   (define-key map (kbd "C-c }")     'ein:notebook-worksheet-open-next-or-first)
   (define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
@@ -1085,7 +1086,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
-          '(("Open previous worksheet"
+          '(("Rename worksheet" ein:worksheet-rename-sheet)
+            ("Open previous worksheet"
              ein:notebook-worksheet-open-prev)
             ("Open previous or last worksheet"
              ein:notebook-worksheet-open-prev-or-last)
