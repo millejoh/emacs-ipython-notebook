@@ -93,6 +93,9 @@
 (autoload 'ein:iexec-mode "ein-iexec"
   "Instant cell execution minor mode." t)
 
+(autoload 'ein:junk-new "ein-junk" nil t)
+(autoload 'ein:junk-rename "ein-junk" nil t)
+
 (autoload 'anything-ein-notebook-buffers "ein-helm" nil t)
 (autoload 'helm-ein-notebook-buffers "ein-helm" nil t)
 
