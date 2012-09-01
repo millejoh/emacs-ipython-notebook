@@ -31,6 +31,7 @@
 (let ((map ein:pseudo-console-mode-map))
   (define-key map "\C-m" 'ein:worksheet-execute-cell-and-insert-below))
 
+;;;###autoload
 (define-minor-mode ein:pseudo-console-mode
   "Pseudo console mode."
   :lighter " ein:pseudo"

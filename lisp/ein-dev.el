@@ -31,6 +31,7 @@
 (require 'ein-notebook)
 (require 'ein-subpackages)
 
+;;;###autoload
 (defun ein:dev-insert-mode-map (map-string)
   "Insert mode-map into rst document.  For README.rst."
   (save-excursion
@@ -105,6 +106,7 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
            (ein:log-level-int-to-name ein:log-level)
            (ein:log-level-int-to-name ein:log-message-level)))
 
+;;;###autoload
 (defun ein:dev-start-debug (&optional ws-callback)
   "Enable EIN debugging support.
 When the prefix argument is given, debugging support for websocket
@@ -120,6 +122,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (ein:dev-patch-backtrace)
   (ein:dev-show-debug-setting))
 
+;;;###autoload
 (defun ein:dev-stop-debug ()
   "Disable debugging support enabled by `ein:dev-start-debug'."
   (interactive)

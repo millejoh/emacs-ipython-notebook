@@ -179,6 +179,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
     "Error (%s) while opening notebook list at the server %s."
     symbol-status url-or-port))
 
+;;;###autoload
 (defun ein:notebooklist-reload ()
   "Reload current Notebook list."
   (interactive)
@@ -206,6 +207,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
                      callback cbargs))
 
+;;;###autoload
 (defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
@@ -242,6 +244,7 @@ This function is called via `ein:notebook-after-rename-hook'."
     ;; reload or open notebook list
     (ein:notebooklist-open url-or-port no-popup)))
 
+;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
   "Open new notebook and rename the notebook."
   (interactive "sNotebook name: ")
@@ -329,6 +332,7 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
+;;;###autoload
 (defun ein:notebooklist-list-notebooks ()
   "Return a list of notebook path (NBPATH).  Each element NBPATH
 is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
@@ -341,6 +345,7 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                                      url-or-port
                                      (plist-get note :name))))))
 
+;;;###autoload
 (defun ein:notebooklist-open-notebook-global (nbpath &optional callback cbargs)
   "Choose notebook from all opened notebook list and open it.
 Notebook is specified by a string NBPATH whose format is
@@ -368,6 +373,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
           (ein:notebook-open url-or-port notebook-id callback cbargs)
         (message "Notebook '%s' not found" nbpath)))))
 
+;;;###autoload
 (defun ein:notebooklist-load (&optional url-or-port)
   "Load notebook list but do not pop-up the notebook list buffer.
 

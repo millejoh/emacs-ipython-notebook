@@ -143,6 +143,7 @@ Types same as `ein:console-security-dir' are valid."
     (format "python %s console --existing %skernel-%s.json %s"
             ipy dir kid args)))
 
+;;;###autoload
 (defun ein:console-open ()
   "Open IPython console.
 To use this function, `ein:console-security-dir' and

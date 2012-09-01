@@ -128,6 +128,7 @@ Create a cell if the buffer has none."
     (when (slot-boundp cell :kernel)
       (oref cell :kernel))))
 
+;;;###autoload
 (defun ein:shared-output-pop-to-buffer ()
   "Open shared output buffer."
   (interactive)
@@ -151,6 +152,7 @@ where CELL locates."
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
+;;;###autoload
 (defun ein:shared-output-show-code-cell-at-point ()
   "Show code cell at point in shared-output buffer.
 It is useful when the output of the cell at point is truncated.
@@ -164,6 +166,7 @@ See also `ein:cell-max-num-outputs'."
 (defvar ein:shared-output-eval-string-history nil
   "History of the `ein:shared-output-eval-string' prompt.")
 
+;;;###autoload
 (defun ein:shared-output-eval-string (code &optional popup verbose kernel)
   "Evaluate a code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without

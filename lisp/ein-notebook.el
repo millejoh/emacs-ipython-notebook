@@ -249,6 +249,7 @@ will be updated with kernel's cwd."
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))
 
+;;;###autoload
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
 (defun ein:notebook-name-getter (notebook)

@@ -60,7 +60,11 @@
   after-execute-hook)
 
 ;; "Public" getters.  Use them outside of this package.
+
+;;;###autoload
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
+
+;;;###autoload
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
 
