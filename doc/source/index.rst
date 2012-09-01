@@ -215,7 +215,7 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
-.. el:function:: ein:notebooklist-new-scratch-notebook
+.. el:function:: ein:junk-new
 
 .. el:keymap:: ein:notebooklist-mode-map
    :exclude: widget-button
@@ -230,7 +230,7 @@ The following keybinds are available in notebook buffers.
 .. el:keymap:: ein:notebook-mode-map
 
 .. el:function:: ein:worksheet-delete-cell
-.. el:function:: ein:notebook-rename-to-scratch-command
+.. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
 
@@ -324,7 +324,7 @@ Notebook
 .. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-autoexec-prompt
-.. el:variable:: ein:scratch-notebook-name-template
+.. el:variable:: ein:junk-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
 .. el:variable:: ein:output-type-preference
@@ -499,6 +499,10 @@ Change Log
 v0.2
 ----
 
+* Rename notion of "scratch notebook" to "junk notebook".
+  This is to avoid confusion with newly added "scratch sheet".
+  Old commands are renamed to :el:symbol:`ein:junk-new` and
+  :el:symbol:`ein:junk-rename`.
 * Preferred MIME types to be used can be configured using the variable
   :el:symbol:`ein:output-type-preference`.
 * HTML content is rendered SHR (Simple HTML Renderer) by default.

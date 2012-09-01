@@ -63,14 +63,6 @@ Notebook server."
                  (const :tag "First value of `ein:url-or-port'" nil))
   :group 'ein)
 
-(defcustom ein:scratch-notebook-name-template "_scratch_%Y-%m-%d-%H%M%S_"
-  "Template of scratch notebook name.
-This value is used from `ein:notebooklist-new-scratch-notebook'
-and `ein:notebook-rename-to-scratch-command'.  This must be a
-format string which can be passed to `format-time-string'."
-  :type '(string :tag "Format string")
-  :group 'ein)
-
 (defcustom ein:filename-translations nil
   "Convert file paths between Emacs and Python process.
 
@@ -122,11 +114,6 @@ pair of TO-PYTHON and FROM-PYTHON."
 
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
-
-(defun ein:scratch-notebook-name ()
-  "Generate new scratch notebook name based on `current-time' and
-`ein:scratch-notebook-name-template'."
-  (format-time-string ein:scratch-notebook-name-template (current-time)))
 
 
 

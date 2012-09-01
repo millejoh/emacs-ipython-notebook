@@ -256,15 +256,6 @@ This function is called via `ein:notebook-after-rename-hook'."
        (pop-to-buffer (current-buffer))))
    (list name)))
 
-(defun ein:notebooklist-new-scratch-notebook ()
-  "Open a notebook to try random thing.
-Notebook name is determined based on
-`ein:scratch-notebook-name-template'."
-  (interactive)
-  (ein:notebooklist-new-notebook-with-name
-   (ein:scratch-notebook-name)
-   (ein:default-url-or-port)))
-
 (defun ein:notebooklist-delete-notebook-ask (notebook-id name)
   (when (y-or-n-p (format "Delete notebook %s?" name))
     (ein:notebooklist-delete-notebook notebook-id name)))
