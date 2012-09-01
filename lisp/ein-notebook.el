@@ -973,6 +973,13 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\M-p"          'ein:worksheet-previous-input-history)
   (define-key map "\M-n"          'ein:worksheet-next-input-history)
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
+  ;; Worksheets
+  (define-key map (kbd "C-c {")     'ein:notebook-worksheet-open-prev-or-last)
+  (define-key map (kbd "C-c }")     'ein:notebook-worksheet-open-next-or-first)
+  (define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
+  (define-key map (kbd "C-c M-+")   'ein:notebook-worksheet-insert-prev)
+  (define-key map (kbd "C-c -")     'ein:notebook-worksheet-delete)
+  ;; Menu
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ("File"
@@ -1041,6 +1048,24 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
+      ("Worksheets [Experimental]"
+       ,@(ein:generate-menu
+          '(("Open previous worksheet"
+             ein:notebook-worksheet-open-prev)
+            ("Open previous or last worksheet"
+             ein:notebook-worksheet-open-prev-or-last)
+            ("Open next worksheet"
+             ein:notebook-worksheet-open-next)
+            ("Open next or first worksheet"
+             ein:notebook-worksheet-open-next-or-first)
+            ("Open next or new worksheet"
+             ein:notebook-worksheet-open-next-or-new)
+            ("Insert next worksheet"
+             ein:notebook-worksheet-insert-next)
+            ("Insert previous worksheet"
+             ein:notebook-worksheet-insert-prev)
+            ("Delete worksheet" ein:notebook-worksheet-delete)
+            )))
       ("Junk notebook"
        ,@(ein:generate-menu
           '(("Junk this notebook" ein:junk-rename)
