@@ -56,7 +56,8 @@ Notebook name is determined based on
   (interactive)
   (ein:notebooklist-new-notebook-with-name
    (ein:junk-notebook-name)
-   (ein:default-url-or-port)))
+   (or (ein:get-url-or-port)
+       (ein:default-url-or-port))))
 
 
 (define-obsolete-function-alias ' ein:notebook-rename-to-scratch-command
