@@ -1087,7 +1087,15 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
           '(("Rename worksheet" ein:worksheet-rename-sheet)
-            ("Open previous worksheet"
+            ("Insert next worksheet"
+             ein:notebook-worksheet-insert-next)
+            ("Insert previous worksheet"
+             ein:notebook-worksheet-insert-prev)
+            ("Delete worksheet" ein:notebook-worksheet-delete)
+            ))
+       "---"
+       ,@(ein:generate-menu
+          '(("Open previous worksheet"
              ein:notebook-worksheet-open-prev)
             ("Open previous or last worksheet"
              ein:notebook-worksheet-open-prev-or-last)
@@ -1097,11 +1105,6 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
              ein:notebook-worksheet-open-next-or-first)
             ("Open next or new worksheet"
              ein:notebook-worksheet-open-next-or-new)
-            ("Insert next worksheet"
-             ein:notebook-worksheet-insert-next)
-            ("Insert previous worksheet"
-             ein:notebook-worksheet-insert-prev)
-            ("Delete worksheet" ein:notebook-worksheet-delete)
             ))
        "---"
        ,@(ein:generate-menu
