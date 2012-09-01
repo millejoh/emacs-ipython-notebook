@@ -741,6 +741,37 @@ See also `ein:notebook-worksheet-open-next'."
     (ein:notebook-worksheet--open-new notebook prev "previous" show)
     prev))
 
+(defun ein:notebook-worksheet-open-ith (notebook i &optional show)
+  "Open I-th (zero-origin) worksheet."
+  (let ((ws (nth i (ein:$notebook-worksheets notebook))))
+    (unless ws (error "No %s-th worksheet" (1+ i)))
+    (ein:notebook-worksheet--open-new notebook ws "previous" show)))
+
+(defmacro ein:notebook-worksheet--defun-open-nth (n)
+  "Define a command to open N-th (one-origin) worksheet."
+  (assert (and (integerp n) (> n 0)) t)
+  (let ((func (intern (format "ein:notebook-worksheet-open-%sth" n))))
+    `(defun ,func (notebook &optional show)
+       ,(format "Open %d-th worksheet." n)
+       (interactive (list (ein:notebook--get-nb-or-error)
+                          #'switch-to-buffer))
+       (ein:notebook-worksheet-open-ith notebook ,(1- n) show))))
+
+(defmacro ein:notebook-worksheet--defun-all-open-nth (min max)
+  `(progn
+     ,@(loop for n from min to max
+             collect `(ein:notebook-worksheet--defun-open-nth ,n))))
+
+(ein:notebook-worksheet--defun-all-open-nth 1 8)
+
+(defun ein:notebook-worksheet-open-last (notebook &optional show)
+  "Open the last worksheet."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     #'switch-to-buffer))
+  (let ((last (car (last (ein:$notebook-worksheets notebook)))))
+    (ein:notebook-worksheet--open-new notebook last "last" show)
+    last))
+
 (defun ein:notebook-worksheet-insert-new (notebook ws &optional render show
                                                    inserter)
   (let ((new (ein:notebook--worksheet-new notebook)))
@@ -979,6 +1010,10 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
   (define-key map (kbd "C-c M-+")   'ein:notebook-worksheet-insert-prev)
   (define-key map (kbd "C-c -")     'ein:notebook-worksheet-delete)
+  (loop for n from 1 to 8
+        do (define-key map (format "\C-c%d" n)
+             (intern (format "ein:notebook-worksheet-open-%sth" n))))
+  (define-key map "\C-c9" 'ein:notebook-worksheet-open-last)
   ;; Menu
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
@@ -1065,7 +1100,16 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
             ("Insert previous worksheet"
              ein:notebook-worksheet-insert-prev)
             ("Delete worksheet" ein:notebook-worksheet-delete)
-            )))
+            ))
+       "---"
+       ,@(ein:generate-menu
+          (append
+           (loop for n from 1 to 8
+                 collect
+                 (list
+                  (format "Open %d-th worksheet" n)
+                  (intern (format "ein:notebook-worksheet-open-%sth" n))))
+           '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
       ("Junk notebook"
        ,@(ein:generate-menu
           '(("Junk this notebook" ein:junk-rename)
