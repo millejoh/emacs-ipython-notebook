@@ -47,8 +47,14 @@
    (s2m :initarg :s2m))
   "Hold status and it's string representation (message).")
 
+(defclass ein:notification-tab ()
+  ((get-list :initarg :get-list :type function)
+   (get-current :initarg :get-current :type function)
+   (get-name :initarg :get-name :type function)))
+
 (defclass ein:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
+   (tab :initarg :tab :type ein:notification-tab)
    (notebook
     :initarg :notebook
     :initform
@@ -119,16 +125,59 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  (force-mode-line-update))))
            packed)))
 
-(defun ein:notification-setup (buffer events)
+(defun ein:notification-setup (buffer events get-list get-current get-name)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
-local variable of the BUFFER"
+local variable of the BUFFER.
+
+Other arguments GET-LIST, GET-CURRENT and GET-NAME are used to
+draw tabs for worksheets.  GET-LIST is a function returns a list
+of worksheets.  GET-CURRENT is a function returns the current
+worksheet.  GET-NAME is a function returns a name of the
+worksheet given as its argument."
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
+    (oset ein:%notification% :tab
+          (make-instance 'ein:notification-tab
+                         :get-list get-list
+                         :get-current get-current
+                         :get-name get-name))
     ein:%notification%))
+
+
+;;; Tabs
+
+(defface ein:notification-tab-selected
+  '((t :inherit (header-line match)))
+  "Face for headline selected tab."
+  :group 'ein)
+
+(defface ein:notification-tab-normal
+  '((t :inherit (header-line)))
+  "Face for headline selected tab."
+  :group 'ein)
+
+(defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
+  (let ((list (funcall (oref tab :get-list)))
+        (current (funcall (oref tab :get-current)))
+        (get-name (oref tab :get-name)))
+    (ein:join-str
+     " "
+     (loop for i from 1
+           for elem in list
+           if (eq elem current)
+           collect (propertize
+                    (or (ein:and-let* ((name (funcall get-name elem)))
+                          (format "[%d: %s]" i name))
+                        (format "[%d]" i))
+                    'face 'ein:notification-tab-selected)
+           else
+           collect (propertize
+                    (format " %d " i)
+                    'face 'ein:notification-tab-normal)))))
 
 
 ;;; Header line
@@ -141,7 +190,9 @@ local variable of the BUFFER"
     (ein:filter
      'identity
      (list (oref (oref ein:%notification% :notebook) :message)
-           (oref (oref ein:%notification% :kernel) :message))))))
+           (oref (oref ein:%notification% :kernel) :message)
+           (ein:notification-tab-create-line
+            (oref ein:%notification% :tab)))))))
 
 (defun ein:header-line-setup-maybe ()
   "Setup `header-line-format' for mumamo.

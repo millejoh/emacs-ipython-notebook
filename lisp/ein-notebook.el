@@ -474,7 +474,12 @@ This is equivalent to do ``C-c`` in the console program."
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
     ;; Now that major-mode is set, set buffer local variables:
-    (ein:notification-setup (current-buffer) (ein:$notebook-events notebook))
+    (ein:notification-setup
+     (current-buffer)
+     (ein:$notebook-events notebook)
+     (lambda () (ein:$notebook-worksheets ein:%notebook%))
+     (lambda () ein:%worksheet%)
+     #'ein:worksheet-name)
     (ein:notebook-setup-kill-buffer-hook)
     (setq ein:%notebook% notebook)))
 
