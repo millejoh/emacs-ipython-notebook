@@ -616,6 +616,9 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 
 (defun ein:notebook-close (notebook)
   "Close NOTEBOOK and kill its buffer."
+  (interactive (prog1 (list (ein:notebook--get-nb-or-error))
+                 (or (ein:notebook-ask-before-kill-buffer)
+                     (error "Quit"))))
   (let ((ein:notebook-kill-buffer-ask nil))
     ;; Let `ein:notebook-kill-buffer-callback' do its job.
     (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
@@ -1014,6 +1017,7 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
+  (define-key map (kbd "C-c C-#") 'ein:notebook-close)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
   (define-key map "\C-c\C-o" 'ein:console-open)
   (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
@@ -1045,6 +1049,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Save notebook" ein:notebook-save-notebook-command)
             ("Rename notebook" ein:notebook-rename-command)
+            ("Close notebook without saving"
+             ein:notebook-close)
             ("Kill kernel then close notebook"
              ein:notebook-kill-kernel-then-close-command))))
       ("Edit"
