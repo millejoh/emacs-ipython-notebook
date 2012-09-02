@@ -97,6 +97,13 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                                    #'ein:notification--callback
                                    (cons ns st))))
   (ein:events-on events
+                 'notebook_saved.Notebook
+                 #'ein:notification--fadeout-callback
+                 (list (oref notification :notebook)
+                       "Notebook is saved"
+                       'notebook_saved.Notebook
+                       nil))
+  (ein:events-on events
                  'status_restarting.Kernel
                  #'ein:notification--fadeout-callback
                  (list (oref notification :kernel)
