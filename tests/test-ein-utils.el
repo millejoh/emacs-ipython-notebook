@@ -104,3 +104,12 @@ def func():
   (should (equal (ein:list-move-left '(a b c d) 'b) '(b a c d)))
   (should (equal (ein:list-move-left '(a b c d) 'c) '(a c b d)))
   (should (equal (ein:list-move-left '(a b c d) 'd) '(a b d c))))
+
+(ert-deftest ein:list-move-right ()
+  (should (equal (ein:list-move-right '(a) 'a) '(a)))
+  (should (equal (ein:list-move-right '(a b) 'a) '(b a)))
+  (should (equal (ein:list-move-right '(a b) 'b) '(b a)))
+  (should (equal (ein:list-move-right '(a b c d) 'a) '(b a c d)))
+  (should (equal (ein:list-move-right '(a b c d) 'b) '(a c b d)))
+  (should (equal (ein:list-move-right '(a b c d) 'c) '(a b d c)))
+  (should (equal (ein:list-move-right '(a b c d) 'd) '(d a b c))))

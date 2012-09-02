@@ -358,6 +358,24 @@ Elements are compared using the function TEST (default: `eq')."
                      list)
             finally do (error "ELEM %S is not in LIST %S" elem list))))))
 
+(defun* ein:list-move-right (list elem &key (test #'eq))
+  "Move ELEM in LIST right.  TEST is used to compare elements"
+  (loop with first = t
+        for rest on list
+        when (funcall test (car rest) elem)
+        return (if (cdr rest)
+                   (let ((next (cadr rest)))
+                     (setf (car rest) next)
+                     (setf (cadr rest) elem)
+                     list)
+                 (if first
+                     list
+                   (setcdr rest-1 nil)
+                   (cons elem list)))
+        finally do (error "ELEM %S is not in LIST %S" elem list)
+        for rest-1 = rest
+        do (setq first nil)))
+
 (defun ein:get-value (obj)
   "Get value from obj if it is a variable or function."
   (cond
