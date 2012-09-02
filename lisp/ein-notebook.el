@@ -823,6 +823,22 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
   (let ((ein:notebook-kill-buffer-ask nil))
     (kill-buffer (ein:worksheet-buffer ws))))
 
+(defun ein:notebook-worksheet-move-prev (notebook ws)
+  "Switch the current worksheet with the previous one."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)))
+  (assert (ein:worksheet-p ws) nil "Not worksheet.")
+  (setf (ein:$notebook-worksheets notebook)
+        (ein:list-move-left (ein:$notebook-worksheets notebook) ws)))
+
+(defun ein:notebook-worksheet-move-next (notebook ws)
+  "Switch the current worksheet with the previous one."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)))
+  (assert (ein:worksheet-p ws) nil "Not worksheet.")
+  (setf (ein:$notebook-worksheets notebook)
+        (ein:list-move-right (ein:$notebook-worksheets notebook) ws)))
+
 
 ;;; Scratch sheet
 
@@ -1008,6 +1024,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map (kbd "C-c !")     'ein:worksheet-rename-sheet)
   (define-key map (kbd "C-c {")     'ein:notebook-worksheet-open-prev-or-last)
   (define-key map (kbd "C-c }")     'ein:notebook-worksheet-open-next-or-first)
+  (define-key map (kbd "C-c M-{")   'ein:notebook-worksheet-move-prev)
+  (define-key map (kbd "C-c M-}")   'ein:notebook-worksheet-move-next)
   (define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
   (define-key map (kbd "C-c M-+")   'ein:notebook-worksheet-insert-prev)
   (define-key map (kbd "C-c -")     'ein:notebook-worksheet-delete)
@@ -1092,6 +1110,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
             ("Insert previous worksheet"
              ein:notebook-worksheet-insert-prev)
             ("Delete worksheet" ein:notebook-worksheet-delete)
+            ("Move worksheet left"  ein:notebook-worksheet-move-prev)
+            ("Move worksheet right" ein:notebook-worksheet-move-next)
             ))
        "---"
        ,@(ein:generate-menu
