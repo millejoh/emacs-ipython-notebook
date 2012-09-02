@@ -182,6 +182,8 @@ Keybinds - Notebook
    M-RET           ein:worksheet-execute-cell-and-goto-next
    M-,             ein:pytools-jump-back-command
    M-.             ein:pytools-jump-to-source-command
+   M-n             ein:worksheet-next-input-history
+   M-p             ein:worksheet-previous-input-history
 
    C-c C-a         ein:worksheet-insert-cell-above
    C-c C-b         ein:worksheet-insert-cell-below
@@ -206,15 +208,34 @@ Keybinds - Notebook
    C-c C-y         ein:worksheet-yank-cell
    C-c C-z         ein:notebook-kernel-interrupt-command
    C-c ESC         Prefix Command
+   C-c !           ein:worksheet-rename-sheet
+   C-c +           ein:notebook-worksheet-insert-next
+   C-c -           ein:notebook-worksheet-delete
+   C-c 1           ein:notebook-worksheet-open-1th
+   C-c 2           ein:notebook-worksheet-open-2th
+   C-c 3           ein:notebook-worksheet-open-3th
+   C-c 4           ein:notebook-worksheet-open-4th
+   C-c 5           ein:notebook-worksheet-open-5th
+   C-c 6           ein:notebook-worksheet-open-6th
+   C-c 7           ein:notebook-worksheet-open-7th
+   C-c 8           ein:notebook-worksheet-open-8th
+   C-c 9           ein:notebook-worksheet-open-last
+   C-c {           ein:notebook-worksheet-open-prev-or-last
+   C-c }           ein:notebook-worksheet-open-next-or-first
    C-c C-S-l       ein:worksheet-clear-all-output
+   C-c C-#         ein:notebook-close
    C-c C-'         ein:worksheet-turn-on-autoexec
    C-c C-,         ein:pytools-jump-back-command
    C-c C-.         ein:pytools-jump-to-source-command
+   C-c C-/         ein:notebook-scratchsheet-open
    C-c C-;         ein:shared-output-show-code-cell-at-point
    C-c <down>      ein:worksheet-move-cell-down
    C-c <up>        ein:worksheet-move-cell-up
 
+   C-c M-+         ein:notebook-worksheet-insert-prev
    C-c M-w         ein:worksheet-copy-cell
+   C-c M-{         ein:notebook-worksheet-move-prev
+   C-c M-}         ein:notebook-worksheet-move-next
 
 .. // KEYS END //
 
@@ -253,6 +274,7 @@ commands are available.
    C-c C-z         ein:connect-pop-to-notebook
    C-c C-,         ein:pytools-jump-back-command
    C-c C-.         ein:pytools-jump-to-source-command
+   C-c C-/         ein:notebook-scratchsheet-open
 
 .. // KEYS END //
 
