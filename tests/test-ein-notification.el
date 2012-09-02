@@ -9,6 +9,13 @@
                  :get-current (lambda () 'a)
                  :get-name #'ignore))
 
+(ert-deftest ein:header-line-normal ()
+  (let* ((ein:%notification% (ein:notification "NotificationTest"))
+         (kernel (oref ein:%notification% :kernel)))
+    (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
+    (should (equal (ein:header-line)
+                   "IP[y]: [1]  2   3 "))))
+
 (ert-deftest ein-header-line-kernel-status-busy ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
          (kernel (oref ein:%notification% :kernel)))
