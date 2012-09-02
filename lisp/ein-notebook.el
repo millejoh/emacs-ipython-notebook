@@ -681,6 +681,31 @@ given."
     (when show
       (funcall show (ein:worksheet-buffer next)))))
 
+(defun ein:notebook-worksheet-open-prev-or-last (notebook ws &optional show)
+  "Open previous or last worksheet.
+See also `ein:notebook-worksheet-open-next-or-first' and
+`ein:notebook-worksheet-open-prev'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((prev (ein:notebook-worksheet-open-prev notebook ws)))
+    (unless prev
+      (setq prev (car (last (ein:$notebook-worksheets notebook)))))
+    (when show
+      (funcall show (ein:worksheet-buffer prev)))))
+
+(defun* ein:notebook-worksheet--open-new
+    (notebook new &optional (adj "next") show)
+  (when new
+    (if (ein:worksheet-has-buffer-p new)
+        (ein:log 'verbose "The worksheet already has a buffer.")
+      (ein:log 'info "Rendering %s worksheet..." adj)
+      (ein:notebook--worksheet-render notebook new)
+      (ein:log 'info "Rendering %s worksheet... Done." adj)))
+  (when show
+    (assert (ein:worksheet-p new) nil "No %s worksheet." adj)
+    (funcall show (ein:worksheet-buffer new))))
+
 (defun ein:notebook-worksheet-open-next (notebook ws &optional show)
   "Open next worksheet.
 
@@ -700,16 +725,88 @@ given."
                       for current in worksheets
                       for next in (cdr worksheets)
                       when (eq current ws) return next))))
-    (when next
-      (if (ein:worksheet-has-buffer-p next)
-          (ein:log 'verbose "Next worksheet already has a buffer.")
-        (ein:log 'info "Rendering next worksheet...")
-        (ein:notebook--worksheet-render notebook next)
-        (ein:log 'info "Rendering next worksheet... Done.")))
-    (when show
-      (assert (ein:worksheet-p next) nil "No next worksheet.")
-      (funcall show (ein:worksheet-buffer next)))
+    (ein:notebook-worksheet--open-new notebook next "next" show)
     next))
+
+(defun ein:notebook-worksheet-open-prev (notebook ws &optional show)
+  "Open previous worksheet.
+See also `ein:notebook-worksheet-open-next'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     #'switch-to-buffer))
+  (let ((prev (if (ein:scratchsheet-p ws)
+                  (car (last (ein:$notebook-worksheets notebook)))
+                (loop for (prev current) on (ein:$notebook-worksheets notebook)
+                      when (eq current ws) return prev))))
+    (ein:notebook-worksheet--open-new notebook prev "previous" show)
+    prev))
+
+(defun ein:notebook-worksheet-open-ith (notebook i &optional show)
+  "Open I-th (zero-origin) worksheet."
+  (let ((ws (nth i (ein:$notebook-worksheets notebook))))
+    (unless ws (error "No %s-th worksheet" (1+ i)))
+    (ein:notebook-worksheet--open-new notebook ws "previous" show)))
+
+(defmacro ein:notebook-worksheet--defun-open-nth (n)
+  "Define a command to open N-th (one-origin) worksheet."
+  (assert (and (integerp n) (> n 0)) t)
+  (let ((func (intern (format "ein:notebook-worksheet-open-%sth" n))))
+    `(defun ,func (notebook &optional show)
+       ,(format "Open %d-th worksheet." n)
+       (interactive (list (ein:notebook--get-nb-or-error)
+                          #'switch-to-buffer))
+       (ein:notebook-worksheet-open-ith notebook ,(1- n) show))))
+
+(defmacro ein:notebook-worksheet--defun-all-open-nth (min max)
+  `(progn
+     ,@(loop for n from min to max
+             collect `(ein:notebook-worksheet--defun-open-nth ,n))))
+
+(ein:notebook-worksheet--defun-all-open-nth 1 8)
+
+(defun ein:notebook-worksheet-open-last (notebook &optional show)
+  "Open the last worksheet."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     #'switch-to-buffer))
+  (let ((last (car (last (ein:$notebook-worksheets notebook)))))
+    (ein:notebook-worksheet--open-new notebook last "last" show)
+    last))
+
+(defun ein:notebook-worksheet-insert-new (notebook ws &optional render show
+                                                   inserter)
+  (let ((new (ein:notebook--worksheet-new notebook)))
+    (setf (ein:$notebook-worksheets notebook)
+          (funcall inserter (ein:$notebook-worksheets notebook) ws new))
+    (when (or render show)
+      (ein:notebook--worksheet-render notebook new))
+    (when show
+      (funcall show (ein:worksheet-buffer new)))
+    new))
+
+(defun ein:notebook-worksheet-insert-next (notebook ws &optional render show)
+  "Insert a new worksheet after this worksheet and open it.
+See also `ein:notebook-worksheet-insert-prev'.
+
+.. The worksheet WS is searched in the worksheets slot of
+   NOTEBOOK and a newly created worksheet is inserted after WS.
+   Worksheet buffer is created when RENDER or SHOW is non-`nil'.
+   SHOW is a function which take a buffer."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t
+                     #'switch-to-buffer))
+  (ein:notebook-worksheet-insert-new notebook ws render show
+                                     #'ein:list-insert-after))
+
+(defun ein:notebook-worksheet-insert-prev (notebook ws &optional render show)
+  "Insert a new worksheet before this worksheet and open it.
+See also `ein:notebook-worksheet-insert-next'."
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t
+                     #'switch-to-buffer))
+  (ein:notebook-worksheet-insert-new notebook ws render show
+                                     #'ein:list-insert-before))
 
 (defun ein:notebook-worksheet-delete (notebook ws)
   "Delete the current worksheet.
@@ -907,6 +1004,18 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
   (define-key map "\M-p"          'ein:worksheet-previous-input-history)
   (define-key map "\M-n"          'ein:worksheet-next-input-history)
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
+  ;; Worksheets
+  (define-key map (kbd "C-c !")     'ein:worksheet-rename-sheet)
+  (define-key map (kbd "C-c {")     'ein:notebook-worksheet-open-prev-or-last)
+  (define-key map (kbd "C-c }")     'ein:notebook-worksheet-open-next-or-first)
+  (define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
+  (define-key map (kbd "C-c M-+")   'ein:notebook-worksheet-insert-prev)
+  (define-key map (kbd "C-c -")     'ein:notebook-worksheet-delete)
+  (loop for n from 1 to 8
+        do (define-key map (format "\C-c%d" n)
+             (intern (format "ein:notebook-worksheet-open-%sth" n))))
+  (define-key map "\C-c9" 'ein:notebook-worksheet-open-last)
+  ;; Menu
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ("File"
@@ -975,6 +1084,37 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
+      ("Worksheets [Experimental]"
+       ,@(ein:generate-menu
+          '(("Rename worksheet" ein:worksheet-rename-sheet)
+            ("Insert next worksheet"
+             ein:notebook-worksheet-insert-next)
+            ("Insert previous worksheet"
+             ein:notebook-worksheet-insert-prev)
+            ("Delete worksheet" ein:notebook-worksheet-delete)
+            ))
+       "---"
+       ,@(ein:generate-menu
+          '(("Open previous worksheet"
+             ein:notebook-worksheet-open-prev)
+            ("Open previous or last worksheet"
+             ein:notebook-worksheet-open-prev-or-last)
+            ("Open next worksheet"
+             ein:notebook-worksheet-open-next)
+            ("Open next or first worksheet"
+             ein:notebook-worksheet-open-next-or-first)
+            ("Open next or new worksheet"
+             ein:notebook-worksheet-open-next-or-new)
+            ))
+       "---"
+       ,@(ein:generate-menu
+          (append
+           (loop for n from 1 to 8
+                 collect
+                 (list
+                  (format "Open %d-th worksheet" n)
+                  (intern (format "ein:notebook-worksheet-open-%sth" n))))
+           '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
       ("Junk notebook"
        ,@(ein:generate-menu
           '(("Junk this notebook" ein:junk-rename)

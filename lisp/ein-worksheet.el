@@ -148,6 +148,13 @@ this value."
 (defmethod ein:worksheet-name ((ws ein:worksheet))
   (plist-get (oref ws :metadata) :name))
 
+(defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
+  "Set worksheet name.
+
+\(fn ws name)"
+  (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
+  (oset ws :metadata (plist-put (oref ws :metadata) :name name)))
+
 (defmethod ein:worksheet-full-name ((ws ein:worksheet))
   (let ((nb-name (ein:worksheet-notebook-name ws)))
     (ein:aif (ein:worksheet-name ws)
@@ -172,7 +179,7 @@ this value."
 
 (defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (rename-buffer (ein:worksheet--buffer-name ws))))
+    (rename-buffer (ein:worksheet--buffer-name ws) t)))
 
 (defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
   (ein:with-live-buffer (ein:worksheet-buffer ws)
@@ -778,6 +785,20 @@ in the history."
                      (ein:worksheet-get-current-cell)
                      (ein:worksheet--get-history-index -1)))
   (ein:worksheet-insert-last-input-history ws cell index))
+
+
+;;; Metadata
+
+(defun ein:worksheet-rename-sheet (ws name)
+  "Change worksheet name (*not* notebook name)."
+  (interactive (let ((ws (ein:worksheet--get-ws-or-error)))
+                 (list ws
+                       (read-from-minibuffer
+                        "New worksheet name: " (ein:worksheet-name ws)))))
+  (unless (equal name (or (ein:worksheet-name ws) ""))
+    (ein:worksheet-set-name ws name)
+    (ein:worksheet-set-modified-p ws t)
+    (ein:worksheet-set-buffer-name ws)))
 
 
 ;;; Generic getter

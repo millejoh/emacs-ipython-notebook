@@ -499,6 +499,7 @@ Change Log
 v0.2
 ----
 
+* Preliminary support for multiple worksheets.
 * Rename notion of "scratch notebook" to "junk notebook".
   This is to avoid confusion with newly added "scratch sheet".
   Old commands are renamed to :el:symbol:`ein:junk-new` and
@@ -528,7 +529,6 @@ v0.2
 * Change the timing to trigger auto-execution in connected buffer.
   It was triggered on save before.  Now it is on run, eval or reload.
   See :el:symbol:`ein:connect-toggle-autoexec`.
-* [WIP] Worksheet support.
 
 
 v0.1.2
