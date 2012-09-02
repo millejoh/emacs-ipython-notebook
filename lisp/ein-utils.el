@@ -347,8 +347,6 @@ Elements are compared using the function TEST (default: `eq')."
     (cond
      ((== (car list) elem)
       (append (cdr list) (list (car list))))
-     ((== (cadr list) elem)
-      (cons (cadr list) (cons (car list) (cddr list))))
      (t
       (loop for rest on list
             when (== (cadr rest) elem)
