@@ -341,6 +341,23 @@ Elements are compared using the function TEST (default: `eq')."
           return (progn (push new (cdr rest)) list)
           finally do (error "PIVOT %S is not in LIST %S" pivot list))))
 
+(defun* ein:list-move-left (list elem &key (test #'eq))
+  "Move ELEM in LIST left.  TEST is used to compare elements"
+  (macrolet ((== (a b) `(funcall test ,a ,b)))
+    (cond
+     ((== (car list) elem)
+      (append (cdr list) (list (car list))))
+     ((== (cadr list) elem)
+      (cons (cadr list) (cons (car list) (cddr list))))
+     (t
+      (loop for rest on list
+            when (== (cadr rest) elem)
+            return (let ((prev (car rest)))
+                     (setf (car rest) elem)
+                     (setf (cadr rest) prev)
+                     list)
+            finally do (error "ELEM %S is not in LIST %S" elem list))))))
+
 (defun ein:get-value (obj)
   "Get value from obj if it is a variable or function."
   (cond

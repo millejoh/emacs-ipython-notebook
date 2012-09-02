@@ -95,3 +95,12 @@ def func():
   (should (equal (ein:list-insert-before '(a b c) 'b 'X) '(a X b c)))
   (should (equal (ein:list-insert-before '(a b c) 'c 'X) '(a b X c)))
   (should-error  (ein:list-insert-before '(a b c) 'd 'X)))
+
+(ert-deftest ein:list-move-left ()
+  (should (equal (ein:list-move-left '(a) 'a) '(a)))
+  (should (equal (ein:list-move-left '(a b) 'a) '(b a)))
+  (should (equal (ein:list-move-left '(a b) 'b) '(b a)))
+  (should (equal (ein:list-move-left '(a b c d) 'a) '(b c d a)))
+  (should (equal (ein:list-move-left '(a b c d) 'b) '(b a c d)))
+  (should (equal (ein:list-move-left '(a b c d) 'c) '(a c b d)))
+  (should (equal (ein:list-move-left '(a b c d) 'd) '(a b d c))))
