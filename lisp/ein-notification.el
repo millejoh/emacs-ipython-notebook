@@ -117,6 +117,8 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
     (ein:notification-status-set ns status)))
 
 (defun ein:notification--fadeout-callback (packed data)
+  ;; FIXME: I can simplify this.
+  ;;        Do not pass around message, for exmaple.
   (let ((ns (nth 0 packed))
         (message (nth 1 packed))
         (status (nth 2 packed))
