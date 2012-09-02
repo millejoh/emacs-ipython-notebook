@@ -215,7 +215,7 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
-.. el:function:: ein:notebooklist-new-scratch-notebook
+.. el:function:: ein:junk-new
 
 .. el:keymap:: ein:notebooklist-mode-map
    :exclude: widget-button
@@ -230,7 +230,7 @@ The following keybinds are available in notebook buffers.
 .. el:keymap:: ein:notebook-mode-map
 
 .. el:function:: ein:worksheet-delete-cell
-.. el:function:: ein:notebook-rename-to-scratch-command
+.. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
 
@@ -317,17 +317,18 @@ Notebook list
 Notebook
 ^^^^^^^^
 
-.. el:variable:: ein:notebook-enable-undo
-.. el:variable:: ein:notebook-discard-output-on-save
+.. el:variable:: ein:worksheet-enable-undo
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:cell-traceback-level
 .. el:variable:: ein:cell-autoexec-prompt
-.. el:variable:: ein:scratch-notebook-name-template
+.. el:variable:: ein:junk-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
+.. el:variable:: ein:output-type-preference
+.. el:variable:: ein:shr-env
 
 Console
 ^^^^^^^
@@ -498,6 +499,26 @@ Change Log
 v0.2
 ----
 
+* Preliminary support for multiple worksheets.
+* Rename notion of "scratch notebook" to "junk notebook".
+  This is to avoid confusion with newly added "scratch sheet".
+  Old commands are renamed to :el:symbol:`ein:junk-new` and
+  :el:symbol:`ein:junk-rename`.
+* Preferred MIME types to be used can be configured using the variable
+  :el:symbol:`ein:output-type-preference`.
+* HTML content is rendered SHR (Simple HTML Renderer) by default.
+  Use :el:symbol:`ein:shr-env` to tweak how HTML rendered.
+* :el:symbol:`ein:notebook-discard-output-on-save` is obsolete now.
+* Support execution history.  Commands
+  :el:symbol:`ein:worksheet-previous-input-history` and
+  :el:symbol:`ein:worksheet-next-input-history` can be used
+  to insert previously executed code into the current cell.
+* Add :el:symbol:`ein:pseudo-console-mode`.
+* Add "scratch sheet".  This acts almost as same as worksheet, but you
+  don't need to save it.  You can use try any code without saving
+  junks in your notebook.  Use the command
+  :el:symbol:`ein:notebook-scratchsheet-open` to open scratch sheet.
+* Menu support in notebook mode and notebook list mode.
 * Auto-connection support.
   The new function :el:symbol:`ein:connect-to-default-notebook` can be
   added to :el:symbol:`python-mode-hook` to automatically connect
@@ -508,7 +529,6 @@ v0.2
 * Change the timing to trigger auto-execution in connected buffer.
   It was triggered on save before.  Now it is on run, eval or reload.
   See :el:symbol:`ein:connect-toggle-autoexec`.
-* [WIP] Worksheet support.
 
 
 v0.1.2

@@ -298,11 +298,14 @@ Notebook is specified by a string NBPATH whose format is
 </dd></dl>
 
 <dl class="function">
-<dt id="ein:notebooklist-new-scratch-notebook">
-<em class="property">function </em><tt class="descname">ein:notebooklist-new-scratch-notebook</tt><a class="headerlink" href="#ein:notebooklist-new-scratch-notebook" title="Permalink to this definition">¶</a></dt>
+<dt id="ein:junk-new">
+<em class="property">function </em><big>(</big><tt class="descname">ein:junk-new </tt><em>name</em> <em>url-or-port</em><big>)</big><a class="headerlink" href="#ein:junk-new" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a notebook to try random thing.
 Notebook name is determined based on
-<a class="reference internal" href="#ein:scratch-notebook-name-template" title="ein:scratch-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:scratch-notebook-name-template</span></tt></a>.</p>
+<a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></tt></a>.</p>
+<p>When any prefix argument is given, this command asks notebook
+name to be used.  When two universal prefix arguments (i.e.,
+<tt class="docutils literal"><span class="pre">C-u</span> <span class="pre">C-u</span></tt>) are given, this command asks URL or port to use.</p>
 </dd></dl>
 
 <p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-mode</span></tt>.</p>
@@ -446,6 +449,31 @@ kill-ring of Emacs (kill-ring for texts).</p>
 
 <dl class="keybind">
 <dt>
+<tt class="descname">C-c M-{</tt><tt class="descclassname"> ein:notebook-worksheet-move-prev</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Switch the current worksheet with the previous one.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c M-}</tt><tt class="descclassname"> ein:notebook-worksheet-move-next</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Switch the current worksheet with the previous one.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c M-+</tt><tt class="descclassname"> ein:notebook-worksheet-insert-prev</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert a new worksheet before this worksheet and open it.
+See also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-insert-next</span></tt>.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">C-c C-w</tt><tt class="descclassname"> ein:worksheet-copy-cell</tt></dt>
 </dt>
 <dd><dd class="first last"><p>Copy the cell at point.  (Put the current cell into the kill-ring.)</p>
@@ -562,7 +590,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dt>
 <tt class="descname">C-c C-x</tt><tt class="descclassname"> ein:tb-show</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Popup traceback viewer.</p>
+<dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
 
@@ -590,6 +618,14 @@ This is equivalent to do <tt class="docutils literal"><span class="pre">C-c</spa
 <dd><dd class="first last"><p>Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-#</tt><tt class="descclassname"> ein:notebook-close</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Close NOTEBOOK and kill its buffer.</p>
 </dd></dd>
 </dl>
 
@@ -628,6 +664,140 @@ given, open the last point in the other window.</p>
 
 <dl class="keybind">
 <dt>
+<tt class="descname">C-c C-/</tt><tt class="descclassname"> ein:notebook-scratchsheet-open</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open &#8220;scratch sheet&#8221;.
+Open a new one when prefix argument is given.
+Scratch sheet is almost identical to worksheet.  However, EIN
+will not save the buffer.  Use this buffer like of normal IPython
+console.  Note that you can always copy cells into the normal
+worksheet to save result.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c !</tt><tt class="descclassname"> ein:worksheet-rename-sheet</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Change worksheet name (<em>not</em> notebook name).</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c {</tt><tt class="descclassname"> ein:notebook-worksheet-open-prev-or-last</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open previous or last worksheet.
+See also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-next-or-first</span></tt> and
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-prev</span></tt>.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c }</tt><tt class="descclassname"> ein:notebook-worksheet-open-next-or-first</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open next or first worksheet.</p>
+<p>Try to open the worksheet to the worksheet WS using the function
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-next</span></tt>, open the first worksheet if
+not found.</p>
+<p>SHOW is a function to be called with the worksheet buffer if
+given.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c +</tt><tt class="descclassname"> ein:notebook-worksheet-insert-next</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert a new worksheet after this worksheet and open it.
+See also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-insert-prev</span></tt>.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c -</tt><tt class="descclassname"> ein:notebook-worksheet-delete</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Delete the current worksheet.
+When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 1</tt><tt class="descclassname"> ein:notebook-worksheet-open-1th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 1-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 2</tt><tt class="descclassname"> ein:notebook-worksheet-open-2th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 2-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 3</tt><tt class="descclassname"> ein:notebook-worksheet-open-3th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 3-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 4</tt><tt class="descclassname"> ein:notebook-worksheet-open-4th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 4-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 5</tt><tt class="descclassname"> ein:notebook-worksheet-open-5th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 5-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 6</tt><tt class="descclassname"> ein:notebook-worksheet-open-6th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 6-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 7</tt><tt class="descclassname"> ein:notebook-worksheet-open-7th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 7-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 8</tt><tt class="descclassname"> ein:notebook-worksheet-open-8th</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open 8-th worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c 9</tt><tt class="descclassname"> ein:notebook-worksheet-open-last</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open the last worksheet.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
 <tt class="descname">M-RET</tt><tt class="descclassname"> ein:worksheet-execute-cell-and-goto-next</tt></dt>
 </dt>
 <dd><dd class="first last"><p>Execute cell at point if it is a code cell and move to the
@@ -653,6 +823,28 @@ selecting it.</p>
 <dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
 is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
 given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-p</tt><tt class="descclassname"> ein:worksheet-previous-input-history</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert the previous input in the execution history.
+You can go back further in the history by repeating this command.
+Use <tt class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-next-input-history</span></tt> to go forward in the
+history.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">M-n</tt><tt class="descclassname"> ein:worksheet-next-input-history</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Insert next input in the execution history.
+You can go forward further in the history by repeating this
+command.  Use <tt class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-previous-input-history</span></tt> to go back
+in the history.</p>
 </dd></dd>
 </dl>
 
@@ -728,9 +920,9 @@ deletion.  Use kill to play on the safe side.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="ein:notebook-rename-to-scratch-command">
-<em class="property">function </em><big>(</big><tt class="descname">ein:notebook-rename-to-scratch-command </tt><em>name</em><big>)</big><a class="headerlink" href="#ein:notebook-rename-to-scratch-command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rename notebook based on <a class="reference internal" href="#ein:scratch-notebook-name-template" title="ein:scratch-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:scratch-notebook-name-template</span></tt></a>
+<dt id="ein:junk-rename">
+<em class="property">function </em><big>(</big><tt class="descname">ein:junk-rename </tt><em>name</em><big>)</big><a class="headerlink" href="#ein:junk-rename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename the current notebook based on <a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></tt></a>
 and save it immediately.</p>
 </dd></dl>
 
@@ -846,7 +1038,7 @@ It should be possible to support python-mode.el.  Patches are welcome!</p>
 <dt>
 <tt class="descname">C-c C-x</tt><tt class="descclassname"> ein:tb-show</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Popup traceback viewer.</p>
+<dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
 
@@ -868,6 +1060,19 @@ selecting it.</p>
 <dd><dd class="first last"><p>Go back to the point where <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></tt>
 is executed last time.  When the prefix argument <tt class="docutils literal"><span class="pre">C-u</span></tt> is
 given, open the last point in the other window.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<tt class="descname">C-c C-/</tt><tt class="descclassname"> ein:notebook-scratchsheet-open</tt></dt>
+</dt>
+<dd><dd class="first last"><p>Open &#8220;scratch sheet&#8221;.
+Open a new one when prefix argument is given.
+Scratch sheet is almost identical to worksheet.  However, EIN
+will not save the buffer.  Use this buffer like of normal IPython
+console.  Note that you can always copy cells into the normal
+worksheet to save result.</p>
 </dd></dd>
 </dl>
 
@@ -942,7 +1147,7 @@ Variable <a class="reference internal" href="#ein:connect-run-command" title="ei
 <dt>
 <tt class="descname">C-c C-x</tt><tt class="descclassname"> ein:tb-show</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Popup traceback viewer.</p>
+<dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
 
@@ -1141,8 +1346,8 @@ in order to make this code work.</p>
 <div class="section" id="id11">
 <h3><a class="toc-backref" href="#id40">Notebook</a><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
-<dt id="ein:notebook-enable-undo">
-<em class="property">variable </em><tt class="descname">ein:notebook-enable-undo</tt><a class="headerlink" href="#ein:notebook-enable-undo" title="Permalink to this definition">¶</a></dt>
+<dt id="ein:worksheet-enable-undo">
+<em class="property">variable </em><tt class="descname">ein:worksheet-enable-undo</tt><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure undo in notebook buffers.</p>
 <dl class="docutils">
 <dt><tt class="xref el el-symbol docutils literal"><span class="pre">no</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
@@ -1160,25 +1365,6 @@ or save it once and reopen it if you want to be careful.</dd>
 </dl>
 <p>You need to reopen the notebook buffer to reflect the change of
 this value.</p>
-</dd></dl>
-
-<dl class="variable">
-<dt id="ein:notebook-discard-output-on-save">
-<em class="property">variable </em><tt class="descname">ein:notebook-discard-output-on-save</tt><a class="headerlink" href="#ein:notebook-discard-output-on-save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configure if the output part of the cell should be saved or not.</p>
-<dl class="docutils">
-<dt><tt class="xref el el-symbol docutils literal"><span class="pre">no</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
-<dd>Save output. This is the default.</dd>
-<dt><tt class="xref el el-symbol docutils literal"><span class="pre">yes</span></tt> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
-<dd>Always discard output.</dd>
-<dt>a function</dt>
-<dd>This function takes two arguments, notebook and cell.  Return
-<tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to discard output and return <tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt> to save.  For example,
-if you don&#8217;t want to save image output but other kind of
-output, use <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-cell-has-image-output-p</span></tt>.</dd>
-</dl>
-<p>Note that using function needs EIN lisp API, which is not determined
-yet.  So be careful when using EIN functions.  They may change.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -1239,11 +1425,11 @@ is on.  See also <a class="reference internal" href="#ein:connect-aotoexec-light
 </dd></dl>
 
 <dl class="variable">
-<dt id="ein:scratch-notebook-name-template">
-<em class="property">variable </em><tt class="descname">ein:scratch-notebook-name-template</tt><a class="headerlink" href="#ein:scratch-notebook-name-template" title="Permalink to this definition">¶</a></dt>
-<dd><p>Template of scratch notebook name.
-This value is used from <a class="reference internal" href="#ein:notebooklist-new-scratch-notebook" title="ein:notebooklist-new-scratch-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></tt></a>
-and <a class="reference internal" href="#ein:notebook-rename-to-scratch-command" title="ein:notebook-rename-to-scratch-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt></a>.  This must be a
+<dt id="ein:junk-notebook-name-template">
+<em class="property">variable </em><tt class="descname">ein:junk-notebook-name-template</tt><a class="headerlink" href="#ein:junk-notebook-name-template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Junk notebook name template.
+This value is used from <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></tt>
+and <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt>.  This must be a
 format string which can be passed to <tt class="xref el el-symbol docutils literal"><span class="pre">format-time-string</span></tt>.</p>
 </dd></dl>
 
@@ -1260,6 +1446,37 @@ format string which can be passed to <tt class="xref el el-symbol docutils liter
 <a class="reference internal" href="#ein:use-auto-complete" title="ein:use-auto-complete"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></tt></a> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></tt></a>)
 must be <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to enable this option.  This variable has effect on
 notebook buffers and connected buffers.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:output-type-preference">
+<em class="property">variable </em><tt class="descname">ein:output-type-preference</tt><a class="headerlink" href="#ein:output-type-preference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output types to be used in notebook.
+First output-type found in this list will be used.
+This variable can be a list or a function returning a list given
+DATA plist.
+See also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:output-type-prefer-pretty-text-over-html</span></tt>.</p>
+<p><strong>Example</strong>:
+If you prefer HTML type over text type, you can set it as:</p>
+<div class="highlight-python"><pre>(setq ein:output-type-preference
+      '(emacs-lisp svg png jpeg html text latex javascript))</pre>
+</div>
+<p>Note that <tt class="docutils literal"><span class="pre">html</span></tt> comes before <tt class="docutils literal"><span class="pre">text</span></tt>.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:shr-env">
+<em class="property">variable </em><tt class="descname">ein:shr-env</tt><a class="headerlink" href="#ein:shr-env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variables let-bound while calling <tt class="xref el el-symbol docutils literal"><span class="pre">shr-insert-document</span></tt>.</p>
+<p>To use default shr setting:</p>
+<div class="highlight-python"><pre>(setq ein:shr-env nil)</pre>
+</div>
+<p>Draw boundaries for table (default):</p>
+<div class="highlight-python"><pre>(setq ein:shr-env
+      '((shr-table-horizontal-line ?-)
+        (shr-table-vertical-line ?|)
+        (shr-table-corner ?+)))</pre>
+</div>
 </dd></dl>
 
 </div>
@@ -1617,6 +1834,26 @@ with <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-st
 <div class="section" id="v0-2">
 <h2><a class="toc-backref" href="#id55">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Preliminary support for multiple worksheets.</li>
+<li>Rename notion of &#8220;scratch notebook&#8221; to &#8220;junk notebook&#8221;.
+This is to avoid confusion with newly added &#8220;scratch sheet&#8221;.
+Old commands are renamed to <a class="reference internal" href="#ein:junk-new" title="ein:junk-new"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:junk-new</span></tt></a> and
+<a class="reference internal" href="#ein:junk-rename" title="ein:junk-rename"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:junk-rename</span></tt></a>.</li>
+<li>Preferred MIME types to be used can be configured using the variable
+<a class="reference internal" href="#ein:output-type-preference" title="ein:output-type-preference"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:output-type-preference</span></tt></a>.</li>
+<li>HTML content is rendered SHR (Simple HTML Renderer) by default.
+Use <a class="reference internal" href="#ein:shr-env" title="ein:shr-env"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:shr-env</span></tt></a> to tweak how HTML rendered.</li>
+<li><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-discard-output-on-save</span></tt> is obsolete now.</li>
+<li>Support execution history.  Commands
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-previous-input-history</span></tt> and
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-next-input-history</span></tt> can be used
+to insert previously executed code into the current cell.</li>
+<li>Add <tt class="xref el el-symbol docutils literal"><span class="pre">ein:pseudo-console-mode</span></tt>.</li>
+<li>Add &#8220;scratch sheet&#8221;.  This acts almost as same as worksheet, but you
+don&#8217;t need to save it.  You can use try any code without saving
+junks in your notebook.  Use the command
+<tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-scratchsheet-open</span></tt> to open scratch sheet.</li>
+<li>Menu support in notebook mode and notebook list mode.</li>
 <li>Auto-connection support.
 The new function <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></tt></a> can be
 added to <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode-hook</span></tt> to automatically connect
@@ -1627,7 +1864,6 @@ python-mode buffers to default notebook specified by
 <li>Change the timing to trigger auto-execution in connected buffer.
 It was triggered on save before.  Now it is on run, eval or reload.
 See <tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-toggle-autoexec</span></tt>.</li>
-<li>[WIP] Worksheet support.</li>
 </ul>
 </div>
 <div class="section" id="v0-1-2">
@@ -1657,7 +1893,7 @@ it can connect to the notebook which is not opened yet.</li>
 <li>Workaround indentation problem when using MuMaMo
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/20">#20</a>).
 See <a class="reference internal" href="#ein:use-mumamo-indent-line-function-workaround" title="ein:use-mumamo-indent-line-function-workaround"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-mumamo-indent-line-function-workaround</span></tt></a>.</li>
-<li>Add <a class="reference internal" href="#ein:notebook-rename-to-scratch-command" title="ein:notebook-rename-to-scratch-command"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt></a>.</li>
+<li>Add <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></tt>.</li>
 <li>Add <a class="reference internal" href="#ein:pytools-pandas-to-ses" title="ein:pytools-pandas-to-ses"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-pandas-to-ses</span></tt></a>.</li>
 <li>Add Imenu support.</li>
 <li>Better heading cell faces.</li>
