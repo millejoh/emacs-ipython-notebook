@@ -595,17 +595,21 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
-(defun ein:worksheet-goto-input (ewoc-node up)
+(defun ein:worksheet-next-input-cell (ewoc-node &optional up)
+  "Return a cell containing the next input node after EWOC-NODE.
+When UP is non-`nil', do the same for the *previous* input node."
   (let* ((ewoc-data (ewoc-data ewoc-node))
          (cell (ein:$node-data ewoc-data))
          (path (ein:$node-path ewoc-data))
          (element (nth 1 path)))
-    (ein:aif
-        (if (memql element (if up '(output footer) '(prompt)))
-            cell
-          (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))
-        (ein:cell-goto it)
-      (error "No %s input!" (if up "previous" "next")))))
+    (if (memql element (if up '(output footer) '(prompt)))
+        cell
+      (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))))
+
+(defun ein:worksheet-goto-input (ewoc-node up)
+  (ein:aif (ein:worksheet-next-input-cell ewoc-node up)
+      (ein:cell-goto it)
+    (error "No %s input!" (if up "previous" "next"))))
 
 (defun ein:worksheet-goto-next-input (ewoc-node)
   (interactive (list (and (ein:worksheet--get-ws-or-error)
