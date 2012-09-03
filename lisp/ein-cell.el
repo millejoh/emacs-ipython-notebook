@@ -372,6 +372,17 @@ A specific node can be specified using optional ARGS."
   (append (call-next-method)
           (ein:cell-element-get cell :output)))
 
+(defmethod ein:cell-language ((cell ein:basecell))
+  "Programming language used for CELL.
+Return language name as a string or `nil' when not defined.
+
+\(fn cell)")
+
+(defmethod ein:cell-language ((cell ein:codecell)) nil "python")
+(defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
+(defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
+(defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
+
 
 ;; EWOC
 
