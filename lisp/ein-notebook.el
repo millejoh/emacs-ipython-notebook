@@ -947,7 +947,7 @@ associated with current buffer (if any)."
 ;;; Notebook mode
 
 (defcustom ein:notebook-modes
-  '(ein:notebook-mumamo-mode ein:notebook-python-mode ein:notebook-plain-mode)
+  '(ein:notebook-mumamo-mode ein:notebook-plain-mode)
   "Notebook modes to use \(in order of preference).
 
 When the notebook is opened, mode in this value is checked one by one
@@ -959,11 +959,11 @@ Examples:
 
 Avoid using MuMaMo even when it is installed::
 
-  (setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))
+  (setq ein:notebook-modes '(ein:notebook-plain-mode))
 
-Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
+Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
+  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-python-mode))
 "
   :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
                          (const :tag "Only Python" ein:notebook-python-mode)
