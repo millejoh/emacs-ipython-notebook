@@ -47,8 +47,8 @@ This function may raise an error."
                  (end   (ein:cell-input-pos-max cell))
                  (lang (ein:cell-language cell)))
     (when (and (>= start pos) (<= end limit))
-      (org-src-font-lock-fontify-block lang start end))
-    t))
+      (org-src-font-lock-fontify-block lang start end)
+      t)))
 
 (defvar ein:org-src-font-lock-keywords
   '(ein:org-src-fontify)
