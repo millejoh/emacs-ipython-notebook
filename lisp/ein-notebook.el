@@ -957,6 +957,11 @@ used.
 
 Examples:
 
+Use MuMaMo if it is installed.  Otherwise, use plain mode.
+This is the default setting::
+
+  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
+
 Avoid using MuMaMo even when it is installed::
 
   (setq ein:notebook-modes '(ein:notebook-plain-mode))
