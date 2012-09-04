@@ -166,6 +166,11 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (interactive)
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode)))
 
+(defun ein:dev-notebook-org-src-mode ()
+  "Use `ein:notebook-org-src-mode'."
+  (interactive)
+  (setq ein:notebook-modes '(ein:notebook-org-src-mode)))
+
 (provide 'ein-dev)
 
 ;;; ein-dev.el ends here
