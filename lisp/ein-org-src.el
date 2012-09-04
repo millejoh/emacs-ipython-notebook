@@ -37,25 +37,50 @@ See info node `(elisp) Search-based Fontification'."
   (ein:log-ignore-errors
     (ein:org-src-fontify-1 limit)))
 
+(defun ein:org-src-current-or-next-input-cell (ewoc-node)
+  "Almost identical to `ein:worksheet-next-input-cell' but return
+the current cell if EWOC-NODE is the input area node."
+  (let* ((ewoc-data (ewoc-data ewoc-node))
+         (cell (ein:$node-data ewoc-data))
+         (path (ein:$node-path ewoc-data))
+         (element (nth 1 path)))
+    (if (memql element '(prompt input))
+        cell
+      (ein:cell-next cell))))
+
 (defun ein:org-src-fontify-1 (limit)
   "Actual implementation of `ein:org-src-fontify'.
 This function may raise an error."
   (ein:and-let* ((pos (point))
                  (node (ein:worksheet-get-nearest-cell-ewoc-node pos limit))
-                 (cell (ein:worksheet-next-input-cell node))
-                 (start (ein:cell-input-pos-min cell)) ((>= start pos))
-                 (end   (ein:cell-input-pos-max cell)) ((<= end limit))
+                 (cell (ein:org-src-current-or-next-input-cell node))
+                 (start (ein:cell-input-pos-min cell))
+                 (end   (ein:cell-input-pos-max cell))
+                 ((<= end limit))
+                 ((< start end))
                  (lang (ein:cell-language cell)))
-    (org-src-font-lock-fontify-block lang start end)
+    (let ((inhibit-read-only t))
+      (org-src-font-lock-fontify-block lang start end)
+      ;; Emacs fontification mechanism requires the function to move
+      ;; the point.  Do *not* use `(goto-char end)'.  As END is in the
+      ;; input area, fontification falls into an infinite loop.
+      (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :footer)))
     t))
 
+(defun ein:org-src-back-to-prev-node ()
+  (ein:aand (ein:worksheet-get-ewoc) (ewoc-goto-prev it 1)))
+
 (defvar ein:org-src-font-lock-keywords
-  '(ein:org-src-fontify)
+  '((ein:org-src-fontify))
   "Default `font-lock-keywords' for `ein:notebook-org-src-mode'.")
 
 (defun ein:org-src-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
-       '(ein:org-src-font-lock-keywords)))
+       '(ein:org-src-font-lock-keywords
+         ;; The following are adapted from org-mode but I am not sure
+         ;; if I need them:
+         t nil nil
+         ein:org-src-back-to-prev-node)))
 
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
