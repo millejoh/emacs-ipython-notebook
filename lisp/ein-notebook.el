@@ -1171,15 +1171,14 @@ This hook is run regardless the actual major mode used."
    ein:notebook-mode-map 'ein:notebook-complete-dot)
   (run-hooks 'ein:notebook-mode-hook))
 
+(add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
+
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
 (define-derived-mode ein:notebook-python-mode python-mode "ein:python"
   "Use `python-mode' for whole notebook buffer.")
-
-(add-hook 'ein:notebook-plain-mode-hook  'ein:worksheet-imenu-setup)
-(add-hook 'ein:notebook-python-mode-hook 'ein:worksheet-imenu-setup)
 
 (set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
 (set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
