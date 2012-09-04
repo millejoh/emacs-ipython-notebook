@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'org-src nil t)
+(eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)
 
@@ -89,6 +90,9 @@ This function may raise an error."
   (ein:org-src-keymap-setup-python)
   (ein:org-src-set-font-lock-defaults))
 
+
+;;; Keymap setup functions
+
 (defun ein:org-src-keymap-setup-python ()
   (when (boundp 'python-mode-map)
     (set-keymap-parent ein:notebook-org-src-mode-map python-mode-map))
@@ -100,6 +104,13 @@ This function may raise an error."
     ;; FIXME: write keymap setup for python-mode.el
     )))
 
+(defun ein:org-src-keymap-setup-markdown ()
+  "Use `markdown-mode-map'.  NOTE: This function is not used now."
+  (when (featurep 'markdown-mode)
+    (set-keymap-parent ein:notebook-org-src-mode-map markdown-mode-map)))
+
+;; FIXME: dynamically call ein:org-src-keymap-setup-LANG using
+;;        `post-command-hook'.
 ;; FIMXE: add more ein:org-src-keymap-setup-LANG to switch kaymap.
 
 (provide 'ein-org-src)
