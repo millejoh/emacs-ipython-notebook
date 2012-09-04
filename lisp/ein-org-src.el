@@ -57,6 +57,10 @@ This function may raise an error."
   (set (make-local-variable 'font-lock-defaults)
        '(ein:org-src-font-lock-keywords)))
 
+(define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
+  "Notebook mode with org-mode powered fontification."
+  (ein:org-src-set-font-lock-defaults))
+
 (provide 'ein-org-src)
 
 ;;; ein-org-src.el ends here
