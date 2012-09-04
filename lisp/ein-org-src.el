@@ -48,7 +48,8 @@ This function may raise an error."
                  ((< start end))
                  (lang (ein:cell-language cell)))
     (let ((inhibit-read-only t))
-      (org-src-font-lock-fontify-block lang start end))
+      (org-src-font-lock-fontify-block lang start end)
+      (goto-char end))
     t))
 
 (defvar ein:org-src-font-lock-keywords
