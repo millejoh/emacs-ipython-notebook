@@ -41,13 +41,15 @@ except ImportError:
 
 def find_source(name):
     """Given an object as string, `name`, print its place in source code."""
+    # FIXME: use JSON display object instead of stdout
     ret = _find_edit_target(name, {}, [])
     if ret:
         (filename, lineno, use_temp) = ret
-        print filename
-        print lineno
-    else:
-        raise RuntimeError("Source code for {0} cannot be found".format(name))
+        if not use_temp:
+            print filename
+            print lineno
+            return
+    raise RuntimeError("Source code for {0} cannot be found".format(name))
 
 
 def run_docstring_examples(obj, verbose=True):
