@@ -28,7 +28,7 @@
 
 (require 'org-src)
 
-(require 'ein-notebook)
+(require 'ein-worksheet)
 
 (defun ein:org-src-fontify (limit)
   "Fontify next input area comes after the current point then

@@ -27,7 +27,7 @@
 
 (require 'mumamo)
 
-(require 'ein-notebook)
+(require 'ein-worksheet)
 
 
 
@@ -154,7 +154,7 @@ the variable every time visiting the different chunks.
    irrelevant to EIN.  Therefore, the current approach is taken.
 
 This is the same workaround as `ein:ac-setup-maybe'."
-  (when ein:%notebook%
+  (when (ein:worksheet-buffer-p)
     (ein:worksheet-imenu-setup)))
 
 (add-hook 'after-change-major-mode-hook 'ein:mumamo-imenu-setup-maybe)
