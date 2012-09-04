@@ -84,7 +84,23 @@ This function may raise an error."
 
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
+  (make-local-variable 'indent-line-function)
+  (make-local-variable 'indent-region-function)
+  (ein:org-src-keymap-setup-python)
   (ein:org-src-set-font-lock-defaults))
+
+(defun ein:org-src-keymap-setup-python ()
+  (when (boundp 'python-mode-map)
+    (set-keymap-parent ein:notebook-org-src-mode-map python-mode-map))
+  (cond
+   ((featurep 'python)
+    (setq indent-line-function #'python-indent-line-function)
+    (setq indent-region-function #'python-indent-region))
+   ((featurep 'python-mode)
+    ;; FIXME: write keymap setup for python-mode.el
+    )))
+
+;; FIMXE: add more ein:org-src-keymap-setup-LANG to switch kaymap.
 
 (provide 'ein-org-src)
 
