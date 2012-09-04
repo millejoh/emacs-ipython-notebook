@@ -40,12 +40,13 @@ See info node `(elisp) Search-based Fontification'."
 (defun ein:org-src-fontify-1 (limit)
   "Actual implementation of `ein:org-src-fontify'.
 This function may raise an error."
-  (ein:and-let* ((node (ein:worksheet-get-nearest-cell-ewoc-node (point) limit))
+  (ein:and-let* ((pos (point))
+                 (node (ein:worksheet-get-nearest-cell-ewoc-node pos limit))
                  (cell (ein:worksheet-next-input-cell node))
                  (start (ein:cell-input-pos-min cell))
                  (end   (ein:cell-input-pos-max cell))
                  (lang (ein:cell-language cell)))
-    (when (< end limit)
+    (when (and (>= start pos) (<= end limit))
       (org-src-font-lock-fontify-block lang start end))
     t))
 
