@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(require 'org-src)
+(require 'org-src nil t)
 
 (require 'ein-worksheet)
 
