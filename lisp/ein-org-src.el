@@ -38,6 +38,8 @@ See info node `(elisp) Search-based Fontification'."
     (ein:org-src-fontify-1 limit)))
 
 (defun ein:org-src-current-or-next-input-cell (ewoc-node)
+  "Almost identical to `ein:worksheet-next-input-cell' but return
+the current cell if EWOC-NODE is the input area node."
   (let* ((ewoc-data (ewoc-data ewoc-node))
          (cell (ein:$node-data ewoc-data))
          (path (ein:$node-path ewoc-data))
@@ -76,6 +78,8 @@ This function may raise an error."
 (defun ein:org-src-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
        '(ein:org-src-font-lock-keywords
+         ;; The following are adapted from org-mode but I am not sure
+         ;; if I need them:
          t nil nil
          ein:org-src-back-to-prev-node)))
 
