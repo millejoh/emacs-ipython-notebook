@@ -31,16 +31,23 @@
 (require 'ein-worksheet)
 
 (defun ein:org-src-fontify (limit)
+  "Fontify next input area comes after the current point then
+return `t' or `nil' if not found.
+See info node `(elisp) Search-based Fontification'."
   (ein:log-ignore-errors
     (ein:org-src-fontify-1 limit)))
 
 (defun ein:org-src-fontify-1 (limit)
+  "Actual implementation of `ein:org-src-fontify'.
+This function may raise an error."
   (ein:and-let* ((node (ein:worksheet-get-nearest-cell-ewoc-node (point) limit))
                  (cell (ein:worksheet-next-input-cell node))
                  (start (ein:cell-input-pos-min cell))
                  (end   (ein:cell-input-pos-max cell))
                  (lang (ein:cell-language cell)))
-    (org-src-font-lock-fontify-block lang start end)))
+    (when (< end limit)
+      (org-src-font-lock-fontify-block lang start end))
+    t))
 
 (defvar ein:org-src-font-lock-keywords
   '(ein:org-src-fontify)
