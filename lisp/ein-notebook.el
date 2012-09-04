@@ -970,11 +970,19 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
 
+(defcustom ein:notebook-mode-hook nil
+  "Hook for `ein:notebook-mode'.
+This hook is run regardless the actual major mode used."
+  :type 'hook
+  :group 'ein)
+
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
   ;; So try to load extra modules here.
   (when (require 'mumamo nil t)
     (require 'ein-mumamo))
+  (when (require 'org-src nil t)
+    (require 'ein-org-src))
   ;; Return first matched mode
   (loop for mode in ein:notebook-modes
         if (functionp mode)
@@ -1162,7 +1170,20 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 (defun ein:notebook-mode ()
   (funcall (ein:notebook-choose-mode))
   (ein:complete-on-dot-install
-   ein:notebook-mode-map 'ein:notebook-complete-dot))
+   ein:notebook-mode-map 'ein:notebook-complete-dot)
+  (ein:notebook-minor-mode +1)
+  (run-hooks 'ein:notebook-mode-hook))
+
+(add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
+
+(define-minor-mode ein:notebook-minor-mode
+  "Minor mode to install `ein:notebook-mode-map' for `ein:notebook-mode'."
+  :keymap ein:notebook-mode-map
+  :group 'ein)
+
+;; To avoid MuMaMo to discard `ein:notebook-minor-mode', make it
+;; permanent local.
+(put 'ein:notebook-minor-mode 'permanent-local t)
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
@@ -1170,12 +1191,6 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 
 (define-derived-mode ein:notebook-python-mode python-mode "ein:python"
   "Use `python-mode' for whole notebook buffer.")
-
-(add-hook 'ein:notebook-plain-mode-hook  'ein:worksheet-imenu-setup)
-(add-hook 'ein:notebook-python-mode-hook 'ein:worksheet-imenu-setup)
-
-(set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
-(set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
 
 (defun ein:notebook-open-in-browser (&optional print)
   "Open current notebook in web browser.

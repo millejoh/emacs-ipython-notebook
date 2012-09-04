@@ -26,9 +26,9 @@
 
 ;;; Code:
 
-(require 'org-src)
+(require 'org-src nil t)
 
-(require 'ein-notebook)
+(require 'ein-worksheet)
 
 (defun ein:org-src-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -85,9 +85,6 @@ This function may raise an error."
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
   (ein:org-src-set-font-lock-defaults))
-
-(add-hook 'ein:notebook-org-src-mode-hook 'ein:worksheet-imenu-setup)
-(set-keymap-parent ein:notebook-org-src-mode-map ein:notebook-mode-map)
 
 (provide 'ein-org-src)
 
