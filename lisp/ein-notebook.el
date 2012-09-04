@@ -970,6 +970,12 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
 
+(defcustom ein:notebook-mode-hook nil
+  "Hook for `ein:notebook-mode'.
+This hook is run regardless the actual major mode used."
+  :type 'hook
+  :group 'ein)
+
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
   ;; So try to load extra modules here.
@@ -1162,7 +1168,8 @@ Do not use `python-mode'.  Use plain mode when MuMaMo is not installed::
 (defun ein:notebook-mode ()
   (funcall (ein:notebook-choose-mode))
   (ein:complete-on-dot-install
-   ein:notebook-mode-map 'ein:notebook-complete-dot))
+   ein:notebook-mode-map 'ein:notebook-complete-dot)
+  (run-hooks 'ein:notebook-mode-hook))
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
