@@ -62,10 +62,9 @@ This function may raise an error."
     (let ((inhibit-read-only t))
       (org-src-font-lock-fontify-block lang start end)
       ;; Emacs fontification mechanism requires the function to move
-      ;; the point.  Also do `1+' to make sure the point goes out of
-      ;; the input area.  Otherwise, fontification falls into an
-      ;; infinite loop.
-      (goto-char (1+ end)))
+      ;; the point.  Do *not* use `(goto-char end)'.  As END is in the
+      ;; input area, fontification falls into an infinite loop.
+      (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :footer)))
     t))
 
 (defun ein:org-src-back-to-prev-node ()
