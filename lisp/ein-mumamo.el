@@ -179,8 +179,6 @@ This is the same workaround as `ein:ac-setup-maybe'."
     ein:mumamo-chunk-headingcell
     )))
 
-(set-keymap-parent ein:notebook-mumamo-mode-map ein:notebook-mode-map)
-
 (add-hook 'ein:notebook-mumamo-mode-hook
           'ein:mumamo-indent-line-function-workaround-turn-on)
 

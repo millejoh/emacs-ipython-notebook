@@ -1169,9 +1169,19 @@ This hook is run regardless the actual major mode used."
   (funcall (ein:notebook-choose-mode))
   (ein:complete-on-dot-install
    ein:notebook-mode-map 'ein:notebook-complete-dot)
+  (ein:notebook-minor-mode +1)
   (run-hooks 'ein:notebook-mode-hook))
 
 (add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
+
+(define-minor-mode ein:notebook-minor-mode
+  "Minor mode to install `ein:notebook-mode-map' for `ein:notebook-mode'."
+  :keymap ein:notebook-mode-map
+  :group 'ein)
+
+;; To avoid MuMaMo to discard `ein:notebook-minor-mode', make it
+;; permanent local.
+(put 'ein:notebook-minor-mode 'permanent-local t)
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
@@ -1179,9 +1189,6 @@ This hook is run regardless the actual major mode used."
 
 (define-derived-mode ein:notebook-python-mode python-mode "ein:python"
   "Use `python-mode' for whole notebook buffer.")
-
-(set-keymap-parent ein:notebook-plain-mode-map ein:notebook-mode-map)
-(set-keymap-parent ein:notebook-python-mode-map ein:notebook-mode-map)
 
 (defun ein:notebook-open-in-browser (&optional print)
   "Open current notebook in web browser.
