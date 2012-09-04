@@ -981,6 +981,8 @@ This hook is run regardless the actual major mode used."
   ;; So try to load extra modules here.
   (when (require 'mumamo nil t)
     (require 'ein-mumamo))
+  (when (require 'org-src nil t)
+    (require 'ein-org-src))
   ;; Return first matched mode
   (loop for mode in ein:notebook-modes
         if (functionp mode)
