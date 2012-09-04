@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'org-src nil t)
+(eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)
 
@@ -84,7 +85,33 @@ This function may raise an error."
 
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
+  (make-local-variable 'indent-line-function)
+  (make-local-variable 'indent-region-function)
+  (ein:org-src-keymap-setup-python)
   (ein:org-src-set-font-lock-defaults))
+
+
+;;; Keymap setup functions
+
+(defun ein:org-src-keymap-setup-python ()
+  (when (boundp 'python-mode-map)
+    (set-keymap-parent ein:notebook-org-src-mode-map python-mode-map))
+  (cond
+   ((featurep 'python)
+    (setq indent-line-function #'python-indent-line-function)
+    (setq indent-region-function #'python-indent-region))
+   ((featurep 'python-mode)
+    ;; FIXME: write keymap setup for python-mode.el
+    )))
+
+(defun ein:org-src-keymap-setup-markdown ()
+  "Use `markdown-mode-map'.  NOTE: This function is not used now."
+  (when (featurep 'markdown-mode)
+    (set-keymap-parent ein:notebook-org-src-mode-map markdown-mode-map)))
+
+;; FIXME: dynamically call ein:org-src-keymap-setup-LANG using
+;;        `post-command-hook'.
+;; FIMXE: add more ein:org-src-keymap-setup-LANG to switch kaymap.
 
 (provide 'ein-org-src)
 
