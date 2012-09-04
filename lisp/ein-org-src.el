@@ -37,13 +37,22 @@ See info node `(elisp) Search-based Fontification'."
   (ein:log-ignore-errors
     (ein:org-src-fontify-1 limit)))
 
+(defun ein:org-src-current-or-next-input-cell (ewoc-node)
+  (let* ((ewoc-data (ewoc-data ewoc-node))
+         (cell (ein:$node-data ewoc-data))
+         (path (ein:$node-path ewoc-data))
+         (element (nth 1 path)))
+    (if (memql element '(prompt input))
+        cell
+      (ein:cell-next cell))))
+
 (defun ein:org-src-fontify-1 (limit)
   "Actual implementation of `ein:org-src-fontify'.
 This function may raise an error."
   (ein:and-let* ((pos (point))
                  (node (ein:worksheet-get-nearest-cell-ewoc-node pos limit))
-                 (cell (ein:worksheet-next-input-cell node))
-                 (start (ein:cell-input-pos-min cell)) ((>= start pos))
+                 (cell (ein:org-src-current-or-next-input-cell node))
+                 (start (ein:cell-input-pos-min cell))
                  (end   (ein:cell-input-pos-max cell)) ((<= end limit))
                  ((< start end))
                  (lang (ein:cell-language cell)))
