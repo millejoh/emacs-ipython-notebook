@@ -299,8 +299,11 @@ worksheet WS is reopened.
 (defmethod ein:worksheet-ncells ((ws ein:worksheet))
   (length (ein:worksheet-get-cells ws)))
 
+(defun ein:worksheet-get-ewoc (&optional ws)
+  (ein:aand (or ws ein:%worksheet%) (oref it :ewoc)))
+
 (defun ein:worksheet-get-current-ewoc-node (&optional pos)
-  (ein:aand ein:%worksheet% (oref it :ewoc) (ewoc-locate it pos)))
+  (ein:aand (ein:worksheet-get-ewoc) (ewoc-locate it pos)))
 
 (defun ein:worksheet-get-nearest-cell-ewoc-node (&optional pos max cell-p)
   (ein:and-let* ((ewoc-node (ein:worksheet-get-current-ewoc-node pos)))

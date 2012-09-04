@@ -52,13 +52,18 @@ This function may raise an error."
       (goto-char end))
     t))
 
+(defun ein:org-src-back-to-prev-node ()
+  (ein:aand (ein:worksheet-get-ewoc) (ewoc-goto-prev it 1)))
+
 (defvar ein:org-src-font-lock-keywords
   '((ein:org-src-fontify))
   "Default `font-lock-keywords' for `ein:notebook-org-src-mode'.")
 
 (defun ein:org-src-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
-       '(ein:org-src-font-lock-keywords)))
+       '(ein:org-src-font-lock-keywords
+         t nil nil
+         ein:org-src-back-to-prev-node)))
 
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
