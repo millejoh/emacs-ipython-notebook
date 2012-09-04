@@ -90,6 +90,9 @@ This function may raise an error."
   (ein:org-src-keymap-setup-python)
   (ein:org-src-set-font-lock-defaults))
 
+(eval-after-load "auto-complete"
+  '(add-to-list 'ac-modes 'ein:notebook-org-src-mode))
+
 
 ;;; Keymap setup functions
 
