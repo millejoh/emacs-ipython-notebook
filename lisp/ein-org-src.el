@@ -45,12 +45,14 @@ This function may raise an error."
                  (cell (ein:worksheet-next-input-cell node))
                  (start (ein:cell-input-pos-min cell)) ((>= start pos))
                  (end   (ein:cell-input-pos-max cell)) ((<= end limit))
+                 ((< start end))
                  (lang (ein:cell-language cell)))
-    (org-src-font-lock-fontify-block lang start end)
+    (let ((inhibit-read-only t))
+      (org-src-font-lock-fontify-block lang start end))
     t))
 
 (defvar ein:org-src-font-lock-keywords
-  '(ein:org-src-fontify)
+  '((ein:org-src-fontify))
   "Default `font-lock-keywords' for `ein:notebook-org-src-mode'.")
 
 (defun ein:org-src-set-font-lock-defaults ()
