@@ -410,41 +410,42 @@ See also:
                       (list url-or-port (plist-get note :notebook_id))))))
 
 (defun ein:notebooklist-open-notebook-by-file-name
-  (&optional filename noerror callback cbargs)
+  (&optional filename noerror buffer-callback)
   "Find the notebook named as same as the current file in the servers.
 Open the notebook if found.  Note that this command will *not*
 upload the current file to the server.
 
 .. When FILENAME is unspecified the variable `buffer-file-name'
    is used instead.  Set NOERROR to non-`nil' to suppress errors.
-   CALLBACK and CBARGS are passed to `ein:notebook-open'."
+   BUFFER-CALLBACK is called after opening notebook with the
+   current buffer as the only one argument."
   (interactive (progn (assert buffer-file-name nil "Not visiting a file.")
                       nil))
   (unless filename (setq filename buffer-file-name))
   (assert filename nil "No file found.")
   (let* ((name (file-name-sans-extension
                 (file-name-nondirectory (or filename))))
-         (found (ein:notebooklist-find-server-by-notebook-name name)))
+         (found (ein:notebooklist-find-server-by-notebook-name name))
+         (callback (lambda (-ignore-1- -ignore-2- buffer buffer-callback)
+                     (ein:notebook-pop-to-current-buffer) ; default
+                     (when (buffer-live-p buffer)
+                       (funcall buffer-callback buffer))))
+         (cbargs (list (current-buffer) (or buffer-callback #'ignore))))
     (assert found nil "No server has notebook named: %s" name)
     (destructuring-bind (url-or-port notebook-id) found
       (ein:notebook-open url-or-port notebook-id callback cbargs))))
 
-(defvar ein:notebooklist-find-file-kill-if-notebook-p nil)
+(defvar ein:notebooklist-find-file-buffer-callback #'ignore)
 
 (defun ein:notebooklist-find-file-callback ()
-  "A callback function for `find-file-hook' to open notebook."
+  "A callback function for `find-file-hook' to open notebook.
+
+FIMXE: document how to use `ein:notebooklist-find-file-callback'
+       when I am convinced with the API."
   (ein:and-let* ((filename buffer-file-name)
                  ((string-match-p "\\.ipynb$" filename)))
-    (let (callback cbargs)
-      (when ein:notebooklist-find-file-kill-if-notebook-p
-        (setq callback
-              (lambda (-ignore-1- -ignore-2- buffer)
-                (ein:notebook-pop-to-current-buffer)
-                (when (buffer-live-p buffer)
-                  (kill-buffer buffer))))
-        (setq cbargs (list (current-buffer))))
-      (ein:notebooklist-open-notebook-by-file-name
-       filename t callback cbargs))))
+    (ein:notebooklist-open-notebook-by-file-name
+     filename t ein:notebooklist-find-file-buffer-callback)))
 
 
 ;;; Generic getter
