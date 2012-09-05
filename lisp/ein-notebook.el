@@ -113,6 +113,28 @@ notebook.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
+(defcustom ein:helm-kernel-history-search-key nil
+  "Bind `helm-ein-kernel-history' to this key in notebook mode.
+
+Example::
+
+    (setq ein:helm-kernel-history-search-key \"\\M-r\")
+
+This key will be installed in the `ein:notebook-mode-map'."
+  :type 'boolean
+  :group 'ein)
+
+(defcustom ein:anything-kernel-history-search-key nil
+  "Bind `anything-ein-kernel-history' to this key in notebook mode.
+
+Example::
+
+    (setq ein:anything-kernel-history-search-key \"\\M-r\")
+
+This key will be installed in the `ein:notebook-mode-map'."
+  :type 'boolean
+  :group 'ein)
+
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
@@ -1176,6 +1198,10 @@ This hook is run regardless the actual major mode used."
   (funcall (ein:notebook-choose-mode))
   (ein:complete-on-dot-install
    ein:notebook-mode-map 'ein:notebook-complete-dot)
+  (ein:aif ein:helm-kernel-history-search-key
+      (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
+  (ein:aif ein:anything-kernel-history-search-key
+      (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
   (ein:notebook-minor-mode +1)
   (run-hooks 'ein:notebook-mode-hook))
 
