@@ -30,7 +30,78 @@
 (declare-function anything-other-buffer "anything")
 (declare-function helm-other-buffer "helm")
 
-;; Helm/anything sources
+(require 'ein-kernel)
+
+
+
+;;; Dynamic Variables
+
+(defvar ein:helm-pattern 'helm-pattern
+  "Dynamically bound to one of `helm-pattern' or `anything-pattern'.")
+
+(defvar ein:helm-kernel nil
+  "Dynamically bound to a kernel object.")
+
+
+
+;;; History search
+
+(defcustom ein:helm-kernel-history-search-auto-pattern t
+  "Automatically construct search pattern when non-`nil'.
+
+1. Single space is converted to \"*\".
+2. A backslash followed by a space is converted to a single space.
+3. A \"*\" is added at the end of the pattern.
+
+This variable applies to both `helm-ein-kernel-history' and
+`anything-ein-kernel-history'."
+  :group 'ein)
+
+(defun ein:helm-kernel-history-search-construct-pattern (pattern)
+  (when ein:helm-kernel-history-search-auto-pattern
+    (setq pattern
+          (replace-regexp-in-string "[^\\\\ ]\\( \\)[^\\\\ ]"
+                                    "*" pattern nil nil 1))
+    (setq pattern
+          (replace-regexp-in-string "\\\\ " " " pattern))
+    (setq pattern (concat pattern "*")))
+  pattern)
+
+(defvar ein:helm-source-kernel-history
+  '((name . "IPython history")
+    (candidates . (lambda ()
+                    (ein:kernel-history-search-synchronously
+                     ein:helm-kernel
+                     (ein:helm-kernel-history-search-construct-pattern
+                      (eval ein:helm-pattern)))))
+    (requires-pattern . 3)
+    ;; There is no need to filter out candidates:
+    (match . (identity))
+    (volatile)
+    (action . insert)
+    (delayed)
+    (multiline))
+  "Helm/anything source for searching kernel history.")
+
+;;;###autoload
+(defun anything-ein-kernel-history ()
+  "Search kernel execution history then insert the selected one."
+  (interactive)
+  (let ((ein:helm-pattern 'anything-pattern)
+        (ein:helm-kernel (ein:get-kernel-or-error)))
+    (anything-other-buffer ein:helm-source-kernel-history "*anything ein*")))
+
+;;;###autoload
+(defun helm-ein-kernel-history ()
+  "Search kernel execution history then insert the selected one."
+  (interactive)
+  (let ((ein:helm-pattern 'helm-pattern)
+        (ein:helm-kernel (ein:get-kernel-or-error)))
+    (helm-other-buffer ein:helm-source-kernel-history "*helm ein*")))
+
+
+
+;;; Notebook buffers
 
 (defvar ein:helm-source-notebook-buffers
   '((name . "IPython notebook buffers")
