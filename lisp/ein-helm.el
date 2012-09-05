@@ -58,6 +58,7 @@
     (multiline))
   "Helm/anything source for searching kernel history.")
 
+;;;###autoload
 (defun anything-ein-kernel-history ()
   "Search kernel execution history then insert the selected one."
   (interactive)
@@ -65,6 +66,7 @@
         (ein:helm-kernel (ein:get-kernel-or-error)))
     (anything-other-buffer ein:helm-source-history-search "*anything ein*")))
 
+;;;###autoload
 (defun helm-ein-kernel-history ()
   "Search kernel execution history then insert the selected one."
   (interactive)
