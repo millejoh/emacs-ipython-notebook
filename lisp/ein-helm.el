@@ -52,6 +52,8 @@
                     (ein:kernel-history-search-synchronously
                      ein:helm-kernel (eval ein:helm-pattern))))
     (requires-pattern . 3)
+    ;; There is no need to filter out candidates:
+    (match . (identity))
     (volatile)
     (action . insert)
     (delayed)
