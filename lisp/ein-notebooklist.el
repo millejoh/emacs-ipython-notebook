@@ -409,13 +409,15 @@ See also:
                  do (return-from outer
                       (list url-or-port (plist-get note :notebook_id))))))
 
-(defun ein:notebooklist-open-notebook-by-file-name (&optional filename)
+(defun ein:notebooklist-open-notebook-by-file-name
+  (&optional filename noerror callback cbargs)
   "Find the notebook named as same as the current file in the servers.
 Open the notebook if found.  Note that this command will *not*
 upload the current file to the server.
 
 .. When FILENAME is unspecified the variable `buffer-file-name'
-   is used instead."
+   is used instead.  Set NOERROR to non-`nil' to suppress errors.
+   CALLBACK and CBARGS are passed to `ein:notebook-open'."
   (interactive (progn (assert buffer-file-name nil "Not visiting a file.")
                       nil))
   (unless filename (setq filename buffer-file-name))
@@ -425,7 +427,24 @@ upload the current file to the server.
          (found (ein:notebooklist-find-server-by-notebook-name name)))
     (assert found nil "No server has notebook named: %s" name)
     (destructuring-bind (url-or-port notebook-id) found
-      (ein:notebook-open url-or-port notebook-id))))
+      (ein:notebook-open url-or-port notebook-id callback cbargs))))
+
+(defvar ein:notebooklist-find-file-kill-if-notebook-p nil)
+
+(defun ein:notebooklist-find-file-callback ()
+  "A callback function for `find-file-hook' to open notebook."
+  (ein:and-let* ((filename buffer-file-name)
+                 ((string-match-p "\\.ipynb$" filename)))
+    (let (callback cbargs)
+      (when ein:notebooklist-find-file-kill-if-notebook-p
+        (setq callback
+              (lambda (-ignore-1- -ignore-2- buffer)
+                (ein:notebook-pop-to-current-buffer)
+                (when (buffer-live-p buffer)
+                  (kill-buffer buffer))))
+        (setq cbargs (list (current-buffer))))
+      (ein:notebooklist-open-notebook-by-file-name
+       filename t callback cbargs))))
 
 
 ;;; Generic getter
