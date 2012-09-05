@@ -607,6 +607,44 @@ as a string and the rest of the argument is the optional ARGS."
                                  (apply func it args)))))
                        (cons func args)))))
 
+(defun* ein:kernel-history-request-synchronously
+    (kernel &rest args &key (timeout 0.5) (tick-time 0.05) &allow-other-keys)
+  "Send the history request and wait TIMEOUT seconds.
+Return a list (CONTENT METADATA).
+This function checks the request reply every TICK-TIME seconds.
+See `ein:kernel-history-request' for other usable options."
+  ;; As `result' and `finished' are set in callback, make sure they
+  ;; won't be trapped in other let-bindings.
+  (lexical-let (result finished)
+    (apply
+     #'ein:kernel-history-request
+     kernel
+     (list :history_reply
+           (cons (lambda (-ignore- content metadata)
+                   (setq result (list content metadata))
+                   (setq finished t))
+                 nil))
+     args)
+    (loop repeat (floor (/ timeout tick-time))
+          do (sit-for tick-time)
+          when finished
+          return t
+          finally (error "Timeout"))
+    result))
+
+(defun ein:kernel-history-search-synchronously (kernel pattern &rest args)
+  "Search execution history in KERNEL using PATTERN.
+Return matched history as a list of strings.
+See `ein:kernel-history-request-synchronously' and
+`ein:kernel-history-request' for usable options."
+  (let ((reply
+         (apply #'ein:kernel-history-request-synchronously
+                kernel
+                :hist-access-type "search"
+                :pattern pattern
+                args)))
+    (mapcar #'caddr (plist-get (car reply) :history))))
+
 (provide 'ein-kernel)
 
 ;;; ein-kernel.el ends here
