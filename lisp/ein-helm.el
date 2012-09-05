@@ -46,7 +46,7 @@
 
 ;;; History search
 
-(defvar ein:helm-source-history-search
+(defvar ein:helm-source-kernel-history
   '((name . "IPython history")
     (candidates . (lambda ()
                     (ein:kernel-history-search-synchronously
@@ -64,7 +64,7 @@
   (interactive)
   (let ((ein:helm-pattern 'anything-pattern)
         (ein:helm-kernel (ein:get-kernel-or-error)))
-    (anything-other-buffer ein:helm-source-history-search "*anything ein*")))
+    (anything-other-buffer ein:helm-source-kernel-history "*anything ein*")))
 
 ;;;###autoload
 (defun helm-ein-kernel-history ()
@@ -72,7 +72,7 @@
   (interactive)
   (let ((ein:helm-pattern 'helm-pattern)
         (ein:helm-kernel (ein:get-kernel-or-error)))
-    (helm-other-buffer ein:helm-source-history-search "*helm ein*")))
+    (helm-other-buffer ein:helm-source-kernel-history "*helm ein*")))
 
 
 
