@@ -51,7 +51,7 @@
     (candidates . (lambda ()
                     (ein:kernel-history-search-synchronously
                      ein:helm-kernel (eval ein:helm-pattern))))
-    (requires-pattern . 5)
+    (requires-pattern . 3)
     (volatile)
     (action . insert)
     (delayed)
