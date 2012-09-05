@@ -247,7 +247,11 @@ This function is called via `ein:notebook-after-rename-hook'."
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
   "Open new notebook and rename the notebook."
-  (interactive "sNotebook name: ")
+  (interactive (let* ((url-or-port (or (ein:get-url-or-port)
+                                       (ein:default-url-or-port)))
+                      (name (read-from-minibuffer
+                             (format "Notebook name (at %s): " url-or-port))))
+                 (list name url-or-port)))
   (ein:notebooklist-new-notebook
    url-or-port
    (lambda (notebook created name)
