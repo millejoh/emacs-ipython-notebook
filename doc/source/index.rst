@@ -331,6 +331,7 @@ Notebook
 .. el:variable:: ein:complete-on-dot
 .. el:variable:: ein:helm-kernel-history-search-key
 .. el:variable:: ein:anything-kernel-history-search-key
+.. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
 
