@@ -431,7 +431,8 @@ upload the current file to the server.
                      (when (buffer-live-p buffer)
                        (funcall buffer-callback buffer))))
          (cbargs (list (current-buffer) (or buffer-callback #'ignore))))
-    (assert found nil "No server has notebook named: %s" name)
+    (unless noerror
+      (assert found nil "No server has notebook named: %s" name))
     (destructuring-bind (url-or-port notebook-id) found
       (ein:notebook-open url-or-port notebook-id callback cbargs))))
 
