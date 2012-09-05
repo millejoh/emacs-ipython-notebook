@@ -73,7 +73,8 @@
     (helm-other-buffer ein:helm-source-history-search "*helm ein*")))
 
 
-;; Helm/anything sources
+
+;;; Notebook buffers
 
 (defvar ein:helm-source-notebook-buffers
   '((name . "IPython notebook buffers")
