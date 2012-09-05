@@ -26,6 +26,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 (require 'org-src nil t)
 (eval-when-compile (defvar markdown-mode-map))
 
@@ -115,6 +116,25 @@ This function may raise an error."
 ;; FIXME: dynamically call ein:org-src-keymap-setup-LANG using
 ;;        `post-command-hook'.
 ;; FIMXE: add more ein:org-src-keymap-setup-LANG to switch kaymap.
+
+
+;;; yasnippet
+
+(defvar ein:org-src-yasnippet-parents '(python-mode markdown-mode)
+  "Parent modes for `ein:notebook-org-src-mode' to register in yasnippet.")
+
+(defun ein:org-src-setup-yasnippet ()
+  (loop for define-parents in '(yas/define-parents
+                                yas--define-parents)
+        when (fboundp define-parents)
+        do (ignore-errors
+             ;; `let' is for workaround the bug in yasnippet
+             (let ((mode-sym 'ein:notebook-org-src-mode))
+               (funcall define-parents
+                        mode-sym
+                        ein:org-src-yasnippet-parents)))))
+
+(eval-after-load "yasnippet" '(ein:org-src-setup-yasnippet))
 
 (provide 'ein-org-src)
 
