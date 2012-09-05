@@ -30,6 +30,49 @@
 (declare-function anything-other-buffer "anything")
 (declare-function helm-other-buffer "helm")
 
+(require 'ein-kernel)
+
+
+
+;;; Dynamic Variables
+
+(defvar ein:helm-pattern 'helm-pattern
+  "Dynamically bound to one of `helm-pattern' or `anything-pattern'.")
+
+(defvar ein:helm-kernel nil
+  "Dynamically bound to a kernel object.")
+
+
+
+;;; History search
+
+(defvar ein:helm-source-history-search
+  '((name . "IPython history")
+    (candidates . (lambda ()
+                    (ein:kernel-history-search-synchronously
+                     ein:helm-kernel (eval ein:helm-pattern))))
+    (requires-pattern . 5)
+    (volatile)
+    (action . insert)
+    (delayed)
+    (multiline))
+  "Helm/anything source for searching kernel history.")
+
+(defun anything-ein-kernel-history ()
+  "Search kernel execution history then insert the selected one."
+  (interactive)
+  (let ((ein:helm-pattern 'anything-pattern)
+        (ein:helm-kernel (ein:get-kernel-or-error)))
+    (anything-other-buffer ein:helm-source-history-search "*anything ein*")))
+
+(defun helm-ein-kernel-history ()
+  "Search kernel execution history then insert the selected one."
+  (interactive)
+  (let ((ein:helm-pattern 'helm-pattern)
+        (ein:helm-kernel (ein:get-kernel-or-error)))
+    (helm-other-buffer ein:helm-source-history-search "*helm ein*")))
+
+
 ;; Helm/anything sources
 
 (defvar ein:helm-source-notebook-buffers
