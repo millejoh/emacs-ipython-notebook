@@ -283,8 +283,10 @@ Misc
 ^^^^
 
 .. el:package:: helm
+.. el:function:: helm-ein-kernel-history
 .. el:function:: helm-ein-notebook-buffers
 .. el:package:: anything
+.. el:function:: anything-ein-kernel-history
 .. el:function:: anything-ein-notebook-buffers
 .. el:package:: ein
 
@@ -499,6 +501,9 @@ Change Log
 v0.2
 ----
 
+* Add helm/anything interface to search kernel history:
+  :el:symbol:`helm-ein-kernel-history`
+  :el:symbol:`anything-ein-kernel-history`
 * Preliminary support for multiple worksheets.
 * Rename notion of "scratch notebook" to "junk notebook".
   This is to avoid confusion with newly added "scratch sheet".
