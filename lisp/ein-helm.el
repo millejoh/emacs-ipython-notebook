@@ -46,11 +46,34 @@
 
 ;;; History search
 
+(defcustom ein:helm-kernel-history-search-auto-pattern t
+  "Automatically construct search pattern when non-`nil'.
+
+1. Single space is converted to \"*\".
+2. A backslash followed by a space is converted to a single space.
+3. A \"*\" is added at the end of the pattern.
+
+This variable applies to both `helm-ein-kernel-history' and
+`anything-ein-kernel-history'."
+  :group 'ein)
+
+(defun ein:helm-kernel-history-search-construct-pattern (pattern)
+  (when ein:helm-kernel-history-search-auto-pattern
+    (setq pattern
+          (replace-regexp-in-string "[^\\\\ ]\\( \\)[^\\\\ ]"
+                                    "*" pattern nil nil 1))
+    (setq pattern
+          (replace-regexp-in-string "\\\\ " " " pattern))
+    (setq pattern (concat pattern "*")))
+  pattern)
+
 (defvar ein:helm-source-kernel-history
   '((name . "IPython history")
     (candidates . (lambda ()
                     (ein:kernel-history-search-synchronously
-                     ein:helm-kernel (eval ein:helm-pattern))))
+                     ein:helm-kernel
+                     (ein:helm-kernel-history-search-construct-pattern
+                      (eval ein:helm-pattern)))))
     (requires-pattern . 3)
     ;; There is no need to filter out candidates:
     (match . (identity))
