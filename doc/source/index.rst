@@ -329,6 +329,8 @@ Notebook
 .. el:variable:: ein:junk-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
+.. el:variable:: ein:helm-kernel-history-search-key
+.. el:variable:: ein:anything-kernel-history-search-key
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
 
@@ -502,8 +504,11 @@ v0.2
 ----
 
 * Add helm/anything interface to search kernel history:
-  :el:symbol:`helm-ein-kernel-history`
-  :el:symbol:`anything-ein-kernel-history`
+  :el:symbol:`helm-ein-kernel-history` and
+  :el:symbol:`anything-ein-kernel-history`.
+  See also the configurable options to use these commands:
+  :el:symbol:`ein:helm-kernel-history-search-key` and
+  :el:symbol:`ein:anything-kernel-history-search-key`.
 * Preliminary support for multiple worksheets.
 * Rename notion of "scratch notebook" to "junk notebook".
   This is to avoid confusion with newly added "scratch sheet".
