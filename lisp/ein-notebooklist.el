@@ -256,6 +256,7 @@ This function is called via `ein:notebook-after-rename-hook'."
           (let ((notebook-id
                  (ein:trim
                   (url-filename (url-generic-parse-url redirect)) "/")))
+            (ein:log 'info "Creating a new notebook... Done.")
             (ein:notebook-open url-or-port notebook-id callback cbargs))
         (ein:log 'error
           (format
