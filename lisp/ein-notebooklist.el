@@ -203,7 +203,6 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (defun ein:notebooklist-open-notebook (nblist notebook-id &optional name
                                               callback cbargs)
-  (message "Open notebook %s." (or name notebook-id))
   (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
                      callback cbargs))
 
@@ -237,9 +236,7 @@ This function is called via `ein:notebook-after-rename-hook'."
       packed
     (message "Creating a new notebook... Done.")
     (if notebook-id
-        (progn
-          (message "Open new notebook %s." notebook-id)
-          (ein:notebook-open url-or-port notebook-id callback cbargs))
+        (ein:notebook-open url-or-port notebook-id callback cbargs)
       (message (concat "Oops. EIN failed to open new notebook. "
                        "Please find it in the notebook list."))
       (setq no-popup nil))
@@ -259,7 +256,6 @@ This function is called via `ein:notebook-after-rename-hook'."
           (let ((notebook-id
                  (ein:trim
                   (url-filename (url-generic-parse-url redirect)) "/")))
-            (message "Open new notebook %s." notebook-id)
             (ein:notebook-open url-or-port notebook-id callback cbargs))
         (ein:log 'error
           (format
