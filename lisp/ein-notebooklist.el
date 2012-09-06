@@ -259,10 +259,9 @@ This function is called via `ein:notebook-after-rename-hook'."
             (ein:log 'info "Creating a new notebook... Done.")
             (ein:notebook-open url-or-port notebook-id callback cbargs))
         (ein:log 'error
-          (format
-           (concat "Failed to open new notebook (error: %S). "
-                   "You may find the one in the notebook list.")
-           error))
+          (concat "Failed to open new notebook (error: %S). "
+                  "You may find the one in the notebook list.")
+          error)
         (setq no-popup nil))
       (ein:notebooklist-open url-or-port no-popup))))
 
