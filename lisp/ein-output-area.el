@@ -26,12 +26,41 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+(require 'xml)
+
 (require 'ein-core)
 
 
 
-;;; HTML renderer
+;;; XML/HTML utils
 
+(defalias 'ein:xml-node-p 'listp)
+
+(defun ein:xml-tree-apply (dom operation)
+  "Apply OPERATION on nodes in DOM.  Apply the same OPERATION on
+the next level children when it returns `nil'."
+  (loop for child in (xml-node-children dom)
+        if (and (not (funcall operation child))
+                (ein:xml-node-p child))
+        do (ein:xml-tree-apply child operation)))
+
+(defun ein:xml-replace-attributes (dom tag attr replace-p replacer)
+  "Replace value of ATTR of TAG in DOM using REPLACER
+when REPLACE-P returns non-`nil'."
+  (ein:xml-tree-apply
+   dom
+   (lambda (node)
+     (ein:and-let* (((ein:xml-node-p node))
+                    ((eq (xml-node-name node) tag))
+                    (attr-cell (assoc attr (xml-node-attributes node)))
+                    (val (cdr attr-cell))
+                    ((funcall replace-p val)))
+       (setcdr attr-cell (funcall replacer val))
+       t))))
+
+
+;;; HTML renderer
 
 (defun ein:output-area-get-html-renderer ()
   ;; FIXME: make this configurable
@@ -78,11 +107,19 @@ Usage::
                (libxml-parse-html-region (point-min) (point-max))))
         (start (point))
         end)
-       ;; FIXME: If URLs are local, they should be adapted here.
+    (ein:insert-html--fix-urls dom)
     (ein:shr-insert-document dom)
     (setq end (point))
     (put-text-property start end 'read-only t)
     (put-text-property start end 'front-sticky t)))
+
+(defun ein:insert-html--fix-urls (dom &optional url-or-port)
+  "Append notebook server URL to local URLs in DOM **in-place**."
+  (ein:and-let* ((url-or-port (or url-or-port (ein:get-url-or-port)))
+                 (replace-p (lambda (val) (string-match-p "^/?files/" val)))
+                 (replacer (lambda (val) (ein:url url-or-port val))))
+    (ein:xml-replace-attributes dom 'a 'href replace-p replacer)
+    (ein:xml-replace-attributes dom 'img 'src replace-p replacer)))
 
 
 (provide 'ein-output-area)
