@@ -119,7 +119,7 @@ Usage::
     (put-text-property start end 'front-sticky t)))
 
 (defun ein:insert-html--fix-urls (dom &optional url-or-port)
-  "Append notebook server URL to local URLs in DOM **in-place**."
+  "Destructively prepend notebook server URL to local URLs in DOM."
   (ein:and-let* ((url-or-port (or url-or-port (ein:get-url-or-port)))
                  (replace-p (lambda (val) (string-match-p "^/?files/" val)))
                  (replacer (lambda (val) (ein:url url-or-port val))))
