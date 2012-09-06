@@ -72,14 +72,14 @@ Usage::
     (ein:insert-html-shr \"<b>HTML</b> string\")
 
 "
-  (let ((start (point))
+  (let ((dom (with-temp-buffer
+               (erase-buffer)
+               (insert html-string)
+               (libxml-parse-html-region (point-min) (point-max))))
+        (start (point))
         end)
-    (ein:shr-insert-document
-     (with-temp-buffer
-       (erase-buffer)
-       (insert html-string)
        ;; FIXME: If URLs are local, they should be adapted here.
-       (libxml-parse-html-region (point-min) (point-max))))
+    (ein:shr-insert-document dom)
     (setq end (point))
     (put-text-property start end 'read-only t)
     (put-text-property start end 'front-sticky t)))
