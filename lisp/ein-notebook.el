@@ -309,9 +309,12 @@ notebook buffer when CALLBACK is called."
   (let ((buffer (ein:notebook-get-opened-buffer url-or-port notebook-id)))
     (if (buffer-live-p buffer)
         (with-current-buffer buffer
+          (ein:log 'info "Notebook %s is already opened."
+                   (ein:$notebook-notebook-name ein:%notebook%))
           (when callback
             (apply callback ein:%notebook% nil cbargs))
           ein:%notebook%)
+      (ein:log 'info "Opening notebook %s..." notebook-id)
       (ein:notebook-request-open url-or-port notebook-id callback cbargs))))
 
 (defun ein:notebook-request-open (url-or-port notebook-id

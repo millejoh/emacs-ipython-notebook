@@ -167,7 +167,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
       (ein:notebooklist-list-add ein:%notebooklist%)
       (ein:notebooklist-render)
       (goto-char orig-point)
-      (message "Opened notebook list at %s" url-or-port)
+      (ein:log 'info "Opened notebook list at %s" url-or-port)
       (unless already-opened-p
         (run-hooks 'ein:notebooklist-first-open-hook))
       (current-buffer))))
@@ -203,7 +203,6 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (defun ein:notebooklist-open-notebook (nblist notebook-id &optional name
                                               callback cbargs)
-  (message "Open notebook %s." (or name notebook-id))
   (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
                      callback cbargs))
 
@@ -211,7 +210,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 (defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (message "Creating a new notebook...")
+  (ein:log 'info "Creating a new notebook...")
   (unless url-or-port
     (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
   (assert url-or-port nil
@@ -222,6 +221,8 @@ This function is called via `ein:notebook-after-rename-hook'."
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
+   :error (cons #'ein:notebooklist-new-notebook-error
+                (list url-or-port callback cbargs))
    :success (cons #'ein:notebooklist-new-notebook-callback
                   (list url-or-port callback cbargs))))
 
@@ -233,16 +234,36 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                        (no-popup t))
   (destructuring-bind (url-or-port callback cbargs)
       packed
-    (message "Creating a new notebook... Done.")
+    (ein:log 'info "Creating a new notebook... Done.")
     (if notebook-id
-        (progn
-          (message "Open new notebook %s." notebook-id)
-          (ein:notebook-open url-or-port notebook-id callback cbargs))
-      (message (concat "Oops. EIN failed to open new notebook. "
-                       "Please find it in the notebook list."))
+        (ein:notebook-open url-or-port notebook-id callback cbargs)
+      (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
+                             "Please find it in the notebook list."))
       (setq no-popup nil))
     ;; reload or open notebook list
     (ein:notebooklist-open url-or-port no-popup)))
+
+(defun* ein:notebooklist-new-notebook-error
+    (packed &key status &allow-other-keys &aux (no-popup t))
+  (ein:log 'verbose
+    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR packed: %S; status: %S"
+    packed status)
+  (destructuring-bind (url-or-port callback cbargs) packed
+    (destructuring-bind (&key redirect error) status
+      (if redirect
+          ;; Workaround the redirection bug in `url-retrieve'.
+          ;; See: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12374
+          (let ((notebook-id
+                 (ein:trim
+                  (url-filename (url-generic-parse-url redirect)) "/")))
+            (ein:log 'info "Creating a new notebook... Done.")
+            (ein:notebook-open url-or-port notebook-id callback cbargs))
+        (ein:log 'error
+          (concat "Failed to open new notebook (error: %S). "
+                  "You may find the new one in the notebook list.")
+          error)
+        (setq no-popup nil))
+      (ein:notebooklist-open url-or-port no-popup))))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
@@ -268,7 +289,7 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:notebooklist-delete-notebook notebook-id name)))
 
 (defun ein:notebooklist-delete-notebook (notebook-id name)
-  (message "Deleting notebook %s..." name)
+  (ein:log 'info "Deleting notebook %s..." name)
   (ein:query-singleton-ajax
    (list 'notebooklist-delete-notebook
          (ein:$notebooklist-url-or-port ein:%notebooklist%) notebook-id)
@@ -278,7 +299,8 @@ This function is called via `ein:notebook-after-rename-hook'."
    :cache nil
    :type "DELETE"
    :success (cons (lambda (packed &rest ignore)
-                    (message "Deleting notebook %s... Done." (cdr packed))
+                    (ein:log 'info
+                      "Deleting notebook %s... Done." (cdr packed))
                     (with-current-buffer (car packed)
                       (ein:notebooklist-reload)))
                   (cons (current-buffer) name))))
@@ -375,7 +397,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
                  return it)))
       (if notebook-id
           (ein:notebook-open url-or-port notebook-id callback cbargs)
-        (message "Notebook '%s' not found" nbpath)))))
+        (ein:log 'info "Notebook '%s' not found" nbpath)))))
 
 ;;;###autoload
 (defun ein:notebooklist-load (&optional url-or-port)
