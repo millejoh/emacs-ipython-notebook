@@ -35,6 +35,14 @@
 
 ;;; XML/HTML utils
 
+(defun ein:xml-parse-html-string (html-string)
+  "Parse HTML-STRING and return a dom object which
+can be handled by the xml module."
+  (with-temp-buffer
+    (erase-buffer)
+    (insert html-string)
+    (libxml-parse-html-region (point-min) (point-max))))
+
 (defalias 'ein:xml-node-p 'listp)
 
 (defun ein:xml-tree-apply (dom operation)
@@ -101,10 +109,7 @@ Usage::
     (ein:insert-html-shr \"<b>HTML</b> string\")
 
 "
-  (let ((dom (with-temp-buffer
-               (erase-buffer)
-               (insert html-string)
-               (libxml-parse-html-region (point-min) (point-max))))
+  (let ((dom (ein:xml-parse-html-string html-string))
         (start (point))
         end)
     (ein:insert-html--fix-urls dom)
