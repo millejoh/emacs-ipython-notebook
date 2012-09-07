@@ -415,7 +415,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
                                            session
                                            start
                                            stop
-                                           (n 1)
+                                           (n 10)
                                            pattern)
   "Request execution history to KERNEL.
 
@@ -431,6 +431,11 @@ CONTENT and METADATA are given by `history_reply' message.
 
 `history_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#history
+
+Relevant Python code:
+
+* :py:method:`IPython.zmq.ipkernel.Kernel.history_request`
+* :py:class:`IPython.core.history.HistoryAccessor`
 "
   (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
   (let* ((content (list
