@@ -30,6 +30,7 @@
 
 (require 'ein-core)
 (require 'ein-log)
+;; FIXME: use websocket.el directly once v1.0 is released.
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)

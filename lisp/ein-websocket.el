@@ -54,7 +54,6 @@
   onopen
   onopen-args
   closed-by-client)
-;; FIXME: probably, first arguments of any callback must be WEBSOCKET.
 
 
 (defun ein:websocket (url &optional onmessage onclose onopen

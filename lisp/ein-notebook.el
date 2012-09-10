@@ -209,7 +209,6 @@ Current buffer for these functions is set to the notebook buffer.")
   scratchsheets
   )
 
-;; FIXME: Remove `ein:%notebook%' when worksheet is fully implemented.
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
@@ -252,7 +251,8 @@ call notebook destructor `ein:notebook-del'."
 
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
-  ;; FIXME: Find a better way to define notebook buffer! (or remove this func)
+  ;; FIXME: Find a better way to define notebook buffer!
+  ;;        For example, the last accessed buffer.
   (let ((first-buffer
          (lambda (ws-list)
            (loop for ws in ws-list if (ein:worksheet-buffer ws) return it))))
