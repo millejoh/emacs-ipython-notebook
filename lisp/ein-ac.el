@@ -44,12 +44,6 @@
   :type 'integer
   :group 'ein)
 
-(defvar ein:ac-syntax-table
-  (let ((table (make-syntax-table ein:dotty-syntax-table)))
-    (modify-syntax-entry ?~ "w" table)
-    table)
-  "`ein:dotty-syntax-table' plus \"~\" considered as a word character.")
-
 
 ;;; Chunk (adapted from auto-complete-chunk.el)
 
@@ -89,12 +83,22 @@
   "Variable to store completion candidates for `auto-completion'.")
 ;; FIXME: Maybe this should be buffer-local?
 
+(defun ein:ac-direct-get-matches ()
+  (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
+
+(defun ein:ac-cache-get-matches ()
+  (ein:ac-chunk-candidates-from-list ein:ac-cache-matches))
+
 (ac-define-source ein-direct
-  '((candidates . ein:ac-direct-matches)
+  '((candidates . ein:ac-direct-get-matches)
+    (requires . 0)
+    (prefix . ein:ac-chunk-beginning)
     (symbol . "s")))
 
 (ac-define-source ein-cached
-  '((candidates . ein:ac-cache-matches)
+  '((candidates . ein:ac-cache-get-matches)
+    (requires . 0)
+    (prefix . ein:ac-chunk-beginning)
     (symbol . "c")))
 
 
@@ -113,8 +117,7 @@ compatibility with `ein:completer-finish-completing-default'."
     (setq ein:ac-direct-matches matches)  ; let-binding won't work
     (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
     (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
-    (with-syntax-table ein:ac-syntax-table
-      (auto-complete '(ac-source-ein-direct)))))
+    (auto-complete '(ac-source-ein-direct))))
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
@@ -165,42 +168,22 @@ first candidate when the `ac-menu' pops up."
   (ein:ac-request-document-for-selected-candidate))
 
 
-;;; Syntax hack
-
-(defadvice ac-prefix
-  (around ein:ac-always-dotty (requires ignore-list))
-  "Monkey patch `auto-complete' internal function to enable
-dotty completion."
-  (if (or ein:%notebook% (ein:eval-if-bound 'ein:%connect%))
-      (with-syntax-table ein:ac-syntax-table
-        ad-do-it)
-    ad-do-it))
-
-
 ;;; Setup
 
 (defun ein:ac-superpack ()
   "Enable richer auto-completion.
 
-* Enable omni completion by using dotty syntax table for auto-complete.
-  Monkey patch `ac-prefix' to make \".\" as a part of word.
 * Enable auto-completion help by monkey patching `ac-next'/`ac-previous'"
   (interactive)
   (ad-enable-advice 'ac-next     'after 'ein:ac-next-request)
   (ad-enable-advice 'ac-previous 'after 'ein:ac-previous-request)
   (ad-enable-advice 'ac-update   'after 'ein:ac-update-request)
-  (ad-enable-advice 'ac-prefix 'around 'ein:ac-always-dotty)
   (ad-activate 'ac-next)
   (ad-activate 'ac-previous)
-  (ad-activate 'ac-update)
-  (ad-activate 'ac-prefix))
+  (ad-activate 'ac-update))
 
 (defun ein:ac-setup ()
   "Call this function from mode hook (see `ein:ac-config')."
-  ;; Note that `ac-source-ein-cached' can still be useful even if
-  ;; `ein:ac-always-dotty' advice is not enabled.  So add this source
-  ;; anyway.  Also note that this source must come at the head of the
-  ;; sources.
   (setq ac-sources (append '(ac-source-ein-cached) ein:ac-sources)))
 
 (defun ein:ac-setup-maybe ()
