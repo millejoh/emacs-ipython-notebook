@@ -419,6 +419,7 @@ in MuMaMo based notebook mode produces segfault.
 Also, ``mumamo-idle-set-major-mode`` messages error
 ``(wrong-type-argument listp python-saved-check-command)``
 time to time, making minibuffer bit noisy while editing notebook.
+See Tips_ to fix this problem.
 
 
 Advanced
