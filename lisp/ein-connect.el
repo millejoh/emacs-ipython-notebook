@@ -199,17 +199,17 @@ notebooks."
   "Connect BUFFER to NOTEBOOK."
   (unless buffer
     (setq buffer (current-buffer)))
-  (if (or (not no-reconnection)
-          (not ein:%connect%))
-      (let ((connection (ein:connect-setup notebook buffer)))
-        (when (ein:eval-if-bound 'ac-sources)
-          (push 'ac-source-ein-cached ac-sources))
-        (with-current-buffer buffer
-          (ein:connect-mode))
-        (ein:log 'info "Connected to %s"
-                 (ein:$notebook-notebook-name notebook))
-        connection)
-    (ein:log 'info "Buffer is already connected to notebook.")))
+  (with-current-buffer buffer
+    (if (or (not no-reconnection)
+            (not ein:%connect%))
+        (let ((connection (ein:connect-setup notebook buffer)))
+          (when (ein:eval-if-bound 'ac-sources)
+            (push 'ac-source-ein-cached ac-sources))
+          (ein:connect-mode)
+          (ein:log 'info "Connected to %s"
+                   (ein:$notebook-notebook-name notebook))
+          connection)
+      (ein:log 'info "Buffer is already connected to notebook."))))
 
 (defun ein:connect-get-notebook ()
   (oref ein:%connect% :notebook))
