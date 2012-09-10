@@ -32,6 +32,9 @@
 (eval-when-compile (require 'ein-notebook)
                    (defvar ein:mumamo-codecell-mode))
 
+
+;;; Configuration
+
 (defvar ein:ac-sources (and (boundp 'ac-sources)
                             (default-value 'ac-sources))
   "Extra `ac-sources' used in notebook.")
@@ -47,6 +50,9 @@
     table)
   "`ein:dotty-syntax-table' plus \"~\" considered as a word character.")
 
+
+;;; AC Source
+
 (defvar ein:ac-cache-matches nil)
 
 (defvar ein:ac-direct-matches nil
@@ -60,6 +66,9 @@
 (ac-define-source ein-cached
   '((candidates . ein:ac-cache-matches)
     (symbol . "c")))
+
+
+;;; Completer interface
 
 (defun ein:completer-finish-completing-ac (matched-text matches)
   "Invoke completion using `auto-complete'.
@@ -81,6 +90,9 @@ compatibility with `ein:completer-finish-completing-default'."
   (setq ein:ac-cache-matches
         (setcdr (nthcdr (1- ein:ac-max-cache)
                         (delete-dups ein:ac-cache-matches)) nil)))
+
+
+;;; Async document request hack
 
 (defun ein:ac-request-document-for-selected-candidate ()
   "Request object information for the candidate at point.
@@ -122,6 +134,9 @@ documentation asynchronously.  This will request info for the
 first candidate when the `ac-menu' pops up."
   (ein:ac-request-document-for-selected-candidate))
 
+
+;;; Syntax hack
+
 (defadvice ac-prefix
   (around ein:ac-always-dotty (requires ignore-list))
   "Monkey patch `auto-complete' internal function to enable
@@ -130,6 +145,9 @@ dotty completion."
       (with-syntax-table ein:ac-syntax-table
         ad-do-it)
     ad-do-it))
+
+
+;;; Setup
 
 (defun ein:ac-superpack ()
   "Enable richer auto-completion.
