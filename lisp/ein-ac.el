@@ -51,6 +51,36 @@
   "`ein:dotty-syntax-table' plus \"~\" considered as a word character.")
 
 
+;;; Chunk (adapted from auto-complete-chunk.el)
+
+(defvar ein:ac-chunk-regex
+  (rx (group-n 1 (| (syntax whitespace)
+                    (syntax open-parenthesis)
+                    (syntax close-parenthesis)
+                    bol))
+      (* (+ (| (syntax word) (syntax symbol)))
+         (syntax punctuation))
+      (+ (| (syntax word) (syntax symbol)))
+      (? (syntax punctuation))
+      point)
+  "A regexp that matches to a \"chunk\" containing words and dots.")
+
+(defun ein:ac-chunk-beginning ()
+  "Return the position where the chunk begins."
+  (ignore-errors
+    (save-excursion
+      (+ (re-search-backward ein:ac-chunk-regex) (length (match-string 1))))))
+
+(defun ein:ac-chunk-candidates-from-list (chunk-list)
+  "Return matched candidates in CHUNK-LIST."
+  (let* ((start (ein:ac-chunk-beginning)))
+    (when start
+      (loop with prefix = (buffer-substring start (point))
+            for cc in chunk-list
+            when (string-prefix-p prefix cc)
+            collect cc))))
+
+
 ;;; AC Source
 
 (defvar ein:ac-cache-matches nil)
