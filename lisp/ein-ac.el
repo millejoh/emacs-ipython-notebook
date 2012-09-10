@@ -52,6 +52,7 @@
                     (syntax open-parenthesis)
                     (syntax close-parenthesis)
                     bol))
+      (? (syntax punctuation))          ; to complete ``~/PATH/...``
       (* (+ (| (syntax word) (syntax symbol)))
          (syntax punctuation))
       (+ (| (syntax word) (syntax symbol)))
