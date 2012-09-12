@@ -181,6 +181,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
    "EIN system info"
    :emacs-version (emacs-version)
    :image-types image-types
+   :image-types-available (ein:filter #'image-type-available-p image-types)
    :lib (mapcar #'ein:dev-sys-info--lib
                 '("websocket" "auto-complete" "mumamo"
                   "auto-complete" "popup" "fuzzy" "pos-tip"
