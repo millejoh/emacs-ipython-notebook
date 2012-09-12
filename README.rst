@@ -1,6 +1,6 @@
-===============================
- EIN -- Emacs IPython Notebook
-===============================
+==============================================
+ EIN -- Emacs IPython Notebook |build-status|
+==============================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
@@ -8,6 +8,12 @@
 .. note:: It is stable enough for my day to day work, but I can't
           grantee the safety for your notebook data.  So please make
           sure you have backup.
+
+.. |build-status|
+   image:: https://secure.travis-ci.org/tkf/emacs-ipython-notebook.png
+   :target: http://travis-ci.org/tkf/emacs-ipython-notebook
+   :alt: Build Status
+
 
 Screenshot
 ==========
