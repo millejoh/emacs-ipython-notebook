@@ -48,10 +48,10 @@
 ;;; Chunk (adapted from auto-complete-chunk.el)
 
 (defvar ein:ac-chunk-regex
-  (rx (group-n 1 (| (syntax whitespace)
-                    (syntax open-parenthesis)
-                    (syntax close-parenthesis)
-                    bol))
+  (rx (group (| (syntax whitespace)
+                (syntax open-parenthesis)
+                (syntax close-parenthesis)
+                bol))
       (? (syntax punctuation))          ; to complete ``~/PATH/...``
       (* (+ (| (syntax word) (syntax symbol)))
          (syntax punctuation))
