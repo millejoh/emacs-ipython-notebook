@@ -26,10 +26,8 @@ travis-ci: ert-compile
 
 	emacs-snapshot --version
 	./testein.py --no-func-test --clean-elc -e emacs-snapshot
-	cat test-load_log_batch_emacs-snapshot.log
-	cat test-load_messages_batch_emacs-snapshot.log
+	tail -n3 test-load_messages_batch_emacs-snapshot.log
 
 	emacs --version
 	./testein.py --no-func-test --clean-elc --load-ert
-	cat test-load_log_batch_emacs.log
-	cat test-load_messages_batch_emacs.log
+	tail -n3 test-load_messages_batch_emacs.log
