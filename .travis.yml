@@ -1,0 +1,5 @@
+language: emacs-lisp
+before_install:
+  - git submodule update --init
+script:
+  make travis-ci
