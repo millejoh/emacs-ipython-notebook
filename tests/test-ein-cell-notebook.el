@@ -145,10 +145,11 @@ some input
   ("some output \\\\LaTeX")
   ((:latex "some output \\LaTeX")))
 
-(eintest:gene-test-cell-insert-output-pyout-and-display-data
-  svg
-  (" ")
-  ((:text "some output text" :svg eintest:example-svg)))
+(when (image-type-available-p 'svg)
+  (eintest:gene-test-cell-insert-output-pyout-and-display-data
+   svg
+   (" ")
+   ((:text "some output text" :svg eintest:example-svg))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
@@ -171,12 +172,13 @@ some input
   ((:text "first output text")
    (:text "second output text" :javascript "$.do.something()")))
 
-(eintest:gene-test-cell-insert-output-pyout-and-display-data
-  text-latex-svg
-  ("first output text" "second output \\\\LaTeX" " ")
-  ((:text "first output text")
-   (:latex "second output \\LaTeX")
-   (:text "some output text" :svg eintest:example-svg)))
+(when (image-type-available-p 'svg)
+  (eintest:gene-test-cell-insert-output-pyout-and-display-data
+   text-latex-svg
+   ("first output text" "second output \\\\LaTeX" " ")
+   ((:text "first output text")
+    (:latex "second output \\LaTeX")
+    (:text "some output text" :svg eintest:example-svg))))
 
 
 ;; Insert pyerr
