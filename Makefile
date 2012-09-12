@@ -4,6 +4,10 @@ testein-default:
 testein-24:
 	./testein.py --clean-elc -e emacs-snapshot
 
+testein-unit-all:
+	./testein.py --no-func-test --clean-elc --load-ert
+	./testein.py --no-func-test --clean-elc -e emacs-snapshot
+
 interactive-testein-default:
 	./testein.py --clean-elc --load-ert --no-batch
 
