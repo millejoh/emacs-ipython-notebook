@@ -2,8 +2,10 @@
 (require 'ert)
 
 (require 'ein-dev)
-(ein:dev-require-all)
-(eval-when-compile (ein:dev-require-all)) ; do it also at compile time.
+(ein:dev-require-all :ignore-p (lambda (f) (equal f "ein-mumamo.el")))
+(eval-when-compile
+  ;; do it also at compile time.
+  (ein:dev-require-all :ignore-p (lambda (f) (equal f "ein-mumamo.el"))))
 
 
 (defun eintest:assert-keymap-fboundp (keymap)
