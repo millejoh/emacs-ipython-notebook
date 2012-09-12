@@ -16,6 +16,19 @@ def run(command):
     return proc
 
 
+def has_library(emacs, library):
+    """
+    Return True when `emacs` has build-in `library`.
+    """
+    from subprocess import Popen
+    with open(os.devnull, 'w') as devnull:
+        proc = Popen(
+            [emacs, '-Q', '-batch', '-l', 'cl',
+             '--eval', '(assert (locate-library "{0}"))'.format(library)],
+            stdout=devnull, stderr=devnull)
+        return proc.wait() == 0
+
+
 def eindir(*path):
     return os.path.join(EIN_ROOT, *path)
 
@@ -72,7 +85,7 @@ class TestRunner(object):
             command.extend(['-f', 'toggle-debug-on-error'])
 
         # load modules
-        if self.load_ert:
+        if self.need_ert():
             ertdir = einlibdir('ert', 'lisp', 'emacs-lisp')
             command.extend([
                 '-L', ertdir,
@@ -91,6 +104,7 @@ class TestRunner(object):
                         '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
+        self.show_sys_info(command)
 
         # do the test
         if self.batch:
@@ -98,6 +112,33 @@ class TestRunner(object):
         else:
             command.extend(['--eval', "(ert 't)"])
         return command
+
+    def show_sys_info(self, base_command):
+        from subprocess import Popen, PIPE
+        print "*" * 50
+        command = base_command + ['-f', 'ein:dev-print-sys-info']
+        proc = Popen(command, stderr=PIPE)
+        err = proc.stderr.read()
+        proc.wait()
+        if proc.returncode != 0:
+            print "Error with return code {0} while running {1}".format(
+                proc.returncode, command)
+            print err
+            pass
+        print "*" * 50
+
+    def need_ert(self):
+        if self.load_ert:
+            return True
+        if self.auto_ert:
+            if has_library(self.emacs, 'ert'):
+                print "{0} has ERT module.".format(self.emacs)
+                return False
+            else:
+                print "{0} has no ERT module.".format(self.emacs),
+                print "ERT is going to be loaded from git submodule."
+                return True
+        return False
 
     def make_process(self):
         print "Start test {0}".format(self.testfile)
@@ -173,6 +214,10 @@ def main():
                         help="load ERT from git submodule. "
                         "you need to update git submodule manually "
                         "if ert/ directory does not exist yet.")
+    parser.add_argument('--no-auto-ert', default=True,
+                        dest='auto_ert', action='store_false',
+                        help="load ERT from git submodule. "
+                        "if this Emacs has no build-in ERT module.")
     parser.add_argument('--no-batch', '-B', default=True,
                         dest='batch', action='store_false',
                         help="start interactive session.")
