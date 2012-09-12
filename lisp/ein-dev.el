@@ -199,6 +199,9 @@ callback (`websocket-callback-debug-on-error') is enabled."
             (pop-to-buffer buffer)))
       (message "EIN INFO:\n%s" (pp-to-string info)))))
 
+(defun ein:dev-print-sys-info ()
+  (pp (ein:dev-sys-info)))
+
 (provide 'ein-dev)
 
 ;;; ein-dev.el ends here

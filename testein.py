@@ -104,6 +104,7 @@ class TestRunner(object):
                         '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
+        self.show_sys_info(command)
 
         # do the test
         if self.batch:
@@ -111,6 +112,15 @@ class TestRunner(object):
         else:
             command.extend(['--eval', "(ert 't)"])
         return command
+
+    def show_sys_info(self, command):
+        from subprocess import Popen
+        print "*" * 50
+        with open(os.devnull, 'w') as devnull:
+            Popen(
+                command + ['-f', 'ein:dev-print-sys-info'],
+                stderr=devnull).wait()
+        print "*" * 50
 
     def need_ert(self):
         if self.load_ert:
