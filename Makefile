@@ -9,3 +9,10 @@ interactive-testein-default:
 
 interactive-testein-24:
 	./testein.py --clean-elc -e emacs-snapshot --no-batch
+
+ert-compile: ert-clean
+	cd lib/ert/lisp/emacs-lisp/ && \
+		emacs -Q -L . -batch -f batch-byte-compile *.el
+
+ert-clean:
+	rm -f lib/ert/lisp/emacs-lisp/*.elc
