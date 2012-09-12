@@ -113,13 +113,18 @@ class TestRunner(object):
             command.extend(['--eval', "(ert 't)"])
         return command
 
-    def show_sys_info(self, command):
-        from subprocess import Popen
+    def show_sys_info(self, base_command):
+        from subprocess import Popen, PIPE
         print "*" * 50
-        with open(os.devnull, 'w') as devnull:
-            Popen(
-                command + ['-f', 'ein:dev-print-sys-info'],
-                stderr=devnull).wait()
+        command = base_command + ['-f', 'ein:dev-print-sys-info']
+        proc = Popen(command, stderr=PIPE)
+        err = proc.stderr.read()
+        proc.wait()
+        if proc.returncode != 0:
+            print "Error with return code {0} while running {1}".format(
+                proc.returncode, command)
+            print err
+            pass
         print "*" * 50
 
     def need_ert(self):
