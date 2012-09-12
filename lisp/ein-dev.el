@@ -64,9 +64,10 @@
   (ein:load-files "^ein-.*\\.el$")
   (ein:subpackages-reload))
 
-(defun ein:dev-require-all ()
+(defun* ein:dev-require-all (&key (ignore-p #'ignore))
   (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
-        unless (equal f "ein-pkg.el")
+        unless (or (equal f "ein-pkg.el")
+                   (funcall ignore-p f))
         do (require (intern (file-name-sans-extension f)) nil t))
   ;; For `widget-button-press':
   (require 'wid-edit nil t))
