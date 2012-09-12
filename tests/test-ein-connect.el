@@ -21,8 +21,8 @@
 
 (ert-deftest ein:get-kernel--connect ()
   (eintest:with-connected-buffer
-    (should (equal (ein:get-kernel)
-                   (ein:$notebook-kernel notebook)))))
+    (should (eq (ein:get-kernel)
+                (ein:$notebook-kernel notebook)))))
 
 (ert-deftest ein:get-cell-at-point--connect ()
   "`ein:get-cell-at-point' is in empty context in connected buffer."
