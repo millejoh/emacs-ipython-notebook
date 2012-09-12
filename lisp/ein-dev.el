@@ -172,6 +172,33 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (interactive)
   (setq ein:notebook-modes '(ein:notebook-org-src-mode)))
 
+(defun ein:dev-sys-info--lib (name)
+  (list :name name
+        :path (ein:aand (locate-library name) (abbreviate-file-name it))))
+
+(defun ein:dev-sys-info ()
+  (list
+   "EIN system info"
+   :emacs-version (emacs-version)
+   :image-types image-types
+   :lib (mapcar #'ein:dev-sys-info--lib
+                '("websocket" "auto-complete" "mumamo"
+                  "auto-complete" "popup" "fuzzy" "pos-tip"
+                  "python" "python-mode" "markdown-mode"
+                  "smartrep" "anything" "helm"))))
+
+(defun ein:dev-show-sys-info (&optional show-in-buffer)
+  "Show Emacs and library information."
+  (interactive (list t))
+  (let ((info (ein:dev-sys-info)))
+    (if show-in-buffer
+        (let ((buffer (get-buffer-create "*ein:sys-info*")))
+          (with-current-buffer buffer
+            (erase-buffer)
+            (pp info buffer)
+            (pop-to-buffer buffer)))
+      (message "EIN INFO:\n%s" (pp-to-string info)))))
+
 (provide 'ein-dev)
 
 ;;; ein-dev.el ends here
