@@ -1,5 +1,8 @@
 language: emacs-lisp
 before_install:
   - git submodule update --init
+  - sudo add-apt-repository ppa:cassou/emacs
+  - sudo apt-get update
+  - sudo apt-get install emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot
 script:
   make travis-ci
