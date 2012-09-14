@@ -7,7 +7,8 @@ Run EIN test suite
 import os
 import glob
 
-EIN_ROOT = os.path.join(os.path.dirname(__file__), os.path.pardir)
+EIN_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 
 def run(command):
