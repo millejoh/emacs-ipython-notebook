@@ -118,7 +118,8 @@ class TestRunner(object):
     def show_sys_info(self, base_command):
         from subprocess import Popen, PIPE
         print "*" * 50
-        command = base_command + ['-f', 'ein:dev-print-sys-info']
+        command = base_command + [
+            '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
