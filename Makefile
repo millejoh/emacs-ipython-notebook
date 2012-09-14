@@ -28,4 +28,4 @@ travis-ci: ert-compile
 	$(EMACS) --version
 	python --version
 	$(TESTEIN) --no-func-test --clean-elc -e $(EMACS)
-	tail -n3 test-load_messages_batch_$(EMACS).log
+	tail -n3 log/test-load_messages_batch_$(EMACS).log
