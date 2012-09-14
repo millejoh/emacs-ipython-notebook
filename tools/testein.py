@@ -7,7 +7,8 @@ Run EIN test suite
 import os
 import glob
 
-EIN_ROOT = os.path.dirname(__file__)
+EIN_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 
 def run(command):
@@ -57,8 +58,9 @@ class TestRunner(object):
             testname=os.path.splitext(self.testfile)[0],
             modename='batch' if self.batch else 'interactive',
         )
-        logtemp = '"{testname}_log_{modename}_{emacsname}.log"'
-        msgtemp = '"{testname}_messages_{modename}_{emacsname}.log"'
+        logpath = lambda x: '"{0}"'.format(os.path.join(self.log_dir, x))
+        logtemp = logpath("{testname}_log_{modename}_{emacsname}.log")
+        msgtemp = logpath("{testname}_messages_{modename}_{emacsname}.log")
         self.lispvars = {
             'ein:testing-dump-file-log': logtemp.format(**fmtdata),
             'ein:testing-dump-file-messages': msgtemp.format(**fmtdata),
@@ -156,8 +158,15 @@ class TestRunner(object):
         return int(self.failed)
 
     def run(self):
+        mkdirp(self.log_dir)
         self.make_process()
         return self.report()
+
+
+def mkdirp(path):
+    """Do ``mkdir -p {path}``"""
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
 
 def remove_elc():
@@ -242,6 +251,8 @@ def main():
     parser.add_argument('--ein-message-level', default=30)
     parser.add_argument('--ein-debug', default=False, action='store_true',
                         help="(setq ein:debug t) when given.")
+    parser.add_argument('--log-dir', default="log",
+                        help="Directory to store log (default: %(default)s)")
     args = parser.parse_args()
     sys.exit(run_ein_test(**vars(args)))
 

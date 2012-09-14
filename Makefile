@@ -1,20 +1,21 @@
 EMACS = emacs
+TESTEIN = tools/testein.py
 
 testein-default:
-	./testein.py --clean-elc --load-ert
+	$(TESTEIN) --clean-elc --load-ert
 
 testein-24:
-	./testein.py --clean-elc -e emacs-snapshot
+	$(TESTEIN) --clean-elc -e emacs-snapshot
 
 testein-unit-all:
-	./testein.py --no-func-test --clean-elc --load-ert
-	./testein.py --no-func-test --clean-elc -e emacs-snapshot
+	$(TESTEIN) --no-func-test --clean-elc --load-ert
+	$(TESTEIN) --no-func-test --clean-elc -e emacs-snapshot
 
 interactive-testein-default:
-	./testein.py --clean-elc --load-ert --no-batch
+	$(TESTEIN) --clean-elc --load-ert --no-batch
 
 interactive-testein-24:
-	./testein.py --clean-elc -e emacs-snapshot --no-batch
+	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch
 
 ert-compile: ert-clean
 	cd lib/ert/lisp/emacs-lisp/ && \
@@ -26,5 +27,5 @@ ert-clean:
 travis-ci: ert-compile
 	$(EMACS) --version
 	python --version
-	./testein.py --no-func-test --clean-elc -e $(EMACS)
-	tail -n3 test-load_messages_batch_$(EMACS).log
+	$(TESTEIN) --no-func-test --clean-elc -e $(EMACS)
+	tail -n3 log/test-load_messages_batch_$(EMACS).log

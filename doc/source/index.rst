@@ -440,7 +440,7 @@ web client.  See `emacslisp.py`_ for more details.
    6
 
 .. _`emacslisp.py`:
-  https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
+  https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py
 
 
 Reporting issue
