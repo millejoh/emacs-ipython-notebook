@@ -137,7 +137,10 @@ See the definition of `create-image' for how it works."
                       (format "SVG(data=\"\"\"%s\"\"\")"
                               ein:testing-example-svg)))
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until (lambda () (not (oref cell :running))))
+        ;; It seems in this case, watching `:running' does not work
+        ;; well sometimes.  Probably "output reply" (iopub) comes
+        ;; before "execute reply" in this case.
+        (ein:testing-wait-until (lambda () (oref cell :outputs)))
         ;; This cell has only one input
         (should (= (length (oref cell :outputs)) 1))
         ;; This output is a SVG image
