@@ -6,22 +6,16 @@ Run EIN test suite
 
 import os
 import glob
+from subprocess import Popen, PIPE, STDOUT
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
-
-
-def run(command):
-    from subprocess import Popen, PIPE, STDOUT
-    proc = Popen(command, stdout=PIPE, stderr=STDOUT)
-    return proc
 
 
 def has_library(emacs, library):
     """
     Return True when `emacs` has build-in `library`.
     """
-    from subprocess import Popen
     with open(os.devnull, 'w') as devnull:
         proc = Popen(
             [emacs, '-Q', '-batch', '-l', 'cl',
@@ -78,7 +72,8 @@ class TestRunner(object):
                     '--eval', '(setq {0} {1})'.format(k, v)])
         return command
 
-    def command(self):
+    @property
+    def base_command(self):
         command = [self.emacs, '-Q'] + self.bind_lispvars()
 
         if self.batch:
@@ -106,19 +101,21 @@ class TestRunner(object):
                         '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
-        self.show_sys_info(command)
+        return command
 
-        # do the test
+    @property
+    def command(self):
+        command = self.base_command[:]
         if self.batch:
             command.extend(['-f', 'ert-run-tests-batch-and-exit'])
         else:
             command.extend(['--eval', "(ert 't)"])
         return command
 
-    def show_sys_info(self, base_command):
-        from subprocess import Popen, PIPE
+    def show_sys_info(self):
         print "*" * 50
-        command = base_command + ['-f', 'ein:dev-print-sys-info']
+        command = self.base_command + [
+            '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
@@ -144,7 +141,7 @@ class TestRunner(object):
 
     def make_process(self):
         print "Start test {0}".format(self.testfile)
-        self.proc = run(self.command())
+        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
         return self.proc
 
     def report(self):
@@ -159,6 +156,7 @@ class TestRunner(object):
 
     def run(self):
         mkdirp(self.log_dir)
+        self.show_sys_info()
         self.make_process()
         return self.report()
 
