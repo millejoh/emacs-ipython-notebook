@@ -4,6 +4,7 @@
 (require 'ein-notebooklist)
 (require 'wid-edit)
 (require 'ein-testing)
+(require 'ein-testing-cell)
 
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
@@ -116,6 +117,13 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward "100" nil t))))))
 
+(defun ein:testing-image-type (image)
+  "Return the type of IMAGE.
+See the definition of `create-image' for how it works."
+  (assert (and (listp image) (eq (car image) 'image)) nil
+          "%S is not an image." image)
+  (plist-get (cdr image) :type))
+
 (ert-deftest ein:notebook-execute-current-cell-pyout-image ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -123,14 +131,25 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
-      (insert (ein:join-str "\n" '("import pylab"
-                                   "pylab.plot([1,2,3])")))
+      ;; Use IPython.core.display rather than IPython.display to
+      ;; test it with older (< 0.13) IPython.
+      (insert (concat "from IPython.core.display import SVG\n"
+                      (format "SVG(data=\"\"\"%s\"\"\")"
+                              ein:testing-example-svg)))
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until (lambda () (not (oref cell :running)))))
+        (ein:testing-wait-until (lambda () (not (oref cell :running))))
+        ;; This cell has only one input
+        (should (= (length (oref cell :outputs)) 1))
+        ;; This output is a SVG image
+        (let ((out (nth 0 (oref cell :outputs))))
+          (should (equal (plist-get out :output_type) "pyout"))
+          (should (plist-get out :svg))))
+      ;; Check the actual output in the buffer:
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
-        (should (search-forward-regexp
-                 "<matplotlib\\.lines\\.Line2D at .*>" nil t))))))
+        (should (= (forward-line) 0))
+        (let ((image (get-text-property (point) 'display)))
+          (should (eq (ein:testing-image-type image) 'svg)))))))
 
 (ert-deftest ein:notebook-execute-current-cell-stream ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
