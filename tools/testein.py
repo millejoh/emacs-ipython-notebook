@@ -173,6 +173,52 @@ def remove_elc():
     print "Removed {0} elc files".format(len(files))
 
 
+class ServerRunner(object):
+
+    def __init__(self, **kwds):
+        self.port = None
+        self.__dict__.update(kwds)
+
+    @staticmethod
+    def _parse_port_line(line):
+        return line.strip().rsplit(':', 1)[-1].strip('/')
+
+    def get_port(self):
+        if self.port is None:
+            self.port = self._parse_port_line(self.proc.stdout.readline())
+        return self.port
+
+    def start(self):
+        from subprocess import Popen, PIPE, STDOUT
+        self.proc = Popen(
+            self.command(), stdout=PIPE, stderr=STDOUT, shell=True)
+
+    def stop(self):
+        self.proc.kill()
+
+    def command(self):
+        fmtdata = dict(
+            notebook_dir=os.path.join(EIN_ROOT, "tests", "notebook"),
+            ipython=self.ipython,
+            server_log='{testname}_server_{modename}_{emacsname}.log'.format(
+                emacsname=os.path.basename(self.emacs),
+                testname=os.path.splitext(self.testfile)[0],
+                modename='batch' if self.batch else 'interactive',
+            ),
+        )
+        return self.command_template.format(**fmtdata)
+
+    command_template = r"""
+{ipython} notebook \
+    --notebook-dir {notebook_dir} \
+    --debug \
+    --no-browser 2>&1 \
+    | tee {server_log} \
+    | grep --line-buffered 'The IPython Notebook is running at' \
+    | head -n1
+"""
+
+
 def construct_command(args):
     """
     Construct command as a string given a list of arguments.
