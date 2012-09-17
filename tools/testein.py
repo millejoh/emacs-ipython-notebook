@@ -78,7 +78,8 @@ class TestRunner(object):
                     '--eval', '(setq {0} {1})'.format(k, v)])
         return command
 
-    def command(self):
+    @property
+    def base_command(self):
         command = [self.emacs, '-Q'] + self.bind_lispvars()
 
         if self.batch:
@@ -106,9 +107,11 @@ class TestRunner(object):
                         '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
-        self.show_sys_info(command)
+        return command
 
-        # do the test
+    @property
+    def command(self):
+        command = self.base_command[:]
         if self.batch:
             command.extend(['-f', 'ert-run-tests-batch-and-exit'])
         else:
@@ -145,7 +148,7 @@ class TestRunner(object):
 
     def make_process(self):
         print "Start test {0}".format(self.testfile)
-        self.proc = run(self.command())
+        self.proc = run(self.command)
         return self.proc
 
     def report(self):
@@ -160,6 +163,7 @@ class TestRunner(object):
 
     def run(self):
         mkdirp(self.log_dir)
+        self.show_sys_info(self.base_command)
         self.make_process()
         return self.report()
 
