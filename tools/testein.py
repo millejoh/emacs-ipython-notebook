@@ -216,7 +216,11 @@ class ServerRunner(object):
             self.command(), stdout=PIPE, stderr=STDOUT, shell=True)
 
     def stop(self):
-        self.proc.kill()
+        print "Stopping server", self.port
+        try:
+            kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
+        finally:
+            self.proc.terminate()
 
     def command(self):
         fmtdata = dict(
@@ -239,6 +243,25 @@ class ServerRunner(object):
     | grep --line-buffered 'The IPython Notebook is running at' \
     | head -n1
 """
+
+
+def kill_subprocesses(pid, include=lambda x: True):
+    from subprocess import Popen, PIPE
+    import signal
+    command = [
+        'ps', '--ppid', str(pid), '--format', 'pid,cmd', '--no-headers']
+    proc = Popen(command, stdout=PIPE, stderr=PIPE)
+    (stdout, stderr) = proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(
+            'Command {0} failed with code {1} and following error message:\n'
+            '{3}'.format(command, proc.returncode, stderr))
+
+    for line in map(str.strip, stdout.splitlines()):
+        (pid, cmd) = line.split(' ', 1)
+        if include(cmd):
+            print "Killing PID={0} COMMAND={1}".format(pid, cmd)
+            os.kill(int(pid), signal.SIGINT)
 
 
 def construct_command(args):
