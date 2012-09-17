@@ -112,9 +112,9 @@ class TestRunner(object):
             command.extend(['--eval', "(ert 't)"])
         return command
 
-    def show_sys_info(self, base_command):
+    def show_sys_info(self):
         print "*" * 50
-        command = base_command + [
+        command = self.base_command + [
             '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
@@ -156,7 +156,7 @@ class TestRunner(object):
 
     def run(self):
         mkdirp(self.log_dir)
-        self.show_sys_info(self.base_command)
+        self.show_sys_info()
         self.make_process()
         return self.report()
 
