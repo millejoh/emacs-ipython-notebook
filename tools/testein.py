@@ -115,7 +115,7 @@ class TestRunner(object):
     def show_sys_info(self, base_command):
         print "*" * 50
         command = base_command + [
-            '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
+            '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
