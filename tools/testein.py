@@ -64,6 +64,9 @@ class TestRunner(object):
         if self.ein_debug:
             self.lispvars['ein:debug'] = "'t"
 
+    def setq(self, sym, val):
+        self.lispvars[sym] = val
+
     def bind_lispvars(self):
         command = []
         for (k, v) in self.lispvars.iteritems():
@@ -180,13 +183,21 @@ class ServerRunner(object):
         self.notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
         self.__dict__.update(kwds)
 
+    def __enter__(self):
+        self.run()
+        return self.port
+
+    def __exit__(self, type, value, traceback):
+        self.stop()
+
     def run(self):
         self.clear_notebook_dir()
         self.start()
         self.get_port()
+        print "Server running at", self.port
 
     def clear_notebook_dir(self):
-        files = os.path.join(self.notebook_dir, '*.ipynb')
+        files = glob.glob(os.path.join(self.notebook_dir, '*.ipynb'))
         map(os.remove, files)
         print "Removed {0} ipynb files".format(len(files))
 
@@ -257,8 +268,11 @@ def run_ein_test(unit_test, func_test, clean_elc, dry_run, **kwds):
         func_test_runner = TestRunner(testfile='func-test.el', **kwds)
         if dry_run:
             print construct_command(func_test_runner.command())
-        elif func_test_runner.run() != 0:
-            return 1
+        else:
+            with ServerRunner(testfile='func-test.el', **kwds) as port:
+                func_test_runner.setq('ein:testing-port', port)
+                if func_test_runner.run() != 0:
+                    return 1
     return 0
 
 
@@ -302,6 +316,10 @@ def main():
     parser.add_argument('--dry-run', default=False,
                         action='store_true',
                         help="Print commands to be executed.")
+    parser.add_argument('--ipython', default='ipython',
+                        help="""
+                        ipython executable to use to run notebook server.
+                        """)
     parser.add_argument('--ein-log-level', default=40)
     parser.add_argument('--ein-message-level', default=30)
     parser.add_argument('--ein-debug', default=False, action='store_true',
