@@ -7,18 +7,6 @@
 (require 'ein-testing-notebook)
 
 
-;; Test utils
-
-(defvar eintest:example-svg "\
-<?xml version=\"1.0\" standalone=\"no\"?>
-<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
- \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">
-
-<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">
-  <circle cx=\"100\" cy=\"50\" r=\"40\" />
-</svg>")
-
-
 ;; ein:cell-location
 
 (ert-deftest ein:cell-location-codecell-prompt-beg ()
@@ -149,7 +137,7 @@ some input
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    svg
    (" ")
-   ((:text "some output text" :svg eintest:example-svg))))
+   ((:text "some output text" :svg ein:testing-example-svg))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
@@ -178,7 +166,7 @@ some input
    ("first output text" "second output \\\\LaTeX" " ")
    ((:text "first output text")
     (:latex "second output \\LaTeX")
-    (:text "some output text" :svg eintest:example-svg))))
+    (:text "some output text" :svg ein:testing-example-svg))))
 
 
 ;; Insert pyerr
