@@ -177,7 +177,18 @@ class ServerRunner(object):
 
     def __init__(self, **kwds):
         self.port = None
+        self.notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
         self.__dict__.update(kwds)
+
+    def run(self):
+        self.clear_notebook_dir()
+        self.start()
+        self.get_port()
+
+    def clear_notebook_dir(self):
+        files = os.path.join(self.notebook_dir, '*.ipynb')
+        map(os.remove, files)
+        print "Removed {0} ipynb files".format(len(files))
 
     @staticmethod
     def _parse_port_line(line):
@@ -198,7 +209,7 @@ class ServerRunner(object):
 
     def command(self):
         fmtdata = dict(
-            notebook_dir=os.path.join(EIN_ROOT, "tests", "notebook"),
+            notebook_dir=self.notebook_dir,
             ipython=self.ipython,
             server_log='{testname}_server_{modename}_{emacsname}.log'.format(
                 emacsname=os.path.basename(self.emacs),
