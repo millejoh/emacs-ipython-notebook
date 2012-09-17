@@ -12,11 +12,6 @@ EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 
-def run(command):
-    proc = Popen(command, stdout=PIPE, stderr=STDOUT)
-    return proc
-
-
 def has_library(emacs, library):
     """
     Return True when `emacs` has build-in `library`.
@@ -146,7 +141,7 @@ class TestRunner(object):
 
     def make_process(self):
         print "Start test {0}".format(self.testfile)
-        self.proc = run(self.command)
+        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
         return self.proc
 
     def report(self):
