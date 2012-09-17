@@ -1,0 +1,3 @@
+ipython==0.12
+pyzmq
+tornado

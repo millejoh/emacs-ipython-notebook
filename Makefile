@@ -24,6 +24,15 @@ ert-compile: ert-clean
 ert-clean:
 	rm -f lib/ert/lisp/emacs-lisp/*.elc
 
+env-ipy.0.13.0:
+	tools/makeenv.sh env/ipy.0.13.0 tools/requirement-ipy.0.13.0.txt
+
+env-ipy.0.12.1:
+	tools/makeenv.sh env/ipy.0.12.1 tools/requirement-ipy.0.12.1.txt
+
+env-ipy.0.12.0:
+	tools/makeenv.sh env/ipy.0.12.0 tools/requirement-ipy.0.12.0.txt
+
 travis-ci: ert-compile
 	$(EMACS) --version
 	python --version
