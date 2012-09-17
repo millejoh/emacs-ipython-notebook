@@ -151,8 +151,11 @@ See the definition of `create-image' for how it works."
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (= (forward-line) 0))
-        (let ((image (get-text-property (point) 'display)))
-          (should (eq (ein:testing-image-type image) 'svg)))))))
+        (if (image-type-available-p 'svg)
+            (let ((image (get-text-property (point) 'display)))
+              (should (eq (ein:testing-image-type image) 'svg)))
+          (ein:log 'info
+            "Skipping image check as SVG image type is not available."))))))
 
 (ert-deftest ein:notebook-execute-current-cell-stream ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
