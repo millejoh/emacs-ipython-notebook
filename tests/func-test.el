@@ -8,10 +8,6 @@
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
 
-;; Execute `eintest:dz-ipython-start' before starting the following
-;; test to setup server.
-;; See: ./setup-server.el
-
 
 (defvar ein:testing-port 8889)
 
