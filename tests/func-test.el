@@ -44,13 +44,13 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (progn (ein:log 'debug
                  "TESTING-GET-UNTITLED0-OR-CREATE notebook already exists")
                notebook)
-      (with-current-buffer (ein:notebooklist-open url-or-port t)
-        (setq ein:%notebooklist% nil)
-        (ein:testing-wait-until (lambda () ein:%notebooklist%))
-        (ein:notebooklist-new-notebook url-or-port)
-        (ein:testing-wait-until
-         (lambda ()
-           (ein:testing-get-notebook-by-name url-or-port "Untitled0"))))
+      (ein:log 'debug
+        "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
+      (let ((created nil))
+        (ein:notebooklist-new-notebook url-or-port
+                                       (lambda (&rest -ignore-)
+                                         (setq created t)))
+        (ein:testing-wait-until (lambda () created)))
       (prog1
           (ein:testing-get-notebook-by-name url-or-port "Untitled0")
         (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
