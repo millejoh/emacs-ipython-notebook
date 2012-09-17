@@ -213,7 +213,10 @@ class ServerRunner(object):
     def start(self):
         from subprocess import Popen, PIPE, STDOUT
         self.proc = Popen(
-            self.command(), stdout=PIPE, stderr=STDOUT, shell=True)
+            self.command(), stdout=PIPE, stderr=STDOUT, stdin=PIPE,
+            shell=True)
+        # Answer "y" to the prompt: Shutdown Notebook Server (y/[n])?
+        self.proc.stdin.write('y\n')
 
     def stop(self):
         print "Stopping server", self.port
