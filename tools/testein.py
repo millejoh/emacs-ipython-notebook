@@ -6,13 +6,13 @@ Run EIN test suite
 
 import os
 import glob
+from subprocess import Popen, PIPE, STDOUT
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 
 def run(command):
-    from subprocess import Popen, PIPE, STDOUT
     proc = Popen(command, stdout=PIPE, stderr=STDOUT)
     return proc
 
@@ -21,7 +21,6 @@ def has_library(emacs, library):
     """
     Return True when `emacs` has build-in `library`.
     """
-    from subprocess import Popen
     with open(os.devnull, 'w') as devnull:
         proc = Popen(
             [emacs, '-Q', '-batch', '-l', 'cl',
@@ -119,7 +118,6 @@ class TestRunner(object):
         return command
 
     def show_sys_info(self, base_command):
-        from subprocess import Popen, PIPE
         print "*" * 50
         command = base_command + [
             '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
