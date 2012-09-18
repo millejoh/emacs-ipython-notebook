@@ -73,9 +73,11 @@ class TestRunner(BaseRunner):
             modename='batch' if self.batch else 'interactive',
         )
         quote = '"{0}"'.format
+        self.logpath_log = self.logpath('log')
+        self.logpath_messages = self.logpath('messages')
         self.lispvars = {
-            'ein:testing-dump-file-log': quote(self.logpath('log')),
-            'ein:testing-dump-file-messages': quote(self.logpath('messages')),
+            'ein:testing-dump-file-log': quote(self.logpath_log),
+            'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
         }
@@ -169,8 +171,15 @@ class TestRunner(BaseRunner):
         (stdout, _) = self.proc.communicate()
         self.failed = self.proc.returncode != 0
         if self.failed:
-            print "{0} failed".format(self.testfile)
+            print "*" * 50
+            print "Showing {0}:".format(self.logpath_log)
+            print open(self.logpath_log).read()
+            print
+            print "*" * 50
+            print "Showing STDOUT/STDERR:"
             print stdout
+            print
+            print "{0} failed".format(self.testfile)
         else:
             print "{0} OK".format(self.testfile)
             for line in reversed(stdout.splitlines()):
