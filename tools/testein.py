@@ -40,11 +40,31 @@ def einlibdir(*path):
     return eindir('lib', *path)
 
 
-class TestRunner(object):
+class BaseRunner(object):
 
     def __init__(self, **kwds):
         self.__dict__.update(kwds)
         self.batch = self.batch and not self.debug_on_error
+
+    def logpath(self, name, ext='log'):
+        return os.path.join(
+            self.log_dir,
+            "{testname}_{logname}_{modename}_{emacsname}.{ext}".format(
+                ext=ext,
+                logname=name,
+                emacsname=os.path.basename(self.emacs),
+                testname=os.path.splitext(self.testfile)[0],
+                modename='batch' if self.batch else 'interactive',
+            ))
+
+    def run(self):
+        mkdirp(self.log_dir)
+
+
+class TestRunner(BaseRunner):
+
+    def __init__(self, **kwds):
+        super(TestRunner, self).__init__(**kwds)
 
         fmtdata = self.__dict__.copy()
         fmtdata.update(
@@ -52,12 +72,10 @@ class TestRunner(object):
             testname=os.path.splitext(self.testfile)[0],
             modename='batch' if self.batch else 'interactive',
         )
-        logpath = lambda x: '"{0}"'.format(os.path.join(self.log_dir, x))
-        logtemp = logpath("{testname}_log_{modename}_{emacsname}.log")
-        msgtemp = logpath("{testname}_messages_{modename}_{emacsname}.log")
+        quote = '"{0}"'.format
         self.lispvars = {
-            'ein:testing-dump-file-log': logtemp.format(**fmtdata),
-            'ein:testing-dump-file-messages': msgtemp.format(**fmtdata),
+            'ein:testing-dump-file-log': quote(self.logpath('log')),
+            'ein:testing-dump-file-messages': quote(self.logpath('message')),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
         }
@@ -158,7 +176,7 @@ class TestRunner(object):
         return int(self.failed)
 
     def run(self):
-        mkdirp(self.log_dir)
+        super(TestRunner, self).run()
         self.show_sys_info()
         self.make_process()
         return self.report()
@@ -176,12 +194,10 @@ def remove_elc():
     print "Removed {0} elc files".format(len(files))
 
 
-class ServerRunner(object):
+class ServerRunner(BaseRunner):
 
-    def __init__(self, **kwds):
-        self.port = None
-        self.notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
-        self.__dict__.update(kwds)
+    port = None
+    notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
 
     def __enter__(self):
         self.run()
@@ -191,7 +207,7 @@ class ServerRunner(object):
         self.stop()
 
     def run(self):
-        mkdirp(self.log_dir)
+        super(ServerRunner, self).run()
         self.clear_notebook_dir()
         self.start()
         self.get_port()
@@ -230,13 +246,7 @@ class ServerRunner(object):
         fmtdata = dict(
             notebook_dir=self.notebook_dir,
             ipython=self.ipython,
-            server_log=os.path.join(
-                self.log_dir,
-                '{testname}_server_{modename}_{emacsname}.log'.format(
-                    emacsname=os.path.basename(self.emacs),
-                    testname=os.path.splitext(self.testfile)[0],
-                    modename='batch' if self.batch else 'interactive',
-                )),
+            server_log=self.logpath('server'),
         )
         return self.command_template.format(**fmtdata)
 
