@@ -166,12 +166,17 @@ class TestRunner(BaseRunner):
         return self.proc
 
     def report(self):
-        if self.proc.wait() != 0:
+        (stdout, _) = self.proc.communicate()
+        if self.proc.returncode != 0:
             print "{0} failed".format(self.testfile)
-            print self.proc.stdout.read()
+            print stdout
             self.failed = True
         else:
             print "{0} OK".format(self.testfile)
+            for line in reversed(stdout.splitlines()):
+                if line.startswith('Ran'):
+                    print line
+                    break
             self.failed = False
         return int(self.failed)
 
