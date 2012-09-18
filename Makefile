@@ -35,6 +35,12 @@ env-ipy.0.12.1:
 env-ipy.0.12.0:
 	tools/makeenv.sh env/ipy.0.12.0 tools/requirement-ipy.0.12.0.txt
 
+env-clean:
+	rm -rf env
+
+log-clean:
+	rm -rf log
+
 travis-ci: ert-compile env-ipy.$(IPY_VERSION)
 	$(EMACS) --version
 	python --version
