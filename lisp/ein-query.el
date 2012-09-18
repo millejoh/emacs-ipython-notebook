@@ -168,10 +168,16 @@ is killed immediately after the execution of this function.
 (defun ein:query-ajax--parse-data (parser status-error)
   "Run PARSER in current buffer if STATUS-ERROR is nil,
 then kill the current buffer."
-  (let ((buffer (current-buffer))) ; NOTE: `parser' could change buffer...
+  (let ((buffer (current-buffer)) ; NOTE: `parser' could change buffer...
+        noerror)
     (unwind-protect
-        (when (and parser (not status-error))
-          (funcall parser))
+        (prog1
+            (when (and parser (not status-error))
+              (funcall parser))
+          (setq noerror t))
+      (unless noerror
+        (ein:log 'error "QUERY-AJAX--PARSE-DATA: error from parser %S"
+                 parser))
       (kill-buffer buffer))))
 
 (defun* ein:query-ajax-callback (status &key
