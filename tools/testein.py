@@ -4,9 +4,11 @@
 Run EIN test suite
 """
 
+import sys
 import os
 import glob
 from subprocess import Popen, PIPE, STDOUT
+import itertools
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
@@ -38,6 +40,45 @@ def eintestdir(*path):
 
 def einlibdir(*path):
     return eindir('lib', *path)
+
+
+def show_nonprinting(string, stream=sys.stdout):
+    """Emulate ``cat -v`` (``--show-nonprinting``)."""
+    stream.writelines(itertools.imap(chr, convert_nonprinting(string)))
+
+
+def convert_nonprinting(string):
+    """
+    Convert non-printing characters in `string`.
+
+    Output is iterable of int.  So for Python 2, you need to
+    convert it into string using `chr`.
+
+    Adapted from: http://stackoverflow.com/a/437542/727827
+
+    """
+
+    for b in itertools.imap(ord, string):
+        assert 0 <= b < 0x100
+
+        if b in (0x09, 0x0a):   # '\t\n'
+            yield b
+            continue
+
+        if b > 0x7f:            # not ascii
+            yield 0x4d          # 'M'
+            yield 0x2d          # '-'
+            b &= 0x7f
+
+        if b < 0x20:            # control char
+            yield 0x5e          # '^'
+            b |= 0x40
+        elif b == 0x7f:
+            yield 0x5e          # '^'
+            yield 0x3f          # '?'
+            continue
+
+        yield b
 
 
 class BaseRunner(object):
@@ -73,9 +114,11 @@ class TestRunner(BaseRunner):
             modename='batch' if self.batch else 'interactive',
         )
         quote = '"{0}"'.format
+        self.logpath_log = self.logpath('log')
+        self.logpath_messages = self.logpath('messages')
         self.lispvars = {
-            'ein:testing-dump-file-log': quote(self.logpath('log')),
-            'ein:testing-dump-file-messages': quote(self.logpath('messages')),
+            'ein:testing-dump-file-log': quote(self.logpath_log),
+            'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
         }
@@ -167,17 +210,23 @@ class TestRunner(BaseRunner):
 
     def report(self):
         (stdout, _) = self.proc.communicate()
-        if self.proc.returncode != 0:
+        self.failed = self.proc.returncode != 0
+        if self.failed:
+            print "*" * 50
+            print "Showing {0}:".format(self.logpath_log)
+            print open(self.logpath_log).read()
+            print
+            print "*" * 50
+            print "Showing STDOUT/STDERR:"
+            show_nonprinting(stdout)
+            print
             print "{0} failed".format(self.testfile)
-            print stdout
-            self.failed = True
         else:
             print "{0} OK".format(self.testfile)
             for line in reversed(stdout.splitlines()):
                 if line.startswith('Ran'):
                     print line
                     break
-            self.failed = False
         return int(self.failed)
 
     def run(self):

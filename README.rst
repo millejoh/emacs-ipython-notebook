@@ -11,6 +11,7 @@
 
 .. |build-status|
    image:: https://secure.travis-ci.org/tkf/emacs-ipython-notebook.png
+           ?branch=master
    :target: http://travis-ci.org/tkf/emacs-ipython-notebook
    :alt: Build Status
 

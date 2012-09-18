@@ -165,6 +165,21 @@ is killed immediately after the execution of this function.
     (set-process-query-on-exit-flag (get-buffer-process buffer) nil)
     buffer))
 
+(defun ein:query-ajax--parse-data (parser status-error)
+  "Run PARSER in current buffer if STATUS-ERROR is nil,
+then kill the current buffer."
+  (let ((buffer (current-buffer)) ; NOTE: `parser' could change buffer...
+        noerror)
+    (unwind-protect
+        (prog1
+            (when (and parser (not status-error))
+              (funcall parser))
+          (setq noerror t))
+      (unless noerror
+        (ein:log 'error "QUERY-AJAX--PARSE-DATA: error from parser %S"
+                 parser))
+      (kill-buffer buffer))))
+
 (defun* ein:query-ajax-callback (status &key
                                         (headers nil)
                                         (parser nil)
@@ -181,15 +196,11 @@ is killed immediately after the execution of this function.
   (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
   (ein:query-ajax-cancel-timer)
-  (let* ((buffer (current-buffer)) ; `parser' could change buffer...
-         (response-status url-http-response-status)
+  (let* ((response-status url-http-response-status)
          (status-code-callback (cdr (assq response-status status-code)))
          (status-error (plist-get status :error))
          (canceled ein:%query-ajax-canceled%)
-         (data (unwind-protect
-                   (if (and parser (not status-error))
-                       (funcall parser))
-                 (kill-buffer buffer))))
+         (data (ein:query-ajax--parse-data parser status-error)))
     (ein:log 'debug "data = %s" data)
     (ein:log 'debug "canceled = %s" canceled)
 
