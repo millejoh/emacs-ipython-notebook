@@ -75,7 +75,7 @@ class TestRunner(BaseRunner):
         quote = '"{0}"'.format
         self.lispvars = {
             'ein:testing-dump-file-log': quote(self.logpath('log')),
-            'ein:testing-dump-file-messages': quote(self.logpath('message')),
+            'ein:testing-dump-file-messages': quote(self.logpath('messages')),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
         }
