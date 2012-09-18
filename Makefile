@@ -47,5 +47,6 @@ log-clean:
 travis-ci: ert-compile env-ipy.$(IPY_VERSION)
 	$(EMACS) --version
 	python --version
+	env/ipy.$(IPY_VERSION)/bin/ipython --version
 	$(TESTEIN) --clean-elc -e $(EMACS) \
 		--ipython env/ipy.$(IPY_VERSION)/bin/ipython
