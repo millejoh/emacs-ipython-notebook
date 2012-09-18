@@ -276,7 +276,7 @@ def kill_subprocesses(pid, include=lambda x: True):
     if proc.returncode != 0:
         raise RuntimeError(
             'Command {0} failed with code {1} and following error message:\n'
-            '{3}'.format(command, proc.returncode, stderr))
+            '{2}'.format(command, proc.returncode, stderr))
 
     for line in map(str.strip, stdout.splitlines()):
         (pid, cmd) = line.split(' ', 1)
