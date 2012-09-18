@@ -1,21 +1,22 @@
 EMACS = emacs
+IPYTHON = ipython
 TESTEIN = tools/testein.py
 
 testein-default:
-	$(TESTEIN) --clean-elc --load-ert
+	$(TESTEIN) --clean-elc --ipython $(IPYTHON)
 
 testein-24:
-	$(TESTEIN) --clean-elc -e emacs-snapshot
+	$(TESTEIN) --clean-elc -e emacs-snapshot --ipython $(IPYTHON)
 
 testein-unit-all:
 	$(TESTEIN) --no-func-test --clean-elc --load-ert
 	$(TESTEIN) --no-func-test --clean-elc -e emacs-snapshot
 
 interactive-testein-default:
-	$(TESTEIN) --clean-elc --load-ert --no-batch
+	$(TESTEIN) --clean-elc --load-ert --no-batch --ipython $(IPYTHON)
 
 interactive-testein-24:
-	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch
+	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch --ipython $(IPYTHON)
 
 ert-compile: ert-clean
 	cd lib/ert/lisp/emacs-lisp/ && \
