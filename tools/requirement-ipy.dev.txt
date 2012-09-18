@@ -1,0 +1,3 @@
+https://github.com/ipython/ipython/tarball/master
+pyzmq
+tornado

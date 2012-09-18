@@ -26,6 +26,9 @@ ert-compile: ert-clean
 ert-clean:
 	rm -f lib/ert/lisp/emacs-lisp/*.elc
 
+env-ipy.dev:
+	tools/makeenv.sh env/ipy.dev tools/requirement-ipy.dev.txt
+
 env-ipy.0.13.0:
 	tools/makeenv.sh env/ipy.0.13.0 tools/requirement-ipy.0.13.0.txt
 
