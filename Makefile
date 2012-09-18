@@ -1,5 +1,6 @@
 EMACS = emacs
 IPYTHON = ipython
+IPY_VERSION = 0.13.0
 TESTEIN = tools/testein.py
 
 testein-default:
@@ -34,7 +35,8 @@ env-ipy.0.12.1:
 env-ipy.0.12.0:
 	tools/makeenv.sh env/ipy.0.12.0 tools/requirement-ipy.0.12.0.txt
 
-travis-ci: ert-compile
+travis-ci: ert-compile env-ipy.$(IPY_VERSION)
 	$(EMACS) --version
 	python --version
-	$(TESTEIN) --no-func-test --clean-elc -e $(EMACS)
+	$(TESTEIN) --clean-elc -e $(EMACS) \
+		--ipython env/ipy.$(IPY_VERSION)/bin/ipython
