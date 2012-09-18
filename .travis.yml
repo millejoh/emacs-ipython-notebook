@@ -1,6 +1,6 @@
 language: emacs-lisp
 before_install:
-  - git submodule update --init
+  - git submodule --quiet update --init
   - sudo apt-get install -qq python-virtualenv
   - if [ "$EMACS" = 'emacs-snapshot' ]; then
       sudo add-apt-repository -y ppa:cassou/emacs &&
