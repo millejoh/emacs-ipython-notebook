@@ -9,7 +9,11 @@ before_install:
           emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot;
     fi
 env:
-  - EMACS=emacs
-  - EMACS=emacs-snapshot
+  - IPY_VERSION=0.13.0 EMACS=emacs
+  - IPY_VERSION=0.12.1 EMACS=emacs
+  - IPY_VERSION=0.12.0 EMACS=emacs
+  - IPY_VERSION=0.13.0 EMACS=emacs-snapshot
+  - IPY_VERSION=0.12.1 EMACS=emacs-snapshot
+  - IPY_VERSION=0.12.0 EMACS=emacs-snapshot
 script:
-  make travis-ci EMACS=$EMACS
+  make travis-ci EMACS=$EMACS IPY_VERSION=$IPY_VERSION
