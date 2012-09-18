@@ -40,11 +40,31 @@ def einlibdir(*path):
     return eindir('lib', *path)
 
 
-class TestRunner(object):
+class BaseRunner(object):
 
     def __init__(self, **kwds):
         self.__dict__.update(kwds)
         self.batch = self.batch and not self.debug_on_error
+
+    def logpath(self, name, ext='log'):
+        return os.path.join(
+            self.log_dir,
+            "{testname}_{logname}_{modename}_{emacsname}.{ext}".format(
+                ext=ext,
+                logname=name,
+                emacsname=os.path.basename(self.emacs),
+                testname=os.path.splitext(self.testfile)[0],
+                modename='batch' if self.batch else 'interactive',
+            ))
+
+    def run(self):
+        mkdirp(self.log_dir)
+
+
+class TestRunner(BaseRunner):
+
+    def __init__(self, **kwds):
+        super(TestRunner, self).__init__(**kwds)
 
         fmtdata = self.__dict__.copy()
         fmtdata.update(
@@ -52,17 +72,18 @@ class TestRunner(object):
             testname=os.path.splitext(self.testfile)[0],
             modename='batch' if self.batch else 'interactive',
         )
-        logpath = lambda x: '"{0}"'.format(os.path.join(self.log_dir, x))
-        logtemp = logpath("{testname}_log_{modename}_{emacsname}.log")
-        msgtemp = logpath("{testname}_messages_{modename}_{emacsname}.log")
+        quote = '"{0}"'.format
         self.lispvars = {
-            'ein:testing-dump-file-log': logtemp.format(**fmtdata),
-            'ein:testing-dump-file-messages': msgtemp.format(**fmtdata),
+            'ein:testing-dump-file-log': quote(self.logpath('log')),
+            'ein:testing-dump-file-messages': quote(self.logpath('message')),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
         }
         if self.ein_debug:
             self.lispvars['ein:debug'] = "'t"
+
+    def setq(self, sym, val):
+        self.lispvars[sym] = val
 
     def bind_lispvars(self):
         command = []
@@ -155,7 +176,7 @@ class TestRunner(object):
         return int(self.failed)
 
     def run(self):
-        mkdirp(self.log_dir)
+        super(TestRunner, self).run()
         self.show_sys_info()
         self.make_process()
         return self.report()
@@ -171,6 +192,92 @@ def remove_elc():
     files = glob.glob(einlispdir("*.elc")) + glob.glob(eintestdir("*.elc"))
     map(os.remove, files)
     print "Removed {0} elc files".format(len(files))
+
+
+class ServerRunner(BaseRunner):
+
+    port = None
+    notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
+
+    def __enter__(self):
+        self.run()
+        return self.port
+
+    def __exit__(self, type, value, traceback):
+        self.stop()
+
+    def run(self):
+        super(ServerRunner, self).run()
+        self.clear_notebook_dir()
+        self.start()
+        self.get_port()
+        print "Server running at", self.port
+
+    def clear_notebook_dir(self):
+        files = glob.glob(os.path.join(self.notebook_dir, '*.ipynb'))
+        map(os.remove, files)
+        print "Removed {0} ipynb files".format(len(files))
+
+    @staticmethod
+    def _parse_port_line(line):
+        return line.strip().rsplit(':', 1)[-1].strip('/')
+
+    def get_port(self):
+        if self.port is None:
+            self.port = self._parse_port_line(self.proc.stdout.readline())
+        return self.port
+
+    def start(self):
+        from subprocess import Popen, PIPE, STDOUT
+        self.proc = Popen(
+            self.command(), stdout=PIPE, stderr=STDOUT, stdin=PIPE,
+            shell=True)
+        # Answer "y" to the prompt: Shutdown Notebook Server (y/[n])?
+        self.proc.stdin.write('y\n')
+
+    def stop(self):
+        print "Stopping server", self.port
+        try:
+            kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
+        finally:
+            self.proc.terminate()
+
+    def command(self):
+        fmtdata = dict(
+            notebook_dir=self.notebook_dir,
+            ipython=self.ipython,
+            server_log=self.logpath('server'),
+        )
+        return self.command_template.format(**fmtdata)
+
+    command_template = r"""
+{ipython} notebook \
+    --notebook-dir {notebook_dir} \
+    --debug \
+    --no-browser 2>&1 \
+    | tee {server_log} \
+    | grep --line-buffered 'The IPython Notebook is running at' \
+    | head -n1
+"""
+
+
+def kill_subprocesses(pid, include=lambda x: True):
+    from subprocess import Popen, PIPE
+    import signal
+    command = [
+        'ps', '--ppid', str(pid), '--format', 'pid,cmd', '--no-headers']
+    proc = Popen(command, stdout=PIPE, stderr=PIPE)
+    (stdout, stderr) = proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(
+            'Command {0} failed with code {1} and following error message:\n'
+            '{3}'.format(command, proc.returncode, stderr))
+
+    for line in map(str.strip, stdout.splitlines()):
+        (pid, cmd) = line.split(' ', 1)
+        if include(cmd):
+            print "Killing PID={0} COMMAND={1}".format(pid, cmd)
+            os.kill(int(pid), signal.SIGINT)
 
 
 def construct_command(args):
@@ -200,8 +307,11 @@ def run_ein_test(unit_test, func_test, clean_elc, dry_run, **kwds):
         func_test_runner = TestRunner(testfile='func-test.el', **kwds)
         if dry_run:
             print construct_command(func_test_runner.command())
-        elif func_test_runner.run() != 0:
-            return 1
+        else:
+            with ServerRunner(testfile='func-test.el', **kwds) as port:
+                func_test_runner.setq('ein:testing-port', port)
+                if func_test_runner.run() != 0:
+                    return 1
     return 0
 
 
@@ -245,6 +355,10 @@ def main():
     parser.add_argument('--dry-run', default=False,
                         action='store_true',
                         help="Print commands to be executed.")
+    parser.add_argument('--ipython', default='ipython',
+                        help="""
+                        ipython executable to use to run notebook server.
+                        """)
     parser.add_argument('--ein-log-level', default=40)
     parser.add_argument('--ein-message-level', default=30)
     parser.add_argument('--ein-debug', default=False, action='store_true',
