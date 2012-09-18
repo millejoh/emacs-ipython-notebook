@@ -191,6 +191,7 @@ class ServerRunner(object):
         self.stop()
 
     def run(self):
+        mkdirp(self.log_dir)
         self.clear_notebook_dir()
         self.start()
         self.get_port()
@@ -229,11 +230,13 @@ class ServerRunner(object):
         fmtdata = dict(
             notebook_dir=self.notebook_dir,
             ipython=self.ipython,
-            server_log='{testname}_server_{modename}_{emacsname}.log'.format(
-                emacsname=os.path.basename(self.emacs),
-                testname=os.path.splitext(self.testfile)[0],
-                modename='batch' if self.batch else 'interactive',
-            ),
+            server_log=os.path.join(
+                self.log_dir,
+                '{testname}_server_{modename}_{emacsname}.log'.format(
+                    emacsname=os.path.basename(self.emacs),
+                    testname=os.path.splitext(self.testfile)[0],
+                    modename='batch' if self.batch else 'interactive',
+                )),
         )
         return self.command_template.format(**fmtdata)
 
