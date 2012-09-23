@@ -32,6 +32,17 @@
 
 (require 'ein-kernel)
 
+
+;;; Macros
+
+(defmacro ein:helm-export-source (name)
+  (let* ((orig-source (intern (format "ein:helm-source-%s"        name)))
+         (any-source  (intern (format "anything-c-source-ein-%s" name)))
+         (helm-source (intern (format "helm-c-source-ein-%s"     name)))
+         (docstring (format "Alias to `%s'" orig-source)))
+    `(progn
+       (defvaralias ',helm-source ',orig-source ,docstring)
+       (defvaralias ',any-source  ',orig-source ,docstring))))
 
 
 ;;; Dynamic Variables
@@ -104,36 +115,52 @@ This variable applies to both `helm-ein-kernel-history' and
 ;;; Notebook buffers
 
 (defvar ein:helm-source-notebook-buffers
-  '((name . "IPython notebook buffers")
+  '((name . "All IPython notebook buffers")
     (candidates . ein:notebook-opened-buffer-names)
     (type . buffer))
-  "Helm/anything source for notebook buffers.")
+  "Helm/anything source for all opened notebook buffers.")
+
+(defvar ein:helm-source-modified-notebook-buffers
+  '((name . "Modified IPython notebook buffers")
+    (candidates
+     . (lambda ()
+         (ein:notebook-opened-buffer-names #'ein:notebook-modified-p)))
+    (type . buffer))
+  "Helm/anything source for modified notebook buffers.")
+
+(defvar ein:helm-source-saved-notebook-buffers
+  '((name . "Saved IPython notebook buffers")
+    (candidates
+     . (lambda ()
+         (ein:notebook-opened-buffer-names
+          (lambda (nb) (not (ein:notebook-modified-p nb))))))
+    (type . buffer))
+  "Helm/anything source for saved notebook buffers.")
 
 
 ;;; "Export" sources to `helm/anything-c-source-*'
-
-(defvaralias 'anything-c-source-ein-notebook-buffers
-  'ein:helm-source-notebook-buffers
-  "Alias to `anything-c-source-ein-notebook-buffers'")
-
-(defvaralias 'helm-c-source-ein-notebook-buffers
-  'ein:helm-source-notebook-buffers
-  "Alias to `ein:helm-source-notebook-buffers'")
+(ein:helm-export-source notebook-buffers)
+(ein:helm-export-source modified-notebook-buffers)
+(ein:helm-export-source saved-notebook-buffers)
 
 
 ;;; Helm/anything commands
+
+(defvar ein:helm-notebook-buffer-sources
+  '(ein:helm-source-modified-notebook-buffers
+    ein:helm-source-saved-notebook-buffers))
 
 ;;;###autoload
 (defun anything-ein-notebook-buffers ()
   "Choose opened notebook using anything.el interface."
   (interactive)
-  (anything-other-buffer ein:helm-source-notebook-buffers "*anything ein*"))
+  (anything-other-buffer ein:helm-notebook-buffer-sources "*anything ein*"))
 
 ;;;###autoload
 (defun helm-ein-notebook-buffers ()
   "Choose opened notebook using helm interface."
   (interactive)
-  (helm-other-buffer ein:helm-source-notebook-buffers "*helm ein*"))
+  (helm-other-buffer ein:helm-notebook-buffer-sources "*helm ein*"))
 
 (provide 'ein-helm)
 ;;; ein-helm.el ends here

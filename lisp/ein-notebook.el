@@ -915,22 +915,27 @@ worksheet to save result."
            notebook
            ein:notebook--opened-map))
 
-(defun ein:notebook-opened-notebooks ()
-  "Return list of opened notebook instances."
+(defun ein:notebook-opened-notebooks (&optional predicate)
+  "Return list of opened notebook instances.
+If PREDICATE is given, notebooks are filtered by PREDICATE.
+PREDICATE is called with each notebook and notebook is included
+in the returned list only when PREDICATE returns non-nil value."
   (let (notebooks)
     (maphash (lambda (k n) (if (ein:notebook-live-p n)
                                (push n notebooks)
                              (remhash k ein:notebook--opened-map)))
              ein:notebook--opened-map)
-    notebooks))
+    (if predicate
+        (ein:filter predicate notebooks)
+      notebooks)))
 
-(defun ein:notebook-opened-buffers ()
+(defun ein:notebook-opened-buffers (&optional predicate)
   "Return list of opened notebook buffers."
-  (mapcar #'ein:notebook-buffer (ein:notebook-opened-notebooks)))
+  (mapcar #'ein:notebook-buffer (ein:notebook-opened-notebooks predicate)))
 
-(defun ein:notebook-opened-buffer-names ()
+(defun ein:notebook-opened-buffer-names (&optional predicate)
   "Return list of opened notebook buffer names."
-  (mapcar #'buffer-name (ein:notebook-opened-buffers)))
+  (mapcar #'buffer-name (ein:notebook-opened-buffers predicate)))
 
 
 ;;; Generic getter
