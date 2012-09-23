@@ -146,17 +146,21 @@ This variable applies to both `helm-ein-kernel-history' and
 
 ;;; Helm/anything commands
 
+(defvar ein:helm-notebook-buffer-sources
+  '(ein:helm-source-modified-notebook-buffers
+    ein:helm-source-saved-notebook-buffers))
+
 ;;;###autoload
 (defun anything-ein-notebook-buffers ()
   "Choose opened notebook using anything.el interface."
   (interactive)
-  (anything-other-buffer ein:helm-source-notebook-buffers "*anything ein*"))
+  (anything-other-buffer ein:helm-notebook-buffer-sources "*anything ein*"))
 
 ;;;###autoload
 (defun helm-ein-notebook-buffers ()
   "Choose opened notebook using helm interface."
   (interactive)
-  (helm-other-buffer ein:helm-source-notebook-buffers "*helm ein*"))
+  (helm-other-buffer ein:helm-notebook-buffer-sources "*helm ein*"))
 
 (provide 'ein-helm)
 ;;; ein-helm.el ends here
