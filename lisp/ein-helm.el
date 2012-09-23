@@ -32,6 +32,17 @@
 
 (require 'ein-kernel)
 
+
+;;; Macros
+
+(defmacro ein:helm-export-source (name)
+  (let* ((orig-source (intern (format "ein:helm-source-%s"        name)))
+         (any-source  (intern (format "anything-c-source-ein-%s" name)))
+         (helm-source (intern (format "helm-c-source-ein-%s"     name)))
+         (docstring (format "Alias to `%s'" orig-source)))
+    `(progn
+       (defvaralias ',helm-source ',orig-source ,docstring)
+       (defvaralias ',any-source  ',orig-source ,docstring))))
 
 
 ;;; Dynamic Variables
@@ -111,14 +122,7 @@ This variable applies to both `helm-ein-kernel-history' and
 
 
 ;;; "Export" sources to `helm/anything-c-source-*'
-
-(defvaralias 'anything-c-source-ein-notebook-buffers
-  'ein:helm-source-notebook-buffers
-  "Alias to `anything-c-source-ein-notebook-buffers'")
-
-(defvaralias 'helm-c-source-ein-notebook-buffers
-  'ein:helm-source-notebook-buffers
-  "Alias to `ein:helm-source-notebook-buffers'")
+(ein:helm-export-source notebook-buffers)
 
 
 ;;; Helm/anything commands
