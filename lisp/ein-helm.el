@@ -115,14 +115,33 @@ This variable applies to both `helm-ein-kernel-history' and
 ;;; Notebook buffers
 
 (defvar ein:helm-source-notebook-buffers
-  '((name . "IPython notebook buffers")
+  '((name . "All IPython notebook buffers")
     (candidates . ein:notebook-opened-buffer-names)
     (type . buffer))
-  "Helm/anything source for notebook buffers.")
+  "Helm/anything source for all opened notebook buffers.")
+
+(defvar ein:helm-source-modified-notebook-buffers
+  '((name . "Modified IPython notebook buffers")
+    (candidates
+     . (lambda ()
+         (ein:notebook-opened-buffer-names #'ein:notebook-modified-p)))
+    (type . buffer))
+  "Helm/anything source for modified notebook buffers.")
+
+(defvar ein:helm-source-saved-notebook-buffers
+  '((name . "Saved IPython notebook buffers")
+    (candidates
+     . (lambda ()
+         (ein:notebook-opened-buffer-names
+          (lambda (nb) (not (ein:notebook-modified-p nb))))))
+    (type . buffer))
+  "Helm/anything source for saved notebook buffers.")
 
 
 ;;; "Export" sources to `helm/anything-c-source-*'
 (ein:helm-export-source notebook-buffers)
+(ein:helm-export-source modified-notebook-buffers)
+(ein:helm-export-source saved-notebook-buffers)
 
 
 ;;; Helm/anything commands
