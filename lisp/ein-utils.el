@@ -174,13 +174,13 @@ See: http://api.jquery.com/jQuery.ajax/"
   (setq char (json-encode-char0 char 'ucs))
   (let ((control-char (car (rassoc char json-special-chars))))
     (cond
-     ;; Special JSON character (\n, \r, etc.)
+     ;; Special JSON character (\n, \r, etc.).
      (control-char
       (format "\\%c" control-char))
-     ;; ASCIIish printable character
-     ((and (> char 31) (< char 160))    ; s/161/160/
+     ;; ASCIIish printable character.
+     ((and (> char 31) (< char 127))    ; s/161/127/
       (format "%c" char))
-     ;; Fallback: UCS code point in \uNNNN form
+     ;; Fallback: UCS code point in \uNNNN form.
      (t
       (format "\\u%04x" char)))))
 
