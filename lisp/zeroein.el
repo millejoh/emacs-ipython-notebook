@@ -59,6 +59,7 @@
 ;; (setq ein:use-smartrep t)
 
 (require 'auto-complete-config nil t)
+(declare-function global-auto-complete-mode "auto-complete.el")
 (when (featurep 'auto-complete-config)
   (ac-config-default)
   (add-to-list 'ac-dictionary-directories
