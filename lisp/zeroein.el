@@ -65,11 +65,9 @@
 ;;; `load-path' configurations
 
 (add-to-list 'load-path (zeroein:path "lisp"))
-
+(add-to-list 'load-path (zeroein:path "lib" "nxhtml" "util"))
 (mapc (lambda (path) (add-to-list 'load-path (zeroein:path "lib" path)))
       zeroein:dependencies)
-
-(load (zeroein:path "lib" "nxhtml" "autostart.el"))
 
 
 ;;; Configurations
