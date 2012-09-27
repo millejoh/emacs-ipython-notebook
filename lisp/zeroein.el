@@ -111,6 +111,9 @@
 
 
 ;;; Finally, open notebook list
+(require 'ein-dev)
+(ein:dev-print-sys-info)
+
 (unless noninteractive
   (call-interactively #'ein:notebooklist-open))
 
