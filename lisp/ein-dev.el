@@ -218,6 +218,49 @@ callback (`websocket-callback-debug-on-error') is enabled."
             (pop-to-buffer buffer)))
       (message "EIN INFO:\n%s" (pp-to-string info)))))
 
+;;;###autoload
+(defun ein:dev-bug-report-template ()
+  "Open a buffer with bug report template."
+  (interactive)
+  (let ((buffer (get-buffer-create "*ein:bug-report*")))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (insert "<!--
+This template is to help you write a good bug report.
+You may skip some sections, but please make sure to include
+the last section \"System info\", unless you find some
+personal information there.
+
+After finish writing it, please post it here:
+https://github.com/tkf/emacs-ipython-notebook/issues/new
+
+See also the EIN manual:
+http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
+-->
+
+## Steps to reproduce the problem
+
+1.
+2.
+3.
+
+## Expected output
+
+
+## Additional information (if any)
+
+
+")
+      (insert "## System info:\n\n```cl\n")
+      (condition-case err
+          (pp (ein:dev-sys-info) buffer)
+        (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
+      (insert "```\n")
+      (goto-char (point-min))
+      (when (fboundp 'markdown-mode)
+        (markdown-mode))
+      (pop-to-buffer buffer))))
+
 (defun ein:dev-print-sys-info ()
   (pp (ein:dev-sys-info)))
 
