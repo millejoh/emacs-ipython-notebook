@@ -176,10 +176,27 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (list :name name
         :path (ein:aand (locate-library name) (abbreviate-file-name it))))
 
+(defun ein:dev-stdout-program (command args)
+  "Safely call COMMAND with ARGS and return its stdout."
+  (ein:aand (executable-find command)
+            (with-temp-buffer
+              (erase-buffer)
+              (apply #'call-process it nil t nil args)
+              (buffer-string))))
+
 (defun ein:dev-sys-info ()
   (list
    "EIN system info"
    :emacs-version (emacs-version)
+   :window-system window-system
+   ;; Emacs variant detection
+   ;; http://coderepos.org/share/browser/lang/elisp/init-loader/init-loader.el
+   :emacs-variant
+   (cond ((featurep 'meadow) 'meadow)
+         ((featurep 'carbon-emacs-package) 'carbon))
+   :os (list
+        :uname (ein:dev-stdout-program "uname" '("-a"))
+        :lsb-release (ein:dev-stdout-program "lsb_release" '("-a")))
    :image-types (ein:eval-if-bound 'image-types)
    :image-types-available (ein:filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
@@ -200,6 +217,49 @@ callback (`websocket-callback-debug-on-error') is enabled."
             (pp info buffer)
             (pop-to-buffer buffer)))
       (message "EIN INFO:\n%s" (pp-to-string info)))))
+
+;;;###autoload
+(defun ein:dev-bug-report-template ()
+  "Open a buffer with bug report template."
+  (interactive)
+  (let ((buffer (get-buffer-create "*ein:bug-report*")))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (insert "<!--
+This template is to help you write a good bug report.
+You may skip some sections, but please make sure to include
+the last section \"System info\", unless you find some
+personal information there.
+
+After finish writing it, please post it here:
+https://github.com/tkf/emacs-ipython-notebook/issues/new
+
+See also the EIN manual:
+http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
+-->
+
+## Steps to reproduce the problem
+
+1.
+2.
+3.
+
+## Expected output
+
+
+## Additional information (if any)
+
+
+")
+      (insert "## System info:\n\n```cl\n")
+      (condition-case err
+          (pp (ein:dev-sys-info) buffer)
+        (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
+      (insert "```\n")
+      (goto-char (point-min))
+      (when (fboundp 'markdown-mode)
+        (markdown-mode))
+      (pop-to-buffer buffer))))
 
 (defun ein:dev-print-sys-info ()
   (pp (ein:dev-sys-info)))

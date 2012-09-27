@@ -5,7 +5,7 @@
 
 ;;;### (autoloads (ein:connect-to-default-notebook ein:connect-buffer-to-notebook
 ;;;;;;  ein:connect-to-notebook-buffer ein:connect-to-notebook ein:connect-to-notebook-command)
-;;;;;;  "ein-connect" "ein-connect.el" (20546 25932))
+;;;;;;  "ein-connect" "ein-connect.el" (20558 28851))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -58,8 +58,9 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 ;;;***
 
-;;;### (autoloads (ein:dev-stop-debug ein:dev-start-debug ein:dev-insert-mode-map)
-;;;;;;  "ein-dev" "ein-dev.el" (20551 8284))
+;;;### (autoloads (ein:dev-bug-report-template ein:dev-stop-debug
+;;;;;;  ein:dev-start-debug ein:dev-insert-mode-map) "ein-dev" "ein-dev.el"
+;;;;;;  (20580 51266))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -79,11 +80,16 @@ Disable debugging support enabled by `ein:dev-start-debug'.
 
 \(fn)" t nil)
 
+(autoload 'ein:dev-bug-report-template "ein-dev" "\
+Open a buffer with bug report template.
+
+\(fn)" t nil)
+
 ;;;***
 
 ;;;### (autoloads (helm-ein-notebook-buffers anything-ein-notebook-buffers
 ;;;;;;  helm-ein-kernel-history anything-ein-kernel-history) "ein-helm"
-;;;;;;  "ein-helm.el" (20551 53895))
+;;;;;;  "ein-helm.el" (20575 4772))
 ;;; Generated autoloads from ein-helm.el
 
 (autoload 'anything-ein-kernel-history "ein-helm" "\
@@ -122,7 +128,7 @@ change in its input area.
 ;;;***
 
 ;;;### (autoloads (ein:junk-rename ein:junk-new) "ein-junk" "ein-junk.el"
-;;;;;;  (20546 25932))
+;;;;;;  (20571 14580))
 ;;; Generated autoloads from ein-junk.el
 
 (autoload 'ein:junk-new "ein-junk" "\
@@ -130,9 +136,7 @@ Open a notebook to try random thing.
 Notebook name is determined based on
 `ein:junk-notebook-name-template'.
 
-When any prefix argument is given, this command asks notebook
-name to be used.  When two universal prefix arguments (i.e.,
-``C-u C-u``) are given, this command asks URL or port to use.
+When prefix argument is given, it asks URL or port to use.
 
 \(fn NAME URL-OR-PORT)" t nil)
 
@@ -144,7 +148,7 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (20551 53895))
+;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (20558 31503))
 ;;; Generated autoloads from ein-kernel.el
 
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
@@ -153,7 +157,7 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20551 53895))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20575 4772))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -163,7 +167,7 @@ and save it immediately.
 ;;;### (autoloads (ein:notebooklist-load ein:notebooklist-open-notebook-global
 ;;;;;;  ein:notebooklist-list-notebooks ein:notebooklist-new-notebook-with-name
 ;;;;;;  ein:notebooklist-new-notebook ein:notebooklist-reload ein:notebooklist-open)
-;;;;;;  "ein-notebooklist" "ein-notebooklist.el" (20552 50557))
+;;;;;;  "ein-notebooklist" "ein-notebooklist.el" (20553 8403))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-open "ein-notebooklist" "\
@@ -281,7 +285,7 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-smartrep.el" "ein-subpackages.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el")
-;;;;;;  (20552 50853 628720))
+;;;;;;  (20580 51305 724567))
 
 ;;;***
 
