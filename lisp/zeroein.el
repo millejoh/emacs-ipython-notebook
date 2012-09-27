@@ -1,3 +1,5 @@
+#! /bin/sh
+":"; exec ${EMACS:-emacs} -Q -l "$0" "$@" # -*-emacs-lisp-*-
 ;;; zeroein.el --- Zero setup Emacs IPython Notebook client
 
 ;; Copyright (C) 2012- Takafumi Arakaki
