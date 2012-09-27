@@ -247,6 +247,16 @@ http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
 ## Expected output
 
 
+## Your EIN configuration (in .emacs.d/init.el or somewhere else)
+
+
+## Your IPython configuration
+
+1. How do you start IPython? (e.g., `ipython notebook --port 9999`):
+
+2. What is your IPython notebook port number or URL?:
+
+
 ## Additional information (if any)
 
 
