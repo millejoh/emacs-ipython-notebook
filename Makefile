@@ -54,3 +54,5 @@ travis-ci-testein: ert-compile env-ipy.$(IPY_VERSION)
 travis-ci-zeroein:
 	$(EMACS) --version
 	EMACS=$(EMACS) lisp/zeroein.el -batch
+	rm -rf lib/*
+	EMACS=$(EMACS) lisp/zeroein.el -batch
