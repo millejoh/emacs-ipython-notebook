@@ -1,8 +1,6 @@
 language: emacs-lisp
 before_install:
-  - if [ ! "$EIN_TEST_TARGET" = "travis-ci-zeroein" ]; then
-    git submodule --quiet update --init;
-    fi
+  - git submodule --quiet update --init
   - sudo apt-get install -qq python-virtualenv
   - if [ "$EMACS" = 'emacs-snapshot' ]; then
       sudo add-apt-repository -y ppa:cassou/emacs &&
