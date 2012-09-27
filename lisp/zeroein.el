@@ -85,7 +85,7 @@
 (when (featurep 'auto-complete-config)
   (ac-config-default)
   (add-to-list 'ac-dictionary-directories
-               (zeroein:path "auto-complete" "dict"))
+               (zeroein:path "lib" "auto-complete" "dict"))
   (global-auto-complete-mode t))
 
 ;; MuMaMo
