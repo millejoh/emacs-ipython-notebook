@@ -163,12 +163,13 @@ object).</li>
 <p>This is a quick and clean way to try EIN separately from your Emacs
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!:</p>
-<div class="highlight-python"><pre>git clone git://github.com/tkf/zeroein.git
-zeroein/zeroein.py</pre>
+<div class="highlight-python"><pre>git clone git://github.com/tkf/emacs-ipython-notebook.git
+lisp/zeroein.el</pre>
 </div>
-<p>This will launch a new Emacs instance.  For more information, see:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">zeroein</span><span class="o">/</span><span class="n">zeroein</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">help</span>
-</pre></div>
+<p>This will launch a new Emacs instance.</p>
+<p>You can use environment variable <tt class="docutils literal"><span class="pre">EMACS</span></tt> to control Emacs executable
+to use.:</p>
+<div class="highlight-python"><pre>EMACS=emacs-snapshot lisp/zeroein.el</pre>
 </div>
 </div>
 <div class="section" id="requirements">
@@ -176,7 +177,7 @@ zeroein/zeroein.py</pre>
 <ul class="simple">
 <li><a class="reference external" href="http://ipython.org/">IPython</a> 0.12 or higher.</li>
 <li><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a> 0.9</li>
-<li>(optional) <a class="reference external" href="http://www.emacswiki.org/emacs/MuMaMo">mumamo</a>:
+<li>(optional) <a class="reference external" href="http://www.emacswiki.org/emacs/MuMaMo">mumamo</a> developmental version:
 It will be automatically loaded when it is on the path.
 The official way to setup path is to load <a class="reference external" href="http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html">nXhtml</a>.</li>
 <li>(optional) markdown-mode</li>
@@ -303,9 +304,7 @@ Notebook is specified by a string NBPATH whose format is
 <dd><p>Open a notebook to try random thing.
 Notebook name is determined based on
 <a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></tt></a>.</p>
-<p>When any prefix argument is given, this command asks notebook
-name to be used.  When two universal prefix arguments (i.e.,
-<tt class="docutils literal"><span class="pre">C-u</span> <span class="pre">C-u</span></tt>) are given, this command asks URL or port to use.</p>
+<p>When prefix argument is given, it asks URL or port to use.</p>
 </dd></dl>
 
 <p>Keymap for <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-mode</span></tt>.</p>
@@ -1243,9 +1242,21 @@ to install it if you are using newer Emacs.</p>
 <div class="section" id="misc">
 <h3><a class="toc-backref" href="#id36">Misc</a><a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
+<dt id="helm-ein-kernel-history">
+<em class="property">function </em><tt class="descname">helm-ein-kernel-history</tt><a class="headerlink" href="#helm-ein-kernel-history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search kernel execution history then insert the selected one.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="helm-ein-notebook-buffers">
 <em class="property">function </em><tt class="descname">helm-ein-notebook-buffers</tt><a class="headerlink" href="#helm-ein-notebook-buffers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Choose opened notebook using helm interface.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="anything-ein-kernel-history">
+<em class="property">function </em><tt class="descname">anything-ein-kernel-history</tt><a class="headerlink" href="#anything-ein-kernel-history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search kernel execution history then insert the selected one.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1376,11 +1387,15 @@ and the first usable mode is used.  By default, MuMaMo is used when
 it is installed.  If not, a simple mode derived from <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt> is
 used.</p>
 <p>Examples:</p>
-<p>Avoid using MuMaMo even when it is installed:</p>
-<div class="highlight-python"><pre>(setq ein:notebook-modes (delq 'ein:notebook-mumamo-mode ein:notebook-modes))</pre>
-</div>
-<p>Do not use <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt>.  Use plain mode when MuMaMo is not installed:</p>
+<p>Use MuMaMo if it is installed.  Otherwise, use plain mode.
+This is the default setting:</p>
 <div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))</pre>
+</div>
+<p>Avoid using MuMaMo even when it is installed:</p>
+<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-plain-mode))</pre>
+</div>
+<p>Use simple <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt> based notebook mode when MuMaMo is not installed:</p>
+<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-python-mode))</pre>
 </div>
 </dd></dl>
 
@@ -1446,6 +1461,39 @@ format string which can be passed to <tt class="xref el el-symbol docutils liter
 <a class="reference internal" href="#ein:use-auto-complete" title="ein:use-auto-complete"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></tt></a> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></tt></a>)
 must be <tt class="xref el el-symbol docutils literal"><span class="pre">t</span></tt> to enable this option.  This variable has effect on
 notebook buffers and connected buffers.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:helm-kernel-history-search-key">
+<em class="property">variable </em><tt class="descname">ein:helm-kernel-history-search-key</tt><a class="headerlink" href="#ein:helm-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></tt></a> to this key in notebook mode.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>(setq ein:helm-kernel-history-search-key "\M-r")</pre>
+</div>
+<p>This key will be installed in the <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></tt>.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:anything-kernel-history-search-key">
+<em class="property">variable </em><tt class="descname">ein:anything-kernel-history-search-key</tt><a class="headerlink" href="#ein:anything-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></tt></a> to this key in notebook mode.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>(setq ein:anything-kernel-history-search-key "\M-r")</pre>
+</div>
+<p>This key will be installed in the <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></tt>.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:helm-kernel-history-search-auto-pattern">
+<em class="property">variable </em><tt class="descname">ein:helm-kernel-history-search-auto-pattern</tt><a class="headerlink" href="#ein:helm-kernel-history-search-auto-pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Automatically construct search pattern when non-<tt class="xref el el-symbol docutils literal"><span class="pre">nil</span></tt>.</p>
+<ol class="arabic simple">
+<li>Single space is converted to &#8220;*&#8221;.</li>
+<li>A backslash followed by a space is converted to a single space.</li>
+<li>A &#8220;*&#8221; is added at the end of the pattern.</li>
+</ol>
+<p>This variable applies to both <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></tt></a> and
+<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -1757,14 +1805,15 @@ the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference"
 in MuMaMo based notebook mode produces segfault.</p>
 <p>Also, <tt class="docutils literal"><span class="pre">mumamo-idle-set-major-mode</span></tt> messages error
 <tt class="docutils literal"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></tt>
-time to time, making minibuffer bit noisy while editing notebook.</p>
+time to time, making minibuffer bit noisy while editing notebook.
+See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
 </div>
 </div>
 <div class="section" id="advanced">
 <h2><a class="toc-backref" href="#id49">Advanced</a><a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
 <p>By telling IPython a little bit about Emacs Lisp, you can execute
 Emacs Lisp from IPython, just like you can execute Javascript in the
-web client.  See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py">emacslisp.py</a> for more details.</p>
+web client.  See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py">emacslisp.py</a> for more details.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
 <span class="o">%</span><span class="n">run</span> <span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">emacslisp</span><span class="o">.</span><span class="n">py</span>
 
@@ -1834,6 +1883,12 @@ with <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-st
 <div class="section" id="v0-2">
 <h2><a class="toc-backref" href="#id55">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Add helm/anything interface to search kernel history:
+<a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></tt></a> and
+<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></tt></a>.
+See also the configurable options to use these commands:
+<a class="reference internal" href="#ein:helm-kernel-history-search-key" title="ein:helm-kernel-history-search-key"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:helm-kernel-history-search-key</span></tt></a> and
+<a class="reference internal" href="#ein:anything-kernel-history-search-key" title="ein:anything-kernel-history-search-key"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:anything-kernel-history-search-key</span></tt></a>.</li>
 <li>Preliminary support for multiple worksheets.</li>
 <li>Rename notion of &#8220;scratch notebook&#8221; to &#8220;junk notebook&#8221;.
 This is to avoid confusion with newly added &#8220;scratch sheet&#8221;.

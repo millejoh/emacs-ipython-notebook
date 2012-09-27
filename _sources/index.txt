@@ -71,12 +71,15 @@ This is a quick and clean way to try EIN separately from your Emacs
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
-   git clone git://github.com/tkf/zeroein.git
-   zeroein/zeroein.py
+   git clone git://github.com/tkf/emacs-ipython-notebook.git
+   lisp/zeroein.el
 
-This will launch a new Emacs instance.  For more information, see::
+This will launch a new Emacs instance.
 
-   zeroein/zeroein.py --help
+You can use environment variable ``EMACS`` to control Emacs executable
+to use.::
+
+   EMACS=emacs-snapshot lisp/zeroein.el
 
 
 Requirements
@@ -84,7 +87,7 @@ Requirements
 
 * IPython_ 0.12 or higher.
 * `websocket.el`_ 0.9
-* (optional) mumamo_:
+* (optional) mumamo_ developmental version:
   It will be automatically loaded when it is on the path.
   The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
@@ -283,8 +286,10 @@ Misc
 ^^^^
 
 .. el:package:: helm
+.. el:function:: helm-ein-kernel-history
 .. el:function:: helm-ein-notebook-buffers
 .. el:package:: anything
+.. el:function:: anything-ein-kernel-history
 .. el:function:: anything-ein-notebook-buffers
 .. el:package:: ein
 
@@ -327,6 +332,9 @@ Notebook
 .. el:variable:: ein:junk-notebook-name-template
 .. el:variable:: ein:iexec-delay
 .. el:variable:: ein:complete-on-dot
+.. el:variable:: ein:helm-kernel-history-search-key
+.. el:variable:: ein:anything-kernel-history-search-key
+.. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
 
@@ -414,6 +422,7 @@ in MuMaMo based notebook mode produces segfault.
 Also, ``mumamo-idle-set-major-mode`` messages error
 ``(wrong-type-argument listp python-saved-check-command)``
 time to time, making minibuffer bit noisy while editing notebook.
+See Tips_ to fix this problem.
 
 
 Advanced
@@ -434,7 +443,7 @@ web client.  See `emacslisp.py`_ for more details.
    6
 
 .. _`emacslisp.py`:
-  https://github.com/tkf/emacs-ipython-notebook/blob/master/emacslisp.py
+  https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py
 
 
 Reporting issue
@@ -499,6 +508,12 @@ Change Log
 v0.2
 ----
 
+* Add helm/anything interface to search kernel history:
+  :el:symbol:`helm-ein-kernel-history` and
+  :el:symbol:`anything-ein-kernel-history`.
+  See also the configurable options to use these commands:
+  :el:symbol:`ein:helm-kernel-history-search-key` and
+  :el:symbol:`ein:anything-kernel-history-search-key`.
 * Preliminary support for multiple worksheets.
 * Rename notion of "scratch notebook" to "junk notebook".
   This is to avoid confusion with newly added "scratch sheet".
