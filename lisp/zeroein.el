@@ -28,7 +28,8 @@
 ;;; Code:
 
 
-;;; load-path configurations
+;;; Utilities
+
 (defvar zeroein:lisp-dir
   (or (if load-file-name (file-name-directory load-file-name))
       default-directory))
@@ -43,11 +44,17 @@
            (concat (file-name-as-directory p) (car ps)) (cdr ps))
     (concat zeroein:root-dir p)))
 
+(defvar zeroein:dependencies
+  '("nxhtml" "markdown-mode" "websocket" "python"
+    "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
+
+
+;;; `load-path' configurations
+
 (add-to-list 'load-path (zeroein:path "lisp"))
 
 (mapc (lambda (path) (add-to-list 'load-path (zeroein:path "lib" path)))
-      '("markdown-mode" "websocket" "python" "auto-complete"
-        "popup" "fuzzy" "pos-tip" "smartrep"))
+      zeroein:dependencies)
 
 (load (zeroein:path "lib" "nxhtml" "autostart.el"))
 
