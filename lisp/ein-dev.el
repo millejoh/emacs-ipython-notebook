@@ -176,10 +176,27 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (list :name name
         :path (ein:aand (locate-library name) (abbreviate-file-name it))))
 
+(defun ein:dev-stdout-program (command args)
+  "Safely call COMMAND with ARGS and return its stdout."
+  (ein:aand (executable-find command)
+            (with-temp-buffer
+              (erase-buffer)
+              (apply #'call-process it nil t nil args)
+              (buffer-string))))
+
 (defun ein:dev-sys-info ()
   (list
    "EIN system info"
    :emacs-version (emacs-version)
+   :window-system window-system
+   ;; Emacs variant detection
+   ;; http://coderepos.org/share/browser/lang/elisp/init-loader/init-loader.el
+   :emacs-variant
+   (cond ((featurep 'meadow) 'meadow)
+         ((featurep 'carbon-emacs-package) 'carbon))
+   :os (list
+        :uname (ein:dev-stdout-program "uname" '("-a"))
+        :lsb-release (ein:dev-stdout-program "lsb_release" '("-a")))
    :image-types (ein:eval-if-bound 'image-types)
    :image-types-available (ein:filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
