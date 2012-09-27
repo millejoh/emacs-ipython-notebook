@@ -9,13 +9,15 @@ before_install:
           emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot;
     fi
 env:
-  - IPY_VERSION=dev    EMACS=emacs
-  - IPY_VERSION=0.13.0 EMACS=emacs
-  - IPY_VERSION=0.12.1 EMACS=emacs
-  - IPY_VERSION=0.12.0 EMACS=emacs
-  - IPY_VERSION=dev    EMACS=emacs-snapshot
-  - IPY_VERSION=0.13.0 EMACS=emacs-snapshot
-  - IPY_VERSION=0.12.1 EMACS=emacs-snapshot
-  - IPY_VERSION=0.12.0 EMACS=emacs-snapshot
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=dev    EMACS=emacs
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.13.0 EMACS=emacs
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.1 EMACS=emacs
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.0 EMACS=emacs
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=dev    EMACS=emacs-snapshot
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.13.0 EMACS=emacs-snapshot
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.1 EMACS=emacs-snapshot
+  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.0 EMACS=emacs-snapshot
+  - EIN_TEST_TARGET=travis-ci-zeroein EMACS=emacs
+  - EIN_TEST_TARGET=travis-ci-zeroein EMACS=emacs-snapshot
 script:
-  make travis-ci EMACS=$EMACS IPY_VERSION=$IPY_VERSION
+  make $EIN_TEST_TARGET EMACS=$EMACS IPY_VERSION=$IPY_VERSION

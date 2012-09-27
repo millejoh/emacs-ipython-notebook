@@ -71,12 +71,15 @@ This is a quick and clean way to try EIN separately from your Emacs
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
-   git clone git://github.com/tkf/zeroein.git
-   zeroein/zeroein.py
+   git clone git://github.com/tkf/emacs-ipython-notebook.git
+   lisp/zeroein.el
 
-This will launch a new Emacs instance.  For more information, see::
+This will launch a new Emacs instance.
 
-   zeroein/zeroein.py --help
+You can use environment variable ``EMACS`` to control Emacs executable
+to use.::
+
+   EMACS=emacs-snapshot lisp/zeroein.el
 
 
 Requirements
