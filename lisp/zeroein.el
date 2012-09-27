@@ -109,4 +109,9 @@
                   'font-lock-syntactic-keywords)))
 ;; See: http://stackoverflow.com/a/5470584/727827
 
+
+;;; Finally, open notebook list
+(unless noninteractive
+  (call-interactively #'ein:notebooklist-open))
+
 ;;; zeroein.el ends here
