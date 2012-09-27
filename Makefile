@@ -44,9 +44,13 @@ env-clean:
 log-clean:
 	rm -rf log
 
-travis-ci: ert-compile env-ipy.$(IPY_VERSION)
+travis-ci-testein: ert-compile env-ipy.$(IPY_VERSION)
 	$(EMACS) --version
 	python --version
 	env/ipy.$(IPY_VERSION)/bin/ipython --version
 	$(TESTEIN) --clean-elc -e $(EMACS) \
 		--ipython env/ipy.$(IPY_VERSION)/bin/ipython
+
+travis-ci-zeroein:
+	$(EMACS) --version
+	EMACS=$(EMACS) lisp/zeroein.el -batch
