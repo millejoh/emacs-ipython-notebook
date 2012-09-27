@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+
 
 ;;; Utilities
 
@@ -47,6 +49,17 @@
 (defvar zeroein:dependencies
   '("nxhtml" "markdown-mode" "websocket" "python"
     "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
+
+
+;;; Install dependencies
+
+(unless (loop for path in zeroein:dependencies
+              unless (file-exists-p (zeroein:path "lib" path))
+              return nil
+              finally return t)
+  (call-process "git" nil (get-buffer "*Messages*") nil
+                "submodule" "update" "--init"))
+
 
 
 ;;; `load-path' configurations
