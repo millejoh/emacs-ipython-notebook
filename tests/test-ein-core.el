@@ -16,6 +16,12 @@
   (let ((default-directory "/tmp/"))
     (should (string-prefix-p ein:version (ein:version)))))
 
+(ert-deftest ein:version-func-outside-of-git-repo ()
+  (flet ((ein:git-root-p (dir) nil))
+    (should (equal (ein:version) ein:version)))
+  (flet ((ein:git-revision-dirty () nil))
+    (should (equal (ein:version) ein:version))))
+
 
 
 ;; Generic getter
