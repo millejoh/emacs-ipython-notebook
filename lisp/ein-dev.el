@@ -247,10 +247,17 @@ personal information there.
 
 After finish writing it, please post it here:
 https://github.com/tkf/emacs-ipython-notebook/issues/new
-
-See also the EIN manual:
-http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
 -->
+
+## Please read \"Avoid standard Emacs traps\" first
+
+Please read \"Avoid standard Emacs traps\" section in
+https://github.com/tkf/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
+and make sure that your problem is not the one of them.
+
+When done, remove this section from your bug report then fill the
+next sections.
+
 
 ## Steps to reproduce the problem
 
