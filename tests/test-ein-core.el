@@ -4,9 +4,17 @@
 (require 'ein-core)
 
 
+
+;;; `ein:version'
+
 (ert-deftest ein:version ()
   "Check if `ein:version' can be parsed by `version-to-list'."
   (version-to-list ein:version))
+
+(ert-deftest ein:version-func-prefix-is-the-variable ()
+  (should (string-prefix-p ein:version (ein:version)))
+  (let ((default-directory "/tmp/"))
+    (should (string-prefix-p ein:version (ein:version)))))
 
 
 

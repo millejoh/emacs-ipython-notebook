@@ -118,6 +118,16 @@ pair of TO-PYTHON and FROM-PYTHON."
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
+(defun ein:version ()
+  "Return a string containing `ein:version' and git revision if
+the source is in git repository."
+  (ein:aif (when (ein:git-root-p
+                  (concat (file-name-as-directory ein:source-dir) ".."))
+             (let ((default-directory ein:source-dir))
+               (ein:git-revision-dirty)))
+      (concat ein:version "." it)
+    ein:version))
+
 
 
 ;;; File name translation (tramp support)
