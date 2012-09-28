@@ -486,6 +486,9 @@ Use `ein:log' for debugging and logging."
 ;;; Git utilities
 
 (defun ein:call-process (command &optional args)
+  "Call COMMAND with ARGS and return its stdout as string or
+`nil' if COMMAND fails.  It also checks if COMMAND executable
+exists or not."
   (with-temp-buffer
     (erase-buffer)
     (and (executable-find command)
