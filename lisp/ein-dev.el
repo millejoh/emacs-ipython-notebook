@@ -173,8 +173,16 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq ein:notebook-modes '(ein:notebook-org-src-mode)))
 
 (defun ein:dev-sys-info--lib (name)
-  (list :name name
-        :path (ein:aand (locate-library name) (abbreviate-file-name it))))
+  (let* ((libsym (intern-soft name))
+         (version-var (loop for fmt in '("%s-version" "%s:version")
+                            if (intern-soft (format fmt name))
+                            return it))
+         (version (symbol-value version-var)))
+    (list :name name
+          :path (ein:aand (locate-library name) (abbreviate-file-name it))
+          :featurep (featurep libsym)
+          :version-var version-var
+          :version version)))
 
 (defun ein:dev-dump-vars (names)
   (loop for var in names
