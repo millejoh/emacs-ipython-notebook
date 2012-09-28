@@ -1,6 +1,36 @@
+# Contribution guide line
+
 Please use `M-x ein:dev-bug-report-template` to write a bug report.
 It pops up a buffer containing some system information and instruction
 for bug report.
+
+
+## Avoid standard Emacs traps
+
+### Badly compiled file
+
+Remove all `*.elc` files from EIN source directory and its
+dependencies.  Then restart Emacs and try the procedure to reproduce
+the problem again.
+
+You will have problem with compiled files if they are older than the
+source files and/or the files are compiled with different Emacs
+versions.
+
+
+### Make sure that the right library is loaded.
+
+Sometimes you accidentally load libraries from unexpected location,
+if you installed it in different places in the past or another
+Emacs lisp libraries you are using bundles the old version of the
+libraries.
+
+To make sure that all EIN dependencies are loaded from the intended
+place, use `M-x locate-library`.  Also, `M-x ein:dev-bug-report-template`
+does it for you for all EIN dependencies.
+
+
+## Investigate the problem further
 
 If you want to investigate the problem further, please read:
 http://tkf.github.com/emacs-ipython-notebook/#reporting-issue

@@ -173,8 +173,21 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq ein:notebook-modes '(ein:notebook-org-src-mode)))
 
 (defun ein:dev-sys-info--lib (name)
-  (list :name name
-        :path (ein:aand (locate-library name) (abbreviate-file-name it))))
+  (let* ((libsym (intern-soft name))
+         (version-var (loop for fmt in '("%s-version" "%s:version")
+                            if (intern-soft (format fmt name))
+                            return it))
+         (version (symbol-value version-var)))
+    (list :name name
+          :path (ein:aand (locate-library name) (abbreviate-file-name it))
+          :featurep (featurep libsym)
+          :version-var version-var
+          :version version)))
+
+(defun ein:dev-dump-vars (names)
+  (loop for var in names
+        collect (intern (format ":%s" var))
+        collect (symbol-value (intern (format "ein:%s" var)))))
 
 (defun ein:dev-stdout-program (command args)
   "Safely call COMMAND with ARGS and return its stdout."
@@ -200,6 +213,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
    :image-types (ein:eval-if-bound 'image-types)
    :image-types-available (ein:filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
+   :ein (ein:dev-dump-vars '("version" "source-dir"))
    :lib (mapcar #'ein:dev-sys-info--lib
                 '("websocket" "auto-complete" "mumamo"
                   "auto-complete" "popup" "fuzzy" "pos-tip"
@@ -233,10 +247,17 @@ personal information there.
 
 After finish writing it, please post it here:
 https://github.com/tkf/emacs-ipython-notebook/issues/new
-
-See also the EIN manual:
-http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
 -->
+
+## Please read \"Avoid standard Emacs traps\" first
+
+Please read \"Avoid standard Emacs traps\" section in
+https://github.com/tkf/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
+and make sure that your problem is not the one of them.
+
+When done, remove this section from your bug report then fill the
+next sections.
+
 
 ## Steps to reproduce the problem
 
