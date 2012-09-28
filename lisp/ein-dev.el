@@ -176,6 +176,11 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (list :name name
         :path (ein:aand (locate-library name) (abbreviate-file-name it))))
 
+(defun ein:dev-dump-vars (names)
+  (loop for var in names
+        collect (intern (format ":%s" var))
+        collect (symbol-value (intern (format "ein:%s" var)))))
+
 (defun ein:dev-stdout-program (command args)
   "Safely call COMMAND with ARGS and return its stdout."
   (ein:aand (executable-find command)
@@ -200,6 +205,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
    :image-types (ein:eval-if-bound 'image-types)
    :image-types-available (ein:filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
+   :ein (ein:dev-dump-vars '("version" "source-dir"))
    :lib (mapcar #'ein:dev-sys-info--lib
                 '("websocket" "auto-complete" "mumamo"
                   "auto-complete" "popup" "fuzzy" "pos-tip"
