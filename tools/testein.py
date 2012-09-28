@@ -354,13 +354,13 @@ def run_ein_test(unit_test, func_test, clean_elc, dry_run, **kwds):
     if unit_test:
         unit_test_runner = TestRunner(testfile='test-load.el', **kwds)
         if dry_run:
-            print construct_command(unit_test_runner.command())
+            print construct_command(unit_test_runner.command)
         elif unit_test_runner.run() != 0:
             return 1
     if func_test:
         func_test_runner = TestRunner(testfile='func-test.el', **kwds)
         if dry_run:
-            print construct_command(func_test_runner.command())
+            print construct_command(func_test_runner.command)
         else:
             with ServerRunner(testfile='func-test.el', **kwds) as port:
                 func_test_runner.setq('ein:testing-port', port)
