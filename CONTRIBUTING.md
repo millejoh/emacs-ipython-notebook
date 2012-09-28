@@ -30,7 +30,8 @@ place, use `M-x locate-library`.  Also, `M-x ein:dev-bug-report-template`
 does it for you for all EIN dependencies.
 
 
-## Investigate the problem further
+## Log and backtrace
 
-If you want to investigate the problem further, please read:
+Please consider putting log and backtrace in your bug report.
+Follow the instruction in the manual:
 http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
