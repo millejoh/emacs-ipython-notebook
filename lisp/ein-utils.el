@@ -483,6 +483,40 @@ Use `ein:log' for debugging and logging."
           list-name-callback))
 
 
+;;; Git utilities
+
+(defun ein:call-process (command &optional args)
+  "Call COMMAND with ARGS and return its stdout as string or
+`nil' if COMMAND fails.  It also checks if COMMAND executable
+exists or not."
+  (with-temp-buffer
+    (erase-buffer)
+    (and (executable-find command)
+         (= (apply #'call-process command nil t nil args) 0)
+         (buffer-string))))
+
+(defun ein:git-root-p (&optional dir)
+  "Return `t' when DIR is root of git repository."
+  (file-directory-p (expand-file-name ".git" (or dir default-directory))))
+
+(defun ein:git-dirty-p ()
+  "Return `t' if the current directory is in git repository and it is dirty."
+  (not (equal (ein:call-process
+               "git" '("--no-pager" "status" "--porcelain"))
+              "")))
+
+(defun ein:git-revision ()
+  "Return abbreviated git revision if the current directory is in
+git repository."
+  (ein:call-process "git" '("--no-pager" "log" "-n1" "--format=format:%h")))
+
+(defun ein:git-revision-dirty ()
+  "Return `ein:git-revision' + \"-dirty\" suffix if the current
+directory is in a dirty git repository."
+  (ein:aand (ein:git-revision)
+            (concat it (if (ein:git-dirty-p) "-dirty" ""))))
+
+
 ;;; utils.js compatible
 
 (defun ein:utils-uuid ()
