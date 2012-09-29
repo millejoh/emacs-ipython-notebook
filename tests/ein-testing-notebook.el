@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+
 (require 'ein-notebook)
 (require 'ein-testing-cell)
 
