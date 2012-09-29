@@ -395,6 +395,8 @@ notebook."
   :group 'ein
   (ein:complete-on-dot-install ein:connect-mode-map))
 
+(put 'ein:connect-mode 'permanent-local t)
+
 
 (provide 'ein-connect)
 

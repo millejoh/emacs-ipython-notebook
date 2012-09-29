@@ -33,3 +33,15 @@
   (eintest:with-connected-buffer
     ;; FIXME: write test with non-empty TB
     (should-not (ein:get-traceback-data))))
+
+(ert-deftest ein:connect-mode-revert-buffer-resistance ()
+  (let ((temp-file (make-temp-file "ein")))
+    (unwind-protect
+        (with-temp-buffer
+          (setq buffer-file-name temp-file)
+          (ein:connect-mode 1)
+          (setq ein:%connect% 'very-important-value)
+          (revert-buffer t t nil)
+          (should ein:connect-mode)
+          (should (eq ein:%connect% 'very-important-value)))
+      (delete-file temp-file))))
