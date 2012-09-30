@@ -26,12 +26,25 @@
 
 ;;; Code:
 
-;; TODO: remove dependency on org-mode.
+;; It would be nice if org-src is available, but this module should
+;; work without org-src.  Data on `org-src-lang-modes' is used
+;; if this variable is bound.
 (require 'org-src nil t)
+
+(defun ein:mlf-get-lang-mode (lang)
+  "Return major mode for LANG.
+Modified version of `org-src-get-lang-mode'."
+  (when (symbolp lang)
+    (setq lang (symbol-name lang)))
+  (intern
+   (format "%s-mode"
+           (or (and (bound-and-true-p org-src-lang-modes)
+                    (cdr (assoc lang org-src-lang-modes)))
+               lang))))
 
 (defun ein:mlf-font-lock-fontify-block (lang start end)
   "Patched version of `org-src-font-lock-fontify-block'."
-  (let ((lang-mode (org-src-get-lang-mode lang)))
+  (let ((lang-mode (ein:mlf-get-lang-mode lang)))
     (if (fboundp lang-mode)
         (let ((string (buffer-substring-no-properties start end))
               (modified (buffer-modified-p))
