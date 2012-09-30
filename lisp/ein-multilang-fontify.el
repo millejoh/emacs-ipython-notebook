@@ -30,11 +30,14 @@
 (require 'org-src nil t)
 
 (defun ein:mlf-font-lock-fontify-block (lang start end)
+  "Patched version of `org-src-font-lock-fontify-block'."
   (let ((lang-mode (org-src-get-lang-mode lang)))
     (if (fboundp lang-mode)
         (let ((string (buffer-substring-no-properties start end))
               (modified (buffer-modified-p))
-              (org-buffer (current-buffer)) pos next)
+              (orig-buffer (current-buffer))
+              pos
+              next)
           (remove-text-properties start end '(face nil))
           (with-current-buffer
               (get-buffer-create
@@ -49,7 +52,7 @@
                ;; `font-lock-face' property is used instead of `font'.
                ;; This is the only difference from org-src.
                (+ start (1- pos)) (+ start next) 'font-lock-face
-               (get-text-property pos 'face) org-buffer)
+               (get-text-property pos 'face) orig-buffer)
               (setq pos next)))
           (add-text-properties
            start end
