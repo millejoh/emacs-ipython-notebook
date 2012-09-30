@@ -167,10 +167,10 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (interactive)
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode)))
 
-(defun ein:dev-notebook-org-src-mode ()
-  "Use `ein:notebook-org-src-mode'."
+(defun ein:dev-notebook-multilang-mode ()
+  "Use `ein:notebook-multilang-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-org-src-mode)))
+  (setq ein:notebook-modes '(ein:notebook-multilang-mode)))
 
 (defun ein:dev-sys-info--lib (name)
   (let* ((libsym (intern-soft name))
