@@ -513,6 +513,9 @@ Change Log
 v0.2
 ----
 
+* Add built-in multiple language fontification for notebook:
+  :el:symbol:`ein:notebook-multilang-mode`.
+  This is the new default for :el:symbol:`ein:notebook-modes`.
 * Add helm/anything interface to search kernel history:
   :el:symbol:`helm-ein-kernel-history` and
   :el:symbol:`anything-ein-kernel-history`.
