@@ -977,18 +977,23 @@ associated with current buffer (if any)."
 ;;; Notebook mode
 
 (defcustom ein:notebook-modes
-  '(ein:notebook-mumamo-mode ein:notebook-plain-mode)
+  '(ein:notebook-multilang-mode)
   "Notebook modes to use \(in order of preference).
 
 When the notebook is opened, mode in this value is checked one by one
-and the first usable mode is used.  By default, MuMaMo is used when
-it is installed.  If not, a simple mode derived from `python-mode' is
-used.
+and the first usable mode is used.
+
+Available modes:
+
+* `ein:notebook-multilang-mode'
+* `ein:notebook-mumamo-mode'
+* `ein:notebook-python-mode'
+* `ein:notebook-plain-mode'
 
 Examples:
 
 Use MuMaMo if it is installed.  Otherwise, use plain mode.
-This is the default setting::
+This is the old default setting::
 
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
 
@@ -1000,7 +1005,8 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
   (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-python-mode))
 "
-  :type '(repeat (choice (const :tag "MuMaMo" ein:notebook-mumamo-mode)
+  :type '(repeat (choice (const :tag "Multi-lang" ein:notebook-multilang-mode)
+                         (const :tag "MuMaMo" ein:notebook-mumamo-mode)
                          (const :tag "Only Python" ein:notebook-python-mode)
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
@@ -1016,8 +1022,6 @@ This hook is run regardless the actual major mode used."
   ;; So try to load extra modules here.
   (when (require 'mumamo nil t)
     (require 'ein-mumamo))
-  (when (require 'org-src nil t)
-    (require 'ein-org-src))
   ;; Return first matched mode
   (loop for mode in ein:notebook-modes
         if (functionp mode)
