@@ -84,6 +84,7 @@ This function may raise an error."
          t nil nil
          ein:ml-back-to-prev-node)))
 
+;;;###autoload
 (define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
   "Notebook mode with org-mode powered fontification."
   (make-local-variable 'indent-line-function)
