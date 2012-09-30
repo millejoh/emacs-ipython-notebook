@@ -5,7 +5,7 @@
 
 ;;;### (autoloads (ein:connect-to-default-notebook ein:connect-buffer-to-notebook
 ;;;;;;  ein:connect-to-notebook-buffer ein:connect-to-notebook ein:connect-to-notebook-command)
-;;;;;;  "ein-connect" "ein-connect.el" (20558 28851))
+;;;;;;  "ein-connect" "ein-connect.el" (20583 22543))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -60,7 +60,7 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 ;;;### (autoloads (ein:dev-bug-report-template ein:dev-stop-debug
 ;;;;;;  ein:dev-start-debug ein:dev-insert-mode-map) "ein-dev" "ein-dev.el"
-;;;;;;  (20580 51266))
+;;;;;;  (20584 36124))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -148,7 +148,7 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (20558 31503))
+;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (20584 30476))
 ;;; Generated autoloads from ein-kernel.el
 
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
@@ -157,7 +157,18 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20575 4772))
+;;;### (autoloads (ein:notebook-multilang-mode) "ein-multilang" "ein-multilang.el"
+;;;;;;  (20584 36965))
+;;; Generated autoloads from ein-multilang.el
+
+(autoload 'ein:notebook-multilang-mode "ein-multilang" "\
+Notebook mode with multiple language fontification.
+
+\(fn)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20584 36788))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -280,12 +291,12 @@ Show full traceback in traceback viewer.
 
 ;;;### (autoloads nil nil ("debug-ein.el" "ein-ac.el" "ein-cell.el"
 ;;;;;;  "ein-completer.el" "ein-core.el" "ein-events.el" "ein-kernelinfo.el"
-;;;;;;  "ein-kill-ring.el" "ein-log.el" "ein-mumamo.el" "ein-node.el"
-;;;;;;  "ein-notification.el" "ein-org-src.el" "ein-output-area.el"
+;;;;;;  "ein-kill-ring.el" "ein-log.el" "ein-multilang-fontify.el"
+;;;;;;  "ein-mumamo.el" "ein-node.el" "ein-notification.el" "ein-output-area.el"
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-smartrep.el" "ein-subpackages.el"
-;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el")
-;;;;;;  (20580 51305 724567))
+;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
+;;;;;;  "zeroein.el") (20584 37071 86259))
 
 ;;;***
 
