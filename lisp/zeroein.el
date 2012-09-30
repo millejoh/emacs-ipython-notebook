@@ -47,8 +47,12 @@
     (concat zeroein:root-dir p)))
 
 (defvar zeroein:dependencies
-  '("nxhtml" "markdown-mode" "websocket" "python"
+  '("nxhtml" "markdown-mode" "websocket"
     "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
+
+;; Loading the new python.el fails in Emacs 23.
+(when (>= emacs-major-version 24)
+  (add-to-list 'zeroein:dependencies "python"))
 
 
 ;;; Install dependencies
