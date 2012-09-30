@@ -86,7 +86,7 @@ This function may raise an error."
 
 ;;;###autoload
 (define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
-  "Notebook mode with org-mode powered fontification."
+  "Notebook mode with multiple language fontification."
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
   (ein:ml-keymap-setup-python)
