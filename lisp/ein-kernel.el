@@ -49,9 +49,9 @@
   kernel-id
   shell-channel
   iopub-channel
-  base-url
-  kernel-url
-  ws-url
+  base-url                              ; /kernels/
+  kernel-url                            ; /kernels/<KERNEL-ID>
+  ws-url                                ; ws://<URL>[:<PORT>]
   running
   username
   session-id
