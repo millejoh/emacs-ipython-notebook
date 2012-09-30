@@ -32,14 +32,14 @@
 
 (require 'ein-worksheet)
 
-(defun ein:org-src-fontify (limit)
+(defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
 return `t' or `nil' if not found.
 See info node `(elisp) Search-based Fontification'."
   (ein:log-ignore-errors
-    (ein:org-src-fontify-1 limit)))
+    (ein:ml-fontify-1 limit)))
 
-(defun ein:org-src-current-or-next-input-cell (ewoc-node)
+(defun ein:ml-current-or-next-input-cell (ewoc-node)
   "Almost identical to `ein:worksheet-next-input-cell' but return
 the current cell if EWOC-NODE is the input area node."
   (let* ((ewoc-data (ewoc-data ewoc-node))
@@ -50,12 +50,12 @@ the current cell if EWOC-NODE is the input area node."
         cell
       (ein:cell-next cell))))
 
-(defun ein:org-src-fontify-1 (limit)
-  "Actual implementation of `ein:org-src-fontify'.
+(defun ein:ml-fontify-1 (limit)
+  "Actual implementation of `ein:ml-fontify'.
 This function may raise an error."
   (ein:and-let* ((pos (point))
                  (node (ein:worksheet-get-nearest-cell-ewoc-node pos limit))
-                 (cell (ein:org-src-current-or-next-input-cell node))
+                 (cell (ein:ml-current-or-next-input-cell node))
                  (start (ein:cell-input-pos-min cell))
                  (end   (ein:cell-input-pos-max cell))
                  ((<= end limit))
@@ -69,27 +69,27 @@ This function may raise an error."
       (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :footer)))
     t))
 
-(defun ein:org-src-back-to-prev-node ()
+(defun ein:ml-back-to-prev-node ()
   (ein:aand (ein:worksheet-get-ewoc) (ewoc-goto-prev it 1)))
 
-(defvar ein:org-src-font-lock-keywords
-  '((ein:org-src-fontify))
+(defvar ein:ml-font-lock-keywords
+  '((ein:ml-fontify))
   "Default `font-lock-keywords' for `ein:notebook-org-src-mode'.")
 
-(defun ein:org-src-set-font-lock-defaults ()
+(defun ein:ml-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
-       '(ein:org-src-font-lock-keywords
+       '(ein:ml-font-lock-keywords
          ;; The following are adapted from org-mode but I am not sure
          ;; if I need them:
          t nil nil
-         ein:org-src-back-to-prev-node)))
+         ein:ml-back-to-prev-node)))
 
 (define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
   "Notebook mode with org-mode powered fontification."
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
-  (ein:org-src-keymap-setup-python)
-  (ein:org-src-set-font-lock-defaults))
+  (ein:ml-keymap-setup-python)
+  (ein:ml-set-font-lock-defaults))
 
 (eval-after-load "auto-complete"
   '(add-to-list 'ac-modes 'ein:notebook-org-src-mode))
@@ -97,7 +97,7 @@ This function may raise an error."
 
 ;;; Keymap setup functions
 
-(defun ein:org-src-keymap-setup-python ()
+(defun ein:ml-keymap-setup-python ()
   (when (boundp 'python-mode-map)
     (set-keymap-parent ein:notebook-org-src-mode-map python-mode-map))
   (cond
@@ -108,22 +108,22 @@ This function may raise an error."
     ;; FIXME: write keymap setup for python-mode.el
     )))
 
-(defun ein:org-src-keymap-setup-markdown ()
+(defun ein:ml-keymap-setup-markdown ()
   "Use `markdown-mode-map'.  NOTE: This function is not used now."
   (when (featurep 'markdown-mode)
     (set-keymap-parent ein:notebook-org-src-mode-map markdown-mode-map)))
 
-;; FIXME: dynamically call ein:org-src-keymap-setup-LANG using
+;; FIXME: dynamically call ein:ml-keymap-setup-LANG using
 ;;        `post-command-hook'.
-;; FIMXE: add more ein:org-src-keymap-setup-LANG to switch kaymap.
+;; FIMXE: add more ein:ml-keymap-setup-LANG to switch kaymap.
 
 
 ;;; yasnippet
 
-(defvar ein:org-src-yasnippet-parents '(python-mode markdown-mode)
+(defvar ein:ml-yasnippet-parents '(python-mode markdown-mode)
   "Parent modes for `ein:notebook-org-src-mode' to register in yasnippet.")
 
-(defun ein:org-src-setup-yasnippet ()
+(defun ein:ml-setup-yasnippet ()
   (loop for define-parents in '(yas/define-parents
                                 yas--define-parents)
         when (fboundp define-parents)
@@ -132,9 +132,9 @@ This function may raise an error."
              (let ((mode-sym 'ein:notebook-org-src-mode))
                (funcall define-parents
                         mode-sym
-                        ein:org-src-yasnippet-parents)))))
+                        ein:ml-yasnippet-parents)))))
 
-(eval-after-load "yasnippet" '(ein:org-src-setup-yasnippet))
+(eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 
 (provide 'ein-org-src)
 
