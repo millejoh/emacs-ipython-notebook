@@ -1,4 +1,4 @@
-;;; ein-org-src.el --- Notebook mode using org-src.el
+;;; ein-multilang.el --- Notebook mode with multiple language fontification
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -6,18 +6,18 @@
 
 ;; This file is NOT part of GNU Emacs.
 
-;; ein-org-src.el is free software: you can redistribute it and/or modify
+;; ein-multilang.el is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; ein-org-src.el is distributed in the hope that it will be useful,
+;; ein-multilang.el is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with ein-org-src.el.
+;; along with ein-multilang.el.
 ;; If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
@@ -27,10 +27,10 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'org-src nil t)
 (eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)
+(require 'ein-multilang-fontify)
 
 (defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -62,7 +62,7 @@ This function may raise an error."
                  ((< start end))
                  (lang (ein:cell-language cell)))
     (let ((inhibit-read-only t))
-      (org-src-font-lock-fontify-block lang start end)
+      (ein:mlf-font-lock-fontify-block lang start end)
       ;; Emacs fontification mechanism requires the function to move
       ;; the point.  Do *not* use `(goto-char end)'.  As END is in the
       ;; input area, fontification falls into an infinite loop.
@@ -74,7 +74,7 @@ This function may raise an error."
 
 (defvar ein:ml-font-lock-keywords
   '((ein:ml-fontify))
-  "Default `font-lock-keywords' for `ein:notebook-org-src-mode'.")
+  "Default `font-lock-keywords' for `ein:notebook-multilang-mode'.")
 
 (defun ein:ml-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
@@ -84,7 +84,7 @@ This function may raise an error."
          t nil nil
          ein:ml-back-to-prev-node)))
 
-(define-derived-mode ein:notebook-org-src-mode fundamental-mode "ein:os"
+(define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
   "Notebook mode with org-mode powered fontification."
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
@@ -92,14 +92,14 @@ This function may raise an error."
   (ein:ml-set-font-lock-defaults))
 
 (eval-after-load "auto-complete"
-  '(add-to-list 'ac-modes 'ein:notebook-org-src-mode))
+  '(add-to-list 'ac-modes 'ein:notebook-multilang-mode))
 
 
 ;;; Keymap setup functions
 
 (defun ein:ml-keymap-setup-python ()
   (when (boundp 'python-mode-map)
-    (set-keymap-parent ein:notebook-org-src-mode-map python-mode-map))
+    (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
   (cond
    ((featurep 'python)
     (setq indent-line-function #'python-indent-line-function)
@@ -111,7 +111,7 @@ This function may raise an error."
 (defun ein:ml-keymap-setup-markdown ()
   "Use `markdown-mode-map'.  NOTE: This function is not used now."
   (when (featurep 'markdown-mode)
-    (set-keymap-parent ein:notebook-org-src-mode-map markdown-mode-map)))
+    (set-keymap-parent ein:notebook-multilang-mode-map markdown-mode-map)))
 
 ;; FIXME: dynamically call ein:ml-keymap-setup-LANG using
 ;;        `post-command-hook'.
@@ -121,7 +121,7 @@ This function may raise an error."
 ;;; yasnippet
 
 (defvar ein:ml-yasnippet-parents '(python-mode markdown-mode)
-  "Parent modes for `ein:notebook-org-src-mode' to register in yasnippet.")
+  "Parent modes for `ein:notebook-multilang-mode' to register in yasnippet.")
 
 (defun ein:ml-setup-yasnippet ()
   (loop for define-parents in '(yas/define-parents
@@ -129,13 +129,13 @@ This function may raise an error."
         when (fboundp define-parents)
         do (ignore-errors
              ;; `let' is for workaround the bug in yasnippet
-             (let ((mode-sym 'ein:notebook-org-src-mode))
+             (let ((mode-sym 'ein:notebook-multilang-mode))
                (funcall define-parents
                         mode-sym
                         ein:ml-yasnippet-parents)))))
 
 (eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 
-(provide 'ein-org-src)
+(provide 'ein-multilang)
 
-;;; ein-org-src.el ends here
+;;; ein-multilang.el ends here
