@@ -89,16 +89,16 @@ This function may raise an error."
   "Notebook mode with multiple language fontification."
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
-  (ein:ml-keymap-setup-python)
+  (ein:ml-lang-setup-python)
   (ein:ml-set-font-lock-defaults))
 
 (eval-after-load "auto-complete"
   '(add-to-list 'ac-modes 'ein:notebook-multilang-mode))
 
 
-;;; Keymap setup functions
+;;; Language setup functions
 
-(defun ein:ml-keymap-setup-python ()
+(defun ein:ml-lang-setup-python ()
   (when (boundp 'python-mode-map)
     (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
   (cond
@@ -109,14 +109,14 @@ This function may raise an error."
     ;; FIXME: write keymap setup for python-mode.el
     )))
 
-(defun ein:ml-keymap-setup-markdown ()
+(defun ein:ml-lang-setup-markdown ()
   "Use `markdown-mode-map'.  NOTE: This function is not used now."
   (when (featurep 'markdown-mode)
     (set-keymap-parent ein:notebook-multilang-mode-map markdown-mode-map)))
 
-;; FIXME: dynamically call ein:ml-keymap-setup-LANG using
+;; FIXME: dynamically call ein:ml-lang-setup-LANG using
 ;;        `post-command-hook'.
-;; FIMXE: add more ein:ml-keymap-setup-LANG to switch kaymap.
+;; FIMXE: add more ein:ml-lang-setup-LANG to switch kaymap.
 
 
 ;;; yasnippet
