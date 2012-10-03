@@ -87,6 +87,10 @@ This function may raise an error."
 ;;;###autoload
 (define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
   "Notebook mode with multiple language fontification."
+  (make-local-variable 'comment-start)
+  (make-local-variable 'comment-start-skip)
+  (make-local-variable 'parse-sexp-lookup-properties)
+  (make-local-variable 'parse-sexp-ignore-comments)
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
   (ein:ml-lang-setup-python)
@@ -99,6 +103,11 @@ This function may raise an error."
 ;;; Language setup functions
 
 (defun ein:ml-lang-setup-python ()
+  (setq comment-start "# ")
+  (setq comment-start-skip "#+\\s-*")
+  (setq parse-sexp-lookup-properties t)
+  (setq parse-sexp-ignore-comments t)
+
   (when (boundp 'python-mode-map)
     (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
   (cond
