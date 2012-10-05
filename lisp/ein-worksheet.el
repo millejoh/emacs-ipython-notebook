@@ -650,7 +650,10 @@ Return t when the movement is succeeded."
                  (target-cell
                   (if (and (= nth 1)
                            (eq (ein:cell-element-get current-cell :input)
-                               current-node))
+                               current-node)
+                           (not (and up
+                                     (= (1+ (ewoc-location current-node))
+                                        (point)))))
                       current-cell
                     (ein:worksheet-next-input-cell current-node up nth))))
     (ein:cell-goto target-cell relpos prop)
