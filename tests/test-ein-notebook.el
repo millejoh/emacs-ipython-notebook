@@ -447,32 +447,28 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (call-interactively #'ein:worksheet-goto-prev-input)
           do (should (looking-at (format "Cell %s" (1- i)))))))
 
-(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg ()
+(defun ein:testing-beginning-of-cell-input (num-cells
+                                            initial-point
+                                            before-callback
+                                            arg
+                                            should-looking-at-this)
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 1)
+    (ein:testing-insert-cells-with-format num-cells)
     (goto-char (point-min))
-    (search-forward "Cell 0")
-    (should-not (looking-at-p "Cell 0"))
-    (ein:worksheet-beginning-of-cell-input)
-    (should (looking-at-p "Cell 0"))))
+    (search-forward initial-point)
+    (when before-callback (funcall before-callback))
+    (should-not (looking-at-p should-looking-at-this))
+    (ein:worksheet-beginning-of-cell-input arg)
+    (should (looking-at-p should-looking-at-this))))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg ()
+  (ein:testing-beginning-of-cell-input 1 "Cell 0" nil nil "Cell 0"))
 
 (ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-two ()
-  (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 2)
-    (goto-char (point-min))
-    (search-forward "Cell 1")
-    (should-not (looking-at-p "Cell 0"))
-    (ein:worksheet-beginning-of-cell-input 2)
-    (should (looking-at-p "Cell 0"))))
+  (ein:testing-beginning-of-cell-input 2 "Cell 1" nil 2 "Cell 0"))
 
 (ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one ()
-  (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 2)
-    (goto-char (point-min))
-    (search-forward "Cell 0")
-    (should-not (looking-at-p "Cell 1"))
-    (ein:worksheet-beginning-of-cell-input -1)
-    (should (looking-at-p "Cell 1"))))
+  (ein:testing-beginning-of-cell-input 2 "Cell 0" nil -1 "Cell 1"))
 
 (ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
   (with-current-buffer (ein:testing-notebook-make-empty)
