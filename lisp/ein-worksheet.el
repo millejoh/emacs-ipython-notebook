@@ -610,7 +610,7 @@ When NTH is specified, return NTH cell.  Note that this function is
     (let ((cell (ein:worksheet-next-input-cell-1 ewoc-node up)))
       (loop repeat (1- nth)
             with next = (if up #'ein:cell-prev #'ein:cell-next)
-            if (funcall cell)
+            if (funcall next cell)
             do (setq cell it)
             else
             return nil)
@@ -660,13 +660,13 @@ Return t when the movement is succeeded."
   "Move backward to the beginning of a cell.
 This function is for `beginning-of-defun-function', so behaves
 similarly with `beginning-of-defun'."
-  (ein:worksheet-goto-next-cell-element (or arg 1)))
+  (ein:worksheet-goto-next-cell-element (or arg 1) t))
 
 (defun ein:worksheet-end-of-cell-input (&optional arg)
   "Move forward to the end of a cell.
 This function is for `end-of-defun-function', so behaves
 similarly with `end-of-defun'."
-  (ein:worksheet-goto-next-cell-element (or arg 1) t -1 :after-input))
+  (ein:worksheet-goto-next-cell-element (or arg 1) nil -1 :after-input))
 
 
 ;;; Cell movement
