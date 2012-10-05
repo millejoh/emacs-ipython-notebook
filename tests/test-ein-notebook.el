@@ -204,7 +204,7 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (ein:testing-notebook-close-scratchsheet-open-and-close 2 1))
 
 
-;; Notebook commands
+;;; Insertion and deletion of cells
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
@@ -418,6 +418,9 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (ein:cell-goto (ein:worksheet-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
+
+;;; Cell selection.
+
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i downfrom 2 to 0
@@ -443,6 +446,9 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (should (looking-at (format "Cell %s" i)))
           do (call-interactively #'ein:worksheet-goto-prev-input)
           do (should (looking-at (format "Cell %s" (1- i)))))))
+
+
+;;; Cell movement
 
 (ert-deftest ein:notebook-move-cell-up-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
