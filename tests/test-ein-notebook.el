@@ -447,6 +447,15 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (call-interactively #'ein:worksheet-goto-prev-input)
           do (should (looking-at (format "Cell %s" (1- i)))))))
 
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format 1)
+    (goto-char (point-min))
+    (search-forward "Cell 0")
+    (should-not (looking-at-p "Cell 0"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 0"))))
+
 
 ;;; Cell movement
 
@@ -491,11 +500,22 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
       (call-interactively #'ein:worksheet-toggle-output)
       (should-not (oref cell :collapsed)))))
 
-(defun ein:testing-insert-cells (list-type-or-cell &optional pivot)
+(defun ein:testing-insert-cells (list-type-or-cell &optional pivot callback)
   (loop with ws = ein:%worksheet%
         with cell = pivot
         for type in list-type-or-cell
-        do (setq cell (ein:worksheet-insert-cell-below ws type cell))))
+        for i from 0
+        do (setq cell (ein:worksheet-insert-cell-below ws type cell t))
+        if callback
+        do (funcall callback i cell)))
+
+(defun* ein:testing-insert-cells-with-format (num &optional
+                                                  (format "Cell %s")
+                                                  (type 'code))
+  (ein:testing-insert-cells (loop repeat num collect type)
+                            nil
+                            (lambda (i &rest _) (insert (format format i))))
+  (should (equal (ein:worksheet-ncells ein:%worksheet%) num)))
 
 (defun ein:testing-test-output-visibility-all (collapsed)
   (mapc (lambda (cell) (should (eq (oref cell :collapsed) collapsed)))

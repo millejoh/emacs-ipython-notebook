@@ -644,9 +644,17 @@ When NTH is specified, return NTH cell.  Note that this function is
   "Go to NTH next cell element named PROP and shift cursor by RELPOS.
 Go to previous cell if UP is t.
 Return t when the movement is succeeded."
-  (ein:aand (ein:worksheet-get-current-ewoc-node)
-            (ein:worksheet-next-input-cell it up nth)
-            (progn (ein:cell-goto it relpos prop) t)))
+  (unless prop (setq prop :input))
+  (ein:and-let* ((current-node (ein:worksheet-get-current-ewoc-node))
+                 (current-cell (ein:cell-from-ewoc-node current-node))
+                 (target-cell
+                  (if (and (= nth 1)
+                           (eq (ein:cell-element-get current-cell prop)
+                               current-node))
+                      current-cell
+                    (ein:worksheet-next-input-cell current-node up nth))))
+    (ein:cell-goto target-cell relpos prop)
+    t))
 
 (defun ein:worksheet-beginning-of-cell-input (&optional arg)
   "Move backward to the beginning of a cell.
