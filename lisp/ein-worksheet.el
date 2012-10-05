@@ -640,6 +640,25 @@ When NTH is specified, return NTH cell.  Note that this function is
                           (ein:worksheet-get-current-ewoc-node))))
   (ein:worksheet-goto-input ewoc-node t))
 
+(defun ein:worksheet-goto-next-cell-element (&optional nth up relpos prop)
+  "Go to NTH next cell element named PROP and shift cursor by RELPOS.
+Go to previous cell if UP is t.
+Return t when the movement is succeeded."
+  (ein:aand (ein:worksheet-next-input-cell up nth)
+            (progn (ein:cell-goto it relpos prop) t)))
+
+(defun ein:worksheet-beginning-of-cell-input (&optional arg)
+  "Move backward to the beginning of a cell.
+This function is for `beginning-of-defun-function', so behaves
+similarly with `beginning-of-defun'."
+  (ein:worksheet-goto-next-cell-element (or arg 1)))
+
+(defun ein:worksheet-end-of-cell-input (&optional arg)
+  "Move forward to the end of a cell.
+This function is for `end-of-defun-function', so behaves
+similarly with `end-of-defun'."
+  (ein:worksheet-goto-next-cell-element (or arg 1) t -1 :after-input))
+
 
 ;;; Cell movement
 
