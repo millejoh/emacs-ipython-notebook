@@ -504,35 +504,29 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
                                        (lambda () (forward-line -1))
                                        -1 "Cell 0"))
 
-(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
+(defun ein:testing-end-of-cell-input (num-cells
+                                      initial-point
+                                      before-callback
+                                      arg
+                                      should-looking-back-this)
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 1)
+    (ein:testing-insert-cells-with-format num-cells)
     (goto-char (point-min))
-    (search-forward "Cell 0")
+    (search-forward initial-point)
     (beginning-of-line)
-    (should (looking-at-p "Cell 0"))
-    (ein:worksheet-end-of-cell-input)
-    (should (looking-back "Cell 0"))))
+    (when before-callback (funcall before-callback))
+    (should-not (looking-back should-looking-back-this))
+    (ein:worksheet-end-of-cell-input arg)
+    (should (looking-back should-looking-back-this))))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
+  (ein:testing-end-of-cell-input 1 "Cell 0" nil nil "Cell 0"))
 
 (ert-deftest ein:worksheet-end-of-cell-input-with-arg-two ()
-  (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 2)
-    (goto-char (point-min))
-    (search-forward "Cell 0")
-    (beginning-of-line)
-    (should-not (looking-back "Cell 1"))
-    (ein:worksheet-end-of-cell-input 2)
-    (should (looking-back "Cell 1"))))
+  (ein:testing-end-of-cell-input 2 "Cell 0" nil 2 "Cell 1"))
 
 (ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one ()
-  (with-current-buffer (ein:testing-notebook-make-empty)
-    (ein:testing-insert-cells-with-format 2)
-    (goto-char (point-min))
-    (search-forward "Cell 1")
-    (beginning-of-line)
-    (should-not (looking-back "Cell 0"))
-    (ein:worksheet-end-of-cell-input -1)
-    (should (looking-back "Cell 0"))))
+  (ein:testing-end-of-cell-input 2 "Cell 1" nil -1 "Cell 0"))
 
 
 ;;; Cell movement
