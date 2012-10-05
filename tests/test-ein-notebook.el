@@ -470,6 +470,22 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 (ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one ()
   (ein:testing-beginning-of-cell-input 2 "Cell 0" nil -1 "Cell 1"))
 
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg-at-footer ()
+  (ein:testing-beginning-of-cell-input 1 "Cell 0"
+                                       #'forward-line
+                                       nil "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-two-at-footer ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 1"
+                                       #'forward-line
+                                       2 "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one-at-footer
+    ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 0"
+                                       #'forward-line
+                                        -1 "Cell 1"))
+
 (ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (ein:testing-insert-cells-with-format 1)
