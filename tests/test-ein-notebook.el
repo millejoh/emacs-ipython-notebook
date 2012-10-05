@@ -528,6 +528,38 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 (ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one ()
   (ein:testing-end-of-cell-input 2 "Cell 1" nil -1 "Cell 0"))
 
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg-at-footer ()
+  (ein:testing-end-of-cell-input 2 "Cell 0"
+                                 #'forward-line
+                                 nil "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-two-at-footer ()
+  (ein:testing-end-of-cell-input 3 "Cell 0"
+                                 #'forward-line
+                                 2 "Cell 2"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one-at-footer
+    ()
+  (ein:testing-end-of-cell-input 2 "Cell 0"
+                                 #'forward-line
+                                 -1 "Cell 0"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg-at-prompt ()
+  (ein:testing-end-of-cell-input 2 "Cell 1"
+                                 (lambda () (forward-line -1))
+                                 nil "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-two-at-prompt ()
+  (ein:testing-end-of-cell-input 3 "Cell 0"
+                                 (lambda () (forward-line -1))
+                                 2 "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one-at-prompt
+    ()
+  (ein:testing-end-of-cell-input 2 "Cell 1"
+                                 (lambda () (forward-line -1))
+                                 -1 "Cell 0"))
+
 
 ;;; Cell movement
 
