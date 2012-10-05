@@ -504,6 +504,21 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
                                        (lambda () (forward-line -1))
                                        -1 "Cell 0"))
 
+(ert-deftest ein:worksheet-beginning-of-cell-input-repeat ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format 3)
+    (goto-char (point-min))
+    (search-forward "Cell 2")
+    (should-not (looking-at-p "Cell 2"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 2"))
+    (should-not (looking-at-p "Cell 1"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 1"))
+    (should-not (looking-at-p "Cell 0"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 0"))))
+
 (defun ein:testing-end-of-cell-input (num-cells
                                       initial-point
                                       before-callback
