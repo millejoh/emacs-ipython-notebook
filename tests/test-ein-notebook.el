@@ -474,6 +474,16 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (ein:worksheet-beginning-of-cell-input -1)
     (should (looking-at-p "Cell 1"))))
 
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format 1)
+    (goto-char (point-min))
+    (search-forward "Cell 0")
+    (beginning-of-line)
+    (should (looking-at-p "Cell 0"))
+    (ein:worksheet-end-of-cell-input)
+    (should (looking-back "Cell 0"))))
+
 
 ;;; Cell movement
 

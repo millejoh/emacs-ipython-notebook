@@ -649,7 +649,7 @@ Return t when the movement is succeeded."
                  (current-cell (ein:cell-from-ewoc-node current-node))
                  (target-cell
                   (if (and (= nth 1)
-                           (eq (ein:cell-element-get current-cell prop)
+                           (eq (ein:cell-element-get current-cell :input)
                                current-node))
                       current-cell
                     (ein:worksheet-next-input-cell current-node up nth))))
@@ -666,7 +666,7 @@ similarly with `beginning-of-defun'."
   "Move forward to the end of a cell.
 This function is for `end-of-defun-function', so behaves
 similarly with `end-of-defun'."
-  (ein:worksheet-goto-next-cell-element (or arg 1) nil -1 :after-input))
+  (ein:worksheet-goto-next-cell-element (or arg 1) nil 0 :after-input))
 
 
 ;;; Cell movement
