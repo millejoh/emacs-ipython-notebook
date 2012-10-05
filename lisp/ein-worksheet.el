@@ -598,9 +598,25 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
-(defun ein:worksheet-next-input-cell (ewoc-node &optional up)
+(defun* ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
   "Return a cell containing the next input node after EWOC-NODE.
-When UP is non-`nil', do the same for the *previous* input node."
+When UP is non-`nil', do the same for the *previous* input node.
+When NTH is specified, return NTH cell.  Note that this function is
+*not* defined for NTH=0; it returns nil."
+  (unless (= nth 0)
+    (when (< nth 0)
+      (setq nth (* nth -1))
+      (setq up (not up)))
+    (let ((cell (ein:worksheet-next-input-cell-1 ewoc-node up)))
+      (loop repeat (1- nth)
+            with next = (if up #'ein:cell-prev #'ein:cell-next)
+            if (funcall cell)
+            do (setq cell it)
+            else
+            return nil)
+      cell)))
+
+(defun ein:worksheet-next-input-cell-1 (ewoc-node &optional up)
   (let* ((ewoc-data (ewoc-data ewoc-node))
          (cell (ein:$node-data ewoc-data))
          (path (ein:$node-path ewoc-data))
