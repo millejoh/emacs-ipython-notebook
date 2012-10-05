@@ -204,7 +204,7 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (ein:testing-notebook-close-scratchsheet-open-and-close 2 1))
 
 
-;; Notebook commands
+;;; Insertion and deletion of cells
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
@@ -418,6 +418,9 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
     (ein:cell-goto (ein:worksheet-get-current-cell))
     (should (looking-at "Cell 0\nCell 1"))))
 
+
+;;; Cell selection.
+
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (loop for i downfrom 2 to 0
@@ -443,6 +446,137 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
           do (should (looking-at (format "Cell %s" i)))
           do (call-interactively #'ein:worksheet-goto-prev-input)
           do (should (looking-at (format "Cell %s" (1- i)))))))
+
+(defun ein:testing-beginning-of-cell-input (num-cells
+                                            initial-point
+                                            before-callback
+                                            arg
+                                            should-looking-at-this)
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format num-cells)
+    (goto-char (point-min))
+    (search-forward initial-point)
+    (when before-callback (funcall before-callback))
+    (should-not (looking-at-p should-looking-at-this))
+    (ein:worksheet-beginning-of-cell-input arg)
+    (should (looking-at-p should-looking-at-this))))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg ()
+  (ein:testing-beginning-of-cell-input 1 "Cell 0" nil nil "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-two ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 1" nil 2 "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 0" nil -1 "Cell 1"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg-at-footer ()
+  (ein:testing-beginning-of-cell-input 1 "Cell 0"
+                                       #'forward-line
+                                       nil "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-two-at-footer ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 1"
+                                       #'forward-line
+                                       2 "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one-at-footer
+    ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 0"
+                                       #'forward-line
+                                        -1 "Cell 1"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-no-arg-at-prompt ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 1"
+                                       (lambda () (forward-line -1))
+                                       nil "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-two-at-prompt ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 1"
+                                       (lambda () (forward-line -1))
+                                       2 "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-with-arg-minus-one-at-prompt
+    ()
+  (ein:testing-beginning-of-cell-input 2 "Cell 0"
+                                       ;; I need two cells to make it fail
+                                       ;; without (forward-line -1)
+                                       (lambda () (forward-line -1))
+                                       -1 "Cell 0"))
+
+(ert-deftest ein:worksheet-beginning-of-cell-input-repeat ()
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format 3)
+    (goto-char (point-min))
+    (search-forward "Cell 2")
+    (should-not (looking-at-p "Cell 2"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 2"))
+    (should-not (looking-at-p "Cell 1"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 1"))
+    (should-not (looking-at-p "Cell 0"))
+    (ein:worksheet-beginning-of-cell-input)
+    (should (looking-at-p "Cell 0"))))
+
+(defun ein:testing-end-of-cell-input (num-cells
+                                      initial-point
+                                      before-callback
+                                      arg
+                                      should-looking-back-this)
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (ein:testing-insert-cells-with-format num-cells)
+    (goto-char (point-min))
+    (search-forward initial-point)
+    (beginning-of-line)
+    (when before-callback (funcall before-callback))
+    (should-not (looking-back should-looking-back-this))
+    (ein:worksheet-end-of-cell-input arg)
+    (should (looking-back should-looking-back-this))))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg ()
+  (ein:testing-end-of-cell-input 1 "Cell 0" nil nil "Cell 0"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-two ()
+  (ein:testing-end-of-cell-input 2 "Cell 0" nil 2 "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one ()
+  (ein:testing-end-of-cell-input 2 "Cell 1" nil -1 "Cell 0"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg-at-footer ()
+  (ein:testing-end-of-cell-input 2 "Cell 0"
+                                 #'forward-line
+                                 nil "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-two-at-footer ()
+  (ein:testing-end-of-cell-input 3 "Cell 0"
+                                 #'forward-line
+                                 2 "Cell 2"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one-at-footer
+    ()
+  (ein:testing-end-of-cell-input 2 "Cell 0"
+                                 #'forward-line
+                                 -1 "Cell 0"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-no-arg-at-prompt ()
+  (ein:testing-end-of-cell-input 2 "Cell 1"
+                                 (lambda () (forward-line -1))
+                                 nil "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-two-at-prompt ()
+  (ein:testing-end-of-cell-input 3 "Cell 0"
+                                 (lambda () (forward-line -1))
+                                 2 "Cell 1"))
+
+(ert-deftest ein:worksheet-end-of-cell-input-with-arg-minus-one-at-prompt
+    ()
+  (ein:testing-end-of-cell-input 2 "Cell 1"
+                                 (lambda () (forward-line -1))
+                                 -1 "Cell 0"))
+
+
+;;; Cell movement
 
 (ert-deftest ein:notebook-move-cell-up-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
@@ -485,11 +619,22 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
       (call-interactively #'ein:worksheet-toggle-output)
       (should-not (oref cell :collapsed)))))
 
-(defun ein:testing-insert-cells (list-type-or-cell &optional pivot)
+(defun ein:testing-insert-cells (list-type-or-cell &optional pivot callback)
   (loop with ws = ein:%worksheet%
         with cell = pivot
         for type in list-type-or-cell
-        do (setq cell (ein:worksheet-insert-cell-below ws type cell))))
+        for i from 0
+        do (setq cell (ein:worksheet-insert-cell-below ws type cell t))
+        if callback
+        do (funcall callback i cell)))
+
+(defun* ein:testing-insert-cells-with-format (num &optional
+                                                  (format "Cell %s")
+                                                  (type 'code))
+  (ein:testing-insert-cells (loop repeat num collect type)
+                            nil
+                            (lambda (i &rest _) (insert (format format i))))
+  (should (equal (ein:worksheet-ncells ein:%worksheet%) num)))
 
 (defun ein:testing-test-output-visibility-all (collapsed)
   (mapc (lambda (cell) (should (eq (oref cell :collapsed) collapsed)))

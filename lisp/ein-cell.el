@@ -640,13 +640,20 @@ Return `nil' always for non-code cells."
 prompt EWOC node."
   (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
-(defmethod ein:cell-goto ((cell ein:basecell) &optional relpos)
+(defmethod ein:cell-goto ((cell ein:basecell) &optional relpos prop)
   "Go to the input area of the given CELL.
-RELPOS is the position relative to the input area.  Default is 0."
+RELPOS is the position relative to the input area.  Default is 0.
+PROP is a name of cell element.  Default is `:input'.
+
+\(fn cell relpos prop)"
   (unless relpos (setq relpos 0))
-  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :input))
-  ;; `1+' to skip the newline
-  (forward-char (1+ relpos)))
+  (unless prop (setq prop :input))
+  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop))
+  (let ((offset (case prop
+                  ((:input :before-output) 1)
+                  (:after-input -1)
+                  (t 0))))
+    (forward-char (+ relpos offset))))
 
 (defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
   "Return the point relative to the input area of CELL.

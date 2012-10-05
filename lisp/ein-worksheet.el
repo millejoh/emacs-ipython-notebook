@@ -598,9 +598,25 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
-(defun ein:worksheet-next-input-cell (ewoc-node &optional up)
+(defun* ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
   "Return a cell containing the next input node after EWOC-NODE.
-When UP is non-`nil', do the same for the *previous* input node."
+When UP is non-`nil', do the same for the *previous* input node.
+When NTH is specified, return NTH cell.  Note that this function is
+*not* defined for NTH=0; it returns nil."
+  (unless (= nth 0)
+    (when (< nth 0)
+      (setq nth (* nth -1))
+      (setq up (not up)))
+    (let ((cell (ein:worksheet-next-input-cell-1 ewoc-node up)))
+      (loop repeat (1- nth)
+            with next = (if up #'ein:cell-prev #'ein:cell-next)
+            if (funcall next cell)
+            do (setq cell it)
+            else
+            return nil)
+      cell)))
+
+(defun ein:worksheet-next-input-cell-1 (ewoc-node &optional up)
   (let* ((ewoc-data (ewoc-data ewoc-node))
          (cell (ein:$node-data ewoc-data))
          (path (ein:$node-path ewoc-data))
@@ -623,6 +639,37 @@ When UP is non-`nil', do the same for the *previous* input node."
   (interactive (list (and (ein:worksheet--get-ws-or-error)
                           (ein:worksheet-get-current-ewoc-node))))
   (ein:worksheet-goto-input ewoc-node t))
+
+(defun ein:worksheet-goto-next-cell-element (&optional nth up relpos prop)
+  "Go to NTH next cell element named PROP and shift cursor by RELPOS.
+Go to previous cell if UP is t.
+Return t when the movement is succeeded."
+  (unless prop (setq prop :input))
+  (ein:and-let* ((current-node (ein:worksheet-get-current-ewoc-node))
+                 (current-cell (ein:cell-from-ewoc-node current-node))
+                 (target-cell
+                  (if (and (= nth 1)
+                           (eq (ein:cell-element-get current-cell :input)
+                               current-node)
+                           (not (and up
+                                     (= (1+ (ewoc-location current-node))
+                                        (point)))))
+                      current-cell
+                    (ein:worksheet-next-input-cell current-node up nth))))
+    (ein:cell-goto target-cell relpos prop)
+    t))
+
+(defun ein:worksheet-beginning-of-cell-input (&optional arg)
+  "Move backward to the beginning of a cell.
+This function is for `beginning-of-defun-function', so behaves
+similarly with `beginning-of-defun'."
+  (ein:worksheet-goto-next-cell-element (or arg 1) t))
+
+(defun ein:worksheet-end-of-cell-input (&optional arg)
+  "Move forward to the end of a cell.
+This function is for `end-of-defun-function', so behaves
+similarly with `end-of-defun'."
+  (ein:worksheet-goto-next-cell-element (or arg 1) nil 0 :after-input))
 
 
 ;;; Cell movement

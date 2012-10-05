@@ -93,6 +93,8 @@ This function may raise an error."
   (make-local-variable 'parse-sexp-ignore-comments)
   (make-local-variable 'indent-line-function)
   (make-local-variable 'indent-region-function)
+  (make-local-variable 'beginning-of-defun-function)
+  (make-local-variable 'end-of-defun-function)
   (ein:ml-lang-setup-python)
   (ein:ml-set-font-lock-defaults))
 
@@ -107,6 +109,8 @@ This function may raise an error."
   (setq comment-start-skip "#+\\s-*")
   (setq parse-sexp-lookup-properties t)
   (setq parse-sexp-ignore-comments t)
+  (setq beginning-of-defun-function 'ein:worksheet-beginning-of-cell-input)
+  (setq end-of-defun-function 'ein:worksheet-end-of-cell-input)
 
   (when (boundp 'python-mode-map)
     (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
