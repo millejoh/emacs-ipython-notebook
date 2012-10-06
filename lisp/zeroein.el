@@ -57,12 +57,8 @@
 
 ;;; Install dependencies
 
-(unless (loop for path in zeroein:dependencies
-              unless (file-exists-p (zeroein:path "lib" path))
-              return nil
-              finally return t)
-  (call-process "git" nil (get-buffer "*Messages*") nil
-                "submodule" "update" "--init"))
+(call-process "git" nil (get-buffer "*Messages*") nil
+              "submodule" "update" "--init")
 
 
 
