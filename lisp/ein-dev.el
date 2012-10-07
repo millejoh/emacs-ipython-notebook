@@ -201,6 +201,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (list
    "EIN system info"
    :emacs-version (emacs-version)
+   :emacs-bzr-version (ein:eval-if-bound 'emacs-bzr-version)
    :window-system window-system
    ;; Emacs variant detection
    ;; http://coderepos.org/share/browser/lang/elisp/init-loader/init-loader.el
