@@ -98,8 +98,24 @@ class BaseRunner(object):
                 modename='batch' if self.batch else 'interactive',
             ))
 
+    @property
+    def command(self):
+        raise NotImplementedError
+
+    def do_run(self):
+        raise NotImplementedError
+
     def run(self):
-        mkdirp(self.log_dir)
+        if self.dry_run:
+            command = self.command
+            if isinstance(command, basestring):
+                print command
+            else:
+                print construct_command(command)
+            return 0
+        else:
+            mkdirp(self.log_dir)
+            return self.do_run()
 
 
 class TestRunner(BaseRunner):
@@ -229,8 +245,7 @@ class TestRunner(BaseRunner):
                     break
         return int(self.failed)
 
-    def run(self):
-        super(TestRunner, self).run()
+    def do_run(self):
         self.show_sys_info()
         self.make_process()
         return self.report()
@@ -260,8 +275,7 @@ class ServerRunner(BaseRunner):
     def __exit__(self, type, value, traceback):
         self.stop()
 
-    def run(self):
-        super(ServerRunner, self).run()
+    def do_run(self):
         self.clear_notebook_dir()
         self.start()
         self.get_port()
@@ -284,18 +298,20 @@ class ServerRunner(BaseRunner):
     def start(self):
         from subprocess import Popen, PIPE, STDOUT
         self.proc = Popen(
-            self.command(), stdout=PIPE, stderr=STDOUT, stdin=PIPE,
+            self.command, stdout=PIPE, stderr=STDOUT, stdin=PIPE,
             shell=True)
         # Answer "y" to the prompt: Shutdown Notebook Server (y/[n])?
         self.proc.stdin.write('y\n')
 
     def stop(self):
         print "Stopping server", self.port
-        try:
-            kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
-        finally:
-            self.proc.terminate()
+        if not self.dry_run:
+            try:
+                kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
+            finally:
+                self.proc.terminate()
 
+    @property
     def command(self):
         fmtdata = dict(
             notebook_dir=self.notebook_dir,
@@ -348,24 +364,19 @@ def construct_command(args):
     return " ".join(command)
 
 
-def run_ein_test(unit_test, func_test, clean_elc, dry_run, **kwds):
-    if clean_elc and not dry_run:
+def run_ein_test(unit_test, func_test, clean_elc, **kwds):
+    if clean_elc and not kwds['dry_run']:
         remove_elc()
     if unit_test:
         unit_test_runner = TestRunner(testfile='test-load.el', **kwds)
-        if dry_run:
-            print construct_command(unit_test_runner.command)
-        elif unit_test_runner.run() != 0:
+        if unit_test_runner.run() != 0:
             return 1
     if func_test:
         func_test_runner = TestRunner(testfile='func-test.el', **kwds)
-        if dry_run:
-            print construct_command(func_test_runner.command)
-        else:
-            with ServerRunner(testfile='func-test.el', **kwds) as port:
-                func_test_runner.setq('ein:testing-port', port)
-                if func_test_runner.run() != 0:
-                    return 1
+        with ServerRunner(testfile='func-test.el', **kwds) as port:
+            func_test_runner.setq('ein:testing-port', port)
+            if func_test_runner.run() != 0:
+                return 1
     return 0
 
 
