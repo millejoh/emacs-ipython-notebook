@@ -364,7 +364,8 @@ def construct_command(args):
     return " ".join(command)
 
 
-def run_ein_test(unit_test, func_test, clean_elc, **kwds):
+def run_ein_test(unit_test, func_test, func_test_max_retries,
+                 clean_elc, **kwds):
     if clean_elc and not kwds['dry_run']:
         remove_elc()
     if unit_test:
@@ -372,11 +373,16 @@ def run_ein_test(unit_test, func_test, clean_elc, **kwds):
         if unit_test_runner.run() != 0:
             return 1
     if func_test:
-        func_test_runner = TestRunner(testfile='func-test.el', **kwds)
-        with ServerRunner(testfile='func-test.el', **kwds) as port:
-            func_test_runner.setq('ein:testing-port', port)
-            if func_test_runner.run() != 0:
-                return 1
+        for i in range(func_test_max_retries + 1):
+            func_test_runner = TestRunner(testfile='func-test.el', **kwds)
+            with ServerRunner(testfile='func-test.el', **kwds) as port:
+                func_test_runner.setq('ein:testing-port', port)
+                if func_test_runner.run() == 0:
+                    print "Functional test succeeded after {0} retries." \
+                        .format(i)
+                    return 0
+        print "Functional test failed after {0} retries.".format(i)
+        return 1
     return 0
 
 
@@ -407,6 +413,12 @@ def main():
                         action='store_true',
                         help="set debug-on-error to t and start "
                         "interactive session.")
+    parser.add_argument('--func-test-max-retries', default=4, type=int,
+                        help="""
+                        Specify number of retries for functional test
+                        before failing with error.  This is workaround
+                        for the issue #74.
+                        """)
     parser.add_argument('--no-func-test', '-F', default=True,
                         dest='func_test', action='store_false',
                         help="do not run functional test.")
