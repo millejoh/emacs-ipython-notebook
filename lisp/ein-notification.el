@@ -232,6 +232,8 @@ insert-prev insert-next)"
 ;;; Header line
 
 (let ((map ein:header-line-map))
+  (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
+  (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
   (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
   (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
   (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
@@ -267,6 +269,16 @@ insert-prev insert-next)"
 (defun ein:header-line-delete-this-tab (key-event)
   (interactive "e")
   (funcall (oref (oref ein:%notification% :tab) :delete)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defun ein:header-line-insert-prev-tab (key-event)
+  (interactive "e")
+  (funcall (oref (oref ein:%notification% :tab) :insert-prev)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defun ein:header-line-insert-next-tab (key-event)
+  (interactive "e")
+  (funcall (oref (oref ein:%notification% :tab) :insert-next)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line ()
