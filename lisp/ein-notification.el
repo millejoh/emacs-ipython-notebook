@@ -45,7 +45,8 @@
 mouse-1 (left click) : switch to this tab
 mouse-3 (right click) : pop to this tab
 mouse-2 (middle click) : delete this tab
-M-mouse-1/3 (Alt left/right click): insert new tab to the left/right"
+M-mouse-1/3 (Alt + left/right click): insert new tab to left/right
+S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   "Help message.")
 ;; Note: can't put this below of `ein:notification-setup'...
 
