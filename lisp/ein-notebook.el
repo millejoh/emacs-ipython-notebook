@@ -801,7 +801,7 @@ See also `ein:notebook-worksheet-open-next'."
   "Open I-th (zero-origin) worksheet."
   (let ((ws (nth i (ein:$notebook-worksheets notebook))))
     (unless ws (error "No %s-th worksheet" (1+ i)))
-    (ein:notebook-worksheet--open-new notebook ws "previous" show)))
+    (ein:notebook-worksheet--open-new notebook ws (format "%s-th" i) show)))
 
 (defmacro ein:notebook-worksheet--defun-open-nth (n)
   "Define a command to open N-th (one-origin) worksheet."
