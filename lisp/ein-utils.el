@@ -279,6 +279,24 @@ Adapted from twittering-mode.el's `case-string'."
        clauses)))
 
 
+;;; Text manipulation on buffer
+
+(defun ein:find-leftmot-column (beg end)
+  "Return the leftmost column in region BEG to END."
+  (save-excursion
+    (goto-char beg)
+    (back-to-indentation)
+    (let ((mincol (current-column)))
+      (forward-line 1)
+      (while (< (point) end)
+        (back-to-indentation)
+        (unless (= (point) (point-at-eol))
+          (setq mincol (min mincol (current-column))))
+        (unless (= (forward-line 1) 0)
+          (return-from ein:find-leftmot-column mincol)))
+      mincol)))
+
+
 ;;; Misc
 
 (defun ein:plist-iter (plist)

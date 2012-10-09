@@ -887,6 +887,17 @@ in the history."
              (buffer-modified-p buffer)))))
 
 
+;;; Utility commands
+
+(defun ein:worksheet-dedent-cell-text (cell)
+  "Dedent text in CELL."
+  (interactive (list (ein:worksheet-get-current-cell)))
+  (let* ((beg (ein:cell-input-pos-min cell))
+         (end (ein:cell-input-pos-max cell)))
+    (indent-rigidly
+     beg end (- (ein:find-leftmot-column beg end)))))
+
+
 ;;; Auto-execution
 
 (defun ein:worksheet-toggle-autoexec (cell)
