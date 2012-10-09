@@ -50,7 +50,12 @@
 (defclass ein:notification-tab ()
   ((get-list :initarg :get-list :type function)
    (get-current :initarg :get-current :type function)
-   (get-name :initarg :get-name :type function)))
+   (get-name :initarg :get-name :type function)
+   (get-buffer :initarg :get-buffer :type function))
+  ;; These "methods" are for not depending on what the TABs for.
+  ;; Probably I'd want change this to be a separated Emacs lisp
+  ;; library at some point.
+  "See `ein:notification-setup' for explanation.")
 
 (defclass ein:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
@@ -144,7 +149,8 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  (force-mode-line-update))))
            packed)))
 
-(defun ein:notification-setup (buffer events get-list get-current get-name)
+(defun ein:notification-setup (buffer events get-list get-current get-name
+                                      get-buffer)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
@@ -153,7 +159,11 @@ Other arguments GET-LIST, GET-CURRENT and GET-NAME are used to
 draw tabs for worksheets.  GET-LIST is a function returns a list
 of worksheets.  GET-CURRENT is a function returns the current
 worksheet.  GET-NAME is a function returns a name of the
-worksheet given as its argument."
+worksheet given as its argument.
+
+GET-BUFFER : function
+  Get a buffer of given worksheet.  Render it if needed.
+"
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
@@ -163,7 +173,8 @@ worksheet given as its argument."
           (make-instance 'ein:notification-tab
                          :get-list get-list
                          :get-current get-current
-                         :get-name get-name))
+                         :get-name get-name
+                         :get-buffer get-buffer))
     ein:%notification%))
 
 
