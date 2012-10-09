@@ -53,9 +53,21 @@
   (let* ((notification (ein:notification "NotificationTest"))
          (kernel (oref notification :kernel))
          (notebook (oref notification :notebook))
-         (events (ein:events-new)))
+         (events (ein:events-new))
+         (event-symbols
+          '(notebook_saved.Notebook
+            notebook_saving.Notebook
+            notebook_save_failed.Notebook
+            execution_count.Kernel
+            status_restarting.Kernel
+            status_idle.Kernel
+            status_busy.Kernel
+            status_dead.Kernel
+            ))
+         (callbacks (oref events :callbacks)))
     (ein:notification-bind-events notification events)
-    (should (= (hash-table-count (oref events :callbacks)) 7))
+    (mapc (lambda (s) (should (gethash s callbacks))) event-symbols)
+    (should (= (hash-table-count callbacks) (length event-symbols)))
     (should (equal (oref kernel :status) nil))
     (loop for et in (mapcar #'car (oref kernel :s2m))
           do (ein:events-trigger events et)
