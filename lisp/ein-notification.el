@@ -263,7 +263,7 @@ DELETE : function
   (interactive "e")
   (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
 
-(defun ein:header-line-key-delete-this-tab (key-event)
+(defun ein:header-line-delete-this-tab (key-event)
   (interactive "e")
   (funcall (oref (oref ein:%notification% :tab) :delete)
            (ein:header-line-key-event-get-worksheet key-event)))
