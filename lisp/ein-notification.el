@@ -240,12 +240,13 @@ GET-BUFFER : function
        ,key-event
      ,@body))
 
-(defun ein:header-line-key-event-get-buffer (key-event)
+(defun ein:header-line-key-event-get-worksheet (key-event)
   (ein:with-destructuring-bind-key-event key-event
-    (let ((worksheet (get-char-property (cdr object) 'ein:worksheet
-                                        (car object)))
-          (get-buffer (oref (oref ein:%notification% :tab) :get-buffer)))
-      (funcall get-buffer worksheet))))
+    (get-char-property (cdr object) 'ein:worksheet (car object))))
+
+(defun ein:header-line-key-event-get-buffer (key-event)
+  (funcall (oref (oref ein:%notification% :tab) :get-buffer)
+           (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line-switch-to-this-tab (key-event)
   (interactive "e")
