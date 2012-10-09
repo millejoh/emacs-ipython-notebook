@@ -155,11 +155,16 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
 
-Other arguments GET-LIST, GET-CURRENT and GET-NAME are used to
-draw tabs for worksheets.  GET-LIST is a function returns a list
-of worksheets.  GET-CURRENT is a function returns the current
-worksheet.  GET-NAME is a function returns a name of the
-worksheet given as its argument.
+Rest of the arguments are for TABs in `header-line'.
+
+GET-LIST : function
+  Return a list of worksheets.
+
+GET-CURRENT : function
+  Return the current worksheet.
+
+GET-NAME : function
+  Return a name of the worksheet given as its argument.
 
 GET-BUFFER : function
   Get a buffer of given worksheet.  Render it if needed.
