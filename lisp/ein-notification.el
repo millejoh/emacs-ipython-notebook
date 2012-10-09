@@ -152,8 +152,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  (force-mode-line-update))))
            packed)))
 
-(defun ein:notification-setup (buffer events get-list get-current get-name
-                                      get-buffer delete)
+(defun ein:notification-setup (buffer events &rest tab-slots)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
@@ -174,19 +173,15 @@ GET-BUFFER : function
 
 DELETE : function
   Remove a given worksheet.
-"
+
+\(fn buffer events &key get-list get-current get-name get-buffer delete)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
     (oset ein:%notification% :tab
-          (make-instance 'ein:notification-tab
-                         :get-list get-list
-                         :get-current get-current
-                         :get-name get-name
-                         :get-buffer get-buffer
-                         :delete delete))
+          (apply #'make-instance 'ein:notification-tab tab-slots))
     ein:%notification%))
 
 

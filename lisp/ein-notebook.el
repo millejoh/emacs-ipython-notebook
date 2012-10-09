@@ -504,20 +504,29 @@ This is equivalent to do ``C-c`` in the console program."
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
     ;; Now that major-mode is set, set buffer local variables:
-    (ein:notification-setup
-     (current-buffer)
-     (ein:$notebook-events notebook)
-     (lambda () (ein:$notebook-worksheets ein:%notebook%))
-     (lambda () ein:%worksheet%)
-     #'ein:worksheet-name
-     (lambda (ws)
-       (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
-       (ein:worksheet-buffer ws))
-     (lambda (ws)
-       (ein:notebook-worksheet-delete ein:%notebook% ws t)))
+    (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
     (ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
+
+(defun ein:notebook--notification-setup (notebook)
+  (ein:notification-setup
+   (current-buffer)
+   (ein:$notebook-events notebook)
+   :get-list
+   (lambda () (ein:$notebook-worksheets ein:%notebook%))
+   :get-current
+   (lambda () ein:%worksheet%)
+   :get-name
+   #'ein:worksheet-name
+   :get-buffer
+   (lambda (ws)
+     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
+     (ein:worksheet-buffer ws))
+   :delete
+   (lambda (ws)
+     (ein:notebook-worksheet-delete ein:%notebook% ws t))
+   ))
 
 (defun ein:notebook-set-buffer-file-name-maybe (notebook)
   "Set `buffer-file-name' of the current buffer to ipynb file
