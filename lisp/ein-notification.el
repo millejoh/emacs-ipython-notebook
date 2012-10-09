@@ -39,6 +39,7 @@
 (define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
+(defvar ein:header-line-map (make-sparse-keymap))
 ;; Note: can't put this below of `ein:notification-setup'...
 
 (defclass ein:notification-status ()
@@ -208,14 +209,51 @@ GET-BUFFER : function
                     (or (ein:and-let* ((name (funcall get-name elem)))
                           (format "/%d: %s\\" i name))
                         (format "/%d\\" i))
+                    'ein:worksheet elem
+                    'keymap ein:header-line-map
+                    'mouse-face 'highlight
                     'face 'ein:notification-tab-selected)
            else
            collect (propertize
                     (format "/%d\\" i)
+                    'ein:worksheet elem
+                    'keymap ein:header-line-map
+                    'mouse-face 'highlight
                     'face 'ein:notification-tab-normal)))))
 
 
 ;;; Header line
+
+(let ((map ein:header-line-map))
+  (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
+  (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
+
+(defmacro ein:with-destructuring-bind-key-event (key-event &rest body)
+  (declare (debug (form &rest form))
+           (indent 1))
+  ;; See: (info "(elisp) Click Events")
+  `(destructuring-bind
+       (event-type
+        (window pos-or-area (x . y) timestamp
+                object text-pos (col . row)
+                image (dx . dy) (width . height)))
+       ,key-event
+     ,@body))
+
+(defun ein:header-line-key-event-get-buffer (key-event)
+  (ein:with-destructuring-bind-key-event key-event
+    (let ((worksheet (get-char-property (cdr object) 'ein:worksheet
+                                        (car object)))
+          (get-buffer (oref (oref ein:%notification% :tab) :get-buffer)))
+      (funcall get-buffer worksheet))))
+
+(defun ein:header-line-switch-to-this-tab (key-event)
+  (interactive "e")
+  (switch-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+
+(defun ein:header-line-pop-to-this-tab (key-event)
+  (interactive "e")
+  (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
 
 (defun ein:header-line ()
   (format
