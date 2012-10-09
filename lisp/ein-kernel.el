@@ -515,8 +515,9 @@ Relevant Python code:
       (let ((events (ein:$kernel-events kernel)))
         (ein:case-equal msg-type
           (("execute_reply")
-           (ein:events-trigger events 'execution_count.Kernel
-                               (plist-get content :execution_count)))))))
+           (ein:aif (plist-get content :execution_count)
+               ;; It can be `nil' for silent execution
+               (ein:events-trigger events 'execution_count.Kernel it)))))))
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: finished"))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
