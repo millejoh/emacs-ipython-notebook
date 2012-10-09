@@ -750,14 +750,23 @@ See also `ein:notebook-worksheet-open-next-or-first' and
     (when show
       (funcall show (ein:worksheet-buffer prev)))))
 
+(defun* ein:notebook-worksheet--render-maybe
+    (notebook ws &optional (adj "next"))
+  "Render worksheet WS of NOTEBOOK if it does not have buffer.
+ADJ is a adjective to describe worksheet to be rendered."
+  (if (ein:worksheet-has-buffer-p ws)
+      (ein:log 'verbose "The worksheet already has a buffer.")
+    (ein:log 'info "Rendering %s worksheet..." adj)
+    (ein:notebook--worksheet-render notebook ws)
+    (ein:log 'info "Rendering %s worksheet... Done." adj)))
+
 (defun* ein:notebook-worksheet--open-new
     (notebook new &optional (adj "next") show)
+  "Open (possibly new) worksheet NEW of NOTEBOOK with SHOW function.
+ADJ is a adjective to describe worksheet to be opened.
+SHOW is a function to be called with worksheet buffer if given."
   (when new
-    (if (ein:worksheet-has-buffer-p new)
-        (ein:log 'verbose "The worksheet already has a buffer.")
-      (ein:log 'info "Rendering %s worksheet..." adj)
-      (ein:notebook--worksheet-render notebook new)
-      (ein:log 'info "Rendering %s worksheet... Done." adj)))
+    (ein:notebook-worksheet--render-maybe notebook new adj))
   (when show
     (assert (ein:worksheet-p new) nil "No %s worksheet." adj)
     (funcall show (ein:worksheet-buffer new))))
