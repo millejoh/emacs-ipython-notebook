@@ -135,6 +135,11 @@ This key will be installed in the `ein:notebook-mode-map'."
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:notebook-set-buffer-file-name nil
+  "[EXPERIMENTAL] Set `buffer-file-name' of notebook buffer."
+  :type 'boolean
+  :group 'ein)
+
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
@@ -506,7 +511,25 @@ This is equivalent to do ``C-c`` in the console program."
      (lambda () ein:%worksheet%)
      #'ein:worksheet-name)
     (ein:notebook-setup-kill-buffer-hook)
+    (ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
+
+(defun ein:notebook-set-buffer-file-name-maybe (notebook)
+  "Set `buffer-file-name' of the current buffer to ipynb file
+of NOTEBOOK."
+  (when ein:notebook-set-buffer-file-name
+    (ein:notebook-fetch-data
+     notebook
+     (lambda (data notebook buffer)
+       (with-current-buffer buffer
+         (destructuring-bind (&key project &allow-other-keys)
+             data
+           (setq buffer-file-name
+                 (expand-file-name
+                  (format "%s.ipynb"
+                          (ein:$notebook-notebook-name notebook))
+                  project)))))
+     (list notebook (current-buffer)))))
 
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
@@ -1248,6 +1271,34 @@ Note that print page is not supported in IPython 0.12.1."
                     (if print (list "print")))))
     (message "Opening %s in browser" url)
     (browse-url url)))
+
+(defun ein:notebook-fetch-data (notebook callback &optional cbargs)
+  "Fetch data in body tag of NOTEBOOK html page.
+CALLBACK is called with a plist with data in the body tag as
+the first argument and CBARGS as the rest of arguments."
+  (let ((url-or-port (ein:$notebook-url-or-port notebook))
+        (notebook-id (ein:$notebook-notebook-id notebook)))
+    (ein:query-singleton-ajax
+     (list 'notebook-fetch-data url-or-port notebook-id)
+     (ein:url url-or-port notebook-id)
+     :parser
+     (lambda ()
+       (list
+        :project
+        (ein:html-get-data-in-body-tag "data-project")
+        :base-project-url
+        (ein:html-get-data-in-body-tag "data-base-project-url")
+        :base-kernel-url
+        (ein:html-get-data-in-body-tag "data-base-kernel-url")
+        :read-only
+        (ein:html-get-data-in-body-tag "data-read-only")
+        :notebook-id
+        (ein:html-get-data-in-body-tag "data-notebook-id")))
+     :success
+     (cons (function*
+            (lambda (packed &key data &allow-other-keys)
+              (apply (car packed) data (cadr packed))))
+           (list callback cbargs)))))
 
 
 ;;; Buffer and kill hooks
