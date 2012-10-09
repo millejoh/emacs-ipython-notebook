@@ -135,6 +135,11 @@ This key will be installed in the `ein:notebook-mode-map'."
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:notebook-set-buffer-file-name nil
+  "[EXPERIMENTAL] Set `buffer-file-name' of notebook buffer."
+  :type 'boolean
+  :group 'ein)
+
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
@@ -506,7 +511,25 @@ This is equivalent to do ``C-c`` in the console program."
      (lambda () ein:%worksheet%)
      #'ein:worksheet-name)
     (ein:notebook-setup-kill-buffer-hook)
+    (ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
+
+(defun ein:notebook-set-buffer-file-name-maybe (notebook)
+  "Set `buffer-file-name' of the current buffer to ipynb file
+of NOTEBOOK."
+  (when ein:notebook-set-buffer-file-name
+    (ein:notebook-fetch-data
+     notebook
+     (lambda (data notebook buffer)
+       (with-current-buffer buffer
+         (destructuring-bind (&key project &allow-other-keys)
+             data
+           (setq buffer-file-name
+                 (expand-file-name
+                  (format "%s.ipynb"
+                          (ein:$notebook-notebook-name notebook))
+                  project)))))
+     (list notebook (current-buffer)))))
 
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
