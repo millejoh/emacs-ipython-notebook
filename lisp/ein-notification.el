@@ -160,12 +160,12 @@ worksheet given as its argument."
 ;;; Tabs
 
 (defface ein:notification-tab-selected
-  '((t :inherit (header-line match)))
+  '((t :inherit (header-line match) :underline t))
   "Face for headline selected tab."
   :group 'ein)
 
 (defface ein:notification-tab-normal
-  '((t :inherit (header-line)))
+  '((t :inherit (header-line) :underline t :height 0.8))
   "Face for headline selected tab."
   :group 'ein)
 
@@ -180,12 +180,12 @@ worksheet given as its argument."
            if (eq elem current)
            collect (propertize
                     (or (ein:and-let* ((name (funcall get-name elem)))
-                          (format "[%d: %s]" i name))
-                        (format "[%d]" i))
+                          (format "/%d: %s\\" i name))
+                        (format "/%d\\" i))
                     'face 'ein:notification-tab-selected)
            else
            collect (propertize
-                    (format " %d " i)
+                    (format "/%d\\" i)
                     'face 'ein:notification-tab-normal)))))
 
 
