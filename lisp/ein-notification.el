@@ -39,6 +39,16 @@
 (define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
+(defvar ein:header-line-tab-map (make-sparse-keymap))
+(defvar ein:header-line-insert-tab-map (make-sparse-keymap))
+(defvar ein:header-line-tab-help
+  "\
+mouse-1 (left click) : switch to this tab
+mouse-3 (right click) : pop to this tab
+mouse-2 (middle click) : delete this tab
+M-mouse-1/3 (Alt + left/right click): insert new tab to left/right
+S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
+  "Help message.")
 ;; Note: can't put this below of `ein:notification-setup'...
 
 (defclass ein:notification-status ()
@@ -50,7 +60,18 @@
 (defclass ein:notification-tab ()
   ((get-list :initarg :get-list :type function)
    (get-current :initarg :get-current :type function)
-   (get-name :initarg :get-name :type function)))
+   (get-name :initarg :get-name :type function)
+   (get-buffer :initarg :get-buffer :type function)
+   (delete :initarg :delete :type function)
+   (insert-prev :initarg :insert-prev :type function)
+   (insert-next :initarg :insert-next :type function)
+   (move-prev :initarg :move-prev :type function)
+   (move-next :initarg :move-next :type function)
+   )
+  ;; These "methods" are for not depending on what the TABs for.
+  ;; Probably I'd want change this to be a separated Emacs lisp
+  ;; library at some point.
+  "See `ein:notification-setup' for explanation.")
 
 (defclass ein:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
@@ -144,26 +165,43 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  (force-mode-line-update))))
            packed)))
 
-(defun ein:notification-setup (buffer events get-list get-current get-name)
+(defun ein:notification-setup (buffer events &rest tab-slots)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
 
-Other arguments GET-LIST, GET-CURRENT and GET-NAME are used to
-draw tabs for worksheets.  GET-LIST is a function returns a list
-of worksheets.  GET-CURRENT is a function returns the current
-worksheet.  GET-NAME is a function returns a name of the
-worksheet given as its argument."
+Rest of the arguments are for TABs in `header-line'.
+
+GET-LIST : function
+  Return a list of worksheets.
+
+GET-CURRENT : function
+  Return the current worksheet.
+
+GET-NAME : function
+  Return a name of the worksheet given as its argument.
+
+GET-BUFFER : function
+  Get a buffer of given worksheet.  Render it if needed.
+
+DELETE : function
+  Remove a given worksheet.
+
+INSERT-PREV / INSERT-NEXT : function
+  Insert new worksheet before/after the specified worksheet.
+
+MOVE-PREV / MOVE-NEXT : function
+  Switch this worksheet to the previous/next one.
+
+\(fn buffer events &key get-list get-current get-name get-buffer delete \
+insert-prev insert-next move-prev move-next)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
     (oset ein:%notification% :tab
-          (make-instance 'ein:notification-tab
-                         :get-list get-list
-                         :get-current get-current
-                         :get-name get-name))
+          (apply #'make-instance 'ein:notification-tab tab-slots))
     ein:%notification%))
 
 
@@ -185,21 +223,113 @@ worksheet given as its argument."
         (get-name (oref tab :get-name)))
     (ein:join-str
      " "
-     (loop for i from 1
-           for elem in list
-           if (eq elem current)
-           collect (propertize
-                    (or (ein:and-let* ((name (funcall get-name elem)))
-                          (format "/%d: %s\\" i name))
-                        (format "/%d\\" i))
-                    'face 'ein:notification-tab-selected)
-           else
-           collect (propertize
-                    (format "/%d\\" i)
-                    'face 'ein:notification-tab-normal)))))
+     (append
+      (loop for i from 1
+            for elem in list
+            if (eq elem current)
+            collect (propertize
+                     (or (ein:and-let* ((name (funcall get-name elem)))
+                           (format "/%d: %s\\" i name))
+                         (format "/%d\\" i))
+                     'ein:worksheet elem
+                     'keymap ein:header-line-tab-map
+                     'help-echo ein:header-line-tab-help
+                     'mouse-face 'highlight
+                     'face 'ein:notification-tab-selected)
+            else
+            collect (propertize
+                     (format "/%d\\" i)
+                     'ein:worksheet elem
+                     'keymap ein:header-line-tab-map
+                     'help-echo ein:header-line-tab-help
+                     'mouse-face 'highlight
+                     'face 'ein:notification-tab-normal))
+      (list
+       (propertize "[+]"
+                   'keymap ein:header-line-insert-tab-map
+                   'help-echo "Click (mouse-1) to insert a new tab."
+                   'mouse-face 'highlight
+                   'face 'ein:notification-tab-normal))))))
 
 
 ;;; Header line
+
+(let ((map ein:header-line-tab-map))
+  (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
+  (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
+  (define-key map [header-line S-mouse-1] 'ein:header-line-move-prev-tab)
+  (define-key map [header-line S-mouse-3] 'ein:header-line-move-next-tab)
+  (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
+  (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
+  (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
+
+(define-key ein:header-line-insert-tab-map
+  [header-line mouse-1] 'ein:header-line-insert-new-tab)
+
+(defmacro ein:with-destructuring-bind-key-event (key-event &rest body)
+  (declare (debug (form &rest form))
+           (indent 1))
+  ;; See: (info "(elisp) Click Events")
+  `(destructuring-bind
+       (event-type
+        (window pos-or-area (x . y) timestamp
+                object text-pos (col . row)
+                image (dx . dy) (width . height)))
+       ,key-event
+     ,@body))
+
+(defun ein:header-line-select-window (key-event)
+  (ein:with-destructuring-bind-key-event key-event (select-window window)))
+
+(defun ein:header-line-key-event-get-worksheet (key-event)
+  (ein:with-destructuring-bind-key-event key-event
+    (get-char-property (cdr object) 'ein:worksheet (car object))))
+
+(defun ein:header-line-key-event-get-buffer (key-event)
+  (funcall (oref (oref ein:%notification% :tab) :get-buffer)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defun ein:header-line-switch-to-this-tab (key-event)
+  (interactive "e")
+  (ein:header-line-select-window key-event)
+  (switch-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+
+(defun ein:header-line-pop-to-this-tab (key-event)
+  (interactive "e")
+  (ein:header-line-select-window key-event)
+  (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+
+(defun ein:header-line-do-slot-function (key-event slot)
+  "Call SLOT function on worksheet instance fetched from KEY-EVENT."
+  (ein:header-line-select-window key-event)
+  (funcall (slot-value (oref ein:%notification% :tab) slot)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defmacro ein:header-line-define-mouse-commands (&rest name-slot-list)
+  `(progn
+     ,@(loop for (name slot) on name-slot-list by 'cddr
+             collect
+             `(defun ,name (key-event)
+                ,(format "Run slot %s
+Generated by `ein:header-line-define-mouse-commands'" slot)
+                (interactive "e")
+                (ein:header-line-do-slot-function key-event ,slot)))))
+
+(ein:header-line-define-mouse-commands
+ ein:header-line-delete-this-tab :delete
+ ein:header-line-insert-prev-tab :insert-prev
+ ein:header-line-insert-next-tab :insert-next
+ ein:header-line-move-prev-tab :move-prev
+ ein:header-line-move-next-tab :move-next
+ )
+
+(defun ein:header-line-insert-new-tab (key-event)
+  "Insert new tab."
+  (interactive "e")
+  (ein:header-line-select-window key-event)
+  (let ((notification (oref ein:%notification% :tab)))
+    (funcall (oref notification :insert-next)
+             (car (last (funcall (oref notification :get-list)))))))
 
 (defun ein:header-line ()
   (format

@@ -504,15 +504,37 @@ This is equivalent to do ``C-c`` in the console program."
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
     ;; Now that major-mode is set, set buffer local variables:
-    (ein:notification-setup
-     (current-buffer)
-     (ein:$notebook-events notebook)
-     (lambda () (ein:$notebook-worksheets ein:%notebook%))
-     (lambda () ein:%worksheet%)
-     #'ein:worksheet-name)
+    (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
     (ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
+
+(defun ein:notebook--notification-setup (notebook)
+  (ein:notification-setup
+   (current-buffer)
+   (ein:$notebook-events notebook)
+   :get-list
+   (lambda () (ein:$notebook-worksheets ein:%notebook%))
+   :get-current
+   (lambda () ein:%worksheet%)
+   :get-name
+   #'ein:worksheet-name
+   :get-buffer
+   (lambda (ws)
+     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
+     (ein:worksheet-buffer ws))
+   :delete
+   (lambda (ws)
+     (ein:notebook-worksheet-delete ein:%notebook% ws t))
+   :insert-prev
+   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
+   :insert-next
+   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
+   :move-prev
+   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
+   :move-next
+   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
+   ))
 
 (defun ein:notebook-set-buffer-file-name-maybe (notebook)
   "Set `buffer-file-name' of the current buffer to ipynb file
@@ -750,14 +772,23 @@ See also `ein:notebook-worksheet-open-next-or-first' and
     (when show
       (funcall show (ein:worksheet-buffer prev)))))
 
+(defun* ein:notebook-worksheet--render-maybe
+    (notebook ws &optional (adj "next"))
+  "Render worksheet WS of NOTEBOOK if it does not have buffer.
+ADJ is a adjective to describe worksheet to be rendered."
+  (if (ein:worksheet-has-buffer-p ws)
+      (ein:log 'verbose "The worksheet already has a buffer.")
+    (ein:log 'info "Rendering %s worksheet..." adj)
+    (ein:notebook--worksheet-render notebook ws)
+    (ein:log 'info "Rendering %s worksheet... Done." adj)))
+
 (defun* ein:notebook-worksheet--open-new
     (notebook new &optional (adj "next") show)
+  "Open (possibly new) worksheet NEW of NOTEBOOK with SHOW function.
+ADJ is a adjective to describe worksheet to be opened.
+SHOW is a function to be called with worksheet buffer if given."
   (when new
-    (if (ein:worksheet-has-buffer-p new)
-        (ein:log 'verbose "The worksheet already has a buffer.")
-      (ein:log 'info "Rendering %s worksheet..." adj)
-      (ein:notebook--worksheet-render notebook new)
-      (ein:log 'info "Rendering %s worksheet... Done." adj)))
+    (ein:notebook-worksheet--render-maybe notebook new adj))
   (when show
     (assert (ein:worksheet-p new) nil "No %s worksheet." adj)
     (funcall show (ein:worksheet-buffer new))))
@@ -839,7 +870,8 @@ See also `ein:notebook-worksheet-open-next'."
       (funcall show (ein:worksheet-buffer new)))
     new))
 
-(defun ein:notebook-worksheet-insert-next (notebook ws &optional render show)
+(defun* ein:notebook-worksheet-insert-next
+    (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet after this worksheet and open it.
 See also `ein:notebook-worksheet-insert-prev'.
 
@@ -848,31 +880,29 @@ See also `ein:notebook-worksheet-insert-prev'.
    Worksheet buffer is created when RENDER or SHOW is non-`nil'.
    SHOW is a function which take a buffer."
   (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     t
-                     #'switch-to-buffer))
+                     (ein:worksheet--get-ws-or-error)))
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-after))
 
-(defun ein:notebook-worksheet-insert-prev (notebook ws &optional render show)
+(defun* ein:notebook-worksheet-insert-prev
+    (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet before this worksheet and open it.
 See also `ein:notebook-worksheet-insert-next'."
   (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     t
-                     #'switch-to-buffer))
+                     (ein:worksheet--get-ws-or-error)))
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-before))
 
-(defun ein:notebook-worksheet-delete (notebook ws)
+(defun ein:notebook-worksheet-delete (notebook ws &optional confirm)
   "Delete the current worksheet.
 When used as a lisp function, delete worksheet WS from NOTEBOOk."
-  (interactive (progn
-                 (unless (y-or-n-p
-                          "Really remove this worksheet? There is no undo.")
-                   (error "Quit deleting the current worksheet."))
-                 (list (ein:notebook--get-nb-or-error)
-                       (ein:worksheet--get-ws-or-error))))
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t))
+  (when confirm
+    (unless (y-or-n-p
+             "Really remove this worksheet? There is no undo.")
+      (error "Quit deleting the current worksheet.")))
   (setf (ein:$notebook-worksheets notebook)
         (delq ws (ein:$notebook-worksheets notebook)))
   (setf (ein:$notebook-dirty notebook) t)
