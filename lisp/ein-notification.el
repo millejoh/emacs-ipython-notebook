@@ -39,7 +39,7 @@
 (define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
-(defvar ein:header-line-map (make-sparse-keymap))
+(defvar ein:header-line-tab-map (make-sparse-keymap))
 (defvar ein:header-line-tab-help
   "\
 mouse-1 (left click) : switch to this tab
@@ -230,7 +230,7 @@ insert-prev insert-next move-prev move-next)"
                           (format "/%d: %s\\" i name))
                         (format "/%d\\" i))
                     'ein:worksheet elem
-                    'keymap ein:header-line-map
+                    'keymap ein:header-line-tab-map
                     'help-echo ein:header-line-tab-help
                     'mouse-face 'highlight
                     'face 'ein:notification-tab-selected)
@@ -238,7 +238,7 @@ insert-prev insert-next move-prev move-next)"
            collect (propertize
                     (format "/%d\\" i)
                     'ein:worksheet elem
-                    'keymap ein:header-line-map
+                    'keymap ein:header-line-tab-map
                     'help-echo ein:header-line-tab-help
                     'mouse-face 'highlight
                     'face 'ein:notification-tab-normal)))))
@@ -246,7 +246,7 @@ insert-prev insert-next move-prev move-next)"
 
 ;;; Header line
 
-(let ((map ein:header-line-map))
+(let ((map ein:header-line-tab-map))
   (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
   (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
   (define-key map [header-line S-mouse-1] 'ein:header-line-move-prev-tab)
