@@ -144,6 +144,18 @@ See: http://api.jquery.com/jQuery.ajax/"
   (concat url (format-time-string "?_=%s")))
 
 
+;;; HTML utils
+
+(defun ein:html-get-data-in-body-tag (key)
+  "Very ad-hoc parser to get data in body tag."
+  (ignore-errors
+    (save-excursion
+      (goto-char (point-min))
+      (search-forward "<body")
+      (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
+      (match-string 1))))
+
+
 ;;; JSON utils
 
 (defmacro ein:with-json-setting (&rest body)

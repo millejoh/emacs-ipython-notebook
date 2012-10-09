@@ -192,15 +192,6 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
-(defun ein:notebooklist-get-data-in-body-tag (key)
-  "Very ad-hoc parser to get data in body tag."
-  (ignore-errors
-    (save-excursion
-      (goto-char (point-min))
-      (search-forward "<body")
-      (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
-      (match-string 1))))
-
 (defun ein:notebooklist-open-notebook (nblist notebook-id &optional name
                                               callback cbargs)
   (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
@@ -220,7 +211,7 @@ This function is called via `ein:notebook-after-rename-hook'."
    (list 'notebooklist-new-notebook url-or-port)
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
-             (ein:notebooklist-get-data-in-body-tag "data-notebook-id"))
+             (ein:html-get-data-in-body-tag "data-notebook-id"))
    :error (cons #'ein:notebooklist-new-notebook-error
                 (list url-or-port callback cbargs))
    :success (cons #'ein:notebooklist-new-notebook-callback
