@@ -38,6 +38,8 @@
     (let ((notebook (ein:notebook-new "DUMMY-URL" notebook-id)))
       (setf (ein:$notebook-kernel notebook)
             (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook)))
+      (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
+            (ein:events-new))
       (ein:notebook-request-open-callback
        notebook :data (ein:json-read-from-string json-string))
       (ein:notebook-buffer notebook))))

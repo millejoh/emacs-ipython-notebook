@@ -55,6 +55,9 @@
 (defclass ein:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
    (tab :initarg :tab :type ein:notification-tab)
+   (execution-count
+    :initform "y" :initarg :execution-count
+    :documentation "Last `execution_count' sent by `execute_reply'.")
    (notebook
     :initarg :notebook
     :initform
@@ -104,6 +107,10 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                        'notebook_saved.Notebook
                        nil))
   (ein:events-on events
+                 'execution_count.Kernel
+                 #'ein:notification--set-execution-count
+                 notification)
+  (ein:events-on events
                  'status_restarting.Kernel
                  #'ein:notification--fadeout-callback
                  (list (oref notification :kernel)
@@ -115,6 +122,9 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
   (let ((ns (car packed))
         (status (cdr packed)))
     (ein:notification-status-set ns status)))
+
+(defun ein:notification--set-execution-count (notification count)
+  (oset notification :execution-count count))
 
 (defun ein:notification--fadeout-callback (packed data)
   ;; FIXME: I can simplify this.
@@ -160,12 +170,12 @@ worksheet given as its argument."
 ;;; Tabs
 
 (defface ein:notification-tab-selected
-  '((t :inherit (header-line match)))
+  '((t :inherit (header-line match) :underline t))
   "Face for headline selected tab."
   :group 'ein)
 
 (defface ein:notification-tab-normal
-  '((t :inherit (header-line)))
+  '((t :inherit (header-line) :underline t :height 0.8))
   "Face for headline selected tab."
   :group 'ein)
 
@@ -180,12 +190,12 @@ worksheet given as its argument."
            if (eq elem current)
            collect (propertize
                     (or (ein:and-let* ((name (funcall get-name elem)))
-                          (format "[%d: %s]" i name))
-                        (format "[%d]" i))
+                          (format "/%d: %s\\" i name))
+                        (format "/%d\\" i))
                     'face 'ein:notification-tab-selected)
            else
            collect (propertize
-                    (format " %d " i)
+                    (format "/%d\\" i)
                     'face 'ein:notification-tab-normal)))))
 
 
@@ -193,7 +203,8 @@ worksheet given as its argument."
 
 (defun ein:header-line ()
   (format
-   "IP[y]: %s"
+   "IP[%s]: %s"
+   (oref ein:%notification% :execution-count)
    (ein:join-str
     " | "
     (ein:filter

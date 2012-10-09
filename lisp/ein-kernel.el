@@ -511,7 +511,13 @@ Relevant Python code:
         (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
                  msg-type msg-id))
       (ein:aif (plist-get content :payload)
-          (ein:kernel--handle-payload kernel callbacks it))))
+          (ein:kernel--handle-payload kernel callbacks it))
+      (let ((events (ein:$kernel-events kernel)))
+        (ein:case-equal msg-type
+          (("execute_reply")
+           (ein:aif (plist-get content :execution_count)
+               ;; It can be `nil' for silent execution
+               (ein:events-trigger events 'execution_count.Kernel it)))))))
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: finished"))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
