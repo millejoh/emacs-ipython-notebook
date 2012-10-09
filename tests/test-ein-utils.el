@@ -99,6 +99,14 @@ def f():
           (4 "\
         # indent = 8
     # indent 4")
+          ;; With empty lines
+          (4 "\
+
+        # indent = 8
+
+    # indent 4
+
+")
           )
         do (with-temp-buffer
              (insert text)

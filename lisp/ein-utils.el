@@ -284,14 +284,14 @@ Adapted from twittering-mode.el's `case-string'."
 (defun ein:find-leftmot-column (beg end)
   "Return the leftmost column in region BEG to END."
   (save-excursion
-    (goto-char beg)
-    (back-to-indentation)
-    (let ((mincol (current-column)))
-      (forward-line 1)
+    (let (mincol)
+      (goto-char beg)
       (while (< (point) end)
         (back-to-indentation)
         (unless (= (point) (point-at-eol))
-          (setq mincol (min mincol (current-column))))
+          (setq mincol (if mincol
+                           (min mincol (current-column))
+                         (current-column))))
         (unless (= (forward-line 1) 0)
           (return-from ein:find-leftmot-column mincol)))
       mincol)))
