@@ -1249,6 +1249,34 @@ Note that print page is not supported in IPython 0.12.1."
     (message "Opening %s in browser" url)
     (browse-url url)))
 
+(defun ein:notebook-fetch-data (notebook callback &optional cbargs)
+  "Fetch data in body tag of NOTEBOOK html page.
+CALLBACK is called with a plist with data in the body tag as
+the first argument and CBARGS as the rest of arguments."
+  (let ((url-or-port (ein:$notebook-url-or-port notebook))
+        (notebook-id (ein:$notebook-notebook-id notebook)))
+    (ein:query-singleton-ajax
+     (list 'notebook-fetch-data url-or-port notebook-id)
+     (ein:url url-or-port notebook-id)
+     :parser
+     (lambda ()
+       (list
+        :project
+        (ein:html-get-data-in-body-tag "data-project")
+        :base-project-url
+        (ein:html-get-data-in-body-tag "data-base-project-url")
+        :base-kernel-url
+        (ein:html-get-data-in-body-tag "data-base-kernel-url")
+        :read-only
+        (ein:html-get-data-in-body-tag "data-read-only")
+        :notebook-id
+        (ein:html-get-data-in-body-tag "data-notebook-id")))
+     :success
+     (cons (function*
+            (lambda (packed &key data &allow-other-keys)
+              (apply (car packed) data (cadr packed))))
+           (list callback cbargs)))))
+
 
 ;;; Buffer and kill hooks
 
