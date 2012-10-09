@@ -54,6 +54,8 @@
    (get-name :initarg :get-name :type function)
    (get-buffer :initarg :get-buffer :type function)
    (delete :initarg :delete :type function)
+   (insert-prev :initarg :insert-prev :type function)
+   (insert-next :initarg :insert-next :type function)
    )
   ;; These "methods" are for not depending on what the TABs for.
   ;; Probably I'd want change this to be a separated Emacs lisp
@@ -174,7 +176,11 @@ GET-BUFFER : function
 DELETE : function
   Remove a given worksheet.
 
-\(fn buffer events &key get-list get-current get-name get-buffer delete)"
+INSERT-PREV / INSERT-NEXT : function
+  Insert new worksheet before/after the specified worksheet.
+
+\(fn buffer events &key get-list get-current get-name get-buffer delete \
+insert-prev insert-next)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))

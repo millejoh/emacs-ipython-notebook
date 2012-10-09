@@ -526,6 +526,10 @@ This is equivalent to do ``C-c`` in the console program."
    :delete
    (lambda (ws)
      (ein:notebook-worksheet-delete ein:%notebook% ws t))
+   :insert-prev
+   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
+   :insert-next
+   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
    ))
 
 (defun ein:notebook-set-buffer-file-name-maybe (notebook)
