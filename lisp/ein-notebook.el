@@ -862,7 +862,8 @@ See also `ein:notebook-worksheet-open-next'."
       (funcall show (ein:worksheet-buffer new)))
     new))
 
-(defun ein:notebook-worksheet-insert-next (notebook ws &optional render show)
+(defun* ein:notebook-worksheet-insert-next
+    (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet after this worksheet and open it.
 See also `ein:notebook-worksheet-insert-prev'.
 
@@ -871,19 +872,16 @@ See also `ein:notebook-worksheet-insert-prev'.
    Worksheet buffer is created when RENDER or SHOW is non-`nil'.
    SHOW is a function which take a buffer."
   (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     t
-                     #'switch-to-buffer))
+                     (ein:worksheet--get-ws-or-error)))
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-after))
 
-(defun ein:notebook-worksheet-insert-prev (notebook ws &optional render show)
+(defun* ein:notebook-worksheet-insert-prev
+    (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet before this worksheet and open it.
 See also `ein:notebook-worksheet-insert-next'."
   (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     t
-                     #'switch-to-buffer))
+                     (ein:worksheet--get-ws-or-error)))
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-before))
 
