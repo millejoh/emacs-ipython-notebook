@@ -40,6 +40,13 @@
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 (defvar ein:header-line-map (make-sparse-keymap))
+(defvar ein:header-line-tab-help
+  "\
+mouse-1 (left click) : switch to this tab
+mouse-3 (right click) : pop to this tab
+mouse-2 (middle click) : delete this tab
+M-mouse-1/3 (Alt left/right click): insert new tab to the left/right"
+  "Help message.")
 ;; Note: can't put this below of `ein:notification-setup'...
 
 (defclass ein:notification-status ()
@@ -218,6 +225,7 @@ insert-prev insert-next)"
                         (format "/%d\\" i))
                     'ein:worksheet elem
                     'keymap ein:header-line-map
+                    'help-echo ein:header-line-tab-help
                     'mouse-face 'highlight
                     'face 'ein:notification-tab-selected)
            else
@@ -225,6 +233,7 @@ insert-prev insert-next)"
                     (format "/%d\\" i)
                     'ein:worksheet elem
                     'keymap ein:header-line-map
+                    'help-echo ein:header-line-tab-help
                     'mouse-face 'highlight
                     'face 'ein:notification-tab-normal)))))
 
