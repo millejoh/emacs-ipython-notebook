@@ -82,6 +82,40 @@ def func():
 "))
     (should (equal (ein:trim-indent original) trimmed))))
 
+
+;;; Text manipulation on buffer
+
+(ert-deftest ein:find-leftmot-column-simple-cases ()
+  (loop for (indent text) in
+        '(;; No indent
+          (0 "\
+def f():
+    pass")
+          ;; Indented python code
+          (4 "\
+    def f():
+        pass")
+          ;; Deeper indent can come first
+          (4 "\
+        # indent = 8
+    # indent 4")
+          ;; With empty lines
+          (4 "\
+
+        # indent = 8
+
+    # indent 4
+
+")
+          )
+        do (with-temp-buffer
+             (insert text)
+             (should (= (ein:find-leftmot-column (point-min) (point-max))
+                        indent)))))
+
+
+;;; Misc
+
 (ert-deftest ein:list-insert-after ()
   (should (equal (ein:list-insert-after '(a) 'a 'X) '(a X)))
   (should (equal (ein:list-insert-after '(a b c) 'a 'X) '(a X b c)))

@@ -1114,7 +1114,9 @@ This hook is run regardless the actual major mode used."
             ("Go to next cell" ein:worksheet-goto-next-input)
             ("Go to previous cell" ein:worksheet-goto-prev-input)
             ("Move cell up" ein:worksheet-move-cell-up)
-            ("Move cell down" ein:worksheet-move-cell-down))))
+            ("Move cell down" ein:worksheet-move-cell-down)
+            ("Dedent text in CELL" ein:worksheet-dedent-cell-text)
+            )))
       ("Cell/Code"
        ,@(ein:generate-menu
           '(("Execute cell" ein:worksheet-execute-cell
