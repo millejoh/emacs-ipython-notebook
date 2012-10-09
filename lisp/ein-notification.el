@@ -52,7 +52,9 @@
   ((get-list :initarg :get-list :type function)
    (get-current :initarg :get-current :type function)
    (get-name :initarg :get-name :type function)
-   (get-buffer :initarg :get-buffer :type function))
+   (get-buffer :initarg :get-buffer :type function)
+   (delete :initarg :delete :type function)
+   )
   ;; These "methods" are for not depending on what the TABs for.
   ;; Probably I'd want change this to be a separated Emacs lisp
   ;; library at some point.
@@ -226,6 +228,7 @@ GET-BUFFER : function
 
 (let ((map ein:header-line-map))
   (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
+  (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
   (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
 
 (defmacro ein:with-destructuring-bind-key-event (key-event &rest body)
@@ -255,6 +258,11 @@ GET-BUFFER : function
 (defun ein:header-line-pop-to-this-tab (key-event)
   (interactive "e")
   (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+
+(defun ein:header-line-key-delete-this-tab (key-event)
+  (interactive "e")
+  (funcall (oref (oref ein:%notification% :tab) :delete)
+           (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line ()
   (format
