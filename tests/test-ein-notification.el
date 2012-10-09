@@ -14,7 +14,7 @@
          (kernel (oref ein:%notification% :kernel)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (should (equal (ein:header-line)
-                   "IP[y]: /1\\ /2\\ /3\\"))))
+                   "IP[y]: /1\\ /2\\ /3\\ [+]"))))
 
 (ert-deftest ein:header-line-kernel-status-busy ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -23,7 +23,7 @@
     (ein:notification-status-set kernel
                                  'status_busy.Kernel)
     (should (equal (ein:header-line)
-                   "IP[y]: Kernel is busy... | /1\\ /2\\ /3\\"))))
+                   "IP[y]: Kernel is busy... | /1\\ /2\\ /3\\ [+]"))))
 
 (ert-deftest ein:header-line-notebook-status-busy ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -32,7 +32,7 @@
     (ein:notification-status-set notebook
                                  'notebook_saved.Notebook)
     (should (equal (ein:header-line)
-                   "IP[y]: Notebook is saved | /1\\ /2\\ /3\\"))))
+                   "IP[y]: Notebook is saved | /1\\ /2\\ /3\\ [+]"))))
 
 (ert-deftest ein:header-line-notebook-complex ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -47,7 +47,7 @@
              (ein:header-line)
              (concat "IP[y]: Saving Notebook... | "
                      "Kernel is dead. Need restart. | "
-                     "/1\\ /2\\ /3\\")))))
+                     "/1\\ /2\\ /3\\ [+]")))))
 
 (ert-deftest ein:notification-and-events ()
   (let* ((notification (ein:notification "NotificationTest"))
