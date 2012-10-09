@@ -267,6 +267,9 @@ insert-prev insert-next move-prev move-next)"
        ,key-event
      ,@body))
 
+(defun ein:header-line-select-window (key-event)
+  (ein:with-destructuring-bind-key-event key-event (select-window window)))
+
 (defun ein:header-line-key-event-get-worksheet (key-event)
   (ein:with-destructuring-bind-key-event key-event
     (get-char-property (cdr object) 'ein:worksheet (car object))))
@@ -277,34 +280,41 @@ insert-prev insert-next move-prev move-next)"
 
 (defun ein:header-line-switch-to-this-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (switch-to-buffer (ein:header-line-key-event-get-buffer key-event)))
 
 (defun ein:header-line-pop-to-this-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
 
 (defun ein:header-line-delete-this-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (funcall (oref (oref ein:%notification% :tab) :delete)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line-insert-prev-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (funcall (oref (oref ein:%notification% :tab) :insert-prev)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line-insert-next-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (funcall (oref (oref ein:%notification% :tab) :insert-next)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line-move-prev-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (funcall (oref (oref ein:%notification% :tab) :move-prev)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line-move-next-tab (key-event)
   (interactive "e")
+  (ein:header-line-select-window key-event)
   (funcall (oref (oref ein:%notification% :tab) :move-next)
            (ein:header-line-key-event-get-worksheet key-event)))
 
