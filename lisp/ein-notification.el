@@ -153,7 +153,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
            packed)))
 
 (defun ein:notification-setup (buffer events get-list get-current get-name
-                                      get-buffer)
+                                      get-buffer delete)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
@@ -171,6 +171,9 @@ GET-NAME : function
 
 GET-BUFFER : function
   Get a buffer of given worksheet.  Render it if needed.
+
+DELETE : function
+  Remove a given worksheet.
 "
   (with-current-buffer buffer
     (setq ein:%notification%
@@ -182,7 +185,8 @@ GET-BUFFER : function
                          :get-list get-list
                          :get-current get-current
                          :get-name get-name
-                         :get-buffer get-buffer))
+                         :get-buffer get-buffer
+                         :delete delete))
     ein:%notification%))
 
 

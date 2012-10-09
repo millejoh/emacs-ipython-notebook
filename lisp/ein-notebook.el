@@ -512,7 +512,9 @@ This is equivalent to do ``C-c`` in the console program."
      #'ein:worksheet-name
      (lambda (ws)
        (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
-       (ein:worksheet-buffer ws)))
+       (ein:worksheet-buffer ws))
+     (lambda (ws)
+       (ein:notebook-worksheet-delete ein:%notebook% ws t)))
     (ein:notebook-setup-kill-buffer-hook)
     (ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
