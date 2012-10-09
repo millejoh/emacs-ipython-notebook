@@ -63,6 +63,8 @@ M-mouse-1/3 (Alt left/right click): insert new tab to the left/right"
    (delete :initarg :delete :type function)
    (insert-prev :initarg :insert-prev :type function)
    (insert-next :initarg :insert-next :type function)
+   (move-prev :initarg :move-prev :type function)
+   (move-next :initarg :move-next :type function)
    )
   ;; These "methods" are for not depending on what the TABs for.
   ;; Probably I'd want change this to be a separated Emacs lisp
@@ -186,8 +188,11 @@ DELETE : function
 INSERT-PREV / INSERT-NEXT : function
   Insert new worksheet before/after the specified worksheet.
 
+MOVE-PREV / MOVE-NEXT : function
+  Switch this worksheet to the previous/next one.
+
 \(fn buffer events &key get-list get-current get-name get-buffer delete \
-insert-prev insert-next)"
+insert-prev insert-next move-prev move-next)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (ein:notification "NotificationWidget" :buffer buffer))
@@ -243,6 +248,8 @@ insert-prev insert-next)"
 (let ((map ein:header-line-map))
   (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
   (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
+  (define-key map [header-line S-mouse-1] 'ein:header-line-move-prev-tab)
+  (define-key map [header-line S-mouse-3] 'ein:header-line-move-next-tab)
   (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
   (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
   (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
@@ -288,6 +295,16 @@ insert-prev insert-next)"
 (defun ein:header-line-insert-next-tab (key-event)
   (interactive "e")
   (funcall (oref (oref ein:%notification% :tab) :insert-next)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defun ein:header-line-move-prev-tab (key-event)
+  (interactive "e")
+  (funcall (oref (oref ein:%notification% :tab) :move-prev)
+           (ein:header-line-key-event-get-worksheet key-event)))
+
+(defun ein:header-line-move-next-tab (key-event)
+  (interactive "e")
+  (funcall (oref (oref ein:%notification% :tab) :move-next)
            (ein:header-line-key-event-get-worksheet key-event)))
 
 (defun ein:header-line ()
