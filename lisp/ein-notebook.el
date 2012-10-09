@@ -876,15 +876,16 @@ See also `ein:notebook-worksheet-insert-next'."
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-before))
 
-(defun ein:notebook-worksheet-delete (notebook ws)
+(defun ein:notebook-worksheet-delete (notebook ws &optional confirm)
   "Delete the current worksheet.
 When used as a lisp function, delete worksheet WS from NOTEBOOk."
-  (interactive (progn
-                 (unless (y-or-n-p
-                          "Really remove this worksheet? There is no undo.")
-                   (error "Quit deleting the current worksheet."))
-                 (list (ein:notebook--get-nb-or-error)
-                       (ein:worksheet--get-ws-or-error))))
+  (interactive (list (ein:notebook--get-nb-or-error)
+                     (ein:worksheet--get-ws-or-error)
+                     t))
+  (when confirm
+    (unless (y-or-n-p
+             "Really remove this worksheet? There is no undo.")
+      (error "Quit deleting the current worksheet.")))
   (setf (ein:$notebook-worksheets notebook)
         (delq ws (ein:$notebook-worksheets notebook)))
   (setf (ein:$notebook-dirty notebook) t)
