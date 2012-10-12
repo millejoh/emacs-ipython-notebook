@@ -28,8 +28,15 @@
 
 (require 'ein-notebooklist)
 
+
+(defvar ein:ipynb-parent-mode 'js-mode
+  "A mode (a symbol) to use for parent mode for `ein:ipynb-mode'.
+Note that this variable must be set *before* compiling EIN.")
+
+(defalias 'ein:ipynb-parent-mode ein:ipynb-parent-mode)
+
 ;;;###autoload
-(define-derived-mode ein:ipynb-mode js-mode "ein:ipynb"
+(define-derived-mode ein:ipynb-mode ein:ipynb-parent-mode "ein:ipynb"
   "A simple mode for ipynb file.")
 
 (let ((map ein:ipynb-mode-map))
