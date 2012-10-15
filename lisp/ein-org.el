@@ -26,6 +26,10 @@
 
 ;;; Code:
 
+(require 'org)
+(require 'ein-core)
+
+
 ;;;###autoload
 (defun ein:org-open (link-path)
   "Open IPython notebook specified by LINK-PATH.
@@ -37,7 +41,18 @@ This function is to be used for FOLLOW function of
 (defun ein:org-store-link ()
   "Call `org-store-link-props' when in notebook buffer.
 This function is to be used for `org-store-link-functions'."
-  (error "Not implemented!"))
+  (ein:and-let* ((notebook (ein:get-notebook))
+                 (name (ein:notebook-name notebook))
+                 (link (format
+                        "ipynb:%S"
+                        (list
+                         :url-or-port (ein:get-url-or-port)
+                         :name name)))
+                 (description name))
+    (org-store-link-props
+     :type "ipynb"
+     :link link
+     :description description)))
 
 ;;;###autoload
 (eval-after-load "org"
