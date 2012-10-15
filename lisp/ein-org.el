@@ -35,7 +35,9 @@
   "Open IPython notebook specified by LINK-PATH.
 This function is to be used for FOLLOW function of
 `org-add-link-type'."
-  (destructuring-bind (&key url-or-port name) (read link-path)
+  (destructuring-bind (&key url-or-port name
+                            &allow-other-keys)
+      (read link-path)
     (ein:notebooklist-open-notebook-by-name name url-or-port)))
 
 ;;;###autoload
