@@ -27,7 +27,7 @@
 ;;; Code:
 
 (require 'org)
-(require 'ein-core)
+(require 'ein-notebooklist)
 
 
 ;;;###autoload
@@ -35,7 +35,8 @@
   "Open IPython notebook specified by LINK-PATH.
 This function is to be used for FOLLOW function of
 `org-add-link-type'."
-  (error "Not implemented!"))
+  (destructuring-bind (&key url-or-port name) (read link-path)
+    (ein:notebooklist-open-notebook-by-name name url-or-port)))
 
 ;;;###autoload
 (defun ein:org-store-link ()
