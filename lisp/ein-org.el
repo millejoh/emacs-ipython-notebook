@@ -41,7 +41,22 @@ This function is to be used for FOLLOW function of
 ;;;###autoload
 (defun ein:org-store-link ()
   "Call `org-store-link-props' when in notebook buffer.
-This function is to be used for `org-store-link-functions'."
+This function is to be used for `org-store-link-functions'.
+
+Examples::
+
+  ipynb:(:url-or-port 8888 :name \"My_Notebook\")
+  ipynb:(:url-or-port \"http://notebook-server\" :name \"My_Notebook\")
+
+Note that spaces will be escaped in org files.
+
+As how IPython development team supports multiple directory in
+IPython notebook server is unclear, it is not easy to decide the
+format for notebook links.  Current approach is to use
+S-expression based (rather verbose) serialization, so that
+extending link spec without loosing backward compatibility is
+easier.  For the examples of link format in general, see Info
+node `(org) External links' and Info node `(org) Search options'"
   (ein:and-let* ((notebook (ein:get-notebook))
                  (name (ein:notebook-name notebook))
                  (link (let ((print-length nil)
