@@ -43,11 +43,13 @@ This function is to be used for FOLLOW function of
 This function is to be used for `org-store-link-functions'."
   (ein:and-let* ((notebook (ein:get-notebook))
                  (name (ein:notebook-name notebook))
-                 (link (format
-                        "ipynb:%S"
-                        (list
-                         :url-or-port (ein:get-url-or-port)
-                         :name name)))
+                 (link (let ((print-length nil)
+                             (print-level nil))
+                         (format
+                          "ipynb:%S"
+                          (list
+                           :url-or-port (ein:get-url-or-port)
+                           :name name))))
                  (description name))
     (org-store-link-props
      :type "ipynb"
