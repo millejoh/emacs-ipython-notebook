@@ -30,7 +30,9 @@
 (require 'ein-notebooklist)
 
 (defun* ein:org-goto-link (notebook created
-                                    &key worksheet-index
+                                    &key
+                                    worksheet-index
+                                    search
                                     &allow-other-keys)
   (if created
       (ein:log 'info "Linked notebook did not exist.  Created a new one.")
@@ -38,6 +40,9 @@
         (ein:notebook-worksheet-open-ith notebook worksheet-index
                                          #'pop-to-buffer)
       (pop-to-buffer (ein:notebook-buffer notebook)))
+    (when search
+      (goto-char (point-min))
+      (search-forward search nil t))
     ;; More to come here:
     ))
 
@@ -79,6 +84,9 @@ node `(org) External links' and Info node `(org) Search options'"
     (ein:aif (ein:notebook-worksheet-index notebook)
         (unless (= it 0)
           (plist-put link :worksheet-index it)))
+    (when (region-active-p)
+      (plist-put link :search (buffer-substring-no-properties
+                               (region-beginning) (region-end))))
     (org-store-link-props
      :type "ipynb"
      :link (let ((print-length nil)
