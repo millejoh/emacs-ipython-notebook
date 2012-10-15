@@ -29,15 +29,17 @@
 (require 'org)
 (require 'ein-notebooklist)
 
-(defun* ein:org-goto-link (notebook -created-not-used-
+(defun* ein:org-goto-link (notebook created
                                     &key worksheet-index
                                     &allow-other-keys)
-  (if worksheet-index
-      (ein:notebook-worksheet-open-ith notebook worksheet-index
-                                       #'pop-to-buffer)
-    (pop-to-buffer (ein:notebook-buffer notebook)))
-  ;; More to come here:
-  )
+  (if created
+      (ein:log 'info "Linked notebook did not exist.  Created a new one.")
+    (if worksheet-index
+        (ein:notebook-worksheet-open-ith notebook worksheet-index
+                                         #'pop-to-buffer)
+      (pop-to-buffer (ein:notebook-buffer notebook)))
+    ;; More to come here:
+    ))
 
 ;;;###autoload
 (defun ein:org-open (link-path)
