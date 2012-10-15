@@ -83,7 +83,8 @@ node `(org) External links' and Info node `(org) Search options'"
                  (description name))
     (ein:aif (ein:notebook-worksheet-index notebook)
         (unless (= it 0)
-          (plist-put link :worksheet-index it)))
+          (plist-put link :worksheet-index it))
+      (error "[ein] Cannot link to scratch sheet!"))
     (when (region-active-p)
       (plist-put link :search (buffer-substring-no-properties
                                (region-beginning) (region-end))))
