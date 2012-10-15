@@ -29,6 +29,9 @@
 (require 'org)
 (require 'ein-notebooklist)
 
+;; FIXME: Separate org-unrelated cores from the following code and
+;; expose them as API in ein-link.el.
+
 (defun* ein:org-goto-link (notebook created
                                     &key
                                     worksheet-index
@@ -86,6 +89,7 @@ node `(org) External links' and Info node `(org) Search options'"
           (plist-put link :worksheet-index it))
       (error "[ein] Cannot link to scratch sheet!"))
     (when (region-active-p)
+      ;; FIXME: It does not work when selecting muli-line.
       (plist-put link :search (buffer-substring-no-properties
                                (region-beginning) (region-end))))
     (org-store-link-props
