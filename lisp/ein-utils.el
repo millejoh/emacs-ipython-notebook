@@ -46,7 +46,9 @@
 
 (defmacro ein:and-let* (bindings &rest form)
   "Gauche's `and-let*'."
-  (declare (debug (((symbolp form)) &rest form))
+  (declare (debug ((&rest &or symbolp (form) (gate symbolp &optional form))
+                   body))
+           ;; See: (info "(elisp) Specification List")
            (indent 1))
   (if (null bindings)
       `(progn ,@form)
