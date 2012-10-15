@@ -925,6 +925,15 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
   (setf (ein:$notebook-worksheets notebook)
         (ein:list-move-right (ein:$notebook-worksheets notebook) ws)))
 
+(defun* ein:notebook-worksheet-index
+    (&optional (notebook ein:%notebook%)
+               (ws ein:%worksheet%))
+  "Return an index of the worksheet WS in NOTEBOOK."
+  (loop for i from 0
+        for ith-ws in (ein:$notebook-worksheets notebook)
+        when (eq ith-ws ws)
+        return i))
+
 
 ;;; Scratch sheet
 
