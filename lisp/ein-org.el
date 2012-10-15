@@ -61,17 +61,14 @@ easier.  For the examples of link format in general, see Info
 node `(org) External links' and Info node `(org) Search options'"
   (ein:and-let* ((notebook (ein:get-notebook))
                  (name (ein:notebook-name notebook))
-                 (link (let ((print-length nil)
-                             (print-level nil))
-                         (format
-                          "ipynb:%S"
-                          (list
-                           :url-or-port (ein:get-url-or-port)
-                           :name name))))
+                 (link (list :url-or-port (ein:get-url-or-port)
+                             :name name))
                  (description name))
     (org-store-link-props
      :type "ipynb"
-     :link link
+     :link (let ((print-length nil)
+                 (print-level nil))
+             (format "ipynb:%S" link))
      :description description)))
 
 ;;;###autoload
