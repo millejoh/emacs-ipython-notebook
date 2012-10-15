@@ -296,6 +296,28 @@ Misc
 .. It is better to remove el:package from eldomain??
 
 
+Org-mode integration
+--------------------
+
+You can link to IPython notebook from org-mode_ files.
+
+1. Call org-mode function :el:symbol:`org-store-link`
+   [#org-store-link]_ in notebook buffer.  You can select a region to
+   specify a position in the notebook.
+
+2. Go to org-mode file and type ``C-c C-l``
+   (:el:symbol:`org-insert-link`).  This will insert a link to the
+   notebook.
+
+3. Type ``C-c C-o`` (:el:symbol:`org-open-at-point`) to open
+   the link at the point of cursor.
+
+.. _org-mode: http://orgmode.org/
+
+.. [#org-store-link] See `1.3 Activation
+   <http://orgmode.org/manual/Activation.html>`_ in org-mode manual.
+
+
 Customization
 -------------
 
@@ -513,6 +535,7 @@ Change Log
 v0.2
 ----
 
+* Add a simple org-mode link support.
 * Add built-in multiple language fontification for notebook:
   :el:symbol:`ein:notebook-multilang-mode`.
   This is the new default for :el:symbol:`ein:notebook-modes`.
