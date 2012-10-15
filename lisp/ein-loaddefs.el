@@ -128,7 +128,7 @@ change in its input area.
 ;;;***
 
 ;;;### (autoloads (ein:ipynb-mode) "ein-ipynb-mode" "ein-ipynb-mode.el"
-;;;;;;  (20600 17103 342557 522000))
+;;;;;;  (20600 17207 518562 563000))
 ;;; Generated autoloads from ein-ipynb-mode.el
 
 (autoload 'ein:ipynb-mode "ein-ipynb-mode" "\
@@ -182,8 +182,8 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20596 44641
-;;;;;;  43203 238000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20604 24168
+;;;;;;  987586 508000))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -193,8 +193,8 @@ Notebook mode with multiple language fontification.
 ;;;### (autoloads (ein:notebooklist-load ein:notebooklist-open-notebook-global
 ;;;;;;  ein:notebooklist-list-notebooks ein:notebooklist-new-notebook-with-name
 ;;;;;;  ein:notebooklist-new-notebook ein:notebooklist-reload ein:notebooklist-open)
-;;;;;;  "ein-notebooklist" "ein-notebooklist.el" (20596 10953 809572
-;;;;;;  870000))
+;;;;;;  "ein-notebooklist" "ein-notebooklist.el" (20604 21315 671448
+;;;;;;  417000))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-open "ein-notebooklist" "\
@@ -255,6 +255,42 @@ See also:
 
 ;;;***
 
+;;;### (autoloads (ein:org-store-link ein:org-open) "ein-org" "ein-org.el"
+;;;;;;  (20604 28304 115786 638000))
+;;; Generated autoloads from ein-org.el
+
+(autoload 'ein:org-open "ein-org" "\
+Open IPython notebook specified by LINK-PATH.
+This function is to be used for FOLLOW function of
+`org-add-link-type'.
+
+\(fn LINK-PATH)" nil nil)
+
+(autoload 'ein:org-store-link "ein-org" "\
+Call `org-store-link-props' when in notebook buffer.
+This function is to be used for `org-store-link-functions'.
+
+Examples::
+
+  ipynb:(:url-or-port 8888 :name \"My_Notebook\")
+  ipynb:(:url-or-port \"http://notebook-server\" :name \"My_Notebook\")
+
+Note that spaces will be escaped in org files.
+
+As how IPython development team supports multiple directory in
+IPython notebook server is unclear, it is not easy to decide the
+format for notebook links.  Current approach is to use
+S-expression based (rather verbose) serialization, so that
+extending link spec without loosing backward compatibility is
+easier.  For the examples of link format in general, see Info
+node `(org) External links' and Info node `(org) Search options'
+
+\(fn)" nil nil)
+
+(eval-after-load "org" '(progn (org-add-link-type "ipynb" 'ein:org-open) (add-hook 'org-store-link-functions 'ein:org-store-link)))
+
+;;;***
+
 ;;;### (autoloads (ein:pseudo-console-mode) "ein-pseudo-console"
 ;;;;;;  "ein-pseudo-console.el" (20546 25932 441322 552000))
 ;;; Generated autoloads from ein-pseudo-console.el
@@ -312,7 +348,7 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-smartrep.el" "ein-subpackages.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
-;;;;;;  "zeroein.el") (20600 17122 613157 382000))
+;;;;;;  "zeroein.el") (20604 28346 685498 148000))
 
 ;;;***
 
