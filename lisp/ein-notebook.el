@@ -486,7 +486,7 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-test-notebook-name (name)
   (and (stringp name)
        (> (length name) 0)
-       (not (string-match "[\\/\\\\]" name))))
+       (not (string-match "[\\/\\\\:]" name))))
 
 (defun* ein:notebook--worksheet-new (notebook
                                      &optional (func #'ein:worksheet-new))

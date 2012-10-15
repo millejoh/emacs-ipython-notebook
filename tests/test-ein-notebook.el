@@ -1267,8 +1267,10 @@ value of `ein:worksheet-enable-undo'."
   (should-not (ein:notebook-test-notebook-name ""))
   (should-not (ein:notebook-test-notebook-name "/"))
   (should-not (ein:notebook-test-notebook-name "\\"))
+  (should-not (ein:notebook-test-notebook-name ":"))
   (should-not (ein:notebook-test-notebook-name "a/b"))
   (should-not (ein:notebook-test-notebook-name "a\\b"))
+  (should-not (ein:notebook-test-notebook-name "a:b"))
   (should (ein:notebook-test-notebook-name "This is a OK notebook name")))
 
 (defun* eintest:notebook--check-nbformat (&optional orig_nbformat
