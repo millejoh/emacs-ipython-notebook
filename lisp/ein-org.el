@@ -29,16 +29,26 @@
 (require 'org)
 (require 'ein-notebooklist)
 
+(defun* ein:org-goto-link (notebook -created-not-used-
+                                    &key worksheet-index
+                                    &allow-other-keys)
+  (if worksheet-index
+      (ein:notebook-worksheet-open-ith notebook worksheet-index
+                                       #'pop-to-buffer)
+    (pop-to-buffer (ein:notebook-buffer notebook)))
+  ;; More to come here:
+  )
 
 ;;;###autoload
 (defun ein:org-open (link-path)
   "Open IPython notebook specified by LINK-PATH.
 This function is to be used for FOLLOW function of
 `org-add-link-type'."
-  (destructuring-bind (&key url-or-port name
-                            &allow-other-keys)
-      (read link-path)
-    (ein:notebooklist-open-notebook-by-name name url-or-port)))
+  (let ((link (read link-path)))
+    (destructuring-bind (&key url-or-port name &allow-other-keys)
+        link
+      (ein:notebooklist-open-notebook-by-name name url-or-port
+                                              #'ein:org-goto-link link))))
 
 ;;;###autoload
 (defun ein:org-store-link ()
@@ -64,6 +74,9 @@ node `(org) External links' and Info node `(org) Search options'"
                  (link (list :url-or-port (ein:get-url-or-port)
                              :name name))
                  (description name))
+    (ein:aif (ein:notebook-worksheet-index notebook)
+        (unless (= it 0)
+          (plist-put link :worksheet-index it)))
     (org-store-link-props
      :type "ipynb"
      :link (let ((print-length nil)
