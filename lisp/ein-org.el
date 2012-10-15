@@ -100,6 +100,13 @@ node `(org) External links' and Info node `(org) Search options'"
   '(progn
      (org-add-link-type "ipynb" 'ein:org-open)
      (add-hook 'org-store-link-functions 'ein:org-store-link)))
+;; The above expression is evaluated via loaddef file.  At the moment,
+;; org.el nor ein-org.el need not be loaded.  When org-mode is used,
+;; the above `progn' is executed but still ein-org.el is not loaded.
+;; When `ein:org-open' or `ein:org-store-link' is called for opening
+;; or storing ipynb link, ein-org.el is loaded finally.  (When
+;; ein-org.el is loaded the above expression is evaluated again, but
+;; that's OK as the expression is idempotent.)
 
 
 (provide 'ein-org)
