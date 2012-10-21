@@ -231,6 +231,8 @@ Notebook
 The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
+   :replace: s/C-c TAB/C-c C-i/
+             s/C-c RET/C-c C-m/
 
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
@@ -248,6 +250,7 @@ etc.  Once the buffer is connected to the notebook, minor mode
 are available.
 
 .. el:keymap:: ein:connect-mode-map
+   :replace: s/C-c TAB/C-c C-i/
 
 Other useful commands:
 
