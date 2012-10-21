@@ -249,7 +249,6 @@ texinfo_documents = [
 
 # -- Options for EL domain -----------------------------------------------------
 
-emacs_executable = os.getenv("EMACS") or 'emacs'
 elisp_packages = {
     'ein': 'ein:',
     'helm': 'helm-',
