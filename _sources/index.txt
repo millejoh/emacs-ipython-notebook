@@ -231,6 +231,8 @@ Notebook
 The following keybinds are available in notebook buffers.
 
 .. el:keymap:: ein:notebook-mode-map
+   :replace: s/C-c TAB/C-c C-i/
+             s/C-c RET/C-c C-m/
 
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
@@ -248,6 +250,7 @@ etc.  Once the buffer is connected to the notebook, minor mode
 are available.
 
 .. el:keymap:: ein:connect-mode-map
+   :replace: s/C-c TAB/C-c C-i/
 
 Other useful commands:
 
@@ -294,6 +297,28 @@ Misc
 .. el:package:: ein
 
 .. It is better to remove el:package from eldomain??
+
+
+Org-mode integration
+--------------------
+
+You can link to IPython notebook from org-mode_ files.
+
+1. Call org-mode function :el:symbol:`org-store-link`
+   [#org-store-link]_ in notebook buffer.  You can select a region to
+   specify a position in the notebook.
+
+2. Go to org-mode file and type ``C-c C-l``
+   (:el:symbol:`org-insert-link`).  This will insert a link to the
+   notebook.
+
+3. Type ``C-c C-o`` (:el:symbol:`org-open-at-point`) to open
+   the link at the point of cursor.
+
+.. _org-mode: http://orgmode.org/
+
+.. [#org-store-link] See `1.3 Activation
+   <http://orgmode.org/manual/Activation.html>`_ in org-mode manual.
 
 
 Customization
@@ -449,6 +474,11 @@ web client.  See `emacslisp.py`_ for more details.
 Reporting issue
 ---------------
 
+Please use ``M-x ein:dev-bug-report-template`` to write a bug report.
+It pops up a buffer containing some system information and instruction
+for bug report.
+
+
 Logging
 ^^^^^^^
 
@@ -508,6 +538,10 @@ Change Log
 v0.2
 ----
 
+* Add a simple org-mode link support.
+* Add built-in multiple language fontification for notebook:
+  :el:symbol:`ein:notebook-multilang-mode`.
+  This is the new default for :el:symbol:`ein:notebook-modes`.
 * Add helm/anything interface to search kernel history:
   :el:symbol:`helm-ein-kernel-history` and
   :el:symbol:`anything-ein-kernel-history`.
