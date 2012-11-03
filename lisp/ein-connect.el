@@ -221,7 +221,7 @@ notebooks."
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (ein:shared-output-eval-string (buffer-string))
+  (ein:shared-output-eval-string (buffer-string) nil nil nil :silent t)
   (ein:connect-execute-autoexec-cells)
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
@@ -238,7 +238,7 @@ Variable `ein:connect-run-command' sets the default command."
              (cmd (format "%s %s" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
-              (ein:shared-output-eval-string cmd)
+              (ein:shared-output-eval-string cmd nil nil nil :silent t)
               (ein:connect-execute-autoexec-cells)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))

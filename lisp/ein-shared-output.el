@@ -56,10 +56,12 @@
 ;;; Cell related
 
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
-                             &optional popup)
+                             &optional popup &rest args)
+  (unless (plist-get args :silent)
+    (setq args (plist-put args :silent nil)))
   (oset cell :popup popup)
   (oset cell :kernel kernel)
-  (ein:cell-execute-internal cell kernel code :silent nil))
+  (apply #'ein:cell-execute-internal cell kernel code args))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
                                     msg-type content -metadata-not-used-)
@@ -167,12 +169,16 @@ See also `ein:cell-max-num-outputs'."
   "History of the `ein:shared-output-eval-string' prompt.")
 
 ;;;###autoload
-(defun ein:shared-output-eval-string (code &optional popup verbose kernel)
-  "Evaluate a code.  Prompt will appear asking the code to run.
+(defun ein:shared-output-eval-string (code &optional popup verbose kernel
+                                           &rest args)
+  "Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
-`ein:shared-output-pop-to-buffer'."
+`ein:shared-output-pop-to-buffer'.
+
+.. ARGS is passed to `ein:kernel-execute'.  Unlike `ein:kernel-execute',
+   `:silent' is `nil' by default."
   (interactive
    (let ((kernel (ein:get-kernel-or-error))
          ;; ... so error will be raised before user typing code if it
@@ -182,7 +188,7 @@ shared output buffer.  You can open the buffer by the command
      (list code nil t kernel)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
-    (ein:cell-execute cell kernel (ein:trim-indent code) popup))
+    (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args))
   (when verbose
     (ein:log 'info "Code \"%s\" is sent to the kernel." code)))
 
