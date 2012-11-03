@@ -238,7 +238,7 @@ Variable `ein:connect-run-command' sets the default command."
              (cmd (format "%s %s" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
-              (ein:shared-output-eval-string cmd)
+              (ein:shared-output-eval-string cmd nil nil nil :silent t)
               (ein:connect-execute-autoexec-cells)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))
