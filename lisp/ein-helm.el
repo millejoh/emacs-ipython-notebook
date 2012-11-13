@@ -62,7 +62,7 @@
 
 1. Single space is converted to \"*\".
 2. A backslash followed by a space is converted to a single space.
-3. A \"*\" is added at the end of the pattern.
+3. A \"*\" is added at the beginning and end of the pattern.
 
 This variable applies to both `helm-ein-kernel-history' and
 `anything-ein-kernel-history'."
@@ -75,7 +75,7 @@ This variable applies to both `helm-ein-kernel-history' and
                                     "*" pattern nil nil 1))
     (setq pattern
           (replace-regexp-in-string "\\\\ " " " pattern))
-    (setq pattern (concat pattern "*")))
+    (setq pattern (concat "*" pattern "*")))
   pattern)
 
 (defvar ein:helm-source-kernel-history
