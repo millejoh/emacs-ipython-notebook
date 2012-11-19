@@ -42,7 +42,7 @@
           <div class="body">
             
   <div class="section" id="welcome-to-emacs-ipython-notebook-s-documentation">
-<h1><a class="toc-backref" href="#id21">Welcome to Emacs IPython Notebook&#8217;s documentation!</a><a class="headerlink" href="#welcome-to-emacs-ipython-notebook-s-documentation" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id22">Welcome to Emacs IPython Notebook&#8217;s documentation!</a><a class="headerlink" href="#welcome-to-emacs-ipython-notebook-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p>Emacs IPython Notebook (EIN) provides a IPython Notebook client and
 integrated REPL (like <a class="reference external" href="http://common-lisp.net/project/slime/">SLIME</a>) in Emacs.  While EIN makes notebook
 editing very powerful by allowing you to use any Emacs features, it
@@ -99,82 +99,87 @@ object).</li>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#welcome-to-emacs-ipython-notebook-s-documentation" id="id21">Welcome to Emacs IPython Notebook&#8217;s documentation!</a><ul>
-<li><a class="reference internal" href="#quick-try" id="id22">Quick try</a></li>
-<li><a class="reference internal" href="#requirements" id="id23">Requirements</a></li>
-<li><a class="reference internal" href="#install" id="id24">Install</a><ul>
-<li><a class="reference internal" href="#using-el-get" id="id25">Using el-get</a></li>
-<li><a class="reference internal" href="#using-package-el-melpa" id="id26">Using package.el (MELPA)</a></li>
-<li><a class="reference internal" href="#manual-install" id="id27">Manual install</a></li>
-<li><a class="reference internal" href="#setup" id="id28">Setup</a></li>
+<li><a class="reference internal" href="#welcome-to-emacs-ipython-notebook-s-documentation" id="id22">Welcome to Emacs IPython Notebook&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#quick-try" id="id23">Quick try</a></li>
+<li><a class="reference internal" href="#requirements" id="id24">Requirements</a></li>
+<li><a class="reference internal" href="#install" id="id25">Install</a><ul>
+<li><a class="reference internal" href="#using-el-get" id="id26">Using el-get</a></li>
+<li><a class="reference internal" href="#using-package-el-melpa" id="id27">Using package.el (MELPA)</a></li>
+<li><a class="reference internal" href="#manual-install" id="id28">Manual install</a></li>
+<li><a class="reference internal" href="#setup" id="id29">Setup</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage" id="id29">Usage</a></li>
-<li><a class="reference internal" href="#commands-keybinds" id="id30">Commands/Keybinds</a><ul>
-<li><a class="reference internal" href="#notebook-list" id="id31">Notebook list</a></li>
-<li><a class="reference internal" href="#notebook" id="id32">Notebook</a></li>
-<li><a class="reference internal" href="#connected-buffer" id="id33">Connected buffer</a></li>
-<li><a class="reference internal" href="#shared-output-buffer" id="id34">Shared output buffer</a></li>
-<li><a class="reference internal" href="#traceback-viewer" id="id35">Traceback viewer</a></li>
-<li><a class="reference internal" href="#pytools" id="id36">PyTools</a></li>
-<li><a class="reference internal" href="#misc" id="id37">Misc</a></li>
+<li><a class="reference internal" href="#usage" id="id30">Usage</a></li>
+<li><a class="reference internal" href="#commands-keybinds" id="id31">Commands/Keybinds</a><ul>
+<li><a class="reference internal" href="#notebook-list" id="id32">Notebook list</a></li>
+<li><a class="reference internal" href="#notebook" id="id33">Notebook</a></li>
+<li><a class="reference internal" href="#connected-buffer" id="id34">Connected buffer</a></li>
+<li><a class="reference internal" href="#shared-output-buffer" id="id35">Shared output buffer</a></li>
+<li><a class="reference internal" href="#traceback-viewer" id="id36">Traceback viewer</a></li>
+<li><a class="reference internal" href="#pytools" id="id37">PyTools</a></li>
+<li><a class="reference internal" href="#misc" id="id38">Misc</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#org-mode-integration" id="id38">Org-mode integration</a></li>
-<li><a class="reference internal" href="#customization" id="id39">Customization</a><ul>
-<li><a class="reference internal" href="#subpackages" id="id40">Subpackages</a></li>
-<li><a class="reference internal" href="#id11" id="id41">Notebook list</a></li>
-<li><a class="reference internal" href="#id12" id="id42">Notebook</a></li>
-<li><a class="reference internal" href="#console" id="id43">Console</a></li>
-<li><a class="reference internal" href="#connect" id="id44">Connect</a></li>
-<li><a class="reference internal" href="#id13" id="id45">MuMaMo</a></li>
-<li><a class="reference internal" href="#id14" id="id46">Misc</a></li>
+<li><a class="reference internal" href="#org-mode-integration" id="id39">Org-mode integration</a></li>
+<li><a class="reference internal" href="#customization" id="id40">Customization</a><ul>
+<li><a class="reference internal" href="#subpackages" id="id41">Subpackages</a></li>
+<li><a class="reference internal" href="#id11" id="id42">Notebook list</a></li>
+<li><a class="reference internal" href="#id12" id="id43">Notebook</a></li>
+<li><a class="reference internal" href="#console" id="id44">Console</a></li>
+<li><a class="reference internal" href="#connect" id="id45">Connect</a><ul>
+<li><a class="reference internal" href="#jedi-el" id="id46">Jedi.el</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#gotchas-and-caveats" id="id47">Gotchas and caveats</a><ul>
-<li><a class="reference internal" href="#url-retrieve" id="id48"><tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt></a></li>
-<li><a class="reference internal" href="#id15" id="id49">MuMaMo</a></li>
-<li><a class="reference internal" href="#gotchas-python-mode-el" id="id50">python-mode.el</a></li>
+<li><a class="reference internal" href="#id14" id="id47">MuMaMo</a></li>
+<li><a class="reference internal" href="#id15" id="id48">Misc</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#advanced" id="id51">Advanced</a></li>
-<li><a class="reference internal" href="#reporting-issue" id="id52">Reporting issue</a><ul>
-<li><a class="reference internal" href="#logging" id="id53">Logging</a><ul>
-<li><a class="reference internal" href="#id18" id="id54">websocket.el</a></li>
+<li><a class="reference internal" href="#gotchas-and-caveats" id="id49">Gotchas and caveats</a><ul>
+<li><a class="reference internal" href="#url-retrieve" id="id50"><tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt></a></li>
+<li><a class="reference internal" href="#id16" id="id51">MuMaMo</a></li>
+<li><a class="reference internal" href="#gotchas-python-mode-el" id="id52">python-mode.el</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#debugging" id="id55">Debugging</a></li>
+<li><a class="reference internal" href="#advanced" id="id53">Advanced</a></li>
+<li><a class="reference internal" href="#reporting-issue" id="id54">Reporting issue</a><ul>
+<li><a class="reference internal" href="#logging" id="id55">Logging</a><ul>
+<li><a class="reference internal" href="#id19" id="id56">websocket.el</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugging" id="id57">Debugging</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#change-log" id="id56">Change Log</a><ul>
-<li><a class="reference internal" href="#v0-2" id="id57">v0.2</a></li>
-<li><a class="reference internal" href="#v0-1-2" id="id58">v0.1.2</a></li>
-<li><a class="reference internal" href="#v0-1-1" id="id59">v0.1.1</a></li>
-<li><a class="reference internal" href="#v0-1" id="id60">v0.1</a></li>
+<li><a class="reference internal" href="#change-log" id="id58">Change Log</a><ul>
+<li><a class="reference internal" href="#v0-2" id="id59">v0.2</a></li>
+<li><a class="reference internal" href="#v0-1-2" id="id60">v0.1.2</a></li>
+<li><a class="reference internal" href="#v0-1-1" id="id61">v0.1.1</a></li>
+<li><a class="reference internal" href="#v0-1" id="id62">v0.1</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#license" id="id61">License</a></li>
-<li><a class="reference internal" href="#indices-and-tables" id="id62">Indices and tables</a></li>
+<li><a class="reference internal" href="#license" id="id63">License</a></li>
+<li><a class="reference internal" href="#indices-and-tables" id="id64">Indices and tables</a></li>
 </ul>
 </div>
 <div class="section" id="quick-try">
-<h2><a class="toc-backref" href="#id22">Quick try</a><a class="headerlink" href="#quick-try" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id23">Quick try</a><a class="headerlink" href="#quick-try" title="Permalink to this headline">¶</a></h2>
 <p>This is a quick and clean way to try EIN separately from your Emacs
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!:</p>
-<div class="highlight-python"><pre>git clone git://github.com/tkf/emacs-ipython-notebook.git
-lisp/zeroein.el</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="nv">git</span> <span class="nv">clone</span> <span class="nv">git://github.com/tkf/emacs-ipython-notebook.git</span>
+<span class="nv">lisp/zeroein.el</span>
+</pre></div>
 </div>
 <p>This will launch a new Emacs instance.</p>
 <p>You can use environment variable <tt class="docutils literal"><span class="pre">EMACS</span></tt> to control Emacs executable
 to use.:</p>
-<div class="highlight-python"><pre>EMACS=emacs-snapshot lisp/zeroein.el</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="nv">EMACS=emacs-snapshot</span> <span class="nv">lisp/zeroein.el</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="requirements">
-<h2><a class="toc-backref" href="#id23">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id24">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference external" href="http://ipython.org/">IPython</a> 0.12 or higher.</li>
 <li><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a> 0.9</li>
@@ -206,7 +211,7 @@ EIEIO and json.el.  EIN is currently tested in Emacs 24.1.</p>
 </table>
 </div>
 <div class="section" id="install">
-<h2><a class="toc-backref" href="#id24">Install</a><a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id25">Install</a><a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">As EIN relies on many packages and it will not work
@@ -214,7 +219,7 @@ properly with outdated versions, installing it using el-get or
 MELPA is highly recommended.</p>
 </div>
 <div class="section" id="using-el-get">
-<h3><a class="toc-backref" href="#id25">Using el-get</a><a class="headerlink" href="#using-el-get" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id26">Using el-get</a><a class="headerlink" href="#using-el-get" title="Permalink to this headline">¶</a></h3>
 <p>If you use developmental version of <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a>, you can install it
 easily using it.  Emacs IPython Notebook is registered as package
 <tt class="docutils literal"><span class="pre">ein</span></tt>.   See <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a> website for more information.</p>
@@ -228,12 +233,12 @@ will solve the problem.  Note that this will remove the whole
 </div>
 </div>
 <div class="section" id="using-package-el-melpa">
-<h3><a class="toc-backref" href="#id26">Using package.el (MELPA)</a><a class="headerlink" href="#using-package-el-melpa" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id27">Using package.el (MELPA)</a><a class="headerlink" href="#using-package-el-melpa" title="Permalink to this headline">¶</a></h3>
 <p>You can install EIN using <a class="reference external" href="http://emacswiki.org/emacs/ELPA">package.el</a> when <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> package repository
 is added to its setting. See <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> website for more information.</p>
 </div>
 <div class="section" id="manual-install">
-<h3><a class="toc-backref" href="#id27">Manual install</a><a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id28">Manual install</a><a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
 <p>Put Emacs lisp <tt class="docutils literal"><span class="pre">ein*.el</span></tt> files and Python file <tt class="docutils literal"><span class="pre">ein.py</span></tt> in
 a directory defined in your <tt class="xref el el-symbol docutils literal"><span class="pre">load-path</span></tt>.</p>
 <p>You should byte compile EIN, especially when using MuMaMo, otherwise
@@ -254,7 +259,7 @@ don&#8217;t use that optional package.</p>
 </div>
 </div>
 <div class="section" id="setup">
-<h3><a class="toc-backref" href="#id28">Setup</a><a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id29">Setup</a><a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
 <p>Here is the minimal configuration.  See <a class="reference internal" href="#customization">customization</a> for more details.</p>
 <div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
 </pre></div>
@@ -262,7 +267,7 @@ don&#8217;t use that optional package.</p>
 </div>
 </div>
 <div class="section" id="usage">
-<h2><a class="toc-backref" href="#id29">Usage</a><a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id30">Usage</a><a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Start <a class="reference external" href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html">IPython notebook server</a>.</li>
 <li>Hit <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> to open notebook list.  This will
@@ -273,9 +278,9 @@ section for what you can do in the notebook buffer.</li>
 </ol>
 </div>
 <div class="section" id="commands-keybinds">
-<h2><a class="toc-backref" href="#id30">Commands/Keybinds</a><a class="headerlink" href="#commands-keybinds" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id31">Commands/Keybinds</a><a class="headerlink" href="#commands-keybinds" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="notebook-list">
-<span id="notebook-list-commands"></span><h3><a class="toc-backref" href="#id31">Notebook list</a><a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
+<span id="notebook-list-commands"></span><h3><a class="toc-backref" href="#id32">Notebook list</a><a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
 <p>You can start notebook by <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></tt> and enter the
 port or URL of the IPython notebook server.</p>
 <dl class="function">
@@ -362,7 +367,7 @@ Notebook name is determined based on
 
 </div>
 <div class="section" id="notebook">
-<span id="notebook-commands"></span><h3><a class="toc-backref" href="#id32">Notebook</a><a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h3>
+<span id="notebook-commands"></span><h3><a class="toc-backref" href="#id33">Notebook</a><a class="headerlink" href="#notebook" title="Permalink to this headline">¶</a></h3>
 <p>The following keybinds are available in notebook buffers.</p>
 <dl class="keybind">
 <dt>
@@ -585,6 +590,9 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <tt class="descname">C-c C-i</tt><tt class="descclassname"> ein:completer-complete</tt></dt>
+</dt>
+<dd><dd class="first last"><p>(fn KERNEL &amp;optional (CALLBACKS (list :complete_reply (cons (function ein:completer-finish-completing) nil))))</p>
+</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -883,7 +891,7 @@ cell bellow.</p>
 <dt>
 <tt class="descname">C-:</tt><tt class="descclassname"> ein:shared-output-eval-string</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Evaluate a code.  Prompt will appear asking the code to run.
+<dd><dd class="first last"><p>Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
@@ -916,8 +924,9 @@ This command has no key binding because there is no way to undo
 deletion.  Use kill to play on the safe side.</p>
 <p>If you really want use this command, you can do something like this
 (but be careful when using it!):</p>
-<div class="highlight-python"><pre>(define-key ein:notebook-mode-map "\C-c\C-d"
-            'ein:worksheet-delete-cell)</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="nv">define-key</span> <span class="nv">ein:notebook-mode-map</span> <span class="s">&quot;\C-c\C-d&quot;</span>
+            <span class="ss">&#39;ein:worksheet-delete-cell</span><span class="p">)</span>
+</pre></div>
 </div>
 </dd></dl>
 
@@ -944,7 +953,7 @@ change in its input area.</p>
 
 </div>
 <div class="section" id="connected-buffer">
-<h3><a class="toc-backref" href="#id33">Connected buffer</a><a class="headerlink" href="#connected-buffer" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id34">Connected buffer</a><a class="headerlink" href="#connected-buffer" title="Permalink to this headline">¶</a></h3>
 <p>You can connect any buffer (typically buffer opening Python file) to
 opened notebook and use the kernel of the notebook to execute the
 code, inspect objects, auto-complete code, jump to the other source,
@@ -989,6 +998,9 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <tt class="descname">C-c C-i</tt><tt class="descclassname"> ein:completer-complete</tt></dt>
+</dt>
+<dd><dd class="first last"><p>(fn KERNEL &amp;optional (CALLBACKS (list :complete_reply (cons (function ein:completer-finish-completing) nil))))</p>
+</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -1082,7 +1094,7 @@ worksheet to save result.</p>
 <dt>
 <tt class="descname">C-:</tt><tt class="descclassname"> ein:shared-output-eval-string</tt></dt>
 </dt>
-<dd><dd class="first last"><p>Evaluate a code.  Prompt will appear asking the code to run.
+<dd><dd class="first last"><p>Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
@@ -1137,7 +1149,7 @@ Variable <a class="reference internal" href="#ein:connect-run-command" title="ei
 
 </div>
 <div class="section" id="shared-output-buffer">
-<h3><a class="toc-backref" href="#id34">Shared output buffer</a><a class="headerlink" href="#shared-output-buffer" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id35">Shared output buffer</a><a class="headerlink" href="#shared-output-buffer" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="ein:shared-output-pop-to-buffer">
 <em class="property">function </em><tt class="descname">ein:shared-output-pop-to-buffer</tt><a class="headerlink" href="#ein:shared-output-pop-to-buffer" title="Permalink to this definition">¶</a></dt>
@@ -1182,7 +1194,7 @@ selecting it.</p>
 
 </div>
 <div class="section" id="traceback-viewer">
-<h3><a class="toc-backref" href="#id35">Traceback viewer</a><a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id36">Traceback viewer</a><a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
 <p>Traceback in notebook buffer is not easy to understand.  You can open
 Traceback viewer by the command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></tt>.
 In the Traceback viewer, following keybinds are available.</p>
@@ -1209,7 +1221,7 @@ In the Traceback viewer, following keybinds are available.</p>
 
 </div>
 <div class="section" id="pytools">
-<h3><a class="toc-backref" href="#id36">PyTools</a><a class="headerlink" href="#pytools" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id37">PyTools</a><a class="headerlink" href="#pytools" title="Permalink to this headline">¶</a></h3>
 <p>These commands can be used in the notebook buffer and the connected
 buffer.</p>
 <dl class="function">
@@ -1243,7 +1255,7 @@ to install it if you are using newer Emacs.</p>
 
 </div>
 <div class="section" id="misc">
-<h3><a class="toc-backref" href="#id37">Misc</a><a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id38">Misc</a><a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="helm-ein-kernel-history">
 <em class="property">function </em><tt class="descname">helm-ein-kernel-history</tt><a class="headerlink" href="#helm-ein-kernel-history" title="Permalink to this definition">¶</a></dt>
@@ -1271,7 +1283,7 @@ to install it if you are using newer Emacs.</p>
 </div>
 </div>
 <div class="section" id="org-mode-integration">
-<h2><a class="toc-backref" href="#id38">Org-mode integration</a><a class="headerlink" href="#org-mode-integration" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id39">Org-mode integration</a><a class="headerlink" href="#org-mode-integration" title="Permalink to this headline">¶</a></h2>
 <p>You can link to IPython notebook from <a class="reference external" href="http://orgmode.org/">org-mode</a> files.</p>
 <ol class="arabic simple">
 <li>Call org-mode function <tt class="xref el el-symbol docutils literal"><span class="pre">org-store-link</span></tt>
@@ -1291,12 +1303,12 @@ the link at the point of cursor.</li>
 </table>
 </div>
 <div class="section" id="customization">
-<h2><a class="toc-backref" href="#id39">Customization</a><a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id40">Customization</a><a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
 <p>You can customize EIN using the Emacs customization UI by typing
 <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></tt>.
 All the configurable variables are listed below.</p>
 <div class="section" id="subpackages">
-<h3><a class="toc-backref" href="#id40">Subpackages</a><a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id41">Subpackages</a><a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:use-auto-complete">
 <em class="property">variable </em><tt class="descname">ein:use-auto-complete</tt><a class="headerlink" href="#ein:use-auto-complete" title="Permalink to this definition">¶</a></dt>
@@ -1341,7 +1353,7 @@ commands is fine.</p>
 
 </div>
 <div class="section" id="id11">
-<h3><a class="toc-backref" href="#id41">Notebook list</a><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id42">Notebook list</a><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:url-or-port">
 <em class="property">variable </em><tt class="descname">ein:url-or-port</tt><a class="headerlink" href="#ein:url-or-port" title="Permalink to this definition">¶</a></dt>
@@ -1364,11 +1376,13 @@ Notebook server.</p>
 <dd><p>Load notebook list but do not pop-up the notebook list buffer.</p>
 <p>For example, if you want to load notebook list when Emacs starts,
 add this in the Emacs initialization file:</p>
-<div class="highlight-python"><pre>(add-to-hook 'after-init-hook 'ein:notebooklist-load)</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="nv">add-to-hook</span> <span class="ss">&#39;after-init-hook</span> <span class="ss">&#39;ein:notebooklist-load</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>or even this (if you want fast Emacs start-up):</p>
-<div class="highlight-python"><pre>;; load notebook list if Emacs is idle for 3 sec after start-up
-(run-with-idle-timer 3 nil #'ein:notebooklist-load)</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="c1">;; load notebook list if Emacs is idle for 3 sec after start-up</span>
+<span class="p">(</span><span class="nv">run-with-idle-timer</span> <span class="mi">3</span> <span class="no">nil</span> <span class="nf">#&#39;</span><span class="nv">ein:notebooklist-load</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>You should setup <a class="reference internal" href="#ein:url-or-port" title="ein:url-or-port"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:url-or-port</span></tt></a> or <a class="reference internal" href="#ein:default-url-or-port" title="ein:default-url-or-port"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:default-url-or-port</span></tt></a>
 in order to make this code work.</p>
@@ -1378,7 +1392,7 @@ in order to make this code work.</p>
 
 </div>
 <div class="section" id="id12">
-<h3><a class="toc-backref" href="#id42">Notebook</a><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id43">Notebook</a><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:worksheet-enable-undo">
 <em class="property">variable </em><tt class="descname">ein:worksheet-enable-undo</tt><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
@@ -1417,13 +1431,16 @@ and the first usable mode is used.</p>
 <p>Examples:</p>
 <p>Use MuMaMo if it is installed.  Otherwise, use plain mode.
 This is the old default setting:</p>
-<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
+</pre></div>
 </div>
 <p>Avoid using MuMaMo even when it is installed:</p>
-<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-plain-mode))</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
+</pre></div>
 </div>
 <p>Use simple <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt> based notebook mode when MuMaMo is not installed:</p>
-<div class="highlight-python"><pre>(setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-python-mode))</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-python-mode</span><span class="p">))</span>
+</pre></div>
 </div>
 </dd></dl>
 
@@ -1496,7 +1513,8 @@ notebook buffers and connected buffers.</p>
 <em class="property">variable </em><tt class="descname">ein:helm-kernel-history-search-key</tt><a class="headerlink" href="#ein:helm-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bind <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></tt></a> to this key in notebook mode.</p>
 <p>Example:</p>
-<div class="highlight-python"><pre>(setq ein:helm-kernel-history-search-key "\M-r")</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:helm-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>This key will be installed in the <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></tt>.</p>
 </dd></dl>
@@ -1506,7 +1524,8 @@ notebook buffers and connected buffers.</p>
 <em class="property">variable </em><tt class="descname">ein:anything-kernel-history-search-key</tt><a class="headerlink" href="#ein:anything-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bind <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></tt></a> to this key in notebook mode.</p>
 <p>Example:</p>
-<div class="highlight-python"><pre>(setq ein:anything-kernel-history-search-key "\M-r")</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:anything-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>This key will be installed in the <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></tt>.</p>
 </dd></dl>
@@ -1518,7 +1537,7 @@ notebook buffers and connected buffers.</p>
 <ol class="arabic simple">
 <li>Single space is converted to &#8220;*&#8221;.</li>
 <li>A backslash followed by a space is converted to a single space.</li>
-<li>A &#8220;*&#8221; is added at the end of the pattern.</li>
+<li>A &#8220;*&#8221; is added at the beginning and end of the pattern.</li>
 </ol>
 <p>This variable applies to both <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></tt></a> and
 <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><tt class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></tt></a>.</p>
@@ -1534,8 +1553,9 @@ DATA plist.
 See also <tt class="xref el el-symbol docutils literal"><span class="pre">ein:output-type-prefer-pretty-text-over-html</span></tt>.</p>
 <p><strong>Example</strong>:
 If you prefer HTML type over text type, you can set it as:</p>
-<div class="highlight-python"><pre>(setq ein:output-type-preference
-      '(emacs-lisp svg png jpeg html text latex javascript))</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:output-type-preference</span>
+      <span class="o">&#39;</span><span class="p">(</span><span class="nv">emacs-lisp</span> <span class="nv">svg</span> <span class="nv">png</span> <span class="nv">jpeg</span> <span class="nv">html</span> <span class="nv">text</span> <span class="nv">latex</span> <span class="nv">javascript</span><span class="p">))</span>
+</pre></div>
 </div>
 <p>Note that <tt class="docutils literal"><span class="pre">html</span></tt> comes before <tt class="docutils literal"><span class="pre">text</span></tt>.</p>
 </dd></dl>
@@ -1545,10 +1565,11 @@ If you prefer HTML type over text type, you can set it as:</p>
 <em class="property">variable </em><tt class="descname">ein:shr-env</tt><a class="headerlink" href="#ein:shr-env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Variables let-bound while calling <tt class="xref el el-symbol docutils literal"><span class="pre">shr-insert-document</span></tt>.</p>
 <p>To use default shr setting:</p>
-<div class="highlight-python"><pre>(setq ein:shr-env nil)</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:shr-env</span> <span class="no">nil</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>Draw boundaries for table (default):</p>
-<div class="highlight-python"><pre>(setq ein:shr-env
+<div class="highlight-cl"><pre>(setq ein:shr-env
       '((shr-table-horizontal-line ?-)
         (shr-table-vertical-line ?|)
         (shr-table-corner ?+)))</pre>
@@ -1557,7 +1578,7 @@ If you prefer HTML type over text type, you can set it as:</p>
 
 </div>
 <div class="section" id="console">
-<h3><a class="toc-backref" href="#id43">Console</a><a class="headerlink" href="#console" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id44">Console</a><a class="headerlink" href="#console" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:console-security-dir">
 <em class="property">variable </em><tt class="descname">ein:console-security-dir</tt><a class="headerlink" href="#ein:console-security-dir" title="Permalink to this definition">¶</a></dt>
@@ -1597,7 +1618,7 @@ Types same as <a class="reference internal" href="#ein:console-security-dir" tit
 
 </div>
 <div class="section" id="connect">
-<h3><a class="toc-backref" href="#id44">Connect</a><a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id45">Connect</a><a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:connect-run-command">
 <em class="property">variable </em><tt class="descname">ein:connect-run-command</tt><a class="headerlink" href="#ein:connect-run-command" title="Permalink to this definition">¶</a></dt>
@@ -1638,8 +1659,9 @@ as <a class="reference internal" href="#ein:cell-autoexec-prompt" title="ein:cel
 <dd><p>Notebook to be connect when <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></tt></a> is called.</p>
 <p>Example setting to connect to &#8220;My_Notebook&#8221; in the server at
 port 8888 when opening any buffer in <tt class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></tt>:</p>
-<div class="highlight-python"><pre>(setq ein:connect-default-notebook "8888/My_Notebook")
-(add-hook 'python-mode-hook 'ein:connect-to-default-notebook)</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:connect-default-notebook</span> <span class="s">&quot;8888/My_Notebook&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">add-hook</span> <span class="ss">&#39;python-mode-hook</span> <span class="ss">&#39;ein:connect-to-default-notebook</span><span class="p">)</span>
+</pre></div>
 </div>
 <p><a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></tt></a> can also be a function without any
 argument.  This function must return a string (notebook path of
@@ -1659,9 +1681,23 @@ to automatically connect any python-mode buffer to the
 notebook.</p>
 </dd></dl>
 
+<div class="section" id="jedi-el">
+<h4><a class="toc-backref" href="#id46">Jedi.el</a><a class="headerlink" href="#jedi-el" title="Permalink to this headline">¶</a></h4>
+<dl class="function">
+<dt id="ein:jedi-setup">
+<em class="property">function </em><tt class="descname">ein:jedi-setup</tt><a class="headerlink" href="#ein:jedi-setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup auto-completion using EIN and <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> together.</p>
+<p><a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> is a Python auto-completion library for Emacs.
+To use EIN and Jedi together, add the following in your Emacs setup.:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="nv">add-hook</span> <span class="ss">&#39;ein:connect-mode-hook</span> <span class="ss">&#39;ein:jedi-setup</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="id13">
-<h3><a class="toc-backref" href="#id45">MuMaMo</a><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="id14">
+<h3><a class="toc-backref" href="#id47">MuMaMo</a><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:mumamo-codecell-mode">
 <em class="property">variable </em><tt class="descname">ein:mumamo-codecell-mode</tt><a class="headerlink" href="#ein:mumamo-codecell-mode" title="Permalink to this definition">¶</a></dt>
@@ -1720,8 +1756,8 @@ problem.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id14">
-<h3><a class="toc-backref" href="#id46">Misc</a><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h3><a class="toc-backref" href="#id48">Misc</a><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:filename-translations">
 <em class="property">variable </em><tt class="descname">ein:filename-translations</tt><a class="headerlink" href="#ein:filename-translations" title="Permalink to this definition">¶</a></dt>
@@ -1757,14 +1793,15 @@ pair of TO-PYTHON and FROM-PYTHON.</p>
 <dd><p>Generate a pair of TO-PYTHON and FROM-PYTHON for
 <a class="reference internal" href="#ein:filename-translations" title="ein:filename-translations"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:filename-translations</span></tt></a>.</p>
 <p>Usage:</p>
-<div class="highlight-python"><pre>(setq ein:filename-translations
-      `((8888
-         . ,(ein:tramp-create-filename-translator "MY-HOSTNAME"))))
-;; Equivalently:
-(setq ein:filename-translations
-      (lambda (url-or-port)
-        (when (equal url-or-port 8888)
-          (ein:tramp-create-filename-translator "MY-HOSTNAME"))))</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:filename-translations</span>
+      <span class="o">`</span><span class="p">((</span><span class="mi">8888</span>
+         <span class="o">.</span> <span class="o">,</span><span class="p">(</span><span class="nv">ein:tramp-create-filename-translator</span> <span class="s">&quot;MY-HOSTNAME&quot;</span><span class="p">))))</span>
+<span class="c1">;; Equivalently:</span>
+<span class="p">(</span><span class="k">setq</span> <span class="nv">ein:filename-translations</span>
+      <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">url-or-port</span><span class="p">)</span>
+        <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nb">equal</span> <span class="nv">url-or-port</span> <span class="mi">8888</span><span class="p">)</span>
+          <span class="p">(</span><span class="nv">ein:tramp-create-filename-translator</span> <span class="s">&quot;MY-HOSTNAME&quot;</span><span class="p">))))</span>
+</pre></div>
 </div>
 <p>This setting assumes that the IPython server which can be
 connected using the port 8888 in localhost is actually running in
@@ -1796,14 +1833,14 @@ let me know or send pull request at github!
 </div>
 </div>
 <div class="section" id="gotchas-and-caveats">
-<h2><a class="toc-backref" href="#id47">Gotchas and caveats</a><a class="headerlink" href="#gotchas-and-caveats" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id49">Gotchas and caveats</a><a class="headerlink" href="#gotchas-and-caveats" title="Permalink to this headline">¶</a></h2>
 <p>Although EIN mostly works fine, there are some deficits I noticed but
 have not fixed yet.  It seems that they originate from some upstream
 bugs so there is little I can do in EIN (but I&#8217;m not sure &#8211; it&#8217;s
 possible that I am misusing the libraries!).</p>
 <p>If you know how to fix/workaround them, patches are very welcome.</p>
 <div class="section" id="url-retrieve">
-<h3><a class="toc-backref" href="#id48"><tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt></a><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id50"><tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt></a><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
 <p>While using EIN, probably most of the error messages are about server
 connections.  It looks like the problem is in <tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt>.
 But in those cases you don&#8217;t loose any notebook data and your IPython
@@ -1812,23 +1849,23 @@ fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from <tt class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></tt> to
 make it even safer.</p>
 </div>
-<div class="section" id="id15">
-<h3><a class="toc-backref" href="#id49">MuMaMo</a><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h3><a class="toc-backref" href="#id51">MuMaMo</a><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <p>When using MuMaMo based notebook mode, you will notice that
 highlighting outside of the cell input is turned off while you are in
-the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id16">[6]</a>.</p>
+the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
 <a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:use-smartrep</span></tt></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id16">[6]</a></td><td>See the relevant bug report I posted:
+<tr><td class="label"><a class="fn-backref" href="#id17">[6]</a></td><td>See the relevant bug report I posted:
 <a class="reference external" href="https://bugs.launchpad.net/nxhtml/+bug/1013794">https://bugs.launchpad.net/nxhtml/+bug/1013794</a></td></tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="gotchas-python-mode-el">
-<span id="id17"></span><h3><a class="toc-backref" href="#id50">python-mode.el</a><a class="headerlink" href="#gotchas-python-mode-el" title="Permalink to this headline">¶</a></h3>
+<span id="id18"></span><h3><a class="toc-backref" href="#id52">python-mode.el</a><a class="headerlink" href="#gotchas-python-mode-el" title="Permalink to this headline">¶</a></h3>
 <p>In my environment, using <a class="reference external" href=":https://launchpad.net/python-mode">python-mode.el</a> without byte-compiling it
 in MuMaMo based notebook mode produces segfault.</p>
 <p>Also, <tt class="docutils literal"><span class="pre">mumamo-idle-set-major-mode</span></tt> messages error
@@ -1838,7 +1875,7 @@ See <a class="reference external" href="https://github.com/tkf/emacs-ipython-not
 </div>
 </div>
 <div class="section" id="advanced">
-<h2><a class="toc-backref" href="#id51">Advanced</a><a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id53">Advanced</a><a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
 <p>By telling IPython a little bit about Emacs Lisp, you can execute
 Emacs Lisp from IPython, just like you can execute Javascript in the
 web client.  See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py">emacslisp.py</a> for more details.</p>
@@ -1853,12 +1890,12 @@ web client.  See <a class="reference external" href="https://github.com/tkf/emac
 </div>
 </div>
 <div class="section" id="reporting-issue">
-<h2><a class="toc-backref" href="#id52">Reporting issue</a><a class="headerlink" href="#reporting-issue" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id54">Reporting issue</a><a class="headerlink" href="#reporting-issue" title="Permalink to this headline">¶</a></h2>
 <p>Please use <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:dev-bug-report-template</span></tt> to write a bug report.
 It pops up a buffer containing some system information and instruction
 for bug report.</p>
 <div class="section" id="logging">
-<h3><a class="toc-backref" href="#id53">Logging</a><a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id55">Logging</a><a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
 <p>Sometime more information that the <tt class="docutils literal"><span class="pre">*Message*</span></tt> buffer provides is
 needed to debug.</p>
 <ol class="arabic">
@@ -1871,19 +1908,20 @@ needed to debug.</p>
 and paste the whole buffer to the issue tracker.</p>
 <p>Please enclose the log with three backquotes to make the snippet as
 a code block, like this:</p>
-<div class="highlight-python"><pre>```
-[verbose] Start logging. @#&lt;buffer *ein: 8888/NAME*&gt;
-[info] Notebook NAME is ready @#&lt;buffer *ein: 8888/NAME*&gt;
-[info] Kernel started: 5e4f74d1-ce91-4e7e-9575-9646adea5172 @#&lt;buffer *scratch*&gt;
-```</pre>
+<div class="highlight-cl"><div class="highlight"><pre><span class="o">```</span>
+<span class="nv">[verbose]</span> <span class="nv">Start</span> <span class="nv">logging.</span> <span class="nv">@#&lt;buffer</span> <span class="nv">*ein:</span> <span class="nv">8888/NAME*&gt;</span>
+<span class="nv">[info]</span> <span class="nv">Notebook</span> <span class="nv">NAME</span> <span class="nv">is</span> <span class="nv">ready</span> <span class="nv">@#&lt;buffer</span> <span class="nv">*ein:</span> <span class="nv">8888/NAME*&gt;</span>
+<span class="nv">[info]</span> <span class="nv">Kernel</span> <span class="nv">started:</span> <span class="nv">5e4f74d1-ce91-4e7e-9575-9646adea5172</span> <span class="nv">@#&lt;buffer</span> <span class="vg">*scratch*</span><span class="nb">&gt;</span>
+<span class="o">```</span>
+</pre></div>
 </div>
 <p>See also: <a class="reference external" href="http://github.github.com/github-flavored-markdown/">GitHub Flavored Markdown - Introduction</a></p>
 <p>If it is too long, you can use paste bin service such as
 <a class="reference external" href="https://gist.github.com/">gist</a>.</p>
 </li>
 </ol>
-<div class="section" id="id18">
-<h4><a class="toc-backref" href="#id54">websocket.el</a><a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id19">
+<h4><a class="toc-backref" href="#id56">websocket.el</a><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
 <p>websocket.el has its logging buffer.  Sometime its useful to see its
 log.  This is how to do that.</p>
 <ol class="arabic simple">
@@ -1898,7 +1936,7 @@ These command must be called in the notebook buffer.</li>
 </div>
 </div>
 <div class="section" id="debugging">
-<h3><a class="toc-backref" href="#id55">Debugging</a><a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id57">Debugging</a><a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
 <p>If you are interested in debugging EIN, you should start it with
 calling the command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-start-debug</span></tt>.
 This command sets <tt class="xref el el-symbol docutils literal"><span class="pre">debug-on-error</span></tt> to <tt class="docutils literal"><span class="pre">t</span></tt> and do some
@@ -1910,10 +1948,11 @@ with <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-st
 </div>
 </div>
 <div class="section" id="change-log">
-<h1><a class="toc-backref" href="#id56">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id58">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="v0-2">
-<h2><a class="toc-backref" href="#id57">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id59">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Add support for <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a>.  See <a class="reference internal" href="#ein:jedi-setup" title="ein:jedi-setup"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:jedi-setup</span></tt></a>.</li>
 <li>Add a simple org-mode link support.</li>
 <li>Add built-in multiple language fontification for notebook:
 <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-multilang-mode</span></tt>.
@@ -1957,7 +1996,7 @@ See <tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect
 </ul>
 </div>
 <div class="section" id="v0-1-2">
-<h2><a class="toc-backref" href="#id58">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id60">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Mostly refactoring for worksheet support in v0.2.</li>
 <li>Rename command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-open</span></tt> to
@@ -1970,7 +2009,7 @@ now actually runs buffer instead of loading it.</li>
 </ul>
 </div>
 <div class="section" id="v0-1-1">
-<h2><a class="toc-backref" href="#id59">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id61">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>&#8216;s popup/quick help.</li>
 <li>Add <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-first-open-hook</span></tt>.</li>
@@ -2003,19 +2042,19 @@ Use <a class="reference internal" href="#helm-ein-notebook-buffers" title="helm-
 </ul>
 </div>
 <div class="section" id="v0-1">
-<h2><a class="toc-backref" href="#id60">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id62">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>First release.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="license">
-<h1><a class="toc-backref" href="#id61">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id63">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>Emacs IPython Notebook is licensed under GPL v3.
 See COPYING for details.</p>
 </div>
 <div class="section" id="indices-and-tables">
-<h1><a class="toc-backref" href="#id62">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id64">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
 <li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
