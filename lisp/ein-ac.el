@@ -105,7 +105,8 @@
 
 ;;; Completer interface
 
-(defun ein:completer-finish-completing-ac (matched-text matches)
+(defun* ein:completer-finish-completing-ac
+    (matched-text matches &optional (sources '(ac-source-ein-direct)))
   "Invoke completion using `auto-complete'.
 Only the argument MATCHES is used.  MATCHED-TEXT is for
 compatibility with `ein:completer-finish-completing-default'."
@@ -118,7 +119,7 @@ compatibility with `ein:completer-finish-completing-default'."
     (setq ein:ac-direct-matches matches)  ; let-binding won't work
     (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
     (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
-    (auto-complete '(ac-source-ein-direct))))
+    (auto-complete sources)))
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
