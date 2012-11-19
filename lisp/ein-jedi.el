@@ -34,21 +34,28 @@
 (defvar ein:jedi-dot-complete-sources
   '(ac-source-jedi-direct ac-source-ein-direct))
 
+(defun ein:jedi--completer-complete ()
+  (lexical-let ((d (deferred:new #'identity)))
+    (ein:and-let* ((kernel (ein:get-kernel))
+                   ((not (ac-cursor-on-diable-face-p)))
+                   ((ein:kernel-live-p kernel)))
+      (ein:completer-complete
+       kernel
+       (list :complete_reply
+             (cons (lambda (_ &rest args) (deferred:callback-post d args))
+                   nil))))
+    d))
+
 (defun ein:jedi-complete ()
   ;; Should I make it parallel and call auto-complete at the end?
   (deferred:nextc (jedi:complete-request)
     (lambda ()
       (auto-complete ein:jedi-dot-complete-sources)))
-  (ein:and-let* ((kernel (ein:get-kernel))
-                 ((not (ac-cursor-on-diable-face-p)))
-                 ((ein:kernel-live-p kernel)))
-    (ein:completer-complete
-     kernel
-     '(:complete_reply ((lambda (_ matched-text matches)
-                          (ein:completer-finish-completing-ac
-                           matched-text matches
-                           ein:jedi-dot-complete-sources))
-                        . nil)))))
+  (deferred:nextc (ein:jedi--completer-complete)
+    (lambda (reply)
+      (destructuring-bind (matched-text matches) reply
+        (ein:completer-finish-completing-ac matched-text matches
+                                            ein:jedi-dot-complete-sources)))))
 
 (defun ein:jedi-dot-complete ()
   (interactive)
