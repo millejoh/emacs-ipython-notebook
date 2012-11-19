@@ -47,15 +47,20 @@
     d))
 
 (defun ein:jedi-complete ()
-  ;; Should I make it parallel and call auto-complete at the end?
-  (deferred:nextc (jedi:complete-request)
-    (lambda ()
-      (auto-complete ein:jedi-dot-complete-sources)))
-  (deferred:nextc (ein:jedi--completer-complete)
-    (lambda (reply)
-      (destructuring-bind (matched-text matches) reply
-        (ein:completer-finish-completing-ac matched-text matches
-                                            ein:jedi-dot-complete-sources)))))
+  (deferred:$
+    (deferred:parallel              ; or `deferred:earlier' is better?
+      (jedi:complete-request)
+      (ein:jedi--completer-complete))
+    (deferred:nextc it
+      (lambda (replies)
+        (destructuring-bind (_ ((&key matched_text matches
+                                      &allow-other-keys)
+                                _)) replies
+          (if matches
+              (ein:completer-finish-completing-ac
+               matched_text matches
+               ein:jedi-dot-complete-sources)
+            (auto-complete ein:jedi-dot-complete-sources)))))))
 
 (defun ein:jedi-dot-complete ()
   (interactive)
