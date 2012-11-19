@@ -49,6 +49,7 @@
 
 ;;;###autoload
 (defun ein:jedi-complete ()
+  "Run completion using candidates calculated by EIN and Jedi."
   (interactive)
   (deferred:$
     (deferred:parallel              ; or `deferred:earlier' is better?
@@ -67,6 +68,7 @@
 
 ;;;###autoload
 (defun ein:jedi-dot-complete ()
+  "Insert \".\" and run `ein:jedi-complete'."
   (interactive)
   (insert ".")
   (ein:jedi-complete))
@@ -76,6 +78,11 @@
 
 ;;;###autoload
 (defun ein:jedi-setup ()
+  "Setup auto-completion using EIN and Jedi together.
+
+To use EIN and Jedi together, add the following in your Emacs setup.::
+
+  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)"
   (let ((map ein:connect-mode-map))
     (define-key map "\C-c\C-i" 'ein:jedi-complete)
     (ein:jedi-complete-on-dot-install map)))
