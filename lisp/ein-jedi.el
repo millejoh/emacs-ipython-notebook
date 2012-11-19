@@ -47,6 +47,7 @@
     d))
 
 (defun ein:jedi-complete ()
+  (interactive)
   (deferred:$
     (deferred:parallel              ; or `deferred:earlier' is better?
       (jedi:complete-request)
