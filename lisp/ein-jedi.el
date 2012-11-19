@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(require 'jedi)
+(require 'jedi nil t)
 
 (eval-when-compile (require 'ein-connect))
 (require 'ein-ac)
