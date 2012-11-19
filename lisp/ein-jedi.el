@@ -46,6 +46,7 @@
                    nil))))
     d))
 
+;;;###autoload
 (defun ein:jedi-complete ()
   (interactive)
   (deferred:$
@@ -63,6 +64,7 @@
                ein:jedi-dot-complete-sources)
             (auto-complete ein:jedi-dot-complete-sources)))))))
 
+;;;###autoload
 (defun ein:jedi-dot-complete ()
   (interactive)
   (insert ".")
