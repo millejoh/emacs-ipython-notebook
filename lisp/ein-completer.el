@@ -66,14 +66,16 @@
       (delete-region beg end)
       (insert word))))
 
-(defun ein:completer-complete (kernel)
+(defun* ein:completer-complete
+    (kernel
+     &optional
+     (callbacks (list :complete_reply
+                      (cons #'ein:completer-finish-completing nil))))
   (interactive (list (ein:get-kernel)))
-  (let ((callbacks (list :complete_reply
-                         (cons #'ein:completer-finish-completing nil))))
-    (ein:kernel-complete kernel
-                         (thing-at-point 'line)
-                         (current-column)
-                         callbacks)))
+  (ein:kernel-complete kernel
+                       (thing-at-point 'line)
+                       (current-column)
+                       callbacks))
 
 (defun ein:completer-dot-complete ()
   "Insert dot and request completion."
