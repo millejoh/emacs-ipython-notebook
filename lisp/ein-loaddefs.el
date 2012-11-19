@@ -5,7 +5,7 @@
 
 ;;;### (autoloads (ein:connect-to-default-notebook ein:connect-buffer-to-notebook
 ;;;;;;  ein:connect-to-notebook-buffer ein:connect-to-notebook ein:connect-to-notebook-command)
-;;;;;;  "ein-connect" "ein-connect.el" (20583 22543 57053 189000))
+;;;;;;  "ein-connect" "ein-connect.el" (20629 35398 551423 930000))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -89,7 +89,7 @@ Open a buffer with bug report template.
 
 ;;;### (autoloads (helm-ein-notebook-buffers anything-ein-notebook-buffers
 ;;;;;;  helm-ein-kernel-history anything-ein-kernel-history) "ein-helm"
-;;;;;;  "ein-helm.el" (20575 4772 754819 95000))
+;;;;;;  "ein-helm.el" (20642 12065 658663 404000))
 ;;; Generated autoloads from ein-helm.el
 
 (autoload 'anything-ein-kernel-history "ein-helm" "\
@@ -140,6 +140,34 @@ A simple mode for ipynb file.
 
 ;;;***
 
+;;;### (autoloads (ein:jedi-setup ein:jedi-dot-complete ein:jedi-complete)
+;;;;;;  "ein-jedi" "ein-jedi.el" (20650 42078 657490 10000))
+;;; Generated autoloads from ein-jedi.el
+
+(autoload 'ein:jedi-complete "ein-jedi" "\
+Run completion using candidates calculated by EIN and Jedi.
+
+\(fn)" t nil)
+
+(autoload 'ein:jedi-dot-complete "ein-jedi" "\
+Insert \".\" and run `ein:jedi-complete'.
+
+\(fn)" t nil)
+
+(autoload 'ein:jedi-setup "ein-jedi" "\
+Setup auto-completion using EIN and Jedi.el_ together.
+
+Jedi.el_ is a Python auto-completion library for Emacs.
+To use EIN and Jedi together, add the following in your Emacs setup.::
+
+  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)
+
+.. _Jedi.el: https://github.com/tkf/emacs-jedi
+
+\(fn)" nil nil)
+
+;;;***
+
 ;;;### (autoloads (ein:junk-rename ein:junk-new) "ein-junk" "ein-junk.el"
 ;;;;;;  (20571 14580 170606 716000))
 ;;; Generated autoloads from ein-junk.el
@@ -182,8 +210,8 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20604 24168
-;;;;;;  987586 508000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20604 29927
+;;;;;;  731865 215000))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -256,7 +284,7 @@ See also:
 ;;;***
 
 ;;;### (autoloads (ein:org-store-link ein:org-open) "ein-org" "ein-org.el"
-;;;;;;  (20604 28304 115786 638000))
+;;;;;;  (20604 29927 731865 215000))
 ;;; Generated autoloads from ein-org.el
 
 (autoload 'ein:org-open "ein-org" "\
@@ -304,7 +332,7 @@ Pseudo console mode.  Hit RET to execute code.
 
 ;;;### (autoloads (ein:shared-output-eval-string ein:shared-output-show-code-cell-at-point
 ;;;;;;  ein:shared-output-pop-to-buffer) "ein-shared-output" "ein-shared-output.el"
-;;;;;;  (20546 25932 441322 552000))
+;;;;;;  (20629 35398 555423 930000))
 ;;; Generated autoloads from ein-shared-output.el
 
 (autoload 'ein:shared-output-pop-to-buffer "ein-shared-output" "\
@@ -320,13 +348,16 @@ See also `ein:cell-max-num-outputs'.
 \(fn)" t nil)
 
 (autoload 'ein:shared-output-eval-string "ein-shared-output" "\
-Evaluate a code.  Prompt will appear asking the code to run.
+Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
 `ein:shared-output-pop-to-buffer'.
 
-\(fn CODE &optional POPUP VERBOSE KERNEL)" t nil)
+.. ARGS is passed to `ein:kernel-execute'.  Unlike `ein:kernel-execute',
+   `:silent' is `nil' by default.
+
+\(fn CODE &optional POPUP VERBOSE KERNEL &rest ARGS)" t nil)
 
 ;;;***
 
@@ -348,7 +379,7 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-smartrep.el" "ein-subpackages.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
-;;;;;;  "zeroein.el") (20604 28346 685498 148000))
+;;;;;;  "zeroein.el") (20650 45637 307359 381000))
 
 ;;;***
 
