@@ -381,6 +381,11 @@ Connect
 .. el:variable:: ein:connect-default-notebook
 .. el:function:: ein:connect-to-default-notebook
 
+Jedi.el
+"""""""
+
+.. el:function:: ein:jedi-setup
+
 MuMaMo
 ^^^^^^
 
@@ -538,6 +543,7 @@ Change Log
 v0.2
 ----
 
+* Add support for Jedi.el_.  See :el:symbol:`ein:jedi-setup`.
 * Add a simple org-mode link support.
 * Add built-in multiple language fontification for notebook:
   :el:symbol:`ein:notebook-multilang-mode`.
