@@ -28,6 +28,7 @@
 
 (require 'jedi)
 
+(eval-when-compile (require 'ein-connect))
 (require 'ein-ac)
 (require 'ein-completer)
 
@@ -73,7 +74,11 @@
 (defun ein:jedi-complete-on-dot-install (map)
   (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
 
-;; (ein:jedi-complete-on-dot-install ein:connect-mode-map)
+;;;###autoload
+(defun ein:jedi-setup ()
+  (let ((map ein:connect-mode-map))
+    (define-key map "\C-c\C-i" 'ein:jedi-complete)
+    (ein:jedi-complete-on-dot-install map)))
 
 (provide 'ein-jedi)
 
