@@ -952,6 +952,25 @@ function."
   "Called via notebook mode hooks."
   (setq imenu-create-index-function #'ein:worksheet-imenu-create-index))
 
+
+;;; Workarounds
+
+(defadvice fill-paragraph (around ein:worksheet-fill-paragraph activate)
+  "Prevent \"Text is read-only\" error when filling paragraph in
+EIN worksheet."
+  (if ein:%worksheet%
+      (let* ((cell (ein:worksheet-get-current-cell))
+             (beg (copy-marker (ein:cell-input-pos-min cell))))
+        (save-excursion
+          (goto-char beg)
+          (insert "\n"))
+        (unwind-protect
+            ad-do-it
+          (save-excursion
+            (goto-char beg)
+            (delete-char 1))))
+    ad-do-it))
+
 (provide 'ein-worksheet)
 
 ;;; ein-worksheet.el ends here
