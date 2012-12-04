@@ -133,6 +133,9 @@
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
   (destructuring-bind (&key kernel_id ws_url &allow-other-keys) data
+    (unless (and kernel_id ws_url)
+      (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
+             data))
     (ein:log 'info "Kernel started: %s" kernel_id)
     (setf (ein:$kernel-running kernel) t)
     (setf (ein:$kernel-kernel-id kernel) kernel_id)
