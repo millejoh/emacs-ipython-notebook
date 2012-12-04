@@ -132,13 +132,13 @@
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
-  (ein:log 'info "Kernel started: %s" (plist-get data :kernel_id))
-  (setf (ein:$kernel-running kernel) t)
-  (setf (ein:$kernel-kernel-id kernel) (plist-get data :kernel_id))
-  (setf (ein:$kernel-ws-url kernel) (plist-get data :ws_url))
-  (setf (ein:$kernel-kernel-url kernel)
-        (concat (ein:$kernel-base-url kernel) "/"
-                (ein:$kernel-kernel-id kernel)))
+  (destructuring-bind (&key kernel_id ws_url &allow-other-keys) data
+    (ein:log 'info "Kernel started: %s" kernel_id)
+    (setf (ein:$kernel-running kernel) t)
+    (setf (ein:$kernel-kernel-id kernel) kernel_id)
+    (setf (ein:$kernel-ws-url kernel) ws_url)
+    (setf (ein:$kernel-kernel-url kernel)
+          (concat (ein:$kernel-base-url kernel) "/" kernel_id)))
   (ein:kernel-start-channels kernel)
   (let ((shell-channel (ein:$kernel-shell-channel kernel))
         (iopub-channel (ein:$kernel-iopub-channel kernel)))
