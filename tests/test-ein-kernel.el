@@ -31,7 +31,8 @@
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (&rest ignore) (make-ein:$websocket))
            (ein:events-trigger (&rest ignore)))
-      (ein:kernel--kernel-started kernel :data (list :kernel_id kernel-id))
+      (ein:kernel--kernel-started
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
       (ein:kernel-restart kernel)
       (should (equal got-url desired-url)))))
 
@@ -46,7 +47,8 @@
            (set-process-query-on-exit-flag (process flag))
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (&rest ignore) (make-ein:$websocket)))
-      (ein:kernel--kernel-started kernel :data (list :kernel_id kernel-id))
+      (ein:kernel--kernel-started
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
       (ein:kernel-interrupt kernel)
       (should (equal got-url desired-url)))))
 
@@ -60,7 +62,8 @@
            (set-process-query-on-exit-flag (process flag))
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (&rest ignore) (make-ein:$websocket)))
-      (ein:kernel--kernel-started kernel :data (list :kernel_id kernel-id))
+      (ein:kernel--kernel-started
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
       (ein:kernel-kill kernel)
       (let* ((l (split-string got-url "?"))
              (got-url-0 (nth 0 l))
