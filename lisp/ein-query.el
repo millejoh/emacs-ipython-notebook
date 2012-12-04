@@ -188,10 +188,12 @@ then kill the current buffer."
                                         (timeout nil)
                                         (status-code nil)
                                         &allow-other-keys)
-  (declare (special url-http-response-status))
+  (declare (special url-http-method
+                    url-http-response-status))
 
   (ein:log 'debug "EIN:QUERY-AJAX-CALLBACK")
   (ein:log 'debug "status = %S" status)
+  (ein:log 'debug "url-http-method = %s" url-http-method)
   (ein:log 'debug "url-http-response-status = %s" url-http-response-status)
   (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
 
