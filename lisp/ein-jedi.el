@@ -63,12 +63,9 @@
                ((&key matched_text matches &allow-other-keys) ; :complete_reply
                 _))  ; ignore metadata
               replies
+            (ein:ac-prepare-completion matches)
             (let ((ac-expand-on-auto-complete expand))
-              (if matches
-                  (ein:completer-finish-completing-ac
-                   matched_text matches
-                   ein:jedi-dot-complete-sources)
-                (auto-complete ein:jedi-dot-complete-sources)))))))))
+              (auto-complete ein:jedi-dot-complete-sources))))))))
 
 ;;;###autoload
 (defun ein:jedi-dot-complete ()
