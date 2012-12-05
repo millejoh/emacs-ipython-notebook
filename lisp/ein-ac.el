@@ -105,8 +105,15 @@
 
 ;;; Completer interface
 
-(defun* ein:completer-finish-completing-ac
-    (matched-text matches &optional (sources '(ac-source-ein-direct)))
+(defun ein:ac-prepare-completion (matches)
+  "Prepare `ac-source-ein-direct' using MATCHES from kernel.
+Call this function before calling `auto-complete'."
+  (when matches
+    (setq ein:ac-direct-matches matches)  ; let-binding won't work
+    (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
+    (run-with-idle-timer 1 nil #'ein:ac-clear-cache)))
+
+(defun ein:completer-finish-completing-ac (matched-text matches)
   "Invoke completion using `auto-complete'.
 Only the argument MATCHES is used.  MATCHED-TEXT is for
 compatibility with `ein:completer-finish-completing-default'."
@@ -115,11 +122,9 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; checks it anyway.
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING-AC: matched-text=%S matches=%S"
            matched-text matches)
+  (ein:ac-prepare-completion matches)
   (when matches      ; No auto-complete drop-down list when no matches
-    (setq ein:ac-direct-matches matches)  ; let-binding won't work
-    (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
-    (run-with-idle-timer 1 nil #'ein:ac-clear-cache)
-    (auto-complete sources)))
+    (auto-complete '(ac-source-ein-direct))))
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
