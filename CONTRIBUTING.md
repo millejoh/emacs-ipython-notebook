@@ -7,6 +7,23 @@ for bug report.
 
 ## Avoid standard Emacs traps
 
+### It is Emacs not all
+
+Do you try the same thing in normal IPython notebook (i.e., browser)?
+If not, please try.  There can be problem in your IPython installation.
+
+
+### Your Emacs configuration
+
+There can be some configuration EIN does not work well with.  To check
+if the problem is in the configuration or not, the best way is to start
+EIN in a clean Emacs (i.e., without your configuration).
+
+You can use zeroein.el to start EIN in a clean Emacs.
+See the Quick try section in the manual:
+http://tkf.github.com/emacs-ipython-notebook/#quick-try
+
+
 ### Badly compiled file
 
 Remove all `*.elc` files from EIN source directory and its
