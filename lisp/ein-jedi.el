@@ -57,9 +57,11 @@
       (ein:jedi--completer-complete))
     (deferred:nextc it
       (lambda (replies)
-        (destructuring-bind (_ ((&key matched_text matches
-                                      &allow-other-keys)
-                                _)) replies
+        (destructuring-bind
+            (_  ; ignore `jedi:complete-request' what returns.
+             ((&key matched_text matches &allow-other-keys) ; :complete_reply
+              _))  ; ignore metadata
+            replies
           (if matches
               (ein:completer-finish-completing-ac
                matched_text matches
