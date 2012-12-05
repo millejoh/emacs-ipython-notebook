@@ -275,9 +275,11 @@ next sections.
 
 ## Your IPython configuration
 
-1. How do you start IPython? (e.g., `ipython notebook --port 9999`):
+1. What is your IPython version? (run `ipython --version`):
 
-2. What is your IPython notebook port number or URL?:
+2. How do you start IPython? (e.g., `ipython notebook --port 9999`):
+
+3. What is your IPython notebook port number or URL?:
 
 
 ## Additional information (if any)
