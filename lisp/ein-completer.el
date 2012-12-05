@@ -71,6 +71,8 @@
      &optional
      (callbacks (list :complete_reply
                       (cons #'ein:completer-finish-completing nil))))
+  "Request completion to KERNEL.
+CALLBACKS is passed to `ein:kernel-complete'."
   (interactive (list (ein:get-kernel)))
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
