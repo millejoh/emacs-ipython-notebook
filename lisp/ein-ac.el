@@ -113,8 +113,7 @@ Call this function before calling `auto-complete'."
     (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
     (run-with-idle-timer 1 nil #'ein:ac-clear-cache)))
 
-(defun* ein:completer-finish-completing-ac
-    (matched-text matches &optional (sources '(ac-source-ein-direct)))
+(defun ein:completer-finish-completing-ac (matched-text matches)
   "Invoke completion using `auto-complete'.
 Only the argument MATCHES is used.  MATCHED-TEXT is for
 compatibility with `ein:completer-finish-completing-default'."
@@ -125,7 +124,7 @@ compatibility with `ein:completer-finish-completing-default'."
            matched-text matches)
   (ein:ac-prepare-completion matches)
   (when matches      ; No auto-complete drop-down list when no matches
-    (auto-complete sources)))
+    (auto-complete '(ac-source-ein-direct))))
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
