@@ -48,30 +48,34 @@
     d))
 
 ;;;###autoload
-(defun ein:jedi-complete ()
+(defun* ein:jedi-complete (&key (expand ac-expand-on-auto-complete))
   "Run completion using candidates calculated by EIN and Jedi."
   (interactive)
-  (deferred:$
-    (deferred:parallel              ; or `deferred:earlier' is better?
-      (jedi:complete-request)
-      (ein:jedi--completer-complete))
-    (deferred:nextc it
-      (lambda (replies)
-        (destructuring-bind (_ ((&key matched_text matches
-                                      &allow-other-keys)
-                                _)) replies
-          (if matches
-              (ein:completer-finish-completing-ac
-               matched_text matches
-               ein:jedi-dot-complete-sources)
-            (auto-complete ein:jedi-dot-complete-sources)))))))
+  (lexical-let ((expand expand))
+    (deferred:$
+      (deferred:parallel              ; or `deferred:earlier' is better?
+        (jedi:complete-request)
+        (ein:jedi--completer-complete))
+      (deferred:nextc it
+        (lambda (replies)
+          (destructuring-bind
+              (_  ; ignore `jedi:complete-request' what returns.
+               ((&key matched_text matches &allow-other-keys) ; :complete_reply
+                _))  ; ignore metadata
+              replies
+            (let ((ac-expand-on-auto-complete expand))
+              (if matches
+                  (ein:completer-finish-completing-ac
+                   matched_text matches
+                   ein:jedi-dot-complete-sources)
+                (auto-complete ein:jedi-dot-complete-sources)))))))))
 
 ;;;###autoload
 (defun ein:jedi-dot-complete ()
   "Insert \".\" and run `ein:jedi-complete'."
   (interactive)
   (insert ".")
-  (ein:jedi-complete))
+  (ein:jedi-complete :expand nil))
 
 (defun ein:jedi-complete-on-dot-install (map)
   (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
