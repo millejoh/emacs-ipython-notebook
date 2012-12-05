@@ -75,7 +75,7 @@
   "Insert \".\" and run `ein:jedi-complete'."
   (interactive)
   (insert ".")
-  (ein:jedi-complete))
+  (ein:jedi-complete :expand nil))
 
 (defun ein:jedi-complete-on-dot-install (map)
   (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
