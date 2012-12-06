@@ -608,6 +608,12 @@ If the input area of the CELL does not exist, return `nil'"
            (oref cell :ewoc)
            (ein:cell-element-get cell :output))))
 
+(defmethod ein:cell-collapse ((cell ein:codecell))
+  (ein:cell-set-collapsed cell t))
+
+(defmethod ein:cell-expand ((cell ein:codecell))
+  (ein:cell-set-collapsed cell nil))
+
 (defmethod ein:cell-toggle-output ((cell ein:codecell))
   "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (ein:cell-set-collapsed cell (not (oref cell :collapsed))))
