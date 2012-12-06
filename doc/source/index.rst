@@ -543,6 +543,7 @@ Change Log
 v0.2
 ----
 
+* :el:symbol:`ein:console-open` works without `python.el`_.
 * Expand code cell output on execution.
   (`#88 <https://github.com/tkf/emacs-ipython-notebook/issues/88>`_).
 * Improve :el:symbol:`ein:completer-dot-complete` and
