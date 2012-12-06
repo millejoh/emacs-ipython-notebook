@@ -27,6 +27,8 @@
 
 (declare-function ac-cursor-on-diable-face-p "auto-complete")
 
+(eval-when-compile (require 'cl))
+
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
@@ -48,15 +50,16 @@
   (save-excursion
     (re-search-backward (concat matched-text "\\="))))
 
-(defun ein:completer-finish-completing (_dummy_ content -metadata-not-used-)
+(defun ein:completer-finish-completing (args content -metadata-not-used-)
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
   (let ((matched-text (plist-get content :matched_text))
         (matches (plist-get content :matches))
         (completer (ein:completer-choose)))
     (ein:log 'debug "COMPLETER-FINISH-COMPLETING: completer=%s" completer)
-    (funcall completer matched-text matches)))
+    (apply completer matched-text matches args)))
 
-(defun ein:completer-finish-completing-default (matched-text matches)
+(defun ein:completer-finish-completing-default (matched-text matches
+                                                             &rest -ignore-)
   (let* ((end (point))
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
@@ -67,13 +70,28 @@
       (insert word))))
 
 (defun* ein:completer-complete
-    (kernel
-     &optional
-     (callbacks (list :complete_reply
-                      (cons #'ein:completer-finish-completing nil))))
-  "Request completion to KERNEL.
-CALLBACKS is passed to `ein:kernel-complete'."
+    (kernel &rest args &key callbacks &allow-other-keys)
+  "Start completion for the code at point.
+
+.. It sends `:complete_request' to KERNEL.
+   CALLBACKS is passed to `ein:kernel-complete'.
+
+   If you specify CALLBACKS explicitly (i.e., you are not using
+   `ein:completer-finish-completing'), keyword argument will be
+   ignored.  Otherwise, ARGS are passed as additional arguments
+   to completer callback functions.  ARGS **must** be keyword
+   arguments.
+
+   EXPAND keyword argument is supported by
+   `ein:completer-finish-completing-ac'.  When it is specified,
+   it overrides `ac-expand-on-auto-complete' when calling
+   `auto-complete'."
   (interactive (list (ein:get-kernel)))
+  (unless callbacks
+    (setq callbacks
+          (list :complete_reply
+                (cons #'ein:completer-finish-completing
+                      (ein:plist-exclude args '(:callbacks))))))
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
                        (current-column)
@@ -86,7 +104,7 @@ CALLBACKS is passed to `ein:kernel-complete'."
   (ein:and-let* ((kernel (ein:get-kernel))
                  ((not (ac-cursor-on-diable-face-p)))
                  ((ein:kernel-live-p kernel)))
-    (ein:completer-complete kernel)))
+    (ein:completer-complete kernel :expand nil)))
 
 (defcustom ein:complete-on-dot t
   "Start completion when inserting a dot.  Note that
@@ -105,6 +123,5 @@ notebook buffers and connected buffers."
     (define-key map "." nil)))
 
 (provide 'ein-completer)
-
 
 ;;; ein-completer.el ends here

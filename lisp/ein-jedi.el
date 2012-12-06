@@ -42,6 +42,7 @@
                    ((ein:kernel-live-p kernel)))
       (ein:completer-complete
        kernel
+       :callbacks
        (list :complete_reply
              (cons (lambda (_ &rest args) (deferred:callback-post d args))
                    nil))))

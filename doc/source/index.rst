@@ -543,6 +543,9 @@ Change Log
 v0.2
 ----
 
+* Improve :el:symbol:`ein:completer-dot-complete` and
+  :el:symbol:`ein:jedi-dot-complete`.  Do not expand common part when
+  inserting dot, to make typing code containing dots less surprising.
 * Add support for Jedi.el_.  See :el:symbol:`ein:jedi-setup`.
 * Add a simple org-mode link support.
 * Add built-in multiple language fontification for notebook:
