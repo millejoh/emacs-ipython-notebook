@@ -36,7 +36,7 @@
   '(ac-source-jedi-direct ac-source-ein-direct))
 
 (defun ein:jedi--completer-complete ()
-  (lexical-let ((d (deferred:new #'identity)))
+  (let ((d (deferred:new #'identity)))
     (ein:and-let* ((kernel (ein:get-kernel))
                    ((not (ac-cursor-on-diable-face-p)))
                    ((ein:kernel-live-p kernel)))
@@ -44,8 +44,8 @@
        kernel
        :callbacks
        (list :complete_reply
-             (cons (lambda (_ &rest args) (deferred:callback-post d args))
-                   nil))))
+             (cons (lambda (d &rest args) (deferred:callback-post d args))
+                   d))))
     d))
 
 ;;;###autoload
