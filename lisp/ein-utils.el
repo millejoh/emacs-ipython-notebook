@@ -315,12 +315,23 @@ Adapted from twittering-mode.el's `case-string'."
 
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."
+  ;; FIXME: this is not needed.  See: `ein:plist-exclude'.
   (loop for p in plist
         for i from 0
         for key-p = (= (% i 2) 0)
         with key = nil
         if key-p do (setq key p)
         else collect `(,key . ,p)))
+
+(defun ein:plist-exclude (plist keys)
+  "Exclude entries specified by KEYS in PLIST.
+
+Example::
+
+    (ein:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
+  (loop for (k v) on plist by 'cddr
+        unless (memq k keys)
+        nconc (list k v)))
 
 (defun ein:hash-keys (table)
   (let (keys)
