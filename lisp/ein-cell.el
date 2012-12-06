@@ -602,10 +602,17 @@ If the input area of the CELL does not exist, return `nil'"
 
 (defmethod ein:cell-set-collapsed ((cell ein:codecell) collapsed)
   "Set `:collapsed' slot of CELL and invalidate output ewoc nodes."
-  (oset cell :collapsed collapsed)
-  (apply #'ewoc-invalidate
-         (oref cell :ewoc)
-         (ein:cell-element-get cell :output)))
+  (unless (eq (oref cell :collapsed) collapsed)
+    (oset cell :collapsed collapsed)
+    (apply #'ewoc-invalidate
+           (oref cell :ewoc)
+           (ein:cell-element-get cell :output))))
+
+(defmethod ein:cell-collapse ((cell ein:codecell))
+  (ein:cell-set-collapsed cell t))
+
+(defmethod ein:cell-expand ((cell ein:codecell))
+  (ein:cell-set-collapsed cell nil))
 
 (defmethod ein:cell-toggle-output ((cell ein:codecell))
   "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
@@ -746,7 +753,7 @@ If END is non-`nil', return the location of next element."
            (intern (format "output-%s" (plist-get json :stream)))))))
 
 (defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
-  ;; (ein:cell-expand cell)
+  (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (oset cell :outputs
         (append (oref cell :outputs) (list json)))
