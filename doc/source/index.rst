@@ -543,6 +543,8 @@ Change Log
 v0.2
 ----
 
+* Expand code cell output on execution.
+  (`#88 <https://github.com/tkf/emacs-ipython-notebook/issues/88>`_).
 * Improve :el:symbol:`ein:completer-dot-complete` and
   :el:symbol:`ein:jedi-dot-complete`.  Do not expand common part when
   inserting dot, to make typing code containing dots less surprising.
