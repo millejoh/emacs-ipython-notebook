@@ -753,7 +753,7 @@ If END is non-`nil', return the location of next element."
            (intern (format "output-%s" (plist-get json :stream)))))))
 
 (defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
-  ;; (ein:cell-expand cell)
+  (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (oset cell :outputs
         (append (oref cell :outputs) (list json)))
