@@ -6,7 +6,7 @@
 
 
 .. note:: It is stable enough for my day to day work, but I can't
-          grantee the safety for your notebook data.  So please make
+          guarantee the safety for your notebook data.  So please make
           sure you have backup.
 
 .. |build-status|
