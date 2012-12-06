@@ -97,7 +97,11 @@
 (defmethod ein:tb-file-path-at-point ((traceback ein:traceback))
   (destructuring-bind (beg end)
       (ein:tb-range-of-node-at-point traceback)
-    (let* ((file-tail (next-single-property-change beg 'font-lock-face nil end))
+    (let* ((file-tail
+            (if (>= emacs-major-version 24)
+                (next-single-property-change beg 'font-lock-face nil end)
+              ;; For Emacs 23.x:
+              (next-single-property-change beg 'face nil end)))
            (file (when file-tail
                    (buffer-substring-no-properties beg file-tail))))
       (if (string-match "\\.pyc$" file)
