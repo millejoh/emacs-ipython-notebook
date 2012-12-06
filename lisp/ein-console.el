@@ -131,18 +131,17 @@ If you want to use more complex setting, you can set a function to it::
 
 See also: `ein:console-security-dir'."
   :type '(choice
-          (string :tag "Arguments to IPython"
-                  "--profile nbserver --ssh HOSTNAME")
+          (repeat (string :tag "Arguments to IPython" "--profile"))
           (alist :tag "Arguments mapping"
                  :key-type (choice :tag "URL or PORT"
                                    (string :tag "URL" "http://127.0.0.1:8888")
                                    (integer :tag "PORT" 8888)
                                    (const default))
-                 :value-type (string :tag "Arguments to IPython"
-                                     "--profile nbserver --ssh HOSTNAME"))
+                 :value-type
+                 (repeat (string :tag "Arguments to IPython" "--profile")))
           (function :tag "Additional arguments getter"
                     (lambda (url-or-port)
-                      (format "--ssh %s" url-or-port))))
+                      (list "--ssh" (format "%s" url-or-port)))))
   :group 'ein)
 
 (defun ein:console-security-dir-get (url-or-port)
