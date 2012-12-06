@@ -424,12 +424,15 @@ Elements are compared using the function TEST (default: `eq')."
    ((boundp obj) (eval obj))
    ((fboundp obj) (funcall obj))))
 
-(defun ein:choose-setting (symbol value)
+(defun ein:choose-setting (symbol value &optional single-p)
   "Choose setting in stored in SYMBOL based on VALUE.
-The value of SYMBOL can be string, alist or function."
+The value of SYMBOL can be string, alist or function.
+SINGLE-P is a function which takes one argument.  It must
+return t when the value of SYMBOL can be used as a setting.
+SINGLE-P is `stringp' by default."
   (let ((setting (eval symbol)))
     (cond
-     ((stringp setting) setting)
+     ((funcall (or single-p 'stringp) setting) setting)
      ((functionp setting) (funcall setting value))
      ((listp setting)
       (ein:get-value (or (assoc-default value setting)
@@ -505,6 +508,16 @@ Use `ein:log' for debugging and logging."
   ;; FIXME: Probably set BUFFER-NAME per notebook?
   ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
   (display-warning 'ein message level))
+
+(defvar ein:display-warning-once--db
+  (make-hash-table :test 'equal))
+
+(defun ein:display-warning-once (message &optional level)
+  "Call `ein:display-warning' once for same MESSAGE and LEVEL."
+  (let ((key (list message level)))
+    (unless (gethash key ein:display-warning-once--db)
+      (ein:display-warning message level)
+      (puthash key t ein:display-warning-once--db))))
 
 (defun ein:get-docstring (function)
   "Return docstring of FUNCTION."
