@@ -51,6 +51,7 @@
   (rx (group (| (syntax whitespace)
                 (syntax open-parenthesis)
                 (syntax close-parenthesis)
+                (syntax string-quote) ; Complete files for `open("path/..`
                 bol))
       (? (syntax punctuation))          ; to complete ``~/PATH/...``
       (* (+ (| (syntax word) (syntax symbol)))
