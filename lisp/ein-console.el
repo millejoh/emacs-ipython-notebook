@@ -189,10 +189,13 @@ Use list of string instead of space separated string.")
   "Open IPython console.
 To use this function, `ein:console-security-dir' and
 `ein:console-args' must be set properly.
-This function requires `Fabian Gallina's python.el`_ for now;
+This function works best with the new python.el_ which is shipped
+with Emacs 24.2 or later.  If you don't have it, this function
+opens a \"plain\" command line interpreter (comint) buffer where
+you cannot use fancy stuff such as TAB completion.
 It should be possible to support python-mode.el.  Patches are welcome!
 
-.. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el"
+.. _python.el: https://github.com/fgallina/python.el"
   (interactive)
   (if (fboundp 'python-shell-switch-to-shell)
       (let ((cmd (mapconcat #'shell-quote-argument
