@@ -109,10 +109,12 @@
 
 
 ;;; Finally, open notebook list
-(require 'ein-dev)
-(ein:dev-print-sys-info)
-
-(unless noninteractive
-  (call-interactively #'ein:notebooklist-open))
+(if noninteractive
+    (progn
+      ;; When called in batch mode, print system info.
+      (require 'ein-dev)
+      (ein:dev-print-sys-info))
+  ;; To make EIN configurable by --eval, use idle timer:
+  (run-with-idle-timer 0 nil 'call-interactively 'ein:notebooklist-open))
 
 ;;; zeroein.el ends here
