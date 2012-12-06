@@ -27,6 +27,8 @@
 
 (declare-function ac-cursor-on-diable-face-p "auto-complete")
 
+(eval-when-compile (require 'cl))
+
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
@@ -67,7 +69,8 @@
       (delete-region beg end)
       (insert word))))
 
-(defun ein:completer-complete (kernel &optional callbacks &rest args)
+(defun* ein:completer-complete
+    (kernel &rest args &key callbacks &allow-other-keys)
   "Start completion for the code at point.
 
 .. It sends `:complete_request' to KERNEL.
@@ -87,7 +90,8 @@
   (unless callbacks
     (setq callbacks
           (list :complete_reply
-                (cons #'ein:completer-finish-completing args))))
+                (cons #'ein:completer-finish-completing
+                      (ein:plist-exclude args '(:callbacks))))))
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
                        (current-column)
@@ -100,7 +104,7 @@
   (ein:and-let* ((kernel (ein:get-kernel))
                  ((not (ac-cursor-on-diable-face-p)))
                  ((ein:kernel-live-p kernel)))
-    (ein:completer-complete kernel nil :expand nil)))
+    (ein:completer-complete kernel :expand nil)))
 
 (defcustom ein:complete-on-dot t
   "Start completion when inserting a dot.  Note that
