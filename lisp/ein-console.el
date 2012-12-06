@@ -107,8 +107,29 @@ Types same as `ein:console-security-dir' are valid."
 .. warning:: Space-separated string is obsolete now.  Use a list
    of string as value now.
 
-Example: ``(\"--ssh\" \"HOSTNAME\")``.
-Types same as `ein:console-security-dir' are valid."
+Setting to use IPython profile named \"YOUR-IPYTHON-PROFILE\"::
+
+    (setq ein:console-args '(\"--profile\" \"YOUR-IPYTHON-PROFILE\"))
+
+Together with `ein:console-security-dir', you can open IPython
+console connecting to a remote kernel.::
+
+    (setq ein:console-args '(\"--ssh\" \"HOSTNAME\"))
+    (setq ein:console-security-dir \"PATH/TO/SECURITY/DIR\")
+
+You can setup `ein:console-args' per server basis using alist form::
+
+    (setq ein:console-args
+          '((8888 . '(\"--profile\" \"PROFILE\"))
+            (8889 . '(\"--ssh\" \"HOSTNAME\"))
+            (default . '(\"--profile\" \"default\"))))
+
+If you want to use more complex setting, you can set a function to it::
+
+    (setq ein:console-args
+          (lambda (url-or-port) '(\"--ssh\" \"HOSTNAME\")))
+
+See also: `ein:console-security-dir'."
   :type '(choice
           (string :tag "Arguments to IPython"
                   "--profile nbserver --ssh HOSTNAME")
