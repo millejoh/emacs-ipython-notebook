@@ -134,14 +134,28 @@ Types same as `ein:console-security-dir' are valid."
   (ein:choose-setting 'ein:console-args url-or-port))
 
 (defun ein:console-make-command ()
+  ;; FIXME: use %connect_info to get connection file, then I can get
+  ;; rid of `ein:console-security-dir'.
   (let* ((url-or-port (or (ein:get-url-or-port)
                           (error "Cannot find notebook to connect!")))
          (dir (ein:console-security-dir-get url-or-port))
          (kid (ein:kernel-id (ein:get-kernel)))
          (ipy (ein:console-executable-get url-or-port))
          (args (ein:console-args-get url-or-port)))
-    (format "python %s console --existing %skernel-%s.json %s"
-            ipy dir kid args)))
+    ;; FIMXE: do I need "python" here?
+    (append (list "python" ipy "console" "--existing"
+                  (format "%skernel-%s.json" dir kid))
+            (if (listp args)
+                args
+              (ein:display-warning
+               "String value for `ein:console-args' is obsolete.
+Use list of string instead of space separated string.")
+              (split-string-and-unquote args)))))
+
+(defun ein:console-get-buffer ()
+  (let ((url-or-port (ein:get-url-or-port))
+        (notebook (ein:get-notebook)))
+    (format "*ein:console %s/%s*" url-or-port (ein:notebook-name notebook))))
 
 ;;;###autoload
 (defun ein:console-open ()
@@ -152,11 +166,10 @@ This function requires `Fabian Gallina's python.el`_ for now;
 It should be possible to support python-mode.el.  Patches are welcome!
 
 .. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el"
-  ;; FIXME: use %connect_info to get connection file, then I can get
-  ;; rid of `ein:console-security-dir'.
   (interactive)
   (if (fboundp 'python-shell-switch-to-shell)
-      (let ((cmd (ein:console-make-command))
+      (let ((cmd (mapconcat #'shell-quote-argument
+                            (ein:console-make-command) " "))
             ;; python.el settings:
             (python-shell-setup-codes nil)
             ;; python.el makes dedicated process when
@@ -169,9 +182,14 @@ It should be possible to support python-mode.el.  Patches are welcome!
         (python-shell-make-comint cmd (python-shell-get-process-name t))
         ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
-    (error "python.el is not loaded!")))
+    (let* ((command (ein:console-make-command))
+           (program (car command))
+           (args (cdr command))
+           (buffer (ein:console-get-buffer)))
+      (apply #'make-comint-in-buffer
+             "ein:console" buffer program nil args)
+      (pop-to-buffer buffer))))
 
 (provide 'ein-console)
 
 ;;; ein-console.el ends here
-
