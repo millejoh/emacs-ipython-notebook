@@ -101,10 +101,13 @@ Types same as `ein:console-security-dir' are valid."
                     (lambda (url-or-port) (executable-find "ipython"))))
   :group 'ein)
 
-(defcustom ein:console-args "--profile nbserver"
+(defcustom ein:console-args '("--profile" "nbserver")
   "Additional argument when using console.
 
-Example: ``\"--ssh HOSTNAME\"``.
+.. warning:: Space-separated string is obsolete now.  Use a list
+   of string as value now.
+
+Example: ``(\"--ssh\" \"HOSTNAME\")``.
 Types same as `ein:console-security-dir' are valid."
   :type '(choice
           (string :tag "Arguments to IPython"
@@ -131,7 +134,11 @@ Types same as `ein:console-security-dir' are valid."
   (ein:choose-setting 'ein:console-executable url-or-port))
 
 (defun ein:console-args-get (url-or-port)
-  (ein:choose-setting 'ein:console-args url-or-port))
+  (ein:choose-setting 'ein:console-args url-or-port
+                      (lambda (x)
+                        (or (stringp x)
+                            (and (listp x)
+                                 (stringp (car x)))))))
 
 (defun ein:console-make-command ()
   ;; FIXME: use %connect_info to get connection file, then I can get
