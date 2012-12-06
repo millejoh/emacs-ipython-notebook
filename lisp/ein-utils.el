@@ -506,6 +506,16 @@ Use `ein:log' for debugging and logging."
   ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
   (display-warning 'ein message level))
 
+(defvar ein:display-warning-once--db
+  (make-hash-table :test 'equal))
+
+(defun ein:display-warning-once (message &optional level)
+  "Call `ein:display-warning' once for same MESSAGE and LEVEL."
+  (let ((key (list message level)))
+    (unless (gethash key ein:display-warning-once--db)
+      (ein:display-warning message level)
+      (puthash key t ein:display-warning-once--db))))
+
 (defun ein:get-docstring (function)
   "Return docstring of FUNCTION."
   ;; Borrowed from `ac-symbol-documentation'.

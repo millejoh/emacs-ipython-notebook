@@ -147,7 +147,7 @@ Types same as `ein:console-security-dir' are valid."
                   (format "%skernel-%s.json" dir kid))
             (if (listp args)
                 args
-              (ein:display-warning
+              (ein:display-warning-once
                "String value for `ein:console-args' is obsolete.
 Use list of string instead of space separated string.")
               (split-string-and-unquote args)))))
