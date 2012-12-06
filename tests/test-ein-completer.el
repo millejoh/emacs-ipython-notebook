@@ -13,10 +13,11 @@
   (let* ((matched-text 'dummy-matched-text-value) ; value can be anything
          (matches 'dummy-matches-value)
          (content (list :matched_text matched-text
-                        :matches matches)))
+                        :matches matches))
+         (args '(:extend t)))
     (mocker-let
         ((ein:completer-choose () ((:output 'completer)))
          (completer
-          (matched-text matches)
-          ((:input (list matched-text matches)))))
-      (ein:completer-finish-completing '-not-used- content '-not-used-))))
+          (matched-text matches &rest args)
+          ((:input (list matched-text matches args)))))
+      (ein:completer-finish-completing args content '-not-used-))))
