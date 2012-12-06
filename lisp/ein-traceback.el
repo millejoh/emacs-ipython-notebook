@@ -116,7 +116,7 @@
                                            &optional select)
   (let ((file (ein:tb-file-path-at-point traceback))
         (lineno (ein:tb-file-lineno-at-point traceback)))
-    (assert (file-exists-p file) nil "File %s does not exit." file)
+    (assert (file-exists-p file) nil "File %s does not exist." file)
     (let ((buf (find-file-noselect file))
           (scroll (lambda ()
                     (goto-char (point-min))
