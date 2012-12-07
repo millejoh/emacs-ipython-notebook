@@ -150,7 +150,7 @@ the source is in git repository."
     filename))
 
 (defun ein:make-tramp-file-name (username remote-host python-filename)
-  "Old (with multi-hops) tramp compatability function.
+  "Old (with multi-hops) tramp compatibility function.
 Adapted from `slime-make-tramp-file-name'."
   (if (boundp 'tramp-multi-methods)
       (tramp-make-tramp-file-name nil nil
