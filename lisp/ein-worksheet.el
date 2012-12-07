@@ -662,13 +662,15 @@ Return t when the movement is succeeded."
 (defun ein:worksheet-beginning-of-cell-input (&optional arg)
   "Move backward to the beginning of a cell.
 This function is for `beginning-of-defun-function', so behaves
-similarly with `beginning-of-defun'."
+similarly with `beginning-of-defun'.
+It is set in `ein:notebook-multilang-mode'."
   (ein:worksheet-goto-next-cell-element (or arg 1) t))
 
 (defun ein:worksheet-end-of-cell-input (&optional arg)
   "Move forward to the end of a cell.
 This function is for `end-of-defun-function', so behaves
-similarly with `end-of-defun'."
+similarly with `end-of-defun'.
+It is set in `ein:notebook-multilang-mode'."
   (ein:worksheet-goto-next-cell-element (or arg 1) nil 0 :after-input))
 
 
