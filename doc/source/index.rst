@@ -543,6 +543,8 @@ Change Log
 v0.2
 ----
 
+* Code completion in notebook happens *really* automatically.
+  You don't need to hit a key to start completion.
 * :el:symbol:`ein:console-open` works without `python.el`_.
 * Expand code cell output on execution.
   (`#88 <https://github.com/tkf/emacs-ipython-notebook/issues/88>`_).
