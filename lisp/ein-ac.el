@@ -101,7 +101,18 @@
   '((candidates . ein:ac-cache-get-matches)
     (requires . 0)
     (prefix . ein:ac-chunk-beginning)
+    (init . ein:ac-request-in-background)
     (symbol . "c")))
+
+(defun ein:ac-request-in-background ()
+  (ein:and-let* ((kernel (ein:get-kernel)))
+    (ein:completer-complete
+     kernel
+     :callbacks
+     (list :complete_reply
+           (cons (lambda (_ content _)
+                   (ein:ac-prepare-completion (plist-get content :matches)))
+                 nil)))))
 
 
 ;;; Completer interface
