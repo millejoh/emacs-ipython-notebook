@@ -466,6 +466,38 @@ Relevant Python code:
     msg-id))
 
 
+(defun ein:kernel-kernel-info-request (kernel callbacks)
+  "Request core information of KERNEL.
+
+When calling this method pass a CALLBACKS structure of the form::
+
+  (:kernel_info_reply (FUNCTION . ARGUMENT))
+
+Call signature::
+
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
+
+CONTENT and METADATA are given by `kernel_info_reply' message.
+
+`kernel_info_reply' message is documented here:
+http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info
+
+Example::
+
+  (ein:kernel-kernel-info-request
+   (ein:get-kernel)
+   '(:kernel_info_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
+"
+  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (let* ((msg (ein:kernel--get-msg kernel "kernel_info_request" nil))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:websocket-send
+     (ein:$kernel-shell-channel kernel)
+     (json-encode msg))
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    msg-id))
+
+
 (defun ein:kernel-interrupt (kernel)
   (when (ein:$kernel-running kernel)
     (ein:log 'info "Interrupting kernel")
