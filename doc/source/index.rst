@@ -105,7 +105,8 @@ Requirements
   this feature.
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently tested in Emacs 24.1.
+EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
+It is known to work in Emacs 23.2, 24.1 and 24.2.
 
 .. _IPython: http://ipython.org/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
