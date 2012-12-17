@@ -468,20 +468,46 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
   "Login to IPython notebook server."
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (read-passwd "Password: ")))
+  (ein:log 'debug "NOTEBOOKLIST-LOGIN: %s" url-or-port)
   (ein:query-singleton-ajax
    (list 'notebooklist-login url-or-port)
    (ein:url url-or-port "login")
    :type "POST"
    :data (concat "password=" password)
-   :error
-   (cons (lambda (url-or-port &rest _)
-           (ein:log 'info "Cannot login to %s" url-or-port))
-         url-or-port)
-   :success
-   (cons (lambda (url-or-port &rest _)
-           (ein:log 'info "Login to %s complete. \
+   :parser #'ein:notebooklist-login--parser
+   :error (cons #'ein:notebooklist-login--error url-or-port)
+   :success (cons #'ein:notebooklist-login--success url-or-port)))
+
+(defun ein:notebooklist-login--parser ()
+  (goto-char (point-min))
+  (list :has-cookie (search-forward "Set-Cookie" nil t)
+        :bad-page (re-search-forward "<input type=.?password" nil t)))
+
+(defun ein:notebooklist-login--success-1 (url-or-port)
+  (ein:log 'info "Login to %s complete. \
 Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
-         url-or-port)))
+
+(defun ein:notebooklist-login--error-1 (url-or-port)
+  (ein:log 'info "Failed to login to %s" url-or-port))
+
+(defun* ein:notebooklist-login--success (url-or-port &key
+                                                     data
+                                                     &allow-other-keys)
+  (if (plist-get data :bad-page)
+      (ein:notebooklist-login--error-1 url-or-port)
+    (ein:notebooklist-login--success-1 url-or-port)))
+
+(defun* ein:notebooklist-login--error (url-or-port &key
+                                                   data
+                                                   symbol-status
+                                                   response-status
+                                                   &allow-other-keys)
+  (if (and (eq symbol-status 'timeout)
+           response-status
+           (= response-status 302)
+           (plist-get data :has-cookie))
+      (ein:notebooklist-login--success-1 url-or-port)
+    (ein:notebooklist-login--error-1 url-or-port)))
 
 
 ;;; Generic getter

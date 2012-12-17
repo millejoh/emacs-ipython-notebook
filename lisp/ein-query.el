@@ -63,6 +63,11 @@ will be canceled \(see also `ein:query-singleton-ajax').
                  (const :tag "No timeout" nil))
   :group 'ein)
 
+;; FIXME: Passing around timer object using buffer local variable is
+;;        not a good idea, as it looks like `url-retrieve' opens
+;;        different buffer when following redirections (probably
+;;        another bug...).
+
 (ein:deflocal ein:%query-ajax-timer% nil)
 
 (ein:deflocal ein:%query-ajax-canceled% nil
@@ -224,14 +229,40 @@ then kill the current buffer."
                                :status status :data data))))
 
 (defun* ein:query-ajax-timeout-callback (buffer &key
-                                                (error nil)
+                                                error parser
                                                 &allow-other-keys)
   (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK buffer = %S" buffer)
   (ein:with-live-buffer buffer
     (setq ein:%query-ajax-canceled% 'timeout)
     (let ((proc (get-buffer-process buffer)))
-      ;; This will call `ein:query-ajax-callback'.
-      (delete-process proc))))
+      (ein:log 'debug "EIN:QUERY-AJAX-TIMEOUT-CALLBACK proc = %S" proc)
+      (if proc
+          ;; This will call `ein:query-ajax-callback'.
+          (delete-process proc)
+        ;; No associated process.  This means that `url-retrieve' failed
+        ;; to call callback function.  This happens sometimes.
+        ;; Let's call the error callback manually.
+        (destructuring-bind (&key code &allow-other-keys)
+            (progn
+              (goto-char (point-min))
+              (ein:query--parse-response-at-point))
+          (ein:log 'debug "(buffer-string) =\n%s" (buffer-string))
+          ;; FIXME: error callback may be called already in
+          ;;        `ein:query-ajax-callback'.  This happens when
+          ;;        `ein:query-ajax-callback' is called in
+          ;;        differnt buffer.
+          (ein:safe-funcall-packed
+           error
+           ;; Passing data to error callback makes no sense, but it is
+           ;; needed for implementing `ein:notebooklist-login--error'.
+           ;; Also, this kills the buffer.
+           :data (ein:query-ajax--parse-data parser nil)
+           :symbol-status 'timeout :response-status code))))))
+
+(defun ein:query--parse-response-at-point ()
+  (re-search-forward "\\=[ \t\n]*HTTP/\\([0-9\\.]+\\) +\\([0-9]+\\)")
+  (list :version (match-string 1)
+        :code (string-to-number (match-string 2))))
 
 (defun ein:query-ajax-cancel-timer ()
   (ein:log 'debug "EIN:QUERY-AJAX-CANCEL-TIMER")
