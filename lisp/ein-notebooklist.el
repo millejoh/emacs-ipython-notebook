@@ -462,6 +462,28 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
      filename t ein:notebooklist-find-file-buffer-callback)))
 
 
+;;; Login
+
+(defun ein:notebooklist-login (url-or-port password)
+  "Login to IPython notebook server."
+  (interactive (list (ein:notebooklist-ask-url-or-port)
+                     (read-string "Password: ")))
+  (ein:query-singleton-ajax
+   (list 'notebooklist-login url-or-port)
+   (ein:url url-or-port "login")
+   :type "POST"
+   :data (concat "password=" password)
+   :error
+   (cons (lambda (url-or-port &rest _)
+           (ein:log 'info "Cannot login to %s" url-or-port))
+         url-or-port)
+   :success
+   (cons (lambda (url-or-port &rest _)
+           (ein:log 'info "Login to %s complete. \
+Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
+         url-or-port)))
+
+
 ;;; Generic getter
 
 (defun ein:get-url-or-port--notebooklist ()
