@@ -261,6 +261,24 @@ KEY, then call `ein:query-ajax' with ARGS.  KEY is compared by
        (remhash key ein:query-running-process-table)))
    ein:query-running-process-table))
 
+
+;;; Cookie
+
+(defun ein:query-get-cookie (host &optional localpart secure)
+  "Return cookie string (like `document.cookie').
+
+Example::
+
+   (ein:query-get-cookie \"127.0.0.1\" \"/\")
+"
+  (let ((cookies (mapcar
+                  (lambda (c) (cons (url-cookie-name c) (url-cookie-value c)))
+                  (url-cookie-retrieve host localpart secure))))
+    (mapconcat
+     (lambda (nv) (concat (car nv) "=" (cdr nv)))
+     cookies
+     "; ")))
+
 (provide 'ein-query)
 
 ;;; ein-query.el ends here
