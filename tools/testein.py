@@ -305,6 +305,15 @@ class ServerRunner(BaseRunner):
 
     def stop(self):
         print "Stopping server", self.port
+        returncode = self.proc.poll()
+        if returncode is not None:
+            logpath = self.logpath('server')
+            print "Server process was already dead by exit code", returncode
+            print "*" * 50
+            print "Showing {0}:".format(logpath)
+            print open(logpath).read()
+            print
+            return
         if not self.dry_run:
             try:
                 kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
