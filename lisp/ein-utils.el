@@ -128,6 +128,7 @@ before previous opening parenthesis."
 
 ;;; URL utils
 
+(defvar ein:url-localhost "127.0.0.1")
 (defvar ein:url-localhost-template "http://127.0.0.1:%s")
 
 (defun ein:url (url-or-port &rest paths)
