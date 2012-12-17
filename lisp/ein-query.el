@@ -147,7 +147,10 @@ is killed immediately after the execution of this function.
     (setq url (ein:url-no-cache url)))
   (unless error
     (setq error (ein:query-get-default-error-callback url))
-    (plist-put settings :error error))
+    (setq settings (plist-put settings :error error)))
+  (when (and (equal type "POST") data)
+    (push '("Content-Type" . "application/x-www-form-urlencoded") headers)
+    (setq settings (plist-put settings :headers headers)))
   (let* ((url-request-extra-headers headers)
          (url-request-method type)
          (url-request-data data)
