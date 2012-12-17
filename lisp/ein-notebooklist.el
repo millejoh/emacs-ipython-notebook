@@ -473,7 +473,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
    (list 'notebooklist-login url-or-port)
    (ein:url url-or-port "login")
    :type "POST"
-   :data (concat "password=" password)
+   :data (concat "password=" (url-hexify-string password))
    :parser #'ein:notebooklist-login--parser
    :error (cons #'ein:notebooklist-login--error url-or-port)
    :success (cons #'ein:notebooklist-login--success url-or-port)))
