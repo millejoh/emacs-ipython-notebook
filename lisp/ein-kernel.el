@@ -167,10 +167,11 @@
   The kernel will no longer be responsive.")))
 
 
-(defun ein:kernel-send-cookie (channel)
-  ;; This is required to open channel.  In IPython's kernel.js, it sends
-  ;; `document.cookie'.  This is an empty string anyway.
-  (ein:websocket-send channel ""))
+(defun ein:kernel-send-cookie (channel host)
+  ;; cookie can be an empty string for IPython server with no password,
+  ;; but something must be sent to start channel.
+  (let ((cookie (ein:query-get-cookie host "/")))
+    (ein:websocket-send channel cookie)))
 
 
 (defun ein:kernel--ws-closed-callback (websocket kernel arg)
@@ -204,9 +205,14 @@
             do (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))
             do (setf (ein:$websocket-onopen c)
                      (lexical-let ((channel c)
-                                   (kernel kernel))
+                                   (kernel kernel)
+                                   (host (let (url-or-port
+                                               (ein:$kernel-url-or-port kernel))
+                                           (if (stringp url-or-port)
+                                               url-or-port
+                                             ein:url-localhost))))
                        (lambda ()
-                         (ein:kernel-send-cookie channel)
+                         (ein:kernel-send-cookie channel host)
                          ;; run `ein:$kernel-after-start-hook' if both
                          ;; channels are ready.
                          (when (ein:kernel-live-p kernel)

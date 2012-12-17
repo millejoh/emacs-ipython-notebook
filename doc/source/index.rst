@@ -219,6 +219,7 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
+.. el:function:: ein:notebooklist-login
 .. el:function:: ein:junk-new
 
 .. el:keymap:: ein:notebooklist-mode-map
@@ -544,6 +545,7 @@ Change Log
 v0.2
 ----
 
+* Preliminary login support.  See :el:symbol:`ein:notebooklist-login`.
 * Code completion in notebook happens *really* automatically.
   You don't need to hit a key to start completion.
 * :el:symbol:`ein:console-open` works without `python.el`_.
