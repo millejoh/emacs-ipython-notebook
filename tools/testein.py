@@ -226,6 +226,7 @@ class TestRunner(BaseRunner):
 
     def report(self):
         (stdout, _) = self.proc.communicate()
+        self.stdout = stdout
         self.failed = self.proc.returncode != 0
         if self.failed:
             print "*" * 50
@@ -249,6 +250,37 @@ class TestRunner(BaseRunner):
         self.show_sys_info()
         self.make_process()
         return self.report()
+
+    def is_known_failure(self):
+        """
+        Check if failures are known, based on STDOUT from ERT.
+        """
+        import re
+        lines = iter(self.stdout.splitlines())
+        for l in lines:
+            if re.match("[0-9]+ unexpected results:.*", l):
+                break
+        else:
+            return True  # no failure
+
+        # Check "FAILED <test-name>" lines
+        for l in lines:
+            if not l:
+                break  # end with an empty line
+            for f in self.known_failures:
+                if re.search(f, l):
+                    break
+            else:
+                return False
+        return True
+
+    known_failures = [
+        "ein:notebook-execute-current-cell-pyout-image$",
+    ]
+    """
+    A list of regexp which matches to test that is known to fail (sometimes).
+    This is a workaround for ##74.
+    """
 
 
 def mkdirp(path):
@@ -374,7 +406,7 @@ def construct_command(args):
 
 
 def run_ein_test(unit_test, func_test, func_test_max_retries,
-                 clean_elc, **kwds):
+                 no_skip, clean_elc, **kwds):
     if clean_elc and not kwds['dry_run']:
         remove_elc()
     if unit_test:
@@ -389,6 +421,9 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
                 if func_test_runner.run() == 0:
                     print "Functional test succeeded after {0} retries." \
                         .format(i)
+                    return 0
+                if not no_skip and func_test_runner.is_known_failure():
+                    print "All failures are known.  Ending functional test."
                     return 0
         print "Functional test failed after {0} retries.".format(i)
         return 1
@@ -427,6 +462,12 @@ def main():
                         Specify number of retries for functional test
                         before failing with error.  This is workaround
                         for the issue #74.
+                        """)
+    parser.add_argument('--no-skip', default=False, action='store_true',
+                        help="""
+                        Do no skip known failures.  Known failures
+                        are implemented as another workaround for the
+                        issue #74.
                         """)
     parser.add_argument('--no-func-test', '-F', default=True,
                         dest='func_test', action='store_false',
