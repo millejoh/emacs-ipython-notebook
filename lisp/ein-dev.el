@@ -288,7 +288,7 @@ next sections.
 ")
       (insert "## System info:\n\n```cl\n")
       (condition-case err
-          (pp (ein:dev-sys-info) buffer)
+          (ein:dev-print-sys-info buffer)
         (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
       (insert "```\n")
       (goto-char (point-min))
@@ -296,8 +296,45 @@ next sections.
         (markdown-mode))
       (pop-to-buffer buffer))))
 
-(defun ein:dev-print-sys-info ()
-  (pp (ein:dev-sys-info)))
+(defun ein:dev-print-sys-info (&optional stream)
+  (princ (ein:dev--pp-to-string (ein:dev-sys-info))
+         (or stream standard-output)))
+
+(defun ein:dev--pp-to-string (object)
+  "`pp-to-string' with additional prettifier."
+  (with-temp-buffer
+    (erase-buffer)
+    (let ((pp-escape-newlines nil))
+      (pp object (current-buffer)))
+    (goto-char (point-min))
+    (let ((emacs-lisp-mode-hook nil))
+      (emacs-lisp-mode))
+    (ein:dev--prettify-sexp)
+    (buffer-string)))
+
+(defun ein:dev--prettify-sexp ()
+  "Prettify s-exp at point recursively.
+Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
+  (down-list)
+  (condition-case nil
+      (while t
+        (forward-sexp)
+        ;; Prettify nested s-exp.
+        (when (looking-back ")")
+          (save-excursion
+            (backward-sexp)
+            (ein:dev--prettify-sexp)))
+        ;; Add newline before keyword symbol.
+        (when (looking-at-p " :")
+          (newline-and-indent))
+        ;; Add newline before long string literal.
+        (when (and (looking-at-p " \"")
+                   (let ((end (save-excursion
+                                (forward-sexp)
+                                (point))))
+                     (> (- end (point)) 80)))
+          (newline-and-indent)))
+    (scan-error)))
 
 (provide 'ein-dev)
 
