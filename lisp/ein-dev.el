@@ -239,7 +239,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
 (defun ein:dev-bug-report-template ()
   "Open a buffer with bug report template."
   (interactive)
-  (let ((buffer (get-buffer-create "*ein:bug-report*")))
+  (let ((buffer (generate-new-buffer "*ein:bug-report*")))
     (with-current-buffer buffer
       (erase-buffer)
       (insert "<!--
