@@ -216,11 +216,12 @@ callback (`websocket-callback-debug-on-error') is enabled."
                                       (ein:eval-if-bound 'image-types))
    :ein (append (list :version (ein:version))
                 (ein:dev-dump-vars '("source-dir")))
-   :lib (mapcar #'ein:dev-sys-info--lib
-                '("websocket" "auto-complete" "mumamo"
-                  "auto-complete" "popup" "fuzzy" "pos-tip"
-                  "python" "python-mode" "markdown-mode"
-                  "smartrep" "anything" "helm"))))
+   :lib (ein:filter (lambda (info) (plist-get info :path))
+                    (mapcar #'ein:dev-sys-info--lib
+                            '("websocket" "auto-complete" "mumamo"
+                              "auto-complete" "popup" "fuzzy" "pos-tip"
+                              "python" "python-mode" "markdown-mode"
+                              "smartrep" "anything" "helm")))))
 
 (defun ein:dev-show-sys-info (&optional show-in-buffer)
   "Show Emacs and library information."
