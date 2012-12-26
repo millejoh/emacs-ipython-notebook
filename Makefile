@@ -19,9 +19,10 @@ interactive-testein-default:
 interactive-testein-24:
 	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch --ipython $(IPYTHON)
 
-ert-compile: ert-clean
-	cd lib/ert/lisp/emacs-lisp/ && \
-		$(EMACS) -Q -L . -batch -f batch-byte-compile *.el
+ERT_DIR = lib/ert/lisp/emacs-lisp
+ert-compile: ert-clean log
+	$(EMACS) -Q -batch -L $(ERT_DIR) \
+		-f batch-byte-compile $(ERT_DIR)/*.el 2> log/ert-compile.log
 
 ert-clean:
 	rm -f lib/ert/lisp/emacs-lisp/*.elc
@@ -40,6 +41,9 @@ env-ipy.0.12.0:
 
 env-clean:
 	rm -rf env
+
+log:
+	mkdir log
 
 log-clean:
 	rm -rf log
