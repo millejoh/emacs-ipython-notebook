@@ -292,8 +292,8 @@ This function is called via `ein:notebook-after-rename-hook'."
    :type "DELETE"
    :success (apply-partially (lambda (buffer name &rest ignore)
                                (ein:log 'info
-                                 "Deleting notebook %s... Done." buffer)
-                               (with-current-buffer name
+                                 "Deleting notebook %s... Done." name)
+                               (with-current-buffer buffer
                                  (ein:notebooklist-reload)))
                              (current-buffer) name)))
 
