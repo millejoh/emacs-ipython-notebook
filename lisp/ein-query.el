@@ -26,7 +26,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'url)
+(require 'request)
 
 (require 'ein-core)
 (require 'ein-log)
@@ -274,24 +274,21 @@ then kill the current buffer."
 
 (defun ein:query-singleton-ajax (key &rest args)
   "Cancel the old process if there is a process associated with
-KEY, then call `ein:query-ajax' with ARGS.  KEY is compared by
+KEY, then call `request' with ARGS.  KEY is compared by
 `equal'."
   (ein:query-gc-running-process-table)
   (ein:aif (gethash key ein:query-running-process-table)
-      (ein:with-live-buffer it
-        (setq ein:%query-ajax-canceled% 'user-cancel)
-        (let ((proc (get-buffer-process it)))
-          ;; This will call `ein:query-ajax-callback'.
-          (delete-process proc))))
-  (let ((buffer (apply #'ein:query-ajax args)))
-    (puthash key buffer ein:query-running-process-table)
-    buffer))
+      (unless (request-response-done-p it)
+        (request-abort it)))            ; This will run callbacks
+  (let ((response (apply #'request args)))
+    (puthash key response ein:query-running-process-table)
+    response))
 
 (defun ein:query-gc-running-process-table ()
   "Garbage collect dead processes in `ein:query-running-process-table'."
   (maphash
    (lambda (key buffer)
-     (unless (buffer-live-p buffer)
+     (when (request-response-done-p buffer)
        (remhash key ein:query-running-process-table)))
    ein:query-running-process-table))
 
