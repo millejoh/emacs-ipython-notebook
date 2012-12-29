@@ -34,3 +34,6 @@
 [submodule "lib/ert"]
 	path = lib/ert
 	url = git://github.com/ohler/ert.git
+[submodule "lib/request"]
+	path = lib/request
+	url = git://github.com/tkf/emacs-request
