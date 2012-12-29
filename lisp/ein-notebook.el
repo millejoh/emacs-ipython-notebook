@@ -354,11 +354,8 @@ See `ein:notebook-open' for more information."
       (with-current-buffer (ein:notebook-buffer notebook)
         (apply callback notebook t cbargs)))))
 
-(defun* ein:notebook-request-open-callback (notebook &key status data
+(defun* ein:notebook-request-open-callback (notebook &key data
                                                      &allow-other-keys)
-  (ein:log 'debug "URL-RETRIEVE nodtebook-id = %S, status = %S"
-           (ein:$notebook-notebook-id notebook)
-           status)
   (let ((notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-start-kernel notebook)
@@ -621,8 +618,10 @@ of NOTEBOOK."
                                                         &rest args
                                                       &key
                                                       status
-                                                      response-status
-                                                      &allow-other-keys)
+                                                      response
+                                                      &allow-other-keys
+                                                      &aux
+                                                      (response-status (request-response-status-code response)))
   ;; IPython server returns 204 only when the notebook URL is
   ;; accessed via PUT or DELETE.  As it seems Emacs failed to
   ;; choose PUT method every two times, let's check the response

@@ -144,19 +144,15 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
      (list 'notebooklist-open url-or-port)
      (ein:notebooklist-url url-or-port)
      :parser #'ein:json-read
-     :error (cons #'ein:notebooklist-open-error url-or-port)
-     :success (cons success url-or-port)))
+     :error (apply-partially #'ein:notebooklist-open-error url-or-port)
+     :success (apply-partially success url-or-port)))
   (ein:notebooklist-get-buffer url-or-port))
 
 (defun* ein:notebooklist-url-retrieve-callback (url-or-port
                                                 &key
-                                                status
                                                 data
                                                 &allow-other-keys)
   "Called via `ein:notebooklist-open'."
-  (ein:aif (plist-get status :error)
-      (error "Failed to connect to server '%s'.  Got: %S"
-             (ein:url url-or-port) it))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (let ((already-opened-p (ein:notebooklist-list-get url-or-port))
           (orig-point (point)))
@@ -172,8 +168,10 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
       (current-buffer))))
 
 (defun* ein:notebooklist-open-error (url-or-port
-                                     &key symbol-status
+                                     &key symbol-status response
                                      &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
     "Error (%s) while opening notebook list at the server %s."
     symbol-status url-or-port))
@@ -236,12 +234,18 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:notebooklist-open url-or-port no-popup)))
 
 (defun* ein:notebooklist-new-notebook-error
-    (packed &key status &allow-other-keys &aux (no-popup t))
+    (url-or-port callback cbargs
+                 &key response &allow-other-keys
+                 &aux
+                 (no-popup t)
+                 (error (request-response-error-thrown response))
+                 (redirects (request-response-redirects response))
+                 (redirect (car (last redirects))))
   (ein:log 'verbose
-    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR packed: %S; status: %S"
-    packed status)
-  (destructuring-bind (url-or-port callback cbargs) packed
-    (destructuring-bind (&key redirect error) status
+    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR url-or-port: %S; error: %S; redirects: %S"
+    url-or-port error redirects)
+  (progn
+    (progn
       (if redirect
           ;; Workaround the redirection bug in `url-retrieve'.
           ;; See: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12374
@@ -500,8 +504,10 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
 (defun* ein:notebooklist-login--error (url-or-port &key
                                                    data
                                                    symbol-status
-                                                   response-status
-                                                   &allow-other-keys)
+                                                   response
+                                                   &allow-other-keys
+                                                   &aux
+                                                   (response-status (request-response-status-code response)))
   (if (and (eq symbol-status 'timeout)
            response-status
            (= response-status 302)
