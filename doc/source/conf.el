@@ -6,6 +6,7 @@
        (path (lambda (&rest ps) (apply join project-directory ps))))
   (add-to-list 'load-path (funcall path "lisp"))
   (add-to-list 'load-path (funcall path "lib" "websocket"))
+  (add-to-list 'load-path (funcall path "lib" "request"))
   (add-to-list 'load-path (funcall path "lib" "nxhtml" "util")) ; mumamo
   (add-to-list 'load-path (funcall path "lib" "auto-complete"))
   (add-to-list 'load-path (funcall path "lib" "popup"))) ; for auto-complete
