@@ -594,7 +594,6 @@ of NOTEBOOK."
      :timeout ein:notebook-querty-timeout-save
      :type "PUT"
      :headers '(("Content-Type" . "application/json"))
-     :cache nil
      :data (json-encode data)
      :error (apply-partially #'ein:notebook-save-notebook-error notebook)
      :success (apply-partially #'ein:notebook-save-notebook-workaround
