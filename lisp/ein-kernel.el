@@ -112,7 +112,7 @@
              "?" (format "notebook=%s" notebook-id))
      :type "POST"
      :parser #'ein:json-read
-     :success (cons #'ein:kernel--kernel-started kernel))))
+     :success (apply-partially #'ein:kernel--kernel-started kernel))))
 
 
 (defun ein:kernel-restart (kernel)
@@ -128,7 +128,7 @@
               "restart")
      :type "POST"
      :parser #'ein:json-read
-     :success (cons #'ein:kernel--kernel-started kernel))))
+     :success (apply-partially #'ein:kernel--kernel-started kernel))))
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
@@ -475,9 +475,8 @@ Relevant Python code:
               (ein:$kernel-kernel-url kernel)
               "interrupt")
      :type "POST"
-     :success (cons (lambda (&rest ignore)
-                      (ein:log 'info "Sent interruption command."))
-                    nil))))
+     :success (lambda (&rest ignore)
+                (ein:log 'info "Sent interruption command.")))))
 
 
 (defun ein:kernel-kill (kernel &optional callback cbargs)
@@ -488,13 +487,12 @@ Relevant Python code:
               (ein:$kernel-kernel-url kernel))
      :cache nil
      :type "DELETE"
-     :success (cons (lambda (packed &rest ignore)
-                      (ein:log 'info "Notebook kernel is killed")
-                      (destructuring-bind (kernel callback cbargs)
-                          packed
-                        (setf (ein:$kernel-running kernel) nil)
-                        (when callback (apply callback cbargs))))
-                    (list kernel callback cbargs)))))
+     :success (apply-partially
+               (lambda (kernel callback cbargs &rest ignore)
+                 (ein:log 'info "Notebook kernel is killed")
+                 (setf (ein:$kernel-running kernel) nil)
+                 (when callback (apply callback cbargs)))
+               kernel callback cbargs))))
 
 
 ;; Reply handlers.

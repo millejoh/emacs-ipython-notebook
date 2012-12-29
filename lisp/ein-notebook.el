@@ -339,14 +339,16 @@ See `ein:notebook-open' for more information."
      url
      :timeout ein:notebook-querty-timeout-open
      :parser #'ein:json-read
-     :success (cons #'ein:notebook-request-open-callback-with-callback
-                    (list notebook callback cbargs)))
+     :success (apply-partially
+               #'ein:notebook-request-open-callback-with-callback
+               notebook callback cbargs))
     notebook))
 
-(defun ein:notebook-request-open-callback-with-callback (packed &rest args)
-  (let ((notebook (nth 0 packed))
-        (callback (nth 1 packed))
-        (cbargs (nth 2 packed)))
+(defun ein:notebook-request-open-callback-with-callback (notebook
+                                                         callback
+                                                         cbargs
+                                                         &rest args)
+  (progn
     (apply #'ein:notebook-request-open-callback notebook args)
     (when callback
       (with-current-buffer (ein:notebook-buffer notebook)
@@ -598,25 +600,25 @@ of NOTEBOOK."
      :headers '(("Content-Type" . "application/json"))
      :cache nil
      :data (json-encode data)
-     :error (cons #'ein:notebook-save-notebook-error notebook)
-     :success (cons #'ein:notebook-save-notebook-workaround
-                    (list notebook retry callback cbarg))
+     :error (apply-partially #'ein:notebook-save-notebook-error notebook)
+     :success (apply-partially #'ein:notebook-save-notebook-workaround
+                               notebook retry callback cbarg)
      :status-code
-     `((204 . ,(cons (lambda (arg &rest rest)
-                       (destructuring-bind (notebook callback cbarg)
-                           arg
-                         (apply #'ein:notebook-save-notebook-success
-                                notebook rest)
-                         (when callback
-                           (apply callback cbarg rest))))
-                     (list notebook callback cbarg)))))))
+     `((204 . ,(apply-partially
+                (lambda (notebook callback cbarg &rest rest)
+                  (apply #'ein:notebook-save-notebook-success
+                         notebook rest)
+                  (when callback
+                    (apply callback cbarg rest)))
+                notebook callback cbarg))))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
   (interactive)
   (ein:notebook-save-notebook ein:%notebook% 0))
 
-(defun* ein:notebook-save-notebook-workaround (packed &rest args
+(defun* ein:notebook-save-notebook-workaround (notebook retry callback cbarg
+                                                        &rest args
                                                       &key
                                                       status
                                                       response-status
@@ -626,8 +628,7 @@ of NOTEBOOK."
   ;; choose PUT method every two times, let's check the response
   ;; here and fail when 204 is not returned.
   (unless (eq response-status 204)
-    (destructuring-bind (notebook retry callback cbarg)
-        packed
+    (progn
       (with-current-buffer (ein:notebook-buffer notebook)
         (if (< retry ein:notebook-save-retry-max)
             (progn
@@ -1334,10 +1335,10 @@ the first argument and CBARGS as the rest of arguments."
         :notebook-id
         (ein:html-get-data-in-body-tag "data-notebook-id")))
      :success
-     (cons (function*
-            (lambda (packed &key data &allow-other-keys)
-              (apply (car packed) data (cadr packed))))
-           (list callback cbargs)))))
+     (apply-partially (function*
+                       (lambda (callback cbargs &key data &allow-other-keys)
+                         (apply callback data cbargs)))
+                      callback cbargs))))
 
 
 ;;; Buffer and kill hooks

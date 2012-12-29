@@ -212,19 +212,21 @@ This function is called via `ein:notebook-after-rename-hook'."
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:html-get-data-in-body-tag "data-notebook-id"))
-   :error (cons #'ein:notebooklist-new-notebook-error
-                (list url-or-port callback cbargs))
-   :success (cons #'ein:notebooklist-new-notebook-callback
-                  (list url-or-port callback cbargs))))
+   :error (apply-partially #'ein:notebooklist-new-notebook-error
+                           url-or-port callback cbargs)
+   :success (apply-partially #'ein:notebooklist-new-notebook-callback
+                             url-or-port callback cbargs)))
 
-(defun* ein:notebooklist-new-notebook-callback (packed &key
+(defun* ein:notebooklist-new-notebook-callback (url-or-port
+                                                callback
+                                                cbargs
+                                                &key
                                                        data
                                                        &allow-other-keys
                                                        &aux
                                                        (notebook-id data)
                                                        (no-popup t))
-  (destructuring-bind (url-or-port callback cbargs)
-      packed
+  (progn
     (ein:log 'info "Creating a new notebook... Done.")
     (if notebook-id
         (ein:notebook-open url-or-port notebook-id callback cbargs)
@@ -289,12 +291,12 @@ This function is called via `ein:notebook-after-rename-hook'."
     notebook-id)
    :cache nil
    :type "DELETE"
-   :success (cons (lambda (packed &rest ignore)
-                    (ein:log 'info
-                      "Deleting notebook %s... Done." (cdr packed))
-                    (with-current-buffer (car packed)
-                      (ein:notebooklist-reload)))
-                  (cons (current-buffer) name))))
+   :success (apply-partially (lambda (buffer name &rest ignore)
+                               (ein:log 'info
+                                 "Deleting notebook %s... Done." buffer)
+                               (with-current-buffer name
+                                 (ein:notebooklist-reload)))
+                             (current-buffer) name)))
 
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
@@ -475,8 +477,8 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
    :type "POST"
    :data (concat "password=" (url-hexify-string password))
    :parser #'ein:notebooklist-login--parser
-   :error (cons #'ein:notebooklist-login--error url-or-port)
-   :success (cons #'ein:notebooklist-login--success url-or-port)))
+   :error (apply-partially #'ein:notebooklist-login--error url-or-port)
+   :success (apply-partially #'ein:notebooklist-login--success url-or-port)))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
