@@ -68,15 +68,20 @@ will be canceled \(see also `ein:query-singleton-ajax').
 
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
 
-(defun ein:query-singleton-ajax (key &rest args)
+(defun* ein:query-singleton-ajax (key url &rest settings
+                                      &key
+                                      (timeout ein:query-timeout)
+                                      &allow-other-keys)
   "Cancel the old process if there is a process associated with
-KEY, then call `request' with ARGS.  KEY is compared by
+KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
   (ein:query-gc-running-process-table)
+  (when timeout
+    (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
   (ein:aif (gethash key ein:query-running-process-table)
       (unless (request-response-done-p it)
         (request-abort it)))            ; This will run callbacks
-  (let ((response (apply #'request args)))
+  (let ((response (apply #'request url settings)))
     (puthash key response ein:query-running-process-table)
     response))
 
