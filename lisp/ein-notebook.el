@@ -348,11 +348,10 @@ See `ein:notebook-open' for more information."
                                                          callback
                                                          cbargs
                                                          &rest args)
-  (progn
-    (apply #'ein:notebook-request-open-callback notebook args)
-    (when callback
-      (with-current-buffer (ein:notebook-buffer notebook)
-        (apply callback notebook t cbargs)))))
+  (apply #'ein:notebook-request-open-callback notebook args)
+  (when callback
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (apply callback notebook t cbargs))))
 
 (defun* ein:notebook-request-open-callback (notebook &key data
                                                      &allow-other-keys)
@@ -614,30 +613,29 @@ of NOTEBOOK."
   (interactive)
   (ein:notebook-save-notebook ein:%notebook% 0))
 
-(defun* ein:notebook-save-notebook-workaround (notebook retry callback cbarg
-                                                        &rest args
-                                                      &key
-                                                      status
-                                                      response
-                                                      &allow-other-keys
-                                                      &aux
-                                                      (response-status (request-response-status-code response)))
+(defun* ein:notebook-save-notebook-workaround
+    (notebook retry callback cbarg
+              &key
+              status
+              response
+              &allow-other-keys
+              &aux
+              (response-status (request-response-status-code response)))
   ;; IPython server returns 204 only when the notebook URL is
   ;; accessed via PUT or DELETE.  As it seems Emacs failed to
   ;; choose PUT method every two times, let's check the response
   ;; here and fail when 204 is not returned.
   (unless (eq response-status 204)
-    (progn
-      (with-current-buffer (ein:notebook-buffer notebook)
-        (if (< retry ein:notebook-save-retry-max)
-            (progn
-              (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
-              (ein:notebook-save-notebook notebook (1+ retry)
-                                          callback cbarg))
-          (ein:notebook-save-notebook-error notebook :status status)
-          (ein:log 'info
-            "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
-            response-status ein:notebook-save-retry-max))))))
+    (with-current-buffer (ein:notebook-buffer notebook)
+      (if (< retry ein:notebook-save-retry-max)
+          (progn
+            (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
+            (ein:notebook-save-notebook notebook (1+ retry)
+                                        callback cbarg))
+        (ein:notebook-save-notebook-error notebook :status status)
+        (ein:log 'info
+          "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
+          response-status ein:notebook-save-retry-max)))))
 
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
   (ein:log 'info "Notebook is saved.")

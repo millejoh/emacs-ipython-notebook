@@ -218,20 +218,19 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 callback
                                                 cbargs
                                                 &key
-                                                       data
-                                                       &allow-other-keys
-                                                       &aux
-                                                       (notebook-id data)
-                                                       (no-popup t))
-  (progn
-    (ein:log 'info "Creating a new notebook... Done.")
-    (if notebook-id
-        (ein:notebook-open url-or-port notebook-id callback cbargs)
-      (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
-                             "Please find it in the notebook list."))
-      (setq no-popup nil))
-    ;; reload or open notebook list
-    (ein:notebooklist-open url-or-port no-popup)))
+                                                data
+                                                &allow-other-keys
+                                                &aux
+                                                (notebook-id data)
+                                                (no-popup t))
+  (ein:log 'info "Creating a new notebook... Done.")
+  (if notebook-id
+      (ein:notebook-open url-or-port notebook-id callback cbargs)
+    (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
+                           "Please find it in the notebook list."))
+    (setq no-popup nil))
+  ;; reload or open notebook list
+  (ein:notebooklist-open url-or-port no-popup))
 
 (defun* ein:notebooklist-new-notebook-error
     (url-or-port callback cbargs
@@ -244,22 +243,20 @@ This function is called via `ein:notebook-after-rename-hook'."
   (ein:log 'verbose
     "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR url-or-port: %S; error: %S; redirects: %S"
     url-or-port error redirects)
-  (progn
-    (progn
-      (if redirect
-          ;; Workaround the redirection bug in `url-retrieve'.
-          ;; See: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12374
-          (let ((notebook-id
-                 (ein:trim
-                  (url-filename (url-generic-parse-url redirect)) "/")))
-            (ein:log 'info "Creating a new notebook... Done.")
-            (ein:notebook-open url-or-port notebook-id callback cbargs))
-        (ein:log 'error
-          (concat "Failed to open new notebook (error: %S). "
-                  "You may find the new one in the notebook list.")
-          error)
-        (setq no-popup nil))
-      (ein:notebooklist-open url-or-port no-popup))))
+  (if redirect
+      ;; Workaround the redirection bug in `url-retrieve'.
+      ;; See: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12374
+      (let ((notebook-id
+             (ein:trim
+              (url-filename (url-generic-parse-url redirect)) "/")))
+        (ein:log 'info "Creating a new notebook... Done.")
+        (ein:notebook-open url-or-port notebook-id callback cbargs))
+    (ein:log 'error
+      (concat "Failed to open new notebook (error: %S). "
+              "You may find the new one in the notebook list.")
+      error)
+    (setq no-popup nil))
+  (ein:notebooklist-open url-or-port no-popup))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
