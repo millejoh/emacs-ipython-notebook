@@ -485,7 +485,6 @@ Relevant Python code:
      (list 'kernel-kill (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel))
-     :cache nil
      :type "DELETE"
      :success (apply-partially
                (lambda (kernel callback cbargs &rest ignore)

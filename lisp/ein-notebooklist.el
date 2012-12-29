@@ -143,7 +143,6 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
     (ein:query-singleton-ajax
      (list 'notebooklist-open url-or-port)
      (ein:notebooklist-url url-or-port)
-     :cache nil
      :parser #'ein:json-read
      :error (cons #'ein:notebooklist-open-error url-or-port)
      :success (cons success url-or-port)))
@@ -289,7 +288,6 @@ This function is called via `ein:notebook-after-rename-hook'."
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:%notebooklist%)
     notebook-id)
-   :cache nil
    :type "DELETE"
    :success (apply-partially (lambda (buffer name &rest ignore)
                                (ein:log 'info
