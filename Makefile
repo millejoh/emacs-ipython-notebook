@@ -19,8 +19,11 @@ interactive-testein-default:
 interactive-testein-24:
 	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch --ipython $(IPYTHON)
 
+submodule:
+	git submodule update --init
+
 ERT_DIR = lib/ert/lisp/emacs-lisp
-ert-compile: ert-clean log
+ert-compile: submodule ert-clean log
 	$(EMACS) -Q -batch -L $(ERT_DIR) \
 		-f batch-byte-compile $(ERT_DIR)/*.el 2> log/ert-compile.log
 
