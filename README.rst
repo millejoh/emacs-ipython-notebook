@@ -88,6 +88,7 @@ setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
    git clone git://github.com/tkf/emacs-ipython-notebook.git
+   cd emacs-ipython-notebook/
    lisp/zeroein.el
 
 This will launch a new Emacs instance.
