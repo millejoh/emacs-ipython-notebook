@@ -498,13 +498,14 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
       (ein:notebooklist-login--error-1 url-or-port)
     (ein:notebooklist-login--success-1 url-or-port)))
 
-(defun* ein:notebooklist-login--error (url-or-port &key
-                                                   data
-                                                   symbol-status
-                                                   response
-                                                   &allow-other-keys
-                                                   &aux
-                                                   (response-status (request-response-status-code response)))
+(defun* ein:notebooklist-login--error
+    (url-or-port &key
+                 data
+                 symbol-status
+                 response
+                 &allow-other-keys
+                 &aux
+                 (response-status (request-response-status-code response)))
   (if (and (eq symbol-status 'timeout)
            response-status
            (= response-status 302)
