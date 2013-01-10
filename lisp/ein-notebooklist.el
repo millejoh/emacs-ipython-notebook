@@ -481,8 +481,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
-  (list :has-cookie (search-forward "Set-Cookie" nil t)
-        :bad-page (re-search-forward "<input type=.?password" nil t)))
+  (list :bad-page (re-search-forward "<input type=.?password" nil t)))
 
 (defun ein:notebooklist-login--success-1 (url-or-port)
   (ein:log 'info "Login to %s complete. \
@@ -506,10 +505,15 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
                  &allow-other-keys
                  &aux
                  (response-status (request-response-status-code response)))
-  (if (and (eq symbol-status 'timeout)
-           response-status
-           (= response-status 302)
-           (plist-get data :has-cookie))
+  (if (or
+       ;; workaround for url-retrieve backend
+       (and (eq symbol-status 'timeout)
+            (equal response-status 302)
+            (request-response-header response "set-cookie"))
+       ;; workaround for curl backend
+       (and (equal response-status 405)
+            (ein:aand (car (request-response-history response))
+                      (request-response-header it "set-cookie"))))
       (ein:notebooklist-login--success-1 url-or-port)
     (ein:notebooklist-login--error-1 url-or-port)))
 
