@@ -6,6 +6,11 @@
 (require 'ein-testing)
 (require 'ein-testing-cell)
 
+(let ((backend (getenv "EL_REQUEST_BACKEND")))
+  (when (and backend (not (equal backend "")))
+    (setq request-backend (intern backend))
+    (message "Using request-backend = %S" request-backend)))
+
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
 (setq message-log-max t)
