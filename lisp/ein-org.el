@@ -79,7 +79,8 @@ S-expression based (rather verbose) serialization, so that
 extending link spec without loosing backward compatibility is
 easier.  For the examples of link format in general, see Info
 node `(org) External links' and Info node `(org) Search options'"
-  (ein:and-let* ((notebook (ein:get-notebook))
+  (ein:and-let* (((ein:worksheet-buffer-p))
+                 (notebook (ein:get-notebook))
                  (name (ein:notebook-name notebook))
                  (link (list :url-or-port (ein:get-url-or-port)
                              :name name))
