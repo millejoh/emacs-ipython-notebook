@@ -143,21 +143,16 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
     (ein:query-singleton-ajax
      (list 'notebooklist-open url-or-port)
      (ein:notebooklist-url url-or-port)
-     :cache nil
      :parser #'ein:json-read
-     :error (cons #'ein:notebooklist-open-error url-or-port)
-     :success (cons success url-or-port)))
+     :error (apply-partially #'ein:notebooklist-open-error url-or-port)
+     :success (apply-partially success url-or-port)))
   (ein:notebooklist-get-buffer url-or-port))
 
 (defun* ein:notebooklist-url-retrieve-callback (url-or-port
                                                 &key
-                                                status
                                                 data
                                                 &allow-other-keys)
   "Called via `ein:notebooklist-open'."
-  (ein:aif (plist-get status :error)
-      (error "Failed to connect to server '%s'.  Got: %S"
-             (ein:url url-or-port) it))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (let ((already-opened-p (ein:notebooklist-list-get url-or-port))
           (orig-point (point)))
@@ -173,8 +168,10 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
       (current-buffer))))
 
 (defun* ein:notebooklist-open-error (url-or-port
-                                     &key symbol-status
+                                     &key symbol-status response
                                      &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
     "Error (%s) while opening notebook list at the server %s."
     symbol-status url-or-port))
@@ -212,49 +209,44 @@ This function is called via `ein:notebook-after-rename-hook'."
    (ein:notebooklist-new-url url-or-port)
    :parser (lambda ()
              (ein:html-get-data-in-body-tag "data-notebook-id"))
-   :error (cons #'ein:notebooklist-new-notebook-error
-                (list url-or-port callback cbargs))
-   :success (cons #'ein:notebooklist-new-notebook-callback
-                  (list url-or-port callback cbargs))))
+   :error (apply-partially #'ein:notebooklist-new-notebook-error
+                           url-or-port callback cbargs)
+   :success (apply-partially #'ein:notebooklist-new-notebook-callback
+                             url-or-port callback cbargs)))
 
-(defun* ein:notebooklist-new-notebook-callback (packed &key
-                                                       data
-                                                       &allow-other-keys
-                                                       &aux
-                                                       (notebook-id data)
-                                                       (no-popup t))
-  (destructuring-bind (url-or-port callback cbargs)
-      packed
-    (ein:log 'info "Creating a new notebook... Done.")
-    (if notebook-id
-        (ein:notebook-open url-or-port notebook-id callback cbargs)
-      (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
-                             "Please find it in the notebook list."))
-      (setq no-popup nil))
-    ;; reload or open notebook list
-    (ein:notebooklist-open url-or-port no-popup)))
+(defun* ein:notebooklist-new-notebook-callback (url-or-port
+                                                callback
+                                                cbargs
+                                                &key
+                                                data
+                                                &allow-other-keys
+                                                &aux
+                                                (notebook-id data)
+                                                (no-popup t))
+  (ein:log 'info "Creating a new notebook... Done.")
+  (if notebook-id
+      (ein:notebook-open url-or-port notebook-id callback cbargs)
+    (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
+                           "Please find it in the notebook list."))
+    (setq no-popup nil))
+  ;; reload or open notebook list
+  (ein:notebooklist-open url-or-port no-popup))
 
 (defun* ein:notebooklist-new-notebook-error
-    (packed &key status &allow-other-keys &aux (no-popup t))
+    (url-or-port callback cbargs
+                 &key response &allow-other-keys
+                 &aux
+                 (no-popup t)
+                 (error (request-response-error-thrown response))
+                 (dest (request-response-url response)))
   (ein:log 'verbose
-    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR packed: %S; status: %S"
-    packed status)
-  (destructuring-bind (url-or-port callback cbargs) packed
-    (destructuring-bind (&key redirect error) status
-      (if redirect
-          ;; Workaround the redirection bug in `url-retrieve'.
-          ;; See: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12374
-          (let ((notebook-id
-                 (ein:trim
-                  (url-filename (url-generic-parse-url redirect)) "/")))
-            (ein:log 'info "Creating a new notebook... Done.")
-            (ein:notebook-open url-or-port notebook-id callback cbargs))
-        (ein:log 'error
-          (concat "Failed to open new notebook (error: %S). "
-                  "You may find the new one in the notebook list.")
-          error)
-        (setq no-popup nil))
-      (ein:notebooklist-open url-or-port no-popup))))
+    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR url-or-port: %S; error: %S; dest: %S"
+    url-or-port error dest)
+  (ein:log 'error
+    "Failed to open new notebook (error: %S). \
+You may find the new one in the notebook list." error)
+  (setq no-popup nil)
+  (ein:notebooklist-open url-or-port no-popup))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
@@ -287,14 +279,13 @@ This function is called via `ein:notebook-after-rename-hook'."
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:%notebooklist%)
     notebook-id)
-   :cache nil
    :type "DELETE"
-   :success (cons (lambda (packed &rest ignore)
-                    (ein:log 'info
-                      "Deleting notebook %s... Done." (cdr packed))
-                    (with-current-buffer (car packed)
-                      (ein:notebooklist-reload)))
-                  (cons (current-buffer) name))))
+   :success (apply-partially (lambda (buffer name &rest ignore)
+                               (ein:log 'info
+                                 "Deleting notebook %s... Done." name)
+                               (with-current-buffer buffer
+                                 (ein:notebooklist-reload)))
+                             (current-buffer) name)))
 
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
@@ -475,13 +466,12 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
    :type "POST"
    :data (concat "password=" (url-hexify-string password))
    :parser #'ein:notebooklist-login--parser
-   :error (cons #'ein:notebooklist-login--error url-or-port)
-   :success (cons #'ein:notebooklist-login--success url-or-port)))
+   :error (apply-partially #'ein:notebooklist-login--error url-or-port)
+   :success (apply-partially #'ein:notebooklist-login--success url-or-port)))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
-  (list :has-cookie (search-forward "Set-Cookie" nil t)
-        :bad-page (re-search-forward "<input type=.?password" nil t)))
+  (list :bad-page (re-search-forward "<input type=.?password" nil t)))
 
 (defun ein:notebooklist-login--success-1 (url-or-port)
   (ein:log 'info "Login to %s complete. \
@@ -497,15 +487,23 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
       (ein:notebooklist-login--error-1 url-or-port)
     (ein:notebooklist-login--success-1 url-or-port)))
 
-(defun* ein:notebooklist-login--error (url-or-port &key
-                                                   data
-                                                   symbol-status
-                                                   response-status
-                                                   &allow-other-keys)
-  (if (and (eq symbol-status 'timeout)
-           response-status
-           (= response-status 302)
-           (plist-get data :has-cookie))
+(defun* ein:notebooklist-login--error
+    (url-or-port &key
+                 data
+                 symbol-status
+                 response
+                 &allow-other-keys
+                 &aux
+                 (response-status (request-response-status-code response)))
+  (if (or
+       ;; workaround for url-retrieve backend
+       (and (eq symbol-status 'timeout)
+            (equal response-status 302)
+            (request-response-header response "set-cookie"))
+       ;; workaround for curl backend
+       (and (equal response-status 405)
+            (ein:aand (car (request-response-history response))
+                      (request-response-header it "set-cookie"))))
       (ein:notebooklist-login--success-1 url-or-port)
     (ein:notebooklist-login--error-1 url-or-port)))
 

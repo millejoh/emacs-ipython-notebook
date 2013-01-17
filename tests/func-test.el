@@ -6,6 +6,11 @@
 (require 'ein-testing)
 (require 'ein-testing-cell)
 
+(let ((backend (getenv "EL_REQUEST_BACKEND")))
+  (when (and backend (not (equal backend "")))
+    (setq request-backend (intern backend))
+    (message "Using request-backend = %S" request-backend)))
+
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
 (setq message-log-max t)
@@ -57,20 +62,29 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
           (ein:testing-get-notebook-by-name url-or-port "Untitled0")
         (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
 
+(defvar ein:notebooklist-after-open-hook nil)
+
+(defadvice ein:notebooklist-url-retrieve-callback
+  (after ein:testing-notebooklist-url-retrieve-callback activate)
+  "Advice to add `ein:notebooklist-after-open-hook'."
+  (run-hooks 'ein:notebooklist-after-open-hook))
+
 (defun ein:testing-delete-notebook-by-name (url-or-port notebook-name)
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK-BY-NAME start")
-  (with-current-buffer (ein:notebooklist-open url-or-port nil)
-    (ein:testing-wait-until (lambda () ein:%notebooklist%))
-    (save-excursion
-      (goto-char (point-min))
-      (search-forward notebook-name)
-      (move-beginning-of-line 1)
-      (search-forward "Delete")
-      (flet ((y-or-n-p (ignore) t))
-        (widget-button-press (point))))
-    (setq ein:%notebooklist% nil)
-    (ein:testing-wait-until (lambda () ein:%notebooklist%))
-    (ein:log 'debug "TESTING-DELETE-NOTEBOOK-BY-NAME end")))
+  (lexical-let (called-p)
+    (let ((ein:notebooklist-after-open-hook
+           (list (lambda () (setq called-p t)))))
+      (with-current-buffer (ein:notebooklist-open url-or-port nil)
+        (ein:testing-wait-until (lambda () ein:%notebooklist%))
+        (save-excursion
+          (goto-char (point-min))
+          (search-forward notebook-name)
+          (move-beginning-of-line 1)
+          (search-forward "Delete")
+          (flet ((y-or-n-p (ignore) t))
+            (widget-button-press (point))))
+        (ein:testing-wait-until (lambda () called-p))
+        (ein:log 'debug "TESTING-DELETE-NOTEBOOK-BY-NAME end")))))
 
 (ert-deftest ein:testing-get-untitled0-or-create ()
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE start")

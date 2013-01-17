@@ -52,6 +52,17 @@ log-clean:
 	rm -rf log
 
 travis-ci-testein: ert-compile env-ipy.$(IPY_VERSION)
+	${MAKE} testein-2
+
+testein-2: testein-2-url-retrieve testein-2-curl
+
+testein-2-curl:
+	EL_REQUEST_BACKEND=curl ${MAKE} testein-1
+
+testein-2-url-retrieve:
+	EL_REQUEST_BACKEND=url-retrieve ${MAKE} testein-1
+
+testein-1:
 	$(EMACS) --version
 	python --version
 	env/ipy.$(IPY_VERSION)/bin/ipython --version

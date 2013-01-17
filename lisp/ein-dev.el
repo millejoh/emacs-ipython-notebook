@@ -214,11 +214,12 @@ callback (`websocket-callback-debug-on-error') is enabled."
    :image-types (ein:eval-if-bound 'image-types)
    :image-types-available (ein:filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
+   :request (list :backend request-backend)
    :ein (append (list :version (ein:version))
                 (ein:dev-dump-vars '("source-dir")))
    :lib (ein:filter (lambda (info) (plist-get info :path))
                     (mapcar #'ein:dev-sys-info--lib
-                            '("websocket" "auto-complete" "mumamo"
+                            '("websocket" "request" "auto-complete" "mumamo"
                               "auto-complete" "popup" "fuzzy" "pos-tip"
                               "python" "python-mode" "markdown-mode"
                               "smartrep" "anything" "helm")))))

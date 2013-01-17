@@ -177,6 +177,7 @@ class TestRunner(BaseRunner):
             command.extend(['-l', path])
         command.extend(['-L', einlispdir(),
                         '-L', einlibdir('websocket'),
+                        '-L', einlibdir('request'),
                         '-L', einlibdir('auto-complete'),
                         '-L', einlibdir('popup'),
                         '-L', eintestdir(),
