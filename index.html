@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to Emacs IPython Notebook’s documentation! &mdash; Emacs IPython Notebook 0.2.0 documentation</title>
+    <title>Welcome to Emacs IPython Notebook’s documentation! &mdash; Emacs IPython Notebook 0.2.1alpha1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2.0',
+        VERSION:     '0.2.1alpha1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Emacs IPython Notebook 0.2.0 documentation" href="#" /> 
+    <link rel="top" title="Emacs IPython Notebook 0.2.1alpha1 documentation" href="#" /> 
   </head>
   <body>
     <div class="related">
@@ -33,7 +33,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="#">Emacs IPython Notebook 0.2.0 documentation</a> &raquo;</li> 
+        <li><a href="#">Emacs IPython Notebook 0.2.1alpha1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -152,14 +152,15 @@ object).</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log" id="id60">Change Log</a><ul>
-<li><a class="reference internal" href="#v0-2" id="id61">v0.2</a></li>
-<li><a class="reference internal" href="#v0-1-2" id="id62">v0.1.2</a></li>
-<li><a class="reference internal" href="#v0-1-1" id="id63">v0.1.1</a></li>
-<li><a class="reference internal" href="#v0-1" id="id64">v0.1</a></li>
+<li><a class="reference internal" href="#v0-2-1" id="id61">v0.2.1</a></li>
+<li><a class="reference internal" href="#v0-2" id="id62">v0.2</a></li>
+<li><a class="reference internal" href="#v0-1-2" id="id63">v0.1.2</a></li>
+<li><a class="reference internal" href="#v0-1-1" id="id64">v0.1.1</a></li>
+<li><a class="reference internal" href="#v0-1" id="id65">v0.1</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#license" id="id65">License</a></li>
-<li><a class="reference internal" href="#indices-and-tables" id="id66">Indices and tables</a></li>
+<li><a class="reference internal" href="#license" id="id66">License</a></li>
+<li><a class="reference internal" href="#indices-and-tables" id="id67">Indices and tables</a></li>
 </ul>
 </div>
 <div class="section" id="quick-try">
@@ -183,6 +184,7 @@ to use.:</p>
 <ul class="simple">
 <li><a class="reference external" href="http://ipython.org/">IPython</a> 0.12 or higher.</li>
 <li><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a> 0.9</li>
+<li><a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> &gt;= 0.2</li>
 <li>(optional) <a class="reference external" href="http://www.emacswiki.org/emacs/MuMaMo">mumamo</a> developmental version:
 It will be automatically loaded when it is on the path.
 The official way to setup path is to load <a class="reference external" href="http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html">nXhtml</a>.</li>
@@ -1990,8 +1992,14 @@ with <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-st
 </div>
 <div class="section" id="change-log">
 <h1><a class="toc-backref" href="#id60">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-2-1">
+<h2><a class="toc-backref" href="#id61">v0.2.1</a><a class="headerlink" href="#v0-2-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use <a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> for smoother experience.</li>
+</ul>
+</div>
 <div class="section" id="v0-2">
-<h2><a class="toc-backref" href="#id61">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id62">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Preliminary login support.  See <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></tt></a>.</li>
 <li>Code completion in notebook happens <em>really</em> automatically.
@@ -2046,7 +2054,7 @@ See <tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect
 </ul>
 </div>
 <div class="section" id="v0-1-2">
-<h2><a class="toc-backref" href="#id62">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id63">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Mostly refactoring for worksheet support in v0.2.</li>
 <li>Rename command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-open</span></tt> to
@@ -2059,7 +2067,7 @@ now actually runs buffer instead of loading it.</li>
 </ul>
 </div>
 <div class="section" id="v0-1-1">
-<h2><a class="toc-backref" href="#id63">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id64">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>&#8216;s popup/quick help.</li>
 <li>Add <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-first-open-hook</span></tt>.</li>
@@ -2092,19 +2100,19 @@ Use <a class="reference internal" href="#helm-ein-notebook-buffers" title="helm-
 </ul>
 </div>
 <div class="section" id="v0-1">
-<h2><a class="toc-backref" href="#id64">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id65">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>First release.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="license">
-<h1><a class="toc-backref" href="#id65">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id66">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>Emacs IPython Notebook is licensed under GPL v3.
 See COPYING for details.</p>
 </div>
 <div class="section" id="indices-and-tables">
-<h1><a class="toc-backref" href="#id66">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id67">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
 <li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
@@ -2122,7 +2130,7 @@ See COPYING for details.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="#">Emacs IPython Notebook 0.2.0 documentation</a> &raquo;</li> 
+        <li><a href="#">Emacs IPython Notebook 0.2.1alpha1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
