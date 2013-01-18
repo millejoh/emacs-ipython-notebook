@@ -84,7 +84,8 @@ This variable applies to both `helm-ein-kernel-history' and
                     (ein:kernel-history-search-synchronously
                      ein:helm-kernel
                      (ein:helm-kernel-history-search-construct-pattern
-                      (eval ein:helm-pattern)))))
+                      (eval ein:helm-pattern))
+                     :unique t)))
     (requires-pattern . 3)
     ;; There is no need to filter out candidates:
     (match . (identity))

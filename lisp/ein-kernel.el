@@ -426,7 +426,8 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
                                            start
                                            stop
                                            (n 10)
-                                           pattern)
+                                           pattern
+                                           unique)
   "Request execution history to KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -456,7 +457,8 @@ Relevant Python code:
                    :start start
                    :stop stop
                    :n n
-                   :pattern pattern))
+                   :pattern pattern
+                   :unique unique))
          (msg (ein:kernel--get-msg kernel "history_request" content))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send
