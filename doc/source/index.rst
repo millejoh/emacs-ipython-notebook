@@ -547,6 +547,10 @@ Change Log
 v0.2.1
 ------
 
+* Add support for `kernel_info` request for IPython kernel protocol,
+  which is introduced by
+  `ipython/ipython#2649 <https://github.com/ipython/ipython/issues/2649>`_.
+  This protocol is not used in EIN anywhere yet.
 * Use request.el_ for smoother experience.
 
 v0.2
