@@ -98,7 +98,7 @@ to use.::
 
    EMACS=emacs-snapshot lisp/zeroein.el
 
-The above command require /bin/sh.  If the above command does not work
+The above command requires /bin/sh.  If the above command does not work
 (e.g., you are using MS Windows), try the following command::
 
   emacs -Q -l lisp/zeroein.el
