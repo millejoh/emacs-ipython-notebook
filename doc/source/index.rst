@@ -72,6 +72,7 @@ setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
    git clone git://github.com/tkf/emacs-ipython-notebook.git
+   cd emacs-ipython-notebook/
    lisp/zeroein.el
 
 This will launch a new Emacs instance.
@@ -80,6 +81,11 @@ You can use environment variable ``EMACS`` to control Emacs executable
 to use.::
 
    EMACS=emacs-snapshot lisp/zeroein.el
+
+The above command require /bin/sh.  If the above command does not work
+(e.g., you are using MS Windows), try the following command::
+
+  emacs -Q -l lisp/zeroein.el
 
 
 Requirements
