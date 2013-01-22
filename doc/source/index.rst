@@ -146,11 +146,18 @@ easily using it.  Emacs IPython Notebook is registered as package
 
 .. _el-get: https://github.com/dimitri/el-get
 
-.. note:: If el-get complains there is no "ein/ein-notebooklist", I
-   guess you are updated EIN after I reorganized the repository.  In
-   this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
-   will solve the problem.  Note that this will remove the whole
-   ``ein/`` directory including ``.git`` directory before installation.
+.. note:: If you get error "Cannot open load file: request" that means
+   you have older el-get version.  You can fix this problem by
+   either (1) install request.el manually, (2) use the latest recipe,
+   or (3) update el-get to its master.
+
+   You can get the latest recipe here:
+
+   - https://github.com/dimitri/el-get/blob/master/recipes/ein.rcp
+   - https://github.com/dimitri/el-get/blob/master/recipes/request.rcp
+
+   See `issue 98 <https://github.com/tkf/emacs-ipython-notebook/issues/98>`_
+   for more information.
 
 
 Using package.el (MELPA)
