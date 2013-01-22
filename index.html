@@ -169,6 +169,7 @@ object).</li>
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span class="nv">git</span> <span class="nv">clone</span> <span class="nv">git://github.com/tkf/emacs-ipython-notebook.git</span>
+<span class="nv">cd</span> <span class="nv">emacs-ipython-notebook/</span>
 <span class="nv">lisp/zeroein.el</span>
 </pre></div>
 </div>
@@ -176,6 +177,11 @@ requirements is too much, try this!:</p>
 <p>You can use environment variable <tt class="docutils literal"><span class="pre">EMACS</span></tt> to control Emacs executable
 to use.:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span class="nv">EMACS=emacs-snapshot</span> <span class="nv">lisp/zeroein.el</span>
+</pre></div>
+</div>
+<p>The above command requires /bin/sh.  If the above command does not work
+(e.g., you are using MS Windows), try the following command:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span class="nv">emacs</span> <span class="nv">-Q</span> <span class="nv">-l</span> <span class="nv">lisp/zeroein.el</span>
 </pre></div>
 </div>
 </div>
@@ -228,11 +234,17 @@ easily using it.  Emacs IPython Notebook is registered as package
 <tt class="docutils literal"><span class="pre">ein</span></tt>.   See <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a> website for more information.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If el-get complains there is no &#8220;ein/ein-notebooklist&#8221;, I
-guess you are updated EIN after I reorganized the repository.  In
-this case, simply reinstalling EIN by <tt class="docutils literal"><span class="pre">M-x</span> <span class="pre">el-get-reinstall</span> <span class="pre">RET</span> <span class="pre">ein</span></tt>
-will solve the problem.  Note that this will remove the whole
-<tt class="docutils literal"><span class="pre">ein/</span></tt> directory including <tt class="docutils literal"><span class="pre">.git</span></tt> directory before installation.</p>
+<p>If you get error &#8220;Cannot open load file: request&#8221; that means
+you have older el-get version.  You can fix this problem by
+either (1) install request.el manually, (2) use the latest recipe,
+or (3) update el-get to its master.</p>
+<p>You can get the latest recipe here:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/dimitri/el-get/blob/master/recipes/ein.rcp">https://github.com/dimitri/el-get/blob/master/recipes/ein.rcp</a></li>
+<li><a class="reference external" href="https://github.com/dimitri/el-get/blob/master/recipes/request.rcp">https://github.com/dimitri/el-get/blob/master/recipes/request.rcp</a></li>
+</ul>
+<p class="last">See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/98">issue 98</a>
+for more information.</p>
 </div>
 </div>
 <div class="section" id="using-package-el-melpa">
@@ -1995,6 +2007,10 @@ with <tt class="xref el el-symbol docutils literal"><span class="pre">ein:dev-st
 <div class="section" id="v0-2-1">
 <h2><a class="toc-backref" href="#id61">v0.2.1</a><a class="headerlink" href="#v0-2-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Add support for <cite>kernel_info</cite> request for IPython kernel protocol,
+which is introduced by
+<a class="reference external" href="https://github.com/ipython/ipython/issues/2649">ipython/ipython#2649</a>.
+This protocol is not used in EIN anywhere yet.</li>
 <li>Use <a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> for smoother experience.</li>
 </ul>
 </div>

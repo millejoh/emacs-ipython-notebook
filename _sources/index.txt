@@ -72,6 +72,7 @@ setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
    git clone git://github.com/tkf/emacs-ipython-notebook.git
+   cd emacs-ipython-notebook/
    lisp/zeroein.el
 
 This will launch a new Emacs instance.
@@ -80,6 +81,11 @@ You can use environment variable ``EMACS`` to control Emacs executable
 to use.::
 
    EMACS=emacs-snapshot lisp/zeroein.el
+
+The above command requires /bin/sh.  If the above command does not work
+(e.g., you are using MS Windows), try the following command::
+
+  emacs -Q -l lisp/zeroein.el
 
 
 Requirements
@@ -140,11 +146,18 @@ easily using it.  Emacs IPython Notebook is registered as package
 
 .. _el-get: https://github.com/dimitri/el-get
 
-.. note:: If el-get complains there is no "ein/ein-notebooklist", I
-   guess you are updated EIN after I reorganized the repository.  In
-   this case, simply reinstalling EIN by ``M-x el-get-reinstall RET ein``
-   will solve the problem.  Note that this will remove the whole
-   ``ein/`` directory including ``.git`` directory before installation.
+.. note:: If you get error "Cannot open load file: request" that means
+   you have older el-get version.  You can fix this problem by
+   either (1) install request.el manually, (2) use the latest recipe,
+   or (3) update el-get to its master.
+
+   You can get the latest recipe here:
+
+   - https://github.com/dimitri/el-get/blob/master/recipes/ein.rcp
+   - https://github.com/dimitri/el-get/blob/master/recipes/request.rcp
+
+   See `issue 98 <https://github.com/tkf/emacs-ipython-notebook/issues/98>`_
+   for more information.
 
 
 Using package.el (MELPA)
@@ -547,6 +560,10 @@ Change Log
 v0.2.1
 ------
 
+* Add support for `kernel_info` request for IPython kernel protocol,
+  which is introduced by
+  `ipython/ipython#2649 <https://github.com/ipython/ipython/issues/2649>`_.
+  This protocol is not used in EIN anywhere yet.
 * Use request.el_ for smoother experience.
 
 v0.2
