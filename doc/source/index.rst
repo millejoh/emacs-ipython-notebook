@@ -560,6 +560,14 @@ Change Log
 v0.2.1
 ------
 
+* History search interface (:el:symbol:`helm-ein-kernel-history` and
+  :el:symbol:`anything-ein-kernel-history`) discards duplications.
+  This functionality requires at least version 4.0 of IPython kernel.
+  It is introduced by the pull request
+  `ipython/ipython#2792 <https://github.com/ipython/ipython/pull/2792>`_.
+  As of writing, you need IPython 0.14.dev from github.
+  For older versions of kernels, it continues to work but you will
+  see duplications.
 * Add support for `kernel_info` request for IPython kernel protocol,
   which is introduced by
   `ipython/ipython#2649 <https://github.com/ipython/ipython/issues/2649>`_.

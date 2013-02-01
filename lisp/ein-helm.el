@@ -78,13 +78,21 @@ This variable applies to both `helm-ein-kernel-history' and
     (setq pattern (concat "*" pattern "*")))
   pattern)
 
+(defun ein:helm-kernel-history-search-get-candidates ()
+  "Retrieve search result from kernel.
+It requires the following dynamical variables:
+* `ein:helm-pattern'
+* `ein:helm-kernel'"
+  (let* ((pattern (ein:helm-kernel-history-search-construct-pattern
+                   (eval ein:helm-pattern)))
+         (candidates (ein:kernel-history-search-synchronously
+                      ein:helm-kernel pattern :unique t)))
+    ;; Most recent history first:
+    (nreverse candidates)))
+
 (defvar ein:helm-source-kernel-history
   '((name . "IPython history")
-    (candidates . (lambda ()
-                    (ein:kernel-history-search-synchronously
-                     ein:helm-kernel
-                     (ein:helm-kernel-history-search-construct-pattern
-                      (eval ein:helm-pattern)))))
+    (candidates . ein:helm-kernel-history-search-get-candidates)
     (requires-pattern . 3)
     ;; There is no need to filter out candidates:
     (match . (identity))
