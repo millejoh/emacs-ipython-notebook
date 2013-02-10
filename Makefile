@@ -1,23 +1,14 @@
 EMACS = emacs
-IPYTHON = ipython
+IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
 IPY_VERSION = 0.13.0
 TESTEIN = tools/testein.py
+TESTEIN_OPTS =
 
-testein-default:
-	$(TESTEIN) --clean-elc --ipython $(IPYTHON)
+testein: test-requirements
+	${MAKE} testein-1
 
-testein-24:
-	$(TESTEIN) --clean-elc -e emacs-snapshot --ipython $(IPYTHON)
-
-testein-unit-all:
-	$(TESTEIN) --no-func-test --clean-elc --load-ert
-	$(TESTEIN) --no-func-test --clean-elc -e emacs-snapshot
-
-interactive-testein-default:
-	$(TESTEIN) --clean-elc --load-ert --no-batch --ipython $(IPYTHON)
-
-interactive-testein-24:
-	$(TESTEIN) --clean-elc -e emacs-snapshot --no-batch --ipython $(IPYTHON)
+interactive-testein: test-requirements
+	${MAKE} TESTEIN_OPTS="--no-batch" testein-1
 
 submodule:
 	git submodule update --init
@@ -51,7 +42,9 @@ log:
 log-clean:
 	rm -rf log
 
-travis-ci-testein: ert-compile env-ipy.$(IPY_VERSION)
+test-requirements: ert-compile env-ipy.$(IPY_VERSION)
+
+travis-ci-testein: test-requirements
 	${MAKE} testein-2
 
 testein-2: testein-2-url-retrieve testein-2-curl
@@ -67,7 +60,7 @@ testein-1:
 	python --version
 	env/ipy.$(IPY_VERSION)/bin/ipython --version
 	$(TESTEIN) --clean-elc -e $(EMACS) \
-		--ipython env/ipy.$(IPY_VERSION)/bin/ipython
+		--ipython $(IPYTHON) ${TESTEIN_OPTS}
 
 travis-ci-zeroein:
 	$(EMACS) --version
