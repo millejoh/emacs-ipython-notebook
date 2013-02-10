@@ -21,17 +21,8 @@ ert-compile: submodule ert-clean log
 ert-clean:
 	rm -f lib/ert/lisp/emacs-lisp/*.elc
 
-env-ipy.dev:
-	tools/makeenv.sh env/ipy.dev tools/requirement-ipy.dev.txt
-
-env-ipy.0.13.0:
-	tools/makeenv.sh env/ipy.0.13.0 tools/requirement-ipy.0.13.0.txt
-
-env-ipy.0.12.1:
-	tools/makeenv.sh env/ipy.0.12.1 tools/requirement-ipy.0.12.1.txt
-
-env-ipy.0.12.0:
-	tools/makeenv.sh env/ipy.0.12.0 tools/requirement-ipy.0.12.0.txt
+env-ipy.%:
+	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
 
 env-clean:
 	rm -rf env
