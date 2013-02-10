@@ -565,12 +565,16 @@ Example::
         for p in payload
         for text = (plist-get p :text)
         for source = (plist-get p :source)
-        if (equal source "IPython.zmq.page.page")
+        if (member source '("IPython.kernel.zmq.page.page"
+                            "IPython.zmq.page.page"))
         do (when (not (equal (ein:trim text) ""))
              (ein:events-trigger
               events 'open_with_text.Pager (list :text text)))
         else if
-        (equal source "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input")
+        (member
+         source
+         '("IPython.kernel.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
+           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"))
         do (let ((cb (plist-get callbacks :set_next_input)))
              (when cb (ein:funcall-packed cb text)))))
 
