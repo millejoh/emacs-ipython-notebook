@@ -36,16 +36,18 @@
   '(ac-source-jedi-direct ac-source-ein-direct))
 
 (defun ein:jedi--completer-complete ()
-  (let ((d (deferred:new #'identity)))
-    (ein:and-let* ((kernel (ein:get-kernel))
-                   ((not (ac-cursor-on-diable-face-p)))
-                   ((ein:kernel-live-p kernel)))
-      (ein:completer-complete
-       kernel
-       :callbacks
-       (list :complete_reply
-             (cons (lambda (d &rest args) (deferred:callback-post d args))
-                   d))))
+  (let ((d (deferred:new #'identity))
+        (kernel (ein:get-kernel)))
+    (if (and (ein:kernel-live-p kernel)
+             (not (ac-cursor-on-diable-face-p)))
+        (ein:completer-complete
+         kernel
+         :callbacks
+         (list :complete_reply
+               (cons (lambda (d &rest args) (deferred:callback-post d args))
+                     d)))
+      ;; Pass "no match" result when kernel the request was not sent:
+      (deferred:callback-post d (list nil nil)))
     d))
 
 ;;;###autoload
