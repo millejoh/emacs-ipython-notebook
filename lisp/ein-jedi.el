@@ -38,8 +38,7 @@
 (defun ein:jedi--completer-complete ()
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
-    (if (and (ein:kernel-live-p kernel)
-             (not (ac-cursor-on-diable-face-p)))
+    (if (ein:kernel-live-p kernel)
         (ein:completer-complete
          kernel
          :callbacks
@@ -75,7 +74,8 @@
   "Insert \".\" and run `ein:jedi-complete'."
   (interactive)
   (insert ".")
-  (ein:jedi-complete :expand nil))
+  (unless (ac-cursor-on-diable-face-p)
+    (ein:jedi-complete :expand nil)))
 
 (defun ein:jedi-complete-on-dot-install (map)
   (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
