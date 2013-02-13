@@ -252,6 +252,7 @@
 
 (defun ein:kernel-live-p (kernel)
   (and
+   (ein:$kernel-p kernel)
    (ein:aand (ein:$kernel-shell-channel kernel) (ein:websocket-open-p it))
    (ein:aand (ein:$kernel-iopub-channel kernel) (ein:websocket-open-p it))))
 

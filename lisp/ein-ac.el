@@ -105,7 +105,8 @@
     (symbol . "c")))
 
 (defun ein:ac-request-in-background ()
-  (ein:and-let* ((kernel (ein:get-kernel)))
+  (ein:and-let* ((kernel (ein:get-kernel))
+                 ((ein:kernel-live-p kernel)))
     (ein:completer-complete
      kernel
      :callbacks
@@ -162,7 +163,7 @@ popup help string."
          (callbacks (list :object_info_reply
                           (cons #'ein:ac-set-document candidate))))
     (when (and candidate
-               kernel
+               (ein:kernel-live-p kernel)
                (not (get-text-property 0 'document candidate)))
       (ein:log 'debug "Requesting object info for AC candidate %S"
                candidate)
