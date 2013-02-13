@@ -111,7 +111,7 @@
      kernel
      :callbacks
      (list :complete_reply
-           (cons (lambda (_ content _)
+           (cons (lambda (_ content __)
                    (ein:ac-prepare-completion (plist-get content :matches)))
                  nil)))))
 
@@ -127,7 +127,7 @@ Call this function before calling `auto-complete'."
     (run-with-idle-timer 1 nil #'ein:ac-clear-cache)))
 
 (defun* ein:completer-finish-completing-ac
-    (-matched-text-not-used-
+    (matched-text
      matches
      &key (expand ac-expand-on-auto-complete)
      &allow-other-keys)

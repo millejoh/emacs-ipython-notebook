@@ -28,9 +28,9 @@
 
 (require 'jedi nil t)
 
-(eval-when-compile (require 'ein-connect))
 (require 'ein-ac)
 (require 'ein-completer)
+(eval-when-compile (require 'ein-connect))
 
 (defvar ein:jedi-dot-complete-sources
   '(ac-source-jedi-direct ac-source-ein-direct))
