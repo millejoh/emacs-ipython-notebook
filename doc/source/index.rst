@@ -547,6 +547,9 @@ Debugging
 
 If you are interested in debugging EIN, you should start it with
 calling the command :el:symbol:`ein:dev-start-debug`.
+If the bug is websocket related, you may need to run it with a
+prefix key like this: ``C-u M-x ein:dev-start-debug RET`` to get
+a backtrace.
 This command sets :el:symbol:`debug-on-error` to ``t`` and do some
 patching to debugger.  This patching is required because printing EWOC
 objects freezes Emacs otherwise.  It also changes log level to
