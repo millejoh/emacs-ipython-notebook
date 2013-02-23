@@ -253,14 +253,18 @@ After finish writing it, please post it here:
 https://github.com/tkf/emacs-ipython-notebook/issues/new
 -->
 
-## Please read \"Avoid standard Emacs traps\" first
+## Check list
 
-Please read \"Avoid standard Emacs traps\" section in
-https://github.com/tkf/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
-and make sure that your problem is not the one of them.
+- [ ] I read \"Avoid standard Emacs traps\" section in
+  https://github.com/tkf/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
+- [ ] I checked that IPython works with the browser interface.
+- [ ] I checked that the problem was not due to badly compiled
+  files.  Removing `*.elc` files from source directory of EIN and
+  its dependencies did not solve the problem.
+- [ ] I checked that the libraries are loaded from intended place.
+  (You can check the location in the \"System info\" section below)
 
-When done, remove this section from your bug report then fill the
-next sections.
+## Description of the problem you have
 
 
 ## Steps to reproduce the problem
