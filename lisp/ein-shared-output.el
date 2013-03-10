@@ -199,7 +199,10 @@ shared output buffer.  You can open the buffer by the command
          ;; ... so error will be raised before user typing code if it
          ;; is impossible to execute
          (code (read-string
-                "IP[y]: " nil 'ein:shared-output-eval-string-history)))
+                "IP[y]: "
+                (when (region-active-p)
+                  (buffer-substring (region-beginning) (region-end)))
+                'ein:shared-output-eval-string-history)))
      (list code nil t kernel)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
