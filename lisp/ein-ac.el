@@ -88,9 +88,6 @@
 (defun ein:ac-direct-get-matches ()
   (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
 
-(defun ein:ac-cache-get-matches ()
-  (ein:ac-chunk-candidates-from-list ein:ac-cache-matches))
-
 (ac-define-source ein-direct
   '((candidates . ein:ac-direct-get-matches)
     (requires . 0)
@@ -98,7 +95,7 @@
     (symbol . "s")))
 
 (ac-define-source ein-cached
-  '((candidates . ein:ac-cache-get-matches)
+  '((candidates . ein:ac-direct-get-matches)
     (requires . 0)
     (prefix . ein:ac-chunk-beginning)
     (init . ein:ac-request-in-background)
@@ -122,9 +119,7 @@
   "Prepare `ac-source-ein-direct' using MATCHES from kernel.
 Call this function before calling `auto-complete'."
   (when matches
-    (setq ein:ac-direct-matches matches)  ; let-binding won't work
-    (setq ein:ac-cache-matches (append matches ein:ac-cache-matches))
-    (run-with-idle-timer 1 nil #'ein:ac-clear-cache)))
+    (setq ein:ac-direct-matches matches)))  ; let-binding won't work
 
 (defun* ein:completer-finish-completing-ac
     (matched-text
