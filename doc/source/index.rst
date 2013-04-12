@@ -251,6 +251,7 @@ The following keybinds are available in notebook buffers.
    :replace: s/C-c TAB/C-c C-i/
              s/C-c RET/C-c C-m/
 
+.. el:function:: ein:worksheet-execute-all-cell
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers

@@ -1186,6 +1186,8 @@ This hook is run regardless the actual major mode used."
             ("Execute cell and insert below"
              ein:worksheet-execute-cell-and-insert-below
              :active (ein:worksheet-at-codecell-p))
+            ("Execute all"
+             ein:worksheet-execute-all-cell)
             ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
              :active (ein:worksheet-at-codecell-p))
             ("Evaluate code in minibuffer" ein:shared-output-eval-string)
