@@ -1,4 +1,4 @@
-https://github.com/ipython/ipython/tarball/master
+-e git://github.com/ipython/ipython.git#egg=ipython
 pyzmq
 tornado
 jinja2
