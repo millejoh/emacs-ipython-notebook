@@ -3,6 +3,10 @@ IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
 IPY_VERSION = 0.13.0
 TESTEIN = tools/testein.py
 TESTEIN_OPTS =
+PKG_INFO = \
+grep '^Version' \
+env/ipy.$(IPY_VERSION)/lib/python*/site-packages/*.egg-info/PKG-INFO \
+| sed -r 's%.*/site-packages/(.*)-py.*\.egg-info/.*:Version: (.*)$$%\1\t\2%'
 
 testein: test-requirements
 	${MAKE} testein-1
@@ -15,6 +19,11 @@ clean: ert-clean
 
 purge: clean
 	rm -rf env log
+
+pkg-info:
+	@echo "**************************************************"
+	@echo "Installed Python Packages"
+	$(PKG_INFO)
 
 submodule:
 	git submodule update --init
@@ -34,6 +43,7 @@ log:
 	mkdir log
 
 test-requirements: ert-compile env-ipy.$(IPY_VERSION)
+	${MAKE} pkg-info
 
 travis-ci-testein: test-requirements
 	${MAKE} testein-2
