@@ -10,6 +10,12 @@ testein: test-requirements
 interactive-testein: test-requirements
 	${MAKE} TESTEIN_OPTS="--no-batch" testein-1
 
+clean: ert-clean
+	rm -f lisp/*.elc
+
+purge: clean
+	rm -rf env log
+
 submodule:
 	git submodule update --init
 
@@ -24,14 +30,8 @@ ert-clean:
 env-ipy.%:
 	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
 
-env-clean:
-	rm -rf env
-
 log:
 	mkdir log
-
-log-clean:
-	rm -rf log
 
 test-requirements: ert-compile env-ipy.$(IPY_VERSION)
 
