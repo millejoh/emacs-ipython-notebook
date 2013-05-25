@@ -67,7 +67,8 @@
               replies
             (ein:ac-prepare-completion matches)
             (let ((ac-expand-on-auto-complete expand))
-              (auto-complete ein:jedi-dot-complete-sources))))))))
+              (ac-start))))))))
+;; Why `ac-start'?  See: `jedi:complete'.
 
 ;;;###autoload
 (defun ein:jedi-dot-complete ()

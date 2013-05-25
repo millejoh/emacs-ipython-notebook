@@ -142,7 +142,8 @@ compatibility with `ein:completer-finish-completing-default'."
   (ein:ac-prepare-completion matches)
   (when matches      ; No auto-complete drop-down list when no matches
     (let ((ac-expand-on-auto-complete expand))
-      (auto-complete '(ac-source-ein-direct)))))
+      (ac-start))))
+;; Why `ac-start'?  See: `jedi:complete'.
 
 (defun ein:ac-clear-cache ()
   (setq ein:ac-cache-matches
