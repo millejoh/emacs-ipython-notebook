@@ -130,6 +130,18 @@ is on.  See also `ein:connect-aotoexec-lighter'."
   :type 'string
   :group 'ein)
 
+(defcustom ein:slice-image nil
+  "[EXPERIMENTAL] When non-`nil', use `insert-sliced-image' when
+drawing images.  If it is of the form of ``(ROWS COLS)``, it is
+passed to the corresponding arguments of `insert-sliced-image'.
+
+.. FIXME: ROWS and COLS must be determined dynamically by measuring
+   the size of iamge and Emacs window.
+
+See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
+  :type 'boolean
+  :group 'ein)
+
 
 
 ;;; EIEIO related utils
@@ -141,6 +153,16 @@ is on.  See also `ein:connect-aotoexec-lighter'."
 (defmacro ein:oref-safe (obj slot)
   `(when (slot-boundp ,obj ,slot)
      (oref ,obj ,slot)))
+
+
+;;; Utils
+(defun ein:insert-image (&rest args)
+  (let ((img (apply #'create-image args)))
+    (if ein:slice-image
+        (destructuring-bind (&optional rows cols)
+            (when (listp ein:slice-image) ein:slice-image)
+          (insert-sliced-image img nil nil (or rows 20) cols))
+      (insert-image img))))
 
 
 ;;; Cell classes
@@ -886,9 +908,9 @@ prettified text thus be used instead of HTML type."
      ((latex text)
       (ein:insert-read-only (plist-get json type)))
      (svg
-      (insert-image (create-image value key t)))
+      (ein:insert-image value key t))
      ((png jpeg)
-      (insert-image (create-image (base64-decode-string value) key t))))))
+      (ein:insert-image (base64-decode-string value) key t)))))
 
 (defun ein:cell-append-text (data &rest properties)
   ;; escape ANSI in plaintext:
