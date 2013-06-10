@@ -139,7 +139,7 @@
     (ein:log 'info "Kernel started: %s" kernel_id)
     (setf (ein:$kernel-running kernel) t)
     (setf (ein:$kernel-kernel-id kernel) kernel_id)
-    (setf (ein:$kernel-ws-url kernel) ws_url)
+    (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel ws_url))
     (setf (ein:$kernel-kernel-url kernel)
           (concat (ein:$kernel-base-url kernel) "/" kernel_id)))
   (ein:kernel-start-channels kernel)
@@ -153,6 +153,15 @@
       (setf (ein:$websocket-onmessage iopub-channel)
             (lambda (packet)
               (ein:kernel--handle-iopub-reply kernel packet))))))
+
+
+(defun ein:kernel--ws-url (kernel ws_url)
+  "Use `ein:$kernel-url-or-port' if WS_URL is an empty string.
+See: https://github.com/ipython/ipython/pull/3307"
+  (if (string-match-p "^wss?://" ws_url)
+      ws_url
+    (let ((ein:url-localhost-template "ws://127.0.0.1:%s"))
+      (ein:url (ein:$kernel-url-or-port kernel)))))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
