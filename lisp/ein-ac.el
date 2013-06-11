@@ -94,12 +94,17 @@ Maximum number of cache to store."
     (prefix . ein:ac-chunk-beginning)
     (symbol . "s")))
 
-(ac-define-source ein-cached
+(ac-define-source ein-async
   '((candidates . ein:ac-direct-get-matches)
     (requires . 0)
     (prefix . ein:ac-chunk-beginning)
     (init . ein:ac-request-in-background)
     (symbol . "c")))
+
+(define-obsolete-function-alias 'ac-complete-ein-cached 'ac-complete-ein-async
+  "0.2.1")
+(define-obsolete-variable-alias 'ac-source-ein-cached 'ac-source-ein-async
+  "0.2.1")
 
 (defun ein:ac-request-in-background ()
   (ein:and-let* ((kernel (ein:get-kernel))
@@ -200,7 +205,7 @@ first candidate when the `ac-menu' pops up."
 
 (defun ein:ac-setup ()
   "Call this function from mode hook (see `ein:ac-config')."
-  (setq ac-sources (append '(ac-source-ein-cached) ein:ac-sources)))
+  (setq ac-sources (append '(ac-source-ein-async) ein:ac-sources)))
 
 (defun ein:ac-setup-maybe ()
   "Setup `ac-sources' for mumamo.

@@ -204,7 +204,7 @@ notebooks."
             (not ein:%connect%))
         (let ((connection (ein:connect-setup notebook buffer)))
           (when (ein:eval-if-bound 'ac-sources)
-            (push 'ac-source-ein-cached ac-sources))
+            (push 'ac-source-ein-async ac-sources))
           (ein:connect-mode)
           (ein:log 'info "Connected to %s"
                    (ein:$notebook-notebook-name notebook))
