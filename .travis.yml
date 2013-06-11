@@ -42,4 +42,4 @@ matrix:
     - env: EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.1 EMACS=emacs-snapshot
     - env: EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=0.12.0 EMACS=emacs-snapshot
 script:
-  make $EIN_TEST_TARGET EMACS=$EMACS IPY_VERSION=$IPY_VERSION
+  make $EIN_TEST_TARGET IPY_VERSION=$IPY_VERSION
