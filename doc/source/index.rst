@@ -564,6 +564,8 @@ Change Log
 v0.2.1
 ------
 
+* :el:symbol:`ein:query-timeout` is `nil` if `curl` backend is used
+  by request.el_.
 * History search interface (:el:symbol:`helm-ein-kernel-history` and
   :el:symbol:`anything-ein-kernel-history`) discards duplications.
   This functionality requires at least version 4.0 of IPython kernel.

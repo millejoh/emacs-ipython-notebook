@@ -41,10 +41,14 @@
 
 ;;; Variables
 
-(defcustom ein:query-timeout 1000
+(defcustom ein:query-timeout
+  (if (eq request-backend 'url-retrieve) 1000 nil)
   "Default query timeout for HTTP access in millisecond.
 
 Setting this to `nil' means no timeout.
+If you have ``curl`` command line program, it is automatically set to
+`nil' as ``curl`` is reliable than `url-retrieve' therefore no need for
+a workaround (see below).
 
 If you do the same operation before the timeout, old operation
 will be canceled \(see also `ein:query-singleton-ajax').
