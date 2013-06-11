@@ -39,8 +39,10 @@
                             (default-value 'ac-sources))
   "Extra `ac-sources' used in notebook.")
 
+(make-obsolete-variable 'ein:ac-max-cache nil "0.1.2")
 (defcustom ein:ac-max-cache 1000
-  "Maximum number of cache to store."
+  "[This value is not used anymore!]
+Maximum number of cache to store."
   :type 'integer
   :group 'ein)
 
@@ -78,8 +80,6 @@
 
 
 ;;; AC Source
-
-(defvar ein:ac-cache-matches nil)
 
 (defvar ein:ac-direct-matches nil
   "Variable to store completion candidates for `auto-completion'.")
@@ -139,11 +139,6 @@ compatibility with `ein:completer-finish-completing-default'."
     (let ((ac-expand-on-auto-complete expand))
       (ac-start))))
 ;; Why `ac-start'?  See: `jedi:complete'.
-
-(defun ein:ac-clear-cache ()
-  (setq ein:ac-cache-matches
-        (setcdr (nthcdr (1- ein:ac-max-cache)
-                        (delete-dups ein:ac-cache-matches)) nil)))
 
 
 ;;; Async document request hack
