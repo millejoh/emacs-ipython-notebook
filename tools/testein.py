@@ -376,8 +376,8 @@ class ServerRunner(BaseRunner):
 def kill_subprocesses(pid, include=lambda x: True):
     from subprocess import Popen, PIPE
     import signal
-    command = [
-        'ps', '--ppid', str(pid), '--format', 'pid,cmd', '--no-headers']
+
+    command = ['ps', '-e', '-o', 'ppid,pid,command']
     proc = Popen(command, stdout=PIPE, stderr=PIPE)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
@@ -386,10 +386,10 @@ def kill_subprocesses(pid, include=lambda x: True):
             '{2}'.format(command, proc.returncode, stderr))
 
     for line in map(str.strip, stdout.splitlines()):
-        (pid, cmd) = line.split(' ', 1)
-        if include(cmd):
-            print "Killing PID={0} COMMAND={1}".format(pid, cmd)
-            os.kill(int(pid), signal.SIGINT)
+        (cmd_ppid, cmd_pid, cmd) = line.split(None, 2)
+        if cmd_ppid == str(pid) and include(cmd):
+            print "Killing PID={0} COMMAND={1}".format(cmd_pid, cmd)
+            os.kill(int(cmd_pid), signal.SIGINT)
 
 
 def construct_command(args):
