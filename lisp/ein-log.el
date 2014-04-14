@@ -29,7 +29,7 @@
 (require 'ein-core)
 
 
-(defvar ein:log-all-buffer-name " *ein:log-all*")
+(defvar ein:log-all-buffer-name "*ein:log-all*")
 
 (defvar ein:log-level-def
   '(;; debugging

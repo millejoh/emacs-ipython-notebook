@@ -49,8 +49,8 @@
   kernel-id
   shell-channel
   iopub-channel
-  base-url                              ; /kernels/
-  kernel-url                            ; /kernels/<KERNEL-ID>
+  base-url                              ; /api/kernels/
+  kernel-url                            ; /api/kernels/<KERNEL-ID>
   ws-url                                ; ws://<URL>[:<PORT>]
   running
   username
@@ -102,15 +102,22 @@
    :parent_header (make-hash-table)))
 
 
-(defun ein:kernel-start (kernel notebook-id)
+(defun ein:kernel-start (kernel notebook-id &optional path)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
+    (if (not path)
+        (setq path ""))
     (ein:query-singleton-ajax
      (list 'kernel-start (ein:$kernel-kernel-id kernel))
-     (concat (ein:url (ein:$kernel-url-or-port kernel)
-                      (ein:$kernel-base-url kernel))
-             "?" (format "notebook=%s" notebook-id))
+     ;;(concat
+     (ein:url (ein:$kernel-url-or-port kernel)
+              ;;(ein:$kernel-base-url kernel))
+              ;;"?" (format "notebook=%s" notebook-id)
+              "api/sessions")
      :type "POST"
+     :data (json-encode `(("notebook" .
+                           (("name" . ,notebook-id)
+                            ("path" . ,path)))))
      :parser #'ein:json-read
      :success (apply-partially #'ein:kernel--kernel-started kernel))))
 
@@ -132,16 +139,16 @@
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
-  (destructuring-bind (&key kernel_id ws_url &allow-other-keys) data
-    (unless (and kernel_id ws_url)
+  (destructuring-bind (&key id &allow-other-keys) (plist-get data :kernel)
+    (unless id
       (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
              data))
-    (ein:log 'info "Kernel started: %s" kernel_id)
+    (ein:log 'info "Kernel started: %s" id)
     (setf (ein:$kernel-running kernel) t)
-    (setf (ein:$kernel-kernel-id kernel) kernel_id)
-    (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel ws_url))
+    (setf (ein:$kernel-kernel-id kernel) id)
+    (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel id))
     (setf (ein:$kernel-kernel-url kernel)
-          (concat (ein:$kernel-base-url kernel) "/" kernel_id)))
+          (concat (ein:$kernel-base-url kernel) "/" id)))
   (ein:kernel-start-channels kernel)
   (let ((shell-channel (ein:$kernel-shell-channel kernel))
         (iopub-channel (ein:$kernel-iopub-channel kernel)))

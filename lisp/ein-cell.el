@@ -1,6 +1,6 @@
 ;;; ein-cell.el --- Cell module
 
-;; Copyright (C) 2012- Takafumi Arakaki
+;; (C) 2012- Takafumi Arakaki
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 

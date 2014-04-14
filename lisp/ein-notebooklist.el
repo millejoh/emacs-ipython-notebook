@@ -96,16 +96,19 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
                         ein:%notebooklist%)
         for note in (ein:$notebooklist-data nblist)
         for notebook-name = (plist-get note :name)
-        for notebook-id = (plist-get note :notebook_id)
+        for notebook-path = (plists get note :path)
+        for notebook-id = notebook-name ;(plist-get note :notebook_id)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
-                                  notebook-id callback cbargs)))
+                                  notebook-id callback cbargs notebook-path)))
 
 (defun ein:notebooklist-url (url-or-port)
-  (ein:url url-or-port "notebooks"))
+  (ein:url url-or-port "api/notebooks"))
 
-(defun ein:notebooklist-new-url (url-or-port)
-  (ein:url url-or-port "new"))
+(defun ein:notebooklist-new-url (url-or-port &optional path)
+  (if path
+      (ein:url url-or-port "api/notebooks" path)
+    (ein:url url-or-port "api/notebooks")))
 
 (defun ein:notebooklist-get-buffer (url-or-port)
   (get-buffer-create
@@ -191,7 +194,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (defun ein:notebooklist-open-notebook (nblist notebook-id &optional name
                                               callback cbargs)
-  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id
+  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) name ;notebook-id
                      callback cbargs))
 
 ;;;###autoload
@@ -204,15 +207,17 @@ This function is called via `ein:notebook-after-rename-hook'."
   (assert url-or-port nil
           (concat "URL-OR-PORT is not given and the current buffer "
                   "is not the notebook list buffer."))
-  (ein:query-singleton-ajax
-   (list 'notebooklist-new-notebook url-or-port)
-   (ein:notebooklist-new-url url-or-port)
-   :parser (lambda ()
-             (ein:html-get-data-in-body-tag "data-notebook-id"))
-   :error (apply-partially #'ein:notebooklist-new-notebook-error
-                           url-or-port callback cbargs)
-   :success (apply-partially #'ein:notebooklist-new-notebook-callback
-                             url-or-port callback cbargs)))
+  (let ((url (ein:notebooklist-new-url url-or-port)))
+    (ein:query-singleton-ajax
+     (list 'notebooklist-new-notebook url-or-port)
+     url
+     :type "POST"
+     :parser (lambda ()
+               (ein:html-get-data-in-body-tag "data-notebook-id"))
+     :error (apply-partially #'ein:notebooklist-new-notebook-error
+                             url-or-port callback cbargs)
+     :success (apply-partially #'ein:notebooklist-new-notebook-callback
+                               url-or-port callback cbargs))))
 
 (defun* ein:notebooklist-new-notebook-callback (url-or-port
                                                 callback
@@ -278,7 +283,7 @@ You may find the new one in the notebook list." error)
          (ein:$notebooklist-url-or-port ein:%notebooklist%) notebook-id)
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:%notebooklist%)
-    notebook-id)
+    name)
    :type "DELETE"
    :success (apply-partially (lambda (buffer name &rest ignore)
                                (ein:log 'info
@@ -375,7 +380,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
                  when (equal (ein:$notebooklist-url-or-port nblist) url-or-port)
                  if (loop for note in (ein:$notebooklist-data nblist)
                           when (equal (plist-get note :name) name)
-                          return (plist-get note :notebook_id))
+                          return (plist-get note :name))
                  return it)))
       (if notebook-id
           (ein:notebook-open url-or-port notebook-id callback cbargs)
