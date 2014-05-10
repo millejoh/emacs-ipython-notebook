@@ -139,7 +139,9 @@
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
-  (destructuring-bind (&key id &allow-other-keys) (plist-get data :kernel)
+  (if (plist-get data :kernel)
+      (setq data (plist-get data :kernel)))
+  (destructuring-bind (&key id &allow-other-keys) data
     (unless id
       (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
              data))
