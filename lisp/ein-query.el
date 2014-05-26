@@ -27,6 +27,7 @@
 
 (eval-when-compile (require 'cl))
 (require 'request)
+(require 'url)
 
 (require 'ein-core)
 (require 'ein-log)
@@ -85,7 +86,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
   (ein:aif (gethash key ein:query-running-process-table)
       (unless (request-response-done-p it)
         (request-abort it)))            ; This will run callbacks
-  (let ((response (apply #'request url settings)))
+  (let ((response (apply #'request (url-encode-url url) settings)))
     (puthash key response ein:query-running-process-table)
     response))
 
