@@ -585,7 +585,8 @@ Example::
         for text = (plist-get p :text)
         for source = (plist-get p :source)
         if (member source '("IPython.kernel.zmq.page.page"
-                            "IPython.zmq.page.page"))
+                            "IPython.zmq.page.page"
+                            "page"))
         do (when (not (equal (ein:trim text) ""))
              (ein:events-trigger
               events 'open_with_text.Pager (list :text text)))
