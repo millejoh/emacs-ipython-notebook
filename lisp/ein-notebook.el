@@ -300,16 +300,19 @@ will be updated with kernel's cwd."
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
+                                    (ein:$notebook-notebook-path notebook)
                                     (ein:$notebook-notebook-id notebook)))
 
-(defun ein:notebook-url-from-url-and-id (url-or-port notebook-id)
-  (ein:url url-or-port "api/notebooks" notebook-id))
+(defun ein:notebook-url-from-url-and-id (url-or-port path notebook-id)
+  (ein:url url-or-port "api/notebooks" path notebook-id))
 
 (defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
   "Default callback for `ein:notebook-open'."
   (pop-to-buffer (current-buffer)))
 
-(defun ein:notebook-open (url-or-port notebook-id &optional callback cbargs notebook-path)
+;;; TODO - I think notebook-path is unnecessary (JMM).
+
+(defun ein:notebook-open (url-or-port notebook-id path &optional callback cbargs notebook-path)
   "Open notebook of NOTEBOOK-ID in the server URL-OR-PORT.
 Opened notebook instance is returned.  Note that notebook might not be
 ready at the time when this function is executed.
@@ -333,9 +336,9 @@ notebook buffer when CALLBACK is called."
             (apply callback ein:%notebook% nil cbargs))
           ein:%notebook%)
       (ein:log 'info "Opening notebook %s..." notebook-id)
-      (ein:notebook-request-open url-or-port notebook-id callback cbargs notebook-path))))
+      (ein:notebook-request-open url-or-port notebook-id path callback cbargs notebook-path))))
 
-(defun ein:notebook-request-open (url-or-port notebook-id
+(defun ein:notebook-request-open (url-or-port notebook-id path
                                               &optional callback cbargs notebook-path)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
 Return `ein:$notebook' instance.  Notebook may not be ready at
@@ -344,11 +347,12 @@ the time of execution.
 CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
 argument `t' indicates that the notebook is newly opened.
 See `ein:notebook-open' for more information."
-  (let ((url (ein:notebook-url-from-url-and-id url-or-port notebook-id))
-        (notebook (ein:notebook-new url-or-port notebook-id notebook-path)))
+  (unless path (setq path ""))
+  (let ((url (ein:notebook-url-from-url-and-id url-or-port path notebook-id))
+        (notebook (ein:notebook-new url-or-port notebook-id path)))
     (ein:log 'debug "Opening notebook at %s" url)
     (ein:query-singleton-ajax
-     (list 'notebook-open url-or-port notebook-id)
+     (list 'notebook-open url-or-port notebook-id path)
      url
      :timeout ein:notebook-querty-timeout-open
      :parser #'ein:json-read
@@ -431,7 +435,7 @@ of minor mode."
 ;;; Kernel related things
 
 ;;; This no longer works in iPython-2.0. Protocol is to create a session for a
-;;; notebook, which will automatically create and associate a kernal with the notebook.
+;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
