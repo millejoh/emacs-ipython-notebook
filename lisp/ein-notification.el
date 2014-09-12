@@ -161,8 +161,9 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
            (lambda (ns message status next)
              (when (equal (oref ns :status) status)
                (ein:notification-status-set ns next)
-               (ein:with-live-buffer (oref ns :buffer)
-                 (force-mode-line-update))))
+               ;; (ein:with-live-buffer (oref ns :buffer)
+               ;;   (force-mode-line-update))
+               ))
            packed)))
 
 (defun ein:notification-setup (buffer events &rest tab-slots)

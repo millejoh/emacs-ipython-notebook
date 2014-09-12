@@ -651,7 +651,8 @@ of NOTEBOOK."
   ;; accessed via PUT or DELETE.  As it seems Emacs failed to
   ;; choose PUT method every two times, let's check the response
   ;; here and fail when 204 is not returned.
-  (unless (eq response-status 204)
+  ;; UPDATE 12Sep2014 (JMM) - IPython server now returns 200 on successful save.
+  (unless (eq response-status 200)
     (with-current-buffer (ein:notebook-buffer notebook)
       (if (< retry ein:notebook-save-retry-max)
           (progn
@@ -660,7 +661,7 @@ of NOTEBOOK."
                                         callback cbarg))
         (ein:notebook-save-notebook-error notebook :status status)
         (ein:log 'info
-          "Status code (=%s) is not 204 and retry exceeds limit (=%s)."
+          "Status code (=%s) is not 200 and retry exceeds limit (=%s)."
           response-status ein:notebook-save-retry-max)))))
 
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)

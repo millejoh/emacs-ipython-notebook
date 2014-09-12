@@ -52,7 +52,7 @@ is opened at first time.::
 `ein:$notebooklist-url-or-port'
   URL or port of IPython server.
 
-`ein:$notbooklist-url-or-port'
+`ein:$notbooklist-path'
   The path for the notebooklist.
 
 `ein:$notebooklist-data'
@@ -142,6 +142,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   "Open notebook list buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless url-or-port (setq url-or-port (ein:default-url-or-port)))
+  (unless path (setq path ""))
   (ein:subpackages-load)
   (let ((success
          (if no-popup
@@ -311,6 +312,7 @@ Notebook list data is passed via the buffer local variable
   (remove-overlays)
   ;; Create notebook list
   (widget-insert "IPython Notebook list\n\n")
+  (widget-insert " | " (ein:$notebooklist-path ein:%notebooklist%) " |\n")
   (widget-create
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
