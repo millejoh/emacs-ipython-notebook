@@ -610,12 +610,13 @@ of NOTEBOOK."
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (let ((data `((content . ,content-data))))
-      (push `(path . "") data)
+      (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
       (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
       (ein:query-singleton-ajax
        (list 'notebook-save
              (ein:$notebook-url-or-port notebook)
-             (ein:$notebook-notebook-id notebook))
+             (ein:$notebook-notebook-path notebook)
+             (ein:$notebook-notebook-name notebook))
        (ein:notebook-url notebook)
        :timeout ein:notebook-querty-timeout-save
        :type "PUT"
