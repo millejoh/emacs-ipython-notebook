@@ -112,7 +112,8 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
     (ein:url url-or-port "api/notebooks")))
 
 (defun ein:notebooklist-new-url (url-or-port &optional path)
-  (if path
+  (ein:log 'info "New notebook. Port: %s, Path: %s" url-or-port path)
+  (if (and path (not (string= path "")))
       (ein:url url-or-port "api/notebooks" path)
     (ein:url url-or-port "api/notebooks")))
 
@@ -202,50 +203,53 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
-(defun ein:notebooklist-open-notebook (nblist notebook-id path &optional name
+(defun ein:notebooklist-open-notebook (nblist name path &optional
                                               callback cbargs)
-  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) notebook-id path ;notebook-id
+  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) name path
                      callback cbargs))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
+b(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (ein:log 'info "Creating a new notebook...")
-  (unless url-or-port
-    (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-  (assert url-or-port nil
-          (concat "URL-OR-PORT is not given and the current buffer "
-                  "is not the notebook list buffer."))
-  (let ((url (ein:notebooklist-new-url url-or-port)))
-    (ein:query-singleton-ajax
-     (list 'notebooklist-new-notebook url-or-port)
-     url
-     :type "POST"
-     :parser (lambda ()
-               (ein:html-get-data-in-body-tag "data-notebook-id"))
-     :error (apply-partially #'ein:notebooklist-new-notebook-error
-                             url-or-port callback cbargs)
-     :success (apply-partially #'ein:notebooklist-new-notebook-callback
-                               url-or-port callback cbargs))))
+  (let ((path (ein:$notebooklist-path ein:%notebooklist%)))
+    (ein:log 'info "Creating a new notebook at %s..." path)
+    (unless url-or-port
+      (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
+    (assert url-or-port nil
+            (concat "URL-OR-PORT is not given and the current buffer "
+                    "is not the notebook list buffer."))
+    (let ((url (ein:notebooklist-new-url url-or-port
+                                         path)))
+      (ein:query-singleton-ajax
+       (list 'notebooklist-new-notebook url-or-port path)
+       url
+       :type "POST"
+       :parser (lambda ()
+                 (ein:html-get-data-in-body-tag "data-notebook-id"))
+       :error (apply-partially #'ein:notebooklist-new-notebook-error
+                               url-or-port path callback cbargs)
+       :success (apply-partially #'ein:notebooklist-new-notebook-callback
+                                 url-or-port path callback cbargs)))))
 
 (defun* ein:notebooklist-new-notebook-callback (url-or-port
+                                                path
                                                 callback
                                                 cbargs
                                                 &key
                                                 data
                                                 &allow-other-keys
                                                 &aux
-                                                (notebook-id data)
+                                                (notebook-name data)
                                                 (no-popup t))
   (ein:log 'info "Creating a new notebook... Done.")
-  (if notebook-id
-      (ein:notebook-open url-or-port notebook-id callback cbargs)
+  (if notebook-name
+      (ein:notebook-open url-or-port notebook-name path callback cbargs)
     (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
                            "Please find it in the notebook list."))
     (setq no-popup nil))
   ;; reload or open notebook list
-  (ein:notebooklist-open url-or-port no-popup))
+  (ein:notebooklist-open url-or-port path no-popup))
 
 (defun* ein:notebooklist-new-notebook-error
     (url-or-port callback cbargs
@@ -282,17 +286,18 @@ You may find the new one in the notebook list." error)
        (pop-to-buffer (current-buffer))))
    (list name)))
 
-(defun ein:notebooklist-delete-notebook-ask (notebook-id name)
-  (when (y-or-n-p (format "Delete notebook %s?" name))
-    (ein:notebooklist-delete-notebook notebook-id name)))
+(defun ein:notebooklist-delete-notebook-ask (name path)
+  (when (y-or-n-p (format "Delete notebook %s/%s?" path name))
+    (ein:notebooklist-delete-notebook name path)))
 
-(defun ein:notebooklist-delete-notebook (notebook-id name)
-  (ein:log 'info "Deleting notebook %s..." name)
+(defun ein:notebooklist-delete-notebook (name path)
+  (ein:log 'info "Deleting notebook %s/%s..." path name)
   (ein:query-singleton-ajax
    (list 'notebooklist-delete-notebook
-         (ein:$notebooklist-url-or-port ein:%notebooklist%) notebook-id)
+         (ein:$notebooklist-url-or-port ein:%notebooklist%) name path)
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:%notebooklist%)
+    path
     name)
    :type "DELETE"
    :success (apply-partially (lambda (buffer name &rest ignore)
@@ -360,11 +365,11 @@ Notebook list data is passed via the buffer local variable
                   (widget-create
                    'link
                    :notify (lexical-let ((name name)
-                                         (notebook-id notebook-id))
+                                         (path path))
                              (lambda (&rest ignore)
                                (ein:notebooklist-delete-notebook-ask
-                                notebook-id
-                                name)))
+                                name
+                                path)))
                    "Delete")
                   (widget-insert " : " name)
                   (widget-insert "\n")))
