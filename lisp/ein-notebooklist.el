@@ -209,7 +209,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                      callback cbargs))
 
 ;;;###autoload
-b(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
+(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (let ((path (ein:$notebooklist-path ein:%notebooklist%)))
