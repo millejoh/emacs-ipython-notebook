@@ -699,15 +699,41 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                       (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
                         (unless (string-match "Untitled[0-9]+" name)
                           name)))))
-  (ein:notebook-set-notebook-name ein:%notebook% name)
-  (mapc #'ein:worksheet-set-buffer-name
-        (ein:$notebook-worksheets ein:%notebook%))
-  (ein:notebook-save-notebook
-   ein:%notebook% 0
-   (lambda (notebook &rest ignore)
-     (with-current-buffer (ein:notebook-buffer notebook)
-       (run-hooks 'ein:notebook-after-rename-hook)))
-   ein:%notebook%))
+  (let ((old-name (ein:$notebook-notebook-name ein:%notebook%)))
+    (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
+    (ein:log 'info "JSON data looks like %s"
+             (json-encode
+              `((:name . ,name)
+                (:path . ,(ein:$notebook-notebook-path ein:%notebook%)))))
+    (ein:notebook-set-notebook-name ein:%notebook% name)
+    (mapc #'ein:worksheet-set-buffer-name
+          (ein:$notebook-worksheets ein:%notebook%))
+    (ein:query-singleton-ajax
+     (list 'notebook-rename
+           (ein:$notebook-url-or-port ein:%notebook%)
+           (ein:$notebook-notebook-path ein:%notebook%)
+           (ein:$notebook-notebook-name ein:%notebook%))
+     (ein:notebook-url ein:%notebook%)
+     :timeout ein:notebook-querty-timeout-save
+     :type "PATCH"
+     :headers '(("Content-Type" . "application/json"))
+     :data (json-encode
+            `((name . ,name)
+              (path . ,(ein:$notebook-notebook-path ein:%notebook%))))
+     :error (apply-partially #'ein:notebook-rename-error old-name name)
+     :status-code
+     `((200 . ,(apply-partially
+                #'ein:notebook-rename-success
+                ein:%notebook% name))))))
+
+(defun* ein:notebook-rename-error (old new &key symbol-status response
+                                        &allow-other-keys)
+  (ein:log 'error
+    "Error (%s) while renaming notebook %s to %s."
+    symbol-status old new))
+
+(defun* ein:notebook-rename-success (notebook new &allow-other-keys)
+  (ein:log 'info "Notebook renamed to %s." new))
 
 (defun ein:notebook-close (notebook)
   "Close NOTEBOOK and kill its buffer."
