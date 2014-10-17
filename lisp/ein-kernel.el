@@ -56,6 +56,7 @@
   username
   session-id
   msg-callbacks
+  api-version
   ;; FIXME: Use event instead of hook.
   after-start-hook
   after-execute-hook)
@@ -71,7 +72,7 @@
 
 ;;; Initialization and connection.
 
-(defun ein:kernel-new (url-or-port base-url events)
+(defun ein:kernel-new (url-or-port base-url events &optional api-version)
   (make-ein:$kernel
    :url-or-port url-or-port
    :events events
@@ -82,6 +83,7 @@
    :running nil
    :username "username"
    :session-id (ein:utils-uuid)
+   :api-version (or api-version 2)
    :msg-callbacks (make-hash-table :test 'equal)))
 
 
@@ -139,29 +141,31 @@
 
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
-  (if (plist-get data :kernel)
-      (setq data (plist-get data :kernel)))
-  (destructuring-bind (&key id &allow-other-keys) data
-    (unless id
-      (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
-             data))
-    (ein:log 'info "Kernel started: %s" id)
-    (setf (ein:$kernel-running kernel) t)
-    (setf (ein:$kernel-kernel-id kernel) id)
-    (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel id))
-    (setf (ein:$kernel-kernel-url kernel)
-          (concat (ein:$kernel-base-url kernel) "/" id)))
-  (ein:kernel-start-channels kernel)
-  (let ((shell-channel (ein:$kernel-shell-channel kernel))
-        (iopub-channel (ein:$kernel-iopub-channel kernel)))
-    ;; FIXME: get rid of lexical-let
-    (lexical-let ((kernel kernel))
-      (setf (ein:$websocket-onmessage shell-channel)
-            (lambda (packet)
-              (ein:kernel--handle-shell-reply kernel packet)))
-      (setf (ein:$websocket-onmessage iopub-channel)
-            (lambda (packet)
-              (ein:kernel--handle-iopub-reply kernel packet))))))
+  (let ((session-id (plist-get data :id)))
+    (if (plist-get data :kernel)
+        (setq data (plist-get data :kernel)))
+    (destructuring-bind (&key id &allow-other-keys) data
+      (unless id
+        (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
+               data))
+      (ein:log 'info "Kernel started: %s" id)
+      (setf (ein:$kernel-running kernel) t)
+      (setf (ein:$kernel-kernel-id kernel) id)
+      (setf (ein:$kernel-session-id kernel) session-id)
+      (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel id))
+      (setf (ein:$kernel-kernel-url kernel)
+            (concat (ein:$kernel-base-url kernel) "/" id)))
+    (ein:kernel-start-channels kernel)
+    (let ((shell-channel (ein:$kernel-shell-channel kernel))
+          (iopub-channel (ein:$kernel-iopub-channel kernel)))
+      ;; FIXME: get rid of lexical-let
+      (lexical-let ((kernel kernel))
+        (setf (ein:$websocket-onmessage shell-channel)
+              (lambda (packet)
+                (ein:kernel--handle-shell-reply kernel packet)))
+        (setf (ein:$websocket-onmessage iopub-channel)
+              (lambda (packet)
+                (ein:kernel--handle-iopub-reply kernel packet)))))))
 
 
 (defun ein:kernel--ws-url (kernel ws_url)
@@ -211,12 +215,19 @@ See: https://github.com/ipython/ipython/pull/3307"
                            (ein:$kernel-kernel-url kernel)))
            (onclose-arg (list :ws-url ws-url
                               :already-called-onclose nil
-                              :early t)))
+                              :early t))
+           (api-version (ein:$kernel-api-version kernel)))
       (ein:log 'info "Starting WS: %S" ws-url)
       (setf (ein:$kernel-shell-channel kernel)
-            (ein:websocket (concat ws-url "/shell")))
+            (cond ((eql api-version 3)
+                   (ein:websocket (concat ws-url (format "/shell?session_id=%s" (ein:$kernel-session-id kernel)))))
+                  ((eql api-version 2)
+                   (ein:websocket (concat ws-url "/shell")))))
       (setf (ein:$kernel-iopub-channel kernel)
-            (ein:websocket (concat ws-url "/iopub")))
+            (cond ((eql api-version 3)
+                   (ein:websocket (concat ws-url (format "/iopub?session_id=%s" (ein:$kernel-session-id kernel)))))
+                  ((eql api-version 2)
+                   (ein:websocket (concat ws-url "/iopub")))))
 
       (loop for c in (list (ein:$kernel-shell-channel kernel)
                            (ein:$kernel-iopub-channel kernel))

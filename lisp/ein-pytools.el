@@ -238,11 +238,11 @@ to install it if you are using newer Emacs.
      (concat dataframe ".to_csv(__import__('sys').stdout, sep='\\t')")
      (lambda (tsv buffer)
        (with-current-buffer buffer
-         (flet ((y-or-n-p
-                 (prompt)
-                 (if (string-prefix-p "Yank will insert " prompt)
-                     t
-                   (error "Unexpected prompt: %s" prompt))))
+         (cl-flet ((y-or-n-p
+                    (prompt)
+                    (if (string-prefix-p "Yank will insert " prompt)
+                        t
+                      (error "Unexpected prompt: %s" prompt))))
            ;; Import DataFrame as TSV
            (ses-yank-tsf tsv nil))
          ;; Force SES to update (equivalent to run `post-command-hook').

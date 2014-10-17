@@ -207,6 +207,9 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-scratchsheets' : list of `ein:worksheet'
   List of scratch worksheets.
+
+`ein:$notebook-api-version' : integer
+   Major version of the IPython notebook server we are talking to.
 "
   url-or-port
   notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
@@ -222,6 +225,7 @@ Current buffer for these functions is set to the notebook buffer.")
   events
   worksheets
   scratchsheets
+  api-version
   )
 
 (ein:deflocal ein:%notebook% nil
@@ -232,9 +236,10 @@ Current buffer for these functions is set to the notebook buffer.")
 
 ;;; Constructor
 
-(defun ein:notebook-new (url-or-port notebook-name notebook-path &rest args)
+(defun ein:notebook-new (url-or-port api-version notebook-name notebook-path &rest args)
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
+                         :api-version api-version
                          :notebook-id notebook-name
                          :notebook-name notebook-name
                          :notebook-path notebook-path
@@ -300,11 +305,15 @@ will be updated with kernel's cwd."
 
 (defun ein:notebook-url (notebook)
   (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
+                                    (ein:$notebook-api-version notebook)
                                     (ein:$notebook-notebook-path notebook)
                                     (ein:$notebook-notebook-id notebook)))
 
-(defun ein:notebook-url-from-url-and-id (url-or-port path notebook-id)
-  (ein:url url-or-port "api/notebooks" path notebook-id))
+(defun ein:notebook-url-from-url-and-id (url-or-port api-version path notebook-id)
+  (cond ((= 2 api-version)
+         (ein:url url-or-port "api/notebooks" path notebook-id))
+        ((= 3 api-version)
+         (ein:url url-or-port "api/contents" path notebook-id))))
 
 (defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
   "Default callback for `ein:notebook-open'."
@@ -312,7 +321,7 @@ will be updated with kernel's cwd."
 
 ;;; TODO - I think notebook-path is unnecessary (JMM).
 
-(defun ein:notebook-open (url-or-port notebook-id path &optional callback cbargs notebook-path)
+(defun ein:notebook-open (url-or-port api-version notebook-id path &optional callback cbargs notebook-path)
   "Open notebook of NOTEBOOK-ID in the server URL-OR-PORT.
 Opened notebook instance is returned.  Note that notebook might not be
 ready at the time when this function is executed.
@@ -336,9 +345,9 @@ notebook buffer when CALLBACK is called."
             (apply callback ein:%notebook% nil cbargs))
           ein:%notebook%)
       (ein:log 'info "Opening notebook %s..." notebook-id)
-      (ein:notebook-request-open url-or-port notebook-id path callback cbargs notebook-path))))
+      (ein:notebook-request-open url-or-port api-version notebook-id path callback cbargs notebook-path))))
 
-(defun ein:notebook-request-open (url-or-port notebook-id path
+(defun ein:notebook-request-open (url-or-port api-version notebook-id path
                                               &optional callback cbargs notebook-path)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
 Return `ein:$notebook' instance.  Notebook may not be ready at
@@ -348,11 +357,11 @@ CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
 argument `t' indicates that the notebook is newly opened.
 See `ein:notebook-open' for more information."
   (unless path (setq path ""))
-  (let ((url (ein:notebook-url-from-url-and-id url-or-port path notebook-id))
-        (notebook (ein:notebook-new url-or-port notebook-id path)))
+  (let ((url (ein:notebook-url-from-url-and-id url-or-port api-version path notebook-id))
+        (notebook (ein:notebook-new url-or-port api-version notebook-id path)))
     (ein:log 'debug "Opening notebook at %s" url)
     (ein:query-singleton-ajax
-     (list 'notebook-open url-or-port notebook-id path)
+     (list 'notebook-open url-or-port api-version notebook-id path)
      url
      :timeout ein:notebook-querty-timeout-open
      :parser #'ein:json-read
@@ -440,7 +449,8 @@ of minor mode."
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  base-url
-                                 (ein:$notebook-events notebook))))
+                                 (ein:$notebook-events notebook)
+                                 (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
     (ein:pytools-setup-hooks kernel)
     (ein:kernel-start kernel

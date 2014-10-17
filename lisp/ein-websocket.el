@@ -98,6 +98,7 @@
 
 
 (defun ein:websocket-send (websocket text)
+  (ein:log 'info "WS: Sent message %s" text)
   (websocket-send-text (ein:$websocket-ws websocket) text))
 
 

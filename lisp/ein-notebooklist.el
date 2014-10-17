@@ -56,10 +56,13 @@ is opened at first time.::
   The path for the notebooklist.
 
 `ein:$notebooklist-data'
-  JSON data sent from the server."
+  JSON data sent from the server.
+`ein:$notebooklist-api-version'
+  Major version of the IPython notebook server we are talking to."
   url-or-port
   path
-  data)
+  data
+  api-version)
 
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
@@ -104,18 +107,23 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
         for notebook-id = notebook-name ;(plist-get note :notebook_id)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
+                                  (ein:$notebook-api-version nblist)
                                   notebook-id callback cbargs notebook-path)))
 
-(defun ein:notebooklist-url (url-or-port &optional path)
-  (if path
-      (ein:url url-or-port "api/notebooks" (or path ""))
-    (ein:url url-or-port "api/notebooks")))
+(defun ein:notebooklist-url (url-or-port version &optional path)
+  (let ((base-path (cond ((= version 2) "api/notebooks")
+                         ((= version 3) "api/contents"))))
+    (if path
+        (ein:url url-or-port base-path (or path ""))
+      (ein:url url-or-port base-path))))
 
-(defun ein:notebooklist-new-url (url-or-port &optional path)
-  (ein:log 'info "New notebook. Port: %s, Path: %s" url-or-port path)
-  (if (and path (not (string= path "")))
-      (ein:url url-or-port "api/notebooks" path)
-    (ein:url url-or-port "api/notebooks")))
+(defun ein:notebooklist-new-url (url-or-port version &optional path)
+  (let ((base-path (cond ((= version 2) "api/notebooks")
+                         ((= version 3) "api/contents"))))
+    (ein:log 'info "New notebook. Port: %s, Path: %s" url-or-port path)
+    (if (and path (not (string= path "")))
+        (ein:url url-or-port base-path path)
+      (ein:url url-or-port base-path))))
 
 (defun ein:notebooklist-get-buffer (url-or-port)
   (get-buffer-create
@@ -145,21 +153,23 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (unless url-or-port (setq url-or-port (ein:default-url-or-port)))
   (unless path (setq path ""))
   (ein:subpackages-load)
-  (let ((success
+  (let ((api-version (ein:query-ipython-version url-or-port))
+        (success
          (if no-popup
              #'ein:notebooklist-url-retrieve-callback
            (lambda (&rest args)
              (pop-to-buffer
               (apply #'ein:notebooklist-url-retrieve-callback args))))))
     (ein:query-singleton-ajax
-     (list 'notebooklist-open url-or-port path)
-     (ein:notebooklist-url url-or-port path)
+     (list 'notebooklist-open url-or-port api-version path)
+     (ein:notebooklist-url url-or-port api-version path)
      :parser #'ein:json-read
-     :error (apply-partially #'ein:notebooklist-open-error url-or-port path)
-     :success (apply-partially success url-or-port path)))
+     :error (apply-partially #'ein:notebooklist-open-error url-or-port api-version path)
+     :success (apply-partially success url-or-port api-version path)))
   (ein:notebooklist-get-buffer url-or-port))
 
 (defun* ein:notebooklist-url-retrieve-callback (url-or-port
+                                                api-version
                                                 path
                                                 &key
                                                 data
@@ -171,7 +181,8 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
       (setq ein:%notebooklist%
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :path path
-                                    :data data))
+                                    :data data
+                                    :api-version api-version))
       (ein:notebooklist-list-add ein:%notebooklist%)
       (ein:notebooklist-render)
       (goto-char orig-point)
@@ -205,14 +216,16 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (defun ein:notebooklist-open-notebook (nblist name path &optional
                                               callback cbargs)
-  (ein:notebook-open (ein:$notebooklist-url-or-port nblist) name path
+  (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
+                     (ein:$notebooklist-api-version nblist)
+                     name path
                      callback cbargs))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook (&optional url-or-port callback cbargs)
+(defun ein:notebooklist-new-notebook (&optional url-or-port path callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (let ((path (ein:$notebooklist-path ein:%notebooklist%)))
+  (let ((path (or path (ein:$notebooklist-path ein:%notebooklist%))))
     (ein:log 'info "Creating a new notebook at %s..." path)
     (unless url-or-port
       (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
@@ -268,23 +281,25 @@ You may find the new one in the notebook list." error)
   (ein:notebooklist-open url-or-port no-popup))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port)
+(defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port path)
   "Open new notebook and rename the notebook."
   (interactive (let* ((url-or-port (or (ein:get-url-or-port)
                                        (ein:default-url-or-port)))
                       (name (read-from-minibuffer
                              (format "Notebook name (at %s): " url-or-port))))
                  (list name url-or-port)))
-  (ein:notebooklist-new-notebook
-   url-or-port
-   (lambda (notebook created name)
-     (assert created)
-     (with-current-buffer (ein:notebook-buffer notebook)
-       (ein:notebook-rename-command name)
-       ;; As `ein:notebook-open' does not call `pop-to-buffer' when
-       ;; callback is specified, `pop-to-buffer' must be called here:
-       (pop-to-buffer (current-buffer))))
-   (list name)))
+  (let ((path (or path (ein:$notebooklist-path ein:%notebooklist%))))
+    (ein:notebooklist-new-notebook
+     url-or-port
+     path
+     (lambda (notebook created name)
+       (assert created)
+       (with-current-buffer (ein:notebook-buffer notebook)
+         (ein:notebook-rename-command name)
+         ;; As `ein:notebook-open' does not call `pop-to-buffer' when
+         ;; callback is specified, `pop-to-buffer' must be called here:
+         (pop-to-buffer (current-buffer))))
+     (list name))))
 
 (defun ein:notebooklist-delete-notebook-ask (name path)
   (when (y-or-n-p (format "Delete notebook %s/%s?" path name))
@@ -297,6 +312,7 @@ You may find the new one in the notebook list." error)
          (ein:$notebooklist-url-or-port ein:%notebooklist%) name path)
    (ein:notebook-url-from-url-and-id
     (ein:$notebooklist-url-or-port ein:%notebooklist%)
+    (ein:$notebooklist-api-version ein:%notebooklist%)
     path
     name)
    :type "DELETE"
@@ -344,7 +360,10 @@ Notebook list data is passed via the buffer local variable
               (ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
    "Open In Browser")
   (widget-insert "\n")
-  (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
+  (loop for note in (cond ((= 2 (ein:$notebooklist-api-version ein:%notebooklist%))
+                           (ein:$notebooklist-data ein:%notebooklist%))
+                          ((= 3 (ein:$notebooklist-api-version ein:%notebooklist%))
+                           (plist-get (ein:$notebooklist-data ein:%notebooklist%) :content)))
         for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
         for name = (plist-get note :name)
         for path = (plist-get note :path)
@@ -356,7 +375,9 @@ Notebook list data is passed via the buffer local variable
                    :notify (lexical-let ((urlport urlport)
                                          (path name))
                              (lambda (&rest ignore)
-                               (ein:notebooklist-open urlport path)))
+                               (ein:notebooklist-open urlport
+                                                      (ein:url (ein:$notebooklist-path ein:%notebooklist%)
+                                                               path))))
                    "Dir")
                   (widget-insert " : " name)
                   (widget-insert "\n"))

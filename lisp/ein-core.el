@@ -43,7 +43,7 @@
   :group 'applications
   :prefix "ein:")
 
-(defvar ein:version "0.2.1alpha2"
+(defvar ein:version "0.3"
   "Version number for Emacs IPython Notebook (EIN).")
 
 
@@ -111,7 +111,6 @@ pair of TO-PYTHON and FROM-PYTHON."
 (defvar ein:source-dir (file-name-directory load-file-name)
   "Directory in which ``ein*.el`` locate.")
 
-
 
 ;;; Configuration getter
 
@@ -128,6 +127,18 @@ the source is in git repository."
       (concat ein:version "." it)
     ein:version))
 
+(defun ein:query-ipython-version (&optional url-or-port)
+  (let ((resp (request (ein:url (or url-or-port
+                                    (ein:default-url-or-port))
+                                "api")
+                       :parser #'ein:json-read
+                       :timeout 0.5
+                       :sync t)))
+    (if (eql 404 (request-response-status-code resp))
+        (progn
+          (ein:log 'warn "Version api not implemented, assuming we are working with IPython 2.x")
+          2)
+      (string-to-number (first (split-string (plist-get (request-response-data resp) :version) "[\\.]"))))))
 
 
 ;;; File name translation (tramp support)
