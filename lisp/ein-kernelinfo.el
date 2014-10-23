@@ -93,7 +93,7 @@ in these buffer will be synced with the kernel's cwd.")
   "Get hostname in which kernel is running and store it in KERINFO."
   (ein:kernel-request-stream
    (oref kerinfo :kernel)
-   "__import__('sys').stdout.write(__import__('os').uname()[1])"
+   "__import__('sys').stdout.write(__import__('socket').gethostname())" ; uname() not available in windows
    (lambda (hostname kerinfo)
      (oset kerinfo :hostname hostname))
    (list kerinfo)))

@@ -541,6 +541,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (("pyout")        (ein:cell-append-pyout        cell out))
         (("pyerr")        (ein:cell-append-pyerr        cell out))
         (("display_data") (ein:cell-append-display-data cell out))
+        (("execute_result") (ein:cell-append-display-data cell out))
         (("stream")       (ein:cell-append-stream       cell out))))))
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
@@ -770,6 +771,8 @@ If END is non-`nil', return the location of next element."
      '(output-subarea))
     (("display_data")
      '(output-subarea))
+    (("execute_result")
+     '(output-subarea))
     (("stream")
      (list 'output-stream 'output-subarea
            (intern (format "output-%s" (plist-get json :stream)))))))
@@ -832,7 +835,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     ;; like normal terminal does not.
     (setq ansi-color-context nil))
   (let ((start (point)))
-    (ein:cell-append-stream-text-fontified (plist-get json :text) json)
+    (ein:cell-append-stream-text-fontified (or (plist-get json :text) "") json)
     (comint-carriage-motion start (point)))
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
@@ -1016,9 +1019,10 @@ prettified text thus be used instead of HTML type."
   (let* ((json (list :output_type msg-type)))
     (ein:case-equal msg-type
       (("stream")
-       (plist-put json :text (plist-get content :data))
+       (plist-put json :text (or (plist-get content :data)
+                                 (plist-get content :text))) ;; Horrible hack to deal with version 5.0 of messaging protocol.
        (plist-put json :stream (plist-get content :name)))
-      (("display_data" "pyout")
+      (("display_data" "pyout" "execute_result")
        (when (equal msg-type "pyout")
          (plist-put json :prompt_number (plist-get content :execution_count)))
        (setq json (ein:output-area-convert-mime-types
