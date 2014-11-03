@@ -2,7 +2,7 @@
 
 env="$1"
 req="$2"
-activate=$env/bin/activate
+activate=$env/Scripts/activate
 
 if [ -z "$env" -o -z "$req" ]; then
     echo "Usage:"

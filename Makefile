@@ -1,6 +1,6 @@
 EMACS ?= emacs
 IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
-IPY_VERSION = 0.13.0
+IPY_VERSION = 2.2.0
 TESTEIN = tools/testein.py
 TESTEIN_OPTS =
 PKG_INFO = \
@@ -59,7 +59,7 @@ testein-2-url-retrieve:
 testein-1:
 	$(EMACS) --version
 	python --version
-	env/ipy.$(IPY_VERSION)/bin/ipython --version
+	env/ipy.$(IPY_VERSION)/Scripts/ipython --version
 	$(TESTEIN) --clean-elc -e $(EMACS) \
 		--ipython $(IPYTHON) ${TESTEIN_OPTS}
 

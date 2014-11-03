@@ -250,7 +250,7 @@ the last section \"System info\", unless you find some
 personal information there.
 
 After finish writing it, please post it here:
-https://github.com/tkf/emacs-ipython-notebook/issues/new
+https://github.com/millejoh/emacs-ipython-notebook/issues/new
 -->
 
 ## Check list

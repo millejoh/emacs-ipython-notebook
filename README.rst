@@ -5,9 +5,9 @@
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
 
-.. note:: It is stable enough for my day to day work, but I can't
-          guarantee the safety for your notebook data.  So please make
-          sure you have backup.
+.. note:: The code, so far, has been stable enough for day to day work, but
+          there are no guarantees for the safety for your notebook data.  Please
+          make sure you backup, and backup often!
 
 .. |build-status|
    image:: https://secure.travis-ci.org/tkf/emacs-ipython-notebook.png
@@ -107,7 +107,7 @@ The above command requires /bin/sh.  If the above command does not work
 Requirements
 ============
 
-* IPython_ 0.12 or higher.
+* IPython_ 2.0 or higher.
 * `websocket.el`_ 0.9
 * `request.el`_ >= 0.2
 * (optional) mumamo_ developmental version:
@@ -174,7 +174,7 @@ Enable `smartrep.el`_::
    (setq ein:use-smartrep t)
 
 
-Keybinds - Notebook
+Keybindings - Notebook
 -------------------
 
 .. (ein:dev-insert-mode-map "\\{ein:notebook-mode-map}")
@@ -259,7 +259,7 @@ Keybinds - Notebook
 .. // KEYS END //
 
 
-Keybinds - Connect
+Keybindings - Connect
 ------------------
 
 In Python (or any other) buffer, you can connect to any open notebook

@@ -44,7 +44,7 @@ def einlibdir(*path):
 
 def show_nonprinting(string, stream=sys.stdout):
     """Emulate ``cat -v`` (``--show-nonprinting``)."""
-    stream.writelines(itertools.imap(chr, convert_nonprinting(string)))
+    stream.writelines(map(chr, convert_nonprinting(string)))
 
 
 def convert_nonprinting(string):
@@ -58,7 +58,7 @@ def convert_nonprinting(string):
 
     """
 
-    for b in itertools.imap(ord, string):
+    for b in map(ord, string):
         assert 0 <= b < 0x100
 
         if b in (0x09, 0x0a):   # '\t\n'
@@ -108,10 +108,10 @@ class BaseRunner(object):
     def run(self):
         if self.dry_run:
             command = self.command
-            if isinstance(command, basestring):
-                print command
+            if isinstance(command, str):
+                print(command)
             else:
-                print construct_command(command)
+                print((construct_command(command)))
             return 0
         else:
             mkdirp(self.log_dir)
@@ -146,7 +146,7 @@ class TestRunner(BaseRunner):
 
     def bind_lispvars(self):
         command = []
-        for (k, v) in self.lispvars.iteritems():
+        for (k, v) in self.lispvars.items():
             if v is not None:
                 command.extend([
                     '--eval', '(setq {0} {1})'.format(k, v)])
@@ -194,34 +194,34 @@ class TestRunner(BaseRunner):
         return command
 
     def show_sys_info(self):
-        print "*" * 50
+        print(("*" * 50))
         command = self.base_command + [
             '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
         if proc.returncode != 0:
-            print "Error with return code {0} while running {1}".format(
-                proc.returncode, command)
-            print err
+            print(("Error with return code {0} while running {1}".format(
+                proc.returncode, command)))
+            print(err)
             pass
-        print "*" * 50
+        print(("*" * 50))
 
     def need_ert(self):
         if self.load_ert:
             return True
         if self.auto_ert:
             if has_library(self.emacs, 'ert'):
-                print "{0} has ERT module.".format(self.emacs)
+                print(("{0} has ERT module.".format(self.emacs)))
                 return False
             else:
-                print "{0} has no ERT module.".format(self.emacs),
-                print "ERT is going to be loaded from git submodule."
+                print("{0} has no ERT module.".format(self.emacs), end=' ')
+                print("ERT is going to be loaded from git submodule.")
                 return True
         return False
 
     def make_process(self):
-        print "Start test {0}".format(self.testfile)
+        print("Start test {0}".format(self.testfile))
         self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
         return self.proc
 
@@ -230,20 +230,20 @@ class TestRunner(BaseRunner):
         self.stdout = stdout
         self.failed = self.proc.returncode != 0
         if self.failed:
-            print "*" * 50
-            print "Showing {0}:".format(self.logpath_log)
-            print open(self.logpath_log).read()
-            print
-            print "*" * 50
-            print "Showing STDOUT/STDERR:"
+            print("*" * 50)
+            print("Showing {0}:".format(self.logpath_log))
+            print(open(self.logpath_log).read())
+            print()
+            print("*" * 50)
+            print("Showing STDOUT/STDERR:")
             show_nonprinting(stdout)
-            print
-            print "{0} failed".format(self.testfile)
+            print()
+            print("{0} failed".format(self.testfile))
         else:
-            print "{0} OK".format(self.testfile)
+            print("{0} OK".format(self.testfile))
             for line in reversed(stdout.splitlines()):
                 if line.startswith('Ran'):
-                    print line
+                    print(line)
                     break
         return int(self.failed)
 
@@ -292,8 +292,8 @@ def mkdirp(path):
 
 def remove_elc():
     files = glob.glob(einlispdir("*.elc")) + glob.glob(eintestdir("*.elc"))
-    map(os.remove, files)
-    print "Removed {0} elc files".format(len(files))
+    list(map(os.remove, files))
+    print("Removed {0} elc files".format(len(files)))
 
 
 class ServerRunner(BaseRunner):
@@ -312,12 +312,12 @@ class ServerRunner(BaseRunner):
         self.clear_notebook_dir()
         self.start()
         self.get_port()
-        print "Server running at", self.port
+        print("Server running at", self.port)
 
     def clear_notebook_dir(self):
         files = glob.glob(os.path.join(self.notebook_dir, '*.ipynb'))
-        map(os.remove, files)
-        print "Removed {0} ipynb files".format(len(files))
+        list(map(os.remove, files))
+        print("Removed {0} ipynb files".format(len(files)))
 
     @staticmethod
     def _parse_port_line(line):
@@ -337,15 +337,15 @@ class ServerRunner(BaseRunner):
         self.proc.stdin.write('y\n')
 
     def stop(self):
-        print "Stopping server", self.port
+        print("Stopping server", self.port)
         returncode = self.proc.poll()
         if returncode is not None:
             logpath = self.logpath('server')
-            print "Server process was already dead by exit code", returncode
-            print "*" * 50
-            print "Showing {0}:".format(logpath)
-            print open(logpath).read()
-            print
+            print("Server process was already dead by exit code", returncode)
+            print("*" * 50)
+            print("Showing {0}:".format(logpath))
+            print(open(logpath).read())
+            print()
             return
         if not self.dry_run:
             try:
@@ -388,7 +388,7 @@ def kill_subprocesses(pid, include=lambda x: True):
     for line in map(str.strip, stdout.splitlines()):
         (cmd_ppid, cmd_pid, cmd) = line.split(None, 2)
         if cmd_ppid == str(pid) and include(cmd):
-            print "Killing PID={0} COMMAND={1}".format(cmd_pid, cmd)
+            print("Killing PID={0} COMMAND={1}".format(cmd_pid, cmd))
             os.kill(int(cmd_pid), signal.SIGINT)
 
 
@@ -420,13 +420,13 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
             with ServerRunner(testfile='func-test.el', **kwds) as port:
                 func_test_runner.setq('ein:testing-port', port)
                 if func_test_runner.run() == 0:
-                    print "Functional test succeeded after {0} retries." \
-                        .format(i)
+                    print("Functional test succeeded after {0} retries." \
+                        .format(i))
                     return 0
                 if not no_skip and func_test_runner.is_known_failure():
-                    print "All failures are known.  Ending functional test."
+                    print("All failures are known.  Ending functional test.")
                     return 0
-        print "Functional test failed after {0} retries.".format(i)
+        print("Functional test failed after {0} retries.".format(i))
         return 1
     return 0
 
