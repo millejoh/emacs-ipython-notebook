@@ -1,5 +1,5 @@
 ==============================================
- EIN -- Emacs IPython Notebook |build-status|
+ EIN2 -- Emacs IPython 2.x Notebook |build-status|
 ==============================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
@@ -10,9 +10,9 @@
           make sure you backup, and backup often!
 
 .. |build-status|
-   image:: https://secure.travis-ci.org/tkf/emacs-ipython-notebook.png
+   image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png
            ?branch=master
-   :target: http://travis-ci.org/tkf/emacs-ipython-notebook
+   :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
    :alt: Build Status
 
 
@@ -27,13 +27,12 @@ See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
 Features
 ========
 
-Emacs IPython Notebook (EIN) provides a IPython Notebook client and
-integrated REPL (like SLIME_) in Emacs.  While EIN makes notebook
-editing very powerful by allowing you to use any Emacs features, it
-also expose IPython features such as code evaluation, object
-inspection and code completion to the Emacs side.  These features can
-be accessed anywhere in Emacs and improve Python code editing and
-reading in Emacs.
+Emacs IPython Notebook (EIN) provides a client for the IPython v2.x notebook and
+an integrated REPL (like SLIME_) in Emacs.  While EIN makes notebook editing
+very powerful by allowing you to use any Emacs features, it also expose IPython
+features such as code evaluation, object inspection and code completion to the
+Emacs side.  These features can be accessed anywhere in Emacs and improve Python
+code editing and reading in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
@@ -75,9 +74,9 @@ Links:
 * `Downloads
   <https://github.com/tkf/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
-  <https://github.com/tkf/emacs-ipython-notebook>`_
+  <https://github.com/millejoh/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
-  <https://github.com/tkf/emacs-ipython-notebook/issues>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/issues>`_
 
 
 Quick try
@@ -87,7 +86,7 @@ This is a quick and clean way to try EIN separately from your Emacs
 setting.  If you want to try EIN but think preparing all the
 requirements is too much, try this!::
 
-   git clone git://github.com/tkf/emacs-ipython-notebook.git
+   git clone git://github.com/millejoh/emacs-ipython-notebook.git
    cd emacs-ipython-notebook/
    lisp/zeroein.el
 
