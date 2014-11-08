@@ -177,6 +177,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
    (input :initarg :input :type string
     :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
+   (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
   "Notebook cell base class")
@@ -210,6 +211,7 @@ slot.")
 This cell is executed when the connected buffer is saved,
 provided that (1) this flag is `t' and (2) corresponding
 auto-execution mode flag in the connected buffer is `t'.")))
+
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
@@ -247,16 +249,25 @@ auto-execution mode flag in the connected buffer is `t'.")))
   (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell-from-json (data &rest args)
-  (ein:cell-init (apply #'ein:cell-from-type
-                        (plist-get data :cell_type) args) data))
+  (let ((cell (ein:cell-init (apply #'ein:cell-from-type
+                                    (plist-get data :cell_type) args)
+                             data)))
+    (if (plist-get data :metadata)
+        (ein:oset-if-empty cell :metadata (plist-get data :metadata)))
+    cell))
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
   (ein:oset-if-empty cell :outputs (plist-get data :outputs))
-  (ein:oset-if-empty cell :input (plist-get data :input))
+  (ein:oset-if-empty cell :input (or (plist-get data :input)
+                                     (plist-get data :source)))
   (ein:aif (plist-get data :prompt_number)
-      (ein:oset-if-empty cell :input-prompt-number it))
+      (ein:oset-if-empty cell :input-prompt-number it)
+    (ein:aif (plist-get data :execution_count)
+        (ein:oset-if-empty cell :input-prompt-number it)))
   (ein:oset-if-empty cell :collapsed
-                     (let ((v (plist-get data :collapsed)))
+                     (let ((v (or (plist-get data :collapsed)
+                                  (plist-get (slot-value cell 'metadata)
+                                             :collapsed))))
                        (if (eql v json-false) nil v)))
   cell)
 
@@ -930,6 +941,10 @@ prettified text thus be used instead of HTML type."
                text)
       (format "Error: %S" err)))))
 
+(defmethod ein:fix-nb4-metadata ((cell ein:basecell))
+  (oset cell :metadata
+        '((name . ""))))
+
 (defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
@@ -940,9 +955,29 @@ prettified text thus be used instead of HTML type."
     (language . "python")
     (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
+(defmethod ein:cell-to-nb4-json ((cell ein:codecell) &optional discard-output)
+  (unless (oref cell :metadata)
+    (ein:fix-nb4-metadata cell))
+  (let ((outputs (if discard-output [] (oref cell :outputs))))
+    ;(ein:log 'info "cell-to-nb4: %s" outputs)
+    `((source . ,(ein:cell-get-text cell))
+                (cell_type . "code")
+                ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
+                      `((execution_count . ,it)))
+                (outputs . ,(apply #'vector outputs))
+                (language . "python")
+                (metadata . ,(oref cell :metadata)))))
+
 (defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
+
+(defmethod ein:cell-to-nb4-json ((cell ein:textcell) &optional discard-output)
+  (unless (oref cell :metadata)
+    (ein:fix-nb4-metadata cell))
+  `((cell_type . ,(oref cell :cell-type))
+    (source    . ,(ein:cell-get-text cell))
+    (metadata . ,(oref cell :metadata))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))

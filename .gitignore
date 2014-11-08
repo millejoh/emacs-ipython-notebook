@@ -1,3 +1,7 @@
 doc/build/
 env
 log
+*.stackdump
+*.elc
+*.el#
+lisp/.#ein-notebook.el

@@ -226,6 +226,9 @@ this value."
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
+(defmethod ein:worksheet-from-cells ((ws ein:worksheet) cells)
+  )
+
 (defmethod ein:worksheet-to-json ((ws ein:worksheet))
   "Convert worksheet WS into JSON ready alist.
 It sets buffer internally so that caller doesn not have to set
@@ -238,6 +241,15 @@ current buffer."
                           (ein:worksheet-get-cells ws)))))
     `((cells . ,(apply #'vector cells))
       ,@(ein:aand (oref ws :metadata) `((metadata . ,it))))))
+
+(defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet))
+  (let* ((discard-output-p (oref ws :discard-output-p))
+         (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
+                  (mapcar (lambda (c)
+                            (ein:cell-to-nb4-json
+                             c (ein:funcall-packed discard-output-p c)))
+                          (ein:worksheet-get-cells ws)))))
+    cells))
 
 (defmethod ein:worksheet-save-cells ((ws ein:worksheet) &optional deactivate)
   "Save cells in worksheet buffer in cache before killing the buffer.
@@ -504,7 +516,11 @@ directly."
                      (("code") "markdown")
                      (("markdown") "raw")
                      (("raw") "heading")
-                     (("heading") "code"))))))
+                     (("heading") "code")))
+                (4 (ein:case-equal (oref cell :cell-type)
+                     (("code") "markdown")
+                     (("markdown") "raw")
+                     (("raw") "code"))))))
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
@@ -524,7 +540,8 @@ an integer used only when the TYPE is \"heading\"."
           (cell (ein:worksheet-get-current-cell))
           (choices (case (oref ws :nbformat)
                      (2 "cm")
-                     (3 "cmr123456")))
+                     (3 "cmr123456")
+                     (4 "cmr")))
           (key (ein:ask-choice-char
                 (format "Cell type [%s]: " choices) choices))
           (type (case key

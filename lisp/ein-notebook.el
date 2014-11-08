@@ -592,22 +592,61 @@ of NOTEBOOK."
       ;;(setf (ein:$notebook-notebook-name notebook) (plist-get metadata :name))
       )
     (setf (ein:$notebook-worksheets notebook)
-          (mapcar (lambda (ws-data)
-                    (ein:worksheet-from-json
-                     (ein:notebook--worksheet-new notebook) ws-data))
-                  (or (plist-get data :worksheets)
-                      (list nil))))
+          (cl-case (ein:$notebook-nbformat notebook)
+            (3 (ein:read-nbformat3-worksheets notebook data))
+            (4 (ein:read-nbformat4-worksheets notebook data))
+            (t (ein:log 'error "Do not currently support nbformat version %s" (ein:$notebook-nbformat notebook)))))
     (ein:notebook--worksheet-render notebook
                                     (nth 0 (ein:$notebook-worksheets notebook)))
     notebook))
 
+(defun ein:read-nbformat3-worksheets (notebook data)
+  (mapcar (lambda (ws-data)
+                    (ein:worksheet-from-json
+                     (ein:notebook--worksheet-new notebook)
+                     ws-data))
+          (or (plist-get data :worksheets)
+              (list nil))))
+
+;; nbformat4 gets rid of the concenpt of worksheets. That means, for the moment,
+;; ein will no longer support worksheets. There may be a path forward for
+;; reimplementing this feature, however.  The nbformat 4 json definition says
+;; that cells are allowed to have tags. Clever use of this feature may lead to
+;; good things.
+
+(defun ein:read-nbformat4-worksheets (notebook data)
+  "Convert a notebook in nbformat4 to a list of worksheet-like
+  objects suitable for processing in ein:notebook-from-json."
+  (ein:log 'info "Reading nbformat4 notebook.")
+  (let* ((cells (plist-get data :cells))
+         (ws-cells (mapcar (lambda (data) (ein:cell-from-json data)) cells))
+         (worksheet (ein:notebook--worksheet-new notebook)))
+    (ein:log 'info "Loaded %i cells from notebook." (length cells))
+    (oset worksheet :saved-cells ws-cells)
+    (list worksheet)))
+
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
+  (ein:log 'info "Converting notebook %s to json." (ein:$notebook-notebook-name notebook))
+  (case (ein:$notebook-nbformat notebook)
+    (3 (ein:write-nbformat3-worksheets notebook))
+    (4 (ein:write-nbformat4-worksheets notebook))
+    (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook)))))
+
+(defun ein:write-nbformat3-worksheets (notebook)
   (let ((worksheets (mapcar #'ein:worksheet-to-json
                             (ein:$notebook-worksheets notebook))))
     `((worksheets . ,(apply #'vector worksheets))
       (metadata . ,(ein:$notebook-metadata notebook))
       )))
+
+(defun ein:write-nbformat4-worksheets (notebook)
+  (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
+  (let ((all-cells (first (mapcar #'ein:worksheet-to-nb4-json
+                                  (ein:$notebook-worksheets notebook)))))
+    (ein:log 'info "Worksheet json = %s" all-cells)
+    `((metadata . ,(ein:$notebook-metadata notebook))
+      (cells . ,(apply #'vector all-cells)))))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
   (let ((content-data (ein:notebook-to-json notebook)))
@@ -622,6 +661,7 @@ of NOTEBOOK."
     (let ((data `((content . ,content-data))))
       (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
       (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
+      (push `(type . "notebook") data)
       (ein:query-singleton-ajax
        (list 'notebook-save
              (ein:$notebook-url-or-port notebook)

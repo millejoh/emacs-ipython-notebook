@@ -76,6 +76,7 @@ will be canceled \(see also `ein:query-singleton-ajax').
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
                                       (timeout ein:query-timeout)
+                                      (force-sync nil)
                                       &allow-other-keys)
   "Cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
@@ -83,6 +84,8 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
   (ein:query-gc-running-process-table)
   (when timeout
     (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
+  (when force-sync
+    (setq settings (plist-put settings :sync t)))
   (ein:aif (gethash key ein:query-running-process-table)
       (unless (request-response-done-p it)
         (request-abort it)))            ; This will run callbacks

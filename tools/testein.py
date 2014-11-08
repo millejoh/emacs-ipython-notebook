@@ -215,7 +215,7 @@ class TestRunner(BaseRunner):
                 print(("{0} has ERT module.".format(self.emacs)))
                 return False
             else:
-                print("{0} has no ERT module.".format(self.emacs), end=' ')
+                print("{0} has no ERT module.".format(self.emacs))
                 print("ERT is going to be loaded from git submodule.")
                 return True
         return False
