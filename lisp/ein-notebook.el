@@ -621,13 +621,11 @@ of NOTEBOOK."
   (let* ((cells (plist-get data :cells))
          (ws-cells (mapcar (lambda (data) (ein:cell-from-json data)) cells))
          (worksheet (ein:notebook--worksheet-new notebook)))
-    (ein:log 'info "Loaded %i cells from notebook." (length cells))
     (oset worksheet :saved-cells ws-cells)
     (list worksheet)))
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (ein:log 'info "Converting notebook %s to json." (ein:$notebook-notebook-name notebook))
   (case (ein:$notebook-nbformat notebook)
     (3 (ein:write-nbformat3-worksheets notebook))
     (4 (ein:write-nbformat4-worksheets notebook))
@@ -644,7 +642,6 @@ of NOTEBOOK."
   (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
   (let ((all-cells (first (mapcar #'ein:worksheet-to-nb4-json
                                   (ein:$notebook-worksheets notebook)))))
-    (ein:log 'info "Worksheet json = %s" all-cells)
     `((metadata . ,(ein:$notebook-metadata notebook))
       (cells . ,(apply #'vector all-cells)))))
 

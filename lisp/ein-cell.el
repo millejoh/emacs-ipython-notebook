@@ -941,10 +941,6 @@ prettified text thus be used instead of HTML type."
                text)
       (format "Error: %S" err)))))
 
-(defmethod ein:fix-nb4-metadata ((cell ein:basecell))
-  (oset cell :metadata
-        '((name . ""))))
-
 (defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
@@ -956,28 +952,33 @@ prettified text thus be used instead of HTML type."
     (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) &optional discard-output)
-  (unless (oref cell :metadata)
-    (ein:fix-nb4-metadata cell))
-  (let ((outputs (if discard-output [] (oref cell :outputs))))
-    ;(ein:log 'info "cell-to-nb4: %s" outputs)
+  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))))
+        (outputs (if discard-output []
+                   (oref cell :outputs)))
+        (renamed-outputs '()))
+    (unless discard-output
+      (dolist (output outputs)
+        (push (let ((item '()))
+                (dolist (o (reverse output) item)
+                  (if (not (equal o :stream))
+                      (push o item)
+                    (push :name item))))
+              renamed-outputs)))
     `((source . ,(ein:cell-get-text cell))
-                (cell_type . "code")
-                ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
-                      `((execution_count . ,it)))
-                (outputs . ,(apply #'vector outputs))
-                (language . "python")
-                (metadata . ,(oref cell :metadata)))))
+      (cell_type . "code")
+      ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
+            `((execution_count . ,it)))
+      (outputs . ,(apply #'vector (or renamed-outputs outputs)))
+      (metadata . ,metadata))))
 
 (defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) &optional discard-output)
-  (unless (oref cell :metadata)
-    (ein:fix-nb4-metadata cell))
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
-    (metadata . ,(oref cell :metadata))))
+    (metadata . ((collapsed . t)))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))
