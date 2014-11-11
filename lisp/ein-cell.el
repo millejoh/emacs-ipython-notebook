@@ -780,6 +780,8 @@ If END is non-`nil', return the location of next element."
      '(output-subarea))
     (("pyerr")
      '(output-subarea))
+    (("error")
+     '(output-subarea))
     (("display_data")
      '(output-subarea))
     (("execute_result")
@@ -967,7 +969,8 @@ prettified text thus be used instead of HTML type."
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
       ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
-            `((execution_count . ,it)))
+            `((execution_count . ,it))
+          `((execution_count)))
       (outputs . ,(apply #'vector (or renamed-outputs outputs)))
       (metadata . ,metadata))))
 
@@ -1063,7 +1066,7 @@ prettified text thus be used instead of HTML type."
          (plist-put json :prompt_number (plist-get content :execution_count)))
        (setq json (ein:output-area-convert-mime-types
                    json (plist-get content :data))))
-      (("pyerr")
+      (("pyerr" "error")
        (plist-put json :ename (plist-get content :ename))
        (plist-put json :evalue (plist-get content :evalue))
        (plist-put json :traceback (plist-get content :traceback))))

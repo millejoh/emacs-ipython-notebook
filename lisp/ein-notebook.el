@@ -507,7 +507,8 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-set-notebook-name (notebook name)
   "Check NAME and change the name of NOTEBOOK to it."
   (if (ein:notebook-test-notebook-name name)
-      (setf (ein:$notebook-notebook-name notebook) name)
+      (setf (ein:$notebook-notebook-name notebook) name
+            (ein:$notebook-notebook-id notebook) name)
     (ein:log 'error "%S is not a good notebook name." name)
     (error "%S is not a good notebook name." name)))
 
@@ -746,15 +747,15 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                       (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
                         (unless (string-match "Untitled[0-9]+" name)
                           name)))))
+  (unless (and (string-match ".ipynb" name) (= (match-end 0) (length name)))
+    (setq name (format "%s.ipynb" name)))
   (let ((old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
     (ein:log 'info "JSON data looks like %s"
              (json-encode
               `((:name . ,name)
                 (:path . ,(ein:$notebook-notebook-path ein:%notebook%)))))
-    (ein:notebook-set-notebook-name ein:%notebook% name)
-    (mapc #'ein:worksheet-set-buffer-name
-          (ein:$notebook-worksheets ein:%notebook%))
+    ;(ein:notebook-set-notebook-name ein:%notebook% name)
     (ein:query-singleton-ajax
      (list 'notebook-rename
            (ein:$notebook-url-or-port ein:%notebook%)
@@ -767,19 +768,30 @@ NAME is any non-empty string that does not contain '/' or '\\'."
      :data (json-encode
             `((name . ,name)
               (path . ,(ein:$notebook-notebook-path ein:%notebook%))))
-     :error (apply-partially #'ein:notebook-rename-error old-name name)
+     :error (apply-partially #'ein:notebook-rename-error old-name name ein:%notebook%)
+     :success (apply-partially #'ein:notebook-rename-success
+                               ein:%notebook% name)
      :status-code
      `((200 . ,(apply-partially
-                #'ein:notebook-rename-success
-                ein:%notebook% name))))))
+                #'ein:notebook-rename-success ein:%notebook% name))
+       (409 . ,(apply-partially
+                #'ein:notebook-rename-success ein:%notebook% name))))))
 
-(defun* ein:notebook-rename-error (old new &key symbol-status response
-                                        &allow-other-keys)
-  (ein:log 'error
-    "Error (%s) while renaming notebook %s to %s."
-    symbol-status old new))
+(defun* ein:notebook-rename-error (old new notebook &key symbol-status response
+                                       error-thrown
+                                       &allow-other-keys)
+  (if (= (request-response-status-code response) 409)
+      (progn
+        (ein:log 'warn "IPython returned a 409 status code, but has still renamed the notebook. This may be an IPython bug.")
+        (ein:notebook-rename-success notebook new response))
+    (ein:log 'error
+      "Error (%s :: %s) while renaming notebook %s to %s."
+      symbol-status error-thrown old new)))
 
-(defun* ein:notebook-rename-success (notebook new &allow-other-keys)
+(defun* ein:notebook-rename-success (notebook new &rest args &allow-other-keys)
+  (ein:notebook-set-notebook-name notebook new)
+  (mapc #'ein:worksheet-set-buffer-name
+        (ein:$notebook-worksheets notebook))
   (ein:log 'info "Notebook renamed to %s." new))
 
 (defun ein:notebook-close (notebook)
