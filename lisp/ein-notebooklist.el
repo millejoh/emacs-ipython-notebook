@@ -325,6 +325,12 @@ You may find the new one in the notebook list." error)
                                  (ein:notebooklist-reload)))
                              (current-buffer) name)))
 
+;; Because MinRK wants me to suffer...
+(defun ein:get-actual-path (path)
+  (ein:aif (cl-position ?/ path :from-end t)
+      (substring path 0 it)
+    ""))
+
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
 Notebook list data is passed via the buffer local variable
@@ -362,49 +368,53 @@ Notebook list data is passed via the buffer local variable
               (ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
    "Open In Browser")
   (widget-insert "\n")
-  (loop for note in (cond ((= 2 (ein:$notebooklist-api-version ein:%notebooklist%))
-                           (ein:$notebooklist-data ein:%notebooklist%))
-                          ((= 3 (ein:$notebooklist-api-version ein:%notebooklist%))
-                           (plist-get (ein:$notebooklist-data ein:%notebooklist%) :content)))
-        for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
-        for name = (plist-get note :name)
-        for path = (plist-get note :path)
-        for type = (plist-get note :type)
-        for notebook-id = (plist-get note :notebook_id)
-        if (string= type "directory")
-        do (progn (widget-create
-                   'link
-                   :notify (lexical-let ((urlport urlport)
-                                         (path name))
-                             (lambda (&rest ignore)
-                               (ein:notebooklist-open urlport
-                                                      (ein:url (ein:$notebooklist-path ein:%notebooklist%)
-                                                               path))))
-                   "Dir")
-                  (widget-insert " : " name)
-                  (widget-insert "\n"))
-        if (string= type "notebook")
-        do (progn (widget-create
-                   'link
-                   :notify (lexical-let ((name name)
-                                         (path path)
-                                         (notebook-id notebook-id))
-                             (lambda (&rest ignore)
-                               (ein:notebooklist-open-notebook
-                                ein:%notebooklist% name path)))
-                   "Open")
-                  (widget-insert " ")
-                  (widget-create
-                   'link
-                   :notify (lexical-let ((name name)
-                                         (path path))
-                             (lambda (&rest ignore)
-                               (ein:notebooklist-delete-notebook-ask
-                                name
-                                path)))
-                   "Delete")
-                  (widget-insert " : " name)
-                  (widget-insert "\n")))
+  (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%)))
+    (loop for note in (cond ((= 2 api-version)
+                             (ein:$notebooklist-data ein:%notebooklist%))
+                            ((= 3 api-version)
+                             (plist-get (ein:$notebooklist-data ein:%notebooklist%) :content)))
+          for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
+          for name = (plist-get note :name)
+          for path = (cond ((= 2 api-version)
+                            (plist-get note :path))
+                           ((= 3 api-version)
+                            (ein:get-actual-path (plist-get note :path))))
+          for type = (plist-get note :type)
+          for notebook-id = (plist-get note :notebook_id)
+          if (string= type "directory")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((urlport urlport)
+                                           (path name))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open urlport
+                                                        (ein:url (ein:$notebooklist-path ein:%notebooklist%)
+                                                                 path))))
+                     "Dir")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))
+          if (string= type "notebook")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((name name)
+                                           (path path)
+                                           (notebook-id notebook-id))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open-notebook
+                                  ein:%notebooklist% name path)))
+                     "Open")
+                    (widget-insert " ")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((name name)
+                                           (path path))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-delete-notebook-ask
+                                  name
+                                  path)))
+                     "Delete")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))))
   (ein:notebooklist-mode)
   (widget-setup))
 
