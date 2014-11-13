@@ -156,8 +156,11 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 
 
 ;;; Utils
+(defvar ein:mime-type-map
+  '((image/svg . svg) (image/png . png) (image/jpeg . jpeg)))
+
 (defun ein:insert-image (&rest args)
-  (let ((img (apply #'create-image args)))
+  (let* ((img (apply #'create-image args)))
     (if ein:slice-image
         (destructuring-bind (&optional rows cols)
             (when (listp ein:slice-image) ein:slice-image)
@@ -870,7 +873,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (if (and (fboundp 'shr-insert-document)
            (fboundp 'libxml-parse-xml-region))
       #'ein:output-type-prefer-pretty-text-over-html
-    '(emacs-lisp svg png jpeg text html latex javascript))
+    '(emacs-lisp svg image/svg png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript))
   "Output types to be used in notebook.
 First output-type found in this list will be used.
 This variable can be a list or a function returning a list given
@@ -894,10 +897,17 @@ HTML for other object.
 If the text type output contains a newline, it is assumed be a
 prettified text thus be used instead of HTML type."
   (if (ein:aand (plist-get data :text) (string-match-p "\n" it))
-      '(emacs-lisp svg png jpeg text html latex javascript)
-    '(emacs-lisp svg png jpeg html text latex javascript)))
+      '(emacs-lisp svg image/svg png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript)
+    '(emacs-lisp svg image/svg png image/png jpeg image/jpeg html text/html text text/plain latex text/latex javascript text/javascript)))
+
+(defun ein:fix-mime-type (type)
+  (ein:aif (assoc type ein:mime-type-map)
+      (cdr it)
+    type))
 
 (defun ein:cell-append-mime-type (json dynamic)
+  (when (plist-get json :data)
+    (setq json (plist-get json :data))) ;; For nbformat v4 support.
   (loop
    for key in (cond
                ((functionp ein:output-type-preference)
@@ -911,7 +921,7 @@ prettified text thus be used instead of HTML type."
      ;; NOTE: Normally `javascript' and `html' will not be inserted as
      ;; they come out after `text'.  Maybe it is better to inform user
      ;; when one of them is inserted.
-     (javascript
+     ((javascript text/javascript)
       (when dynamic
         (ein:log 'info (concat "ein:cell-append-mime-type does not support "
                                "dynamic javascript. got: %s") value))
@@ -919,14 +929,14 @@ prettified text thus be used instead of HTML type."
      (emacs-lisp
       (when dynamic
         (ein:cell-safe-read-eval-insert (plist-get json type))))
-     (html
+     ((html text/html)
       (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
-     ((latex text)
+     ((latex text/latex text text/plain)
       (ein:insert-read-only (plist-get json type)))
-     (svg
-      (ein:insert-image value key t))
-     ((png jpeg)
-      (ein:insert-image (base64-decode-string value) key t)))))
+     ((svg image/svg)
+      (ein:insert-image value (ein:fix-mime-type key) t))
+     ((png image/png jpeg image/jpeg)
+      (ein:insert-image (base64-decode-string value) (ein:fix-mime-type key) t)))))
 
 (defun ein:cell-append-text (data &rest properties)
   ;; escape ANSI in plaintext:
@@ -960,6 +970,9 @@ prettified text thus be used instead of HTML type."
         (renamed-outputs '()))
     (unless discard-output
       (dolist (output outputs)
+        (if (and (plist-member output :metadata)
+                 (null (plist-get output :metadata)))
+            (plist-put output :metadata (make-hash-table)))
         (push (let ((item '()))
                 (dolist (o (reverse output) item)
                   (if (not (equal o :stream))
