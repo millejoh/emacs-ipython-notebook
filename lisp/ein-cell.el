@@ -995,7 +995,8 @@ prettified text thus be used instead of HTML type."
                               ((equal prop :stream) (progn (push value new-output)
                                                                 (push :name new-output)))
 
-                              ((ein:output-property-p prop)
+                              ((and (equal otype "display_data")
+                                    (ein:output-property-p prop))
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
                                  (push :data new-output)))
