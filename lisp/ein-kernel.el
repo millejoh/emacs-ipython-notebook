@@ -409,6 +409,8 @@ Sample implementations
     (ein:websocket-send
      (ein:$kernel-shell-channel kernel)
      (json-encode msg))
+    (unless (plist-get callbacks :execute_reply)
+      (ein:log 'debug "code: %s" code))
     (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
     (unless silent
       (mapc #'ein:funcall-packed

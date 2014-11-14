@@ -963,6 +963,14 @@ prettified text thus be used instead of HTML type."
     (language . "python")
     (collapsed . ,(if (oref cell :collapsed) t json-false))))
 
+(defvar ein:output-type-map
+  '((:svg . :image/svg) (:png . :image/png) (:jpeg . :image/jpeg)
+    (:text . :text/plain)
+    (:html . :text/html) (:latex . :text/latex) (:javascript . :text/javascript)))
+
+(defun ein:output-property-p (maybe-property)
+  (assoc maybe-property ein:output-type-map))
+
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) &optional discard-output)
   (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))))
         (outputs (if discard-output []
@@ -970,15 +978,42 @@ prettified text thus be used instead of HTML type."
         (renamed-outputs '()))
     (unless discard-output
       (dolist (output outputs)
-        (if (and (plist-member output :metadata)
-                 (null (plist-get output :metadata)))
-            (plist-put output :metadata (make-hash-table)))
-        (push (let ((item '()))
-                (dolist (o (reverse output) item)
-                  (if (not (equal o :stream))
-                      (push o item)
-                    (push :name item))))
-              renamed-outputs)))
+        (let ((otype (plist-get output :output_type)))
+          (ein:log 'info "Saving output of type %S" otype)
+          (if (and (or (equal otype "display_data")
+                       (equal otype "execute_result"))
+                   (null (plist-get output :metadata)))
+              (plist-put output :metadata (make-hash-table)))
+          (push (let ((ocopy (copy-list output))
+                      (new-output '()))
+                  (loop while ocopy
+                        do (let ((prop (pop ocopy))
+                                 (value (pop ocopy)))
+                             (ein:log 'info "Checking property %s for output type %s"
+                                      prop otype)
+                             (cond
+                              ((equal prop :stream) (progn (push value new-output)
+                                                                (push :name new-output)))
+
+                              ((ein:output-property-p prop)
+                               (let ((new-prop (cdr (ein:output-property-p prop))))
+                                 (push (list new-prop (list value)) new-output)
+                                 (push :data new-output)))
+
+                              ((and (equal otype "display_data")
+                                    (equal prop :text))
+                               (ein:log 'info "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
+
+                              ((and (equal otype "execute_result")
+                                    (equal prop :text))
+                               (ein:log 'info "Fixing execute_result (%s?)." otype)
+                               (let ((new-prop (cdr (ein:output-property-p prop))))
+                                 (push (list new-prop (list value)) new-output)
+                                 (push :data new-output)))
+
+                              (t (progn (push value new-output) (push prop new-output)))))
+                        finally return new-output))
+                renamed-outputs))))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
       ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
@@ -1074,11 +1109,13 @@ prettified text thus be used instead of HTML type."
        (plist-put json :text (or (plist-get content :data)
                                  (plist-get content :text))) ;; Horrible hack to deal with version 5.0 of messaging protocol.
        (plist-put json :stream (plist-get content :name)))
-      (("display_data" "pyout" "execute_result")
-       (when (equal msg-type "pyout")
+      (("display_data" "pyout" "execute_result") ;; in v4 nbformat execute_result == pyout
+       (when (or (equal msg-type "pyout")
+                 (equal msg-type "execute_result"))
          (plist-put json :prompt_number (plist-get content :execution_count)))
        (setq json (ein:output-area-convert-mime-types
-                   json (plist-get content :data))))
+                   json (plist-get content :data)))
+       )
       (("pyerr" "error")
        (plist-put json :ename (plist-get content :ename))
        (plist-put json :evalue (plist-get content :evalue))
@@ -1118,8 +1155,11 @@ prettified text thus be used instead of HTML type."
   "Return `t' if given cell has image output, `nil' otherwise."
   (loop for out in (oref cell :outputs)
         when (or (plist-member out :svg)
+                 (plist-member out :image/svg)
                  (plist-member out :png)
-                 (plist-member out :jpeg))
+                 (plist-member out :image/png)
+                 (plist-member out :jpeg)
+                 (plist-member out :image/jpeg))
         return t))
 
 (defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
