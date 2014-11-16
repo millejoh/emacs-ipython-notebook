@@ -253,7 +253,8 @@ See: https://github.com/ipython/ipython/pull/3307"
                        (cond ((= api-version 2)
                               (ein:kernel-send-cookie channel host))
                              ((= api-version 3)
-                              (ein:kernel-kernel-info-request kernel '(:kernel_info_reply (message . "CONTENT: %S\nMETADATA: %s")))))
+                              (ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel))))
+                             )
                        ;; run `ein:$kernel-after-start-hook' if both
                        ;; channels are ready.
                        (when (ein:kernel-live-p kernel)
@@ -273,6 +274,8 @@ See: https://github.com/ipython/ipython/pull/3307"
 ;; NOTE: `onclose-arg' can be accessed as:
 ;; (nth 1 (ein:$websocket-onclose-args (ein:$kernel-shell-channel (ein:$notebook-kernel ein:notebook))))
 
+(defun ein:kernel-on-connect (kernel content -metadata-not-used-)
+  (ein:log 'info "Kernel connect_request_reply received."))
 
 (defun ein:kernel-run-after-start-hook (kernel)
   (ein:log 'debug "EIN:KERNEL-RUN-AFTER-START-HOOK")
@@ -331,7 +334,7 @@ CONTENT and METADATA are given by `object_into_reply' message.
 `object_into_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
   (when objname
     (let* ((content (list :oname (format "%s" objname)))
            (msg (ein:kernel--get-msg kernel "object_info_request" content))
@@ -408,7 +411,7 @@ Sample implementations
   ;;        call signature becomes something like:
   ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
 
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "execute_reply: Kernel is not active.")
   (let* ((content (list
                    :code code
                    :silent (or silent json-false)
@@ -447,7 +450,7 @@ CONTENT and METADATA are given by `complete_reply' message.
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "complete_reply: Kernel is not active.")
   (let* ((content (list
                    :text ""
                    :line line
@@ -492,7 +495,7 @@ Relevant Python code:
 * :py:method:`IPython.zmq.ipkernel.Kernel.history_request`
 * :py:class:`IPython.core.history.HistoryAccessor`
 "
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "history_reply: Kernel is not active.")
   (let* ((content (list
                    :output (ein:json-any-to-bool output)
                    :raw (ein:json-any-to-bool raw)
@@ -533,7 +536,7 @@ Example::
    (ein:get-kernel)
    '(:kernel_connect_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
 "
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "connect_reply: Kernel is not active.")
   (let* ((msg (ein:kernel--get-msg kernel "connect_request" (make-hash-table)))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send
@@ -564,7 +567,7 @@ Example::
    (ein:get-kernel)
    '(:kernel_info_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
 "
-  (assert (ein:kernel-live-p kernel) nil "Kernel is not active.")
+  (assert (ein:kernel-live-p kernel) nil "kernel_info_reply: Kernel is not active.")
   (let* ((msg (ein:kernel--get-msg kernel "kernel_info_request" nil))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send
