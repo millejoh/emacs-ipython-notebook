@@ -46,6 +46,8 @@
 "
   url-or-port
   events
+  api-version
+  session-id
   kernel-id
   shell-channel
   iopub-channel
@@ -54,9 +56,7 @@
   ws-url                                ; ws://<URL>[:<PORT>]
   running
   username
-  session-id
   msg-callbacks
-  api-version
   ;; FIXME: Use event instead of hook.
   after-start-hook
   after-execute-hook)
@@ -79,14 +79,14 @@
   (make-ein:$kernel
    :url-or-port url-or-port
    :events events
+   :api-version (or api-version 2)
+   :session-id (ein:utils-uuid)
    :kernel-id nil
    :shell-channel nil
    :iopub-channel nil
    :base-url base-url
    :running nil
    :username "username"
-   :session-id (ein:utils-uuid)
-   :api-version (or api-version 2)
    :msg-callbacks (make-hash-table :test 'equal)))
 
 
@@ -217,14 +217,25 @@ See: https://github.com/ipython/ipython/pull/3307"
   (let* ((api-version (ein:$kernel-api-version kernel))
          (ws-url (concat (ein:$kernel-ws-url kernel)
                          (ein:$kernel-kernel-url kernel)))
+         (shell-session-url (concat ws-url "/shell?session_id="
+                                   (ein:$kernel-session-id kernel)))
+         (iopub-session-url (concat ws-url "/iopub?session_id="
+                                    (ein:$kernel-session-id kernel)))
          (onclose-arg (list :ws-url ws-url
                             :already-called-onclose nil
                             :early t)))
-    (ein:log 'info "Starting WS: %S" ws-url)
+    (ein:log 'info "Starting session WS: %S" shell-session-url)
+    (ein:log 'info "Starting iopub WS: %S" iopub-session-url)
     (setf (ein:$kernel-shell-channel kernel)
-          (ein:websocket (concat ws-url "/shell")))
+          (cond ((= api-version 3)
+                 (ein:websocket shell-session-url))
+                (t
+                 (ein:websocket (concat ws-url "/shell")))))
     (setf (ein:$kernel-iopub-channel kernel)
-          (ein:websocket (concat ws-url "/iopub")))
+          (cond ((= api-version 3)
+                 (ein:websocket iopub-session-url))
+                (t
+                 (ein:websocket (concat ws-url "/iopub")))))
     
     (loop for c in (list (ein:$kernel-shell-channel kernel)
                          (ein:$kernel-iopub-channel kernel))
