@@ -989,7 +989,7 @@ prettified text thus be used instead of HTML type."
                   (loop while ocopy
                         do (let ((prop (pop ocopy))
                                  (value (pop ocopy)))
-                             (ein:log 'info "Checking property %s for output type %s"
+                             (ein:log 'info "Checking property %s for output type '%s'"
                                       prop otype)
                              (cond
                               ((equal prop :stream) (progn (push value new-output)
@@ -1011,6 +1011,12 @@ prettified text thus be used instead of HTML type."
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
                                  (push :data new-output)))
+
+                              ((and (equal otype "execute_result")
+                                    (equal prop :prompt_number))
+                               (ein:log 'info "SAVE-NOTEBOOK: Fixing prompt_number property.")
+                               (push value new-output)
+                               (push :execution_count new-output))
 
                               (t (progn (push value new-output) (push prop new-output)))))
                         finally return new-output))
