@@ -3,37 +3,37 @@
 	url = https://github.com/sigma/mocker.el.git
 [submodule "doc/eldomain"]
 	path = doc/eldomain
-	url = git://github.com/tkf/sphinx-eldomain.git
+	url = https://github.com/tkf/sphinx-eldomain.git
 [submodule "lib/websocket"]
 	path = lib/websocket
-	url = git://github.com/ahyatt/emacs-websocket.git
+	url = https://github.com/ahyatt/emacs-websocket.git
 [submodule "lib/auto-complete"]
 	path = lib/auto-complete
-	url = git://github.com/auto-complete/auto-complete.git
+	url = https://github.com/auto-complete/auto-complete.git
 [submodule "lib/fuzzy"]
 	path = lib/fuzzy
-	url = git://github.com/auto-complete/fuzzy-el.git
+	url = https://github.com/auto-complete/fuzzy-el.git
 [submodule "lib/popup"]
 	path = lib/popup
-	url = git://github.com/auto-complete/popup-el.git
+	url = https://github.com/auto-complete/popup-el.git
 [submodule "lib/pos-tip"]
 	path = lib/pos-tip
-	url = git://github.com/emacsmirror/pos-tip.git
+	url = https://github.com/emacsmirror/pos-tip.git
 [submodule "lib/smartrep"]
 	path = lib/smartrep
-	url = git://github.com/myuhe/smartrep.el.git
+	url = https://github.com/myuhe/smartrep.el.git
 [submodule "lib/python"]
 	path = lib/python
-	url = git://github.com/fgallina/python.el.git
+	url = https://github.com/fgallina/python.el.git
 [submodule "lib/markdown-mode"]
 	path = lib/markdown-mode
-	url = git://jblevins.org/git/markdown-mode.git
+	url = https://github.com/defunkt/markdown-mode.git
 [submodule "lib/nxhtml"]
 	path = lib/nxhtml
-	url = git://github.com/emacsmirror/nxhtml.git
+	url = https://github.com/emacsmirror/nxhtml.git
 [submodule "lib/ert"]
 	path = lib/ert
-	url = git://github.com/ohler/ert.git
+	url = https://github.com/ohler/ert.git
 [submodule "lib/request"]
 	path = lib/request
-	url = git://github.com/tkf/emacs-request
+	url = https://github.com/tkf/emacs-request
