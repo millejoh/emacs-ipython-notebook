@@ -33,18 +33,20 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (error "Timeout"))
   (ein:log 'debug "TESTING-WAIT-UNTIL end"))
 
-(defun ein:testing-get-notebook-by-name (url-or-port notebook-name)
+(defun ein:testing-get-notebook-by-name (url-or-port notebook-name &optional path)
   (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME start")
   ;; Kill notebook list buffer here to make sure next
   ;; `ein:testing-wait-until' works properly.
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
+  (unless path (setq path ""))
   (with-current-buffer (ein:notebooklist-open url-or-port nil)
     (ein:testing-wait-until (lambda () ein:%notebooklist%))
     (prog1
         (ein:notebooklist-open-notebook-by-name notebook-name)
       (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
 
-(defun ein:testing-get-untitled0-or-create (url-or-port)
+(defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
+  (unless path (setq path ""))
   (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE start")
   (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled0")))
     (if notebook
@@ -54,12 +56,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
       (let ((created nil))
-        (ein:notebooklist-new-notebook url-or-port
+        (ein:notebooklist-new-notebook url-or-port path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
         (ein:testing-wait-until (lambda () created)))
       (prog1
-          (ein:testing-get-notebook-by-name url-or-port "Untitled0")
+          (ein:testing-get-notebook-by-name url-or-port "Untitled0" path)
         (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
 
 (defvar ein:notebooklist-after-open-hook nil)
@@ -113,7 +115,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         "ERT TESTING-DELETE-UNTITLED0 check the notebook is delete")
    do (let ((num-notebook
              (length (ein:testing-get-notebook-by-name ein:testing-port
-                                                       "Untitled0"))))
+                                                       "Untitled0"
+                                                       ""))))
         (should (= num-notebook 0))))
   (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 end"))
 

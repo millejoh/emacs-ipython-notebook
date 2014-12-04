@@ -225,8 +225,10 @@ This function is called via `ein:notebook-after-rename-hook'."
 (defun ein:notebooklist-new-notebook (&optional url-or-port path callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (let ((path (or path (ein:$notebooklist-path ein:%notebooklist%)))
-        (version (ein:$notebooklist-api-version ein:%notebooklist%)))
+  (let ((path (or path (ein:$notebooklist-path (or ein:%notebooklist%
+                                                   (ein:notebooklist-list-get url-or-port)))))
+        (version (ein:$notebooklist-api-version (or ein:%notebooklist%
+                                                    (ein:notebooklist-list-get url-or-port)))))
     (ein:log 'info "Creating a new notebook at %s..." path)
     (unless url-or-port
       (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
@@ -240,8 +242,9 @@ This function is called via `ein:notebook-after-rename-hook'."
        (list 'notebooklist-new-notebook url-or-port path)
        url
        :type "POST"
-       :parser (lambda ()
-                 (ein:html-get-data-in-body-tag "data-notebook-id"))
+       :parser #'ein:json-read
+       ;; (lambda ()
+       ;;   (ein:html-get-data-in-body-tag "data-notebook-id"))
        :error (apply-partially #'ein:notebooklist-new-notebook-error
                                url-or-port path callback cbargs)
        :success (apply-partially #'ein:notebooklist-new-notebook-callback
@@ -255,11 +258,12 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 data
                                                 &allow-other-keys
                                                 &aux
-                                                (notebook-name data)
                                                 (no-popup t))
   (ein:log 'info "Creating a new notebook... Done.")
-  (if notebook-name
-      (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) notebook-name path callback cbargs)
+  (if data
+      (let ((name (plist-get data :name))
+            (path (plist-get data :path)))
+        (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) name path callback cbargs))
     (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
                            "Please find it in the notebook list."))
     (setq no-popup nil))
