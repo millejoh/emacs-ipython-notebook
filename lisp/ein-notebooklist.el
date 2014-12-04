@@ -107,8 +107,8 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
         for notebook-id = notebook-name ;(plist-get note :notebook_id)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
-                                  (ein:$notebook-api-version nblist)
-                                  notebook-id callback cbargs notebook-path)))
+                                  (ein:$notebooklist-api-version nblist)
+                                  notebook-id notebook-path callback cbargs)))
 
 (defun ein:notebooklist-url (url-or-port version &optional path)
   (let ((base-path (cond ((= version 2) "api/notebooks")

@@ -321,7 +321,7 @@ will be updated with kernel's cwd."
 
 ;;; TODO - I think notebook-path is unnecessary (JMM).
 
-(defun ein:notebook-open (url-or-port api-version notebook-id path &optional callback cbargs notebook-path)
+(defun ein:notebook-open (url-or-port api-version notebook-id path &optional callback cbargs)
   "Open notebook of NOTEBOOK-ID in the server URL-OR-PORT.
 Opened notebook instance is returned.  Note that notebook might not be
 ready at the time when this function is executed.
@@ -345,10 +345,10 @@ notebook buffer when CALLBACK is called."
             (apply callback ein:%notebook% nil cbargs))
           ein:%notebook%)
       (ein:log 'info "Opening notebook %s..." notebook-id)
-      (ein:notebook-request-open url-or-port api-version notebook-id path callback cbargs notebook-path))))
+      (ein:notebook-request-open url-or-port api-version notebook-id path callback cbargs))))
 
 (defun ein:notebook-request-open (url-or-port api-version notebook-id path
-                                              &optional callback cbargs notebook-path)
+                                              &optional callback cbargs)
   "Request notebook of NOTEBOOK-ID to the server at URL-OR-PORT.
 Return `ein:$notebook' instance.  Notebook may not be ready at
 the time of execution.
