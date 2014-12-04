@@ -6,13 +6,13 @@
 
 
 (defun eintest:kernel-new (port)
-  (ein:kernel-new port "/kernels"
+  (ein:kernel-new port "/api/kernels"
                   (get-buffer-create "*eintest: dummy for kernel test*")))
 
 (ert-deftest ein:kernel-start-check-url ()
   (let* ((kernel (eintest:kernel-new 8888))
          (notebook-id "NOTEBOOK-ID")
-         (desired-url "http://127.0.0.1:8888/kernels?notebook=NOTEBOOK-ID")
+         (desired-url "http://127.0.0.1:8888/api/sessions")
          (dummy-response (make-request-response))
          got-url)
     (flet ((request (url &rest ignore) (setq got-url url) dummy-response)
@@ -23,7 +23,8 @@
 (ert-deftest ein:kernel-restart-check-url ()
   (let* ((kernel (eintest:kernel-new 8888))
          (kernel-id "KERNEL-ID")
-         (desired-url "http://127.0.0.1:8888/kernels/KERNEL-ID/restart")
+         (session-id "SESSION-ID")
+         (desired-url "http://127.0.0.1:8888/api/kernels/KERNEL-ID/restart")
          (dummy-response (make-request-response))
          got-url)
     (flet ((request (url &rest ignore) (setq got-url url) dummy-response)
@@ -32,7 +33,7 @@
            (ein:websocket (&rest ignore) (make-ein:$websocket))
            (ein:events-trigger (&rest ignore)))
       (ein:kernel--kernel-started
-       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
       (ein:kernel-restart kernel)
       (should (equal got-url desired-url)))))
 
@@ -40,7 +41,7 @@
 (ert-deftest ein:kernel-interrupt-check-url ()
   (let* ((kernel (eintest:kernel-new 8888))
          (kernel-id "KERNEL-ID")
-         (desired-url "http://127.0.0.1:8888/kernels/KERNEL-ID/interrupt")
+         (desired-url "http://127.0.0.1:8888/api/kernels/KERNEL-ID/interrupt")
          (dummy-response (make-request-response))
          got-url)
     (flet ((request (url &rest ignore) (setq got-url url) dummy-response)
@@ -48,14 +49,14 @@
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (&rest ignore) (make-ein:$websocket)))
       (ein:kernel--kernel-started
-       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
       (ein:kernel-interrupt kernel)
       (should (equal got-url desired-url)))))
 
 (ert-deftest ein:kernel-kill-check-url ()
   (let* ((kernel (eintest:kernel-new 8888))
          (kernel-id "KERNEL-ID")
-         (desired-url "http://127.0.0.1:8888/kernels/KERNEL-ID")
+         (desired-url "http://127.0.0.1:8888/api/kernels/KERNEL-ID")
          (dummy-response (make-request-response))
          got-url)
     (flet ((request (url &rest ignore) (setq got-url url) dummy-response)
@@ -63,7 +64,7 @@
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (&rest ignore) (make-ein:$websocket)))
       (ein:kernel--kernel-started
-       kernel :data (list :ws_url "ws://127.0.0.1:8888" :kernel_id kernel-id))
+       kernel :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
       (ein:kernel-kill kernel)
       (should (equal got-url desired-url)))))
 

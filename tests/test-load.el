@@ -13,5 +13,5 @@
 
 
 (ein:load-files "^test-ein-.*\\.el$"
-                (file-name-directory load-file-name)
+                "./" ;(file-name-directory load-file-name)
                 t)                      ; ignore-compiled

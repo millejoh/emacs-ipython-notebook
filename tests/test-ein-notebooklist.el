@@ -2,7 +2,9 @@
 
 (defun eintest:notebooklist-make-empty (&optional url-or-port)
   "Make empty notebook list buffer."
-  (ein:notebooklist-url-retrieve-callback (or url-or-port "DUMMY-URL")))
+  (ein:notebooklist-url-retrieve-callback (or url-or-port "DUMMY-URL")
+                                          (ein:query-ipython-version)
+                                          ""))
 
 (defmacro eintest:notebooklist-is-empty-context-of (func)
   `(ert-deftest ,(intern (format "%s--notebooklist" func)) ()
