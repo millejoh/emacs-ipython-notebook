@@ -259,7 +259,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 (no-popup t))
   (ein:log 'info "Creating a new notebook... Done.")
   (if notebook-name
-      (ein:notebook-open url-or-port notebook-name path callback cbargs)
+      (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) notebook-name path callback cbargs)
     (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
                            "Please find it in the notebook list."))
     (setq no-popup nil))
@@ -431,6 +431,8 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                                      url-or-port
                                      (plist-get note :name))))))
 
+;;FIXME: Code below assumes notebook is in root directory - need to do a better
+;;       job listing notebooks in subdirectories and parsing out the path.
 ;;;###autoload
 (defun ein:notebooklist-open-notebook-global (nbpath &optional callback cbargs)
   "Choose notebook from all opened notebook list and open it.
@@ -448,16 +450,16 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
     (when (and (stringp url-or-port)
                (string-match "^[0-9]+$" url-or-port))
       (setq url-or-port (string-to-number url-or-port)))
-    (let ((notebook-id
-           (loop for nblist in (ein:notebooklist-list)
-                 when (equal (ein:$notebooklist-url-or-port nblist) url-or-port)
-                 if (loop for note in (ein:$notebooklist-data nblist)
-                          when (equal (plist-get note :name) name)
-                          return (plist-get note :name))
-                 return it)))
-      (if notebook-id
-          (ein:notebook-open url-or-port notebook-id callback cbargs)
-        (ein:log 'info "Notebook '%s' not found" nbpath)))))
+    ;; (let ((notebook-id
+    ;;        (loop for nblist in (ein:notebooklist-list)
+    ;;              when (equal (ein:$notebooklist-url-or-port nblist) url-or-port)
+    ;;              if (loop for note in (ein:$notebooklist-data nblist)
+    ;;                       when (equal (plist-get note :name) name)
+    ;;                       return (plist-get note :name))
+    ;;              return it)))
+    ;;   (if notebook-id
+    (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) name "/" callback cbargs)
+    (ein:log 'info "Notebook '%s' not found" nbpath)))
 
 ;;;###autoload
 (defun ein:notebooklist-load (&optional url-or-port)
@@ -516,7 +518,7 @@ upload the current file to the server.
     (unless noerror
       (assert found nil "No server has notebook named: %s" name))
     (destructuring-bind (url-or-port notebook-id) found
-      (ein:notebook-open url-or-port notebook-id callback cbargs))))
+      (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) notebook-id callback cbargs))))
 
 (defvar ein:notebooklist-find-file-buffer-callback #'ignore)
 
