@@ -1,6 +1,6 @@
-==============================================
+==================================================
  EIN2 -- Emacs IPython 2.x Notebook |build-status|
-==============================================
+==================================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
@@ -107,7 +107,8 @@ Requirements
 ============
 
 * IPython_ 2.0 or higher.
-* `websocket.el`_ 0.9
+* Tornado_ 4.0.2 or higher
+* `websocket.el`_ 1.3. Note that if you are using IPython-dev you should download my fork_ from github which fixes an issue with PING responses.
 * `request.el`_ >= 0.2
 * (optional) mumamo_ developmental version:
   It will be automatically loaded when it is on the path.
@@ -131,6 +132,8 @@ EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
 It is known to work in Emacs 23.2, 24.1 and 24.2.
 
 .. _IPython: http://ipython.org/
+.. _Tornado: http://tornadoweb.org/
+.. _fork http://github.com/millejoh/emacs-websocket
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
