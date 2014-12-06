@@ -152,7 +152,7 @@ Usage
 
 2. Require module::
 
-     (require 'ein)
+     (require 'ein2)
 
 3. Start `IPython notebook server`_.
 

@@ -72,7 +72,7 @@
 
 ;;; Configurations
 (eval-when-compile (require 'ein-notebooklist))
-(require 'ein)
+(require 'ein2)
 
 ;; auto-complete
 (setq ein:use-auto-complete-superpack t)

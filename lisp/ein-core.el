@@ -34,7 +34,7 @@
 (declare-function tramp-dissect-file-name "tramp")
 
 
-(require 'ein)  ; get autoloaded functions into namespace
+(require 'ein2)  ; get autoloaded functions into namespace
 (require 'ein-utils)
 
 
