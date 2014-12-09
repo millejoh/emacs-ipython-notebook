@@ -335,6 +335,15 @@ You may find the new one in the notebook list." error)
       (substring path 0 it)
     ""))
 
+(defun generate-breadcrumbs (path)
+  "Given notebooklist path, generate alist of breadcrumps of form (name . path)."
+  (let* ((paths (split-string path "/" t))
+         (current-path "/")
+         (pairs (list (cons "Home" ""))))
+    (dolist (p paths pairs)
+      (setf current-path (concat current-path p)
+            pairs (append pairs (list (cons p current-path)))))))
+
 (defun ein:notebooklist-render ()
   "Render notebook list widget.
 Notebook list data is passed via the buffer local variable
@@ -345,16 +354,18 @@ Notebook list data is passed via the buffer local variable
   (remove-overlays)
   ;; Create notebook list
   (widget-insert "IPython Notebook list\n\n")
-  (widget-insert " | ")
-  (widget-create
-   'link
-   :notify (lambda (&rest ignore) (ein:notebooklist-open
-                                   (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                   ""))
-   "Home")
-  (if (not (string= "" (ein:$notebooklist-path ein:%notebooklist%)))
-      (widget-insert " | " (ein:$notebooklist-path ein:%notebooklist%)))
-  (widget-insert " |\n")
+  (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
+    (dolist (p breadcrumbs)
+      (lexical-let ((name (car p))
+                    (path (cdr p)))
+        (widget-insert " | ")
+        (widget-create
+         'link
+         :notify (lambda (&rest ignore) (ein:notebooklist-open
+                                         (ein:$notebooklist-url-or-port ein:%notebooklist%)
+                                         path))
+         name)))
+    (widget-insert " |\n"))
   (widget-create
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook))
