@@ -26,7 +26,7 @@
 ;;; Code:
 
 (add-to-list 'load-path (file-name-directory load-file-name))
-(require 'ein2)
+(require 'ein)
 (require 'ein-dev)
 
 (ein:dev-start-debug)

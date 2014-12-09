@@ -4,5 +4,4 @@ log
 *.stackdump
 *.elc
 *.el#
-*.el~
-*.log
+lisp/.#ein-notebook.el
