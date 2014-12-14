@@ -1,6 +1,6 @@
-==============================================
- EIN2 -- Emacs IPython 2.x Notebook |build-status|
-==============================================
+=================================================
+ EIN -- Emacs IPython 2.x Notebook |build-status|
+=================================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
@@ -107,7 +107,8 @@ Requirements
 ============
 
 * IPython_ 2.0 or higher.
-* `websocket.el`_ 0.9
+* Tornado_ 4.0.2 or higher.
+* `websocket.el`_ 1.3
 * `request.el`_ >= 0.2
 * (optional) mumamo_ developmental version:
   It will be automatically loaded when it is on the path.
@@ -125,12 +126,27 @@ Requirements
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
   You need to configure subpackage ``ein-smartrep`` to enable
   this feature.
+* (optional) `jedi.el`_:
+  Python auto-completion for emacs using `jedi`_. In your
+  emacs initialization file add
 
+  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)
+
+* (optional) auto-complete.el`_:
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
+* (optional) `smartrep.el`_:
+  This package enables you to omit typing prefix keys (e.g.,
+  ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
+  You need to configure subpackage ``ein-smartrep`` to enable
+  this feature.
+  
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
 It is known to work in Emacs 23.2, 24.1 and 24.2.
 
 .. _IPython: http://ipython.org/
+.. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
@@ -138,7 +154,8 @@ It is known to work in Emacs 23.2, 24.1 and 24.2.
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
-
+.. _jedi.el: https://github.com/tkf/emacs-jedi
+.. _jedi: https://github.com/davidhalter/jedi
 
 Usage
 =====

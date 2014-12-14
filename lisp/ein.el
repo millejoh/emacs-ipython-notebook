@@ -2,10 +2,11 @@
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
-;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
+;; Authors: Takafumi Arakaki <aka.tkf at gmail.com>
+;;          John Miller <millejoh at millejoh.com>
 ;; URL: http://tkf.github.com/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.2.1alpha2
+;; Version: 0.3.0
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -57,7 +58,7 @@
 
 ;; For backward compatibility + providing easy way to load EIN for
 ;; users who prefer manual installation.
-(require 'ein-loaddefs)
+;(require 'ein-loaddefs)
 
 (provide 'ein)
 
