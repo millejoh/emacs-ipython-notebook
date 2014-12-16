@@ -243,11 +243,10 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (let ((buffer (generate-new-buffer "*ein:bug-report*")))
     (with-current-buffer buffer
       (erase-buffer)
-      (insert "<!--
-This template is to help you write a good bug report.
-You may skip some sections, but please make sure to include
-the last section \"System info\", unless you find some
-personal information there.
+      (insert "<!-- Use this template to help write bug report.
+You may skip some sections, but at the very least include the
+\"System info\" section, though do edit it to make sure no
+personal information is included!
 
 After finish writing it, please post it here:
 https://github.com/millejoh/emacs-ipython-notebook/issues/new
@@ -255,13 +254,13 @@ https://github.com/millejoh/emacs-ipython-notebook/issues/new
 
 ## Check list
 
-- [ ] I read \"Avoid standard Emacs traps\" section in
-  https://github.com/tkf/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
-- [ ] I checked that IPython works with the browser interface.
-- [ ] I checked that the problem was not due to badly compiled
-  files.  Removing `*.elc` files from source directory of EIN and
-  its dependencies did not solve the problem.
-- [ ] I checked that the libraries are loaded from intended place.
+- [ ] Read the \"Avoiding Common Emacs Traps\" section in
+  https://github.com/millejoh/emacs-ipython-notebook/blob/master/CONTRIBUTING.md
+- [ ] Does IPython works from the web browser?
+- [ ] Confirm the problem was not due to badly compiled
+  files by removing all the `*.elc` files from source directory of EIN and
+  its dependencies.
+- [ ] Confirm that the libraries are loaded as expected and are at the required version.
   (You can check the location in the \"System info\" section below)
 
 ## Description of the problem you have

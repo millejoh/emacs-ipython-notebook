@@ -1,34 +1,31 @@
-# Contribution guide line
+# Guidelines for submitting bug reports
 
-Please use `M-x ein:dev-bug-report-template` to write a bug report.
-It pops up a buffer containing some system information and instruction
-for bug report.
+Please use `M-x ein:dev-bug-report-template` to write a bug report.  It pops up
+a buffer containing system information and instructions for submitting a bug
+report.
 
 
-## Avoid standard Emacs traps
+## Avoiding Common Emacs Traps
 
-### It is Emacs not all
+### Is it just Emacs?
 
-Do you try the same thing in normal IPython notebook (i.e., browser)?
-If not, please try.  There can be problem in your IPython installation.
-
+Did you try the same thing in a normal IPython notebook, i.e. from the browser
+interface?
 
 ### Your Emacs configuration
 
-There can be some configuration EIN does not work well with.  To check
-if the problem is in the configuration or not, the best way is to start
-EIN in a clean Emacs (i.e., without your configuration).
+There is always the possibility of an unintended interaction with another
+package, so to elimate this possibility the best way is to start EIN in a clean
+Emacs (i.e., without your configuration).
 
-You can use zeroein.el to start EIN in a clean Emacs.
-See the Quick try section in the manual:
-http://tkf.github.com/emacs-ipython-notebook/#quick-try
+You can use zeroein.el to start EIN in a clean Emacs.  See the Quick try section
+in the manual: http://millejoh.github.com/emacs-ipython-notebook/#quick-try
 
 
 ### Badly compiled file
 
-Remove all `*.elc` files from EIN source directory and its
-dependencies.  Then restart Emacs and try the procedure to reproduce
-the problem again.
+Remove all `*.elc` files from EIN source directory and its dependencies.  Then
+restart Emacs and try to reproduce the problem.
 
 You will have problem with compiled files if they are older than the
 source files and/or the files are compiled with different Emacs

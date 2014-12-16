@@ -3,7 +3,7 @@
 	url = https://github.com/sigma/mocker.el.git
 [submodule "doc/eldomain"]
 	path = doc/eldomain
-	url = https://github.com/tkf/sphinx-eldomain.git
+	url = https://github.com/millejoh/sphinx-eldomain.git
 [submodule "lib/websocket"]
 	path = lib/websocket
 	url = https://github.com/ahyatt/emacs-websocket.git

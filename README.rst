@@ -130,16 +130,7 @@ Requirements
   Python auto-completion for emacs using `jedi`_. In your
   emacs initialization file add
 
-  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)
-
-* (optional) auto-complete.el`_:
-  You need to configure subpackage ``ein-ac`` to enable
-  this feature.
-* (optional) `smartrep.el`_:
-  This package enables you to omit typing prefix keys (e.g.,
-  ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
-  You need to configure subpackage ``ein-smartrep`` to enable
-  this feature.
+  ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
   
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
