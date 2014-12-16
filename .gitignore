@@ -5,3 +5,7 @@ log
 *.elc
 *.el#
 lisp/.#ein-notebook.el
+*.el~
+lisp/ein-autoloads.el
+tests/func-test-batch-log.log
+tests/test-batch-log.log

@@ -131,7 +131,9 @@ the source is in git repository."
   (let ((resp (request (ein:url (or url-or-port
                                     (ein:default-url-or-port))
                                 "api")
-                       :parser #'ein:json-read
+                       :parser #'(lambda ()
+                                   (ignore-errors
+                                     (ein:json-read)))
                        :timeout 0.5
                        :sync t)))
     (if (eql 404 (request-response-status-code resp))
