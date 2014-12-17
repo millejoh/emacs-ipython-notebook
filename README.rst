@@ -5,9 +5,9 @@
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
 
-.. note:: The code, so far, has been stable enough for day to day work, but
-          there are no guarantees for the safety for your notebook data.  Please
-          make sure you backup, and backup often!
+.. note:: The code has been stable enough for my day to day work, but there are
+          no guarantees for the safety for your notebook data.  Please make sure
+          that you backup and backup often!
 
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png
@@ -27,9 +27,9 @@ See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
 Features
 ========
 
-Emacs IPython Notebook (EIN) provides a client for the IPython v2.x notebook and
-an integrated REPL (like SLIME_) in Emacs.  While EIN makes notebook editing
-very powerful by allowing you to use any Emacs features, it also expose IPython
+The Emacs IPython Notebook (EIN) provides a client for the IPython v2.x notebook
+and an integrated REPL (like SLIME_) in Emacs.  EIN makes notebook editing very
+powerful by allowing you to use any Emacs features, it also expose IPython
 features such as code evaluation, object inspection and code completion to the
 Emacs side.  These features can be accessed anywhere in Emacs and improve Python
 code editing and reading in Emacs.
@@ -39,15 +39,14 @@ code editing and reading in Emacs.
 Highlighted features:
 
 * Copy/paste cells, even to/from different notebooks.
-* Console integration: You can easily connect to kernel via console
-  application.  This enables you to start debugging in the same
-  kernel.  It is even possible to connect console over ssh.
-* IPython kernel can be "connected" to any buffers.  This enables you
-  to evaluate buffer/region using same kernel as notebook.  Notebook
-  goodies such as tooltip help, help browser and code completion are
+* Console integration: You can easily connect to a kernel via the console
+  application.  This enables you to start debugging in the same kernel.  It is
+  even possible to connect to a console over ssh.
+* An IPython kernel can be "connected" to any buffer.  This enables you to
+  evaluate a buffer or buffer region using the same kernel as the notebook.
+  Notebook goodies such as tooltip help, help browser and code completion are
   available in these buffers.
-* Jump to definition (go to the definition by hitting ``M-.`` over an
-  object).
+* Jump to definition (go to the definition by hitting ``M-.`` over an object).
 
 Other notebook features:
 
@@ -61,18 +60,18 @@ Other notebook features:
 Links:
 
 * `Online Documentation
-  <http://tkf.github.com/emacs-ipython-notebook/>`_
+  <http://millejoh.github.io/emacs-ipython-notebook/>`_
 
 * `Wiki
-  <https://github.com/tkf/emacs-ipython-notebook/wiki>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/wiki>`_
 
   + `Screenshots
-    <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+    <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_
   + `Tips
-    <https://github.com/tkf/emacs-ipython-notebook/wiki/Tips>`_
+    <https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips>`_
 
 * `Downloads
-  <https://github.com/tkf/emacs-ipython-notebook/tags>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
   <https://github.com/millejoh/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
