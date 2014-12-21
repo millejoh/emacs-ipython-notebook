@@ -89,39 +89,47 @@ The above command requires /bin/sh.  If the above command does not work
 Requirements
 ------------
 
-* IPython_ 0.12 or higher.
-* `websocket.el`_ 0.9
+* IPython_ 2.0 or higher.
+* Tornado_ 4.0.2 or higher.
+* `websocket.el`_ 1.3
 * `request.el`_ >= 0.2
 * (optional) mumamo_ developmental version:
   It will be automatically loaded when it is on the path.
   The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
 * (optional) python-mode:
-  It should work with either python.el or `python-mode.el`_ [#]_.
+  It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
-  :el:symbol:`ein:console-open` command.
+  ``ein:console-open`` command.
 * (optional) `auto-complete.el`_
-  You need to configure :el:symbol:`ein:use-auto-complete` to enable
+  You need to configure subpackage ``ein-ac`` to enable
   this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
-  You need to configure :el:symbol:`ein:use-smartrep` to enable
+  You need to configure subpackage ``ein-smartrep`` to enable
   this feature.
+* (optional) `jedi.el`_:
+  Python auto-completion for emacs using `jedi`_. In your
+  emacs initialization file add
 
+  ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
+  
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
 It is known to work in Emacs 23.2, 24.1 and 24.2.
 
 .. _IPython: http://ipython.org/
+.. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
-.. _python-mode.el: :https://launchpad.net/python-mode
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
+.. _jedi.el: https://github.com/tkf/emacs-jedi
+.. _jedi: https://github.com/davidhalter/jedi
 
 .. [#] See
    :ref:`Gotchas and caveats > python-mode.el <gotchas-python-mode.el>`.
@@ -138,16 +146,16 @@ Install
 Using el-get
 ^^^^^^^^^^^^
 
-If you use developmental version of `el-get`_, you can install it
-easily using it.  Emacs IPython Notebook is registered as package
-``ein``.   See `el-get`_ website for more information.
+If you use developmental version of `el-get`_ installation is simple.  Emacs
+IPython Notebook is registered as package ``ein``.  See the `el-get`_ website
+for more information.
 
 .. _el-get: https://github.com/dimitri/el-get
 
-.. note:: If you get error "Cannot open load file: request" that means
-   you have older el-get version.  You can fix this problem by
-   either (1) install request.el manually, (2) use the latest recipe,
-   or (3) update el-get to its master.
+.. note:: If you get error "Cannot open load file: request" that means you have
+   an older version of el-get.  You can fix this problem by either (1)
+   installing request.el manually, (2) using the latest recipe, or (3) updating
+   el-get to its master.
 
    You can get the latest recipe here:
 
