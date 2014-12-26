@@ -395,7 +395,7 @@ Notebook list data is passed via the buffer local variable
                            ((= 3 api-version)
                             (ein:get-actual-path (plist-get note :path))))
           for type = (plist-get note :type)
-          for notebook-id = (plist-get note :notebook_id)
+          for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport name)
           if (string= type "directory")
           do (progn (widget-create
                      'link
@@ -412,13 +412,23 @@ Notebook list data is passed via the buffer local variable
           do (progn (widget-create
                      'link
                      :notify (lexical-let ((name name)
-                                           (path path)
-                                           (notebook-id notebook-id))
+                                           (path path))
                                (lambda (&rest ignore)
                                  (ein:notebooklist-open-notebook
                                   ein:%notebooklist% name path)))
                      "Open")
                     (widget-insert " ")
+                    (when (and opened-notebook-maybe (ein:kernel-live-p (ein:$notebook-kernel opened-notebook-maybe)))
+                      (widget-create
+                       'link
+                       :notify (lexical-let ((urlport urlport)
+                                             (name name))
+                                 (lambda (&rest ignore)
+                                   (let ((buf (ein:notebook-get-opened-buffer urlport name)))
+                                     (when buf
+                                       (kill-buffer buf)))))
+                       "Stop")
+                      (widget-insert " "))
                     (widget-create
                      'link
                      :notify (lexical-let ((name name)
