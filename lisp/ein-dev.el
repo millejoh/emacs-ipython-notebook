@@ -341,6 +341,18 @@ Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
           (newline-and-indent)))
     (scan-error)))
 
+(defun ein:debug-notebook-to-json-buffer ()
+  "Create a new buffer with the json representation of the current notebook."
+  (interactive)
+  (let ((content-data (ein:notebook-to-json ein:%notebook%))
+        (bufname (format "*notebook-json:%s" (ein:$notebook-notebook-name ein:%notebook%))))
+    (with-current-buffer (get-buffer-create bufname)
+      (barf-if-buffer-read-only)
+      (erase-buffer)
+      (save-excursion
+        (insert (json-encode content-data))
+        (json-pretty-print (point-min) (point-max))))))
+
 (provide 'ein-dev)
 
 ;;; ein-dev.el ends here
