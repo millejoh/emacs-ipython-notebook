@@ -415,7 +415,8 @@ Notebook list data is passed via the buffer local variable
                                            (path path))
                                (lambda (&rest ignore)
                                  (ein:notebooklist-open-notebook
-                                  ein:%notebooklist% name path)))
+                                  ein:%notebooklist% name path)
+                                 (ein:notebooklist-reload)))
                      "Open")
                     (widget-insert " ")
                     (when (and opened-notebook-maybe (ein:kernel-live-p (ein:$notebook-kernel opened-notebook-maybe)))
@@ -426,7 +427,8 @@ Notebook list data is passed via the buffer local variable
                                  (lambda (&rest ignore)
                                    (let ((buf (ein:notebook-get-opened-buffer urlport name)))
                                      (when buf
-                                       (kill-buffer buf)))))
+                                       (kill-buffer buf)
+                                       (ein:notebooklist-reload)))))
                        "Stop")
                       (widget-insert " "))
                     (widget-create
