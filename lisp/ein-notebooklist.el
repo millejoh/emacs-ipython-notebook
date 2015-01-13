@@ -201,16 +201,19 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
     symbol-status path url-or-port))
 
 ;;;###autoload
-(defun ein:notebooklist-reload ()
+(defun ein:notebooklist-reload (&optional notebooklist)
   "Reload current Notebook list."
   (interactive)
-  (ein:notebooklist-open (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                         (ein:$notebooklist-path ein:%notebooklist%) t))
+  (unless notebooklist
+    (setq notebooklist ein:%notebooklist%))
+  (ein:notebooklist-open (ein:$notebooklist-url-or-port notebooklist)
+                         (ein:$notebooklist-path notebooklist) t))
 
 (defun ein:notebooklist-refresh-related ()
   "Reload notebook list in which current notebook locates.
 This function is called via `ein:notebook-after-rename-hook'."
-  (ein:notebooklist-open (ein:$notebook-url-or-port ein:%notebook%) t))
+  (ein:notebooklist-open (ein:$notebook-url-or-port ein:%notebook%)
+                         (ein:$notebook-notebook-path ein:%notebook%) t))
 
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
@@ -414,6 +417,8 @@ Notebook list data is passed via the buffer local variable
                      :notify (lexical-let ((name name)
                                            (path path))
                                (lambda (&rest ignore)
+                                 (run-at-time 3 nil
+                                              #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
                                  (ein:notebooklist-open-notebook
                                   ein:%notebooklist% name path)))
                      "Open")
@@ -426,6 +431,9 @@ Notebook list data is passed via the buffer local variable
                                  (lambda (&rest ignore)
                                    (let ((buf (ein:notebook-get-opened-buffer urlport name)))
                                      (when buf
+                                       (run-at-time 1 nil
+                                                    #'ein:notebooklist-reload
+                                                    ein:%notebooklist%)
                                        (kill-buffer buf)))))
                        "Stop")
                       (widget-insert " "))
