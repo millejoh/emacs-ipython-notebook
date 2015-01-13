@@ -643,7 +643,9 @@ of NOTEBOOK."
   (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
   (let ((all-cells (first (mapcar #'ein:worksheet-to-nb4-json
                                   (ein:$notebook-worksheets notebook)))))
-    `((metadata . ,(ein:$notebook-metadata notebook))
+    `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
+                       it
+                     (make-hash-table)))
       (cells . ,(apply #'vector all-cells)))))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
