@@ -138,7 +138,7 @@ the source is in git repository."
                        :sync t)))
     (if (eql 404 (request-response-status-code resp))
         (progn
-          (ein:log 'warn "Version api not implemented, assuming we are working with IPython 2.x")
+          (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
           2)
       (string-to-number (first (split-string (plist-get (request-response-data resp) :version) "[\\.]"))))))
 

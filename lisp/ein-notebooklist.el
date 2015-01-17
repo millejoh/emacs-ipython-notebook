@@ -245,6 +245,7 @@ This function is called via `ein:notebook-after-rename-hook'."
        (list 'notebooklist-new-notebook url-or-port path)
        url
        :type "POST"
+       :data (json-encode '((:type . "notebook")))
        :parser #'ein:json-read
        ;; (lambda ()
        ;;   (ein:html-get-data-in-body-tag "data-notebook-id"))
