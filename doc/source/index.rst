@@ -16,14 +16,13 @@ accessed anywhere in Emacs and improve Python code editing and reading in Emacs.
 
 Highlighted features:
 
-* Copy/paste cells, even to/from different notebooks.
-* Console integration: You can easily connect to kernel via console
-  application.  This enables you to start debugging in the same
-  kernel.  It is even possible to connect console over ssh [#]_.
-* IPython kernel can be "connected" to any buffers.  This enables you
-  to evaluate buffer/region using same kernel as notebook.  Notebook
-  goodies such as tooltip help, help browser and code completion are
-  available in these buffers. [#]_
+* Copy/paste cells in and between notebooks.
+* Console integration: You can easily connect to a kernel via a console
+  application.  This enables you to start debugging in the same kernel.  It is
+  even possible to connect a console over ssh [#]_.
+* IPython kernel can be "connected" to a buffer.  This enables you to evaluate
+  buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
+  help, help browser and code completion are available in these buffers. [#]_
 * Jump to definition (go to the definition by hitting ``M-.`` over an
   object).
 
@@ -65,11 +64,10 @@ Links:
 Quick try
 ---------
 
-This is a quick and clean way to try EIN separately from your Emacs
-setting.  If you want to try EIN but think preparing all the
-requirements is too much, try this!::
+If you want to try EIN but think preparing all the requirements is too much, try
+this!::
 
-   git clone git://github.com/tkf/emacs-ipython-notebook.git
+   git clone git://github.com/millejoh/emacs-ipython-notebook.git
    cd emacs-ipython-notebook/
    lisp/zeroein.el
 
@@ -218,9 +216,9 @@ Usage
 2. Hit ``M-x ein:notebooklist-open`` to open notebook list.  This will
    open :ref:`notebook list <notebook-list-commands>` buffer.
 
-3. In the notebook list buffer, you can open notebooks by hitting
-   ``[Open]`` buttons.  See :ref:`notebook <notebook-commands>`
-   section for what you can do in the notebook buffer.
+3. In the notebook list buffer, you can open notebooks by selecting the
+   ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
+   operations and commands available in the notebook buffer.
 
 .. _`IPython notebook server`:
    http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
@@ -266,12 +264,11 @@ The following keybinds are available in notebook buffers.
 Connected buffer
 ^^^^^^^^^^^^^^^^
 
-You can connect any buffer (typically buffer opening Python file) to
-opened notebook and use the kernel of the notebook to execute the
-code, inspect objects, auto-complete code, jump to the other source,
-etc.  Once the buffer is connected to the notebook, minor mode
-:el:symbol:`ein:connect-mode` is enabled and the following keybinds
-are available.
+You can connect any buffer (though typically a buffer that contains a Python
+file) to an opened notebook and use the kernel of that notebook to execute code,
+inspect objects, auto-complete code, jump to the other source, etc.  Once the
+buffer is connected to the notebook, minor mode :el:symbol:`ein:connect-mode` is
+enabled and the following keybinds are available.
 
 .. el:keymap:: ein:connect-mode-map
    :replace: s/C-c TAB/C-c C-i/
@@ -292,8 +289,9 @@ Shared output buffer
 Traceback viewer
 ^^^^^^^^^^^^^^^^
 
-Traceback in notebook buffer is not easy to understand.  You can open
-Traceback viewer by the command :el:symbol:`ein:notebook-view-traceback`.
+Tracebacks from the notebook buffer can be difficult to understand.  You can
+open a Traceback viewer by calling :el:symbol:`ein:notebook-view-traceback`.
+
 In the Traceback viewer, following keybinds are available.
 
 .. el:keymap:: ein:traceback-mode-map
@@ -348,9 +346,8 @@ You can link to IPython notebook from org-mode_ files.
 Customization
 -------------
 
-You can customize EIN using the Emacs customization UI by typing
-``M-x customize-group RET ein RET``.
-All the configurable variables are listed below.
+You can customize EIN by typing ``M-x customize-group RET ein RET``.  All the
+configurable variables are listed below.
 
 Subpackages
 ^^^^^^^^^^^
@@ -445,7 +442,7 @@ If you know how to fix/workaround them, patches are very welcome.
 
 While using EIN, probably most of the error messages are about server
 connections.  It looks like the problem is in :el:symbol:`url-retrieve`.
-But in those cases you don't loose any notebook data and your IPython
+But in those cases you don't lose any notebook data and your IPython
 kernel is fine.  You can just type the command again and it will go
 fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from :el:symbol:`url-retrieve` to
@@ -538,8 +535,8 @@ needed to debug.
 websocket.el
 """"""""""""
 
-websocket.el has its logging buffer.  Sometime its useful to see its
-log.  This is how to do that.
+websocket.el has its own logging buffer.  Sometime it is useful to see this
+log.  To do this:
 
 1. ``(require 'ein-dev)``
 2. ``(setq websocket-debug t)`` or call :el:symbol:`ein:dev-start-debug`.
@@ -552,20 +549,26 @@ log.  This is how to do that.
 Debugging
 ^^^^^^^^^
 
-If you are interested in debugging EIN, you should start it with
-calling the command :el:symbol:`ein:dev-start-debug`.
-If the bug is websocket related, you may need to run it with a
-prefix key like this: ``C-u M-x ein:dev-start-debug RET`` to get
-a backtrace.
-This command sets :el:symbol:`debug-on-error` to ``t`` and do some
-patching to debugger.  This patching is required because printing EWOC
-objects freezes Emacs otherwise.  It also changes log level to
-log everything the log buffer.  You can reset the patch and log level
-with :el:symbol:`ein:dev-stop-debug`.
+If you are interested in debugging EIN, you should start by calling the command
+:el:symbol:`ein:dev-start-debug`.  If the bug is websocket related, you may need
+to run it with a prefix key like this: ``C-u M-x ein:dev-start-debug RET`` to
+get a backtrace.  This command sets :el:symbol:`debug-on-error` to ``t`` and
+does some patching to the debugger.  This patching is required because printing
+EWOC objects freezes Emacs otherwise.  It also changes log level to report
+everything the log buffer.  You can reset the patch and log level with
+:el:symbol:`ein:dev-stop-debug`.
 
 
 Change Log
 ==========
+
+v0.3
+----
+
+* New maintainer - John Miller (millejoh at mac dot com)
+* Official repository is now at https://github.com/millejoh/emacs-ipython-notebook
+* Support for IPython 2.x and 3.x added.
+* Support for IPython 1.x and earlier removed.
 
 v0.2.1
 ------
