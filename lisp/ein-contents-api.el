@@ -148,8 +148,8 @@
      (list 'get-file url-or-port path)
      (ein:content-url url-or-port path)
      :type "PATCH"
-     :input (json-encode `(:path ,new-path))
-     :reader #'ein:json-read
+     :data (json-encode `(:path ,new-path))
+     :parser #'ein:json-read
      :success (apply-partially #'update-content-path content)
      :error (apply-partially #'ein-content-rename-error path))))
 

@@ -32,3 +32,8 @@
 (require 'ein-contents-api)
 (require 'deferred)
 
+(defparameter *list-content-result* nil)
+
+(defun ein-test-list-contents-1 ()
+  (ein:content-list-contents "" )
+  )
