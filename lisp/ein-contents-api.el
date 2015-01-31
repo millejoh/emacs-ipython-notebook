@@ -86,19 +86,8 @@
       (ein:url url-or-port "api/contents" path name)
     (ein:url url-or-port "api/contents" path)))
 
-(defun* ein:new-content (content &key data &allow-other-keys)
-  (setf (ein:$content-name content) (plist-get data :name)
-        (ein:$content-path content) (plist-get data :path)
-        (ein:$content-type content) (plist-get data :type)
-        (ein:$content-created content) (plist-get data :created)
-        (ein:$content-last-modified content) (plist-get data :last_modified)
-        (ein:$content-format content) (plist-get data :format)
-        (ein:$content-writable content) (plist-get data :writable)
-        (ein:$content-mimetype content) (plist-get data :mimetype)
-        (ein:$content-raw-content content) (plist-get data :content)))
-
 (defun ein:content-list-contents (path &optional url-or-port force-sync)
-  "Return the contents of a directory from the Jupyter server."
+  "Return the contents of the object at the specified path from the Jupyter server."
   (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
          (url (ein:content-url url-or-port path))
          (new-content (make-ein:$content :url-or-port url-or-port)))
@@ -112,12 +101,24 @@
      :error (apply-partially #'ein-content-list-contents-error url))
     new-content))
 
+(defun* ein:new-content (content &key data &allow-other-keys)
+  (setf (ein:$content-name content) (plist-get data :name)
+        (ein:$content-path content) (plist-get data :path)
+        (ein:$content-type content) (plist-get data :type)
+        (ein:$content-created content) (plist-get data :created)
+        (ein:$content-last-modified content) (plist-get data :last_modified)
+        (ein:$content-format content) (plist-get data :format)
+        (ein:$content-writable content) (plist-get data :writable)
+        (ein:$content-mimetype content) (plist-get data :mimetype)
+        (ein:$content-raw-content content) (plist-get data :content)))
+
 (defun* ein:content-list-contents-error (url &key symbol-status response &allow-other-keys)
   (ein:log 'verbose
     "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
     "Content list call %s failed with status %s." url symbol-status))
 
+;; ***
 
 (defvar *ein:content-hierarchy* (make-hash-table))
 
@@ -138,3 +139,27 @@
     (setf (gethash url-or-port *ein:content-hierarchy*)
           (ein:make-content-hierarchy ""  url-or-port))))
 
+;;; Get file contents
+
+(defun ein:content-rename (content new-path)
+  (let ((url-or-port (ein:$content-url-or-port content))
+        (path (ein:$content-path content)))
+    (ein:query-singleton-ajax
+     (list 'get-file url-or-port path)
+     (ein:content-url url-or-port path)
+     :type "PATCH"
+     :input (json-encode `(:path ,new-path))
+     :reader #'ein:json-read
+     :success (apply-partially #'update-content-path content)
+     :error (apply-partially #'ein-content-rename-error path))))
+
+(defun* update-content-path (content &key data &allow-other-keys)
+  (setf (ein:$content-path content) (plist-get data :path)
+        (ein:$content-name content) (plist-get data :name)
+        (ein:$content-last-modified content) (plist-get data :last_modified)))
+
+(defun* ein:content-rename-error (path &key symbol-status response &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S" (request-response-error-thrown response))
+  (ein:log 'error
+    "Renaming content %s failed with status %s." path symbol-status))
