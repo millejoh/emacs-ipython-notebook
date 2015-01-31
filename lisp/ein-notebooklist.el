@@ -2,7 +2,8 @@
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
-;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
+;; Authors: Takafumi Arakaki <aka.tkf at gmail.com>
+;;          John M. Miller <millejoh at mac.com>
 
 ;; This file is NOT part of GNU Emacs.
 

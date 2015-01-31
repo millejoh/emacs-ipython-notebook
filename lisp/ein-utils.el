@@ -126,6 +126,20 @@ before previous opening parenthesis."
 (defun ein:object-at-point-or-error ()
   (or (ein:object-at-point) (error "No object found at the point")))
 
+(defun ein:flatten (tree)
+  "Traverses the tree in order, collecting non-null leaves into a list."
+  (let (list)
+    (cl-labels ((traverse (subtree)
+                          (when subtree
+                            (if (consp subtree)
+                                (progn
+                                  (traverse (car subtree))
+                                  (traverse (cdr subtree)))
+                              (push subtree list)))))
+      (traverse tree))
+    (nreverse list)))
+
+
 
 ;;; URL utils
 
