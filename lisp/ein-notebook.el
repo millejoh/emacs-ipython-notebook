@@ -53,6 +53,7 @@
 (require 'ein-kill-ring)
 (require 'ein-query)
 (require 'ein-pytools)
+(require 'ein-traceback)
 
 
 ;;; Configuration

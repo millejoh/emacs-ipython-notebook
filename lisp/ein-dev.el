@@ -28,6 +28,7 @@
 (eval-when-compile (require 'cl))
 (declare-function rst-shift-region "rst")
 
+(require 'ein-loaddefs)
 (require 'ein-notebook)
 (require 'ein-subpackages)
 

@@ -14,7 +14,7 @@ if [ -e $activate ]; then
     echo "virtualenv $env exists."
 else
     echo "Creating virtualenv $env."
-    virtualenv $env
+    virtualenv -v $env
 fi
 
 . $activate

@@ -32,21 +32,24 @@
 (require 'ein-testing-cell)
 
 (defun ein:testing-notebook-from-json (json-string &optional notebook-name path)
-  (unless notebook-name (setq notebook-name "NOTEBOOK-DUMMY"))
-  (unless path (setq path ""))
-  ;; cl-flet does not work correctly here!
-  (flet ((pop-to-buffer (buf)
-                        buf)
-         (ein:notebook-start-kernel (notebook)
+  (let* ((data (ein:json-read-from-string json-string))
+         (notebook-name (plist-get data :name))
+         (path (plist-get data :path)))
+    (unless notebook-name (setq notebook-name "NOTEBOOK-DUMMY"))
+    (unless path (setq path ""))
+    ;; cl-flet does not work correctly here!
+    (cl-flet ((pop-to-buffer (buf)
+                             buf)
+              (ein:notebook-start-kernel (notebook)
                                          notebook))
-    (let ((notebook (ein:notebook-new "DUMMY-URL" (ein:query-ipython-version) notebook-name path)))
-      (setf (ein:$notebook-kernel notebook)
-            (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:query-ipython-version)))
-      (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
-            (ein:events-new))
-      (ein:notebook-request-open-callback
-       notebook :data (ein:json-read-from-string json-string))
-      (ein:notebook-buffer notebook))))
+      (let ((notebook (ein:notebook-new "DUMMY-URL" (ein:query-ipython-version) notebook-name path)))
+        (setf (ein:$notebook-kernel notebook)
+              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:query-ipython-version)))
+        (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
+              (ein:events-new))
+        (ein:notebook-request-open-callback
+         notebook :data data)
+        (ein:notebook-buffer notebook)))))
 
 (defun ein:testing-notebook-make-data (cells &optional name path)
   (setq cells
@@ -71,16 +74,16 @@
              (t c)))
           cells))
 
-(defun ein:testing-notebook-make-new (&optional name notebook-id cells-data)
+(defun ein:testing-notebook-make-new (&optional name cells-data)
   "Make new notebook.  One empty cell will be inserted
 automatically if CELLS-DATA is nil."
   (ein:testing-notebook-from-json
-   (json-encode (ein:testing-notebook-make-data cells-data name)) notebook-id))
+   (json-encode (ein:testing-notebook-make-data cells-data name))))
 
-(defun ein:testing-notebook-make-empty (&optional name notebook-id)
+(defun ein:testing-notebook-make-empty (&optional name)
   "Make empty notebook and return its buffer.
 Automatically inserted cell for new notebook is deleted."
-  (let ((buffer (ein:testing-notebook-make-new name notebook-id)))
+  (let ((buffer (ein:testing-notebook-make-new name)))
     (with-current-buffer buffer
       (call-interactively #'ein:worksheet-delete-cell))
     buffer))
@@ -100,7 +103,7 @@ LIST-OUTPUTS is a list of list of strings (pyout text).  Number
 of LIST-OUTPUTS equals to the number cells to be contained in the
 notebook."
   (ein:testing-notebook-make-new
-   nil nil
+   nil
    (mapcar (lambda (outputs)
              (ein:testing-codecell-data
               nil nil (mapcar #'ein:testing-codecell-pyout-data outputs)))

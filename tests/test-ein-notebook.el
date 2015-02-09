@@ -13,35 +13,69 @@
 
 ;; Test utils
 
+;;; This is the content portion of a response fromt he content API.
 (defvar eintest:notebook-data-simple-json
   "{
- \"metadata\": {
-  \"name\": \"Untitled0\"
- },
- \"name\": \"Untitled0\",
- \"nbformat\": 2,
- \"worksheets\": [
-  {
-   \"cells\": [
+ \"name\": \"Untitled0.ipynb\",
+ \"path\": \"\",
+ \"type\": \"notebook\",
+ \"content\" : {
+   \"metadata\": {
+   },
+   \"nbformat\": 3,
+   \"nbformat_minor\": 0,
+  
+   \"worksheets\": [
     {
-     \"cell_type\": \"code\",
-     \"collapsed\": false,
-     \"input\": \"1 + 1\",
-     \"language\": \"python\",
-     \"outputs\": [
+     \"cells\": [
       {
-       \"output_type\": \"pyout\",
-       \"prompt_number\": 1,
-       \"text\": \"2\"
+       \"cell_type\": \"code\",
+       \"collapsed\": false,
+       \"input\": \"1 + 1\",
+       \"language\": \"python\",
+       \"outputs\": [
+        {
+         \"output_type\": \"pyout\",
+         \"prompt_number\": 1,
+         \"text\": \"2\"
+        }
+       ],
+       \"prompt_number\": 1
       }
-     ],
-     \"prompt_number\": 1
+     ]
     }
    ]
+  }
+}
+")
+
+(defvar eintest:notebook-data-simple-json-v4
+  "{
+ \"metadata\": {
+  \"name\": \"Untitled0.ipynb\"
+ },
+ \"nbformat\": 4,
+ \"nbformat_minor\": 0,
+ \"cells\": [
+  {
+   \"cell_type\": \"code\",
+   \"metadata\" : {
+        \"collapsed\": false,
+   },
+   \"source\": \"1 + 1\",
+   \"outputs\": [
+    {
+     \"name\": \"stdout\",
+     \"output_type\": \"stream\",
+     \"text\": \"2\"
+    }
+   ],
+   \"prompt_number\": 1
   }
  ]
 }
 ")
+
 
 (defun eintest:notebook-enable-mode (buffer)
   (with-current-buffer buffer (ein:notebook-plain-mode) buffer))
@@ -85,8 +119,7 @@ is not found."
   (with-current-buffer (ein:testing-notebook-from-json
                         eintest:notebook-data-simple-json)
     (should (ein:$notebook-p ein:%notebook%))
-    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
-    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Untitled0.ipynb"))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 1))
     (let ((cell (car (ein:worksheet-get-cells ein:%worksheet%))))
       (should (ein:codecell-p cell))
@@ -102,14 +135,13 @@ is not found."
 (ert-deftest ein:notebook-from-json-empty ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (should (ein:$notebook-p ein:%notebook%))
-    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
-    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name.ipynb"))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))))
 
 (ert-deftest ein:notebook-from-json-all-cell-types ()
   (with-current-buffer
       (ein:testing-notebook-make-new
-       nil nil (list (ein:testing-codecell-data "import numpy")
+       nil (list (ein:testing-codecell-data "import numpy")
                      (ein:testing-markdowncell-data "*markdown* text")
                      (ein:testing-rawcell-data "`raw` cell text")
                      (ein:testing-htmlcell-data "<b>HTML</b> text")
@@ -120,8 +152,7 @@ is not found."
                      (ein:testing-headingcell-data "Heading 5" 5)
                      (ein:testing-headingcell-data "Heading 6" 6)))
     (should (ein:$notebook-p ein:%notebook%))
-    (should (equal (ein:$notebook-notebook-id ein:%notebook%) "NOTEBOOK-ID"))
-    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name"))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%) "Dummy Name.ipynb"))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))
     (let ((cells (ein:worksheet-get-cells ein:%worksheet%)))
       (should (ein:codecell-p     (nth 0 cells)))
@@ -307,6 +338,14 @@ some text
     ;; toggle to markdown
     (call-interactively #'ein:worksheet-toggle-cell-type)
     (should (ein:markdowncell-p (ein:worksheet-get-current-cell)))
+    (should (looking-back "some text"))
+    ;; toggle to raw
+    (call-interactively #'ein:worksheet-toggle-cell-type)
+    (should (ein:rawcell-p (ein:worksheet-get-current-cell)))
+    (should (looking-back "some text"))
+    ;; toggle to heading
+    (call-interactively #'ein:worksheet-toggle-cell-type)
+    (should (ein:headingcell-p (ein:worksheet-get-current-cell)))
     (should (looking-back "some text"))
     ;; toggle to code
     (call-interactively #'ein:worksheet-toggle-cell-type)
@@ -1200,22 +1239,22 @@ value of `ein:worksheet-enable-undo'."
     (should (ein:notebook-ask-before-kill-emacs))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (ein:testing-notebook-make-empty "Modified Notebook" "NOTEBOOK-ID-1"))
+         (ein:testing-notebook-make-empty "Modified Notebook.ipynb"))
       (call-interactively #'ein:worksheet-insert-cell-below)
       (should (ein:notebook-modified-p)))
     (with-current-buffer
         (eintest:notebook-enable-mode
-         (ein:testing-notebook-make-empty "Saved Notebook" "NOTEBOOK-ID-2"))
+         (ein:testing-notebook-make-empty "Saved Notebook.ipynb"))
       (ein:notebook-save-notebook-success ein:%notebook%)
       (should-not (ein:notebook-modified-p)))
     (flet ((y-or-n-p (&rest ignore) t)
            (ein:notebook-del (&rest ignore)))
       (kill-buffer
        (eintest:notebook-enable-mode
-        (ein:testing-notebook-make-empty "Killed Notebook" "NOTEBOOK-ID-3"))))
-    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-1") ein:notebook--opened-map))
-    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-2") ein:notebook--opened-map))
-    (should (gethash '("DUMMY-URL" "NOTEBOOK-ID-3") ein:notebook--opened-map))
+        (ein:testing-notebook-make-empty "Killed Notebook.ipynb"))))
+    (should (gethash '("DUMMY-URL" "Modified Notebook.ipynb") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "Saved Notebook.ipynb") ein:notebook--opened-map))
+    (should (gethash '("DUMMY-URL" "Killed Notebook.ipynb") ein:notebook--opened-map))
     (should (= (hash-table-count ein:notebook--opened-map) 3))
     (mocker-let ((y-or-n-p
                   (prompt)

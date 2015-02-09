@@ -1,6 +1,7 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
+(require 'ein-loaddefs)
 (require 'ein-notebooklist)
 (require 'wid-edit)
 (require 'ein-testing)
@@ -83,7 +84,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
           (search-forward notebook-name)
           (move-beginning-of-line 1)
           (search-forward "Delete")
-          (flet ((y-or-n-p (ignore) t))
+          (cl-flet ((y-or-n-p (ignore) t))
             (widget-button-press (point))))
         (ein:testing-wait-until (lambda () called-p))
         (ein:log 'debug "TESTING-DELETE-NOTEBOOK-BY-NAME end")))))

@@ -58,7 +58,7 @@ def convert_nonprinting(string):
 
     """
 
-    for b in map(ord, string):
+    for b in map(ord, string.decode('utf-8')):
         assert 0 <= b < 0x100
 
         if b in (0x09, 0x0a):   # '\t\n'
@@ -241,7 +241,7 @@ class TestRunner(BaseRunner):
             print("{0} failed".format(self.testfile))
         else:
             print("{0} OK".format(self.testfile))
-            for line in reversed(stdout.splitlines()):
+            for line in reversed(stdout.decode('utf-8').splitlines()):
                 if line.startswith('Ran'):
                     print(line)
                     break
@@ -259,7 +259,7 @@ class TestRunner(BaseRunner):
         import re
         lines = iter(self.stdout.splitlines())
         for l in lines:
-            if re.match("[0-9]+ unexpected results:.*", l):
+            if re.match("[0-9]+ unexpected results:.*", l.decode('utf-8')):
                 break
         else:
             return True  # no failure
@@ -269,7 +269,7 @@ class TestRunner(BaseRunner):
             if not l:
                 break  # end with an empty line
             for f in self.known_failures:
-                if re.search(f, l):
+                if re.search(f, l.decode('utf-8')):
                     break
             else:
                 return False
@@ -325,7 +325,7 @@ class ServerRunner(BaseRunner):
 
     def get_port(self):
         if self.port is None:
-            self.port = self._parse_port_line(self.proc.stdout.readline())
+            self.port = self._parse_port_line(self.proc.stdout.readline().decode('utf-8'))
         return self.port
 
     def start(self):
@@ -334,7 +334,7 @@ class ServerRunner(BaseRunner):
             self.command, stdout=PIPE, stderr=STDOUT, stdin=PIPE,
             shell=True)
         # Answer "y" to the prompt: Shutdown Notebook Server (y/[n])?
-        self.proc.stdin.write('y\n')
+        self.proc.stdin.write(b'y\n')
 
     def stop(self):
         print("Stopping server", self.port)
@@ -385,7 +385,7 @@ def kill_subprocesses(pid, include=lambda x: True):
             'Command {0} failed with code {1} and following error message:\n'
             '{2}'.format(command, proc.returncode, stderr))
 
-    for line in map(str.strip, stdout.splitlines()):
+    for line in map(str.strip, stdout.decode('utf-8').splitlines()):
         (cmd_ppid, cmd_pid, cmd) = line.split(None, 2)
         if cmd_ppid == str(pid) and include(cmd):
             print("Killing PID={0} COMMAND={1}".format(cmd_pid, cmd))
