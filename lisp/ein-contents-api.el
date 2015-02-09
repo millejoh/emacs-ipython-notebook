@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'ein-core)
+(require 'ein-utils)
 
 (defstruct ein:$content
   "Content returned from the Jupyter notebook server:
@@ -86,20 +87,64 @@
       (ein:url url-or-port "api/contents" path name)
     (ein:url url-or-port "api/contents" path)))
 
-(defun ein:content-list-contents (path &optional url-or-port force-sync)
+(defun ein:content-url-legacy (url-or-port path &optional name)
+  "Generate content url's for IPython Notebook version 2.x"
+  (if name
+      (ein:url url-or-port "api/notebooks" path name)
+    (ein:url url-or-port "api/notebooks" path)))
+
+(defun ein:content-query-contents (path &optional url-or-port force-sync)
   "Return the contents of the object at the specified path from the Jupyter server."
   (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
          (url (ein:content-url url-or-port path))
          (new-content (make-ein:$content :url-or-port url-or-port)))
+    (if (= 2 (ein:query-ipython-version url-or-port))
+        (setq new-content (ein:content-query-contents-legacy path url-or-port force-sync))
+      (ein:query-singleton-ajax
+       (list 'content-query-contents url-or-port path)
+       url
+       :type "GET"
+       :parser #'ein:json-read
+       :sync force-sync
+       :success (apply-partially #'ein:new-content new-content)
+       :error (apply-partially #'ein-content-list-contents-error url)))
+    new-content))
+
+(defun ein:content-query-contents-legacy (path &optional url-or-port force-sync)
+  "Return contents of boject at specified path for IPython Notebook versions 2.x"
+  (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
+         (url (ein:content-url-legacy url-or-port path))
+         (new-content (make-ein:$content :url-or-port url-or-port)))
     (ein:query-singleton-ajax
-     (list 'content-list-contents url-or-port path)
+     (list 'content-query-contents-legacy url-or-port path)
      url
      :type "GET"
      :parser #'ein:json-read
      :sync force-sync
-     :success (apply-partially #'ein:new-content new-content)
-     :error (apply-partially #'ein-content-list-contents-error url))
+     :success (apply-partially #'ein:list-contents-legacy-success path new-content)
+     :error (apply-partially #'ein-content-query-contents-error url))
     new-content))
+
+(defun ein:fix-legacy-content-data (data)
+  (if (listp (car data))
+      (loop for item in data
+            collecting
+            (ein:fix-legacy-content-data item))
+    (if (string= (plist-get data :path) "")
+            (plist-put data :path (plist-get data :name))
+      (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
+
+(defun* ein:list-contents-legacy-success (path content &key data &allow-other-keys)
+  (let* ((url-or-port (ein:$content-url-or-port content)))
+    (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
+          (ein:$content-path content) path 
+          (ein:$content-type content) "directory"
+                                        ;(ein:$content-created content) (plist-get data :created)
+                                        ;(ein:$content-last-modified content) (plist-get data :last_modified)
+          (ein:$content-format content) nil
+          (ein:$content-writable content) nil
+          (ein:$content-mimetype content) nil
+          (ein:$content-raw-content content) (ein:fix-legacy-content-data data))))
 
 (defun* ein:new-content (content &key data &allow-other-keys)
   (setf (ein:$content-name content) (plist-get data :name)
@@ -112,7 +157,7 @@
         (ein:$content-mimetype content) (plist-get data :mimetype)
         (ein:$content-raw-content content) (plist-get data :content)))
 
-(defun* ein:content-list-contents-error (url &key symbol-status response &allow-other-keys)
+(defun* ein:content-query-contents-error (url &key symbol-status response &allow-other-keys)
   (ein:log 'verbose
     "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
@@ -123,7 +168,7 @@
 (defvar *ein:content-hierarchy* (make-hash-table))
 
 (defun ein:make-content-hierarchy (path url-or-port)
-  (let* ((node (ein:content-list-contents path url-or-port t))
+  (let* ((node (ein:content-query-contents path url-or-port t))
          (items (ein:$content-raw-content node)))
     (ein:flatten (loop for item in items
                    for c = (make-ein:$content :url-or-port url-or-port)
@@ -163,3 +208,8 @@
     "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
     "Renaming content %s failed with status %s." path symbol-status))
+
+
+
+
+(provide 'ein-contents-api)
