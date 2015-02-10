@@ -397,7 +397,7 @@ Notebook list data is passed via the buffer local variable
           ;;       ((= 3 api-version)
           ;;        (ein:get-actual-path (plist-get note :path))))
           for type = (plist-get note :type)
-          for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport name)
+          for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
           if (string= type "directory")
           do (progn (widget-create
                      'link
