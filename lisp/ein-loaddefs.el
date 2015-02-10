@@ -3,9 +3,8 @@
 ;;; Code:
 
 
-;;;### (autoloads (ein:connect-to-default-notebook ein:connect-buffer-to-notebook
-;;;;;;  ein:connect-to-notebook-buffer ein:connect-to-notebook ein:connect-to-notebook-command)
-;;;;;;  "ein-connect" "ein-connect.el" (20629 35398 551423 930000))
+;;;### (autoloads nil "ein-connect" "ein-connect.el" (21715 54032
+;;;;;;  0 0))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -41,26 +40,27 @@ notebook.
 
 ;;;***
 
-;;;### (autoloads (ein:console-open) "ein-console" "ein-console.el"
-;;;;;;  (20546 25932 437322 552000))
+;;;### (autoloads nil "ein-console" "ein-console.el" (21715 54032
+;;;;;;  0 0))
 ;;; Generated autoloads from ein-console.el
 
 (autoload 'ein:console-open "ein-console" "\
 Open IPython console.
 To use this function, `ein:console-security-dir' and
 `ein:console-args' must be set properly.
-This function requires `Fabian Gallina's python.el`_ for now;
+This function works best with the new python.el_ which is shipped
+with Emacs 24.2 or later.  If you don't have it, this function
+opens a \"plain\" command line interpreter (comint) buffer where
+you cannot use fancy stuff such as TAB completion.
 It should be possible to support python-mode.el.  Patches are welcome!
 
-.. _`Fabian Gallina's python.el`: https://github.com/fgallina/python.el
+.. _python.el: https://github.com/fgallina/python.el
 
 \(fn)" t nil)
 
 ;;;***
 
-;;;### (autoloads (ein:dev-bug-report-template ein:dev-stop-debug
-;;;;;;  ein:dev-start-debug ein:dev-insert-mode-map) "ein-dev" "ein-dev.el"
-;;;;;;  (20593 3171 499680 955000))
+;;;### (autoloads nil "ein-dev" "ein-dev.el" (21720 44286 0 0))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -87,9 +87,7 @@ Open a buffer with bug report template.
 
 ;;;***
 
-;;;### (autoloads (helm-ein-notebook-buffers anything-ein-notebook-buffers
-;;;;;;  helm-ein-kernel-history anything-ein-kernel-history) "ein-helm"
-;;;;;;  "ein-helm.el" (20642 12065 658663 404000))
+;;;### (autoloads nil "ein-helm" "ein-helm.el" (21715 54032 0 0))
 ;;; Generated autoloads from ein-helm.el
 
 (autoload 'anything-ein-kernel-history "ein-helm" "\
@@ -114,8 +112,7 @@ Choose opened notebook using helm interface.
 
 ;;;***
 
-;;;### (autoloads (ein:iexec-mode) "ein-iexec" "ein-iexec.el" (20546
-;;;;;;  25932 437322 552000))
+;;;### (autoloads nil "ein-iexec" "ein-iexec.el" (21715 54032 0 0))
 ;;; Generated autoloads from ein-iexec.el
 
 (autoload 'ein:iexec-mode "ein-iexec" "\
@@ -127,8 +124,8 @@ change in its input area.
 
 ;;;***
 
-;;;### (autoloads (ein:ipynb-mode) "ein-ipynb-mode" "ein-ipynb-mode.el"
-;;;;;;  (20600 17207 518562 563000))
+;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (21715
+;;;;;;  54032 0 0))
 ;;; Generated autoloads from ein-ipynb-mode.el
 
 (autoload 'ein:ipynb-mode "ein-ipynb-mode" "\
@@ -140,14 +137,13 @@ A simple mode for ipynb file.
 
 ;;;***
 
-;;;### (autoloads (ein:jedi-setup ein:jedi-dot-complete ein:jedi-complete)
-;;;;;;  "ein-jedi" "ein-jedi.el" (20650 42078 657490 10000))
+;;;### (autoloads nil "ein-jedi" "ein-jedi.el" (21715 54032 0 0))
 ;;; Generated autoloads from ein-jedi.el
 
 (autoload 'ein:jedi-complete "ein-jedi" "\
 Run completion using candidates calculated by EIN and Jedi.
 
-\(fn)" t nil)
+\(fn &key (expand ac-expand-on-auto-complete))" t nil)
 
 (autoload 'ein:jedi-dot-complete "ein-jedi" "\
 Insert \".\" and run `ein:jedi-complete'.
@@ -168,8 +164,7 @@ To use EIN and Jedi together, add the following in your Emacs setup.::
 
 ;;;***
 
-;;;### (autoloads (ein:junk-rename ein:junk-new) "ein-junk" "ein-junk.el"
-;;;;;;  (20571 14580 170606 716000))
+;;;### (autoloads nil "ein-junk" "ein-junk.el" (21715 54032 0 0))
 ;;; Generated autoloads from ein-junk.el
 
 (autoload 'ein:junk-new "ein-junk" "\
@@ -189,8 +184,8 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (20596 28965 566444
-;;;;;;  588000))
+;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (21715 54089 0
+;;;;;;  0))
 ;;; Generated autoloads from ein-kernel.el
 
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
@@ -199,8 +194,8 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads (ein:notebook-multilang-mode) "ein-multilang" "ein-multilang.el"
-;;;;;;  (20591 25156 462553 731000))
+;;;### (autoloads nil "ein-multilang" "ein-multilang.el" (21715 54032
+;;;;;;  0 0))
 ;;; Generated autoloads from ein-multilang.el
 
 (autoload 'ein:notebook-multilang-mode "ein-multilang" "\
@@ -210,40 +205,37 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (20604 29927
-;;;;;;  731865 215000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (21720 44286
+;;;;;;  0 0))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
 ;;;***
 
-;;;### (autoloads (ein:notebooklist-load ein:notebooklist-open-notebook-global
-;;;;;;  ein:notebooklist-list-notebooks ein:notebooklist-new-notebook-with-name
-;;;;;;  ein:notebooklist-new-notebook ein:notebooklist-reload ein:notebooklist-open)
-;;;;;;  "ein-notebooklist" "ein-notebooklist.el" (20604 21315 671448
-;;;;;;  417000))
+;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (21720
+;;;;;;  45483 0 0))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-open "ein-notebooklist" "\
 Open notebook list buffer.
 
-\(fn &optional URL-OR-PORT NO-POPUP)" t nil)
+\(fn &optional URL-OR-PORT PATH NO-POPUP)" t nil)
 
 (autoload 'ein:notebooklist-reload "ein-notebooklist" "\
 Reload current Notebook list.
 
-\(fn)" t nil)
+\(fn &optional NOTEBOOKLIST)" t nil)
 
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist" "\
 Ask server to create a new notebook and open it in a new buffer.
 
-\(fn &optional URL-OR-PORT CALLBACK CBARGS)" t nil)
+\(fn &optional URL-OR-PORT PATH CALLBACK CBARGS)" t nil)
 
 (autoload 'ein:notebooklist-new-notebook-with-name "ein-notebooklist" "\
 Open new notebook and rename the notebook.
 
-\(fn NAME &optional URL-OR-PORT)" t nil)
+\(fn NAME &optional URL-OR-PORT PATH)" t nil)
 
 (autoload 'ein:notebooklist-list-notebooks "ein-notebooklist" "\
 Return a list of notebook path (NBPATH).  Each element NBPATH
@@ -283,8 +275,7 @@ See also:
 
 ;;;***
 
-;;;### (autoloads (ein:org-store-link ein:org-open) "ein-org" "ein-org.el"
-;;;;;;  (20604 29927 731865 215000))
+;;;### (autoloads nil "ein-org" "ein-org.el" (21715 54032 0 0))
 ;;; Generated autoloads from ein-org.el
 
 (autoload 'ein:org-open "ein-org" "\
@@ -319,8 +310,8 @@ node `(org) External links' and Info node `(org) Search options'
 
 ;;;***
 
-;;;### (autoloads (ein:pseudo-console-mode) "ein-pseudo-console"
-;;;;;;  "ein-pseudo-console.el" (20546 25932 441322 552000))
+;;;### (autoloads nil "ein-pseudo-console" "ein-pseudo-console.el"
+;;;;;;  (21715 54032 0 0))
 ;;; Generated autoloads from ein-pseudo-console.el
 
 (autoload 'ein:pseudo-console-mode "ein-pseudo-console" "\
@@ -330,9 +321,8 @@ Pseudo console mode.  Hit RET to execute code.
 
 ;;;***
 
-;;;### (autoloads (ein:shared-output-eval-string ein:shared-output-show-code-cell-at-point
-;;;;;;  ein:shared-output-pop-to-buffer) "ein-shared-output" "ein-shared-output.el"
-;;;;;;  (20629 35398 555423 930000))
+;;;### (autoloads nil "ein-shared-output" "ein-shared-output.el"
+;;;;;;  (21715 54032 0 0))
 ;;; Generated autoloads from ein-shared-output.el
 
 (autoload 'ein:shared-output-pop-to-buffer "ein-shared-output" "\
@@ -361,8 +351,8 @@ shared output buffer.  You can open the buffer by the command
 
 ;;;***
 
-;;;### (autoloads (ein:tb-show) "ein-traceback" "ein-traceback.el"
-;;;;;;  (20546 25932 441322 552000))
+;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (21715 54032
+;;;;;;  0 0))
 ;;; Generated autoloads from ein-traceback.el
 
 (autoload 'ein:tb-show "ein-traceback" "\
@@ -373,13 +363,13 @@ Show full traceback in traceback viewer.
 ;;;***
 
 ;;;### (autoloads nil nil ("debug-ein.el" "ein-ac.el" "ein-cell.el"
-;;;;;;  "ein-completer.el" "ein-core.el" "ein-events.el" "ein-kernelinfo.el"
-;;;;;;  "ein-kill-ring.el" "ein-log.el" "ein-multilang-fontify.el"
+;;;;;;  "ein-completer.el" "ein-contents-api.el" "ein-core.el" "ein-events.el"
+;;;;;;  "ein-kernelinfo.el" "ein-kill-ring.el" "ein-log.el" "ein-multilang-fontify.el"
 ;;;;;;  "ein-mumamo.el" "ein-node.el" "ein-notification.el" "ein-output-area.el"
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-smartrep.el" "ein-subpackages.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
-;;;;;;  "zeroein.el") (20650 45637 307359 381000))
+;;;;;;  "zeroein.el") (21720 45618 650000 0))
 
 ;;;***
 

@@ -159,6 +159,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 (defvar ein:mime-type-map
   '((image/svg . svg) (image/png . png) (image/jpeg . jpeg)))
 
+;; # TODO: Check if we support image type before inserting it!
 (defun ein:insert-image (&rest args)
   (let* ((img (apply #'create-image args)))
     (if ein:slice-image

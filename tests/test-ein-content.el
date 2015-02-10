@@ -30,7 +30,6 @@
 (eval-when-compile (require 'cl))
 
 (require 'ein-contents-api)
-(require 'deferred)
 
 (defparameter *list-content-result* nil)
 
