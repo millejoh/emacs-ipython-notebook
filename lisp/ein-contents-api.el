@@ -126,7 +126,7 @@ global setting.  For global setting and more information, see
     new-content))
 
 (defun ein:content-query-contents-legacy (path &optional url-or-port force-sync callback)
-  "Return contents of boject at specified path for IPython Notebook versions 2.x"
+  "Return contents of object at specified path for IPython Notebook versions 2.x"
   (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
          (url (ein:content-url-legacy url-or-port path))
          (new-content (make-ein:$content :url-or-port url-or-port
@@ -188,7 +188,8 @@ global setting.  For global setting and more information, see
                   (ein:$content-path content)
                 (substring (ein:$content-path content)
                            0
-                           (cl-position ?/ (ein:$content-path content) :from-end t)))))
+                           (or (cl-position ?/ (ein:$content-path content) :from-end t)
+                               0)))))
     (json-encode `((:type . ,(ein:$content-type content))
                    (:name . ,(ein:$content-name content))
                    (:path . ,path)
