@@ -40,6 +40,7 @@
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-node)
+(require 'ein-contents-api)
 (require 'ein-kernel)
 (require 'ein-kernelinfo)
 (require 'ein-cell)
@@ -614,10 +615,18 @@ of NOTEBOOK."
 
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
-  (case (ein:$notebook-nbformat notebook)
-    (3 (ein:write-nbformat3-worksheets notebook))
-    (4 (ein:write-nbformat4-worksheets notebook))
-    (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook)))))
+  (let ((data
+         (case (ein:$notebook-nbformat notebook)
+           (3 (ein:write-nbformat3-worksheets notebook))
+           (4 (ein:write-nbformat4-worksheets notebook))
+           (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook))))))
+    (plist-put (cdr (assq 'metadata data))
+               :name (ein:$notebook-notebook-name notebook))
+    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+    (ein:aif (ein:$notebook-nbformat-minor notebook)
+        ;; Do not set nbformat when it is not given from server.
+        (push `(nbformat_minor . ,it) data))
+    data))
 
 (defun ein:write-nbformat3-worksheets (notebook)
   (let ((worksheets (mapcar #'ein:worksheet-to-json
@@ -636,19 +645,13 @@ of NOTEBOOK."
       (cells . ,(apply #'vector all-cells)))))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
-  (let ((content-data (ein:notebook-to-json notebook)))
-    (plist-put (cdr (assq 'metadata content-data))
-               :name (ein:$notebook-notebook-name notebook))
-    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) content-data)
-    (ein:aif (ein:$notebook-nbformat-minor notebook)
-        ;; Do not set nbformat when it is not given from server.
-        (push `(nbformat_minor . ,it) content-data))
+  (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
-    (let ((data `((content . ,content-data))))
-      (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
-      (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
-      (push `(type . "notebook") data)
+    (let ((data (ein:content-to-json content)))
+      ;; (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
+      ;; (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
+      ;; (push `(type . "notebook") data)
       (ein:query-singleton-ajax
        (list 'notebook-save
              (ein:$notebook-url-or-port notebook)
@@ -658,7 +661,7 @@ of NOTEBOOK."
        :timeout ein:notebook-querty-timeout-save
        :type "PUT"
        :headers '(("Content-Type" . "application/json"))
-       :data (json-encode data)
+       :data data
        :error (apply-partially #'ein:notebook-save-notebook-error notebook)
        :success (apply-partially #'ein:notebook-save-notebook-workaround
                                  notebook retry callback cbarg)
@@ -1083,7 +1086,7 @@ PREDICATE is called with each notebook and notebook is included
 in the returned list only when PREDICATE returns non-nil value."
   (let (notebooks)
     (maphash (lambda (k n) (if (ein:notebook-live-p n)
-                               qqq(push n notebooks)
+                               (push n notebooks)
                              (remhash k ein:notebook--opened-map)))
              ein:notebook--opened-map)
     (if predicate

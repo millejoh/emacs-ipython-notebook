@@ -138,7 +138,7 @@ global setting.  For global setting and more information, see
      :timeout ein:content-query-timeout
      :parser #'ein:json-read
      :sync force-sync
-     :success (apply-partially #'ein:list-contents-legacy-success path new-content callback)
+     :success (apply-partially #'ein:query-contents-legacy-success path new-content callback)
      :error (apply-partially #'ein-content-query-contents-error url))
     new-content))
 
@@ -151,20 +151,23 @@ global setting.  For global setting and more information, see
             (plist-put data :path (plist-get data :name))
       (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
 
-(defun* ein:list-contents-legacy-success (path content callback &key data &allow-other-keys)
-  (let* ((url-or-port (ein:$content-url-or-port content)))
-    (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
-          (ein:$content-path content) path 
-          (ein:$content-type content) "directory"
-                                        ;(ein:$content-created content) (plist-get data :created)
-                                        ;(ein:$content-last-modified content) (plist-get data :last_modified)
-          (ein:$content-format content) nil
-          (ein:$content-writable content) nil
-          (ein:$content-mimetype content) nil
-          (ein:$content-raw-content content) (ein:fix-legacy-content-data data))
-    (when callback
-      (funcall callback content))
-    content))
+(defun* ein:query-contents-legacy-success (path content callback &key data &allow-other-keys)
+  (if (not (plist-get data :type))
+      ;; Content API in 2.x a bit inconsistent.
+      (progn
+        (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
+              (ein:$content-path content) path 
+              (ein:$content-type content) "directory"
+              ;;(ein:$content-created content) (plist-get data :created)
+              ;;(ein:$content-last-modified content) (plist-get data :last_modified)
+              (ein:$content-format content) nil
+              (ein:$content-writable content) nil
+              (ein:$content-mimetype content) nil
+              (ein:$content-raw-content content) (ein:fix-legacy-content-data data))
+        (when callback
+          (funcall callback content))
+        content)
+    (ein:new-content content callback :data data)))
 
 (defun* ein:new-content (content callback &key data &allow-other-keys)
   (setf (ein:$content-name content) (plist-get data :name)
@@ -179,6 +182,26 @@ global setting.  For global setting and more information, see
   (when callback
     (funcall callback content))
   content)
+
+(defun ein:content-to-json (content)
+  (let ((path (if (>= (ein:$content-ipython-version content) 3)
+                  (ein:$content-path content)
+                (substring (ein:$content-path content)
+                           0
+                           (cl-position ?/ (ein:$content-path content) :from-end t)))))
+    (json-encode `((:type . ,(ein:$content-type content))
+                   (:name . ,(ein:$content-name content))
+                   (:path . ,path)
+                   (:content ,@(ein:$content-raw-content content))))))
+
+(defun ein:content-from-notebook (nb)
+  (let ((nb-content (ein:notebook-to-json nb)))
+    (make-ein:$content :name (ein:$notebook-notebook-name nb)
+                       :path (ein:$notebook-notebook-path nb)
+                       :type "notebook"
+                       :ipython-version (ein:$notebook-api-version nb)
+                       :raw-content nb-content)))
+
 
 (defun* ein:content-query-contents-error (url &key symbol-status response &allow-other-keys)
   (ein:log 'verbose
@@ -207,13 +230,39 @@ global setting.  For global setting and more information, see
     (setf (gethash url-or-port *ein:content-hierarchy*)
           (ein:make-content-hierarchy ""  url-or-port))))
 
-;;; Get file contents
+;;; Save Content
+(defun ein:content-save (content &optional callback cbargs)
+  (let ((url-or-port (ein:$content-url-or-port content)))
+    (if (>= (ein:$content-ipython-version content) 3)
+        (let ((path (ein:$content-path content)))
+          (ein:query-singleton-ajax
+           (list 'content-save url-or-port path)
+           (ein:content-url url-or-port path)
+           :type "PUT"
+           :timeout ein:content-query-timeout
+           :data (ein:content-to-json content)
+           :success (apply-partially #'ein:content-save-success callback cbargs)
+           :error (apply-partially #'ein:content-save-error (ein:content-url url-or-port path)))))))
+
+(defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
+  (ein:log 'info "Saving content successful with status %s" status)
+  (when callback
+    (apply callback cbargs)))
+
+(defun* ein:content-save-error (url &key symbol-status response &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S" (request-response-error-thrown response))
+  (ein:log 'error
+    "Content list call %s failed with status %s." url symbol-status))
+
+
+;;; Rename Content
 
 (defun ein:content-rename (content new-path)
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content)))
     (ein:query-singleton-ajax
-     (list 'get-file url-or-port path)
+     (list 'content-rename url-or-port path)
      (ein:content-url url-or-port path)
      :type "PATCH"
      :data (json-encode `(:path ,new-path))
