@@ -109,7 +109,6 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
         for notebook-path = (plist-get note :path)
         when (equal notebook-name name)
         return (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
-                                  (ein:$notebooklist-api-version nblist)
                                   notebook-path callback cbargs)))
 
 (defun ein:notebooklist-url (url-or-port version &optional path)
@@ -268,7 +267,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   (if data
       (let ((name (plist-get data :name))
             (path (plist-get data :path)))
-        (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) path callback cbargs))
+        (ein:notebook-open url-or-port path callback cbargs))
     (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
                            "Please find it in the notebook list."))
     (setq no-popup nil))
@@ -457,15 +456,20 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
                for api-version = (ein:$notebooklist-api-version nblist)
                collect
-               (if (= api-version 3)
-                   (loop for note in (ein:make-content-hierarchy "" url-or-port)
+               (loop for note in (ein:make-content-hierarchy "" url-or-port)
                          collect (format "%s/%s" url-or-port
                                          (ein:$content-path note)
                                          ))
-                 (loop for note in (ein:$notebooklist-data nblist)
-                       collect (format "%s/%s"
-                                       url-or-port
-                                       (plist-get note :name)))))))
+               ;; (if (= api-version 3)
+               ;;     (loop for note in (ein:make-content-hierarchy "" url-or-port)
+               ;;           collect (format "%s/%s" url-or-port
+               ;;                           (ein:$content-path note)
+               ;;                           ))
+               ;;   (loop for note in (ein:$notebooklist-data nblist)
+               ;;         collect (format "%s/%s"
+               ;;                         url-or-port
+               ;;                         (plist-get note :name))))
+               )))
 
 ;;FIXME: Code below assumes notebook is in root directory - need to do a better
 ;;       job listing notebooks in subdirectories and parsing out the path.
@@ -485,7 +489,7 @@ When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
     (when (and (stringp url-or-port)
                (string-match "^[0-9]+$" url-or-port))
       (setq url-or-port (string-to-number url-or-port)))
-    (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) path callback cbargs)
+    (ein:notebook-open url-or-port path callback cbargs)
     (ein:log 'info "Notebook '%s' not found" nbpath)))
 
 ;;;###autoload
@@ -553,7 +557,7 @@ upload the current file to the server.
     (unless noerror
       (assert found nil "No server has notebook named: %s" name))
     (destructuring-bind (url-or-port path) found
-      (ein:notebook-open url-or-port (ein:query-ipython-version url-or-port) path callback cbargs))))
+      (ein:notebook-open url-or-port path callback cbargs))))
 
 (defvar ein:notebooklist-find-file-buffer-callback #'ignore)
 
