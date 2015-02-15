@@ -541,7 +541,7 @@ an integer used only when the TYPE is \"heading\"."
           (choices (case (oref ws :nbformat)
                      (2 "cm")
                      (3 "cmr123456")
-                     (4 "cmr")))
+                     (4 "cmr123456")))
           (key (ein:ask-choice-char
                 (format "Cell type [%s]: " choices) choices))
           (type (case key
