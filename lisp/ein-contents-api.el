@@ -122,7 +122,7 @@ global setting.  For global setting and more information, see
        :parser #'ein:json-read
        :sync force-sync
        :success (apply-partially #'ein:new-content new-content callback)
-       :error (apply-partially #'ein-content-list-contents-error url)))
+       :error (apply-partially #'ein:content-query-contents-error url)))
     new-content))
 
 (defun ein:content-query-contents-legacy (path &optional url-or-port force-sync callback)
@@ -139,7 +139,7 @@ global setting.  For global setting and more information, see
      :parser #'ein:json-read
      :sync force-sync
      :success (apply-partially #'ein:query-contents-legacy-success path new-content callback)
-     :error (apply-partially #'ein-content-query-contents-error url))
+     :error (apply-partially #'ein:content-query-contents-error url))
     new-content))
 
 (defun ein:fix-legacy-content-data (data)
@@ -269,7 +269,7 @@ global setting.  For global setting and more information, see
      :data (json-encode `(:path ,new-path))
      :parser #'ein:json-read
      :success (apply-partially #'update-content-path content)
-     :error (apply-partially #'ein-content-rename-error path))))
+     :error (apply-partially #'ein:content-rename-error path))))
 
 (defun* update-content-path (content &key data &allow-other-keys)
   (setf (ein:$content-path content) (plist-get data :path)
