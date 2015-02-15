@@ -249,11 +249,22 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
+(defun ein:preprocess-nb4-cell (cell-data)
+  (let ((source (plist-get cell-data :source)))
+    (when (and  (string= (plist-get cell-data :cell_type) "markdown")
+                (string-match "\\(^#*\\)" source))
+      (let ((heading-level (match-end 0)))
+        (plist-put cell-data :cell_type "heading")
+        (plist-put cell-data :level heading-level)
+        (plist-put cell-data :source (substring source (1+ heading-level))))))
+  cell-data)
+
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell-from-json (data &rest args)
-  (let ((cell (ein:cell-init (apply #'ein:cell-from-type
+  (let* ((data (ein:preprocess-nb4-cell data))
+         (cell (ein:cell-init (apply #'ein:cell-from-type
                                     (plist-get data :cell_type) args)
                              data)))
     (if (plist-get data :metadata)
@@ -1038,6 +1049,12 @@ prettified text thus be used instead of HTML type."
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
     (metadata . ((collapsed . t)))))
+
+(defmethod ein:cell-to-nb4-json ((cell ein:headingcell) &optional discard-output)
+  (let ((header (make-string (oref cell :level) ?#)))
+    `((cell_type . "markdown")
+      (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
+      (metadata . ((collapsed . t))))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))
