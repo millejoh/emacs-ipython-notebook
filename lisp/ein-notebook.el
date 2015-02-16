@@ -741,50 +741,27 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                           name)))))
   (unless (and (string-match ".ipynb" name) (= (match-end 0) (length name)))
     (setq name (format "%s.ipynb" name)))
-  (let ((old-name (ein:$notebook-notebook-name ein:%notebook%)))
+  (let ((content (ein:content-from-notebook ein:%notebook%))
+        (old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
-    (ein:log 'info "JSON data looks like %s"
-             (json-encode
-              `((:name . ,name)
-                (:path . ,(ein:$notebook-notebook-path ein:%notebook%)))))
-    ;(ein:notebook-set-notebook-name ein:%notebook% name)
-    (ein:query-singleton-ajax
-     (list 'notebook-rename
-           (ein:$notebook-url-or-port ein:%notebook%)
-           (ein:$notebook-notebook-path ein:%notebook%)
-           (ein:$notebook-notebook-name ein:%notebook%))
-     (ein:notebook-url ein:%notebook%)
-     :timeout ein:notebook-querty-timeout-save
-     :type "PATCH"
-     :headers '(("Content-Type" . "application/json"))
-     :data (json-encode
-            `((name . ,name)
-              (path . ,(ein:$notebook-notebook-path ein:%notebook%))))
-     :error (apply-partially #'ein:notebook-rename-error old-name name ein:%notebook%)
-     :success (apply-partially #'ein:notebook-rename-success
-                               ein:%notebook% name)
-     :status-code
-     `((200 . ,(apply-partially
-                #'ein:notebook-rename-success ein:%notebook% name))
-       (409 . ,(apply-partially
-                #'ein:notebook-rename-success ein:%notebook% name))))))
+    (ein:content-rename content name #'ein:notebook-rename-success (list ein:%notebook% content))))
 
-(defun* ein:notebook-rename-error (old new notebook &key symbol-status response
-                                       error-thrown
-                                       &allow-other-keys)
-  (if (= (request-response-status-code response) 409)
-      (progn
-        (ein:log 'warn "IPython returned a 409 status code, but has still renamed the notebook. This may be an IPython bug.")
-        (ein:notebook-rename-success notebook new response))
-    (ein:log 'error
-      "Error (%s :: %s) while renaming notebook %s to %s."
-      symbol-status error-thrown old new)))
+;; (defun* ein:notebook-rename-error (old new notebook &key symbol-status response
+;;                                        error-thrown
+;;                                        &allow-other-keys)
+;;   (if (= (request-response-status-code response) 409)
+;;       (progn
+;;         (ein:log 'warn "IPython returned a 409 status code, but has still renamed the notebook. This may be an IPython bug.")
+;;         (ein:notebook-rename-success notebook new response))
+;;     (ein:log 'error
+;;       "Error (%s :: %s) while renaming notebook %s to %s."
+;;       symbol-status error-thrown old new)))
 
-(defun* ein:notebook-rename-success (notebook new &rest args &allow-other-keys)
-  (ein:notebook-set-notebook-name notebook new)
+(defun* ein:notebook-rename-success (notebook content)
+  (ein:notebook-set-notebook-name notebook (ein:$content-name content))
   (mapc #'ein:worksheet-set-buffer-name
         (ein:$notebook-worksheets notebook))
-  (ein:log 'info "Notebook renamed to %s." new))
+  (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
 (defun ein:notebook-close (notebook)
   "Close NOTEBOOK and kill its buffer."

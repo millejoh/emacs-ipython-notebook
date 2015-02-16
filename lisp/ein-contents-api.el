@@ -30,6 +30,7 @@
 
 ;;; Code:
 
+(require 'cl)
 (require 'ein-core)
 (require 'ein-utils)
 
@@ -94,24 +95,25 @@ global setting.  For global setting and more information, see
   raw-content
   format)
 
-(defun ein:content-url (url-or-port path &optional name)
-  (if name
-      (ein:url url-or-port "api/contents" path name)
+(defun ein:content-url (content)
+  (let ((url-or-port (ein:$content-url-or-port content))
+        (path (ein:$content-path content)))
     (ein:url url-or-port "api/contents" path)))
 
-(defun ein:content-url-legacy (url-or-port path &optional name)
+(defun ein:content-url-legacy (content)
   "Generate content url's for IPython Notebook version 2.x"
-  (if name
-      (ein:url url-or-port "api/notebooks" path name)
+  (let ((url-or-port (ein:$content-url-or-port content))
+        (path (ein:$content-path content)))
     (ein:url url-or-port "api/notebooks" path)))
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
   "Return the contents of the object at the specified path from the Jupyter server."
   (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
-         (url (ein:content-url url-or-port path))
          (new-content (make-ein:$content
                        :url-or-port url-or-port
-                       :ipython-version (ein:query-ipython-version url-or-port))))
+                       :ipython-version (ein:query-ipython-version url-or-port)
+                       :path path))
+         (url (ein:content-url new-content)))
     (if (= 2 (ein:$content-ipython-version new-content))
         (setq new-content (ein:content-query-contents-legacy path url-or-port force-sync callback))
       (ein:query-singleton-ajax
@@ -128,9 +130,10 @@ global setting.  For global setting and more information, see
 (defun ein:content-query-contents-legacy (path &optional url-or-port force-sync callback)
   "Return contents of object at specified path for IPython Notebook versions 2.x"
   (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
-         (url (ein:content-url-legacy url-or-port path))
          (new-content (make-ein:$content :url-or-port url-or-port
-                                         :ipython-version (ein:query-ipython-version url-or-port))))
+                                         :ipython-version (ein:query-ipython-version url-or-port)
+                                         :path path))
+         (url (ein:content-url-legacy new-content)))
     (ein:query-singleton-ajax
      (list 'content-query-contents-legacy url-or-port path)
      url
@@ -199,6 +202,7 @@ global setting.  For global setting and more information, see
   (let ((nb-content (ein:notebook-to-json nb)))
     (make-ein:$content :name (ein:$notebook-notebook-name nb)
                        :path (ein:$notebook-notebook-path nb)
+                       :url-or-port (ein:$notebook-url-or-port nb)
                        :type "notebook"
                        :ipython-version (ein:$notebook-api-version nb)
                        :raw-content nb-content)))
@@ -233,17 +237,14 @@ global setting.  For global setting and more information, see
 
 ;;; Save Content
 (defun ein:content-save (content &optional callback cbargs)
-  (let ((url-or-port (ein:$content-url-or-port content)))
-    (if (>= (ein:$content-ipython-version content) 3)
-        (let ((path (ein:$content-path content)))
-          (ein:query-singleton-ajax
-           (list 'content-save url-or-port path)
-           (ein:content-url url-or-port path)
-           :type "PUT"
-           :timeout ein:content-query-timeout
-           :data (ein:content-to-json content)
-           :success (apply-partially #'ein:content-save-success callback cbargs)
-           :error (apply-partially #'ein:content-save-error (ein:content-url url-or-port path)))))))
+  (ein:query-singleton-ajax
+   (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
+   (ein:content-url content)
+   :type "PUT"
+   :timeout ein:content-query-timeout
+   :data (ein:content-to-json content)
+   :success (apply-partially #'ein:content-save-success callback cbargs)
+   :error (apply-partially #'ein:content-save-error (ein:content-url content))))
 
 (defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
   (ein:log 'info "Saving content successful with status %s" status)
@@ -259,22 +260,37 @@ global setting.  For global setting and more information, see
 
 ;;; Rename Content
 
-(defun ein:content-rename (content new-path)
-  (let ((url-or-port (ein:$content-url-or-port content))
-        (path (ein:$content-path content)))
+(defun ein:content-legacy-rename (content new-path callback cbargs)
+  (let ((path (substring new-path 0 (or (position ?/ new-path :from-end t) 0)))
+        (name (substring new-path (or (position ?/ new-path :from-end t) 0))))
     (ein:query-singleton-ajax
-     (list 'content-rename url-or-port path)
-     (ein:content-url url-or-port path)
+     (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
+     (ein:content-url-legacy content)
      :type "PATCH"
-     :data (json-encode `(:path ,new-path))
+     :data (json-encode `((name . ,name)
+                          (path . ,path)))
      :parser #'ein:json-read
-     :success (apply-partially #'update-content-path content)
-     :error (apply-partially #'ein:content-rename-error path))))
+     :success (apply-partially #'update-content-path content callback cbargs)
+     :error (apply-partially #'ein:content-rename-error new-path))))
 
-(defun* update-content-path (content &key data &allow-other-keys)
+(defun ein:content-rename (content new-path &optional callback cbargs)
+  (if (>= (ein:$content-ipython-version content) 3)
+      (ein:query-singleton-ajax
+       (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
+       (ein:content-url content)
+       :type "PATCH"
+       :data (json-encode `((path . ,new-path)))
+       :parser #'ein:json-read
+       :success (apply-partially #'update-content-path content callback cbargs)
+       :error (apply-partially #'ein:content-rename-error (ein:$content-path content)))
+    (ein:content-legacy-rename content new-path callback cbargs)))
+
+(defun* update-content-path (content callback cbargs &key data &allow-other-keys)
   (setf (ein:$content-path content) (plist-get data :path)
         (ein:$content-name content) (plist-get data :name)
-        (ein:$content-last-modified content) (plist-get data :last_modified)))
+        (ein:$content-last-modified content) (plist-get data :last_modified))
+  (when callback
+    (apply callback cbargs)))
 
 (defun* ein:content-rename-error (path &key symbol-status response &allow-other-keys)
   (ein:log 'verbose
