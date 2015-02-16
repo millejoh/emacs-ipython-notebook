@@ -253,6 +253,56 @@ to install it if you are using newer Emacs.
       (ses-mode))
     (pop-to-buffer buffer)))
 
+(defun ein:pytools-export-buffer (buffer format)
+  "Export contents of notebook using nbconvert_ to user-specified format
+\(options will depend on the version of nbconvert available\) to a new buffer.
+
+Currently EIN/IPython supports exporting to the following formats:
+
+ - HTML
+ - JSON (this is basically the sames opening the ipynb file in a buffer).
+ - Latex
+ - Markdown
+ - Python
+ - RST
+ - Slides
+
+.. _nbconvert: http://ipython.org/ipython-doc/stable/notebook/nbconvert.html"
+  (interactive (list (read-buffer "Buffer: " (current-buffer) t)
+                     (completing-read "Export format: "
+                                      (list "html"
+                                            "json"
+                                            "latex"
+                                            "markdown"
+                                            "python"
+                                            "rst"
+                                            "slides"))))
+  (let* ((nb (first (ein:notebook-opened-notebooks
+                     #'(lambda (nb)
+                         (equal (buffer-name (ein:notebook-buffer nb))
+                                buffer)))))
+         (json (ein:content-to-json (ein:content-from-notebook nb)))
+         (name (format "*ein %s export: %s*" format (ein:$notebook-notebook-name nb)))
+         (buffer (get-buffer-create name)))
+    (if (equal format "json")
+        (with-current-buffer buffer
+          (erase-buffer)
+          (insert json)
+          (json-pretty-print (point-min) (point-max)))
+      (ein:kernel-request-stream
+       (ein:get-kernel)
+       (format "__import__('ein').export_nb('%s', '%s')"
+               (ein:$notebook-notebook-name nb)
+               format)
+       #'(lambda (export buffer)
+           (with-current-buffer buffer
+             (erase-buffer)
+             (insert export)))
+       (list buffer)))
+    (switch-to-buffer buffer)))
+
+
+
 (provide 'ein-pytools)
 
 ;;; ein-pytools.el ends here
