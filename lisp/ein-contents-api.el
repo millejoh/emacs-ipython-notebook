@@ -103,7 +103,7 @@ global setting.  For global setting and more information, see
 (defun ein:content-url-legacy (content)
   "Generate content url's for IPython Notebook version 2.x"
   (let ((url-or-port (ein:$content-url-or-port content))
-        (path (ein:$content-path content)))
+        (path  (ein:$content-path content)))
     (ein:url url-or-port "api/notebooks" path)))
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
@@ -236,15 +236,29 @@ global setting.  For global setting and more information, see
           (ein:make-content-hierarchy ""  url-or-port))))
 
 ;;; Save Content
-(defun ein:content-save (content &optional callback cbargs)
+(defun ein:content-save-legacy (content &optional callback cbargs)
   (ein:query-singleton-ajax
-   (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
-   (ein:content-url content)
-   :type "PUT"
-   :timeout ein:content-query-timeout
-   :data (ein:content-to-json content)
-   :success (apply-partially #'ein:content-save-success callback cbargs)
-   :error (apply-partially #'ein:content-save-error (ein:content-url content))))
+       (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
+       (ein:content-url-legacy content)
+       :type "PUT"
+       :headers '(("Content-Type" . "application/json"))
+       :timeout ein:content-query-timeout
+       :data (ein:content-to-json content)
+       :success (apply-partially #'ein:content-save-success callback cbargs)
+       :error (apply-partially #'ein:content-save-error (ein:content-url-legacy content))))
+
+(defun ein:content-save (content &optional callback cbargs)
+  (if (>= (ein:$content-ipython-version content) 3)
+      (ein:query-singleton-ajax
+       (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
+       (ein:content-url content)
+       :type "PUT"
+       :headers '(("Content-Type" . "application/json"))
+       :timeout ein:content-query-timeout
+       :data (ein:content-to-json content)
+       :success (apply-partially #'ein:content-save-success callback cbargs)
+       :error (apply-partially #'ein:content-save-error (ein:content-url content)))
+    (ein:content-save-legacy content callback cbargs)))
 
 (defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
   (ein:log 'info "Saving content successful with status %s" status)
@@ -270,8 +284,16 @@ global setting.  For global setting and more information, see
      :data (json-encode `((name . ,name)
                           (path . ,path)))
      :parser #'ein:json-read
-     :success (apply-partially #'update-content-path content callback cbargs)
+     :success (apply-partially #'update-content-path-legacy content callback cbargs)
      :error (apply-partially #'ein:content-rename-error new-path))))
+
+(defun* update-content-path-legacy (content callback cbargs &key data &allow-other-keys)
+  (setf (ein:$content-path content) (ein:trim-left (format "%s/%s" (plist-get data :path) (plist-get data :name))
+                                                   "/")
+        (ein:$content-name content) (plist-get data :name)
+        (ein:$content-last-modified content) (plist-get data :last_modified))
+  (when callback
+    (apply callback cbargs)))
 
 (defun ein:content-rename (content new-path &optional callback cbargs)
   (if (>= (ein:$content-ipython-version content) 3)

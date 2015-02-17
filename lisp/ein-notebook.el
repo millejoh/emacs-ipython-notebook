@@ -644,35 +644,39 @@ of NOTEBOOK."
                      (make-hash-table)))
       (cells . ,(apply #'vector all-cells)))))
 
-(defun ein:notebook-save-notebook (notebook retry &optional callback cbarg)
+(defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
-    (let ((data (ein:content-to-json content)))
-      ;; (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
-      ;; (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
-      ;; (push `(type . "notebook") data)
-      (ein:query-singleton-ajax
-       (list 'notebook-save
-             (ein:$notebook-url-or-port notebook)
-             (ein:$notebook-notebook-path notebook)
-             (ein:$notebook-notebook-name notebook))
-       (ein:notebook-url notebook)
-       :timeout ein:notebook-querty-timeout-save
-       :type "PUT"
-       :headers '(("Content-Type" . "application/json"))
-       :data data
-       :error (apply-partially #'ein:notebook-save-notebook-error notebook)
-       :success (apply-partially #'ein:notebook-save-notebook-workaround
-                                 notebook retry callback cbarg)
-       :status-code
-       `((200 . ,(apply-partially
-                  (lambda (notebook callback cbarg &rest rest)
-                    (apply #'ein:notebook-save-notebook-success
-                           notebook rest)
-                    (when callback
-                      (apply callback cbarg rest)))
-                  notebook callback cbarg)))))))
+    (ein:content-save content
+                      #'ein:notebook-save-notebook-success
+                      (list notebook callback cbargs))
+    ;; (let ((data (ein:content-to-json content)))
+    ;;   ;; (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
+    ;;   ;; (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
+    ;;   ;; (push `(type . "notebook") data)
+    ;;   (ein:query-singleton-ajax
+    ;;    (list 'notebook-save
+    ;;          (ein:$notebook-url-or-port notebook)
+    ;;          (ein:$notebook-notebook-path notebook)
+    ;;          (ein:$notebook-notebook-name notebook))
+    ;;    (ein:notebook-url notebook)
+    ;;    :timeout ein:notebook-querty-timeout-save
+    ;;    :type "PUT"
+    ;;    :headers '(("Content-Type" . "application/json"))
+    ;;    :data data
+    ;;    :error (apply-partially #'ein:notebook-save-notebook-error notebook)
+    ;;    :success (apply-partially #'ein:notebook-save-notebook-workaround
+    ;;                              notebook retry callback cbarg)
+    ;;    :status-code
+    ;;    `((200 . ,(apply-partially
+    ;;               (lambda (notebook callback cbarg &rest rest)
+    ;;                 (apply #'ein:notebook-save-notebook-success
+    ;;                        notebook rest)
+    ;;                 (when callback
+    ;;                   (apply callback cbarg rest)))
+    ;;               notebook callback cbarg)))))
+    ))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
@@ -730,21 +734,18 @@ of NOTEBOOK."
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_save_failed.Notebook)))
 
-(defun ein:notebook-rename-command (name)
+(defun ein:notebook-rename-command (path)
   "Rename current notebook and save it immediately.
 
 NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
-   (list (read-string "Rename notebook: "
-                      (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
-                        (unless (string-match "Untitled[0-9]+" name)
-                          name)))))
-  (unless (and (string-match ".ipynb" name) (= (match-end 0) (length name)))
-    (setq name (format "%s.ipynb" name)))
+   (list (read-string "Rename notebook: " (ein:$notebook-notebook-path ein:%notebook%))))
+  (unless (and (string-match ".ipynb" path) (= (match-end 0) (length path)))
+    (setq name (format "%s.ipynb" path)))
   (let ((content (ein:content-from-notebook ein:%notebook%))
         (old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
-    (ein:content-rename content name #'ein:notebook-rename-success (list ein:%notebook% content))))
+    (ein:content-rename content path #'ein:notebook-rename-success (list ein:%notebook% content))))
 
 ;; (defun* ein:notebook-rename-error (old new notebook &key symbol-status response
 ;;                                        error-thrown
@@ -759,6 +760,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
 
 (defun* ein:notebook-rename-success (notebook content)
   (ein:notebook-set-notebook-name notebook (ein:$content-name content))
+  (setf (ein:$notebook-notebook-path notebook) (ein:$content-path content))
   (mapc #'ein:worksheet-set-buffer-name
         (ein:$notebook-worksheets notebook))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
