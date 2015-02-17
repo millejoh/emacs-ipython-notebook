@@ -741,7 +741,7 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
    (list (read-string "Rename notebook: " (ein:$notebook-notebook-path ein:%notebook%))))
   (unless (and (string-match ".ipynb" path) (= (match-end 0) (length path)))
-    (setq name (format "%s.ipynb" path)))
+    (setq path (format "%s.ipynb" path)))
   (let ((content (ein:content-from-notebook ein:%notebook%))
         (old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
