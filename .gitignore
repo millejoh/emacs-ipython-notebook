@@ -9,3 +9,4 @@ lisp/.#ein-notebook.el
 lisp/ein-autoloads.el
 tests/func-test-batch-log.log
 tests/test-batch-log.log
+*.py~
