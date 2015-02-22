@@ -1,6 +1,6 @@
-=================================================
- EIN -- Emacs IPython 2.x Notebook |build-status|
-=================================================
+=============================================
+ EIN -- Emacs IPython Notebook |build-status|
+=============================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
@@ -27,12 +27,12 @@ See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
 Features
 ========
 
-The Emacs IPython Notebook (EIN) provides a client for the IPython v2.x notebook
-and an integrated REPL (like SLIME_) in Emacs.  EIN makes notebook editing very
-powerful by allowing you to use any Emacs features, it also expose IPython
-features such as code evaluation, object inspection and code completion to the
-Emacs side.  These features can be accessed anywhere in Emacs and improve Python
-code editing and reading in Emacs.
+The Emacs IPython Notebook (EIN) provides a client for IPython v2.x and 3.x
+(i.e. Jupyter) notebooks and an integrated REPL (like SLIME_) in Emacs.  EIN
+makes notebook editing very powerful by allowing you to use any Emacs features,
+it also expose IPython features such as code evaluation, object inspection and
+code completion to the Emacs side.  These features can be accessed anywhere in
+Emacs and improve Python code editing and reading in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 

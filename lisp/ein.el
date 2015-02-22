@@ -6,7 +6,7 @@
 ;;          John Miller <millejoh at millejoh.com>
 ;; URL: http://tkf.github.com/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.3.0
+;; Version: 0.4.0
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; ==================================
-;;  EIN -- Emacs IPython 2.x Notebook
+;;  EIN -- Emacs IPython Notebook
 ;; ==================================
 
 ;;   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
@@ -39,12 +39,12 @@
 ;; Features
 ;; ========
 
-;; The Emacs IPython Notebook (EIN) provides a client for the IPython v2.x notebook
-;; and an integrated REPL (like SLIME_) in Emacs.  EIN makes notebook editing very
-;; powerful by allowing you to use any Emacs features, it also expose IPython
-;; features such as code evaluation, object inspection and code completion to the
-;; Emacs side.  These features can be accessed anywhere in Emacs and improve Python
-;; code editing and reading in Emacs.
+;; The Emacs IPython Notebook (EIN) provides a client for the IPython v2.x and
+;; 3.x notebooks and an integrated REPL (like SLIME_) in Emacs.  EIN makes
+;; notebook editing very powerful by allowing you to use any Emacs features, it
+;; also expose IPython features such as code evaluation, object inspection and
+;; code completion to the Emacs side.  These features can be accessed anywhere
+;; in Emacs and improve Python code editing and reading in Emacs.
 
 ;; .. _SLIME: http://common-lisp.net/project/slime/
 

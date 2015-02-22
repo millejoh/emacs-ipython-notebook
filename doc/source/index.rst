@@ -306,6 +306,7 @@ buffer.
 .. el:function:: ein:pytools-whos
 .. el:function:: ein:pytools-hierarchy
 .. el:function:: ein:pytools-pandas-to-ses
+.. el:function:: ein:pytools-export-buffer
 
 Misc
 ^^^^
@@ -562,6 +563,19 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.4
+----
+
+* Finalizing support for IPython 3.0.
+* Better support for globally opening notebooks stored in a directory hierarchy.
+* Partial refactoring of the interace to IPython's content/notebook REST interface into
+  ein-contents-api.el.
+* ein-mumamo.el has been moved into its own package, ein-mumamo. This should get rid
+  of compilation errors for anyone who does not happen to have nxhtml installed.
+* Restore support for heading level cells with nbformat v4 notebooks.
+* New (buggy) pytools function `ein:pytools-export-buffer` for using nbconvert on a notebook
+  buffer.
+  
 v0.3
 ----
 
