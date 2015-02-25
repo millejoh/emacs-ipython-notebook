@@ -34,7 +34,10 @@
 (defun ein:testing-notebook-from-json (json-string &optional notebook-name path)
   (let* ((data (ein:json-read-from-string json-string))
          (notebook-name (plist-get data :name))
-         (path (plist-get data :path)))
+         (path (plist-get data :path))
+         (content (make-ein:$content :url-or-port "DUMMY-URL"
+                                     :ipython-version 2
+                                     :path path)))
     (unless notebook-name (setq notebook-name "NOTEBOOK-DUMMY"))
     (unless path (setq path ""))
     ;; cl-flet does not work correctly here!
@@ -47,8 +50,7 @@
               (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:query-ipython-version)))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
-        (ein:notebook-request-open-callback
-         notebook :data data)
+        (ein:notebook-request-open-callback notebook (ein:new-content content data nil))
         (ein:notebook-buffer notebook)))))
 
 (defun ein:testing-notebook-make-data (cells &optional name path)

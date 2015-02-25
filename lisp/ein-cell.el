@@ -988,7 +988,9 @@ prettified text thus be used instead of HTML type."
   (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))))
         (outputs (if discard-output []
                    (oref cell :outputs)))
-        (renamed-outputs '()))
+        (renamed-outputs '())
+        (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+                           (and (numberp it) it))))
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
@@ -1036,8 +1038,8 @@ prettified text thus be used instead of HTML type."
                 renamed-outputs))))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
-      ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
-            `((execution_count . ,it))
+      ,@(if execute-count
+            `((execution_count . ,execute-count))
           `((execution_count)))
       (outputs . ,(apply #'vector (or renamed-outputs outputs)))
       (metadata . ,metadata))))
@@ -1109,9 +1111,11 @@ prettified text thus be used instead of HTML type."
                                            -metadata-not-used-)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
-  (let ((events (oref cell :events)))
-    (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
-    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
+  (if (equal (plist-get content :status) "error")
+      (ein:cell--handle-output cell "pyerr" content -metadata-not-used-)
+    (let ((events (oref cell :events)))
+      (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
+      (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))
 
 (defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
   (let ((events (oref cell :events)))
