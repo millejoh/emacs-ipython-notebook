@@ -567,6 +567,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
       (ein:case-equal (plist-get out :output_type)
         (("pyout")        (ein:cell-append-pyout        cell out))
         (("pyerr")        (ein:cell-append-pyerr        cell out))
+        (("error")        (ein:cell-append-pyerr        cell out))
         (("display_data") (ein:cell-append-display-data cell out))
         (("execute_result") (ein:cell-append-display-data cell out))
         (("stream")       (ein:cell-append-stream       cell out))))))
@@ -994,7 +995,7 @@ prettified text thus be used instead of HTML type."
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
-          (ein:log 'info "Saving output of type %S" otype)
+          (ein:log 'debug "Saving output of type %S" otype)
           (if (and (or (equal otype "display_data")
                        (equal otype "execute_result"))
                    (null (plist-get output :metadata)))
@@ -1004,7 +1005,7 @@ prettified text thus be used instead of HTML type."
                   (loop while ocopy
                         do (let ((prop (pop ocopy))
                                  (value (pop ocopy)))
-                             (ein:log 'info "Checking property %s for output type '%s'"
+                             (ein:log 'debug "Checking property %s for output type '%s'"
                                       prop otype)
                              (cond
                               ((equal prop :stream) (progn (push value new-output)
@@ -1018,18 +1019,18 @@ prettified text thus be used instead of HTML type."
 
                               ((and (equal otype "display_data")
                                     (equal prop :text))
-                               (ein:log 'info "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
+                               (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
 
                               ((and (equal otype "execute_result")
                                     (equal prop :text))
-                               (ein:log 'info "Fixing execute_result (%s?)." otype)
+                               (ein:log 'debug "Fixing execute_result (%s?)." otype)
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
                                  (push :data new-output)))
 
                               ((and (equal otype "execute_result")
                                     (equal prop :prompt_number))
-                               (ein:log 'info "SAVE-NOTEBOOK: Fixing prompt_number property.")
+                               (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
                                (push value new-output)
                                (push :execution_count new-output))
 
@@ -1112,7 +1113,7 @@ prettified text thus be used instead of HTML type."
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
   (if (equal (plist-get content :status) "error")
-      (ein:cell--handle-output cell "pyerr" content -metadata-not-used-)
+      (ein:cell--handle-output cell "error" content -metadata-not-used-)
     (let ((events (oref cell :events)))
       (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
       (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))
