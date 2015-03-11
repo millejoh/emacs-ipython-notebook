@@ -66,9 +66,20 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 (defun ein:pytools-request-tooltip (kernel func)
   (interactive (list (ein:get-kernel-or-error)
                      (ein:object-at-point-or-error)))
-  (ein:kernel-object-info-request
-   kernel func (list :object_info_reply
-                     (cons #'ein:pytools-finish-tooltip nil))))
+  (if (>= (ein:$kernel-api-version kernel) 3)
+      (ein:kernel-execute
+       kernel
+       (format "__import__('ein').print_object_info_for(%s)" func)
+       (list
+        :output (cons
+                 (lambda (name msg-type content -metadata-not-used-)
+                   (ein:case-equal msg-type
+                     (("stream" "display_data")
+                      (ein:pytools-finish-tooltip name (ein:json-read-from-string (plist-get content :text)) nil))))
+                 func)))
+    (ein:kernel-object-info-request
+     kernel func (list :object_info_reply
+                       (cons #'ein:pytools-finish-tooltip nil)))))
 
 (declare-function pos-tip-show "pos-tip")
 (declare-function popup-tip "popup")
@@ -157,7 +168,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
                     (push (point-marker) ein:pytools-jump-stack)
                     (ein:log 'info
                       "Jumping to the source of %s...Done" object)))))
-           (("pyerr")
+           (("pyerr" "error")
             (ein:log 'info
               "Jumping to the source of %s...Not found" object)))))
      (list kernel object other-window notebook)))))

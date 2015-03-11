@@ -20,11 +20,13 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+
 def export_nb(nb_filename, format):
     import IPython.nbconvert as nbconvert
     with open(nb_filename, 'r') as f:
         output = nbconvert.export_by_name(format, nb_filename)
     print(output[0])
+
 
 def _find_edit_target_012(*args, **kwds):
     from IPython.core.interactiveshell import InteractiveShell
@@ -64,3 +66,14 @@ def run_docstring_examples(obj, verbose=True):
     globs = inst.user_ns
     return doctest.run_docstring_examples(obj, globs, verbose=verbose)
 
+
+def print_object_info_for(obj):
+    import IPython.core.oinspect
+    import json
+
+    inspector = IPython.core.oinspect.Inspector()
+
+    try:
+        print(json.dumps(inspector.info(obj)))
+    except NameError:
+        print(json.dumps(inspector.noinfo()))
