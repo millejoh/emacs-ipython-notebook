@@ -357,19 +357,24 @@ Call signature::
 
   (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
 
-CONTENT and METADATA are given by `object_into_reply' message.
+CONTENT and METADATA are given by `object_info_reply' message.
 
-`object_into_reply' message is documented here:
+`object_info_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
   (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
   (when objname
-    (let* ((content (list :oname (format "%s" objname)))
-           (msg (ein:kernel--get-msg kernel "object_info_request" content))
-           (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (let ((content (list :oname (format "%s" objname)))
+          msg
+          msg-id)
+      (if (>= (ein:$kernel-api-version kernel) 3)
+          (setf msg (ein:kernel--get-msg kernel "inspect_request"
+                                         (append content (list :detail_level 1)))
+                msg-id (plist-get (plist-get msg :header) :msg_id))
+        (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
+              msg-id (plist-get (plist-get msg :header) :msg_id)))
       (ein:websocket-send-shell-channel kernel msg)
-      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-      msg-id)))
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
 
 
 (defun* ein:kernel-execute (kernel code &optional callbacks
@@ -631,7 +636,7 @@ Example::
 
 (defun ein:kernel--handle-channels-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE_CHANNELS-REPLY")
-  (let ((channel (plist-get (ein:json-read-from-string packet) :channel)))
+  (let ((channel (plist-get es(ein:json-read-from-string packet) :channel)))
     (cond ((string-equal channel "iopub")
            (ein:kernel--handle-iopub-reply kernel packet))
           ((string-equal channel "shell")
@@ -697,7 +702,7 @@ Example::
       (if (and (not (equal msg-type "status")) (null callbacks))
           (ein:log 'verbose "Got message not from this notebook.")
         (ein:case-equal msg-type
-          (("stream" "display_data" "pyout" "pyerr" "execute_result")
+          (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
            (ein:aif (plist-get callbacks :output)
                (ein:funcall-packed it msg-type content metadata)))
           (("status")
@@ -709,6 +714,8 @@ Example::
              (("dead")
               (ein:kernel-stop-channels kernel)
               (ein:events-trigger events 'status_dead.Kernel))))
+          (("data_pub")
+           (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
           (("clear_output")
            (ein:aif (plist-get callbacks :clear_output)
                (ein:funcall-packed it content metadata)))))))
