@@ -636,7 +636,7 @@ Example::
 
 (defun ein:kernel--handle-channels-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE_CHANNELS-REPLY")
-  (let ((channel (plist-get es(ein:json-read-from-string packet) :channel)))
+  (let ((channel (plist-get (ein:json-read-from-string packet) :channel)))
     (cond ((string-equal channel "iopub")
            (ein:kernel--handle-iopub-reply kernel packet))
           ((string-equal channel "shell")
