@@ -1087,7 +1087,9 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell-get-tb-data ((cell ein:codecell))
   (loop for out in (oref cell :outputs)
-        when (equal (plist-get out :output_type) "pyerr")
+        when (and
+              (not (null (plist-get out :traceback)))
+              (member (plist-get out :output_type) '("pyerr" "error")))
         return (plist-get out :traceback)))
 
 (provide 'ein-cell)
