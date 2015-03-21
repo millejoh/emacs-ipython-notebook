@@ -182,7 +182,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
   "Notebook cell base class")
 
 (defclass ein:codecell (ein:basecell)
-  ((cell-type :initarg :cell-type :initform "code")
+  ((traceback :initform nil :initarg :traceback :type list)
+   (cell-type :initarg :cell-type :initform "code")
    (kernel :initarg :kernel :type ein:$kernel)
    (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
@@ -724,6 +725,7 @@ If END is non-`nil', return the location of next element."
   ;; instantaneously for now.
   (ein:log 'debug "cell-clear-output stdout=%s stderr=%s other=%s"
            stdout stderr other)
+  (oset cell :traceback nil)
   (let ((ewoc (oref cell :ewoc))
         (output-nodes (ein:cell-element-get cell :output)))
     (if (and stdout stderr other)
@@ -775,6 +777,20 @@ If END is non-`nil', return the location of next element."
            (intern (format "output-%s" (plist-get json :stream)))))))
 
 (defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
+  ;; When there is a python error, we actually get two identical tracebacks back
+  ;; from the kernel, one from the "shell" channel, and one from the "iopub"
+  ;; channel.  As a workaround, we remember the cell's traceback and ignore
+  ;; traceback outputs that are identical to the one we already have.
+  (let ((new-tb (plist-get json :traceback))
+        (old-tb (oref cell :traceback)))
+    (when (or
+           (null old-tb)
+           (null new-tb)
+           (not (equalp new-tb old-tb)))
+      (ein:cell-actually-append-output cell json dynamic))
+    (oset cell :traceback new-tb)))
+
+(defmethod ein:cell-actually-append-output ((cell ein:codecell) json dynamic)
   (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (oset cell :outputs
