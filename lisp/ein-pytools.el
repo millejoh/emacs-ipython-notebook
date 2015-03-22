@@ -148,8 +148,8 @@ pager buffer.  You can explicitly specify the object by selecting it."
        (destructuring-bind (kernel object other-window notebook)
            packed
          (ein:case-equal msg-type
-           (("stream")
-            (ein:aif (plist-get content :data)
+           (("stream" "display_data")
+            (ein:aif (or (plist-get content :text) (plist-get content :data))
                 (if (string-match ein:pytools-jump-to-source-not-found-regexp
                                   it)
                     (ein:log 'info
