@@ -38,10 +38,10 @@ Other notebook features:
 Links:
 
 * `Online Documentation
-  <http://tkf.github.com/emacs-ipython-notebook/>`_
+  <http://millejoh.github.io/emacs-ipython-notebook/>`_
 
 * `Wiki
-  <https://github.com/tkf/emacs-ipython-notebook/wiki>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/wiki>`_
 
   + `Screenshots
     <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
@@ -49,11 +49,11 @@ Links:
     <https://github.com/tkf/emacs-ipython-notebook/wiki/Tips>`_
 
 * `Downloads
-  <https://github.com/tkf/emacs-ipython-notebook/tags>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/tags>`_
 * `Repository at GitHub
-  <https://github.com/tkf/emacs-ipython-notebook>`_
+  <https://github.com/millejoh/emacs-ipython-notebook>`_
 * `Issue Tracker at GitHub
-  <https://github.com/tkf/emacs-ipython-notebook/issues>`_
+  <https://github.com/millejoh/emacs-ipython-notebook/issues>`_
 
 .. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
@@ -319,7 +319,7 @@ Misc
 .. el:function:: anything-ein-notebook-buffers
 .. el:package:: ein
 
-.. It is better to remove el:package from eldomain??
+.. Is it better to remove el:package from eldomain??
 
 
 Org-mode integration
@@ -498,8 +498,8 @@ web client.  See `emacslisp.py`_ for more details.
   https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py
 
 
-Reporting issue
----------------
+Reporting issues
+----------------
 
 Please use ``M-x ein:dev-bug-report-template`` to write a bug report.
 It pops up a buffer containing some system information and instruction
@@ -509,7 +509,7 @@ for bug report.
 Logging
 ^^^^^^^
 
-Sometime more information that the ``*Message*`` buffer provides is
+Sometime more information than provided in the ``*Message*`` is
 needed to debug.
 
 1. Execute ``(ein:log-set-level 'debug)``
