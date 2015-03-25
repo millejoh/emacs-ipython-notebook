@@ -196,6 +196,7 @@ global setting.  For global setting and more information, see
     (json-encode `((:type . ,(ein:$content-type content))
                    (:name . ,(ein:$content-name content))
                    (:path . ,path)
+                   (:format . "json")
                    (:content ,@(ein:$content-raw-content content))))))
 
 (defun ein:content-from-notebook (nb)

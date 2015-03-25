@@ -271,7 +271,7 @@ to install it if you are using newer Emacs.
 Currently EIN/IPython supports exporting to the following formats:
 
  - HTML
- - JSON (this is basically the sames opening the ipynb file in a buffer).
+ - JSON (this is basically the same as opening the ipynb file in a buffer).
  - Latex
  - Markdown
  - Python
@@ -292,7 +292,7 @@ Currently EIN/IPython supports exporting to the following formats:
                      #'(lambda (nb)
                          (equal (buffer-name (ein:notebook-buffer nb))
                                 buffer)))))
-         (json (ein:content-to-json (ein:content-from-notebook nb)))
+         (json (json-encode (ein:notebook-to-json nb)))
          (name (format "*ein %s export: %s*" format (ein:$notebook-notebook-name nb)))
          (buffer (get-buffer-create name)))
     (if (equal format "json")
@@ -303,12 +303,12 @@ Currently EIN/IPython supports exporting to the following formats:
       (ein:kernel-request-stream
        (ein:get-kernel)
        (format "__import__('ein').export_nb('%s', '%s')"
-               (ein:$notebook-notebook-name nb)
+               json
                format)
-       #'(lambda (export buffer)
-           (with-current-buffer buffer
-             (erase-buffer)
-             (insert export)))
+       (lambda (export buffer)
+         (with-current-buffer buffer
+           (erase-buffer)
+           (insert export)))
        (list buffer)))
     (switch-to-buffer buffer)))
 

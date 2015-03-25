@@ -21,10 +21,11 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-def export_nb(nb_filename, format):
+def export_nb(nb_json, format):
     import IPython.nbconvert as nbconvert
-    with open(nb_filename, 'r') as f:
-        output = nbconvert.export_by_name(format, nb_filename)
+    import IPython.nbformat as nbformat
+    nb = nbformat.reads(nb_json, nbformat.NO_CONVERT)
+    output = nbconvert.export_by_name(format, nb)
     print(output[0])
 
 

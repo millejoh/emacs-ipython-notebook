@@ -267,6 +267,10 @@ This function is called via `ein:notebook-after-rename-hook'."
   (if data
       (let ((name (plist-get data :name))
             (path (plist-get data :path)))
+        (if (= (ein:query-ipython-version url-or-port) 2)
+            (if (string= path "")
+                (setq path name)
+              (setq path (format "%s/%s" path name))))
         (ein:notebook-open url-or-port path callback cbargs))
     (ein:log 'info (concat "Oops. EIN failed to open new notebook. "
                            "Please find it in the notebook list."))
@@ -298,7 +302,10 @@ You may find the new one in the notebook list." error)
                       (name (read-from-minibuffer
                              (format "Notebook name (at %s): " url-or-port))))
                  (list name url-or-port)))
-  (let ((path (or path (ein:$notebooklist-path ein:%notebooklist%))))
+  (let ((path (or path (ein:$notebooklist-path
+                        (or ein:%notebooklist%
+                            (ein:get-notebook)
+                            (gethash url-or-port ein:notebooklist-map))))))
     (ein:notebooklist-new-notebook
      url-or-port
      path

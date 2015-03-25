@@ -622,10 +622,10 @@ of NOTEBOOK."
            (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook))))))
     (plist-put (cdr (assq 'metadata data))
                :name (ein:$notebook-notebook-name notebook))
-    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     (ein:aif (ein:$notebook-nbformat-minor notebook)
         ;; Do not set nbformat when it is not given from server.
         (push `(nbformat_minor . ,it) data))
+    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     data))
 
 (defun ein:write-nbformat3-worksheets (notebook)
