@@ -47,7 +47,7 @@
     (concat zeroein:root-dir p)))
 
 (defvar zeroein:dependencies
-  '("nxhtml" "markdown-mode" "websocket" "request"
+  '("ein-mumamo" "nxhtml" "markdown-mode" "websocket" "request"
     "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
 
 ;; Loading the new python.el fails in Emacs 23.
