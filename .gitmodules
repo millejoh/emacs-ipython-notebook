@@ -37,3 +37,6 @@
 [submodule "lib/request"]
 	path = lib/request
 	url = https://github.com/tkf/emacs-request
+[submodule "lib/ein-mumamo"]
+	path = lib/ein-mumamo
+	url = https://github.com/millejoh/ein-mumamo
