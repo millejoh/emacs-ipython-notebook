@@ -659,13 +659,16 @@ Example::
           (msg-id (plist-get header :msg_id))
           (password (plist-get content :password)))
       (cond ((string-equal msg-type "input_request")
-             (if password
+             (if (not (eql password :json-false))
                  (let* ((passwd (read-passwd (plist-get content :prompt)))
                         (content (list :value passwd))
                         (msg (ein:kernel--get-msg kernel "input_reply" content)))
                    (plist-put (plist-get msg :header) :msg_id msg-id)
                    (ein:websocket-send-stdin-channel kernel msg)
-                   (setf (ein:$kernel-stdin-activep kernel) nil))))))))
+                   (setf (ein:$kernel-stdin-activep kernel) nil))
+               (cond ((string-match "ipdb>" (plist-get content :prompt))
+                      (ein:run-ipdb-session kernel packet)
+                      (setf (ein:$kernel-stdin-activep kernel) nil)))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")

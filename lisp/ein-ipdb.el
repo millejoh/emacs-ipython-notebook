@@ -25,4 +25,13 @@
 
 ;;; Code:
 
+(defvar *ein:ipd-session-buffer* nil)
+
+(defun ein:run-ipdb-session (kernel packet)
+  (let* ((command (read-from-minibuffer "ipdb> "))
+         (content (list :value command))
+         (msg (ein:kernel--get-msg kernel "input_reply" content)))
+    (plist-put (plist-get msg :header) :msg_id (plist-get (plist-get packet :header) :msg_id))
+    (ein:websocket-send-stdin-channel kernel msg)))
+
 (provide 'ein-ipdb)
