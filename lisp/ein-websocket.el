@@ -117,6 +117,14 @@
           (ein:$kernel-channels kernel)
           (json-encode (plist-put msg :channel "shell"))))))
 
+(defun ein:websocket-send-stdin-channel (kernel msg)
+  (cond ((= (ein:$kernel-api-version kernel) 2)
+         (ein:log 'warn "Stdin messages only supported with IPython 3."))
+        ((= (ein:$kernel-api-version kernel) 3)
+         (ein:websocket-send
+          (ein:$kernel-channels kernel)
+          (json-encode (plist-put msg :channel "stdin"))))))
+
 (provide 'ein-websocket)
 
 ;;; ein-websocket.el ends here
