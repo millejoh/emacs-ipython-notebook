@@ -385,7 +385,7 @@ def kill_subprocesses(pid, include=lambda x: True):
             'Command {0} failed with code {1} and following error message:\n'
             '{2}'.format(command, proc.returncode, stderr))
 
-    for line in map(str.strip, stdout.decode('utf-8').splitlines()):
+    for line in map(lambda l: str.strip(str(l)), stdout.decode('utf-8').splitlines()):
         (cmd_ppid, cmd_pid, cmd) = line.split(None, 2)
         if cmd_ppid == str(pid) and include(cmd):
             print("Killing PID={0} COMMAND={1}".format(cmd_pid, cmd))
