@@ -34,7 +34,7 @@
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)
-(require 'ein-ipdb)
+
 
 ;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
 ;;        testing since I can mock I/O using method overriding.
@@ -668,8 +668,7 @@ Example::
                    (setf (ein:$kernel-stdin-activep kernel) nil))
                (cond ((string-match "ipdb>" (plist-get content :prompt))
                       (ein:run-ipdb-session kernel packet)
-                      ;(setf (ein:$kernel-stdin-activep kernel) nil)
-                      ))))))))
+                      (setf (ein:$kernel-stdin-activep kernel) nil)))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
@@ -719,36 +718,34 @@ Example::
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
-  (if (ein:$kernel-stdin-activep kernel)
-      (ein:ipdb--handle-iopub-reply kernel packet)
-    (destructuring-bind
-        (&key content metadata parent_header header &allow-other-keys)
-        (ein:json-read-from-string packet)
-      (let* ((msg-type (plist-get header :msg_type))
-             (callbacks (ein:kernel-get-callbacks-for-msg
-                         kernel (plist-get parent_header :msg_id)))
-             (events (ein:$kernel-events kernel)))
-        (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
-        (if (and (not (equal msg-type "status")) (null callbacks))
-            (ein:log 'verbose "Got message not from this notebook.")
-          (ein:case-equal msg-type
-            (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-             (ein:aif (plist-get callbacks :output)
-                 (ein:funcall-packed it msg-type content metadata)))
-            (("status")
-             (ein:case-equal (plist-get content :execution_state)
-               (("busy")
-                (ein:events-trigger events 'status_busy.Kernel))
-               (("idle")
-                (ein:events-trigger events 'status_idle.Kernel))
-               (("dead")
-                (ein:kernel-stop-channels kernel)
-                (ein:events-trigger events 'status_dead.Kernel))))
-            (("data_pub")
-             (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
-            (("clear_output")
-             (ein:aif (plist-get callbacks :clear_output)
-                 (ein:funcall-packed it content metadata))))))))
+  (destructuring-bind
+      (&key content metadata parent_header header &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (callbacks (ein:kernel-get-callbacks-for-msg
+                       kernel (plist-get parent_header :msg_id)))
+           (events (ein:$kernel-events kernel)))
+      (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
+      (if (and (not (equal msg-type "status")) (null callbacks))
+          (ein:log 'verbose "Got message not from this notebook.")
+        (ein:case-equal msg-type
+          (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
+           (ein:aif (plist-get callbacks :output)
+               (ein:funcall-packed it msg-type content metadata)))
+          (("status")
+           (ein:case-equal (plist-get content :execution_state)
+             (("busy")
+              (ein:events-trigger events 'status_busy.Kernel))
+             (("idle")
+              (ein:events-trigger events 'status_idle.Kernel))
+             (("dead")
+              (ein:kernel-stop-channels kernel)
+              (ein:events-trigger events 'status_dead.Kernel))))
+          (("data_pub")
+           (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
+          (("clear_output")
+           (ein:aif (plist-get callbacks :clear_output)
+               (ein:funcall-packed it content metadata)))))))
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
