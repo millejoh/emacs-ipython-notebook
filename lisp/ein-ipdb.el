@@ -26,6 +26,7 @@
 ;;; Code:
 
 (defvar *ein:ipdb-sessions* (make-hash-table))
+(make-variable-buffer-local 'ein:ipdb-buffer-active-kernel)
 
 (defstruct ein:$ipdb-session
   buffer
@@ -42,6 +43,20 @@
       (setf (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*) db-session)
       db-session)))
 
+(defun ein:run-ipdb-session (kernel)
+  (unless (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
+    (ein:find-or-create-ipdb-session kernel)
+    (setf (ein:$kernel-stdin-activep kernel) t)
+    (ein:prepare-ipdb-session (ein:$kernel-kernel-id kernel))))
+
+(defun ein:prepare-ipdb-session (id)
+  (let ((buffer (get-buffer-create (format "*ipdb: %s*" id))))
+    (with-current-buffer buffer
+      (ein:ipdb-mode)
+      (switch-to-buffer buffer)
+      (setq ein:ipdb-buffer-active-kernel id)
+      buffer)))
+
 (defun ein:stop-ipdb-session (db-session)
   (let ((kernel (ein:$ipdb-session-kernel db-session))
         (buffer (ein:$ipdb-session-buffer db-session)))
@@ -49,44 +64,55 @@
     (setf (ein:$kernel-stdin-activep kernel) nil)
     (remhash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)))
 
-(defun ein:run-ipdb-session (kernel packet)
-  (let ((db-session (ein:find-or-create-ipdb-session kernel)))
-    (ein:ipdb-render db-session)
-    (let* ((command (read-from-minibuffer "ipdb> "))
-           (content (list :value command))
-           (msg (ein:kernel--get-msg kernel "input_reply" content)))
-      ;(plist-put (plist-get msg :header) :msg_id (plist-get (plist-get packet :header) :msg_id))
-      (when (or (string= command "q")
-                (string= command "quit"))
-        (ein:stop-ipdb-session db-session))
-      (ein:websocket-send-stdin-channel kernel msg))))
-
-(defun ein:prepare-ipdb-session (id)
-  (let ((buffer (get-buffer-create (format "*ipdb: %s*" id))))
-    (switch-to-buffer buffer)
-    buffer))
-
 (defun ein:ipdb--handle-iopub-reply (kernel packet)
   (destructuring-bind
       (&key content metadata parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let ((msg-type (plist-get header :msg_type)))
       (if (string-equal msg-type "stream")
-          (let ((session (ein:find-or-create-ipdb-session kernel)))
-            (setf (ein:$ipdb-session-current-payload session)
-                  (plist-get content :text)))))))
+          (let* ((session (ein:find-or-create-ipdb-session kernel))
+                 (buf (ein:$ipdb-session-buffer session))
+                 (text (plist-get content :text)))
+            (with-current-buffer buf
+              (setf (ein:$ipdb-session-current-payload session) text)
+              (insert "%S" text)))))))
 
-(defun ein:ipdb-render (session)
-  (with-current-buffer (ein:$ipdb-session-buffer session)
-    (kill-all-local-variables)
-    (let ((inhibit-read-only t))
-      (erase-buffer))
-    (remove-overlays)
-    ;; Fill the ipdb buffer
-    (widget-insert "IPython Debugger\n\n")
-    (widget-insert (ein:$ipdb-session-current-payload session))
-    (widget-setup)))
+;;; Now try with comint
 
+(defconst *ein:ipdb-prompt* "ipdb> ")
 
+(defun ein:ipdb-input-sender (proc input)
+  (with-current-buffer (process-buffer proc)
+    (assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
+    (let* ((session (ein:find-or-create-ipdb-session ein:ipdb-buffer-active-kernel))
+           (buffer-read-only nil)
+           (kernel (ein:$ipdb-session-kernel session))
+           (content (list :value input))
+           (msg (ein:kernel--get-msg kernel "input_reply" content)))
+      (ein:websocket-send-stdin-channel kernel msg)
+      (when (or (string= input "q")
+                (string= input "quit"))
+        (ein:stop-ipdb-session session)))))
+
+(define-derived-mode
+    ein:ipdb-mode comint-mode "EIN:IPDB"
+    "Run a Javascript shell."
+    :syntax-table python-mode-syntax-table
+    (setq comint-prompt-regexp (concat "^" (regexp-quote *ein:ipdb-prompt*)))
+    (setq comint-input-sender 'ein:ipdb-input-sender)
+
+    (unless (comint-check-proc (current-buffer))
+      ;; Was cat, but on non-Unix platforms that might not exist, so
+      ;; use hexl instead, which is part of the Emacs distribution.
+      (let ((fake-proc
+             (condition-case nil
+                 (start-process "ein:ipdb" (current-buffer) "hexl")
+               (file-error (start-process "ein:ipdb" (current-buffer) "cat")))))
+        (set-process-query-on-exit-flag fake-proc nil)
+        ;; Add a header
+        (insert "EIN IPython Debugger\n")
+        (set-marker
+         (process-mark fake-proc) (point))
+        (comint-output-filter fake-proc *ein:ipdb-prompt*))))
 
 (provide 'ein-ipdb)

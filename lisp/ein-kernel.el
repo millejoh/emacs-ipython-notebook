@@ -666,8 +666,8 @@ Example::
                    (plist-put (plist-get msg :header) :msg_id msg-id)
                    (ein:websocket-send-stdin-channel kernel msg)
                    (setf (ein:$kernel-stdin-activep kernel) nil))
-               (cond ((string-match "ipdb>" (plist-get content :prompt))
-                      (ein:run-ipdb-session kernel packet)
+               (cond ((string-match "ipdb>^" (plist-get content :prompt))
+                      (ein:run-ipdb-session kernel)
                       ;(setf (ein:$kernel-stdin-activep kernel) nil)
                       ))))))))
 
