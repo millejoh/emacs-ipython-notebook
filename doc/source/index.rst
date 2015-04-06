@@ -563,6 +563,11 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.5
+----
+
+* Add support for stdin channel. This mean getpass.getpass() and the ipdb work in no
+  
 v0.4
 ----
 

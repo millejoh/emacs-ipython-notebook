@@ -6,7 +6,7 @@
 ;;          John Miller <millejoh at millejoh.com>
 ;; URL: http://tkf.github.com/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.4.0
+;; Version: 0.5.0
 
 ;; This file is NOT part of GNU Emacs.
 

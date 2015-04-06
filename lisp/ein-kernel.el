@@ -663,7 +663,6 @@ Example::
                  (let* ((passwd (read-passwd (plist-get content :prompt)))
                         (content (list :value passwd))
                         (msg (ein:kernel--get-msg kernel "input_reply" content)))
-                   (plist-put (plist-get msg :header) :msg_id msg-id)
                    (ein:websocket-send-stdin-channel kernel msg)
                    (setf (ein:$kernel-stdin-activep kernel) nil))
                (cond ((string-match "ipdb>" (plist-get content :prompt))

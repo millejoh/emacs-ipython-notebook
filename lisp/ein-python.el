@@ -37,40 +37,40 @@
           "except" "finally" "for" "while" "with")
       symbol-end))
 
-(defun ein:python-indent-calculate-levels ()
-  "Forcefully set indent level to 0 when there is no python block
-yet in this cell."
-  (ein:and-let* ((cell (ein:worksheet-get-current-cell :noerror t))
-                 (beg (ein:cell-input-pos-min cell))
-                 ((< beg (point))))
-    (save-excursion
-      (unless (search-backward-regexp ein:python-block-start beg t)
-        (setq python-indent-levels (list 0))
-        (setq python-indent-current-level 0)
-        t))))
+;; (defun ein:python-indent-calculate-levels ()
+;;   "Forcefully set indent level to 0 when there is no python block
+;; yet in this cell."
+;;   (ein:and-let* ((cell (ein:worksheet-get-current-cell :noerror t))
+;;                  (beg (ein:cell-input-pos-min cell))
+;;                  ((< beg (point))))
+;;     (save-excursion
+;;       (unless (search-backward-regexp ein:python-block-start beg t)
+;;         (setq python-indent-levels (list 0))
+;;         (setq python-indent-current-level 0)
+;;         t))))
 
-(defadvice python-indent-calculate-levels
-  (around ein:python-indent-calculate-levels activate)
-  "Hack `python-indent-calculate-levels' to reset indent per cell.
+;; (defadvice python-indent-calculate-levels
+;;   (around ein:python-indent-calculate-levels activate)
+;;   "Hack `python-indent-calculate-levels' to reset indent per cell.
 
-Let's say you have a notebook something like this::
+;; Let's say you have a notebook something like this::
 
-  In [1]:
-  def func():
-      pass
+;;   In [1]:
+;;   def func():
+;;       pass
 
-  In [2]:
-  something[]
+;;   In [2]:
+;;   something[]
 
-Here, ``[]`` is the cursor position.  When you hit the tab here,
-you don't expect it to indent.  However, python.el tries to follow
-the indent of ``func()`` then you get indentation.  This advice
-workaround this problem.
+;; Here, ``[]`` is the cursor position.  When you hit the tab here,
+;; you don't expect it to indent.  However, python.el tries to follow
+;; the indent of ``func()`` then you get indentation.  This advice
+;; workaround this problem.
 
-Note that this workaround does not work with the MuMaMo based
-notebook mode."
-  (unless (ein:python-indent-calculate-levels)
-    ad-do-it))
+;; Note that this workaround does not work with the MuMaMo based
+;; notebook mode."
+;;   (unless (ein:python-indent-calculate-levels)
+;;     ad-do-it))
 
 (provide 'ein-python)
 
