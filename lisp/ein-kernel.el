@@ -34,7 +34,7 @@
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)
-
+(require 'ein-ipdb)
 
 ;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
 ;;        testing since I can mock I/O using method overriding.
@@ -55,6 +55,7 @@
   base-url                              ; /api/kernels/
   kernel-url                            ; /api/kernels/<KERNEL-ID>
   ws-url                                ; ws://<URL>[:<PORT>]
+  stdin-activep
   running
   username
   msg-callbacks
@@ -88,6 +89,7 @@
    :iopub-channel nil
    :base-url base-url
    :running nil
+   :stdin-activep nil
    :username "username"
    :msg-callbacks (make-hash-table :test 'equal)))
 
@@ -382,7 +384,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
                                    (silent t)
                                    (user-variables [])
                                    (user-expressions (make-hash-table))
-                                   (allow-stdin json-false))
+                                   (allow-stdin t))
   "Execute CODE on KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -443,22 +445,24 @@ Sample implementations
   ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
 
   (assert (ein:kernel-live-p kernel) nil "execute_reply: Kernel is not active.")
-  (let* ((content (list
-                   :code code
-                   :silent (or silent json-false)
-                   :user_variables user-variables
-                   :user_expressions user-expressions
-                   :allow_stdin allow-stdin))
-         (msg (ein:kernel--get-msg kernel "execute_request" content))
-         (msg-id (plist-get (plist-get msg :header) :msg_id)))
-    (ein:websocket-send-shell-channel kernel msg)
-    (unless (plist-get callbacks :execute_reply)
-      (ein:log 'debug "code: %s" code))
-    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-    (unless silent
-      (mapc #'ein:funcall-packed
-            (ein:$kernel-after-execute-hook kernel)))
-    msg-id))
+  (if (not (ein:$kernel-stdin-activep kernel))
+    (let* ((content (list
+                     :code code
+                     :silent (or silent json-false)
+                     :user_variables user-variables
+                     :user_expressions user-expressions
+                     :allow_stdin allow-stdin))
+           (msg (ein:kernel--get-msg kernel "execute_request" content))
+           (msg-id (plist-get (plist-get msg :header) :msg_id)))
+      (ein:websocket-send-shell-channel kernel msg)
+      (unless (plist-get callbacks :execute_reply)
+        (ein:log 'debug "code: %s" code))
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+      (unless silent
+        (mapc #'ein:funcall-packed
+              (ein:$kernel-after-execute-hook kernel)))
+      msg-id)
+    (message "[ein]: stdin active, cannot communicate with kernel.")))
 
 
 (defun ein:kernel-complete (kernel line cursor-pos callbacks)
@@ -641,7 +645,31 @@ Example::
            (ein:kernel--handle-iopub-reply kernel packet))
           ((string-equal channel "shell")
            (ein:kernel--handle-shell-reply kernel packet))
+          ((string-equal channel "stdin")
+           (ein:kernel--handle-stdin-reply kernel packet))
           (t (ein:log 'warn "Received reply from unkown channel %s" channel)))))
+
+(defun ein:kernel--handle-stdin-reply (kernel packet)
+  (ein:log 'debug "KERNEL--HANDLE-STDIN-REPLY")
+  (setf (ein:$kernel-stdin-activep kernel) t)
+  (destructuring-bind
+      (&key header parent_header metadata content &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let ((msg-type (plist-get header :msg_type))
+          (msg-id (plist-get header :msg_id))
+          (password (plist-get content :password)))
+      (cond ((string-equal msg-type "input_request")
+             (if (not (eql password :json-false))
+                 (let* ((passwd (read-passwd (plist-get content :prompt)))
+                        (content (list :value passwd))
+                        (msg (ein:kernel--get-msg kernel "input_reply" content)))
+                   (plist-put (plist-get msg :header) :msg_id msg-id)
+                   (ein:websocket-send-stdin-channel kernel msg)
+                   (setf (ein:$kernel-stdin-activep kernel) nil))
+               (cond ((string-match "ipdb>" (plist-get content :prompt))
+                      (ein:run-ipdb-session kernel packet)
+                      ;(setf (ein:$kernel-stdin-activep kernel) nil)
+                      ))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
@@ -691,34 +719,36 @@ Example::
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
-  (destructuring-bind
-      (&key content metadata parent_header header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let* ((msg-type (plist-get header :msg_type))
-           (callbacks (ein:kernel-get-callbacks-for-msg
-                       kernel (plist-get parent_header :msg_id)))
-           (events (ein:$kernel-events kernel)))
-      (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
-      (if (and (not (equal msg-type "status")) (null callbacks))
-          (ein:log 'verbose "Got message not from this notebook.")
-        (ein:case-equal msg-type
-          (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-           (ein:aif (plist-get callbacks :output)
-               (ein:funcall-packed it msg-type content metadata)))
-          (("status")
-           (ein:case-equal (plist-get content :execution_state)
-             (("busy")
-              (ein:events-trigger events 'status_busy.Kernel))
-             (("idle")
-              (ein:events-trigger events 'status_idle.Kernel))
-             (("dead")
-              (ein:kernel-stop-channels kernel)
-              (ein:events-trigger events 'status_dead.Kernel))))
-          (("data_pub")
-           (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
-          (("clear_output")
-           (ein:aif (plist-get callbacks :clear_output)
-               (ein:funcall-packed it content metadata)))))))
+  (if (ein:$kernel-stdin-activep kernel)
+      (ein:ipdb--handle-iopub-reply kernel packet)
+    (destructuring-bind
+        (&key content metadata parent_header header &allow-other-keys)
+        (ein:json-read-from-string packet)
+      (let* ((msg-type (plist-get header :msg_type))
+             (callbacks (ein:kernel-get-callbacks-for-msg
+                         kernel (plist-get parent_header :msg_id)))
+             (events (ein:$kernel-events kernel)))
+        (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
+        (if (and (not (equal msg-type "status")) (null callbacks))
+            (ein:log 'verbose "Got message not from this notebook.")
+          (ein:case-equal msg-type
+            (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
+             (ein:aif (plist-get callbacks :output)
+                 (ein:funcall-packed it msg-type content metadata)))
+            (("status")
+             (ein:case-equal (plist-get content :execution_state)
+               (("busy")
+                (ein:events-trigger events 'status_busy.Kernel))
+               (("idle")
+                (ein:events-trigger events 'status_idle.Kernel))
+               (("dead")
+                (ein:kernel-stop-channels kernel)
+                (ein:events-trigger events 'status_dead.Kernel))))
+            (("data_pub")
+             (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
+            (("clear_output")
+             (ein:aif (plist-get callbacks :clear_output)
+                 (ein:funcall-packed it content metadata))))))))
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
