@@ -75,7 +75,7 @@
                  (text (plist-get content :text)))
             (with-current-buffer buf
               (setf (ein:$ipdb-session-current-payload session) text)
-              (insert "%S" text)))))))
+              (insert text)))))))
 
 ;;; Now try with comint
 
@@ -84,7 +84,7 @@
 (defun ein:ipdb-input-sender (proc input)
   (with-current-buffer (process-buffer proc)
     (assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
-    (let* ((session (ein:find-or-create-ipdb-session ein:ipdb-buffer-active-kernel))
+    (let* ((session (gethash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))
            (buffer-read-only nil)
            (kernel (ein:$ipdb-session-kernel session))
            (content (list :value input))
