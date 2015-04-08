@@ -75,7 +75,13 @@
                  (text (plist-get content :text)))
             (with-current-buffer buf
               (setf (ein:$ipdb-session-current-payload session) text)
-              (insert text)))))))
+              (let ((buffer-read-only nil))
+                (save-excursion
+                  (re-search-backward
+                   (concat "#ipdb#")
+                   nil t)
+                  (delete-region (point) (line-end-position))
+                  (insert (format "%s" text))))))))))
 
 ;;; Now try with comint
 
@@ -89,10 +95,12 @@
            (kernel (ein:$ipdb-session-kernel session))
            (content (list :value input))
            (msg (ein:kernel--get-msg kernel "input_reply" content)))
+      (comint-output-filter proc (format "#ipdb#\n"))
       (ein:websocket-send-stdin-channel kernel msg)
-      (when (or (string= input "q")
-                (string= input "quit"))
-        (ein:stop-ipdb-session session)))))
+      (if (or (string= input "q")
+              (string= input "quit"))
+          (ein:stop-ipdb-session session)
+        (comint-output-filter proc *ein:ipdb-prompt*)))))
 
 (define-derived-mode
     ein:ipdb-mode comint-mode "EIN:IPDB"
