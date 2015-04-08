@@ -52,17 +52,24 @@
 (defun ein:prepare-ipdb-session (id)
   (let ((buffer (get-buffer-create (format "*ipdb: %s*" id))))
     (with-current-buffer buffer
+      (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
       (ein:ipdb-mode)
       (switch-to-buffer buffer)
       (setq ein:ipdb-buffer-active-kernel id)
       buffer)))
 
+(defun ein:ipdb-on-stop ()
+  (when ein:ipdb-buffer-active-kernel
+    (let* ((kernel (ein:$ipdb-session-kernel
+                    (gethash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*)))
+           (msg (ein:kernel--get-msg kernel "input_reply" (list :value "q"))))
+      (ein:websocket-send-stdin-channel kernel msg)
+      (setf (ein:$kernel-stdin-activep kernel) nil)
+      (remhash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))))
+
 (defun ein:stop-ipdb-session (db-session)
-  (let ((kernel (ein:$ipdb-session-kernel db-session))
-        (buffer (ein:$ipdb-session-buffer db-session)))
-    (kill-buffer buffer)
-    (setf (ein:$kernel-stdin-activep kernel) nil)
-    (remhash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)))
+  (let ((buffer (ein:$ipdb-session-buffer db-session)))
+    (kill-buffer buffer)))
 
 (defun ein:ipdb--handle-iopub-reply (kernel packet)
   (destructuring-bind
@@ -77,11 +84,13 @@
               (setf (ein:$ipdb-session-current-payload session) text)
               (let ((buffer-read-only nil))
                 (save-excursion
-                  (re-search-backward
-                   (concat "#ipdb#")
-                   nil t)
-                  (delete-region (point) (line-end-position))
-                  (ein:cell-append-text text)))))))))
+                  (if (re-search-backward
+                       (concat "#ipdb#")
+                       nil t)
+                      (progn
+                        (delete-region (point) (line-end-position))
+                        (insert "\n")
+                        (ein:cell-append-text text)))))))))))
 
 ;;; Now try with comint
 
@@ -95,17 +104,18 @@
            (kernel (ein:$ipdb-session-kernel session))
            (content (list :value input))
            (msg (ein:kernel--get-msg kernel "input_reply" content)))
-      (comint-output-filter proc (format "#ipdb#\n"))
-      (ein:websocket-send-stdin-channel kernel msg)
       (if (or (string= input "q")
               (string= input "quit"))
           (ein:stop-ipdb-session session)
-        (comint-output-filter proc *ein:ipdb-prompt*)))))
+        (progn
+          (comint-output-filter proc (format "\n#ipdb#\n"))
+          (ein:websocket-send-stdin-channel kernel msg)
+          (comint-output-filter proc *ein:ipdb-prompt*))))))
 
 (define-derived-mode
     ein:ipdb-mode comint-mode "EIN:IPDB"
-    "Run a Javascript shell."
-    :syntax-table python-mode-syntax-table
+    "Run an EIN debug session."
+    ;:syntax-table python-mode-syntax-table
     (setq comint-prompt-regexp (concat "^" (regexp-quote *ein:ipdb-prompt*)))
     (setq comint-input-sender 'ein:ipdb-input-sender)
 
