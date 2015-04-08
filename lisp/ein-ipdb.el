@@ -81,7 +81,7 @@
                    (concat "#ipdb#")
                    nil t)
                   (delete-region (point) (line-end-position))
-                  (insert (format "%s" text))))))))))
+                  (ein:cell-append-text text)))))))))
 
 ;;; Now try with comint
 
