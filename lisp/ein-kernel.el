@@ -666,8 +666,9 @@ Example::
                    (ein:websocket-send-stdin-channel kernel msg)
                    (setf (ein:$kernel-stdin-activep kernel) nil))
                (cond ((string-match "ipdb>" (plist-get content :prompt))
-                      (ein:run-ipdb-session kernel packet)
-                      (setf (ein:$kernel-stdin-activep kernel) nil)))))))))
+                      (ein:run-ipdb-session kernel)
+                      ;(setf (ein:$kernel-stdin-activep kernel) nil)
+                      ))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
