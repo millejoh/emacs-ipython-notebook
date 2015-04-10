@@ -57,11 +57,9 @@
 (defun ein:prepare-ipdb-session (session prompt)
   (with-current-buffer  (setf (ein:$ipdb-session-buffer session)
                               (get-buffer-create (format "*ipdb: %s*" (ein:pdb-session-id session))))
-    (setq ein:ipdb-buffer-active-kernel (ein:pdb-session-id session))
-    (setq ein:ipdb-buffer-prompt prompt)
     (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
     (ein:ipdb-mode)
-    (setq comint-prompt-regexp (concat "^" (regexp-quote ein:ipdb-buffer-prompt)))
+    (setq comint-prompt-regexp (concat "^" (regexp-quote prompt)))
     (setq comint-input-sender 'ein:ipdb-input-sender)
 
     (unless (comint-check-proc (current-buffer))
@@ -75,7 +73,9 @@
         (insert "#ipdb#\n")
         (set-marker
          (process-mark fake-proc) (point))
-        (comint-output-filter fake-proc ein:ipdb-buffer-prompt)))
+        (comint-output-filter fake-proc prompt)))
+    (setq ein:ipdb-buffer-active-kernel (ein:pdb-session-id session))
+    (setq ein:ipdb-buffer-prompt prompt)
     (switch-to-buffer (ein:$ipdb-session-buffer session))))
 
 (defun ein:ipdb-on-stop ()
