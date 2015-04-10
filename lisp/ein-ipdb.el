@@ -26,7 +26,10 @@
 ;;; Code:
 
 (defvar *ein:ipdb-sessions* (make-hash-table))
+(defconst *ein:ipdb-prompt* "(Pdb) ")
+
 (make-variable-buffer-local 'ein:ipdb-buffer-active-kernel)
+(make-variable-buffer-local 'ein:ipdb-buffer-prompt)
 
 (defstruct ein:$ipdb-session
   buffer
@@ -37,26 +40,43 @@
   (ein:aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
       it
     (let ((db-session (make-ein:$ipdb-session
-                       :buffer (ein:prepare-ipdb-session (ein:$kernel-kernel-id kernel))
                        :kernel kernel
                        :current-payload "Debugger started.")))
       (setf (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*) db-session)
       db-session)))
 
-(defun ein:run-ipdb-session (kernel)
-  (unless (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
-    (ein:find-or-create-ipdb-session kernel)
-    (setf (ein:$kernel-stdin-activep kernel) t)
-    (ein:prepare-ipdb-session (ein:$kernel-kernel-id kernel))))
+(defun ein:pdb-session-id (session)
+  (ein:$kernel-kernel-id (ein:$ipdb-session-kernel session)))
 
-(defun ein:prepare-ipdb-session (id)
-  (let ((buffer (get-buffer-create (format "*ipdb: %s*" id))))
-    (with-current-buffer buffer
-      (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
-      (ein:ipdb-mode)
-      (switch-to-buffer buffer)
-      (setq ein:ipdb-buffer-active-kernel id)
-      buffer)))
+(defun ein:run-ipdb-session (kernel prompt)
+  (unless (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
+    (let ((pdb-session (ein:find-or-create-ipdb-session kernel)))
+      (setf (ein:$kernel-stdin-activep kernel) t)
+      (ein:prepare-ipdb-session pdb-session prompt))))
+
+(defun ein:prepare-ipdb-session (session prompt)
+  (with-current-buffer  (setf (ein:$ipdb-session-buffer session)
+                              (get-buffer-create (format "*ipdb: %s*" (ein:pdb-session-id session))))
+    (setq ein:ipdb-buffer-active-kernel (ein:pdb-session-id session))
+    (setq ein:ipdb-buffer-prompt prompt)
+    (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
+    (ein:ipdb-mode)
+    (setq comint-prompt-regexp (concat "^" (regexp-quote ein:ipdb-buffer-prompt)))
+    (setq comint-input-sender 'ein:ipdb-input-sender)
+
+    (unless (comint-check-proc (current-buffer))
+      ;; Was cat, but on non-Unix platforms that might not exist, so
+      ;; use hexl instead, which is part of the Emacs distribution.
+      (let ((fake-proc
+             (condition-case nil
+                 (start-process "ein:ipdb" (current-buffer) "hexl")
+               (file-error (start-process "ein:ipdb" (current-buffer) "cat")))))
+        (set-process-query-on-exit-flag fake-proc nil)
+        (insert "#ipdb#\n")
+        (set-marker
+         (process-mark fake-proc) (point))
+        (comint-output-filter fake-proc ein:ipdb-buffer-prompt)))
+    (switch-to-buffer (ein:$ipdb-session-buffer session))))
 
 (defun ein:ipdb-on-stop ()
   (when ein:ipdb-buffer-active-kernel
@@ -89,12 +109,11 @@
                        nil t)
                       (progn
                         (delete-region (point) (line-end-position))
-                        (insert "\n")
+                        ;(insert "\n")
                         (ein:cell-append-text text)))))))))))
 
 ;;; Now try with comint
 
-(defconst *ein:ipdb-prompt* "ipdb> ")
 
 (defun ein:ipdb-input-sender (proc input)
   (with-current-buffer (process-buffer proc)
@@ -108,29 +127,14 @@
               (string= input "quit"))
           (ein:stop-ipdb-session session)
         (progn
-          (comint-output-filter proc (format "\n#ipdb#\n"))
+          (comint-output-filter proc (format "#ipdb#\n"))
           (ein:websocket-send-stdin-channel kernel msg)
-          (comint-output-filter proc *ein:ipdb-prompt*))))))
+          (comint-output-filter proc ein:ipdb-buffer-prompt))))))
 
 (define-derived-mode
     ein:ipdb-mode comint-mode "EIN:IPDB"
     "Run an EIN debug session."
     ;:syntax-table python-mode-syntax-table
-    (setq comint-prompt-regexp (concat "^" (regexp-quote *ein:ipdb-prompt*)))
-    (setq comint-input-sender 'ein:ipdb-input-sender)
-
-    (unless (comint-check-proc (current-buffer))
-      ;; Was cat, but on non-Unix platforms that might not exist, so
-      ;; use hexl instead, which is part of the Emacs distribution.
-      (let ((fake-proc
-             (condition-case nil
-                 (start-process "ein:ipdb" (current-buffer) "hexl")
-               (file-error (start-process "ein:ipdb" (current-buffer) "cat")))))
-        (set-process-query-on-exit-flag fake-proc nil)
-        ;; Add a header
-        (insert "EIN IPython Debugger\n")
-        (set-marker
-         (process-mark fake-proc) (point))
-        (comint-output-filter fake-proc *ein:ipdb-prompt*))))
+    )
 
 (provide 'ein-ipdb)
