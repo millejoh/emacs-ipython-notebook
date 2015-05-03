@@ -150,6 +150,157 @@ This function may raise an error."
 
 (eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 
+
+;;; Imenu Support
+
+;; Most of this is borrowed from python.el
+;; Just replace python with ein in most cases.
+
+(defvar ein:imenu-format-item-label-function
+  'ein:imenu-format-item-label
+  "Imenu function used to format an item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defvar ein:imenu-format-parent-item-label-function
+  'ein:imenu-format-parent-item-label
+  "Imenu function used to format a parent item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defvar ein:imenu-format-parent-item-jump-label-function
+  'ein:imenu-format-parent-item-jump-label
+  "Imenu function used to format a parent jump item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defun ein:imenu-format-item-label (type name)
+  "Return Imenu label for single node using TYPE and NAME."
+  (format "%s (%s)" name type))
+
+(defun ein:imenu-format-parent-item-label (type name)
+  "Return Imenu label for parent node using TYPE and NAME."
+  (format "%s..." (ein:imenu-format-item-label type name)))
+
+(defun python-imenu-format-parent-item-jump-label (type _name)
+  "Return Imenu label for parent node jump using TYPE and NAME."
+  (if (string= type "class")
+      "*class definition*"
+    "*function definition*"))
+
+(defun ein:imenu--put-parent (type name pos tree)
+  "Add the parent with TYPE, NAME and POS to TREE."
+  (let ((label
+         (funcall ein:imenu-format-item-label-function type name))
+        (jump-label
+         (funcall ein:imenu-format-parent-item-jump-label-function type name)))
+    (if (not tree)
+        (cons label pos)
+      (cons label (cons (cons jump-label pos) tree)))))
+
+(defun ein:imenu--build-tree (&optional min-indent prev-indent tree)
+  "Recursively build the tree of nested definitions of a node.
+Arguments MIN-INDENT, PREV-INDENT and TREE are internal and should
+not be passed explicitly unless you know what you are doing."
+  (setq min-indent (or min-indent 0)
+        prev-indent (or prev-indent python-indent-offset))
+  (let* ((pos (python-nav-backward-defun))
+         (type)
+         (name (when (and pos (looking-at python-nav-beginning-of-defun-regexp))
+                 (let ((split (split-string (match-string-no-properties 0))))
+                   (setq type (car split))
+                   (cadr split))))
+         (label (when name
+                  (funcall ein:imenu-format-item-label-function type name)))
+         (indent (current-indentation))
+         (children-indent-limit (+ python-indent-offset min-indent)))
+    (cond ((not pos)
+           ;; Nothing found, probably near to bobp.
+           nil)
+          ((<= indent min-indent)
+           ;; The current indentation points that this is a parent
+           ;; node, add it to the tree and stop recursing.
+           (ein:imenu--put-parent type name pos tree))
+          (t
+           (ein:imenu--build-tree
+            min-indent
+            indent
+            (if (<= indent children-indent-limit)
+                ;; This lies within the children indent offset range,
+                ;; so it's a normal child of its parent (i.e., not
+                ;; a child of a child).
+                (cons (cons label pos) tree)
+              ;; Oh no, a child of a child?!  Fear not, we
+              ;; know how to roll.  We recursively parse these by
+              ;; swapping prev-indent and min-indent plus adding this
+              ;; newly found item to a fresh subtree.  This works, I
+              ;; promise.
+              (cons
+               (ein:imenu--build-tree
+                prev-indent indent (list (cons label pos)))
+               tree)))))))
+
+(defun ein:imenu-create-index ()
+  "Return tree Imenu alist for the current Python buffer.
+Change `ein:imenu-format-item-label-function',
+`ein:imenu-format-parent-item-label-function',
+`ein:imenu-format-parent-item-jump-label-function' to
+customize how labels are formatted."
+  (goto-char (point-max))
+  (let ((index)
+        (tree))
+    (while (setq tree (ein:imenu--build-tree))
+      (setq index (cons tree index)))
+    index))
+
+(defun ein:imenu-create-flat-index (&optional alist prefix)
+  "Return flat outline of the current Python buffer for Imenu.
+Optional argument ALIST is the tree to be flattened; when nil
+`ein:imenu-build-index' is used with
+`ein:imenu-format-parent-item-jump-label-function'
+`ein:imenu-format-parent-item-label-function'
+`ein:imenu-format-item-label-function' set to
+  (lambda (type name) name)
+Optional argument PREFIX is used in recursive calls and should
+not be passed explicitly.
+
+Converts this:
+
+    ((\"Foo\" . 103)
+     (\"Bar\" . 138)
+     (\"decorator\"
+      (\"decorator\" . 173)
+      (\"wrap\"
+       (\"wrap\" . 353)
+       (\"wrapped_f\" . 393))))
+
+To this:
+
+    ((\"Foo\" . 103)
+     (\"Bar\" . 138)
+     (\"decorator\" . 173)
+     (\"decorator.wrap\" . 353)
+     (\"decorator.wrapped_f\" . 393))"
+  ;; Inspired by imenu--flatten-index-alist removed in revno 21853.
+  (apply
+   'nconc
+   (mapcar
+    (lambda (item)
+      (let ((name (if prefix
+                      (concat prefix "." (car item))
+                    (car item)))
+            (pos (cdr item)))
+        (cond ((or (numberp pos) (markerp pos))
+               (list (cons name pos)))
+              ((listp pos)
+               (cons
+                (cons name (cdar pos))
+                (python-imenu-create-flat-index (cddr item) name))))))
+    (or alist
+        (let* ((fn (lambda (_type name) name))
+               (ein:imenu-format-item-label-function fn)
+              (ein:imenu-format-parent-item-label-function fn)
+              (ein:imenu-format-parent-item-jump-label-function fn))
+          (python-imenu-create-index))))))
+
+
 (provide 'ein-multilang)
 
 ;;; ein-multilang.el ends here

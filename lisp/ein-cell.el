@@ -749,7 +749,7 @@ If END is non-`nil', return the location of next element."
 ;; Data manipulation
 
 (defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
-  ;; codecell.js in IPytohn implements it using timeout and callback.
+  ;; codecell.js in IPython implements it using timeout and callback.
   ;; As it is unclear why timeout is needed, just clear output
   ;; instantaneously for now.
   (ein:log 'debug "cell-clear-output stdout=%s stderr=%s other=%s"

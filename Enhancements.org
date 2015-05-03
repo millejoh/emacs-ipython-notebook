@@ -1,0 +1,67 @@
+#+STARTUP: indent
+
+* Overview
+* Design
+** Notebook Buffer
+** Notebooklist Buffer
+** Kernel communication
+** Contents API
+* Enhancements/Fixes
+** Imenu/Speedbar Cooperation
+Seems to be a couple ways of doing this:
+
+ 1. Configuring `[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]` regex's.
+
+ 2. Redefining imenu-create-index ala python.el.
+
+(2) seems to be the more elegant solution.
+
+EIN currently has minimal support for imenu through
+`[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]`, but all it does is look for
+headings. Somehow this fails to work with speedbar and also does not handle
+indexing Python code (i.e. variables, function, classes, etc.).
+
+To get the speedbar working we will need to define a minor mode per the
+following [[http://www.gnu.org/software/emacs/manual/html_node/speedbar/Minor-Display-Modes.html#Minor-Display-Modes][instructions]]. 
+
+For /name/~-speedbar-menu-items~ can I just use ~imenu-generic-expression~?
+
+Maybe the way to do this is for each ~[[file:lisp/ein-cell.el::ein:codecell][codecell]]~ create a temp buffer with the text
+of that cell and call ~ein:imenu-create-index~.
+
+#+BEGIN_SRC elisp
+  (let ((text (ein:cell-get-text cell)))
+    (with-temp-buffer
+      (insert text)
+      (ein:imenu-create-index)))
+#+END_SRC
+
+Still will need way to map temp buffer positions to actual positions in the
+notebook buffer (~ein:cell-input-pos-min~ and ~ein:cell-input-pos-max~)
+
+** Live links to other notebooks
+    
+ 1. Understand how org-mode does it.
+ 2. Steal???
+ 3. Profit!!!
+
+** Use polymode
+
+[[https://github.com/vspinu/polymode][Polymode]] uses indirect buffers, which may or may not be a good solution for ein
+notebooks.
+
+** Access password protected notebooks
+** Connect to non-python kernels
+** Synergies with pymacs?
+** Detect system path of opened notebook
+** Jump to notebook code in traceback (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/42][#42]])
+
+What needs to be done:
+
+1. Carry notebook reference in the ~[[file:lisp/ein-traceback.el::ein:traceback][ein:traceback]]~ structure.
+2. Look for ~<ipython-input-3-05c9758a9c21> in <module>()~. The number 3 means
+   input #3 in the notebook.
+3. Find cell based on input number. Can iterate through list of cells () and look for matching
+   ~input-prompt-number~.
+4. Call ~ein:cell-goto~ on that cell. May need to swap buffers first.
+
