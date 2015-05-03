@@ -1038,11 +1038,13 @@ prettified text thus be used instead of HTML type."
                                (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
 
                               ((and (equal otype "execute_result")
-                                    (equal prop :text))
+                                    (or (equal prop :text)
+                                        (equal prop :html))) 
                                (ein:log 'debug "Fixing execute_result (%s?)." otype)
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
                                  (push :data new-output)))
+
 
                               ((and (equal otype "execute_result")
                                     (equal prop :prompt_number))
@@ -1060,6 +1062,7 @@ prettified text thus be used instead of HTML type."
           `((execution_count)))
       (outputs . ,(apply #'vector (or renamed-outputs outputs)))
       (metadata . ,metadata))))
+
 
 (defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
