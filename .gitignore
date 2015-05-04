@@ -10,3 +10,7 @@ lisp/ein-autoloads.el
 tests/func-test-batch-log.log
 tests/test-batch-log.log
 *.py~
+*.org~
+lisp/test-batch-log.log
+*.pyc
+test-batch-log.log
