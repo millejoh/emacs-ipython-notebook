@@ -30,7 +30,6 @@
 
 (require 'ein-core)
 (require 'ein-log)
-(require 'ein-notebook)
 ;; FIXME: use websocket.el directly once v1.0 is released.
 (require 'ein-websocket)
 (require 'ein-events)
@@ -116,35 +115,34 @@
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
     (if (= (ein:$kernel-api-version kernel) 2)
-        (ein:kernel-start-legacy kernel
-                                 (ein:$notebook-notebook-name notebook)
-                                 (substring
-                                  (ein:$notebook-notebook-path notebook)
-                                  0
-                                  (or (position
-                                       ?/
-                                       (ein:$notebook-notebook-path notebook)
-                                       :from-end t)
-                                      0))))
-    (ein:query-singleton-ajax
-     (list 'kernel-start (ein:$kernel-kernel-id kernel))
-     (ein:url (ein:$kernel-url-or-port kernel)
-              "api/sessions")
-     :type "POST"
-     :data (json-encode `(("notebook" .
-                           (("path" . ,(ein:$notebook-notebook-path notebook))))))
-     :parser #'ein:json-read
-     :success (apply-partially #'ein:kernel--kernel-started kernel))))
+        (let ((path (substring (ein:$notebook-notebook-path notebook)
+                               0
+                               (or (position ?/ (ein:$notebook-notebook-path notebook)
+                                             :from-end t)
+                                   0))))
+          (ein:kernel-start--legacy kernel
+                                   (ein:$notebook-notebook-name notebook)
+                                   path))
+      (ein:query-singleton-ajax
+       (list 'kernel-start (ein:$kernel-kernel-id kernel))
+       (ein:url (ein:$kernel-url-or-port kernel)
+                "api/sessions")
+       :type "POST"
+       :data (json-encode `(("notebook" .
+                             (("path" . ,(ein:$notebook-notebook-path notebook))))))
+       :parser #'ein:json-read
+       :success (apply-partially #'ein:kernel--kernel-started kernel)))))
 
-(defun ein:kernel-start-legacy (kernel notebook-id path)
+(defun ein:kernel-start--legacy (kernel notebook-id path)
   (unless (ein:$kernel-running kernel)
     (if (not path)
         (setq path ""))
     (ein:query-singleton-ajax
-     (list 'kernel-start (ein:$kernel-kernel-id kernel))
+     (list 'kernel-start notebook-id)
      (ein:url (ein:$kernel-url-or-port kernel)
               "api/sessions")
      :type "POST"
+     
      :data (json-encode `(("notebook" .
                            (("name" . ,notebook-id)
                             ("path" . ,path)))))
