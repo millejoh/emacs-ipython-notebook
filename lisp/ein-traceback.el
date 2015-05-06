@@ -1,3 +1,4 @@
+
 ;;; ein-traceback.el --- Traceback module
 
 ;; Copyright (C) 2012- Takafumi Arakaki
@@ -34,6 +35,7 @@
 
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)
+   (notebook :initarg :source-notebook :type ein:$notebook)
    (buffer-name :initarg :buffer-name :type string)
    (buffer :initarg :buffer :type buffer)
    (ewoc :initarg :ewoc :type ewoc)))
@@ -43,8 +45,8 @@
 
 (defvar ein:tb-buffer-name-template "*ein:tb %s/%s*")
 
-(defun ein:tb-new (buffer-name)
-  (ein:traceback "Traceback" :buffer-name buffer-name))
+(defun ein:tb-new (buffer-name notebook)
+  (ein:traceback "Traceback" :buffer-name buffer-name :source-notebook notebook))
 
 (defmethod ein:tb-get-buffer ((traceback ein:traceback))
   (unless (and (slot-boundp traceback :buffer)
@@ -80,10 +82,11 @@
       (ein:and-let* ((tb-data (ein:get-traceback-data))
                      (url-or-port (ein:get-url-or-port))
                      (kernel (ein:get-kernel))
+                     (notebook (ein:get-notebook))
                      (kr-id (ein:kernel-id kernel))
                      (tb-name (format ein:tb-buffer-name-template
                                       url-or-port kr-id)))
-        (ein:tb-popup (ein:tb-new tb-name) tb-data)
+        (ein:tb-popup (ein:tb-new tb-name notebook) tb-data)
         t)
     (error "No traceback is available.")))
 
@@ -120,16 +123,30 @@
                                            &optional select)
   (let ((file (ein:tb-file-path-at-point traceback))
         (lineno (ein:tb-file-lineno-at-point traceback)))
-    (assert (file-exists-p file) nil "File %s does not exist." file)
-    (let ((buf (find-file-noselect file))
-          (scroll (lambda ()
-                    (goto-char (point-min))
-                    (forward-line (1- lineno)))))
-      (if select
-          (progn (pop-to-buffer buf)
-                 (funcall scroll))
-        (with-selected-window (display-buffer buf)
-          (funcall scroll))))))
+    (if (string-match "<ipython-input-\\([0-9]+\\)-.*" file)
+        (let* ((cellnum (string-to-number (match-string 1 file)))
+               (nb (oref traceback :source-notebook))
+               (ws (first (ein:$notebook-worksheets nb)))
+               (cells (ein:worksheet-get-cells ws))
+               
+               (it (find cellnum cells :key #'(lambda (x)
+                                                (and
+                                                 (slot-exists-p x :input-prompt-number)
+                                                 (slot-boundp x :input-prompt-number)
+                                                 (oref x :input-prompt-number))))))
+          (pop-to-buffer (ein:notebook-buffer nb))
+          (ein:cell-goto it))
+      (progn
+        (assert (file-exists-p file) nil "File %s does not exist." file)
+        (let ((buf (find-file-noselect file))
+              (scroll (lambda ()
+                        (goto-char (point-min))
+                        (forward-line (1- lineno)))))
+          (if select
+              (progn (pop-to-buffer buf)
+                     (funcall scroll))
+            (with-selected-window (display-buffer buf)
+              (funcall scroll))))))))
 
 (defun ein:tb-jump-to-source-at-point-command (&optional select)
   (interactive "P")
