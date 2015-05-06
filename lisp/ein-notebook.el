@@ -442,8 +442,7 @@ of minor mode."
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
     (ein:pytools-setup-hooks kernel)
-    (ein:kernel-start kernel
-                      (ein:$notebook-notebook-id notebook))))
+    (ein:kernel-start kernel notebook)))
 
 (defun ein:notebook-restart-kernel (notebook)
   (ein:kernel-restart (ein:$notebook-kernel notebook)))

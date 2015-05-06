@@ -96,7 +96,7 @@
 
 (defun ein:kernel-del (kernel)
   "Destructor for `ein:$kernel'."
-  (ein:kernel-stop-channels kernel))
+  (ein:kernel-stop kernel))
 
 
 (defun ein:kernel--get-msg (kernel msg-type content)
@@ -111,32 +111,50 @@
    :parent_header (make-hash-table)))
 
 
-(defun ein:kernel-start (kernel notebook-id &optional path)
+(defun ein:kernel-start (kernel notebook)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
+  (unless (ein:$kernel-running kernel)
+    (if (= (ein:$kernel-api-version kernel) 2)
+        (let ((path (substring (ein:$notebook-notebook-path notebook)
+                               0
+                               (or (position ?/ (ein:$notebook-notebook-path notebook)
+                                             :from-end t)
+                                   0))))
+          (ein:kernel-start--legacy kernel
+                                   (ein:$notebook-notebook-name notebook)
+                                   path))
+      (ein:query-singleton-ajax
+       (list 'kernel-start (ein:$kernel-kernel-id kernel))
+       (ein:url (ein:$kernel-url-or-port kernel)
+                "api/sessions")
+       :type "POST"
+       :data (json-encode `(("notebook" .
+                             (("path" . ,(ein:$notebook-notebook-path notebook))))))
+       :parser #'ein:json-read
+       :success (apply-partially #'ein:kernel--kernel-started kernel)))))
+
+(defun ein:kernel-start--legacy (kernel notebook-id path)
   (unless (ein:$kernel-running kernel)
     (if (not path)
         (setq path ""))
     (ein:query-singleton-ajax
-     (list 'kernel-start (ein:$kernel-kernel-id kernel))
-     ;;(concat
+     (list 'kernel-start notebook-id)
      (ein:url (ein:$kernel-url-or-port kernel)
-              ;;(ein:$kernel-base-url kernel))
-              ;;"?" (format "notebook=%s" notebook-id)
               "api/sessions")
      :type "POST"
+     
      :data (json-encode `(("notebook" .
                            (("name" . ,notebook-id)
                             ("path" . ,path)))))
      :parser #'ein:json-read
      :success (apply-partially #'ein:kernel--kernel-started kernel))))
 
-
 (defun ein:kernel-restart (kernel)
   (ein:events-trigger (ein:$kernel-events kernel)
                       'status_restarting.Kernel)
   (ein:log 'info "Restarting kernel")
   (when (ein:$kernel-running kernel)
-    (ein:kernel-stop-channels kernel)
+    (ein:kernel-stop kernel)
     (ein:query-singleton-ajax
      (list 'kernel-restart (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
@@ -274,7 +292,7 @@ See: https://github.com/ipython/ipython/pull/3307"
             #'ein:kernel--ws-closed-callback))))
 
 (defun ein:kernel-start-channels (kernel)
-  (ein:kernel-stop-channels kernel)
+  ;(ein:kernel-stop kernel)
   (let* ((api-version (ein:$kernel-api-version kernel))
          (ws-url (concat (ein:$kernel-ws-url kernel)
                          (ein:$kernel-kernel-url kernel)))
@@ -306,7 +324,7 @@ See: https://github.com/ipython/ipython/pull/3307"
         (ein:$kernel-after-start-hook kernel)))
 
 
-(defun ein:kernel-stop-channels (kernel)
+(defun ein:kernel-stop (kernel)
   (when (ein:$kernel-channels kernel)
     (setf (ein:$websocket-onclose (ein:$kernel-channels kernel)) nil)
     (ein:websocket-close (ein:$kernel-channels kernel))
@@ -318,8 +336,27 @@ See: https://github.com/ipython/ipython/pull/3307"
   (when (ein:$kernel-iopub-channel kernel)
     (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel)) nil)
     (ein:websocket-close (ein:$kernel-iopub-channel kernel))
-    (setf (ein:$kernel-iopub-channel kernel) nil)))
+    (setf (ein:$kernel-iopub-channel kernel) nil))
+  (ein:kernel-stop-session kernel))
 
+(defun ein:kernel-stop-session (kernel)
+  (ein:query-singleton-ajax
+   (list 'session-delete (ein:$kernel-session-id kernel))
+     (ein:url (ein:$kernel-url-or-port kernel)
+              "api/sessions"
+              (ein:$kernel-session-id kernel))
+     :type "DELETE"
+     :success (apply-partially #'ein:kernel--session-stopped-success kernel)
+     :error (apply-partially #'ein:kernel--session-stopped-error kernel)))
+
+(defun* ein:kernel--session-stopped-success (kernel &allow-other-keys)
+  (ein:log 'info "Stopped session %s." (ein:$kernel-session-id kernel)))
+
+(defun* ein:kernel--session-stopped-error (kernel &key symbol-status response &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S." (request-response-error-thrown response))
+  (ein:log 'error
+    "Failed to stop session %s  with status %s." (ein:$kernel-session-id kernel) symbol-status))
 
 (defun ein:kernel-live-p (kernel)
   (and
@@ -740,7 +777,7 @@ Example::
                (("idle")
                 (ein:events-trigger events 'status_idle.Kernel))
                (("dead")
-                (ein:kernel-stop-channels kernel)
+                (ein:kernel-stop kernel)
                 (ein:events-trigger events 'status_dead.Kernel))))
             (("data_pub")
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
