@@ -130,12 +130,12 @@
                (cells (ein:worksheet-get-cells ws))
                
                (it (find cellnum cells :key #'(lambda (x)
-                                                (and
-                                                 (slot-exists-p x :input-prompt-number)
-                                                 (slot-boundp x :input-prompt-number)
-                                                 (oref x :input-prompt-number))))))
-          (pop-to-buffer (ein:notebook-buffer nb))
-          (ein:cell-goto it))
+                                                (if (same-class-p x 'ein:codecell)
+                                                    (oref x :input-prompt-number))))))
+          (if it
+              (progn
+                (pop-to-buffer (ein:notebook-buffer nb))
+                (ein:cell-goto it))))
       (progn
         (assert (file-exists-p file) nil "File %s does not exist." file)
         (let ((buf (find-file-noselect file))
