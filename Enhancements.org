@@ -3,6 +3,13 @@
 * Overview
 * Design
 ** Notebook Buffer
+
+Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][struct]]. Always associated with a buffer,
+[[file:lisp/ein-notebook.el::ein:notebook-buffer][ein:notebook-buffer]] is used to find buffer associated with a notebook.
+
+Notebook does not hold cells, that is delegated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
+class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
+
 ** Notebooklist Buffer
 ** Kernel communication
 ** Contents API
@@ -64,4 +71,21 @@ What needs to be done:
 3. Find cell based on input number. Can iterate through list of cells () and look for matching
    ~input-prompt-number~.
 4. Call ~ein:cell-goto~ on that cell. May need to swap buffers first.
+
+** Return of worksheets
+
+tkf/ein and IPython 2.x allowed for multiple worksheets within an individual
+notebook. This feature was removed in 3.0 since multiple worksheets do not make
+much sense in the context of a tabbed web browser interface. EIN's legacy code
+still supports worksheets, though at the moment that information is lost upon
+saving a notebook.
+
+Having multiple worksheet support makes some sense for ein; below is thinking on
+how to reimplement this feature.
+
+IPython nbformat 4 specifies a [[http://ipython.org/ipython-doc/3/notebook/nbformat.html#metadata][metadata]] key which can be used to store general
+information. Cell metadad has a tag key which is a "A list of string tags on the
+cell. Commas are not allowed in a tag."
+
+Best place to set the tag key is when generating [[content]] for saving a notebook.
 

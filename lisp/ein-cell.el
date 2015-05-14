@@ -1001,8 +1001,9 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-(defmethod ein:cell-to-nb4-json ((cell ein:codecell) &optional discard-output)
-  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))))
+(defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
+                    (tags . ((format "worksheet-%s" wsidx)))))
         (outputs (if discard-output []
                    (oref cell :outputs)))
         (renamed-outputs '())
@@ -1068,16 +1069,18 @@ prettified text thus be used instead of HTML type."
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
-(defmethod ein:cell-to-nb4-json ((cell ein:textcell) &optional discard-output)
+(defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
-    (metadata . ((collapsed . t)))))
+    (metadata . ((collapsed . t)
+                 (tags . (,(format "worksheet-%s" wsidx)))))))
 
-(defmethod ein:cell-to-nb4-json ((cell ein:headingcell) &optional discard-output)
+(defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
   (let ((header (make-string (oref cell :level) ?#)))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
-      (metadata . ((collapsed . t))))))
+      (metadata . ((collapsed . t)
+                   (tags . (,(format "worksheet-%s" wsidx))))))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))

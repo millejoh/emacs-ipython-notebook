@@ -636,8 +636,13 @@ of NOTEBOOK."
 
 (defun ein:write-nbformat4-worksheets (notebook)
   (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
-  (let ((all-cells (first (mapcar #'ein:worksheet-to-nb4-json
-                                  (ein:$notebook-worksheets notebook)))))
+  (let ((all-cells 
+                   (loop for ws in (ein:$notebook-worksheets notebook)
+                         for i from 0
+                         append (ein:worksheet-to-nb4-json ws i))
+                    ;; (mapcar #'ein:worksheet-to-nb4-json
+                    ;;               (ein:$notebook-worksheets notebook))
+                    ))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
@@ -649,33 +654,7 @@ of NOTEBOOK."
                         'notebook_saving.Notebook)
     (ein:content-save content
                       #'ein:notebook-save-notebook-success
-                      (list notebook callback cbargs))
-    ;; (let ((data (ein:content-to-json content)))
-    ;;   ;; (push `(path . ,(ein:$notebook-notebook-path notebook)) data)
-    ;;   ;; (push `(name . ,(ein:$notebook-notebook-name notebook)) data)
-    ;;   ;; (push `(type . "notebook") data)
-    ;;   (ein:query-singleton-ajax
-    ;;    (list 'notebook-save
-    ;;          (ein:$notebook-url-or-port notebook)
-    ;;          (ein:$notebook-notebook-path notebook)
-    ;;          (ein:$notebook-notebook-name notebook))
-    ;;    (ein:notebook-url notebook)
-    ;;    :timeout ein:notebook-querty-timeout-save
-    ;;    :type "PUT"
-    ;;    :headers '(("Content-Type" . "application/json"))
-    ;;    :data data
-    ;;    :error (apply-partially #'ein:notebook-save-notebook-error notebook)
-    ;;    :success (apply-partially #'ein:notebook-save-notebook-workaround
-    ;;                              notebook retry callback cbarg)
-    ;;    :status-code
-    ;;    `((200 . ,(apply-partially
-    ;;               (lambda (notebook callback cbarg &rest rest)
-    ;;                 (apply #'ein:notebook-save-notebook-success
-    ;;                        notebook rest)
-    ;;                 (when callback
-    ;;                   (apply callback cbarg rest)))
-    ;;               notebook callback cbarg)))))
-    ))
+                      (list notebook callback cbargs))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."

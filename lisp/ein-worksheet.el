@@ -242,12 +242,12 @@ current buffer."
     `((cells . ,(apply #'vector cells))
       ,@(ein:aand (oref ws :metadata) `((metadata . ,it))))))
 
-(defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet))
+(defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
   (let* ((discard-output-p (oref ws :discard-output-p))
          (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
                             (ein:cell-to-nb4-json
-                             c (ein:funcall-packed discard-output-p c)))
+                             c wsidx (ein:funcall-packed discard-output-p c)))
                           (ein:worksheet-get-cells ws)))))
     cells))
 
