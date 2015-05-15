@@ -636,13 +636,9 @@ of NOTEBOOK."
 
 (defun ein:write-nbformat4-worksheets (notebook)
   (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
-  (let ((all-cells 
-                   (loop for ws in (ein:$notebook-worksheets notebook)
+  (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
-                         append (ein:worksheet-to-nb4-json ws i))
-                    ;; (mapcar #'ein:worksheet-to-nb4-json
-                    ;;               (ein:$notebook-worksheets notebook))
-                    ))
+                         append (ein:worksheet-to-nb4-json ws i))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))

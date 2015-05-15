@@ -1003,7 +1003,7 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
-                    (tags . ((format "worksheet-%s" wsidx)))))
+                    (tags . (,(format "worksheet-%s" wsidx)))))
         (outputs (if discard-output []
                    (oref cell :outputs)))
         (renamed-outputs '())
