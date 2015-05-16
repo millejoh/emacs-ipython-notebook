@@ -51,14 +51,36 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
                  (const :tag "No" nil))
   :group 'ein)
 
-(defun ein:pytools-setup-hooks (kernel)
+(defun ein:pytools-setup-hooks (kernel notebook)
   (push (cons #'ein:pytools-add-sys-path kernel)
+        (ein:$kernel-after-start-hook kernel))
+  (push (cons #'ein:pytools-get-notebook-dir (list kernel notebook))
         (ein:$kernel-after-start-hook kernel)))
 
 (defun ein:pytools-add-sys-path (kernel)
   (ein:kernel-execute
    kernel
    (format "__import__('sys').path.append('%s')" ein:source-dir)))
+
+(defun ein:set-buffer-file-name (nb msg-type content -not-used-)
+  (let ((buf (ein:notebook-buffer nb)))
+    (ein:case-equal msg-type
+      (("stream" "output")
+       (with-current-buffer buf
+         (setq buffer-file-name
+               (expand-file-name
+                (format "%s" (ein:$notebook-notebook-name nb))
+                (plist-get content :text))))))))
+
+(defun ein:pytools-get-notebook-dir (packed)
+  (multiple-value-bind (kernel notebook) packed
+    (ein:kernel-execute
+     kernel
+     (format "print(__import__('os').getcwd(),end='')")
+     (list
+      :output (cons
+               #'ein:set-buffer-file-name
+               notebook)))))
 
 
 ;;; Tooltip and help

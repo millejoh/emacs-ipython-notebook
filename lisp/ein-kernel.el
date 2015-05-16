@@ -34,7 +34,7 @@
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)
-
+(require 'ein-ipdb)
 
 ;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
 ;;        testing since I can mock I/O using method overriding.
