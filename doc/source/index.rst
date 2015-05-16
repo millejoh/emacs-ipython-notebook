@@ -563,6 +563,14 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.6
+----
+
+* Deprecate ein:set-buffer-file-name, instead use the power of Python!
+* Jump to notebook cells from traceback buffers.
+* Run ipbd/pdb from a comint buffer.
+* Fix serious bug with starting and restarting kernels in IPython 3.x.
+
 v0.5
 ----
 

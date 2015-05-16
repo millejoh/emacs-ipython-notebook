@@ -128,7 +128,7 @@ This key will be installed in the `ein:notebook-mode-map'."
   :group 'ein)
 
 (defcustom ein:notebook-set-buffer-file-name nil
-  "[EXPERIMENTAL] Set `buffer-file-name' of notebook buffer."
+  "[DEPRECATED] Set `buffer-file-name' of notebook buffer. Currently does nothing."
   :type 'boolean
   :group 'ein)
 
@@ -523,7 +523,7 @@ This is equivalent to do ``C-c`` in the console program."
     ;; Now that major-mode is set, set buffer local variables:
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
-    (ein:notebook-set-buffer-file-name-maybe notebook)
+    ;(ein:notebook-set-buffer-file-name-maybe notebook)
     (setq ein:%notebook% notebook)))
 
 (defun ein:notebook--notification-setup (notebook)
