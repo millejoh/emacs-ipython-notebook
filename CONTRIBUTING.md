@@ -48,4 +48,4 @@ does it for you for all EIN dependencies.
 
 Please consider putting log and backtrace in your bug report.
 Follow the instruction in the manual:
-http://tkf.github.com/emacs-ipython-notebook/#reporting-issue
+http://millejoh.github.com/emacs-ipython-notebook/#reporting-issue

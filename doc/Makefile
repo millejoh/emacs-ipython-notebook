@@ -164,7 +164,7 @@ _gh-pages-assert-repo:
 gh-pages-clone:
 	rm -rf build/html
 	git clone --branch gh-pages \
-		git@github.com:tkf/emacs-ipython-notebook.git \
+		git@github.com:millejoh/emacs-ipython-notebook.git \
 		build/html
 
 gh-pages-pull: _gh-pages-assert-repo
