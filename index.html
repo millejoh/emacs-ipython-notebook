@@ -72,8 +72,8 @@ object).</li>
 <ul class="simple">
 <li><a class="reference external" href="http://millejoh.github.io/emacs-ipython-notebook/">Online Documentation</a></li>
 <li><a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki">Wiki</a><ul>
-<li><a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots">Screenshots</a></li>
-<li><a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/wiki/Tips">Tips</a></li>
+<li><a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots">Screenshots</a></li>
+<li><a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips">Tips</a></li>
 </ul>
 </li>
 <li><a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/tags">Downloads</a></li>
@@ -148,17 +148,19 @@ object).</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log" id="id59">Change Log</a><ul>
-<li><a class="reference internal" href="#v0-4" id="id60">v0.4</a></li>
-<li><a class="reference internal" href="#v0-3" id="id61">v0.3</a></li>
-<li><a class="reference internal" href="#v0-2-1" id="id62">v0.2.1</a></li>
-<li><a class="reference internal" href="#v0-2" id="id63">v0.2</a></li>
-<li><a class="reference internal" href="#v0-1-2" id="id64">v0.1.2</a></li>
-<li><a class="reference internal" href="#v0-1-1" id="id65">v0.1.1</a></li>
-<li><a class="reference internal" href="#v0-1" id="id66">v0.1</a></li>
+<li><a class="reference internal" href="#v0-6" id="id60">v0.6</a></li>
+<li><a class="reference internal" href="#v0-5" id="id61">v0.5</a></li>
+<li><a class="reference internal" href="#v0-4" id="id62">v0.4</a></li>
+<li><a class="reference internal" href="#v0-3" id="id63">v0.3</a></li>
+<li><a class="reference internal" href="#v0-2-1" id="id64">v0.2.1</a></li>
+<li><a class="reference internal" href="#v0-2" id="id65">v0.2</a></li>
+<li><a class="reference internal" href="#v0-1-2" id="id66">v0.1.2</a></li>
+<li><a class="reference internal" href="#v0-1-1" id="id67">v0.1.1</a></li>
+<li><a class="reference internal" href="#v0-1" id="id68">v0.1</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#license" id="id67">License</a></li>
-<li><a class="reference internal" href="#indices-and-tables" id="id68">Indices and tables</a></li>
+<li><a class="reference internal" href="#license" id="id69">License</a></li>
+<li><a class="reference internal" href="#indices-and-tables" id="id70">Indices and tables</a></li>
 </ul>
 </div>
 <div class="section" id="quick-try">
@@ -1308,7 +1310,7 @@ to install it if you are using newer Emacs.</p>
 <blockquote>
 <div><ul class="simple">
 <li>HTML</li>
-<li>JSON (this is basically the sames opening the ipynb file in a buffer).</li>
+<li>JSON (this is basically the same as opening the ipynb file in a buffer).</li>
 <li>Latex</li>
 <li>Markdown</li>
 <li>Python</li>
@@ -1944,14 +1946,14 @@ in MuMaMo based notebook mode produces segfault.</p>
 <p>Also, <tt class="docutils literal"><span class="pre">mumamo-idle-set-major-mode</span></tt> messages error
 <tt class="docutils literal"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></tt>
 time to time, making minibuffer bit noisy while editing notebook.
-See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
+See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
 </div>
 </div>
 <div class="section" id="advanced">
 <h2><a class="toc-backref" href="#id54">Advanced</a><a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
 <p>By telling IPython a little bit about Emacs Lisp, you can execute
 Emacs Lisp from IPython, just like you can execute Javascript in the
-web client.  See <a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py">emacslisp.py</a> for more details.</p>
+web client.  See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/blob/master/tools/emacslisp.py">emacslisp.py</a> for more details.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
 <span class="o">%</span><span class="n">run</span> <span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">emacslisp</span><span class="o">.</span><span class="n">py</span>
 
@@ -2023,8 +2025,23 @@ everything the log buffer.  You can reset the patch and log level with
 </div>
 <div class="section" id="change-log">
 <h1><a class="toc-backref" href="#id59">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-6">
+<h2><a class="toc-backref" href="#id60">v0.6</a><a class="headerlink" href="#v0-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Deprecate ein:set-buffer-file-name, instead use the power of Python!</li>
+<li>Jump to notebook cells from traceback buffers.</li>
+<li>Run ipbd/pdb from a comint buffer.</li>
+<li>Fix serious bug with starting and restarting kernels in IPython 3.x.</li>
+</ul>
+</div>
+<div class="section" id="v0-5">
+<h2><a class="toc-backref" href="#id61">v0.5</a><a class="headerlink" href="#v0-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Add support for stdin channel. This mean getpass.getpass() and the ipdb work in no</li>
+</ul>
+</div>
 <div class="section" id="v0-4">
-<h2><a class="toc-backref" href="#id60">v0.4</a><a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id62">v0.4</a><a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Finalizing support for IPython 3.0.</li>
 <li>Better support for globally opening notebooks stored in a directory hierarchy.</li>
@@ -2038,7 +2055,7 @@ buffer.</li>
 </ul>
 </div>
 <div class="section" id="v0-3">
-<h2><a class="toc-backref" href="#id61">v0.3</a><a class="headerlink" href="#v0-3" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id63">v0.3</a><a class="headerlink" href="#v0-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>New maintainer - John Miller (millejoh at mac dot com)</li>
 <li>Official repository is now at <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook">https://github.com/millejoh/emacs-ipython-notebook</a></li>
@@ -2047,7 +2064,7 @@ buffer.</li>
 </ul>
 </div>
 <div class="section" id="v0-2-1">
-<h2><a class="toc-backref" href="#id62">v0.2.1</a><a class="headerlink" href="#v0-2-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id64">v0.2.1</a><a class="headerlink" href="#v0-2-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Cached auto-complete is removed.
 <tt class="xref el el-symbol docutils literal"><span class="pre">ac-source-ein-cached</span></tt> and <tt class="xref el el-symbol docutils literal"><span class="pre">ac-complete-ein-cached</span></tt>
@@ -2071,7 +2088,7 @@ This protocol is not used in EIN anywhere yet.</li>
 </ul>
 </div>
 <div class="section" id="v0-2">
-<h2><a class="toc-backref" href="#id63">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id65">v0.2</a><a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Preliminary login support.  See <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></tt></a>.</li>
 <li>Code completion in notebook happens <em>really</em> automatically.
@@ -2126,7 +2143,7 @@ See <tt class="xref el el-symbol docutils literal"><span class="pre">ein:connect
 </ul>
 </div>
 <div class="section" id="v0-1-2">
-<h2><a class="toc-backref" href="#id64">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id66">v0.1.2</a><a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Mostly refactoring for worksheet support in v0.2.</li>
 <li>Rename command <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-open</span></tt> to
@@ -2139,7 +2156,7 @@ now actually runs buffer instead of loading it.</li>
 </ul>
 </div>
 <div class="section" id="v0-1-1">
-<h2><a class="toc-backref" href="#id65">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id67">v0.1.1</a><a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>&#8216;s popup/quick help.</li>
 <li>Add <tt class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-first-open-hook</span></tt>.</li>
@@ -2172,19 +2189,19 @@ Use <a class="reference internal" href="#helm-ein-notebook-buffers" title="helm-
 </ul>
 </div>
 <div class="section" id="v0-1">
-<h2><a class="toc-backref" href="#id66">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id68">v0.1</a><a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>First release.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="license">
-<h1><a class="toc-backref" href="#id67">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id69">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>Emacs IPython Notebook is licensed under GPL v3.
 See COPYING for details.</p>
 </div>
 <div class="section" id="indices-and-tables">
-<h1><a class="toc-backref" href="#id68">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id70">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
 <li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>

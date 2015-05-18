@@ -10,7 +10,7 @@ evaluation, object inspection and code completion.  These features can be
 accessed anywhere in Emacs and improve Python code editing and reading in Emacs.
 
 .. _`Emacs IPython Notebook (EIN)`:
-  https://github.com/tkf/emacs-ipython-notebook
+  https://github.com/millejoh/emacs-ipython-notebook
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
@@ -44,9 +44,9 @@ Links:
   <https://github.com/millejoh/emacs-ipython-notebook/wiki>`_
 
   + `Screenshots
-    <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_
+    <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_
   + `Tips
-    <https://github.com/tkf/emacs-ipython-notebook/wiki/Tips>`_
+    <https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips>`_
 
 * `Downloads
   <https://github.com/millejoh/emacs-ipython-notebook/tags>`_
@@ -112,7 +112,7 @@ Requirements
   emacs initialization file add
 
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
-  
+
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
 It is known to work in Emacs 23.2, 24.1 and 24.2.
@@ -495,7 +495,7 @@ web client.  See `emacslisp.py`_ for more details.
    6
 
 .. _`emacslisp.py`:
-  https://github.com/tkf/emacs-ipython-notebook/blob/master/tools/emacslisp.py
+  https://github.com/millejoh/emacs-ipython-notebook/blob/master/tools/emacslisp.py
 
 
 Reporting issues
@@ -563,6 +563,19 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.6
+----
+
+* Deprecate ein:set-buffer-file-name, instead use the power of Python!
+* Jump to notebook cells from traceback buffers.
+* Run ipbd/pdb from a comint buffer.
+* Fix serious bug with starting and restarting kernels in IPython 3.x.
+
+v0.5
+----
+
+* Add support for stdin channel. This mean getpass.getpass() and the ipdb work in no
+
 v0.4
 ----
 
@@ -575,7 +588,7 @@ v0.4
 * Restore support for heading level cells with nbformat v4 notebooks.
 * New (buggy) pytools function `ein:pytools-export-buffer` for using nbconvert on a notebook
   buffer.
-  
+
 v0.3
 ----
 
@@ -726,4 +739,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
-
