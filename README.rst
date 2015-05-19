@@ -19,10 +19,10 @@
 Screenshot
 ==========
 
-.. figure:: https://github.com/tkf/emacs-ipython-notebook/raw/data/screenshots/notebook_simple_plot.png
+.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/screenshots/notebook_simple_plot.png
    :alt: Plotting in Emacs IPython Notebook
 
-See `more <https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots>`_!
+See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_!
 
 Features
 ========
