@@ -19,7 +19,7 @@
 Screenshot
 ==========
 
-.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/screenshots/notebook_simple_plot.png
+.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/screenshots/demo_plotnormal.png
    :alt: Plotting in Emacs IPython Notebook
 
 See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_!
