@@ -135,7 +135,7 @@
           (if it
               (progn
                 (pop-to-buffer (ein:notebook-buffer nb))
-                (ein:cell-goto it))))
+                (ein:cell-goto-line it lineno))))
       (progn
         (assert (file-exists-p file) nil "File %s does not exist." file)
         (let ((buf (find-file-noselect file))
