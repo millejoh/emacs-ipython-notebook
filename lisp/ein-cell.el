@@ -714,6 +714,23 @@ PROP is a name of cell element.  Default is `:input'.
                   (t 0))))
     (forward-char (+ relpos offset))))
 
+(defmethod ein:cell-goto-line ((cell ein:basecell) &optional inputline prop)
+  "Go to the input area of the given CELL.
+INPUTLINE is the line number relative to the input area.  Default is 1.
+PROP is a name of cell element.  Default is `:input'.
+
+\(fn cell inputline prop)"
+  (unless inputline (setq inputline 1))
+  (unless prop (setq prop :input))
+  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop))
+  (let ((offset (case prop
+                  ((:input :before-output) 1)
+                  (:after-input -1)
+                  (t 0))))
+    (forward-char offset)
+    (forward-line (- inputline 1))))
+
+
 (defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
   "Return the point relative to the input area of CELL.
 If the position POS is not given, current point is considered."
