@@ -10,8 +10,7 @@
           that you backup and backup often!
 
 .. |build-status|
-   image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png
-           ?branch=master
+   image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
    :alt: Build Status
 
@@ -19,7 +18,7 @@
 Screenshot
 ==========
 
-.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/demo_plotnormal.png
+.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/demo_plotnormal.PNG
    :alt: Plotting in Emacs IPython Notebook
 
 See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_!
