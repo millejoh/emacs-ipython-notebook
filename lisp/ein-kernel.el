@@ -651,7 +651,6 @@ Example::
                      (setf (ein:$kernel-running kernel) nil))
                  (when callback (apply callback cbargs)))
                kernel callback cbargs))))
-g
 
 ;; Reply handlers.
 
