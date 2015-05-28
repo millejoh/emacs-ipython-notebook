@@ -636,11 +636,8 @@ Example::
                 (ein:log 'info "Sent interruption command.")))))
 
 
-
-
-
 (defun ein:kernel-kill (kernel &optional callback cbargs)
-  (when (ein:$kernel-running kernel)
+  (when kernel
     (ein:query-singleton-ajax
      (list 'kernel-kill (ein:$kernel-session-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
@@ -650,10 +647,11 @@ Example::
      :success (apply-partially
                (lambda (kernel callback cbargs &rest ignore)
                  (ein:log 'info "Notebook session killed.")
-                 (setf (ein:$kernel-running kernel) nil)
+                 (if kernel
+                     (setf (ein:$kernel-running kernel) nil))
                  (when callback (apply callback cbargs)))
                kernel callback cbargs))))
-
+g
 
 ;; Reply handlers.
 
