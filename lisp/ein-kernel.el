@@ -339,29 +339,8 @@ See: https://github.com/ipython/ipython/pull/3307"
     (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel)) nil)
     (ein:websocket-close (ein:$kernel-iopub-channel kernel))
     (setf (ein:$kernel-iopub-channel kernel) nil))
-  (ein:kernel-stop-session kernel callback))
-
-(defun ein:kernel-stop-session (kernel &optional callback)
-  (ein:query-singleton-ajax
-   (list 'session-delete (ein:$kernel-session-id kernel))
-     (ein:url (ein:$kernel-url-or-port kernel)
-              "api/sessions"
-              (ein:$kernel-session-id kernel))
-     :type "DELETE"
-     :success (apply-partially #'ein:kernel--session-stopped-success kernel callback)
-     :error (apply-partially #'ein:kernel--session-stopped-error kernel)))
-
-(defun* ein:kernel--session-stopped-success (kernel callback &key response &allow-other-keys)
-  (ein:log 'info "Stopped session %s." (ein:$kernel-session-id kernel))
-  (setf (ein:$kernel-running kernel) nil)
-  (when callback
-    (funcall callback)))
-
-(defun* ein:kernel--session-stopped-error (kernel &key symbol-status response &allow-other-keys)
-  (ein:log 'verbose
-    "Error thrown: %S." (request-response-error-thrown response))
-  (ein:log 'error
-    "Failed to stop session %s with status %s." (ein:$kernel-session-id kernel) (request-response-status-code response)))
+  ;(ein:kernel-stop-session kernel callback)
+  )
 
 (defun ein:kernel-live-p (kernel)
   (and
@@ -657,16 +636,20 @@ Example::
                 (ein:log 'info "Sent interruption command.")))))
 
 
+
+
+
 (defun ein:kernel-kill (kernel &optional callback cbargs)
   (when (ein:$kernel-running kernel)
     (ein:query-singleton-ajax
-     (list 'kernel-kill (ein:$kernel-kernel-id kernel))
+     (list 'kernel-kill (ein:$kernel-session-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
-              (ein:$kernel-kernel-url kernel))
+              "api/sessions"
+              (ein:$kernel-session-id kernel))
      :type "DELETE"
      :success (apply-partially
                (lambda (kernel callback cbargs &rest ignore)
-                 (ein:log 'info "Notebook kernel is killed")
+                 (ein:log 'info "Notebook session killed.")
                  (setf (ein:$kernel-running kernel) nil)
                  (when callback (apply callback cbargs)))
                kernel callback cbargs))))

@@ -93,7 +93,8 @@ global setting.  For global setting and more information, see
   last-modified
   mimetype
   raw-content
-  format)
+  format
+  session-p)
 
 (defun ein:content-url (content)
   (let ((url-or-port (ein:$content-url-or-port content))
@@ -151,7 +152,7 @@ global setting.  For global setting and more information, see
             collecting
             (ein:fix-legacy-content-data item))
     (if (string= (plist-get data :path) "")
-            (plist-put data :path (plist-get data :name))
+        (plist-put data :path (plist-get data :name))
       (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
 
 (defun* ein:query-contents-legacy-success (path content callback &key data &allow-other-keys)
@@ -221,20 +222,24 @@ global setting.  For global setting and more information, see
 
 (defun ein:make-content-hierarchy (path url-or-port)
   (let* ((node (ein:content-query-contents path url-or-port t))
+         (active-sessions (make-hash-table :test 'equal))
          (items (ein:$content-raw-content node)))
+    (ein:content-query-sessions url-or-port active-sessions t)
     (ein:flatten (loop for item in items
-                   for c = (make-ein:$content :url-or-port url-or-port)
+                       for c = (make-ein:$content :url-or-port url-or-port)
                    do (ein:new-content c nil :data item)
                    collect
                    (cond ((string= (ein:$content-type c) "directory")
                           (cons c
                                 (ein:make-content-hierarchy (ein:$content-path c) url-or-port)))
-                         (t c))))))
+                         (t (progv c
+                                (setf (ein:$content-session-p c)
+                                      (gethash active-sessions (ein:$content-path c))))))))))
 
 (defun ein:refresh-content-hierarchy (&optional url-or-port)
   (let ((url-or-port (or url-or-port (ein:default-url-or-port))))
     (setf (gethash url-or-port *ein:content-hierarchy*)
-          (ein:make-content-hierarchy ""  url-or-port))))
+          (ein:make-content-hierarchy "" url-or-port))))
 
 ;;; Save Content
 (defun ein:content-save-legacy (content &optional callback cbargs)
@@ -321,5 +326,32 @@ global setting.  For global setting and more information, see
   (ein:log 'error
     "Renaming content %s failed with status %s." path symbol-status))
 
+
+;;; Sessions
+
+(defun ein:content-query-sessions (session-hash url-or-port &optional force-sync)
+  (ein:query-singleton-ajax
+     (list 'content-queyr-sessions)
+     (ein:url url-or-port "api/sessions")
+     :type "GET"
+     :parser #'ein:json-read
+     :success (apply-partially#'ein:content-query-sessions-success session-hash url-or-port)
+     :error #'ein:content-query-sessions-error
+     :sync force-sync))
+
+(defun* ein:content-query-sessions-success (session-hash url-or-port &key data &allow-other-keys)
+  (cl-flet ((read-name (nb-json)
+                       (if (= (ein:query-ipython-version url-or-port) 2)
+                           (if (string= (plist-get nb-json :path) "")
+                               (plist-get nb-json :name)
+                             (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))
+                         (plist-get nb-json :path))))
+    (dolist (s data)
+      (setf (gethash (read-name (plist-get s :notebook)) session-hash)
+            (cons (plist-get s :id) (plist-get s :kernel))))
+    session-hash))
+
+(defun* ein:content-query-sessions-error (&key symbol-status response &allow-other-keys)
+  (ein:log 'error "Session query failed with status %s (%s)." symbol-status response))
 
 (provide 'ein-contents-api)
