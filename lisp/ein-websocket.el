@@ -69,6 +69,7 @@
                     :onopen-args onopen-args))
         (ws (websocket-open
              url
+             :cookies (ein:query-get-cookie (url-host (url-generic-parse-url url)) "/")
              :on-open
              (lambda (ws)
                (let ((websocket (websocket-client-data ws)))
