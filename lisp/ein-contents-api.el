@@ -99,13 +99,13 @@ global setting.  For global setting and more information, see
 (defun ein:content-url (content)
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content)))
-    (ein:url url-or-port "api/contents" path)))
+    (ein:url url-or-port "api/contents" (url-hexify-string path))))
 
 (defun ein:content-url-legacy (content)
   "Generate content url's for IPython Notebook version 2.x"
   (let ((url-or-port (ein:$content-url-or-port content))
         (path  (ein:$content-path content)))
-    (ein:url url-or-port "api/notebooks" path)))
+    (ein:url url-or-port "api/notebooks" (url-hexify-string path))))
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
   "Return the contents of the object at the specified path from the Jupyter server."
