@@ -16,6 +16,7 @@ interactive-testein: test-requirements
 
 clean: ert-clean
 	rm -f lisp/*.elc
+	rm -f tests/notebook/*.ipynb
 
 purge: clean
 	rm -rf env log
