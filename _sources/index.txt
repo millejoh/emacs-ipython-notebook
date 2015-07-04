@@ -563,6 +563,11 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.7
+----
+
+* Support logging in to password protected jupyter servers.
+  
 v0.6
 ----
 
