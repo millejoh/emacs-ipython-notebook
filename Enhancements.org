@@ -13,6 +13,20 @@ class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
 ** Notebooklist Buffer
 ** Kernel communication
 ** Contents API
+** Connecting to a running Kernel
+Entry point is ~[[file:lisp/ein-notebook.el::ein:notebook-start-kernel][ein:notebook-start-kernel]]~ which is called from
+~ein:notebook-request-open-callback~ after successful call to the notebook
+server requesting the contents of a given notebook.
+
+~[[file:lisp/ein-kernel.el::ein:kernel-start][ein:kernel-start]]~ starts/gets a session with a running kernel using the REST API.
+
+On a [[file:lisp/ein-kernel.el::ein:kernel--kernel-s][successful]] return ein [[file:lisp/ein-websocket.el::ein:websocket][creates]] a websocket channel (channels for IPython
+2.x) via a call to ~websocket-open~ in the [[https://github.com/ahyatt/emacs-websocket][emacs-websocket]] package. The URL request is of the form:
+
+#+BEGIN_QUOTE
+ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/channels?session_id={session id}
+#+END_QUOTE
+
 * Enhancements/Fixes
 ** Imenu/Speedbar Cooperation
 Seems to be a couple ways of doing this:
@@ -57,7 +71,30 @@ notebook buffer (~ein:cell-input-pos-min~ and ~ein:cell-input-pos-max~)
 [[https://github.com/vspinu/polymode][Polymode]] uses indirect buffers, which may or may not be a good solution for ein
 notebooks.
 
-** Access password protected notebooks
+** Access password protected notebooks (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/57][#57]])
+This is what I have found out so far:
+
+You can authenticate with the IPython/Jupyter notebook server using
+ein:notebooklist-login. After calling this a cookie is generated (very easy to
+see if you are using curl as the backend for emacs-request) and you can then use
+the REST API to list and get notebook data.
+
+Once authenticated REST calls to get notebook json data and create sessions work
+fine. After EIN starts a session one can see the kernel is running from the web
+interface. The problem starts when ein tries to open a websocket connection to
+the kernel. The notebook server generates a 403 forbidden response. I think
+because emacs-websocket doesn't know anything about the security cookie
+generated during the curl request.
+
+Not sure if that makes sense, but for the moment that is my theory on what's
+happening. Somehow we need to provide the security cookie with the websocket
+connect request.
+
+<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more info with the connection header:
+
+1. Specify the port along with the url.
+2. Pass along a security cookie.
+
 ** Connect to non-python kernels
 ** Synergies with pymacs?
 ** Detect system path of opened notebook
@@ -72,7 +109,7 @@ What needs to be done:
    ~input-prompt-number~.
 4. Call ~ein:cell-goto~ on that cell. May need to swap buffers first.
 
-** Return of worksheets
+** The Return of Worksheets
 
 tkf/ein and IPython 2.x allowed for multiple worksheets within an individual
 notebook. This feature was removed in 3.0 since multiple worksheets do not make

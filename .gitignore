@@ -14,5 +14,5 @@ tests/test-batch-log.log
 lisp/test-batch-log.log
 *.pyc
 test-batch-log.log
-Makefile~
 *.ipynb~
+Makefile~

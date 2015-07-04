@@ -1057,7 +1057,8 @@ prettified text thus be used instead of HTML type."
 
                               ((and (equal otype "execute_result")
                                     (or (equal prop :text)
-                                        (equal prop :html))) 
+                                        (equal prop :html)
+					(equal prop :latex))) 
                                (ein:log 'debug "Fixing execute_result (%s?)." otype)
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)

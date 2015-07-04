@@ -27,9 +27,8 @@
 
 (eval-when-compile (require 'cl))
 (require 'websocket)
-
 (require 'ein-core)
-
+(require 'url-cookie)
 
 (defstruct ein:$websocket
   "A wrapper object of `websocket'.
@@ -55,39 +54,50 @@
   onopen-args
   closed-by-client)
 
+(defun ein:websocket--prepare-cookies (url)
+  (let* ((parsed-url (url-generic-parse-url url))
+         (host-port (if (url-port-if-non-default parsed-url)
+                        (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
+                      (url-host parsed-url)))
+	 (cookies (request-cookie-alist (url-host (url-generic-parse-url url)) "/")))
+    (when cookies
+      (dolist (c cookies)
+	(url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)))))))
+
 
 ;; Issues opening websockets in IPython 2.0, think it is related to
 ;; http://stackoverflow.com/questions/22202182/error-on-websocket-when-try-to-use-ipython-notebook-in-emacs
 (defun ein:websocket (url &optional onmessage onclose onopen
                           onmessage-args onclose-args onopen-args)
-  (let ((websocket (make-ein:$websocket
-                    :onmessage onmessage
-                    :onclose onclose
-                    :onopen onopen
-                    :onmessage-args onmessage-args
-                    :onclose-args onclose-args
-                    :onopen-args onopen-args))
-        (ws (websocket-open
-             url
-             :on-open
-             (lambda (ws)
-               (let ((websocket (websocket-client-data ws)))
-                 (ein:aif (ein:$websocket-onopen websocket)
-                     (apply it (ein:$websocket-onopen-args websocket)))))
-             :on-message
-             (lambda (ws frame)
-               (let ((websocket (websocket-client-data ws))
-                     (packet (websocket-frame-payload frame)))
-                 (ein:aif (ein:$websocket-onmessage websocket)
-                     (when packet
-                       (apply it packet
-                              (ein:$websocket-onmessage-args websocket))))))
-             :on-close
-             (lambda (ws)
-               (let ((websocket (websocket-client-data ws)))
-                 (ein:aif (ein:$websocket-onclose websocket)
-                     (apply it websocket
-                            (ein:$websocket-onclose-args websocket))))))))
+  (ein:websocket--prepare-cookies url)
+  (let* ((websocket (make-ein:$websocket
+		     :onmessage onmessage
+		     :onclose onclose
+		     :onopen onopen
+		     :onmessage-args onmessage-args
+		     :onclose-args onclose-args
+		     :onopen-args onopen-args))
+	 (ws (websocket-open
+	      url
+	      :on-open
+	      (lambda (ws)
+		(let ((websocket (websocket-client-data ws)))
+		  (ein:aif (ein:$websocket-onopen websocket)
+		      (apply it (ein:$websocket-onopen-args websocket)))))
+	      :on-message
+	      (lambda (ws frame)
+		(let ((websocket (websocket-client-data ws))
+		      (packet (websocket-frame-payload frame)))
+		  (ein:aif (ein:$websocket-onmessage websocket)
+		      (when packet
+			(apply it packet
+			       (ein:$websocket-onmessage-args websocket))))))
+	      :on-close
+	      (lambda (ws)
+		(let ((websocket (websocket-client-data ws)))
+		  (ein:aif (ein:$websocket-onclose websocket)
+		      (apply it websocket
+			     (ein:$websocket-onclose-args websocket))))))))
     (setf (websocket-client-data ws) websocket)
     (setf (ein:$websocket-ws websocket) ws)
     websocket))
