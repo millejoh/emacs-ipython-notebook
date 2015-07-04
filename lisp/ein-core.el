@@ -43,7 +43,7 @@
   :group 'applications
   :prefix "ein:")
 
-(defvar ein:version "0.3"
+(defvar ein:version "0.7"
   "Version number for Emacs IPython Notebook (EIN).")
 
 
