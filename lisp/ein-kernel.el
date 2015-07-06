@@ -96,7 +96,7 @@
 
 (defun ein:kernel-del (kernel)
   "Destructor for `ein:$kernel'."
-  (ein:kernel-stop kernel))
+  (ein:kernel-disconnet kernel))
 
 
 (defun ein:kernel--get-msg (kernel msg-type content)
@@ -154,7 +154,7 @@
                       'status_restarting.Kernel)
   (ein:log 'info "Restarting kernel - local settings will be lost!")
   (when (ein:$kernel-running kernel)
-    (ein:kernel-stop kernel
+    (ein:kernel-kill kernel
                      (apply-partially #'ein:kernel-start kernel (ein:get-notebook-or-error)))
     ;; (ein:query-singleton-ajax
     ;;  (list 'kernel-restart (ein:$kernel-kernel-id kernel))
@@ -325,8 +325,9 @@ See: https://github.com/ipython/ipython/pull/3307"
   (mapc #'ein:funcall-packed
         (ein:$kernel-after-start-hook kernel)))
 
-
-(defun ein:kernel-stop (kernel &optional callback)
+(defun ein:kernel-disconnect (kernel &optional callback)
+  "Disconnect websocket connection to running kernel, but do not
+kill the kernel."
   (when (ein:$kernel-channels kernel)
     (setf (ein:$websocket-onclose (ein:$kernel-channels kernel)) nil)
     (ein:websocket-close (ein:$kernel-channels kernel))
@@ -339,8 +340,13 @@ See: https://github.com/ipython/ipython/pull/3307"
     (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel)) nil)
     (ein:websocket-close (ein:$kernel-iopub-channel kernel))
     (setf (ein:$kernel-iopub-channel kernel) nil))
-  ;(ein:kernel-stop-session kernel callback)
-  )
+  (setf (ein:$kernel-running kernel) nil)
+  (when callback
+    (funcall callback)))
+
+(defun ein:kernel-reconnect (kernel notebook)
+  (ein:kernel-disconnect kernel)
+  (ein:kernel-start kernel notebook))
 
 (defun ein:kernel-live-p (kernel)
   (and
@@ -762,7 +768,7 @@ Example::
                (("idle")
                 (ein:events-trigger events 'status_idle.Kernel))
                (("dead")
-                (ein:kernel-stop kernel)
+                (ein:kernel-disconnect kernel)
                 (ein:events-trigger events 'status_dead.Kernel))))
             (("data_pub")
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))

@@ -455,6 +455,12 @@ of minor mode."
         (ein:notebook-restart-kernel ein:%notebook%))
     (ein:log 'error "Not in notebook buffer!")))
 
+(defun ein:notebook-reconnect-kernel ()
+  "Reconnect to the websocket connection for the running kernel."
+  (interactive)
+  (if ein:%notebook%
+      (ein:kernel-reconnect (ein:$notebook-kernel ein:%notebook%) ein:%notebook%)))
+
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
   'ein:pytools-request-tooltip-or-help "0.1.2")
