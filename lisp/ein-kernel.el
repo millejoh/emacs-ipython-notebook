@@ -96,7 +96,7 @@
 
 (defun ein:kernel-del (kernel)
   "Destructor for `ein:$kernel'."
-  (ein:kernel-disconnet kernel))
+  (ein:kernel-disconnect kernel))
 
 
 (defun ein:kernel--get-msg (kernel msg-type content)
