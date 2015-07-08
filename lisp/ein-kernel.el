@@ -206,7 +206,10 @@ See: https://github.com/ipython/ipython/pull/3307"
   (let ((protocol (if securep "wss" "ws")))
     (if (integerp url-or-port)
         (format "%s://127.0.0.1:%s" protocol url-or-port)
-      (let ((parsed-url (url-generic-parse-url url-or-port)))
+      (let* ((url (if (string-match "^https?://" url-or-port)
+                      url-or-port
+                    (format "http://%s" url-or-port)))
+             (parsed-url (url-generic-parse-url url)))
         (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url))))))
 
 

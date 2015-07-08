@@ -13,6 +13,9 @@ class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
 ** Notebooklist Buffer
 ** Kernel communication
 ** Contents API
+
+Documented at the IPython Github [[https://github.com/ipython/ipython/wiki/IPEP-27%253A-Contents-Service][wiki.]]
+
 ** Connecting to a running Kernel
 Entry point is ~[[file:lisp/ein-notebook.el::ein:notebook-start-kernel][ein:notebook-start-kernel]]~ which is called from
 ~ein:notebook-request-open-callback~ after successful call to the notebook
@@ -28,6 +31,21 @@ ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/ch
 #+END_QUOTE
 
 * Enhancements/Fixes
+** Working with jupyterhub
+
+Jupyterhub requires authentication using username/password, as opposed to just
+providing a secret when logging into ipython 3.x and earlier.
+
+On logging in a cookie of form "jupyter-hub-token-<username>" is generated and
+propogated with all calls to server. Emacs request should automatically handle
+this.
+
+The REST API for this looks like POST http://{host}:{port}/hub/login, username and password
+parameters in the POST.
+
+Also looks like the content REST API has been modified so that querys are of the
+form: /user/<username>/<command>.
+
 ** Imenu/Speedbar Cooperation
 Seems to be a couple ways of doing this:
 

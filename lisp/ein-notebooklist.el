@@ -153,6 +153,8 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless url-or-port (setq url-or-port (ein:default-url-or-port)))
   (unless path (setq path ""))
+  (if (and (stringp url-or-port) (not (string-match "^https?://" url-or-port)))
+      (setq url-or-port (format "http://%s" url-or-port)))
   (ein:subpackages-load)
   (let ((success
          (if no-popup
