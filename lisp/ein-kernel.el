@@ -173,13 +173,13 @@
         (setq data (plist-get data :kernel)))
     (destructuring-bind (&key id &allow-other-keys) data
       (unless id
-        (error "Failed to start kernel.  No `kernel_id' or `ws_url'.  Got %S."
+        (error "Failed to start kernel.  No `kernel_id'.  Got %S."
                data))
       (ein:log 'info "Kernel started: %s" id)
       (setf (ein:$kernel-running kernel) t)
       (setf (ein:$kernel-kernel-id kernel) id)
       (setf (ein:$kernel-session-id kernel) session-id)
-      (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url kernel id))
+      (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url (ein:$kernel-url-or-port kernel)))
       (setf (ein:$kernel-kernel-url kernel)
             (concat (ein:$kernel-base-url kernel) "/" id)))
     (ein:kernel-start-channels kernel)
@@ -200,13 +200,14 @@
                 (ein:kernel--handle-channels-reply kernel packet)))))))
 
 
-(defun ein:kernel--ws-url (kernel ws_url)
-  "Use `ein:$kernel-url-or-port' if WS_URL is an empty string.
+(defun ein:kernel--ws-url (url-or-port &optional securep)
+  "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
-  (if (string-match-p "^wss?://" ws_url)
-      ws_url
-    (let ((ein:url-localhost-template "ws://127.0.0.1:%s"))
-      (ein:url (ein:$kernel-url-or-port kernel)))))
+  (let ((protocol (if securep "wss" "ws")))
+    (if (integerp url-or-port)
+        (format "%s://127.0.0.1:%s" protocol url-or-port)
+      (let ((parsed-url (url-generic-parse-url url-or-port)))
+        (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url))))))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
