@@ -4,16 +4,27 @@
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
+EIN works with IPython 2.x_, 3.x_, and Juptyer_! Note that remote and password
+protected logins are working with IPython 3.x, but have not been tested with
+Jupyter.
 
 .. note:: The code has been stable enough for my day to day work, but there are
           no guarantees for the safety for your notebook data.  Please make sure
-          that you backup and backup often!
+          that you back-up and back-up often!
 
+.. note:: The code for testing EIN is horribly broken, but I regularly hand
+          check the code running against IPython's suite of sample
+          notebooks. It's a worse-is-better solution to problem requiring a
+          time-consuming solution.
+   
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
    :alt: Build Status
 
+.. _2.x: http://ipython.org/ipython-doc/2/index.html
+.. _3.x: http://ipython.org/ipython-doc/3/index.html
+.. _Jupyter: http://jupyter.org
 
 Screenshot
 ==========

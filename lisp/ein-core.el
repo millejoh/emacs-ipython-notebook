@@ -129,23 +129,23 @@ the source is in git repository."
 
 (defvar *running-ipython-version* (make-hash-table))
 
+# TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
 (defun ein:query-ipython-version (&optional url-or-port force)
   (ein:aif (and (not force) (gethash (or url-or-port (ein:default-url-or-port)) *running-ipython-version*))
       it
     (let ((resp (request (ein:url (or url-or-port
                                       (ein:default-url-or-port))
-                                  "api")
+                                  "api/contents")
                          :parser #'(lambda ()
                                      (ignore-errors
                                        (ein:json-read)))
                          :timeout 0.5
                          :sync t)))
       (if (eql 404 (request-response-status-code resp))
-          (progn
-            (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
-            (setf (gethash url-or-port *running-ipython-version*) 2))
-        (setf (gethash url-or-port *running-ipython-version*)
-              (string-to-number (first (split-string (plist-get (request-response-data resp) :version) "[\\.]"))))))))
+                (progn
+                  (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
+                  (setf (gethash url-or-port *running-ipython-version*) 2))
+              (setf (gethash url-or-port *running-ipython-version*) 3)))))
 
 (defun ein:force-ipython-version-check ()
   (interactive)
