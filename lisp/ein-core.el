@@ -129,7 +129,7 @@ the source is in git repository."
 
 (defvar *running-ipython-version* (make-hash-table))
 
-# TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
+;; TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
 (defun ein:query-ipython-version (&optional url-or-port force)
   (ein:aif (and (not force) (gethash (or url-or-port (ein:default-url-or-port)) *running-ipython-version*))
       it
