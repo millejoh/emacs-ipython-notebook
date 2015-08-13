@@ -48,11 +48,11 @@ TEXT is a string and PROMPT-NUMBER is an integer."
   "Create a plist representing JSON data for code-type cell.
 To make OUTPUTS data, use `ein:testing-codecell-pyout-data'."
   (list :cell_type "code"
-        :input (or input "")
+        :source (or input "")
         :language "python"
         :outputs outputs
-        :collapsed json-false
-        :prompt_number prompt-number))
+	:metadata (list :collapsed json-false :autoscroll json-false)
+        :execution_count prompt-number))
 
 (defun ein:testing-textcell-data (&optional source cell-type)
   (list :cell_type cell-type

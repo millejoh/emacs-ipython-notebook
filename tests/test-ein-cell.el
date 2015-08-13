@@ -21,7 +21,7 @@
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
          (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "pyout"
+         (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
@@ -82,7 +82,7 @@
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
          (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "pyout"
+         (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
@@ -100,7 +100,7 @@
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
          (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "pyout"
+         (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
@@ -162,7 +162,7 @@
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
          (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "pyout"
+         (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
@@ -189,7 +189,7 @@
   (let* ((input-prompt-number 111)
          (output-prompt-number 222)
          (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "pyout"
+         (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
                          :text (list "first output"
                                      "second output")))
@@ -210,7 +210,7 @@
         for cell-p = (intern (format "ein:%scell-p" cell-type))
         do
         (let* ((input (ein:join-str "\n" '("first input" "second input")))
-               (data (list :cell_type cell-type :source input))
+               (data (list :cell_type cell-type :source input :metadata nil))
                (dummy-ewoc (ewoc-create 'dummy))
                (old (eintest:cell-from-json data :ewoc dummy-ewoc))
                (new (ein:cell-copy old)))
