@@ -26,6 +26,17 @@ Jupyter.
 .. _3.x: http://ipython.org/ipython-doc/3/index.html
 .. _Jupyter: http://jupyter.org
 
+
+Check out ob-ipython_!
+======================
+
+EIN unfortunately has limited integration_ with org-mode, but if you
+are looking to use the IPython kernel with your org files you should
+check out ob-ipython_ (available on MELPA).
+
+.. _integration: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _ob_ipython: https://github.com/gregsexton/ob-ipython/
+
 Screenshot
 ==========
 
