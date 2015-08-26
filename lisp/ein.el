@@ -1,9 +1,8 @@
 ;;; ein.el --- IPython notebook client in Emacs
 
-;; Copyright (C) 2012- Takafumi Arakaki
+;; Copyright (C) 2012-2015 Takafumi Arakaki, John Miller
 
-;; Authors: Takafumi Arakaki <aka.tkf at gmail.com>
-;;          John Miller <millejoh at millejoh.com>
+;; Author:  John Miller <millejoh at millejoh.com>, Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: http://millejoh.github.io/emacs-ipython-notebook/
 ;; Keywords: applications, tools
 ;; Version: 0.7.0
@@ -85,7 +84,7 @@
 
 (provide 'ein)
 
-;; Old commentary:
+;;; Old commentary:
 
 ;; Development
 ;; ===========
