@@ -41,8 +41,9 @@
   (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
-             :input "some input"
-             :prompt_number 111)
+             :source "some input"
+	     :metadata (list :collapsed json-false :autoscroll json-false)
+             :execution_count 111)
        :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
@@ -54,8 +55,9 @@ some input
   (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
-             :input "some input"
-             :prompt_number "*")
+             :source "some input"
+	     :metadata (list :collapsed json-false :autoscroll json-false)
+             :execution_count "*")
        :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
@@ -67,7 +69,8 @@ some input
   (ein:testing-with-one-cell
       (ein:cell-from-json
        (list :cell_type "code"
-             :input "some input")
+	     :metadata (list :collapsed json-false :autoscroll json-false)
+             :source "some input")
        :ewoc (oref ein:%worksheet% :ewoc))
     (goto-char (ein:cell-location cell))
     (should (looking-at "\
@@ -85,8 +88,9 @@ some input
         (ein:cell-from-json
          (list :cell_type "code"
                :outputs outputs
-               :input "some input"
-               :prompt_number 111)
+               :source "some input"
+	       :metadata (list :collapsed json-false :autoscroll json-false)
+               :execution_count 111)
          :ewoc (oref ein:%worksheet% :ewoc))
       (goto-char (ein:cell-location cell))
       (should (looking-at (format "\
@@ -105,7 +109,7 @@ some input
          (loop for i from 1
                for x in outputs
                collect
-               (append x (list :output_type "pyout" :prompt_number i))))
+               (append x (list :output_type "execute_result" :execution_count i))))
         (outputs-display-data
          (mapcar (lambda (x) (append '(:output_type "display_data") x))
                  outputs))
