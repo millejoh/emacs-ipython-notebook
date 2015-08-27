@@ -31,12 +31,14 @@
 [submodule "lib/nxhtml"]
 	path = lib/nxhtml
 	url = https://github.com/emacsmirror/nxhtml.git
+        branch = master
 [submodule "lib/ert"]
 	path = lib/ert
 	url = https://github.com/ohler/ert.git
 [submodule "lib/request"]
 	path = lib/request
 	url = https://github.com/tkf/emacs-request
+        branch = master
 [submodule "lib/ein-mumamo"]
 	path = lib/ein-mumamo
 	url = https://github.com/millejoh/ein-mumamo
