@@ -2,6 +2,13 @@
 
 * Overview
 * Design
+** Notebook Format
+
+Version 4.0 [[http://nbformat.readthedocs.org/en/latest/][documented]].
+
+Earlier versions might be documented less formally on the wiki. Can
+also look at the IPython source in the json viles.
+
 ** Notebook Buffer
 
 Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][struct]]. Always associated with a buffer,
@@ -10,6 +17,14 @@ Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][
 Notebook does not hold cells, that is delegated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
 class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
 
+Opened notebooks are kept in the ~ein:notebook--opened-map~ hash
+table. Keys are cons cells of ~url-or-port~ and ~path~.
+
+There are a number of helper functions for returning the struct for an opened notebook:
+
+ - ~[[file:lisp/ein-notebook.el::(defun%20ein:notebook-get-opened-notebook%20(url-or-port%20path)][ein:notebook-get-opened-notebook]]~ ::
+ - ~[[file:lisp/ein-notebook.el::(defun%20ein:notebook-get-opened-buffer%20(url-or-port%20path)][ein:notebook-get-opened-buffer]]~ ::
+   - 
 ** Notebooklist Buffer
 ** Kernel communication
 ** Contents API
@@ -79,7 +94,7 @@ Still will need way to map temp buffer positions to actual positions in the
 notebook buffer (~ein:cell-input-pos-min~ and ~ein:cell-input-pos-max~)
 
 ** Live links to other notebooks
-    
+
  1. Understand how org-mode does it.
  2. Steal???
  3. Profit!!!
@@ -87,7 +102,12 @@ notebook buffer (~ein:cell-input-pos-min~ and ~ein:cell-input-pos-max~)
 ** Use polymode
 
 [[https://github.com/vspinu/polymode][Polymode]] uses indirect buffers, which may or may not be a good solution for ein
-notebooks.
+notebooks. I think this is what nxhtml is doing...
+
+** Use [[https://github.com/magnars/dash.el][dash]]?
+Get rid of all those cl compile warnings?
+
+Also look at using [[https://github.com/magnars/s.el][s]] and [[https://github.com/rejeep/f.el][f]].
 
 ** Access password protected notebooks (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/57][#57]])
 This is what I have found out so far:
@@ -144,3 +164,8 @@ cell. Commas are not allowed in a tag."
 
 Best place to set the tag key is when generating [[content]] for saving a notebook.
 
+** Fixing Tests
+ - Insert output tests are failing - probably due to how we are making
+   the test cell. JSON is per nbformat4, but are we correctly parsing
+   mimetypes (i.e. there is an additional call to do this, are we
+   making it?). Is [[file:lisp/ein-cell.el::ein:cell-insert-output][ein:cell-insert-output]] getting called?

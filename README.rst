@@ -35,7 +35,7 @@ are looking to use the IPython kernel with your org files you should
 check out ob-ipython_ (available on MELPA).
 
 .. _integration: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
-.. _ob_ipython: https://github.com/gregsexton/ob-ipython/
+.. _ob-ipython: https://github.com/gregsexton/ob-ipython/
 
 Screenshot
 ==========
