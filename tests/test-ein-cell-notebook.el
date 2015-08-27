@@ -83,7 +83,12 @@ some input
 
 (defun eintest:cell-insert-output (outputs regexp)
   (let ((ein:output-type-preference
-         '(emacs-lisp svg png jpeg text html latex javascript)))
+         '(emacs-lisp image/svg image/png jpeg text/plain text/html text/latex text/javascript)))
+    (message "%S" (list :cell_type "code"
+			:outputs outputs
+			:source "Some input"
+			:metadata (list :collapsed json-false :autoscroll json-false)
+			:execution_count 111))
     (ein:testing-with-one-cell
         (ein:cell-from-json
          (list :cell_type "code"
@@ -109,9 +114,9 @@ some input
          (loop for i from 1
                for x in outputs
                collect
-               (append x (list :output_type "execute_result" :execution_count i))))
+               (append x (list :output_type "execute_result" :execution_count i :metadata nil))))
         (outputs-display-data
-         (mapcar (lambda (x) (append '(:output_type "display_data") x))
+         (mapcar (lambda (x) (append '(:output_type "display_data" :metadata nil) x))
                  outputs))
         (regexp-pyout
          (ein:join-str
@@ -130,47 +135,47 @@ some input
                                      ,regexp-display-data)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
-  text ("some output") ((:text "some output")))
+  text ("some output") ((:data (:text/plain "some output"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   latex
   ("some output \\\\LaTeX")
-  ((:latex "some output \\LaTeX")))
+  ((:data (:text/latex "some output \\LaTeX"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    svg
    (" ")
-   ((:text "some output text" :svg ein:testing-example-svg))))
+   ((:data (:text/plain "some output text" :svg ein:testing-example-svg)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
   ("some output text")
-  ((:text "some output text" :html "<b>not shown</b>")))
+  ((:data (:text/plain ("some output text") :text/html ("<b>not shown</b>")))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   javascript
   ("some output text")
-  ((:text "some output text" :javascript "$.do.something()")))
+  ((:data (:text/plain "some output text" :text/javascript "$.do.something()"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-two
   ("first output text" "second output text")
-  ((:text "first output text") (:text "second output text")))
+  ((:data (:text/plain "first output text")) (:text/plain "second output text")))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-javascript
   ("first output text" "second output text")
-  ((:text "first output text")
-   (:text "second output text" :javascript "$.do.something()")))
+  ((:data (:text/plain "first output text"))
+   (:data (:text/plain "second output text" :text/javascript "$.do.something()"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    text-latex-svg
    ("first output text" "second output \\\\LaTeX" " ")
-   ((:text "first output text")
-    (:latex "second output \\LaTeX")
-    (:text "some output text" :svg ein:testing-example-svg))))
+   ((:data (:text/plain "first output text"))
+    (:data (:text/latex "second output \\LaTeX"))
+    (:data (:text/plain "some output text" :image/svg ein:testing-example-svg)))))
 
 
 ;; Insert pyerr
@@ -191,7 +196,7 @@ some traceback 2
 (ert-deftest ein:cell-insert-output-stream-simple-stdout ()
   (eintest:cell-insert-output
    (list (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 1"))
    "\
 some stdout 1
@@ -200,10 +205,10 @@ some stdout 1
 (ert-deftest ein:cell-insert-output-stream-stdout-stderr ()
   (eintest:cell-insert-output
    (list (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 1")
          (list :output_type "stream"
-               :stream "stderr"
+               :name "stderr"
                :text "some stderr 1"))
    "\
 some stdout 1
@@ -213,10 +218,10 @@ some stderr 1
 (ert-deftest ein:cell-insert-output-stream-flushed-stdout ()
   (eintest:cell-insert-output
    (list (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 1")
          (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 2"))
    "\
 some stdout 1some stdout 2
@@ -225,16 +230,16 @@ some stdout 1some stdout 2
 (ert-deftest ein:cell-insert-output-stream-flushed-stdout-and-stderr ()
   (eintest:cell-insert-output
    (list (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 1")
          (list :output_type "stream"
-               :stream "stderr"
+               :name "stderr"
                :text "some stderr 1")
          (list :output_type "stream"
-               :stream "stdout"
+               :name "stdout"
                :text "some stdout 2")
          (list :output_type "stream"
-               :stream "stderr"
+               :name "stderr"
                :text "some stderr 2"))
    "\
 some stdout 1
