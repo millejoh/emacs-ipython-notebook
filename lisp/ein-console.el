@@ -170,7 +170,7 @@ See also: `ein:console-security-dir'."
          (ipy (ein:console-executable-get url-or-port))
          (args (ein:console-args-get url-or-port)))
     ;; FIMXE: do I need "python" here?
-    (append (list "python" ipy "console" "--existing"
+    (append (list ipy "console" "--existing"
                   (format "%skernel-%s.json" dir kid))
             (if (listp args)
                 args
@@ -209,7 +209,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
         ;; But as `run-python' changed the call signature in the new
         ;; version, let's do this manually.
         ;; See also: https://github.com/tkf/emacs-ipython-notebook/pull/50
-        (python-shell-make-comint cmd (python-shell-get-process-name t))
+	(run-python cmd)
+        ;(python-shell-make-comint cmd (python-shell-get-process-name t))
         ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
     (let* ((command (ein:console-make-command))

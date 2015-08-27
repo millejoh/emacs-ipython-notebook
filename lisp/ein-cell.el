@@ -566,12 +566,12 @@ Called from ewoc pretty printer via `ein:cell-pp'."
             (ein:cell-append-stream-text-fontified "\n" last-out))))
       ;; Finally insert real data
       (ein:case-equal (plist-get out :output_type)
-        (("pyout")        (ein:cell-append-pyout        cell out))
-        (("pyerr")        (ein:cell-append-pyerr        cell out))
-        (("error")        (ein:cell-append-pyerr        cell out))
-        (("display_data") (ein:cell-append-display-data cell out))
+        (("pyout")          (ein:cell-append-pyout        cell out))
+        (("pyerr")          (ein:cell-append-pyerr        cell out))
+        (("error")          (ein:cell-append-pyerr        cell out))
+        (("display_data")   (ein:cell-append-display-data cell out))
         (("execute_result") (ein:cell-append-display-data cell out))
-        (("stream")       (ein:cell-append-stream       cell out))))))
+        (("stream")         (ein:cell-append-stream       cell out))))))
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.

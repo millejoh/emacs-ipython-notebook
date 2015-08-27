@@ -61,6 +61,7 @@
                       (url-host parsed-url)))
 	 (cookies (request-cookie-alist (url-host (url-generic-parse-url url)) "/")))
     (when cookies
+      (ein:log 'debug "Storing cookies in prep for opening websocket (%s)" cookies)
       (dolist (c cookies)
 	(url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)))))))
 
