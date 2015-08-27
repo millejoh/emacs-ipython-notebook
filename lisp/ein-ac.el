@@ -156,7 +156,7 @@ replied within `ac-quick-help-delay' seconds, auto-complete will
 popup help string."
   (let* ((candidate (ac-selected-candidate))
          (kernel (ein:get-kernel))
-	 (api-version (ein:query-ipython-version (ein:$kernel-api-version kernel)))
+	 (api-version (ein:$kernel-api-version kernel))
          (callbacks (list (if (< api-version 3)
 			      :object_info_reply
 			    :inspect_request)
