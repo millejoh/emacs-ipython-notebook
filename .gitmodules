@@ -28,10 +28,6 @@
 [submodule "lib/markdown-mode"]
 	path = lib/markdown-mode
 	url = https://github.com/defunkt/markdown-mode.git
-[submodule "lib/nxhtml"]
-	path = lib/nxhtml
-	url = https://github.com/emacsmirror/nxhtml.git
-        branch = master
 [submodule "lib/ert"]
 	path = lib/ert
 	url = https://github.com/ohler/ert.git
