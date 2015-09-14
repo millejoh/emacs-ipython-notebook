@@ -353,7 +353,7 @@ You may find the new one in the notebook list." error)
          (current-path "/")
          (pairs (list (cons "Home" ""))))
     (dolist (p paths pairs)
-      (setf current-path (concat current-path p)
+      (setf current-path (concat current-path "/" p)
             pairs (append pairs (list (cons p current-path)))))))
 
 (defun ein:notebooklist-render ()
@@ -374,8 +374,8 @@ Notebook list data is passed via the buffer local variable
         (widget-create
          'link
          :notify (lambda (&rest ignore) (ein:notebooklist-open
-                                         (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                         path))
+					 (ein:$notebooklist-url-or-port ein:%notebooklist%)
+					 path))
          name)))
     (widget-insert " |\n\n"))
   (widget-create
