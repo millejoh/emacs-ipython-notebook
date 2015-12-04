@@ -341,7 +341,7 @@ You may find the new one in the notebook list." error)
                                  (ein:notebooklist-reload)))
                              (current-buffer) path)))
 
-;; Because MinRK wants me to suffer...
+;; Because MinRK wants me to suffer (not really, I love MinRK)...
 (defun ein:get-actual-path (path)
   (ein:aif (cl-position ?/ path :from-end t)
       (substring path 0 it)
@@ -467,7 +467,7 @@ is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
                for api-version = (ein:$notebooklist-api-version nblist)
                collect
-               (loop for note in (ein:make-content-hierarchy "" url-or-port)
+               (loop for note in (ein:get-content-hierarchy url-or-port)
                          collect (format "%s/%s" url-or-port
                                          (ein:$content-path note)
                                          ))

@@ -57,8 +57,7 @@ This function is to be used for FOLLOW function of
   (let ((link (read link-path)))
     (destructuring-bind (&key url-or-port name &allow-other-keys)
         link
-      (ein:notebooklist-open-notebook-by-name name url-or-port
-                                              #'ein:org-goto-link link))))
+      (ein:notebook-open url-or-port name))))
 
 ;;;###autoload
 (defun ein:org-store-link ()
@@ -81,7 +80,7 @@ easier.  For the examples of link format in general, see Info
 node `(org) External links' and Info node `(org) Search options'"
   (ein:and-let* (((ein:worksheet-buffer-p))
                  (notebook (ein:get-notebook))
-                 (name (ein:notebook-name notebook))
+                 (name (ein:$notebook-notebook-path notebook))
                  (link (list :url-or-port (ein:get-url-or-port)
                              :name name))
                  (description name))
