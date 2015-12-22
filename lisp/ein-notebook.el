@@ -44,6 +44,7 @@
 (require 'ein-kernel)
 (require 'ein-kernelinfo)
 (require 'ein-cell)
+(require 'ein-cell-output)
 (require 'ein-worksheet)
 (require 'ein-scratchsheet)
 (require 'ein-notification)
@@ -633,6 +634,7 @@ of NOTEBOOK."
         (push `(nbformat_minor . ,it) data))
     (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
     data))
+
 
 (defun ein:write-nbformat3-worksheets (notebook)
   (let ((worksheets (mapcar #'ein:worksheet-to-json
