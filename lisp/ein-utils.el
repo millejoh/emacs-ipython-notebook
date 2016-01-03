@@ -218,6 +218,11 @@ See: http://api.jquery.com/jQuery.ajax/"
   "Replace `json-encode-char' with `ein:json-encode-char'."
   (setq ad-return-value (ein:json-encode-char char)))
 
+(defadvice json-encode (around encode-nil-as-json-empty-object activate)
+  (if (null object)
+    (setq ad-return-value "{}")
+    ad-do-it))
+
 
 ;;; EWOC
 

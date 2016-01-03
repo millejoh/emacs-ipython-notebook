@@ -62,13 +62,14 @@
 	  (push (cond ((equal type "display_data") (ein:cell-display-data-output-to-json o)) 
 		      ((equal type "execute_result") (ein:cell-execute-result-output-to-json o))
 		      ((equal type "stream") (ein:cell-stream-output-to-json o))
+		      ((equal type "error") (ein:cell-error-output-to-json o))
 		      (t (warn "Unhandled output_type %s." type)))
 		renamed-outputs))))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
       ,@(if execute-count
             `((execution_count . ,execute-count))
-          `((execution_count)))
+          `((execution_count . 0)))
       (outputs . ,(apply #'vector (or renamed-outputs outputs)))
       (metadata . ,metadata))))
 
@@ -98,20 +99,25 @@
     (name . "")
     (text . "")))
 
+(defun ein:cell-error-output-to-json (output)
+  `((output_type . "error")
+    (name . "")
+    (text . "")))
+
 (defun ein:cell-execute-result-output-to-json (output)
   (let ((data (ein:aif (plist-get output :text)
 		  `("text/plain" . ,it)
 		(plist-get output :data))))
     `((output_type . "execute_result")
+      (metadata . #s(hash-table))
       (execution_count . ,(or (plist-get output :prompt_number)
 			      (plist-get output :execution_count)))
-      (data . (,data))
-      (metadata . ,(make-hash-table)))))
+      (data . (,data)))))
 
 (defun ein:cell-display-data-output-to-json (output)
   `((output_type . "display_data")
     (data . (,@(plist-get output :data)))
-    (metadata . ,(make-hash-table))))
+    (metadata . #s(hash-table))))
 
 (defun ein:find-and-make-outputs (output-plist)
   (loop for prop in ein:output-type-map
