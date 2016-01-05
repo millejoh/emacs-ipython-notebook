@@ -96,7 +96,7 @@
 ;;; Dealing with Code cell outputs
 (defun ein:cell-stream-output-to-json (output)
   `((output_type . "stream")
-    (name . ,(plist-get output :name))
+    (name . ,(plist-get output :stream))
     (text . ,(plist-get output :text))))
 
 (defun ein:cell-error-output-to-json (output)
