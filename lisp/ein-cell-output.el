@@ -96,13 +96,14 @@
 ;;; Dealing with Code cell outputs
 (defun ein:cell-stream-output-to-json (output)
   `((output_type . "stream")
-    (name . "")
-    (text . "")))
+    (name . ,(plist-get output :name))
+    (text . ,(plist-get output :text))))
 
 (defun ein:cell-error-output-to-json (output)
   `((output_type . "error")
-    (name . "")
-    (text . "")))
+    (ename . ,(plist-get output :ename))
+    (evalue . ,(plist-get output :evalue))
+    (traceback . ,(plist-get output :traceback))))
 
 (defun ein:cell-execute-result-output-to-json (output)
   (let ((data (ein:aif (plist-get output :text)
