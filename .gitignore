@@ -16,3 +16,5 @@ lisp/test-batch-log.log
 test-batch-log.log
 *.ipynb~
 Makefile~
+.ipynb_checkpoints
+.ipynb_checkpoints/*
