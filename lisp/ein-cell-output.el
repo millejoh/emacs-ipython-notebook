@@ -45,7 +45,7 @@
     (:html . :text/html) (:latex . :text/latex) (:javascript . :text/javascript)))
 
 (defun ein:output-property (maybe-property)
-  (assoc maybe-property ein:output-type-map))
+  (cdr (assoc maybe-property ein:output-type-map)))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
@@ -110,15 +110,22 @@
 		  `("text/plain" . ,it)
 		(plist-get output :data))))
     `((output_type . "execute_result")
-      (metadata . #s(hash-table))
+      (metadata . ,(make-hash-table))
       (execution_count . ,(or (plist-get output :prompt_number)
 			      (plist-get output :execution_count)))
       (data . (,data)))))
 
+(defun ein:maybe-get-output-mime-data (output)
+  (loop for type in '(:svg :png :jpeg :html :latex  :javascript :text)
+	if (plist-get output type)
+	collecting (cons (ein:output-property type) (plist-get output type))))
+
 (defun ein:cell-display-data-output-to-json (output)
-  `((output_type . "display_data")
-    (data . (,@(plist-get output :data)))
-    (metadata . #s(hash-table))))
+  (let ((data (or (ein:maybe-get-output-mime-data output)
+		  (plist-get output :data))))
+    `((output_type . "display_data")
+      (data . ,data)
+      (metadata . ,(make-hash-table)))))
 
 (defun ein:find-and-make-outputs (output-plist)
   (loop for prop in ein:output-type-map
