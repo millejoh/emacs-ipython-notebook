@@ -247,7 +247,7 @@ global setting.  For global setting and more information, see
           (ein:make-content-hierarchy "" url-or-port))))
 
 ;;; Save Content
-(defun ein:content-save-legacy (content &optional callback cbargs)
+(defun ein:content-save-legacy (content &optional callback cbargs errcb errcbargs)
   (ein:query-singleton-ajax
        (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
        (ein:content-url-legacy content)
@@ -256,9 +256,9 @@ global setting.  For global setting and more information, see
        :timeout ein:content-query-timeout
        :data (ein:content-to-json content)
        :success (apply-partially #'ein:content-save-success callback cbargs)
-       :error (apply-partially #'ein:content-save-error (ein:content-url-legacy content))))
+       :error (apply-partially #'ein:content-save-error (ein:content-url-legacy content) errcb errcbargs)))
 
-(defun ein:content-save (content &optional callback cbargs)
+(defun ein:content-save (content &optional callback cbargs errcb errcbargs)
   (if (>= (ein:$content-ipython-version content) 3)
       (ein:query-singleton-ajax
        (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
@@ -268,7 +268,8 @@ global setting.  For global setting and more information, see
        :timeout ein:content-query-timeout
        :data (ein:content-to-json content)
        :success (apply-partially #'ein:content-save-success callback cbargs)
-       :error (apply-partially #'ein:content-save-error (ein:content-url content)))
+       :sync t
+       :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs))
     (ein:content-save-legacy content callback cbargs)))
 
 (defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
@@ -276,11 +277,13 @@ global setting.  For global setting and more information, see
   (when callback
     (apply callback cbargs)))
 
-(defun* ein:content-save-error (url &key symbol-status response &allow-other-keys)
+(defun* ein:content-save-error (url errcb errcbargs &key response status-code &allow-other-keys)
   (ein:log 'verbose
     "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
-    "Content list call %s failed with status %s." url symbol-status))
+    "Content list call %s failed with status %s." url status-code)
+  (when errcb
+    (apply errcb errcbargs)))
 
 
 ;;; Rename Content

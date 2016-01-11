@@ -659,7 +659,9 @@ of NOTEBOOK."
                         'notebook_saving.Notebook)
     (ein:content-save content
                       #'ein:notebook-save-notebook-success
-                      (list notebook callback cbargs))))
+                      (list notebook callback cbargs)
+		      #'ein:notebook-save-notebook-error
+		      (list notebook))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
