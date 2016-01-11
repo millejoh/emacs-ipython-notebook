@@ -47,6 +47,7 @@
   url-or-port
   events
   api-version
+  kernelspec                            ; Multiple kernels in Jupyter
   session-id
   kernel-id
   shell-channel
@@ -77,9 +78,10 @@
 
 ;;; Initialization and connection.
 
-(defun ein:kernel-new (url-or-port base-url events &optional api-version)
+(defun ein:kernel-new (url-or-port base-url events &optional api-version kernelspec)
   (make-ein:$kernel
    :url-or-port url-or-port
+   :kernelspec (or kernelspec "")
    :events events
    :api-version (or api-version 2)
    :session-id (ein:utils-uuid)
@@ -129,7 +131,9 @@
                 "api/sessions")
        :type "POST"
        :data (json-encode `(("notebook" .
-                             (("path" . ,(ein:$notebook-notebook-path notebook))))))
+                             (("path" . ,(ein:$notebook-notebook-path notebook))))
+			    (("kernel" .
+			      (("name" . "default"))))))
        :parser #'ein:json-read
        :success (apply-partially #'ein:kernel--kernel-started kernel)))))
 

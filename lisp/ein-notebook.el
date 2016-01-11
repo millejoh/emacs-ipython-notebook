@@ -434,6 +434,44 @@ of minor mode."
 
 ;;; Kernel related things
 
+(defstruct ein:$kernelspec
+  "Kernel specification as return by the Jupyter notebook server."
+  name
+  resources
+  spec)
+
+(defvar ein:available-kernelspecs (make-hash-table))
+
+(defun ein:query-kernelspecs (url-or-port)
+  "Query jupyter server for the list of available kernels."
+  (ein:query-singleton-ajax
+   (list 'ein:qeury-kernelspecs url-or-port)
+   (ein:url url-or-port "api/kernelspecs")
+   :type "GET"
+   :timeout ein:content-query-timeout
+   :parser 'ein:json-read
+   :sync nil
+   :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
+   :error (apply-partially #'ein:query-kernelspecs-error)))
+
+(defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
+  (let ((ks (list :default  (plist-get data :default)))
+	(specs (ein:plist-iter (plist-get data :kernelspecs))))
+    (setf (gethash url-or-port ein:available-kernelspecs)
+	  (ein:flatten (dolist (spec specs ks)
+			 (let ((name (car spec))
+			       (info (cdr spec)))
+			   (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+								  :resources (plist-get info :resources)
+								  :spec (plist-get info :spec)))
+				 ks)))))))
+
+(defun* ein:query-kernelspecs-error (&key symbol-status response &allow-other-keys)
+  (ein:log 'verbose
+    "Error thrown: %S" (request-response-error-thrown response))
+  (ein:log 'error
+    "Kernelspc query call failed with status %s." symbol-status))
+
 ;;; This no longer works in iPython-2.0. Protocol is to create a session for a
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
