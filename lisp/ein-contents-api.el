@@ -268,7 +268,6 @@ global setting.  For global setting and more information, see
        :timeout ein:content-query-timeout
        :data (ein:content-to-json content)
        :success (apply-partially #'ein:content-save-success callback cbargs)
-       :sync t
        :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs))
     (ein:content-save-legacy content callback cbargs)))
 
