@@ -156,20 +156,14 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (if (and (stringp url-or-port) (not (string-match "^https?://" url-or-port)))
       (setq url-or-port (format "http://%s" url-or-port)))
   (ein:subpackages-load)
+  (ein:query-kernelspecs url-or-port)
   (let ((success
          (if no-popup
              #'ein:notebooklist-url-retrieve-callback
            (lambda (content)
              (pop-to-buffer
               (funcall #'ein:notebooklist-url-retrieve-callback content))))))
-    (ein:content-query-contents path url-or-port nil success)
-    ;; (ein:query-singleton-ajax
-    ;;  (list 'notebooklist-open url-or-port api-version path)
-    ;;  (ein:notebooklist-url url-or-port api-version path)
-    ;;  :parser #'ein:json-read
-    ;;  :error (apply-partially #'ein:notebooklist-open-error url-or-port api-version path)
-    ;;  :success (apply-partially success url-or-port api-version path))
-    )
+    (ein:content-query-contents path url-or-port nil success))
   (ein:notebooklist-get-buffer url-or-port))
 
 (defun* ein:notebooklist-url-retrieve-callback (content)
@@ -297,12 +291,15 @@ You may find the new one in the notebook list." error)
   (ein:notebooklist-open url-or-port no-popup))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook-with-name (name &optional url-or-port path)
+(defun ein:notebooklist-new-notebook-with-name (name &optional kernelspec url-or-port path)
   "Open new notebook and rename the notebook."
   (interactive (let* ((url-or-port (or (ein:get-url-or-port)
                                        (ein:default-url-or-port)))
                       (name (read-from-minibuffer
-                             (format "Notebook name (at %s): " url-or-port))))
+                             (format "Notebook name (at %s): " url-or-port)))
+		      (kernelspec (completing-read
+				   "Select kernel [default]: "
+				   (ein:list-available-kernels url-or-port) nil t nil nil "default" nil)))
                  (list name url-or-port)))
   (let ((path (or path (ein:$notebooklist-path
                         (or ein:%notebooklist%

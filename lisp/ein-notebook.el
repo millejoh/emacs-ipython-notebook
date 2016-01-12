@@ -442,8 +442,18 @@ of minor mode."
 
 (defvar ein:available-kernelspecs (make-hash-table))
 
+(defun ein:list-available-kernels (url-or-port)
+  (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
+    (if kernelspecs
+	(cons "default"
+	      (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+		    collecting (ein:$kernelspec-name spec)))
+      "default")))
+
 (defun ein:query-kernelspecs (url-or-port)
-  "Query jupyter server for the list of available kernels."
+  "Query jupyter server for the list of available
+kernels. Results are stored in ein:available-kernelspec, hashed
+on server url/port."
   (ein:query-singleton-ajax
    (list 'ein:qeury-kernelspecs url-or-port)
    (ein:url url-or-port "api/kernelspecs")

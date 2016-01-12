@@ -31,7 +31,8 @@ There are a number of helper functions for returning the struct for an opened no
 
 Documented at the IPython Github [[https://github.com/ipython/ipython/wiki/IPEP-27%253A-Contents-Service][wiki.]]
 
-There is also [[http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/jupyter-js-services/master/rest_api.yaml][another]] great online resource.
+There is also [[http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/jupyter-js-services/master/rest_api.yaml][another]] great online resource for session and kernel
+REST API.
 
 ** Connecting to a running Kernel
 Entry point is ~[[file:lisp/ein-notebook.el::ein:notebook-start-kernel][ein:notebook-start-kernel]]~ which is called from
