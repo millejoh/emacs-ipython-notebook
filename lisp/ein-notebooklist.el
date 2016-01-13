@@ -385,8 +385,9 @@ Notebook list data is passed via the buffer local variable
 	 (default-kernel (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (first kernels))))
     (widget-create
      'link
-     :notify (lambda (&rest ignore) (call-interactively (ein:notebooklist-new-notebook (ein:$notebooklist-url-or-port ein:%notebooklist%)
-										       default-kernel)))
+     :notify (lambda (&rest ignore) (call-interactively (ein:notebooklist-new-notebook
+							 (ein:$notebooklist-url-or-port ein:%notebooklist%)
+							 default-kernel)))
      "New Notebook")
     (widget-insert " ")
     (widget-create
@@ -400,7 +401,7 @@ Notebook list data is passed via the buffer local variable
 	       (browse-url
 		(ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
      "Open In Browser")
-    (widget-insert "\n\nAvailable Kernels:\n")
+    (widget-insert "\n\nCreate New Notebooks Using Kernel: \n")
     (let* ((radio-widget (widget-create 'radio-button-choice
 					:value (first kernels)
 					:notify (lambda (widget &rest ignore)

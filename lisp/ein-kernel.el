@@ -132,8 +132,8 @@
 	 :data (json-encode `(("notebook" .
 			       (("path" . ,(ein:$notebook-notebook-path notebook))))
 			      ,@(if kernelspec
-				    `("kernel"
-				      (("name" . ,(ein:$kernelspec-name kernelspec)))))))
+				    `(("kernel" .
+				       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
 	 :parser #'ein:json-read
 	 :success (apply-partially #'ein:kernel--kernel-started kernel))))))
 
