@@ -563,6 +563,12 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.7.1
+------
+
+* Fix bug saving images in v4 notebook format.
+* Be more graceful handling errors during content saves.
+  
 v0.7
 ----
 
