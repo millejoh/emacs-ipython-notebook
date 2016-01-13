@@ -171,6 +171,9 @@ Current buffer for these functions is set to the notebook buffer.")
 `ein:$notebook-kernel' : `ein:$kernel'
   `ein:$kernel' instance.
 
+`ein:$notebook-kernelspec' : `ein:$kernelspec'
+  Jupyter kernel specification for the notebook.
+
 `ein:$notebook-kernelinfo' : `ein:kernelinfo'
   `ein:kernelinfo' instance.
 
@@ -209,6 +212,7 @@ Current buffer for these functions is set to the notebook buffer.")
   notebook-path
   kernel
   kernelinfo
+  kernelspec
   pager
   dirty
   metadata
@@ -229,9 +233,12 @@ Current buffer for these functions is set to the notebook buffer.")
 
 ;;; Constructor
 
-(defun ein:notebook-new (url-or-port notebook-path &rest args)
+(defun ein:notebook-new (url-or-port notebook-path kernelspec &rest args)
+  (if (or (stringp kernelspec) (symbolp kernelspec))
+      (setq kernelspec (ein:get-kernelspec url-or-port kernelspec)))
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
+			 :kernelspec kernelspec
                          :notebook-path notebook-path
                          args)))
     notebook))
@@ -310,7 +317,7 @@ will be updated with kernel's cwd."
 
 ;;; TODO - I think notebook-path is unnecessary (JMM).
 
-(defun ein:notebook-open (url-or-port path &optional callback cbargs)
+(defun ein:notebook-open (url-or-port path &optional kernelspec callback cbargs)
   "Open notebook at PATH in the server URL-OR-PORT.
 Opened notebook instance is returned.  Note that notebook might not be
 ready at the time when this function is executed.
@@ -324,7 +331,6 @@ is newly created or not.  When CALLBACK is specified, buffer is
 **not** brought up by `pop-to-buffer'.  It is caller's
 responsibility to do so.  The current buffer is set to the
 notebook buffer when CALLBACK is called."
-  ;(interactive)
   (unless callback (setq callback #'ein:notebook-pop-to-current-buffer))
   (let ((buffer (ein:notebook-get-opened-buffer url-or-port path)))
     (if (buffer-live-p buffer)
@@ -335,9 +341,9 @@ notebook buffer when CALLBACK is called."
             (apply callback ein:%notebook% nil cbargs))
           ein:%notebook%)
       (ein:log 'info "Opening notebook %s..." path)
-      (ein:notebook-request-open url-or-port path callback cbargs))))
+      (ein:notebook-request-open url-or-port path kernelspec callback cbargs))))
 
-(defun ein:notebook-request-open (url-or-port path &optional callback cbargs)
+(defun ein:notebook-request-open (url-or-port path &optional kernelspec callback cbargs)
   "Request notebook at PATH from the server at URL-OR-PORT.
 Return an `ein:$notebook' instance.  Notebook kernel may not be ready to
 receive messages after this call is executed.
@@ -345,7 +351,7 @@ receive messages after this call is executed.
 CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
 argument `t' indicates that the notebook is newly opened.
 See `ein:notebook-open' for more information."
-  (let ((notebook (ein:notebook-new url-or-port path)))
+  (let ((notebook (ein:notebook-new url-or-port path kernelspec)))
     (ein:log 'debug "Opening notebook at %s" path)
     (ein:content-query-contents path url-or-port nil
                                 (apply-partially #'ein:notebook-request-open-callback-with-callback
@@ -435,20 +441,35 @@ of minor mode."
 ;;; Kernel related things
 
 (defstruct ein:$kernelspec
-  "Kernel specification as return by the Jupyter notebook server."
+  "Kernel specification as return by the Jupyter notebook server.
+
+`ein:$kernelspec-name' : string
+  Name used to identify the kernel (like python2, or python3).
+
+`ein:$kernelspec-resources' : plist
+  Resources, if any, used by the kernel.
+
+`ein:$kernelspec-spec' : plist
+  How to start the kernel from the command line. Not used by ein (yet).
+"
   name
   resources
   spec)
 
 (defvar ein:available-kernelspecs (make-hash-table))
 
+(defun ein:get-kernelspec (url-or-port name)
+  (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs))
+	(name (if (stringp name)
+		  (intern (format ":%s" name))
+		name)))
+    (plist-get kernelspecs name)))
+
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
-	(cons "default"
-	      (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-		    collecting (ein:$kernelspec-name spec)))
-      "default")))
+	(loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+	      collecting (ein:$kernelspec-name spec)))))
 
 (defun ein:query-kernelspecs (url-or-port)
   "Query jupyter server for the list of available
