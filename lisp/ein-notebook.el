@@ -376,11 +376,20 @@ See `ein:notebook-open' for more information."
     (with-current-buffer (ein:notebook-buffer notebook)
       (apply callback notebook t cbargs))))
 
+(defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
+  (ein:aif (plist-get content-metadata :kernelspec)
+      (setf (ein:$notebook-kernelspec notebook) (make-ein:$kernelspec
+						 :name (plist-get it :name)
+						 :spec (list (cons :display_name
+								   (plist-get it :display_name)))))))
+
+
 (defun ein:notebook-request-open-callback (notebook content)
   (let ((notebook-path (ein:$notebook-notebook-path notebook)))
     (setf (ein:$notebook-api-version notebook) (ein:$content-ipython-version content)
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
+    (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
     (ein:notebook-start-kernel notebook)
     (ein:notebook-from-json notebook (ein:$content-raw-content content)) ; notebook buffer is created here
     (setf (ein:$notebook-kernelinfo notebook)
@@ -457,6 +466,11 @@ of minor mode."
   spec)
 
 (defvar ein:available-kernelspecs (make-hash-table))
+
+(defun ein:kernelspec-for-nb-metadata (kernelspec)
+  (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
+    `((:name . ,(ein:$kernelspec-name kernelspec))
+      (:display_name . ,(format "%s" display-name)))))
 
 (defun ein:get-kernelspec (url-or-port name)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs))
@@ -717,6 +731,12 @@ of NOTEBOOK."
   (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
+    (ein:aif (ein:$notebook-kernelspec notebook)
+	(if (ein:$notebook-metadata notebook)
+	    (plist-put (ein:$notebook-metadata notebook)
+		       :kernelspec (ein:kernelspec-for-nb-metadata it))
+	  (setf (ein:$notebook-metadata notebook)
+		(cons :kernelspec (ein:kernelspec-for-nb-metadata it)))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))

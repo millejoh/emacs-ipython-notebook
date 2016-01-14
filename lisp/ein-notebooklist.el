@@ -227,7 +227,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   (interactive (list (ein:notebooklist-ask-url-or-port)
 		     (completing-read
 		      "Select kernel [default]: "
-		      (ein:list-available-kernels url-or-port) nil t nil nil "default" nil)))
+		      (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)) nil t nil nil "default" nil)))
   (let ((path (or path (ein:$notebooklist-path (or ein:%notebooklist%
                                                    (ein:notebooklist-list-get url-or-port)))))
         (version (ein:$notebooklist-api-version (or ein:%notebooklist%
