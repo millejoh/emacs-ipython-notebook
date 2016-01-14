@@ -378,10 +378,9 @@ See `ein:notebook-open' for more information."
 
 (defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
   (ein:aif (plist-get content-metadata :kernelspec)
-      (setf (ein:$notebook-kernelspec notebook) (make-ein:$kernelspec
-						 :name (plist-get it :name)
-						 :spec (list (cons :display_name
-								   (plist-get it :display_name)))))))
+      (let ((kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
+					    (plist-get it :name))))
+	(setf (ein:$notebook-kernelspec notebook) kernelspec))))
 
 
 (defun ein:notebook-request-open-callback (notebook content)
