@@ -563,6 +563,13 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.8.0
+------
+
+* Support for multiple Jupyter kernels. EIN still thinks everything is
+  Python code, but it should be possible to create notebooks that run
+  any language supported by a Jupyter kernel.
+
 v0.7.1
 ------
 
@@ -585,7 +592,7 @@ v0.6
 v0.5
 ----
 
-* Add support for stdin channel. This mean getpass.getpass() and the ipdb work in no
+* Add support for stdin channel. This mean getpass.getpass() and the ipdb work in notebook buffers.
 
 v0.4
 ----
