@@ -52,9 +52,12 @@
 
 (defun ein:completer-finish-completing (args content -metadata-not-used-)
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
-  (let ((matched-text (plist-get content :matched_text))
-        (matches (plist-get content :matches))
-        (completer (ein:completer-choose)))
+  (let* ((beg (point))
+         (delta (- (plist-get content :cursor_end)
+                   (plist-get content :cursor_start)))
+         (matched-text (buffer-substring beg (- beg delta)))
+         (matches (plist-get content :matches))
+         (completer (ein:completer-choose)))
     (ein:log 'debug "COMPLETER-FINISH-COMPLETING: completer=%s" completer)
     (apply completer matched-text matches args)))
 
@@ -64,7 +67,7 @@
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
                    (completing-read "Complete: " matches
-                                    nil nil matched-text))))
+                                    nil nil matched-text)))) 
     (when word
       (delete-region beg end)
       (insert word))))
