@@ -235,7 +235,7 @@ See: http://api.jquery.com/jQuery.ajax/"
   The version of ewoc.el you are using is too old for EIN.
   Please install the newer version.
   See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
-     (error "Incompatible EOWC version."))))
+     (error "Incompatible EWOC version."))))
 
 
 ;;; Text property
@@ -600,26 +600,26 @@ directory is in a dirty git repository."
   "Return string with random (version 4) UUID.
 Adapted from org-mode's `org-id-uuid'."
   (let ((rnd (md5 (format "%s%s%s%s%s%s%s"
-			  (random t)
-			  (current-time)
-			  (user-uid)
-			  (emacs-pid)
-			  (user-full-name)
-			  user-mail-address
-			  (recent-keys)))))
+                          (random t)
+                          (current-time)
+                          (user-uid)
+                          (emacs-pid)
+                          (user-full-name)
+                          user-mail-address
+                          (recent-keys)))))
     (format "%s-%s-4%s-%s%s-%s"
-	    (substring rnd 0 8)
-	    (substring rnd 8 12)
-	    (substring rnd 13 16)
-	    (format "%x"
-		    (logior
-		     #b10000000
-		     (logand
-		      #b10111111
-		      (string-to-number
-		       (substring rnd 16 18) 16))))
-	    (substring rnd 18 20)
-	    (substring rnd 20 32))))
+            (substring rnd 0 8)
+            (substring rnd 8 12)
+            (substring rnd 13 16)
+            (format "%x"
+                    (logior
+                     #b10000000
+                     (logand
+                      #b10111111
+                      (string-to-number
+                       (substring rnd 16 18) 16))))
+            (substring rnd 18 20)
+            (substring rnd 20 32))))
 
 
 (provide 'ein-utils)

@@ -24,7 +24,7 @@ There are a number of helper functions for returning the struct for an opened no
 
  - ~[[file:lisp/ein-notebook.el::(defun%20ein:notebook-get-opened-notebook%20(url-or-port%20path)][ein:notebook-get-opened-notebook]]~ ::
  - ~[[file:lisp/ein-notebook.el::(defun%20ein:notebook-get-opened-buffer%20(url-or-port%20path)][ein:notebook-get-opened-buffer]]~ ::
-   - 
+  
 ** Notebooklist Buffer
 ** Kernel communication
 ** Contents API
@@ -50,6 +50,20 @@ ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/ch
 #+END_QUOTE
 
 * Enhancements/Fixes
+** Errors on saving new notebook
+Happening because metadata slot is borked when creating new notebooks.
+
+
+** Support company-mode
+** Inline latex
+See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
+
+** Interactive Widgets
+
+For the most part this is a non-starter since in Jupyter this is built on web
+and javascript, but maybe with emacs 25's coming integration with [[https://www.emacswiki.org/emacs/EmacsXWidgets][xwidgets]] there
+is hope?
+
 ** Working with jupyterhub
 
 Jupyterhub requires authentication using username/password, as opposed to just

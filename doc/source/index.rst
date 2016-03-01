@@ -604,7 +604,7 @@ v0.4
 * ein-mumamo.el has been moved into its own package, ein-mumamo. This should get rid
   of compilation errors for anyone who does not happen to have nxhtml installed.
 * Restore support for heading level cells with nbformat v4 notebooks.
-* New (buggy) pytools function `ein:pytools-export-buffer` for using nbconvert on a notebook
+* New (buggy) pytools function :el:symbol:`ein:pytools-export-buffer` for using nbconvert on a notebook
   buffer.
 
 v0.3

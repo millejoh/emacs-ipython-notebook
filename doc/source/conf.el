@@ -11,6 +11,7 @@
   (add-to-list 'load-path (funcall path "lib" "auto-complete"))
   (add-to-list 'load-path (funcall path "lib" "popup"))) ; for auto-complete
 
+(package-initialize)
 (require 'ein-dev)
 (ein:dev-require-all)
 

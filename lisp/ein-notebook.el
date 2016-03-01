@@ -238,7 +238,7 @@ Current buffer for these functions is set to the notebook buffer.")
       (setq kernelspec (ein:get-kernelspec url-or-port kernelspec)))
   (let ((notebook (apply #'make-ein:$notebook
                          :url-or-port url-or-port
-			 :kernelspec kernelspec
+                         :kernelspec kernelspec
                          :notebook-path notebook-path
                          args)))
     notebook))
@@ -379,8 +379,8 @@ See `ein:notebook-open' for more information."
 (defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
   (ein:aif (plist-get content-metadata :kernelspec)
       (let ((kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
-					    (plist-get it :name))))
-	(setf (ein:$notebook-kernelspec notebook) kernelspec))))
+                                            (plist-get it :name))))
+        (setf (ein:$notebook-kernelspec notebook) kernelspec))))
 
 
 (defun ein:notebook-request-open-callback (notebook content)
@@ -473,16 +473,16 @@ of minor mode."
 
 (defun ein:get-kernelspec (url-or-port name)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs))
-	(name (if (stringp name)
-		  (intern (format ":%s" name))
-		name)))
+        (name (if (stringp name)
+                  (intern (format ":%s" name))
+                name)))
     (plist-get kernelspecs name)))
 
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
-	(loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-	      collecting (ein:$kernelspec-name spec)))))
+        (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+              collecting (ein:$kernelspec-name spec)))))
 
 (defun ein:query-kernelspecs (url-or-port)
   "Query jupyter server for the list of available
@@ -494,7 +494,7 @@ on server url/port."
    :type "GET"
    :timeout ein:content-query-timeout
    :parser 'ein:json-read
-   :sync nil
+   :sync t
    :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
    :error (apply-partially #'ein:query-kernelspecs-error)))
 
@@ -731,11 +731,11 @@ of NOTEBOOK."
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
     (ein:aif (ein:$notebook-kernelspec notebook)
-	(if (ein:$notebook-metadata notebook)
-	    (plist-put (ein:$notebook-metadata notebook)
-		       :kernelspec (ein:kernelspec-for-nb-metadata it))
-	  (setf (ein:$notebook-metadata notebook)
-		(cons :kernelspec (ein:kernelspec-for-nb-metadata it)))))
+        (if (ein:$notebook-metadata notebook)
+            (plist-put (ein:$notebook-metadata notebook)
+                       :kernelspec (ein:kernelspec-for-nb-metadata it))
+          (setf (ein:$notebook-metadata notebook)
+                (list :kernelspec (ein:kernelspec-for-nb-metadata it)))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
@@ -1512,7 +1512,7 @@ Called via `kill-buffer-query-functions'."
                 (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
                 (ein:notebook-modified-p)
                 (not (y-or-n-p
-                      "You have unsaved changes. Discard changes?")))
+                      "This notebook has unsaved changes. Discard those changes?")))
            (when (ein:worksheet-p ein:%worksheet%)
              ;; To make `ein:worksheet-save-cells' no-op.
              (ein:worksheet-dont-save-cells ein:%worksheet%)

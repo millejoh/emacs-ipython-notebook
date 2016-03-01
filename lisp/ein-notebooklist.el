@@ -255,7 +255,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                  url-or-port kernelspec path callback cbargs)))))
 
 (defun* ein:notebooklist-new-notebook-callback (url-or-port
-						kernelspec
+                                                kernelspec
                                                 path
                                                 callback
                                                 cbargs
@@ -385,9 +385,9 @@ Notebook list data is passed via the buffer local variable
 	 (default-kernel (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (first kernels))))
     (widget-create
      'link
-     :notify (lambda (&rest ignore) (call-interactively (ein:notebooklist-new-notebook
-							 (ein:$notebooklist-url-or-port ein:%notebooklist%)
-							 default-kernel)))
+     :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
+                                     (ein:$notebooklist-url-or-port ein:%notebooklist%)
+                                     default-kernel))
      "New Notebook")
     (widget-insert " ")
     (widget-create
