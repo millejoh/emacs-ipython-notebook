@@ -1,0 +1,4 @@
+jupyter==1.0.0
+pyzmq
+tornado
+jsonschema

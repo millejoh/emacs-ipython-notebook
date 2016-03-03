@@ -1,6 +1,6 @@
 EMACS ?= emacs
 IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
-IPY_VERSION = 2.2.0
+IPY_VERSION = 4.0.0
 TESTEIN = tools/testein.py
 TESTEIN_OPTS =
 PKG_INFO = \
