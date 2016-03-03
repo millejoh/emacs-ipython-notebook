@@ -217,7 +217,7 @@
           (should (funcall cell-p old))
           (should (funcall cell-p new))
           (should-not (equal (oref old :cell-id)
-                       (oref new :cell-id)))
+                             (oref new :cell-id)))
           (should (equal (oref old :input) input))
           (should (equal (oref new :input) input)))))
 

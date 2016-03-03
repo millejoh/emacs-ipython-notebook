@@ -13,8 +13,6 @@ before_install:
           emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot;
     fi
 env:
-  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=dev   EMACS=emacs
-  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=2.3.0 EMACS=emacs
   - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=3.0.0 EMACS=emacs24
 matrix:
   allow_failures:
