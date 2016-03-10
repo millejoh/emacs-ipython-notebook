@@ -25,8 +25,8 @@
 
 ;;; Code:
 
-(require cl-lib)
-(require ein-ac)
+(require 'ein-core)
+(require 'ein-kernel)
 
 ;; Same as ein:ac-chunk-regex.
 (defvar ein:company-chunk-regex
@@ -43,14 +43,49 @@
       point)
   "A regexp that matches to a \"chunk\" containing words and dots.")
 
+(defvar ein:company-direct-matches nil
+  "The analog of ein:ac-direct-matches, but for company-mode. Stores
+completion candidates for `company-mode' as returned by ein:completer-complete.")
+
+(defun ein:company-chunk-beginning ()
+  "Return the position where the chunk begins."
+  (ignore-errors
+    (save-excursion
+      (+ (re-search-backward ein:ac-chunk-regex) (length (match-string 1))))))
+
+(defun ein:company-chunk-candidates-from-list (chunk-list)
+  "Return matched candidates in CHUNK-LIST."
+  (let* ((start (ein:ac-chunk-beginning)))
+    (when start
+      (loop with prefix = (buffer-substring start (point))
+            for cc in chunk-list
+            when (string-prefix-p prefix cc)
+            collect cc))))
+
 (defun ein:company-candidates (arg)
   )
+
+(defun ein:company-request-in-background ()
+  (ein:and-let* ((kernel (ein:get-kernel))
+                 ((ein:kernel-live-p kernel)))
+    (ein:kernel-complete
+     kernel
+     (thing-at-point 'line)
+     (current-column)
+     kernel
+     :callbacks
+     (list :complete_reply
+           (cons (lambda (_ content __)
+                   (ein:company-prepare-completion (plist-get content :matches)))
+                 nil)))))
+
 
 (defun ein:company-backend (command &optional arg &rest ignored)
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend))
-    (prefix (company-grab-symbol-cons ein:company-chunk-regex))
-    (candidates (ein:ac-direct-get-matches))
-    (annotation )
-    (meta ac))
+    (prefix (and (or ein:%notebook% (eq major-mode 'python-mode))
+                 (company-grab-symbol-cons (ein:company-chunk-beginning))))
+    (candidates (ein:ac-direct-get-matches))))
+
+(provide 'ein-company)
