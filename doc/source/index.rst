@@ -563,6 +563,11 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.8.1
+------
+
+* Fix potential overwrite issue caused by setting buffer-file-name.
+
 v0.8.0
 ------
 
