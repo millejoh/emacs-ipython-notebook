@@ -50,20 +50,23 @@ format string which can be passed to `format-time-string'."
   'ein:junk-new)
 
 ;;;###autoload
-(defun ein:junk-new (name url-or-port)
+(defun ein:junk-new (name kernelspec url-or-port)
   "Open a notebook to try random thing.
 Notebook name is determined based on
 `ein:junk-notebook-name-template'.
 
 When prefix argument is given, it asks URL or port to use."
-  (interactive (let ((name (ein:junk-notebook-name))
-                     (url-or-port (or (ein:get-url-or-port)
-                                      (ein:default-url-or-port))))
+  (interactive (let* ((name (ein:junk-notebook-name))
+                      (url-or-port (or (ein:get-url-or-port)
+                                       (ein:default-url-or-port)))
+                      (kernelspec (completing-read
+                                   "Select kernel [default]: "
+                                   (ein:list-available-kernels url-or-port) nil t nil nil "default" nil)))
                  (setq name (read-string "Open notebook as: " name))
                  (when current-prefix-arg
                    (setq url-or-port (ein:notebooklist-ask-url-or-port)))
-                 (list name url-or-port)))
-  (ein:notebooklist-new-notebook-with-name name url-or-port))
+                 (list name url-or-port)
+                 (ein:notebooklist-new-notebook-with-name name kernelspec url-or-port))))
 
 
 (define-obsolete-function-alias ' ein:notebook-rename-to-scratch-command

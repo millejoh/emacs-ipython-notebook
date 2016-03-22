@@ -296,13 +296,13 @@ You may find the new one in the notebook list." error)
   (ein:notebooklist-open url-or-port no-popup))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook-with-name (name &optional kernelspec url-or-port path)
+(defun ein:notebooklist-new-notebook-with-name (name kernelspec url-or-port &optional path)
   "Open new notebook and rename the notebook."
   (interactive (let* ((url-or-port (or (ein:get-url-or-port)
                                        (ein:default-url-or-port)))
-		      (kernelspec (completing-read
-				   "Select kernel [default]: "
-				   (ein:list-available-kernels url-or-port) nil t nil nil "default" nil))
+                      (kernelspec (completing-read
+                                   "Select kernel [default]: "
+                                   (ein:list-available-kernels url-or-port) nil t nil nil "default" nil))
                       (name (read-from-minibuffer
                              (format "Notebook name (at %s): " url-or-port))))
                  (list name kernelspec url-or-port)))
