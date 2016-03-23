@@ -563,6 +563,14 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.8.2
+------
+
+* Fixes for issues `#92`_ and `#91`_.
+
+.. _`#92`: https://github.com/millejoh/emacs-ipython-notebook/issues/92
+.. _`#91`: https://github.com/millejoh/emacs-ipython-notebook/issues/91
+
 v0.8.1
 ------
 
