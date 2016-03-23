@@ -381,8 +381,8 @@ Notebook list data is passed via the buffer local variable
 					 path))
          name)))
     (widget-insert " |\n\n"))
-  (let* ((kernels (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-	 (default-kernel (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (first kernels))))
+  (lexical-let* ((kernels (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)))
+                 (default-kernel (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (first kernels))))
     (widget-create
      'link
      :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
@@ -413,7 +413,7 @@ Notebook list data is passed via the buffer local variable
 	(widget-radio-add-item radio-widget (list 'item :value k)))))
   (widget-insert "\n")
   (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-	(sessions (make-hash-table :test 'equal)))
+        (sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
 	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)

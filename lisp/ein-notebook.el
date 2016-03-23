@@ -468,7 +468,7 @@ of minor mode."
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
-    `((:name . ,(ein:$kernelspec-name kernelspec))
+ `((:name . ,(ein:$kernelspec-name kernelspec))
       (:display_name . ,(format "%s" display-name)))))
 
 (defun ein:get-kernelspec (url-or-port name)
@@ -500,15 +500,15 @@ on server url/port."
 
 (defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
   (let ((ks (list :default  (plist-get data :default)))
-	(specs (ein:plist-iter (plist-get data :kernelspecs))))
+        (specs (ein:plist-iter (plist-get data :kernelspecs))))
     (setf (gethash url-or-port ein:available-kernelspecs)
-	  (ein:flatten (dolist (spec specs ks)
-			 (let ((name (car spec))
-			       (info (cdr spec)))
-			   (push (list name (make-ein:$kernelspec :name (plist-get info :name)
-								  :resources (plist-get info :resources)
-								  :spec (plist-get info :spec)))
-				 ks)))))))
+          (ein:flatten (dolist (spec specs ks)
+                         (let ((name (car spec))
+                               (info (cdr spec)))
+                           (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+                                                                  :resources (plist-get info :resources)
+                                                                  :spec (plist-get info :spec)))
+                                 ks)))))))
 
 (defun* ein:query-kernelspecs-error (&key symbol-status response &allow-other-keys)
   (ein:log 'verbose
