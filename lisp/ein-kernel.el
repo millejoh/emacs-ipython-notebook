@@ -146,7 +146,6 @@
      (ein:url (ein:$kernel-url-or-port kernel)
               "api/sessions")
      :type "POST"
-     
      :data (json-encode `(("notebook" .
                            (("name" . ,notebook-id)
                             ("path" . ,path)))))
@@ -207,7 +206,10 @@
 (defun ein:kernel--ws-url (url-or-port &optional securep)
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
-  (let ((protocol (if securep "wss" "ws")))
+  (let ((protocol (if (or securep
+                          (string-match "^https://" url-or-port))
+                      "wss"
+                    "ws")))
     (if (integerp url-or-port)
         (format "%s://127.0.0.1:%s" protocol url-or-port)
       (let* ((url (if (string-match "^https?://" url-or-port)
