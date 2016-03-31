@@ -207,7 +207,8 @@
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
   (let ((protocol (if (or securep
-                          (string-match "^https://" url-or-port))
+                          (and (stringp url-or-port)
+                               (string-match "^https://" url-or-port)))
                       "wss"
                     "ws")))
     (if (integerp url-or-port)
