@@ -50,20 +50,34 @@ ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/ch
 #+END_QUOTE
 
 * Enhancements/Fixes
-** Errors on saving new notebook
-Happening because metadata slot is borked when creating new notebooks.
-
-
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
 
-** Interactive Widgets
+** XWidget Support/Interactive Widgets
 
 For the most part this is a non-starter since in Jupyter this is built on web
 and javascript, but maybe with emacs 25's coming integration with [[https://www.emacswiki.org/emacs/EmacsXWidgets][xwidgets]] there
 is hope?
 
+*** What Does ipywidgets.interact() return?
+
+A call to `ipywidgets.interact()` creates a [[http://jupyter-client.readthedocs.org/en/latest/messaging.html#custom-messages][custom communications channel]]
+with the jupyter server.
+
+1. What are message types (msg_type) comm_msg and comm_open for?
+
+   These are received when calling interact().
+
+**** Websocket data for comm_open
+#+BEGIN_SRC
+[WS] Received: {"msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "content": {"execution_state": "busy"}, "channel": "iopub", "metadata": {}, "msg_type": "status", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "status"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "content": {"execution_count": 3, "code": "interact(f, x=10)"}, "channel": "iopub", "metadata": {}, "msg_type": "execute_input", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_input"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "content": {"data": {"width": "", "_model_name": "BoxModel", "font_size": "", "children": [], "overflow_x": "", "padding": "", "font_style": "", "_dom_classes": ["widget-interact"], "box_style": "", "height": "", "_view_module": "", "margin": "", "color": null, "msg_throttle": 3, "border_color": null, "font_family": "", "_view_name": "BoxView", "_model_module": null, "version": 0, "overflow_y": "", "background_color": null, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "237329515cca473985d6fa52ec0c93a1", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "date": "2016-03-24T07:24:50.910702", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
+
+**** Websocket data for comm_msg
+#+BEGIN_SRC
+[WS] Received: {"msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "content": {"data": {"description": "", "orientation": "horizontal", "continuous_update": true, "_model_name": "WidgetModel", "font_size": "", "step": 1, "background_color": null, "padding": "", "slider_color": null, "height": "", "_view_module": "", "margin": "", "color": null, "width": "", "font_family": "", "border_color": null, "_dom_classes": [], "min": -10, "_range": false, "disabled": false, "_model_module": null, "_view_name": "IntSliderView", "max": 30, "version": 0, "font_style": "", "msg_throttle": 3, "value": 10, "readout": true, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "c1059008e6d046209c9d63de036c1aff", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "date": "2016-03-24T07:24:50.948495", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "content": {"data": {"buffers": [], "state": {"description": "x"}, "method": "update"}, "comm_id": "c1059008e6d046209c9d63de036c1aff"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "content": {"data": {"buffers": [], "state": {"children": ["IPY_MODEL_c1059008e6d046209c9d63de036c1aff"]}, "method": "update"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "content": {"data": {"method": "display"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "content": {"wait": true}, "channel": "iopub", "metadata": {}, "msg_type": "clear_output", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "clear_output"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
 ** Working with jupyterhub
 
 Jupyterhub requires authentication using username/password, as opposed to just
