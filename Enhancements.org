@@ -49,10 +49,41 @@ package. The URL request is of the form:
 ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/channels?session_id={session id}
 #+END_QUOTE
 
+** How a Worksheet is Displayed
+EIN relies heavily on EIEO and EWOC.
+
+EWOC PP eventually calls `[[file:lisp/ein-cell.el::ein:cell-append-mime-type][ein:cell-append-mime-type]]` for output. Latex is
+considered text, but should be able to convert to image using dvitopng,
+imagemagick, other?
+
 * Enhancements/Fixes
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
+
+*** For Further Investigation
+
+- [[https://github.com/zk-phi/magic-latex-buffer][magic-latex-buffer.el]]
+- [[https://www.gnu.org/software/auctex/preview-latex.html][preview-latex.el]]
+- Another [[https://github.com/aaptel/preview-latex/][preview-latex]] package (based on org-latex-preview).
+
+*** Inline using org-latex-preview
+
+[[http://orgmode.org/manual/Previewing-LaTeX-fragments.html#Previewing-LaTeX-fragments][Documentation]] for this facility in org.
+
+Does it work here?
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+Some inline Latex math $a^2=b$.
+
+Yes, but nedd MiKTeX installed if on windows.
+
+If org-latex-preview is working then [[https://github.com/aaptel/preview-latex][p]]x will also work, though the code for
+`[[file:~/.emacs.d/elpa/px-20141006.548/px.el::(defun%20px--create-preview%20(at)][px--create-preview]]` needs to be patched as the signature for `org-format-latex`
+has changed.
 
 ** XWidget Support/Interactive Widgets
 
