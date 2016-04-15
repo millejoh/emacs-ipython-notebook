@@ -114,28 +114,28 @@
 (defun ein:kernel-start (kernel notebook)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
-    (let ((kernelspec (ein:$notebook-kernelspec notebook)))
-      (if (= (ein:$kernel-api-version kernel) 2)
-	  (let ((path (substring (ein:$notebook-notebook-path notebook)
-				 0
-				 (or (position ?/ (ein:$notebook-notebook-path notebook)
-					       :from-end t)
-				     0))))
-	    (ein:kernel-start--legacy kernel
-				      (ein:$notebook-notebook-name notebook)
-				      path))
-	(ein:query-singleton-ajax
-	 (list 'kernel-start (ein:$kernel-kernel-id kernel))
-	 (ein:url (ein:$kernel-url-or-port kernel)
-		  "api/sessions")
-	 :type "POST"
-	 :data (json-encode `(("notebook" .
-			       (("path" . ,(ein:$notebook-notebook-path notebook))))
-			      ,@(if kernelspec
-				    `(("kernel" .
-				       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
-	 :parser #'ein:json-read
-	 :success (apply-partially #'ein:kernel--kernel-started kernel))))))
+    (if (= (ein:$kernel-api-version kernel) 2)
+        (let ((path (substring (ein:$notebook-notebook-path notebook)
+                               0
+                               (or (position ?/ (ein:$notebook-notebook-path notebook)
+                                             :from-end t)
+                                   0))))
+          (ein:kernel-start--legacy kernel
+                                    (ein:$notebook-notebook-name notebook)
+                                    path))
+      (let ((kernelspec (ein:$notebook-kernelspec notebook)))
+        (ein:query-singleton-ajax
+         (list 'kernel-start (ein:$kernel-kernel-id kernel))
+         (ein:url (ein:$kernel-url-or-port kernel)
+                  "api/sessions")
+         :type "POST"
+         :data (json-encode `(("notebook" .
+                               (("path" . ,(ein:$notebook-notebook-path notebook))))
+                              ,@(if kernelspec
+                                    `(("kernel" .
+                                       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+         :parser #'ein:json-read
+         :success (apply-partially #'ein:kernel--kernel-started kernel))))))
 
 (defun ein:kernel-start--legacy (kernel notebook-id path)
   (unless (ein:$kernel-running kernel)

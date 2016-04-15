@@ -105,7 +105,7 @@ global setting.  For global setting and more information, see
   "Generate content url's for IPython Notebook version 2.x"
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content)))
-    (url-encode-url (ein:url url-or-port "api/notebooks"))))
+    (url-encode-url (ein:url url-or-port "api/notebooks" path))))
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
   "Return the contents of the object at the specified path from the Jupyter server."
