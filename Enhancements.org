@@ -49,10 +49,78 @@ package. The URL request is of the form:
 ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/channels?session_id={session id}
 #+END_QUOTE
 
+** How a Worksheet is Displayed
+EIN relies heavily on EIEIO and EWOC.
+
+EWOC PP eventually calls ~[[file:lisp/ein-cell.el::ein:cell-append-mime-type][ein:cell-append-mime-type]]~ for output. Latex is
+considered text, but should be able to convert to image using dvitopng,
+imagemagick, other?
+
 * Enhancements/Fixes
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
+
+*** For Further Investigation
+
+- [[https://github.com/zk-phi/magic-latex-buffer][magic-latex-buffer.el]]
+- [[https://www.gnu.org/software/auctex/preview-latex.html][preview-latex.el]]
+- Another [[https://github.com/aaptel/preview-latex/][preview-latex]] package (based on org-latex-preview).
+
+*** Inline using org-latex-preview
+
+[[http://orgmode.org/manual/Previewing-LaTeX-fragments.html#Previewing-LaTeX-fragments][Documentation]] for this facility in org.
+
+Does it work here?
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+Some inline Latex math $a^2=b$.
+
+Yes, but nedd MiKTeX installed if on windows.
+
+If org-latex-preview is working then [[https://github.com/aaptel/preview-latex][p]]x will also work, though the code for
+~[[file:~/.emacs.d/elpa/px-20141006.548/px.el::(defun%20px--create-preview%20(at)][px--create-preview]]~ needs to be patched as the signature for `org-format-latex`
+has changed.
+
+*** Using magic-latex-buffer
+Per the [[https://github.com/zk-phi/magic-latex-buffer][documentation]] all you need to do to configure is to add a hook:
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'latex-mode-hook 'magic-latex-buffer)
+#+END_SRC
+
+Or manually activate by calling ~M-x magic-latex-buffer~.
+
+Use variable ~ein:notebook-first-open-hook~ to enable?
+
+This works, at least for viewing, but the images that get inserted confuse ein
+when saving a notebook and generate errors in Jupter. Can be worked around by
+disabling ~magic-latex-buffer~ before saving. One hack is to advise
+~ein:notebook-save-notebook-command~?
+
+#+BEGIN_SRC emacs-lisp
+  (defvar ein:magic-latex-enabled-p nil)
+
+  (defun ein:disable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Disabling magic-latex.")
+      (magic-latex-buffer -1)))
+
+  (defun ein:enable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Enabling magic-latex.")
+      (magic-latex-buffer t)))
+
+  (advice-add #'ein:notebook-save-notebook :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:notebook-save-notebook :after #'ein:enable-magic-latex-maybe)
+
+  (advice-add #'ein:cell-execute-internal :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:cell-execute-internal :after #'ein:enable-magic-latex-maybe)
+
+#+END_SRC
 
 ** XWidget Support/Interactive Widgets
 
@@ -75,9 +143,10 @@ with the jupyter server.
 #+END_SRC
 
 **** Websocket data for comm_msg
-#+BEGIN_SRC
+#+BEGIN_SRC emacs-lisp
 [WS] Received: {"msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "content": {"data": {"description": "", "orientation": "horizontal", "continuous_update": true, "_model_name": "WidgetModel", "font_size": "", "step": 1, "background_color": null, "padding": "", "slider_color": null, "height": "", "_view_module": "", "margin": "", "color": null, "width": "", "font_family": "", "border_color": null, "_dom_classes": [], "min": -10, "_range": false, "disabled": false, "_model_module": null, "_view_name": "IntSliderView", "max": 30, "version": 0, "font_style": "", "msg_throttle": 3, "value": 10, "readout": true, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "c1059008e6d046209c9d63de036c1aff", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "date": "2016-03-24T07:24:50.948495", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "content": {"data": {"buffers": [], "state": {"description": "x"}, "method": "update"}, "comm_id": "c1059008e6d046209c9d63de036c1aff"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "content": {"data": {"buffers": [], "state": {"children": ["IPY_MODEL_c1059008e6d046209c9d63de036c1aff"]}, "method": "update"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "content": {"data": {"method": "display"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "content": {"wait": true}, "channel": "iopub", "metadata": {}, "msg_type": "clear_output", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "clear_output"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
 #+END_SRC
+
 ** Working with jupyterhub
 
 Jupyterhub requires authentication using username/password, as opposed to just
@@ -90,20 +159,20 @@ this.
 The REST API for this looks like POST http://{host}:{port}/hub/login, username and password
 parameters in the POST.
 
-Also looks like the content REST API has been modified so that querys are of the
+Also looks like the content REST API has been modified so that queries are of the
 form: /user/<username>/<command>.
 
 ** Imenu/Speedbar Cooperation
 Seems to be a couple ways of doing this:
 
- 1. Configuring `[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]` regex's.
+ 1. Configuring ~[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]~ regex's.
 
  2. Redefining imenu-create-index ala python.el.
 
 (2) seems to be the more elegant solution.
 
 EIN currently has minimal support for imenu through
-`[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]`, but all it does is look for
+~[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]~, but all it does is look for
 headings. Somehow this fails to work with speedbar and also does not handle
 indexing Python code (i.e. variables, function, classes, etc.).
 
@@ -141,6 +210,9 @@ Get rid of all those cl compile warnings?
 
 Also look at using [[https://github.com/magnars/s.el][s]] and [[https://github.com/rejeep/f.el][f]].
 
+** Us cl-generic?
+eieio is being deprecated and cl-generic is the recommended replacement..
+
 ** Access password protected notebooks (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/57][#57]])
 This is what I have found out so far:
 
@@ -160,7 +232,8 @@ Not sure if that makes sense, but for the moment that is my theory on what's
 happening. Somehow we need to provide the security cookie with the websocket
 connect request.
 
-<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more info with the connection header:
+<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more
+info with the connection header:
 
 1. Specify the port along with the url.
 2. Pass along a security cookie.
