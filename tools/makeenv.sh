@@ -18,4 +18,4 @@ else
 fi
 
 . $activate
-pip install --quiet --requirement $req
+pip install --requirement $req
