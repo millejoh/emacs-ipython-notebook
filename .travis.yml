@@ -18,7 +18,6 @@ matrix:
   allow_failures:
     IPY_VERSION=dev
     EMACS=emacs
-    # EMACS=emacs-snapshot
 
 script:
   make $EIN_TEST_TARGET IPY_VERSION=$IPY_VERSION

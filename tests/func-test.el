@@ -56,8 +56,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                notebook)
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
-      (let ((created nil))
-        (ein:notebooklist-new-notebook url-or-port path
+      (let ((created nil)
+            (kernelspec (first (ein:list-available-kernels url-or-port))))
+        (ein:notebooklist-new-notebook url-or-port kernelspec path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
         (ein:testing-wait-until (lambda () created)))
