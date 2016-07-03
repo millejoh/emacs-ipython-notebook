@@ -58,7 +58,9 @@
 
 ;;; Install dependencies
 
-(call-process "git" nil (get-buffer "*Messages*") nil
+(call-process "git" nil
+              nil ; (get-buffer "*Messages*")
+              nil
               "submodule" "update" "--init")
 
 
