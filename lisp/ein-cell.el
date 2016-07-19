@@ -183,6 +183,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
    (outputs :initarg :outputs :initform nil :type list)
    (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
+   (slidetype :initarg :slidetype :type string)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
   "Notebook cell base class")
 
@@ -190,7 +191,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
   ((traceback :initform nil :initarg :traceback :type list)
    (cell-type :initarg :cell-type :initform "code")
    (kernel :initarg :kernel :type ein:$kernel)
-   (element-names :initform (:prompt :input :output :footer))
+   (element-names :initform (:prompt :input :output :footer :slidetype))
    (input-prompt-number :initarg :input-prompt-number
                         :documentation "\
 Integer or \"*\" (running state).
@@ -220,7 +221,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
-   (element-names :initform (:prompt :input :footer))))
+   (element-names :initform (:prompt :input :footer :slidetype))))
 
 (defclass ein:htmlcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "html")))
@@ -265,13 +266,28 @@ auto-execution mode flag in the connected buffer is `t'.")))
   (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell-from-json (data &rest args)
-  (let* ((data (ein:preprocess-nb4-cell data))
-         (cell (ein:cell-init (apply #'ein:cell-from-type
-                                    (plist-get data :cell_type) args)
-                             data)))
-    (if (plist-get data :metadata)
-        (ein:oset-if-empty cell :metadata (plist-get data :metadata)))
-    cell))
+  (setq data (ein:preprocess-nb4-cell data))
+  (setq cell (ein:cell-init (apply #'ein:cell-from-type
+					 (plist-get data :cell_type) args)
+				  data))
+
+  (if (plist-get data :metadata)
+      (ein:oset-if-empty cell :metadata (plist-get data :metadata))
+    )
+
+  (setq slideshow (plist-get (oref cell :metadata) :slideshow))
+  
+  (if (null slideshow)
+      (ein:oset-if-empty cell :slidetype "-")
+    (progn
+      (setq slide_type (nth 0 (cdr slideshow)))
+      (ein:oset-if-empty cell :slidetype slide_type)
+      ))
+
+  (message "read slidetype %s" (oref cell :slidetype))
+  (message "reconstructed slideshow %s" (ein:get-slide-show cell))
+  cell
+  )
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
   (ein:oset-if-empty cell :outputs (plist-get data :outputs))
@@ -308,6 +324,8 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (oset new :input (if (ein:cell-active-p cell)
                          (ein:cell-get-text cell)
                        (oref cell :input)))
+    ;; copy slidetype
+    (oset new :slidetype (oref cell :slidetype))
     ;; copy output when the new cell has it
     (when (memq :output (oref new :element-names))
       (oset new :outputs (mapcar 'identity (oref cell :outputs))))
@@ -335,9 +353,13 @@ auto-execution mode flag in the connected buffer is `t'.")))
     ;; copy element attribute
     (loop for k in (oref new :element-names)
           with old-element = (oref cell :element)
-          do (oset new :element
+          do (progn
+	       (oset new :element
                    (plist-put (oref new :element) k
-                              (plist-get old-element k))))
+                              (plist-get old-element k)))
+	       ;(message "copy element %s" k)
+	       )
+	  )
     ;; setting ewoc nodes
     (loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
@@ -493,24 +515,38 @@ Return language name as a string or `nil' when not defined.
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer data))))
 
+(defun ein:get-slide-show (cell)
+  (setq slide_type (oref cell :slidetype))
+  (setq SS_table (make-hash-table))
+  (setf (gethash 'slide_type SS_table) slide_type)
+  SS_table)
+
+
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (concat
-    (format "In [%s]:" (or (ein:oref-safe cell :input-prompt-number)  " "))
+    (format "In [%s]" (or (ein:oref-safe cell :input-prompt-number)  " "))
+    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
     (when (oref cell :autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (format "%s:" (oref cell :cell-type))
+   (concat 
+    (format "%s:" (oref cell :cell-type))
+    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
+    )
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
-   (format "h%s:" (oref cell :level))
+   (concat
+    (format "h%s:" (oref cell :level))
+    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
+    )
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))
@@ -1018,15 +1054,25 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
+
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
-  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
-		    (autoscroll . json-false)
-                    (ein.tags . (,(format "worksheet-%s" wsidx)))))
-        (outputs (if discard-output []
-                   (oref cell :outputs)))
-        (renamed-outputs '())
-        (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
-                           (and (numberp it) it))))
+
+  (setq SS_table (ein:get-slide-show cell))
+  (let
+      (
+       (metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
+		   (autoscroll . ,json-false)
+		   (ein.tags . (,(format "worksheet-%s" wsidx)))
+		   (slideshow . ,SS_table)
+		   )
+		 )
+       (outputs (if discard-output []
+		  (oref cell :outputs)))
+       (renamed-outputs '())
+       (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+			  (and (numberp it) it))))
+
+    
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
@@ -1089,15 +1135,22 @@ prettified text thus be used instead of HTML type."
     (source    . ,(ein:cell-get-text cell))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
+  (setq SS_table (ein:get-slide-show cell))
+
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
-    (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))))))
+    (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
+		 (slideshow . ,SS_table)))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
+  (setq SS_table (ein:get-slide-show cell))
+
   (let ((header (make-string (oref cell :level) ?#)))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
-      (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx))))))))
+      (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
+		   (slideshow . ,SS_table)
+		   )))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))

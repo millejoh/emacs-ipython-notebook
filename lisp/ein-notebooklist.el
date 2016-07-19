@@ -218,6 +218,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
 (defun ein:notebooklist-open-notebook (nblist path &optional callback cbargs)
+  (message "CCCC %s %s" nblist path)
   (ein:notebook-open (ein:$notebooklist-url-or-port nblist)
                      path
                      nil

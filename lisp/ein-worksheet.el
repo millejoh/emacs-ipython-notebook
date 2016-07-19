@@ -526,7 +526,28 @@ directly."
       (when (ein:codecell-p new)
         (oset new :kernel (oref ws :kernel)))
       (ein:worksheet-empty-undo-maybe)
-      (when focus (ein:cell-goto new relpos)))))
+      (when focus (ein:cell-goto new relpos))))
+  )
+
+(defun ein:worksheet-toggle-slide-type (ws cell &optional focus)
+  "Toggle the cell type of the cell at point."
+  (interactive (list (ein:worksheet--get-ws-or-error)
+                     (ein:worksheet-get-current-cell)
+                     t))
+  (setq new_slide_type (ein:case-equal (oref cell :slidetype)
+				       (("-") "slide")
+				       (("slide") "subslide")
+				       (("subslide") "skip")
+				       (("skip") "-")
+				       )
+  	
+  	)
+  (message "changing slide type %s" new_slide_type)
+  (oset cell :slidetype new_slide_type)
+  (ewoc-invalidate (oref cell :ewoc) (ein:cell-element-get cell :prompt))
+  (ein:worksheet-empty-undo-maybe)
+  (when focus (ein:cell-goto cell))
+  )
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
   "Change the cell type of the current cell.

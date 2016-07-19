@@ -702,6 +702,7 @@ This is equivalent to do ``C-c`` in the console program."
          (ws-cells (mapcar (lambda (data) (ein:cell-from-json data)) cells))
          (worksheet (ein:notebook--worksheet-new notebook)))
     (oset worksheet :saved-cells ws-cells)
+    ;(mapcar (lambda (data) (message "test %s" (oref data :metadata))) ws-cells)
     (list worksheet)))
 
 (defun ein:notebook-to-json (notebook)
@@ -741,10 +742,14 @@ This is equivalent to do ``C-c`` in the console program."
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
-      (cells . ,(apply #'vector all-cells)))))
+      (cells . ,(apply #'vector all-cells)))
+
+    ))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (let ((content (ein:content-from-notebook notebook)))
+    ;(message "CCCC %s" content)
+
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (ein:content-save content
@@ -1265,6 +1270,7 @@ This hook is run regardless the actual major mode used."
   (define-key map "\C-c\C-a" 'ein:worksheet-insert-cell-above)
   (define-key map "\C-c\C-b" 'ein:worksheet-insert-cell-below)
   (define-key map "\C-c\C-t" 'ein:worksheet-toggle-cell-type)
+  (define-key map "\C-c\C-d" 'ein:worksheet-toggle-slide-type)
   (define-key map "\C-c\C-u" 'ein:worksheet-change-cell-type)
   (define-key map "\C-c\C-s" 'ein:worksheet-split-cell-at-point)
   (define-key map "\C-c\C-m" 'ein:worksheet-merge-cell)
@@ -1326,6 +1332,7 @@ This hook is run regardless the actual major mode used."
             ("Insert cell above" ein:worksheet-insert-cell-above)
             ("Insert cell below" ein:worksheet-insert-cell-below)
             ("Toggle cell type" ein:worksheet-toggle-cell-type)
+	    ("Toggle slide type" ein:worksheet-toggle-slide-type)
             ("Change cell type" ein:worksheet-change-cell-type)
             ("Split cell at point" ein:worksheet-split-cell-at-point)
             ("Merge cell" ein:worksheet-merge-cell)

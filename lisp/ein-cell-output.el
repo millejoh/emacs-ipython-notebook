@@ -47,10 +47,21 @@
 (defun ein:output-property (maybe-property)
   (cdr (assoc maybe-property ein:output-type-map)))
 
+(defun ein:get-slideshow (cell)
+  (setq slide_type (oref cell :slidetype))
+  (setq SS_table (make-hash-table))
+  (setf (gethash 'slide_type SS_table) slide_type)
+  SS_table)
+
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+
+  (setq SS_table (ein:get-slide-show cell))
+  
   (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
 		    (autoscroll . json-false)
-                    (ein.tags . (,(format "worksheet-%s" wsidx)))))
+                    (ein.tags . (,(format "worksheet-%s" wsidx)))
+		    (slideshow . ,SS_table)
+		    ))
         (outputs (if discard-output []
                    (oref cell :outputs)))
         (renamed-outputs '())
@@ -79,15 +90,23 @@
     (source    . ,(ein:cell-get-text cell))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
+  (setq SS_table (ein:get-slide-show cell))
+  
+
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
-    (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))))))
+    (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
+		 (slideshow . ,SS_table)))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
+  (setq SS_table (ein:get-slide-show cell))
+  
   (let ((header (make-string (oref cell :level) ?#)))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
-      (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx))))))))
+      (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
+		   (slideshow . ,SS_table)
+		   )))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))
