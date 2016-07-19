@@ -357,7 +357,6 @@ auto-execution mode flag in the connected buffer is `t'.")))
 	       (oset new :element
                    (plist-put (oref new :element) k
                               (plist-get old-element k)))
-	       ;(message "copy element %s" k)
 	       )
 	  )
     ;; setting ewoc nodes

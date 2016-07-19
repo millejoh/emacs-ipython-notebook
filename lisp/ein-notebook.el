@@ -748,8 +748,6 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (let ((content (ein:content-from-notebook notebook)))
-    ;(message "CCCC %s" content)
-
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (ein:content-save content
