@@ -183,7 +183,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
    (outputs :initarg :outputs :initform nil :type list)
    (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
-   (slidetype :initarg :slidetype :type string)
+   (slidetype :initarg :slidetype :initform "-" :type string)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
   "Notebook cell base class")
 
@@ -277,11 +277,10 @@ auto-execution mode flag in the connected buffer is `t'.")))
 
   (setq slideshow (plist-get (oref cell :metadata) :slideshow))
   
-  (if (null slideshow)
-      (ein:oset-if-empty cell :slidetype "-")
+  (if (not (null slideshow))
     (progn
       (setq slide_type (nth 0 (cdr slideshow)))
-      (ein:oset-if-empty cell :slidetype slide_type)
+      (oset cell :slidetype slide_type)
       ))
 
   (message "read slidetype %s" (oref cell :slidetype))
