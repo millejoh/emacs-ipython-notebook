@@ -520,6 +520,10 @@ Return language name as a string or `nil' when not defined.
   SS_table)
 
 
+(defun ein:maybe-show-slideshow-data (cell)
+  (when (ein:worksheet-show-slide-data-p ein:%worksheet%)
+    (format " - Slide [%s]:" (or (ein:oref-safe cell :slidetype)  " "))))
+
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
@@ -527,24 +531,22 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only
    (concat
     (format "In [%s]" (or (ein:oref-safe cell :input-prompt-number)  " "))
-    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
+    (ein:maybe-show-slideshow-data cell)
     (when (oref cell :autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (concat 
+   (concat
     (format "%s:" (oref cell :cell-type))
-    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
-    )
+    (ein:maybe-show-slideshow-data cell))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
    (concat
     (format "h%s:" (oref cell :level))
-    (format " - Slide [%s]:"     (or (ein:oref-safe cell :slidetype)  " "))
-    )
+    (ein:maybe-show-slideshow-data cell))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))

@@ -40,6 +40,14 @@
 (define-obsolete-variable-alias
   'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
 
+(defcustom ein:worksheet-show-slide-data nil
+  "Controls whether to show slide metadata by default when
+  opening or creating worksheets. Note that viewing of slide
+  metadata can be toggled in an open worksheet using the command
+  C-cS."
+  :type 'boolean
+  :group 'ein)
+
 (defcustom ein:worksheet-enable-undo 'yes
   "Configure undo in notebook buffers.
 
@@ -92,6 +100,9 @@ this value."
    (kernel :initarg :kernel :type ein:$kernel)
    (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
+   (show-slide-data-p :initarg :show-slide-data-p
+                      :initform ein:worksheet-show-slide-data
+                      :accessor ein:worksheet-show-slide-data-p)
    (events :initarg :events)))
 
 (ein:deflocal ein:%worksheet% nil
@@ -185,6 +196,13 @@ this value."
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (set-buffer-modified-p dirty))
   (oset ws :dirty dirty))
+
+(defun ein:worksheet-toggle-slideshow-view ()
+  (interactive)
+  (let ((ws (ein:worksheet--get-ws-or-error)))
+    (setf (ein:worksheet-show-slide-data-p ws)
+          (not (ein:worksheet-show-slide-data-p ws)))
+    (ein:worksheet-render ws)))
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
@@ -537,17 +555,15 @@ directly."
   (setq new_slide_type (ein:case-equal (oref cell :slidetype)
 			 (("-") "slide")
 			 (("slide") "subslide")
-			 (("subslide") "skip")
-			 (("skip") "-")
-			 )
-  	
-  	)
+			 (("subslide") "fragment")
+       (("fragment") "skip")
+			 (("skip") "notes")
+       (("notes") "-")))
   (message "changing slide type %s" new_slide_type)
   (oset cell :slidetype new_slide_type)
   (ewoc-invalidate (oref cell :ewoc) (ein:cell-element-get cell :prompt))
   (ein:worksheet-empty-undo-maybe)
-  (when focus (ein:cell-goto cell))
-  )
+  (when focus (ein:cell-goto cell)))
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
   "Change the cell type of the current cell.

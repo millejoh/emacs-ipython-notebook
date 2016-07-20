@@ -1251,6 +1251,7 @@ This hook is run regardless the actual major mode used."
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
+  (define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
   (define-key map (kbd "<M-S-return>")
@@ -1330,7 +1331,7 @@ This hook is run regardless the actual major mode used."
             ("Insert cell above" ein:worksheet-insert-cell-above)
             ("Insert cell below" ein:worksheet-insert-cell-below)
             ("Toggle cell type" ein:worksheet-toggle-cell-type)
-	    ("Toggle slide type" ein:worksheet-toggle-slide-type)
+            ("Toggle slide type" ein:worksheet-toggle-slide-type)
             ("Change cell type" ein:worksheet-change-cell-type)
             ("Split cell at point" ein:worksheet-split-cell-at-point)
             ("Merge cell" ein:worksheet-merge-cell)
@@ -1389,7 +1390,8 @@ This hook is run regardless the actual major mode used."
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
-          '(("Rename worksheet" ein:worksheet-rename-sheet)
+          '(("Toggle slide metadata view" ein:worksheet-toggle-slideshow-view)
+            ("Rename worksheet" ein:worksheet-rename-sheet)
             ("Insert next worksheet"
              ein:notebook-worksheet-insert-next)
             ("Insert previous worksheet"
