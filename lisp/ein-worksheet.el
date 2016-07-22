@@ -101,7 +101,6 @@ this value."
    (dirty :initarg :dirty :type boolean :initform nil)
    (metadata :initarg :metadata :initform nil)
    (show-slide-data-p :initarg :show-slide-data-p
-                      :initform ein:worksheet-show-slide-data
                       :accessor ein:worksheet-show-slide-data-p)
    (events :initarg :events)))
 
@@ -116,6 +115,7 @@ this value."
   (apply #'make-instance 'ein:worksheet
          :nbformat nbformat :get-notebook-name get-notebook-name
          :discard-output-p discard-output-p :kernel kernel :events events
+         :show-slide-data-p ein:worksheet-show-slide-data
          args))
 
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
