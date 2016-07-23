@@ -198,6 +198,7 @@ this value."
   (oset ws :dirty dirty))
 
 (defun ein:worksheet-toggle-slideshow-view ()
+  "Changes the display of slideshow metadata in the current worksheet."
   (interactive)
   (let ((ws (ein:worksheet--get-ws-or-error)))
     (setf (ein:worksheet-show-slide-data-p ws)
@@ -548,7 +549,8 @@ directly."
   )
 
 (defun ein:worksheet-toggle-slide-type (ws cell &optional focus)
-  "Toggle the cell type of the cell at point."
+  "Toggle the slide metadata of the cell at point. Available slide settings are:
+ [slide, subslide, fragment, skip, notes, - (none)]."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))

@@ -270,23 +270,16 @@ auto-execution mode flag in the connected buffer is `t'.")))
   (setq cell (ein:cell-init (apply #'ein:cell-from-type
 					 (plist-get data :cell_type) args)
 				  data))
-
   (if (plist-get data :metadata)
-      (ein:oset-if-empty cell :metadata (plist-get data :metadata))
-    )
-
+      (ein:oset-if-empty cell :metadata (plist-get data :metadata)))
   (setq slideshow (plist-get (oref cell :metadata) :slideshow))
-  
   (if (not (null slideshow))
     (progn
       (setq slide_type (nth 0 (cdr slideshow)))
-      (oset cell :slidetype slide_type)
-      ))
-
+      (oset cell :slidetype slide_type)))
   (message "read slidetype %s" (oref cell :slidetype))
   (message "reconstructed slideshow %s" (ein:get-slide-show cell))
-  cell
-  )
+  cell)
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
   (ein:oset-if-empty cell :outputs (plist-get data :outputs))
@@ -1058,21 +1051,15 @@ prettified text thus be used instead of HTML type."
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
 
   (setq SS_table (ein:get-slide-show cell))
-  (let
-      (
-       (metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
-		   (autoscroll . ,json-false)
-		   (ein.tags . (,(format "worksheet-%s" wsidx)))
-		   (slideshow . ,SS_table)
-		   )
-		 )
-       (outputs (if discard-output []
-		  (oref cell :outputs)))
-       (renamed-outputs '())
-       (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
-			  (and (numberp it) it))))
-
-    
+  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
+                    (autoscroll . ,json-false)
+                    (ein.tags . (,(format "worksheet-%s" wsidx)))
+                    (slideshow . ,SS_table)))
+        (outputs (if discard-output []
+                   (oref cell :outputs)))
+        (renamed-outputs '())
+        (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+                           (and (numberp it) it))))
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
@@ -1136,7 +1123,6 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
   (setq SS_table (ein:get-slide-show cell))
-
   `((cell_type . ,(oref cell :cell-type))
     (source    . ,(ein:cell-get-text cell))
     (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
@@ -1144,13 +1130,11 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
   (setq SS_table (ein:get-slide-show cell))
-
   (let ((header (make-string (oref cell :level) ?#)))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
       (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
-		   (slideshow . ,SS_table)
-		   )))))
+                   (slideshow . ,SS_table))))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))

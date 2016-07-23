@@ -384,6 +384,7 @@ Notebook
 .. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
+.. el.variable:: ein:worksheet-show-slide-data
 
 Console
 ^^^^^^^
@@ -562,6 +563,11 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.9.0
+------
+
+* Add support for setting slide attributes for notebook/worksheet cells.
 
 v0.8.2
 ------
