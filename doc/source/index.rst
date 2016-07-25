@@ -564,6 +564,11 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.9.1
+------
+
+* Fix issues with shared-output and notebook connected buffers.
+
 v0.9.0
 ------
 

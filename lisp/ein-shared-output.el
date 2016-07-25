@@ -55,6 +55,16 @@
 
 ;;; Cell related
 
+(defmethod ein:cell-insert-prompt ((cell ein:shared-output-cell))
+  "Insert prompt of the CELL in the buffer.
+Called from ewoc pretty printer via `ein:cell-pp'."
+  ;; Newline is inserted in `ein:cell-insert-input'.
+  (ein:insert-read-only
+   (concat
+    (format "In [%s]" (or (ein:oref-safe cell :input-prompt-number)  " "))
+    (when (oref cell :autoexec) " %s" ein:cell-autoexec-prompt))
+   'font-lock-face 'ein:cell-input-prompt))
+
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
                              &optional popup &rest args)
   (unless (plist-get args :silent)
