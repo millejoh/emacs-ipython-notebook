@@ -516,6 +516,21 @@ on server url/port."
   (ein:log 'error
     "Kernelspc query call failed with status %s." symbol-status))
 
+(defun ein:notebook-switch-kernel (notebook kernel-name)
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names))))
+          (kernel-name (completing-read
+                       "Select kerenl: "
+                       (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
+     (list notebook kernel-name)))
+  (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
+                                                                kernel-name))
+  (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
+  (ein:notebook-restart-kernel notebook))
+
 ;;; This no longer works in iPython-2.0. Protocol is to create a session for a
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)

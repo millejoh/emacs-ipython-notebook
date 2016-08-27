@@ -105,6 +105,8 @@
             :msg_id (ein:utils-uuid)
             :username (ein:$kernel-username kernel)
             :session (ein:$kernel-session-id kernel)
+            ;; version?
+            :date (format-time-string "%Y-%m-%dT%T" (current-time)) ; ISO 8601 timestamp
             :msg_type msg-type)
    :metadata (make-hash-table)
    :content content

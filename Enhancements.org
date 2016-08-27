@@ -27,6 +27,9 @@ There are a number of helper functions for returning the struct for an opened no
   
 ** Notebooklist Buffer
 ** Kernel communication
+
+The [[https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging][messaging protocol]].
+
 ** Contents API
 
 Documented at the IPython Github [[https://github.com/ipython/ipython/wiki/IPEP-27%253A-Contents-Service][wiki.]]
@@ -57,6 +60,37 @@ considered text, but should be able to convert to image using dvitopng,
 imagemagick, other?
 
 * Enhancements/Fixes
+** Mike DeCandia's Wish and Bug List
+*** Wishlist
+
+- switch kernel
+
+- getting a true Python mode when editing code in cells, without messing up the
+  other formatting
+
+- If one cuts and pastes read-only text into a cell it can’t be edited
+
+- A full undo history
+
+- Command history / autocomplete like one gets in regular ipython
+
+- Image resizing
+
+*** Bugs
+
+- emacs ipython notebook fails to follow redirects properly - This is mainly due
+  to the fact that it holds on the original site name internally.
+
+- cookie expiration for long running notebooks - On long running notebooks
+  tornado's default cookie expiration is 30 days. After the cookie expires emacs
+  will continue to attempt autosave, but the notebook will not save. The
+  workaround is to run ein:notebooklist-open to generate a new GET request
+  against /login to get another cookie.
+
+ 
+
+** Switch kernel in running notebook
+** 
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
