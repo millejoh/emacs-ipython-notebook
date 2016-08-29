@@ -87,10 +87,10 @@ imagemagick, other?
   workaround is to run ein:notebooklist-open to generate a new GET request
   against /login to get another cookie.
 
- 
-
 ** Switch kernel in running notebook
-** 
+
+How? Probably by restarting kernel using a new kernelspec.
+
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].

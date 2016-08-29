@@ -517,6 +517,8 @@ on server url/port."
     "Kernelspc query call failed with status %s." symbol-status))
 
 (defun ein:notebook-switch-kernel (notebook kernel-name)
+  "Change the kernel for a running notebook. If not called from a
+notebook buffer then the user will be prompted to select an opened notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
                         (completing-read
@@ -1402,6 +1404,7 @@ This hook is run regardless the actual major mode used."
       ("Kernel"
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
+            ("Switch kernel" ein:notebook-switch-kernel)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
