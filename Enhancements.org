@@ -60,6 +60,35 @@ considered text, but should be able to convert to image using dvitopng,
 imagemagick, other?
 
 * Enhancements/Fixes
+** Run dynamic javascript
+
+The development [[ipynb:(:url-or-port%208888%20:name%20"emacs-ipython-notebook/Embedding%20Altair%20Graphs.ipynb")][notebook]].
+
+Emacs is not a web browser, hence does not know how to execute javascript.
+
+Maybe we can get around this using [[https://github.com/skeeto/skewer-mode][skewer-mode]] or [[http://js-comint-el.sourceforge.net/][js-comint.el]].
+
+Skewer-mode uses JS client provided by a web browser, while js-comint depends on
+nodejs (you understand this difference, right? Right?).
+
+Another thought is to get python to do this for us. The packages [[][naked]] (an
+unfortunate name given my corporate firewall) and [[https://github.com/doloopwhile/PyExecJs][PyExecJs]].
+
+
+
+** Embedding [[https://github.com/ellisonbg/altair][Altair]] plots
+
+First get [[*Run dynamic javascript][dynamic javascript]] working...
+
+Relevant [[https://github.com/vega/ipyvega/issues/31][issue]], [[https://github.com/vega/ipyvega/pull/32][pull request]] and [[https://github.com/ellisonbg/ipyvega/blob/be19059068557c44cbdcbcf5ad509c3312b25763/src/index.js][code]].
+
+Appears the code has capability of returning javascript and png output. When
+calling from ein all that gets returned is javascript, which
+`ein:cell-append-mime-type` chokes on.
+
+Somehow, when running [[https://nbconvert.readthedocs.io/en/latest/][nbconvert]], the javascript gets turned into a png. How to trigger
+that when normally executing cells?
+
 ** Mike DeCandia's Wish and Bug List
 *** Wishlist
 

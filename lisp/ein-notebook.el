@@ -1489,7 +1489,9 @@ Note that print page is not supported in IPython 0.12.1."
   (interactive "P")
   (let ((url (apply #'ein:url
                     (ein:$notebook-url-or-port ein:%notebook%)
-                    (ein:$notebook-notebook-id ein:%notebook%)
+                    (if (>= (ein:$notebook-api-version ein:%notebook%) 3)
+                        "notebooks")
+                    (ein:$notebook-notebook-path ein:%notebook%)
                     (if print (list "print")))))
     (message "Opening %s in browser" url)
     (browse-url url)))
