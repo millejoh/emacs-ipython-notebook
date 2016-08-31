@@ -522,62 +522,72 @@ Notebook list data is passed via the buffer local variable
         (sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
-	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
-	  for name = (plist-get note :name)
-	  for path = (plist-get note :path)
-	  ;; (cond ((= 2 api-version)
-	  ;;        (plist-get note :path))
-	  ;;       ((= 3 api-version)
-	  ;;        (ein:get-actual-path (plist-get note :path))))
-	  for type = (plist-get note :type)
-	  for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
-	  do (widget-insert " ")
-	  if (string= type "directory")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((urlport urlport)
-					   (path name))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-open urlport
-							(ein:url (ein:$notebooklist-path ein:%notebooklist%)
-								 path))))
-		     "Dir")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))
-	  if (string= type "notebook")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((name name)
-					   (path path))
-			       (lambda (&rest ignore)
-				 (run-at-time 3 nil
-					      #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
-				 (ein:notebooklist-open-notebook
-				  ein:%notebooklist% path)))
-		     "Open")
-		    (widget-insert " ")
-		    (when (gethash path sessions)
-		      (widget-create
-		       'link
-		       :notify (lexical-let ((session (car (gethash path sessions)))
-					     (nblist ein:%notebooklist%))
-				 (lambda (&rest ignore)
-				   (run-at-time 1 nil
-						#'ein:notebooklist-reload
-						ein:%notebooklist%)
-				   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-								      :session-id session))))
-		       "Stop")
-		      (widget-insert " "))
-		    (widget-create
-		     'link
-		     :notify (lexical-let ((path path))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-delete-notebook-ask
-				  path)))
-		     "Delete")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))))
+          for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
+          for name = (plist-get note :name)
+          for path = (plist-get note :path)
+          ;; (cond ((= 2 api-version)
+          ;;        (plist-get note :path))
+          ;;       ((= 3 api-version)
+          ;;        (ein:get-actual-path (plist-get note :path))))
+          for type = (plist-get note :type)
+          for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
+          do (widget-insert " ")
+          if (string= type "directory")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((urlport urlport)
+                                           (path name))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open urlport
+                                                        (ein:url (ein:$notebooklist-path ein:%notebooklist%)
+                                                                 path))))
+                     "Dir")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))
+          if (string= type "notebook")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((name name)
+                                           (path path))
+                               (lambda (&rest ignore)
+                                 (run-at-time 3 nil
+                                              #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
+                                 (ein:notebooklist-open-notebook
+                                  ein:%notebooklist% path)))
+                     "Open")
+                    (widget-insert " ")
+                    (when (gethash path sessions)
+                      (widget-create
+                       'link
+                       :notify (lexical-let ((session (car (gethash path sessions)))
+                                             (nblist ein:%notebooklist%))
+                                 (lambda (&rest ignore)
+                                   (run-at-time 1 nil
+                                                #'ein:notebooklist-reload
+                                                ein:%notebooklist%)
+                                   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
+                                                                      :session-id session))))
+                       "Stop")
+                      (widget-insert " "))
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((path path))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-delete-notebook-ask
+                                  path)))
+                     "Delete")
+                    (widget-insert " : " name)
+                    (widget-insert "\n")))
+    (widget-insert "\n---------- All Opened Notebooks ----------\n\n")
+    (loop for buffer in (ein:notebook-opened-buffers)
+          do (progn (widget-create
+                     'link
+                     :notify (lambda (&rest ignore)
+                               (lexical-let (buffer buffer)
+                                 (switch-to-buffer buffer)))
+                     "Open")
+                    (widget-insert " : " (buffer-name buffer))
+                    (widget-insert "\n"))))
   (ein:notebooklist-mode)
   (widget-setup))
 
