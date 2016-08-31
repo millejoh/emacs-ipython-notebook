@@ -525,7 +525,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
                          "Select notebook [URL-OR-PORT/NAME]: "
                          (ein:notebook-opened-buffer-names))))
           (kernel-name (completing-read
-                       "Select kerenl: "
+                       "Select kernel: "
                        (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
   (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
