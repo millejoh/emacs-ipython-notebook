@@ -564,6 +564,12 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.10.0
+-------
+
+* Allow user to change the kernel of a running notebook.
+* The notebooklist buffer now lists all opened notebook buffers.
+
 v0.9.1
 ------
 
