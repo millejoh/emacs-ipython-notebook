@@ -136,9 +136,16 @@ drawing images.  If it is of the form of ``(ROWS COLS)``, it is
 passed to the corresponding arguments of `insert-sliced-image'.
 
 .. FIXME: ROWS and COLS must be determined dynamically by measuring
-   the size of iamge and Emacs window.
+   the size of image and Emacs window.
 
 See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
+  :type 'boolean
+  :group 'ein)
+
+(defcustom ein:enable-dynamic-javascript nil
+  "[EXPERIMENTAL] When non-nil enable support in ein for
+executing dynamic javascript. This feature requires installation
+of the skewer package."
   :type 'boolean
   :group 'ein)
 
@@ -889,7 +896,7 @@ If END is non-`nil', return the location of next element."
                (append (plist-get element :output) (list ewoc-node)))
     (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
-(defmethod ein:cell-append-pyout ((cell ein:codecell) json)
+(cl-defmethod ein:cell-append-pyout ((cell ein:codecell) json)
   "Insert pyout type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:insert-read-only (format "Out [%s]:"
@@ -916,7 +923,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (ein:deflocal ein:%cell-append-stream-last-cell% nil
   "The last cell in which `ein:cell-append-stream' is used.")
 
-(defmethod ein:cell-append-stream ((cell ein:codecell) json)
+(cl-defmethod ein:cell-append-stream ((cell ein:codecell) json)
   "Insert stream type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
@@ -939,11 +946,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:cell-append-text text 'font-lock-face 'ein:cell-output-stderr)
     (ein:cell-append-text text)))
 
-(defmethod ein:cell-append-display-data ((cell ein:codecell) json)
+(cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json (oref cell :dynamic))
-  (ein:insert-read-only "\n"))
+  (if (and (plist-get json :javascript)
+           (oref cell :dynamic) ein:enable-dynamic-javascript)
+      (ein:execute-javascript cell json)
+    (progn
+      (ein:cell-append-mime-type json (oref cell :dynamic))
+      (ein:insert-read-only "\n"))))
 
 (defcustom ein:output-type-preference
   (if (and (fboundp 'shr-insert-document)
@@ -998,9 +1009,7 @@ prettified text thus be used instead of HTML type."
      ;; they come out after `text'.  Maybe it is better to inform user
      ;; when one of them is inserted.
      ((javascript text/javascript)
-      (when dynamic
-        (ein:log 'info (concat "ein:cell-append-mime-type does not support "
-                               "dynamic javascript. got: %s") value))
+      (ein:log 'warn "Evaluation of dynamic javascript is not enabled.")
       (ein:insert-read-only (plist-get json type)))
      (emacs-lisp
       (when dynamic
