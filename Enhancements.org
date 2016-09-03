@@ -74,11 +74,6 @@ nodejs (you understand this difference, right? Right?).
 Another thought is to get python to do this for us. The packages [[][naked]] (an
 unfortunate name given my corporate firewall) and [[https://github.com/doloopwhile/PyExecJs][PyExecJs]].
 
-I am liking skewer, but worth noting:
-
-1. When connected to multiple clients the same javascript gets sent to each
-   client.
-2. Execute code using ``skewer-eval`` or ``skewer-eval-synchronously``.
 
 
 ** Embedding [[https://github.com/ellisonbg/altair][Altair]] plots
@@ -93,17 +88,6 @@ calling from ein all that gets returned is javascript, which
 
 Somehow, when running [[https://nbconvert.readthedocs.io/en/latest/][nbconvert]], the javascript gets turned into a png. How to trigger
 that when normally executing cells?
-
-Even being able to execute javascript in the running notebook this will be
-difficult to implement as Altair relies on ipywidget using [[http://vega.github.io/vega-lite/usage/embed.html][vega-embed]] to modify
-the DOM of the existing document. Not sure if it is possible to bend this to our
-will, but vega does have an API that allows for [[https://github.com/vega/vega/wiki/Headless-Mode][headless]] calling.
-
-** Resizing Images
-
-Some control using insert-sliced-image?
-
-Or maybe using the package [[https://github.com/mhayashi1120/Emacs-imagex][emacs-imagex]]? Requires installation of imagemagick.
 
 ** Mike DeCandia's Wish and Bug List
 *** Wishlist
