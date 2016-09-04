@@ -582,10 +582,19 @@ Notebook list data is passed via the buffer local variable
     (loop for buffer in (ein:notebook-opened-buffers)
           do (progn (widget-create
                      'link
-                     :notify (lambda (&rest ignore)
-                               (lexical-let (buffer buffer)
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
                                  (switch-to-buffer buffer)))
                      "Open")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
+                                 (kill-buffer buffer)
+                                 (run-at-time 1 nil
+                                              #'ein:notebooklist-reload
+                                              ein:%notebooklist%)))
+                     "Close")
                     (widget-insert " : " (buffer-name buffer))
                     (widget-insert "\n"))))
   (ein:notebooklist-mode)
