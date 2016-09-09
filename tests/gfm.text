@@ -1,0 +1,78 @@
+# Introduction to GFM
+
+GitHub uses what we're calling "GitHub Flavored Markdown" (GFM) for messages, issues, and comments. It differs from standard Markdown (SM) in a few significant ways and adds some additional functionality.
+
+If you're not already familiar with Markdown, you should spend 15 minutes and go over the excellent [Markdown Syntax Guide](http://daringfireball.net/projects/markdown/syntax) at Daring Fireball.
+
+If you prefer to learn by example, see the following source and result:
+
+  * [Source](sample_content.html)
+  * [Result](http://github.com/mojombo/github-flavored-markdown/issues/#issue/1)
+
+If you're interested in how we render Markdown files, you might want to check out [Redcarpet](https://github.com/vmg/redcarpet), our Ruby interface to the [Sundown](https://www.github.com/vmg/sundown) library.
+
+## Differences from traditional Markdown
+
+### Newlines
+
+The biggest difference that GFM introduces is in the handling of linebreaks.  With SM you can hard wrap paragraphs of text and they will be combined into a single paragraph.  We find this to be the cause of a huge number of unintentional formatting errors.  GFM treats newlines in paragraph-like content as real line breaks, which is probably what you intended.
+
+The next paragraph contains two phrases separated by a single newline character:
+
+    Roses are red
+    Violets are blue
+
+becomes
+
+Roses are red
+Violets are blue
+
+### Multiple underscores in words
+
+It is not reasonable to italicize just _part_ of a word, especially when you're dealing with code and names often appear with multiple underscores.  Therefore, GFM ignores multiple underscores in words.
+
+    perform_complicated_task
+    do_this_and_do_that_and_another_thing
+
+becomes
+
+perform_complicated_task do_this_and_do_that_and_another_thing
+
+### URL autolinking
+
+GFM will autolink standard URLs, so if you want to link to a URL (instead of setting link text), you can simply enter the URL and it will be turned into a link to that URL.
+
+### Fenced code blocks
+
+Markdown converts text with four spaces at the front of each line to code blocks.  GFM supports that, but we also support fenced blocks.  Just wrap your code blocks in `` ``` `` and you won't need to indent manually to trigger a code block.
+
+### Syntax highlighting
+
+We take code blocks a step further and add syntax highlighting if you request
+it. In your fenced block, add an optional language identifier and we'll run it
+through syntax highlighting. For example, to syntax highlight Ruby code:
+
+    ```ruby
+    require 'redcarpet'
+    markdown = Redcarpet.new("Hello World!")
+    puts markdown.to_html
+    ```
+
+This yields
+
+```ruby
+require 'redcarpet'
+markdown = Redcarpet.new("Hello World!")
+puts markdown.to_html
+```
+
+## Code
+
+The newline and underscore modification code can be seen below.  If you find a bug in the rendering, we'd love to hear about it.  Browse through open Issues and report new Issues on the [GitHub-flavored Markdown Issues page](https://github.com/github/github-flavored-markdown/issues).
+
+## Markdown Cheat Sheet
+
+On Markdown-enabled portions of the site, press **M** on your keyboard to display a cheat sheet.
+
+&copy; 2013 GitHub Inc. All rights reserved.
+<http://github.github.com/github-flavored-markdown/>
