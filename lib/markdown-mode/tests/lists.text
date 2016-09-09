@@ -1,0 +1,160 @@
+# List Cases
+
+Indentation is described in terms of four components: the position of
+the beginning of the block, the actual indentation of the block (first
+line), in terms of spaces, followed by whether the block begins with a
+list marker, and the list level.
+
+
+## Case 1
+
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+   Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+   nisi ut aliquip ex ea commodo consequat.
+
+ Duis aute irure dolor in reprehenderit in voluptate velit esse
+ cillum dolore eu fugiat nulla pariatur.
+
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+officia deserunt mollit anim id est laborum.
+
+*Indentation:* (273 0 nil 0) (399 3 nil 0) (514 1 nil 0) (620 0 nil 0)
+
+*Notes:* These are all just normal paragraphs, since there are no list
+markers or blocks indented at least four spaces.
+
+
+## Case 2
+
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+- Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+  nisi ut aliquip ex ea commodo a consequat.
+
+ Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur.
+
+- Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+officia deserunt mollit anim id est laborum.
+
+*Indentation:* (931 0 nil 0) (1063 0 t 1) (1178 1 nil 1) (1283 0 t 1)
+
+*Notes:* Even though the third block is only indented one space, it is
+indented one more space than the list marker, so it becomes a second
+paragraph within the first list item.
+
+
+## Case 3
+
++ This is a list item with
+no leading indentation and
+no hanging indent.
+
+    A four-space indented block that follows
+    is parsed as a paragraph within the list item.
+
++ Second list item
+
+*Indentation:* (1659 0 t 1) (1733 4 nil 1) (1830 0 t 1)
+
+
+## Case 4
+
+* This is a list item with
+  no leading indentation and
+  a hanging indent.
+
+    A four-space indented block that follows
+    is parsed as a paragraph within the list item.
+
+*Indentation:* (1919 0 t 1) (1996 4 nil 1)
+
+
+## Case 5
+
+ * This is a list item with
+single space leading indentation and
+no hanging indentation.
+
+    A four-space indented block that follows
+    is parsed as a paragraph within the list item.
+
+*Indentation:* (2149 1 t 1) (2239 4 nil 1)
+
+
+## Case 6
+
+ * This is a list item with
+single space leading indentation and
+no hanging indentation.
+
+  * A list item with two-space indent
+  starts a new list level.
+
+    A four-space indented block that follows
+    is parsed as a paragraph within the **first-level**
+    list item.  Why not the second level?
+
+*Indentation:* (2392 2 t 1) (2482 2 t 2) (2548 4 nil 1)
+
+
+## Case 7
+
+ * This is a list item with
+single space leading indentation and
+no hanging indentation.
+
+  * A list item with two-space indent
+  starts a new list level.
+
+  A two-space indented block that follows
+  is parsed as a paragraph within the **first-level**
+  list item.
+
+*Indentation:* (2761 1 t 1) (2851 2 t 2) (2917 2 nil 2)
+
+
+## Case 8
+
+ * This is a list item with
+single space leading indentation and
+no hanging indentation.
+
+  * A list item with two-space indent
+  starts a new list level.
+
+     A five-space indented block that follows is parsed as a
+     paragraph within the *second* list item.  This indentation
+     exceeds that required for the first item.
+
+            Finally, to get a pre block, we have to use 12 spaces.
+            That's the third level of four-space indentation.
+            We have to exceed the list level, which is two.
+
+*Indentation:* (3096 1 t 1) (3186 2 t 2) (3252 5 nil 2) (3425 12 nil 2)
+
+
+## Case 9
+
+-   This is a list item with two paragraphs.
+
+    This is the second paragraph in the list item. You're
+only required to indent the first line. Lorem ipsum dolor
+sit amet, consectetuer adipiscing elit.
+
+*   Another item in the same list.
+
+*Indentation:* (3700 0 t 1) (3746 4 nil 1) (3903 0 t 1)
+
+
+## Case 10
+
+*   A list item with a blockquote:
+
+    > This is a blockquote
+    > inside a list item.
+
+*Indentation:* (4009 0 t 1) (4045 4 nil 1)
