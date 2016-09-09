@@ -1,0 +1,5 @@
+/.cask/
+*.elc
+dist
+doc/build
+doc/source/index.rst
