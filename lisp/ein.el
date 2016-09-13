@@ -115,5 +115,8 @@
 ;; See also:
 ;; `CLiki : naming conventions <http://www.cliki.net/naming%20conventions>`_
 
+;; Integrate ein into core emacs functionality
+(add-to-list 'mouse-buffer-menu-mode-groups
+             '("^ein:" . "ein"))
 
 ;;; ein.el ends here
