@@ -789,35 +789,28 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
 
 ;;; Notebook list mode
 
-(define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
-  "IPython notebook list mode.
-Commands:
-\\{ein:notebooklist-mode-map}}"
-  (set (make-local-variable 'revert-buffer-function)
-       'ein:notebooklist-reload))
+(define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
+  "IPython notebook list mode.")
 
 (defun ein:notebooklist-prev-item () (interactive) (move-beginning-of-line 0))
 (defun ein:notebooklist-next-item () (interactive) (move-beginning-of-line 2))
 
-(defvar ein:notebooklist-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (make-composed-keymap widget-keymap
-                                                 special-mode-map))
-    (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
-    (define-key map "p" 'ein:notebooklist-prev-item)
-    (define-key map "n" 'ein:notebooklist-next-item)
-    map)
-  "Keymap for ein:notebooklist-mode.")
+(setq ein:notebooklist-mode-map (copy-keymap widget-keymap))
 
-(easy-menu-define ein:notebooklist-menu ein:notebooklist-mode-map
-  "EIN Notebook List Mode Menu"
-  `("EIN Notebook List"
-    ,@(ein:generate-menu
-       '(("Reload" ein:notebooklist-reload)
-         ("New Notebook" ein:notebooklist-new-notebook)
-         ("New Notebook (with name)"
-          ein:notebooklist-new-notebook-with-name)
-         ("New Junk Notebook" ein:junk-new)))))
+(let ((map ein:notebooklist-mode-map))
+  (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
+  (define-key map "g" 'ein:notebooklist-reload)
+  (define-key map "p" 'ein:notebooklist-prev-item)
+  (define-key map "n" 'ein:notebooklist-next-item)
+  (define-key map "q" 'bury-buffer)
+  (easy-menu-define ein:notebooklist-menu map "EIN Notebook List Mode Menu"
+    `("EIN Notebook List"
+      ,@(ein:generate-menu
+         '(("Reload" ein:notebooklist-reload)
+           ("New Notebook" ein:notebooklist-new-notebook)
+           ("New Notebook (with name)"
+            ein:notebooklist-new-notebook-with-name)
+           ("New Junk Notebook" ein:junk-new))))))
 
 (provide 'ein-notebooklist)
 
