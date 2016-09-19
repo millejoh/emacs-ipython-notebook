@@ -244,15 +244,18 @@ shared output buffer.  You can open the buffer by the command
 
 ;;; ein:shared-output-mode
 
-(define-derived-mode ein:shared-output-mode fundamental-mode "ein:so"
-  "Shared output mode."
-  (font-lock-mode))
+(defvar ein:shared-output-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-c\C-x" 'ein:tb-show)
+    (define-key map "\M-."          'ein:pytools-jump-to-source-command)
+    (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
+    map)
+  "The map for ein:shared-output-mode-map.")
 
-(let ((map ein:shared-output-mode-map))
-  (define-key map "\C-c\C-x" 'ein:tb-show)
-  (define-key map "\M-."          'ein:pytools-jump-to-source-command)
-  (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
-  (define-key map "q" 'bury-buffer))
+(define-derived-mode ein:shared-output-mode special-mode "ein:so"
+  "Shared output mode."
+  (use-local-map ein:shared-output-mode-map)
+  (font-lock-mode))
 
 (add-hook 'ein:shared-output-mode-hook 'ein:truncate-lines-on)
 
