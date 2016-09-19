@@ -789,12 +789,8 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
 
 ;;; Notebook list mode
 
-(define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
-  "IPython notebook list mode.
-Commands:
-\\{ein:notebooklist-mode-map}}"
-  (set (make-local-variable 'revert-buffer-function)
-       'ein:notebooklist-reload))
+;; (define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
+;;   "IPython notebook list mode.")
 
 (defun ein:notebooklist-prev-item () (interactive) (move-beginning-of-line 0))
 (defun ein:notebooklist-next-item () (interactive) (move-beginning-of-line 2))
@@ -818,6 +814,18 @@ Commands:
          ("New Notebook (with name)"
           ein:notebooklist-new-notebook-with-name)
          ("New Junk Notebook" ein:junk-new)))))
+
+(defun ein:notebooklist-revert-wrapper (&optional ignore-auto noconfirm preserve-modes)
+  (ein:notebooklist-reload))
+
+(define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
+  "IPython notebook list mode.
+Commands:
+\\{ein:notebooklist-mode-map}}"
+  (use-local-map ein:notebooklist-mode-map)
+  (set (make-local-variable 'revert-buffer-function)
+       'ein:notebooklist-revert-wrapper))
+
 
 (provide 'ein-notebooklist)
 

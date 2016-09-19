@@ -73,17 +73,19 @@
   (beginning-of-line 0)
   (recenter 0))
 
-(define-derived-mode ein:pager-mode view-mode "ein:pager"
-  "IPython notebook pager mode.
-Commands:
-\\{ein:pager-mode-map}"
-  (font-lock-mode))
-
 (defvar ein:pager-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
     map)
   "Keymap for ein:pager-mode.")
+
+(define-derived-mode ein:pager-mode view-mode "ein:pager"
+  "IPython notebook pager mode.
+Commands:
+\\{ein:pager-mode-map}"
+  (use-local-map ein:pager-mode-map)
+  (font-lock-mode))
+
 
 (provide 'ein-pager)
 
