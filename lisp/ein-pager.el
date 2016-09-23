@@ -83,7 +83,6 @@
   "IPython notebook pager mode.
 Commands:
 \\{ein:pager-mode-map}"
-  (use-local-map ein:pager-mode-map)
   (font-lock-mode))
 
 

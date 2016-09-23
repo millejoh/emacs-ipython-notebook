@@ -172,7 +172,6 @@
   "Keymap for ein:traceback-mode.")
 
 (define-derived-mode ein:traceback-mode special-mode "ein:tb"
-  (use-local-map ein:traceback-mode-map)
   (font-lock-mode))
 
 (add-hook 'ein:traceback-mode-hook 'ein:truncate-lines-on)
