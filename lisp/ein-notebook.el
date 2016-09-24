@@ -516,6 +516,23 @@ on server url/port."
   (ein:log 'error
     "Kernelspc query call failed with status %s." symbol-status))
 
+(defun ein:notebook-switch-kernel (notebook kernel-name)
+  "Change the kernel for a running notebook. If not called from a
+notebook buffer then the user will be prompted to select an opened notebook."
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names))))
+          (kernel-name (completing-read
+                       "Select kernel: "
+                       (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
+     (list notebook kernel-name)))
+  (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
+                                                                kernel-name))
+  (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
+  (ein:notebook-restart-kernel notebook))
+
 ;;; This no longer works in iPython-2.0. Protocol is to create a session for a
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
@@ -702,6 +719,7 @@ This is equivalent to do ``C-c`` in the console program."
          (ws-cells (mapcar (lambda (data) (ein:cell-from-json data)) cells))
          (worksheet (ein:notebook--worksheet-new notebook)))
     (oset worksheet :saved-cells ws-cells)
+    ;(mapcar (lambda (data) (message "test %s" (oref data :metadata))) ws-cells)
     (list worksheet)))
 
 (defun ein:notebook-to-json (notebook)
@@ -741,7 +759,9 @@ This is equivalent to do ``C-c`` in the console program."
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
-      (cells . ,(apply #'vector all-cells)))))
+      (cells . ,(apply #'vector all-cells)))
+
+    ))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (let ((content (ein:content-from-notebook notebook)))
@@ -1248,6 +1268,7 @@ This hook is run regardless the actual major mode used."
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
+  (define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
   (define-key map (kbd "<M-S-return>")
@@ -1265,6 +1286,7 @@ This hook is run regardless the actual major mode used."
   (define-key map "\C-c\C-a" 'ein:worksheet-insert-cell-above)
   (define-key map "\C-c\C-b" 'ein:worksheet-insert-cell-below)
   (define-key map "\C-c\C-t" 'ein:worksheet-toggle-cell-type)
+  (define-key map "\C-c\C-d" 'ein:worksheet-toggle-slide-type)
   (define-key map "\C-c\C-u" 'ein:worksheet-change-cell-type)
   (define-key map "\C-c\C-s" 'ein:worksheet-split-cell-at-point)
   (define-key map "\C-c\C-m" 'ein:worksheet-merge-cell)
@@ -1326,6 +1348,7 @@ This hook is run regardless the actual major mode used."
             ("Insert cell above" ein:worksheet-insert-cell-above)
             ("Insert cell below" ein:worksheet-insert-cell-below)
             ("Toggle cell type" ein:worksheet-toggle-cell-type)
+            ("Toggle slide type" ein:worksheet-toggle-slide-type)
             ("Change cell type" ein:worksheet-change-cell-type)
             ("Split cell at point" ein:worksheet-split-cell-at-point)
             ("Merge cell" ein:worksheet-merge-cell)
@@ -1381,10 +1404,12 @@ This hook is run regardless the actual major mode used."
       ("Kernel"
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
+            ("Switch kernel" ein:notebook-switch-kernel)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
-          '(("Rename worksheet" ein:worksheet-rename-sheet)
+          '(("Toggle slide metadata view" ein:worksheet-toggle-slideshow-view)
+            ("Rename worksheet" ein:worksheet-rename-sheet)
             ("Insert next worksheet"
              ein:notebook-worksheet-insert-next)
             ("Insert previous worksheet"
@@ -1464,7 +1489,9 @@ Note that print page is not supported in IPython 0.12.1."
   (interactive "P")
   (let ((url (apply #'ein:url
                     (ein:$notebook-url-or-port ein:%notebook%)
-                    (ein:$notebook-notebook-id ein:%notebook%)
+                    (if (>= (ein:$notebook-api-version ein:%notebook%) 3)
+                        "notebooks")
+                    (ein:$notebook-notebook-path ein:%notebook%)
                     (if print (list "print")))))
     (message "Opening %s in browser" url)
     (browse-url url)))

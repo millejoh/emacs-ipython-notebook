@@ -163,16 +163,18 @@
   (interactive)
   (ewoc-goto-next (oref ein:%traceback% :ewoc) 1))
 
-(define-derived-mode ein:traceback-mode fundamental-mode "ein:tb"
+(defvar ein:traceback-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") 'ein:tb-jump-to-source-at-point-command)
+    (define-key map "p" 'ein:tb-prev-item)
+    (define-key map "n" 'ein:tb-next-item)
+    map)
+  "Keymap for ein:traceback-mode.")
+
+(define-derived-mode ein:traceback-mode special-mode "ein:tb"
   (font-lock-mode))
 
 (add-hook 'ein:traceback-mode-hook 'ein:truncate-lines-on)
-
-(let ((map ein:traceback-mode-map))
-  (define-key map (kbd "RET") 'ein:tb-jump-to-source-at-point-command)
-  (define-key map "p" 'ein:tb-prev-item)
-  (define-key map "n" 'ein:tb-next-item)
-  (define-key map "q" 'bury-buffer))
 
 (provide 'ein-traceback)
 

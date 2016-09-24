@@ -522,62 +522,81 @@ Notebook list data is passed via the buffer local variable
         (sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
-	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
-	  for name = (plist-get note :name)
-	  for path = (plist-get note :path)
-	  ;; (cond ((= 2 api-version)
-	  ;;        (plist-get note :path))
-	  ;;       ((= 3 api-version)
-	  ;;        (ein:get-actual-path (plist-get note :path))))
-	  for type = (plist-get note :type)
-	  for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
-	  do (widget-insert " ")
-	  if (string= type "directory")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((urlport urlport)
-					   (path name))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-open urlport
-							(ein:url (ein:$notebooklist-path ein:%notebooklist%)
-								 path))))
-		     "Dir")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))
-	  if (string= type "notebook")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((name name)
-					   (path path))
-			       (lambda (&rest ignore)
-				 (run-at-time 3 nil
-					      #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
-				 (ein:notebooklist-open-notebook
-				  ein:%notebooklist% path)))
-		     "Open")
-		    (widget-insert " ")
-		    (when (gethash path sessions)
-		      (widget-create
-		       'link
-		       :notify (lexical-let ((session (car (gethash path sessions)))
-					     (nblist ein:%notebooklist%))
-				 (lambda (&rest ignore)
-				   (run-at-time 1 nil
-						#'ein:notebooklist-reload
-						ein:%notebooklist%)
-				   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-								      :session-id session))))
-		       "Stop")
-		      (widget-insert " "))
-		    (widget-create
-		     'link
-		     :notify (lexical-let ((path path))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-delete-notebook-ask
-				  path)))
-		     "Delete")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))))
+          for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
+          for name = (plist-get note :name)
+          for path = (plist-get note :path)
+          ;; (cond ((= 2 api-version)
+          ;;        (plist-get note :path))
+          ;;       ((= 3 api-version)
+          ;;        (ein:get-actual-path (plist-get note :path))))
+          for type = (plist-get note :type)
+          for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
+          do (widget-insert " ")
+          if (string= type "directory")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((urlport urlport)
+                                           (path name))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open urlport
+                                                        (ein:url (ein:$notebooklist-path ein:%notebooklist%)
+                                                                 path))))
+                     "Dir")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))
+          if (string= type "notebook")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((name name)
+                                           (path path))
+                               (lambda (&rest ignore)
+                                 (run-at-time 3 nil
+                                              #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
+                                 (ein:notebooklist-open-notebook
+                                  ein:%notebooklist% path)))
+                     "Open")
+                    (widget-insert " ")
+                    (when (gethash path sessions)
+                      (widget-create
+                       'link
+                       :notify (lexical-let ((session (car (gethash path sessions)))
+                                             (nblist ein:%notebooklist%))
+                                 (lambda (&rest ignore)
+                                   (run-at-time 1 nil
+                                                #'ein:notebooklist-reload
+                                                ein:%notebooklist%)
+                                   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
+                                                                      :session-id session))))
+                       "Stop")
+                      (widget-insert " "))
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((path path))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-delete-notebook-ask
+                                  path)))
+                     "Delete")
+                    (widget-insert " : " name)
+                    (widget-insert "\n")))
+    (widget-insert "\n---------- All Opened Notebooks ----------\n\n")
+    (loop for buffer in (ein:notebook-opened-buffers)
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
+                                 (switch-to-buffer buffer)))
+                     "Open")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
+                                 (kill-buffer buffer)
+                                 (run-at-time 1 nil
+                                              #'ein:notebooklist-reload
+                                              ein:%notebooklist%)))
+                     "Close")
+                    (widget-insert " : " (buffer-name buffer))
+                    (widget-insert "\n"))))
   (ein:notebooklist-mode)
   (widget-setup))
 
@@ -770,28 +789,39 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
 
 ;;; Notebook list mode
 
-(define-derived-mode ein:notebooklist-mode fundamental-mode "ein:notebooklist"
-  "IPython notebook list mode.")
-
 (defun ein:notebooklist-prev-item () (interactive) (move-beginning-of-line 0))
 (defun ein:notebooklist-next-item () (interactive) (move-beginning-of-line 2))
 
-(setq ein:notebooklist-mode-map (copy-keymap widget-keymap))
+(defvar ein:notebooklist-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (make-composed-keymap widget-keymap
+                                                 special-mode-map))
+    (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
+    (define-key map "p" 'ein:notebooklist-prev-item)
+    (define-key map "n" 'ein:notebooklist-next-item)
+    map)
+  "Keymap for ein:notebooklist-mode.")
 
-(let ((map ein:notebooklist-mode-map))
-  (define-key map "\C-c\C-r" 'ein:notebooklist-reload)
-  (define-key map "g" 'ein:notebooklist-reload)
-  (define-key map "p" 'ein:notebooklist-prev-item)
-  (define-key map "n" 'ein:notebooklist-next-item)
-  (define-key map "q" 'bury-buffer)
-  (easy-menu-define ein:notebooklist-menu map "EIN Notebook List Mode Menu"
-    `("EIN Notebook List"
-      ,@(ein:generate-menu
-         '(("Reload" ein:notebooklist-reload)
-           ("New Notebook" ein:notebooklist-new-notebook)
-           ("New Notebook (with name)"
-            ein:notebooklist-new-notebook-with-name)
-           ("New Junk Notebook" ein:junk-new))))))
+(easy-menu-define ein:notebooklist-menu ein:notebooklist-mode-map
+  "EIN Notebook List Mode Menu"
+  `("EIN Notebook List"
+    ,@(ein:generate-menu
+       '(("Reload" ein:notebooklist-reload)
+         ("New Notebook" ein:notebooklist-new-notebook)
+         ("New Notebook (with name)"
+          ein:notebooklist-new-notebook-with-name)
+         ("New Junk Notebook" ein:junk-new)))))
+
+(defun ein:notebooklist-revert-wrapper (&optional ignore-auto noconfirm preserve-modes)
+  (ein:notebooklist-reload))
+
+(define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
+  "IPython notebook list mode.
+Commands:
+\\{ein:notebooklist-mode-map}}"
+  (set (make-local-variable 'revert-buffer-function)
+       'ein:notebooklist-revert-wrapper))
+
 
 (provide 'ein-notebooklist)
 
