@@ -28,9 +28,13 @@ def update_libraries():
             os.system('git subtree add --prefix {dir} {pkg} master --squash'.format(dir=subdir, pkg=pkg))
 
 @task
-def run_testein(self):
-    os.system('python tools/testein.py --clean-elc --e {EMACS} --ipython {IPYTHON}'.format(emacs=self.emacs,
-                                                                                               ipython=self.ipython))
+@cmdopts([
+    ('emacs=', 'e', 'Path to emacs executable.'),
+    ('ipython=', 'p', 'Name of the ipython/jupyter notebook command.')])
+def run_testein(options):
+    print(options['ipython'])
+    os.system('python tools/testein.py --clean-elc --emacs {emacs} --ipython {ipython}'.format(emacs=options['emacs'],
+                                                                                           ipython=options['ipython']))
 
 setup(
     name='emacs-ipython-notebook',
