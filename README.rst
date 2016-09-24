@@ -1,6 +1,6 @@
-=============================================
- EIN -- Emacs IPython Notebook |build-status|
-=============================================
+======================================================================
+ EIN -- Emacs IPython Notebook |build-status||melpa-dev||melpa-stable|
+======================================================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
@@ -21,7 +21,14 @@ Jupyter.
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
    :alt: Build Status
-
+.. |melpa-dev|
+   image:: http://melpa.milkbox.net/packages/ein-badge.svg
+   :target: http://melpa.milkbox.net/#/ein
+   :alt: MELPA development version
+.. |melpa-stable|
+   image:: http://melpa-stable.milkbox.net/packages/ein-badge.svg
+   :target: http://melpa-stable.milkbox.net/#/ein
+   :alt: MELPA stable version
 .. _2.x: http://ipython.org/ipython-doc/2/index.html
 .. _3.x: http://ipython.org/ipython-doc/3/index.html
 .. _Jupyter: http://jupyter.org
