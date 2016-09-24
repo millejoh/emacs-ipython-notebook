@@ -1,0 +1,30 @@
+This is *italic.*
+This is **bold.**
+This is `code`.
+This is ``code`containing`backticks``.
+
+Seven backquotes in a row ``````` do not constitute a code span.
+
+If backquotes begin or end a code span, you have to use spaces,
+like `` `this` ``.  Markdown removes any leading and trailing
+whitespace. Only the space a the end is necessary,
+like ```this` ``.
+
+A backslash as the final character in an inline code fragment does
+*not* escape the backquote.  That is, `C-h C-\` will render as
+
+    <code>C-h C-\</code>
+
+However, we can escape what would otherwise be a leading backquote,
+as in \`foo\` or \`bar\`.
+
+But this will be a code span crossing lines: \`foo` or
+bar ` containing only "or bar".
+
+This should result in three backquotes in a code span `` ``` `` and
+they should even match across across lines `` ```
+``, like so.  However, backquotes should not `` ``` match
+
+across two blocks``.
+
+Links have several components: [text](http://www.w3.org/ "title").
