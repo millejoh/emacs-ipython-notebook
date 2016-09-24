@@ -1,10 +1,10 @@
-======================================================================
- EIN -- Emacs IPython Notebook |build-status||melpa-dev||melpa-stable|
-======================================================================
+========================================================================
+ EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
+========================================================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
-EIN works with IPython 2.x_, 3.x_, and Juptyer_! Note that remote and password
+EIN works with IPython 2.x_, 3.x_, and Jupyter_! Note that remote and password
 protected logins are working with IPython 3.x, but have not been tested with
 Jupyter.
 
