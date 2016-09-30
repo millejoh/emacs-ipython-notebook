@@ -321,11 +321,14 @@ class ServerRunner(BaseRunner):
 
     @staticmethod
     def _parse_port_line(line):
-        return line.strip().rsplit(':', 1)[-1].strip('/')
+        port = line.strip().rsplit(':', 1)[-1].strip('/')
+        return port
 
     def get_port(self):
         if self.port is None:
-            self.port = self._parse_port_line(self.proc.stdout.readline().decode('utf-8'))
+            val = self.proc.stdout.readline()
+            dval = val.decode('utf-8')
+            self.port = self._parse_port_line(dval)
         return self.port
 
     def start(self):
@@ -362,15 +365,7 @@ class ServerRunner(BaseRunner):
         )
         return self.command_template.format(**fmtdata)
 
-    command_template = r"""
-{ipython} notebook \
-    --notebook-dir {notebook_dir} \
-    --debug \
-    --no-browser 2>&1 \
-    | tee {server_log} \
-    | grep --line-buffered 'The IPython Notebook is running at' \
-    | head -n1
-"""
+    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
 
 
 def kill_subprocesses(pid, include=lambda x: True):
