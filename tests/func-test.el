@@ -39,17 +39,18 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   ;; Kill notebook list buffer here to make sure next
   ;; `ein:testing-wait-until' works properly.
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
-  (unless path (setq path ""))
-  (with-current-buffer (ein:notebooklist-open url-or-port nil)
+  (when path
+    (setq notebook-name (format "%s/%s" path notebook-name)))
+  (with-current-buffer (ein:notebooklist-open url-or-port path)
     (ein:testing-wait-until (lambda () ein:%notebooklist%))
     (prog1
-        (ein:notebooklist-open-notebook-by-name notebook-name)
+        (ein:notebooklist-open-notebook-by-name notebook-name url-or-port)
       (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
   (unless path (setq path ""))
   (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE start")
-  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled0")))
+  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb")))
     (if notebook
         (progn (ein:log 'debug
                  "TESTING-GET-UNTITLED0-OR-CREATE notebook already exists")
@@ -63,7 +64,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                                          (setq created t)))
         (ein:testing-wait-until (lambda () created)))
       (prog1
-          (ein:testing-get-notebook-by-name url-or-port "Untitled0" path)
+          (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)
         (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
 
 (defvar ein:notebooklist-after-open-hook nil)
@@ -98,7 +99,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:%notebook%)
-                     "Untitled0"))))
+                     "Untitled.ipynb"))))
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE end"))
 
 (ert-deftest ein:testing-delete-untitled0 ()
@@ -112,12 +113,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
          (lambda () (ein:aand (ein:$notebook-kernel notebook)
                               (ein:kernel-live-p it)))))
    do (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 delete notebook")
-   do (ein:testing-delete-notebook-by-name ein:testing-port "Untitled0")
+   do (ein:testing-delete-notebook-by-name ein:testing-port "Untitled.ipynb")
    do (ein:log 'debug
         "ERT TESTING-DELETE-UNTITLED0 check the notebook is delete")
    do (let ((num-notebook
              (length (ein:testing-get-notebook-by-name ein:testing-port
-                                                       "Untitled0"
+                                                       "Untitled.ipynb"
                                                        ""))))
         (should (= num-notebook 0))))
   (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 end"))
@@ -165,7 +166,7 @@ See the definition of `create-image' for how it works."
         (should (= (length (oref cell :outputs)) 1))
         ;; This output is a SVG image
         (let ((out (nth 0 (oref cell :outputs))))
-          (should (equal (plist-get out :output_type) "pyout"))
+          (should (equal (plist-get out :output_type) "execute_result"))
           (should (plist-get out :svg))))
       ;; Check the actual output in the buffer:
       (save-excursion
@@ -184,7 +185,7 @@ See the definition of `create-image' for how it works."
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
-      (insert "print 'Hello'")
+      (insert "print('Hello')")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until (lambda () (not (oref cell :running)))))
       (save-excursion
@@ -202,7 +203,7 @@ See the definition of `create-image' for how it works."
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until (lambda () (not (oref cell :running)))))
       (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
-        (should (search-forward "Docstring:\nrange"))))))
+        (should (search-forward "Docstring:"))))))
 
 (ert-deftest ein:notebook-request-help ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
@@ -219,4 +220,4 @@ See the definition of `create-image' for how it works."
         ;; Pager buffer will be created when got the response
         (ein:testing-wait-until (lambda () (get-buffer pager-name)))
         (with-current-buffer (get-buffer pager-name)
-          (should (search-forward "Docstring:\nfile")))))))
+          (should (search-forward "Docstring:")))))))

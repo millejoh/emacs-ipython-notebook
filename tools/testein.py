@@ -4,15 +4,14 @@
 Run EIN test suite
 """
 
-import sys
-import os
 import glob
+import os
+import sys
+import re
 from subprocess import Popen, PIPE, STDOUT
-import itertools
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
-
 
 def has_library(emacs, library):
     """
@@ -88,7 +87,7 @@ class BaseRunner(object):
         self.batch = self.batch and not self.debug_on_error
 
     def logpath(self, name, ext='log'):
-        return os.path.join(
+        path = os.path.join(
             self.log_dir,
             "{testname}_{logname}_{modename}_{emacsname}.{ext}".format(
                 ext=ext,
@@ -97,6 +96,8 @@ class BaseRunner(object):
                 testname=os.path.splitext(self.testfile)[0],
                 modename='batch' if self.batch else 'interactive',
             ))
+        path = re.sub(r'\\', '/', path)
+        return path
 
     @property
     def command(self):
