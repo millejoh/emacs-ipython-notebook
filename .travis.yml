@@ -20,5 +20,5 @@ install:
 env:
   - EMACS_VERSION=24.3 IPYCMD=jupyter JUPYTER=1.0.0
   - EMACS_VERSION=25.1-rc2 IPYCMD=jupyter JUPYTER=1.0.0
-script: python tools/testein.py --emacs $EMACS --ipython $IPYCMD
+script: python tools/testein.py --emacs emacs --ipython $IPYCMD
  
