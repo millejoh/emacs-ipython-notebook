@@ -1,7 +1,9 @@
-language: emacs-lisp
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
 before_install:
-  - git submodule --quiet update --init
-  - sudo apt-get install -qq python-virtualenv
   - if [ "$EMACS" = "emacs24" ]; then
         sudo apt-get remove -qq emacs
         sudo apt-get install -qq emacs24
@@ -12,12 +14,12 @@ before_install:
       sudo apt-get install -qq
           emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot;
     fi
+install:
+  - if [ "$JUPYTER" ]; then
+       pip install jupyter==$JUPYTER
+    fi
 env:
-  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=3.0.0 EMACS=emacs24
-matrix:
-  allow_failures:
-    IPY_VERSION=dev
-    EMACS=emacs
-
-script:
-  make $EIN_TEST_TARGET IPY_VERSION=$IPY_VERSION
+  - EMACS=emacs24 IPYCMD=jupyter JUPYTER=1.0.0
+  - EMACS=emacs-snapshot IPYCMD=jupyter JUPYTER=1.0.0
+script: python tools/testein.py --emacs $EMACS --ipython $IPYCMD
+ 
