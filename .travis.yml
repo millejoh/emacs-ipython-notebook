@@ -14,7 +14,7 @@ before_install:
   # Download the makefile to emacs-travis.mk
   - wget 'https://raw.githubusercontent.com/flycheck/emacs-travis/master/emacs-travis.mk'
   # Install Emacs (according to $EMACS_VERSION)
-  - sudo make -f emacs-travis.mk install_emacs EMACSCONFFLAGS='--with-x-toolkit=no --without-x --without-all --with-xml2 CFLAGS=-O2 CXXFLAGS=-O2'
+  - sudo make -f emacs-travis.mk install_emacs EMACSCONFFLAGS='--with-xml2 CFLAGS=-O2 CXXFLAGS=-O2'
 install:
   - pip install jupyter==$JUPYTER
 env:
