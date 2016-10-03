@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(package-initialize)
 (eval-when-compile (require 'cl))
 
 

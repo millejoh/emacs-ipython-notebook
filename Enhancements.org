@@ -7,14 +7,14 @@
 Version 4.0 [[http://nbformat.readthedocs.org/en/latest/][documented]].
 
 Earlier versions might be documented less formally on the wiki. Can
-also look at the IPython source in the json viles.
+also look at the IPython source in the json files.
 
 ** Notebook Buffer
 
 Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][struct]]. Always associated with a buffer,
 [[file:lisp/ein-notebook.el::ein:notebook-buffer][ein:notebook-buffer]] is used to find buffer associated with a notebook.
 
-Notebook does not hold cells, that is delegated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
+Notebook does not hold cells, that is dehttp://glf.swim-team.us/legated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
 class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
 
 Opened notebooks are kept in the ~ein:notebook--opened-map~ hash
@@ -58,6 +58,35 @@ EIN relies heavily on EIEIO and EWOC.
 EWOC PP eventually calls ~[[file:lisp/ein-cell.el::ein:cell-append-mime-type][ein:cell-append-mime-type]]~ for output. Latex is
 considered text, but should be able to convert to image using dvitopng,
 imagemagick, other?
+
+** Testing
+This is too complex. Makefile is used to download dependencies and set up python
+virtual environment, then Python code actually runs the Emacs tests.
+
+Using Python is good, Makefile less so.
+
+Having project name changed from IPython to Jupyter complicates things (can't
+rely on ipy-version anymore).
+
+Having python2.7 and python3.x also complicates things.
+
+One option seems to be to do everything in setup.py.
+
+[[file:tools/testein.py::#!/usr/bin/env%20python][testein.py]] uses argparse. Maybe there are better [[https://realpython.com/blog/python/comparing-python-command-line-parsing-libraries-argparse-docopt-click/][options]]?
+
+You can use conda with [[http://conda.pydata.org/docs/travis.html][travis]].
+
+*** TODO Define testing workflow
+1. Update submodules: ~git submodule update --remote~
+2. Create/activate python environment.
+3. Run testein.py
+
+*** TODO Migrate from Makefile to setup.py
+*** TODO Use conda to create testing environments.
+For both Travis CI and local testing.
+
+- ~conda install notebooke~ to install Jupyter notebook.
+- ~conda install ipython=x.x~ to install pre-jupyter ipython notebook versions.
 
 * Enhancements/Fixes
 ** Run dynamic javascript

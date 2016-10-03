@@ -4,15 +4,14 @@
 Run EIN test suite
 """
 
-import sys
-import os
 import glob
+import os
+import sys
+import re
 from subprocess import Popen, PIPE, STDOUT
-import itertools
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
-
 
 def has_library(emacs, library):
     """
@@ -88,7 +87,7 @@ class BaseRunner(object):
         self.batch = self.batch and not self.debug_on_error
 
     def logpath(self, name, ext='log'):
-        return os.path.join(
+        path = os.path.join(
             self.log_dir,
             "{testname}_{logname}_{modename}_{emacsname}.{ext}".format(
                 ext=ext,
@@ -97,6 +96,8 @@ class BaseRunner(object):
                 testname=os.path.splitext(self.testfile)[0],
                 modename='batch' if self.batch else 'interactive',
             ))
+        path = re.sub(r'\\', '/', path)
+        return path
 
     @property
     def command(self):
@@ -321,11 +322,14 @@ class ServerRunner(BaseRunner):
 
     @staticmethod
     def _parse_port_line(line):
-        return line.strip().rsplit(':', 1)[-1].strip('/')
+        port = line.strip().rsplit(':', 1)[-1].strip('/')
+        return port
 
     def get_port(self):
         if self.port is None:
-            self.port = self._parse_port_line(self.proc.stdout.readline().decode('utf-8'))
+            val = self.proc.stdout.readline()
+            dval = val.decode('utf-8')
+            self.port = self._parse_port_line(dval)
         return self.port
 
     def start(self):
@@ -362,15 +366,7 @@ class ServerRunner(BaseRunner):
         )
         return self.command_template.format(**fmtdata)
 
-    command_template = r"""
-{ipython} notebook \
-    --notebook-dir {notebook_dir} \
-    --debug \
-    --no-browser 2>&1 \
-    | tee {server_log} \
-    | grep --line-buffered 'The IPython Notebook is running at' \
-    | head -n1
-"""
+    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
 
 
 def kill_subprocesses(pid, include=lambda x: True):

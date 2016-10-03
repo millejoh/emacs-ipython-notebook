@@ -1,0 +1,25 @@
+   - List level 1 item 1
+   - List level 1 item 2
+
+     Second paragraph of item 2
+
+        Nested pre block in item 2
+        Four spaces past the marker
+
+     Another paragraph of item 2
+
+   - List level 1 item 3
+
+       - List level 2 item 1
+         Four spaces from higher-level the marker.
+                     More indentation in the same block
+                     does not trigger a pre block!
+
+            Nested pre block
+            Four spaces past the previous marker
+
+       - List level 2 item 2
+
+           - List level 3 item 1
+
+                 Nested pre block

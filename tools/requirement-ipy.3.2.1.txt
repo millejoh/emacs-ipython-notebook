@@ -1,4 +1,4 @@
-ipython==3.0.0
+ipython==3.2.1
 pyzmq
 jinja2
 tornado

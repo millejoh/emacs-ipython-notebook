@@ -599,7 +599,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (("pyerr")          (ein:cell-append-pyerr        cell out))
         (("error")          (ein:cell-append-pyerr        cell out))
         (("display_data")   (ein:cell-append-display-data cell out))
-        (("execute_result") (ein:cell-append-display-data cell out))
+        (("execute_result") (ein:cell-append-pyout cell out))
         (("stream")         (ein:cell-append-stream       cell out))))))
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
