@@ -19,12 +19,13 @@
 
 (defvar ein:testing-port 8889)
 
-(defun ein:testing-wait-until (predicate &optional predargs max-count)
+(defun ein:testing-wait-until (message predicate &optional predargs max-count)
   "Wait until PREDICATE function returns non-`nil'.
 PREDARGS is argument list for the PREDICATE function.
 Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "TESTING-WAIT-UNTIL start")
-  (unless (setq max-count 1000))
+  (ein:log 'debug "TESTING-WAIT-UNTIL waiting on: %s" message)
+  (unless (setq max-count 50))
   (unless (loop repeat max-count
                 when (apply predicate predargs)
                 return t
@@ -42,9 +43,11 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (when path
     (setq notebook-name (format "%s/%s" path notebook-name)))
   (with-current-buffer (ein:notebooklist-open url-or-port path)
-    (ein:testing-wait-until (lambda () ein:%notebooklist%))
+    (sleep-for 1.0) ;; Because some computers are too fast???
+    (ein:testing-wait-until "ein:notebooklist-open" (lambda () ein:%notebooklist%))
     (prog1
-        (ein:notebooklist-open-notebook-by-name notebook-name url-or-port)
+        (ignore-errors
+          (ein:notebooklist-open-notebook-by-name notebook-name url-or-port))
       (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
@@ -62,7 +65,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (ein:notebooklist-new-notebook url-or-port kernelspec path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
-        (ein:testing-wait-until (lambda () created)))
+        (ein:testing-wait-until "ein:notebooklist-new-notebook"
+                                (lambda () created)))
       (prog1
           (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)
         (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
@@ -74,11 +78,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   "Advice to add `ein:notebooklist-after-open-hook'."
   (run-hooks 'ein:notebooklist-after-open-hook))
 
-(defun ein:testing-delete-notebook (url-or-port notebook)
+(defun ein:testing-delete-notebook (url-or-port notebook &optional path)
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK start")
   (ein:notebook-close notebook)
   (with-current-buffer (ein:notebooklist-open url-or-port path)
-    (ein:testing-wait-until (lambda () ein:%notebooklist%))
+    (ein:testing-wait-until "ein:notebooklist-open"
+                            (lambda () ein:%notebooklist%))
     (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook)))
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK end"))
 
@@ -86,6 +91,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE start")
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
@@ -99,12 +105,13 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 creating notebook")
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:test-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 delete notebook")
     (ein:testing-delete-notebook ein:testing-port notebook))
   (ein:log 'debug
-    "ERT TESTING-DELETE-UNTITLED0 check the notebook is delete")
+    "ERT TESTING-DELETE-UNTITLED0 check that the notebook is deleted")
   (let ((num-notebook
          (length (ein:testing-get-notebook-by-name ein:testing-port
                                                    "Untitled.ipynb"
@@ -115,13 +122,15 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "a = 100\na")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until (lambda () (not (oref cell :running)))))
+        (ein:testing-wait-until "ein:worksheet-execute-cell"
+                                (lambda () (not (oref cell :running)))))
       ;; (message "%s" (buffer-string))
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
@@ -137,6 +146,7 @@ See the definition of `create-image' for how it works."
 (ert-deftest ein:notebook-execute-current-cell-pyout-image ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
@@ -150,7 +160,8 @@ See the definition of `create-image' for how it works."
         ;; It seems in this case, watching `:running' does not work
         ;; well sometimes.  Probably "output reply" (iopub) comes
         ;; before "execute reply" in this case.
-        (ein:testing-wait-until (lambda () (oref cell :outputs)))
+        (ein:testing-wait-until "ein:worksheet-execute-cell"
+                                (lambda () (oref cell :outputs)))
         ;; This cell has only one input
         (should (= (length (oref cell :outputs)) 1))
         ;; This output is a SVG image
@@ -170,13 +181,15 @@ See the definition of `create-image' for how it works."
 (ert-deftest ein:notebook-execute-current-cell-stream ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "print('Hello')")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until (lambda () (not (oref cell :running)))))
+        (ein:testing-wait-until "ein:worksheet-execute-cell"
+                                (lambda () (not (oref cell :running)))))
       (save-excursion
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
@@ -184,19 +197,23 @@ See the definition of `create-image' for how it works."
 (ert-deftest ein:notebook-execute-current-cell-question ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "range?")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until (lambda () (not (oref cell :running)))))
+        (ein:testing-wait-until
+         "ein:worksheet-execute-cell"
+         (lambda () (not (oref cell :running)))))
       (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
         (should (search-forward "Docstring:"))))))
 
 (ert-deftest ein:notebook-request-help ()
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
@@ -207,6 +224,8 @@ See the definition of `create-image' for how it works."
         (insert "file")
         (call-interactively #'ein:pytools-request-help)
         ;; Pager buffer will be created when got the response
-        (ein:testing-wait-until (lambda () (get-buffer pager-name)))
+        (ein:testing-wait-until
+         "ein:pythools-request-help"
+         (lambda () (get-buffer pager-name)))
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))

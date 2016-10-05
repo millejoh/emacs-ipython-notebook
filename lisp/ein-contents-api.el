@@ -44,6 +44,10 @@ global setting.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
+(defcustom ein:force-sync nil
+  "If T, force ein to communicate with the IPython/Jupyter contents API synchronously. If not, use asynchronous communication. If you are seeing odd errors while using ein try setting this to T, though note that Emacs will likely be less responsive as it blocks while waiting for the IPython/Jupyter notebook server to respond"
+  :type 'boolean
+  :group 'ein)
 
 (defstruct ein:$content
   "Content returned from the Jupyter notebook server:
@@ -116,14 +120,14 @@ global setting.  For global setting and more information, see
                        :path path))
          (url (ein:content-url new-content)))
     (if (= 2 (ein:$content-ipython-version new-content))
-        (setq new-content (ein:content-query-contents-legacy path url-or-port force-sync callback))
+        (setq new-content (ein:content-query-contents-legacy path url-or-port ein:force-sync callback))
       (ein:query-singleton-ajax
        (list 'content-query-contents url-or-port path)
        url
        :type "GET"
        :timeout ein:content-query-timeout
        :parser #'ein:json-read
-       :sync force-sync
+       :sync ein:force-sync
        :success (apply-partially #'ein:new-content new-content callback)
        :error (apply-partially #'ein:content-query-contents-error url)))
     new-content))
@@ -141,7 +145,7 @@ global setting.  For global setting and more information, see
      :type "GET"
      :timeout ein:content-query-timeout
      :parser #'ein:json-read
-     :sync force-sync
+     :sync ein:force-sync
      :success (apply-partially #'ein:query-contents-legacy-success path new-content callback)
      :error (apply-partially #'ein:content-query-contents-error url))
     new-content))
@@ -344,7 +348,7 @@ global setting.  For global setting and more information, see
      :parser #'ein:json-read
      :success (apply-partially#'ein:content-query-sessions-success session-hash url-or-port)
      :error #'ein:content-query-sessions-error
-     :sync force-sync))
+     :sync ein:force-sync))
 
 (defun* ein:content-query-sessions-success (session-hash url-or-port &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
