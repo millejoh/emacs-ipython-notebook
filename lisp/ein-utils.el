@@ -523,7 +523,7 @@ NOTE: This function creates new list."
 PREDARGS is argument list for the PREDICATE function.
 Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "WAIT-UNTIL start")
-  (unless (setq max-count 50))
+  (unless max-count (setq max-count 50))
   (unless (loop repeat max-count
                 when (apply predicate predargs)
                 return t

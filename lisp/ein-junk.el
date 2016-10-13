@@ -32,7 +32,7 @@
 (define-obsolete-variable-alias 'ein:scratch-notebook-name-template
   'ein:junk-notebook-name-template "0.2.0")
 
-(defcustom ein:junk-notebook-name-template "junk-%Y-%m-%d-%H%M%S"
+(defcustom ein:junk-notebook-name-template "junk-%Y-%m-%d-%H%M%S.ipynb"
   "Junk notebook name template.
 This value is used from `ein:notebooklist-new-scratch-notebook'
 and `ein:notebook-rename-to-scratch-command'.  This must be a

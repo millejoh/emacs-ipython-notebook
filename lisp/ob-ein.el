@@ -47,8 +47,10 @@
 
 (defun ein:write-base64-image (img-string file)
   (with-temp-file file
-    (let ((buffer-file-coding-system 'binary)
-          (require-final-newline nil))
+    (let ((buffer-read-only nil)
+          (buffer-file-coding-system 'binary)
+          (require-final-newline nil)
+          (file-precious-flag t))
       (insert img-string)
       (base64-decode-region (point-min) (point-max)))))
 
@@ -109,7 +111,7 @@ jupyter kernels.
     (let ((cell (ein:shared-output-get-cell)))
       (ein:wait-until #'(lambda ()
                           (not (null (slot-value cell 'outputs))))
-                      nil 10000)
+                      nil nil)
       (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params))))
 
 ;; This function should be used to assign any variables in params in
@@ -133,26 +135,44 @@ jupyter kernels.
       url-or-port
     (string-to-number url-or-port)))
 
+(defun ein:org-babel-parse-session (session)
+  (cond ((numberp session)
+         (values session nil))
+        ((search "/" session)
+         (let* ((url-or-port (ein:org-babel-clean-url (car (split-string session "/"))))
+                (path (ein:join-str "/" (rest (split-string session "/")))))
+           (values url-or-port path)))
+        (t (values (ein:org-babel-clean url session) nil))))
+
+(defcustom ein:org-babel-default-session-name "ein_babel_session.ipynb"
+  "Default name for org babel sessions running ein environments.
+This is the name of the notebook used when no notebook path is
+given in the session parameter."
+  :type '(string :tag "Format string")
+  :group 'ein)
+
 (defun org-babel-ein-initiate-session (&optional session kernelspec)
   "If there is not a current inferior-process-buffer in SESSION then create.
  Return the initialized session."
-  (cond ((numberp session)
-         (ein:junk-new (ein:junk-notebook-name) kernelspec session))
-        ((string= session "none")
-         (error "You must specify a notebook or kernelspec as the session variable for ein code blocks."))
-        ((search "/" session)
-         (let* ((url-or-port (ein:org-babel-clean-url (car (split-string session "/"))))
-                (path (ein:join-str "/" (rest (split-string session "/"))))
-                (nb
-                 (or (ein:notebook-get-opened-notebook url-or-port path)
-                     (ein:notebook-open url-or-port path kernelspec
-                                        (lexical-let ((session session))
-                                          (lambda ()
-                                            (org-babel-ein-initiate-session session)))))))
-           (ein:$notebook-kernel nb)))
-        (t ;; Hope this is the name of a kernelspec we can start
-         (let ((url-or-port (ein:org-babel-clean-url session)))
-           (ein:junk-new (ein:junk-notebook-name) kernelspec url-or-port)))))
+  (when (and (stringp session) (string= session "none"))
+    (error "You must specify a notebook or kernelspec as the session variable for ein code blocks."))
+  (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
+    (if (null (gethash url-or-port ein:available-kernelspecs nil))
+        (ein:query-kernelspecs url-or-port))
+    (if (null kernelspec)
+        (setq kernelspec (ein:get-kernelspec url-or-port "default")))
+    (cond ((null path)
+           (let* ((name ein:org-babel-default-session-name)
+                  (new-session (format "%s/%s" url-or-port name)))
+             (ein:notebooklist-new-notebook-with-name name kernelspec url-or-port)
+             (org-babel-ein-initiate-session new-session kernelspec)))
+          (t (let ((nb (or (ein:notebook-get-opened-notebook url-or-port path)
+                           (ein:notebook-open url-or-port path kernelspec
+                                              (lexical-let ((session session)
+                                                            (kernelspec kernelspec))
+                                                (lambda ()
+                                                  (org-babel-ein-initiate-session session kernelspec)))))))
+               (ein:$notebook-kernel nb))))))
 
 (provide 'ob-ein)
  ;;; ob-ein.el ends here
