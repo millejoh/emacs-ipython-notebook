@@ -33,11 +33,11 @@
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
-    ,@(ein:aif (ein:oref-safe cell :input-prompt-number)
+    ,@(ein:aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
-    (outputs . ,(if discard-output [] (apply #'vector (oref cell :outputs))))
+    (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
     (language . "python")
-    (collapsed . ,(if (oref cell :collapsed) t json-false))))
+    (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
 
 (defvar ein:output-type-map
   '((:svg . :image/svg) (:png . :image/png) (:jpeg . :image/jpeg)
@@ -48,7 +48,7 @@
   (cdr (assoc maybe-property ein:output-type-map)))
 
 (defun ein:get-slideshow (cell)
-  (setq slide_type (oref cell :slidetype))
+  (setq slide_type (slot-value cell 'slidetype))
   (setq SS_table (make-hash-table))
   (setf (gethash 'slide_type SS_table) slide_type)
   SS_table)
@@ -56,21 +56,20 @@
 (defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
 
   (setq SS_table (ein:get-slide-show cell))
-  
-  (let ((metadata `((collapsed . ,(if (oref cell :collapsed) t json-false))
+  (let ((metadata `((collapsed . ,(if (slot-value cell 'collapsed) t json-false))
 		    (autoscroll . json-false)
                     (ein.tags . (,(format "worksheet-%s" wsidx)))
 		    (slideshow . ,SS_table)
 		    ))
         (outputs (if discard-output []
-                   (oref cell :outputs)))
+                   (slot-value cell 'outputs)))
         (renamed-outputs '())
-        (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+        (execute-count (ein:aif (ein:oref-safe cell 'input-prompt-number)
                            (and (numberp it) it))))
     (unless discard-output
       (dolist (o outputs)
 	(let ((type  (plist-get o :output_type)))
-	  (push (cond ((equal type "display_data") (ein:cell-display-data-output-to-json o)) 
+	  (push (cond ((equal type "display_data") (ein:cell-display-data-output-to-json o))
 		      ((equal type "execute_result") (ein:cell-execute-result-output-to-json o))
 		      ((equal type "stream") (ein:cell-stream-output-to-json o))
 		      ((equal type "error") (ein:cell-error-output-to-json o))
@@ -86,22 +85,19 @@
 
 
 (defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
-  `((cell_type . ,(oref cell :cell-type))
+  `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
   (setq SS_table (ein:get-slide-show cell))
-  
-
-  `((cell_type . ,(oref cell :cell-type))
+  `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))
     (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
 		 (slideshow . ,SS_table)))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
   (setq SS_table (ein:get-slide-show cell))
-  
-  (let ((header (make-string (oref cell :level) ?#)))
+  (let ((header (make-string (slot-value cell 'level) ?#)))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
       (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
@@ -110,7 +106,7 @@
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
   (let ((json (call-next-method)))
-    (append json `((level . ,(oref cell :level))))))
+    (append json `((level . ,(slot-value cell 'level))))))
 
 ;;; Dealing with Code cell outputs
 (defun ein:cell-stream-output-to-json (output)
