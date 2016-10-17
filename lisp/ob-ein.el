@@ -142,7 +142,7 @@ jupyter kernels.
          (let* ((url-or-port (ein:org-babel-clean-url (car (split-string session "/"))))
                 (path (ein:join-str "/" (rest (split-string session "/")))))
            (values url-or-port path)))
-        (t (values (ein:org-babel-clean url session) nil))))
+        (t (values (ein:org-babel-clean session) nil))))
 
 (defcustom ein:org-babel-default-session-name "ein_babel_session.ipynb"
   "Default name for org babel sessions running ein environments.
@@ -157,7 +157,7 @@ given in the session parameter."
   (when (and (stringp session) (string= session "none"))
     (error "You must specify a notebook or kernelspec as the session variable for ein code blocks."))
   (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
-    (if (null (gethash url-or-port ein:available-kernelspecs nil))
+    (if (null (gethash url-or-port ein:available-kernelspecs))
         (ein:query-kernelspecs url-or-port))
     (if (null kernelspec)
         (setq kernelspec (ein:get-kernelspec url-or-port "default")))
