@@ -62,6 +62,12 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
+(defcustom ein:notebook-checkpoint-frequency 60
+  "Controls frequency (in seconds) at which checkpoints are
+generated for the current notebook."
+  :type 'number
+  :group 'ein)
+
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
 
@@ -206,6 +212,10 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-api-version' : integer
    Major version of the IPython notebook server we are talking to.
+
+`ein:$notebook-checkpoints'
+  Names auto-saved checkpoints for content. Stored as a list
+  of (<id> . <last_modified>) pairs.
 "
   url-or-port
   notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
@@ -223,7 +233,8 @@ Current buffer for these functions is set to the notebook buffer.")
   worksheets
   scratchsheets
   api-version
-  )
+  checkpoint-timer
+  checkpoints)
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
@@ -396,8 +407,10 @@ See `ein:notebook-open' for more information."
                               (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
+    (ein:notebook-enable-checkpoints notebook)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
+
 
 (defun ein:notebook--different-number (n1 n2)
   (and (numberp n1) (numberp n2) (not (= n1 n2))))
@@ -428,6 +441,34 @@ of minor mode."
 
 
 ;;; Initialization.
+
+(defun ein:notebook-enable-checkpoints (notebook)
+  "Enable checkpoints for notebook."
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names)))))
+     (list notebook)))
+  (if (stringp notebook)
+      (error "Fix me!")) ;; FIXME
+  (setf (ein:$notebook-checkpoint-timer notebook)
+        (run-at-time t ein:notebook-checkpoint-frequency #'ein:notebook-save-checkpoint notebook))
+  (ein:log 'info "Enabling checkpoints for %s with frequency %s seconds."
+           (ein:$notebook-notebook-name notebook)
+           ein:notebook-checkpoint-frequency))
+
+(defun ein:notebook-disable-checkpoints (notebook)
+  "Stop automatically saving checkpoints for notebook."
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names)))))
+     (list notebook)))
+  (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
+  (when (ein:$notebook-checkpoint-timer notebook)
+    (cancel-timer (ein:$notebook-checkpoint-timer notebook))))
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
@@ -525,8 +566,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
                          "Select notebook [URL-OR-PORT/NAME]: "
                          (ein:notebook-opened-buffer-names))))
           (kernel-name (completing-read
-                       "Select kernel: "
-                       (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
+                        "Select kernel: "
+                        (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
   (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
                                                                 kernel-name))
@@ -880,6 +921,42 @@ as usual."
       (if (ein:kernel-live-p kernel)
           (ein:kernel-kill kernel #'ein:notebook-close (list ein:%notebook%))
         (ein:notebook-close ein:%notebook%)))))
+
+(defun ein:fast-content-from-notebook (notebook)
+  "Quickly generate a basic content structure from notebook. This
+function does not generate the full json representation of the
+notebook worksheets."
+  (make-ein:$content :name (ein:$notebook-notebook-name notebook)
+                     :path (ein:$notebook-notebook-path notebook)
+                     :url-or-port (ein:$notebook-url-or-port notebook)
+                     :type "notebook"
+                     :ipython-version (ein:$notebook-api-version notebook)))
+
+(defun ein:notebook-save-checkpoint (notebook)
+  (let ((content (ein:fast-content-from-notebook notebook)))
+    (ein:content-create-checkpoint content
+                                   #'(lambda (content)
+                                       (ein:log 'info "Checkpoint for %s generated."
+                                                (ein:$notebook-notebook-name notebook))
+                                       (setf (ein:$notebook-checkpoints notebook)
+                                             (ein:$content-checkpoints content))))))
+
+(defun ein:notebook-list-checkpoint-ids (notebook)
+  (loop for cp in (ein:$notebook-checkpoints notebook)
+        collecting (plist-get cp :id)))
+
+(defun ein:notebook-restore-to-checkpoint (notebook checkpoint)
+  (interactive
+   (let* ((notebook (ein:get-notebook))
+          (checkpoint (completing-read
+                       "Select checkpoint: "
+                       (ein:notebook-list-checkpoint-ids notebook))))
+     (list notebook checkpoint)))
+  (ein:content-restore-checkpoint (ein:fast-content-from-notebook notebook)
+                                  checkpoint)
+  (ein:notebook-close notebook)
+  (ein:notebook-open (ein:$notebook-url-or-port notebook)
+                     (ein:$notebook-notebook-path notebook)))
 
 
 ;;; Worksheet

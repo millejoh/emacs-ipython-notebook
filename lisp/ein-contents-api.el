@@ -54,40 +54,40 @@ global setting.  For global setting and more information, see
 `ein:$content-url-or-port'
   URL or port of Jupyter server.
 
-`ein:$content-name
+`ein:$content-name'
   The name/filename of the content. Always equivalent to the last
   part of the path field
 
-`ein:$content-path
+`ein:$content-path'
  The full file path. It will not start with /, and it will be /-delimited.
 
-`ein:$content-type
+`ein:$content-type'
  One of three values: :directory, :file, :notebook.
 
-`ein:$content-writable
+`ein:$content-writable'
   Indicates if requester has permission to modified the requested content.
 
-`ein:$content-created
+`ein:$content-created'
 
-`ein:$content-last-modified
+`ein:$content-last-modified'
 
-`ein:$content-mimetype
+`ein:$content-mimetype'
   Specify the mime-type of :file content, null otherwise.
 
-`ein:$content-raw-content
+`ein:$content-raw-content'
   Contents of resource as returned by Jupyter.  Depending on content-type will hold:
     :directory : JSON list of models for each item in the directory.
     :file      : Text of file as a string or base64 encoded string if mimetype
                  is other than 'text/plain'.
     :notebook  : JSON structure of the file.
 
-`ein:$content-format
+`ein:$content-format'
   Value will depend on content-type:
     :directory : :json.
     :file      : Either :text or :base64
     :notebook  : :json.
 
-`ein:$content-checkpoints
+`ein:$content-checkpoints'
   Names auto-saved checkpoints for content. Stored as a list
   of (<id> . <last_modified>) pairs.
 "
@@ -439,9 +439,11 @@ global setting.  For global setting and more information, see
      :error (apply-partially #'ein:content-query-checkpoints-error content))))
 
 (defun* ein:content-query-checkpoints-success (content cb cbargs &key data status response &allow-other-keys)
+  (unless (listp (car data))
+    (setq data (list data)))
   (setf (ein:$content-checkpoints content) data)
   (when cb
-    (apply cb cbargs)))
+    (apply cb content cbargs)))
 
 (defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
   (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
