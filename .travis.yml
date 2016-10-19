@@ -8,19 +8,16 @@ python:
   - "3.4"
   - "3.5"
 before_install:
-  - sudo apt-get -yq update
-  # Configure $PATH: Executables are installed to $HOME/bin
-  - export PATH="$HOME/bin:$PATH"
-  # Download the makefile to emacs-travis.mk
-  - wget 'https://raw.githubusercontent.com/flycheck/emacs-travis/master/emacs-travis.mk'
-  # Install Emacs (according to $EMACS_VERSION)
-  - sudo make -f emacs-travis.mk install_emacs EMACSCONFFLAGS='--with-xpm=no --with-gif=no CFLAGS=-O2 CXXFLAGS=-O2'
-  - sudo make -f emacs-travis.mk install_cask
+  - curl -fsSkl https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
+  - evm install $EMACS --use --skip
+  - cask
 install:
   - pip install jupyter==$JUPYTER
-  - cask install
 env:
-  - EMACS_VERSION=24.3 IPYCMD=jupyter JUPYTER=1.0.0
-  - EMACS_VERSION=25.1-rc2 IPYCMD=jupyter JUPYTER=1.0.0
-script: python tools/testein.py --emacs emacs --ipython $IPYCMD
+  - EMACS=emacs-24.4-travis IPYCMD=jupyter JUPYTER=1.0.0
+  - EMACS=emacs-25.1-travis IPYCMD=jupyter JUPYTER=1.0.0
+  - EMACS=emacs-git-snapshot-travis IPYCMD=jupyter JUPYTER=1.0.0
+script:
+  - emacs --version
+  - python tools/testein.py --emacs emacs --ipython $IPYCMD
  
