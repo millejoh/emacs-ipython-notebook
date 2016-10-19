@@ -54,8 +54,8 @@ global setting.  For global setting and more information, see
 `ein:$content-url-or-port'
   URL or port of Jupyter server.
 
-`ein:$content-name 
-  The name/filename of the content. Always equivalent to the last 
+`ein:$content-name
+  The name/filename of the content. Always equivalent to the last
   part of the path field
 
 `ein:$content-path
@@ -86,6 +86,10 @@ global setting.  For global setting and more information, see
     :directory : :json.
     :file      : Either :text or :base64
     :notebook  : :json.
+
+`ein:$content-checkpoints
+  Names auto-saved checkpoints for content. Stored as a list
+  of (<id> . <last_modified>) pairs.
 "
   url-or-port
   ipython-version
@@ -98,18 +102,31 @@ global setting.  For global setting and more information, see
   mimetype
   raw-content
   format
-  session-p)
+  session-p
+  checkpoints)
 
-(defun ein:content-url (content)
+(defun ein:content-url (content &rest params)
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content)))
-    (url-encode-url (ein:url url-or-port "api/contents" path))))
+    (if params
+        (url-encode-url (apply #'ein:url
+                               url-or-port
+                               "api/contents"
+                               path
+                               params))
+      (url-encode-url (ein:url url-or-port "api/contents" path)))))
 
-(defun ein:content-url-legacy (content)
+(defun ein:content-url-legacy (content &rest params)
   "Generate content url's for IPython Notebook version 2.x"
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content)))
-    (url-encode-url (ein:url url-or-port "api/notebooks" path))))
+    (if params
+        (url-encode-url (apply #'ein:url
+                               url-or-port
+                               "api/notebooks"
+                               path
+                               params))
+      (url-encode-url (ein:url url-or-port "api/notebooks" path)))))
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
   "Return the contents of the object at the specified path from the Jupyter server."
@@ -220,7 +237,8 @@ global setting.  For global setting and more information, see
   (ein:log 'error
     "Content list call %s failed with status %s." url symbol-status))
 
-;; ***
+
+;;; Managing/listing the content hierarchy
 
 (defvar *ein:content-hierarchy* (make-hash-table))
 
@@ -250,6 +268,7 @@ global setting.  For global setting and more information, see
     (setf (gethash url-or-port *ein:content-hierarchy*)
           (ein:make-content-hierarchy "" url-or-port))))
 
+
 ;;; Save Content
 (defun ein:content-save-legacy (content &optional callback cbargs errcb errcbargs)
   (ein:query-singleton-ajax
@@ -288,7 +307,7 @@ global setting.  For global setting and more information, see
   (when errcb
     (apply errcb errcbargs)))
 
-
+
 ;;; Rename Content
 
 (defun ein:content-legacy-rename (content new-path callback cbargs)
@@ -338,6 +357,7 @@ global setting.  For global setting and more information, see
     "Renaming content %s failed with status %s." path symbol-status))
 
 
+
 ;;; Sessions
 
 (defun ein:content-query-sessions (session-hash url-or-port &optional force-sync)
@@ -346,7 +366,7 @@ global setting.  For global setting and more information, see
      (ein:url url-or-port "api/sessions")
      :type "GET"
      :parser #'ein:json-read
-     :success (apply-partially#'ein:content-query-sessions-success session-hash url-or-port)
+     :success (apply-partially #'ein:content-query-sessions-success session-hash url-or-port)
      :error #'ein:content-query-sessions-error
      :sync ein:force-sync))
 
@@ -364,5 +384,66 @@ global setting.  For global setting and more information, see
 
 (defun* ein:content-query-sessions-error (&key symbol-status response &allow-other-keys)
   (ein:log 'error "Session query failed with status %s (%s)." symbol-status response))
+
+
+;;; Checkpoints
+
+(defun ein:content-query-checkpoints (content &optional callback cbargs)
+  (let* ((url (ein:content-url content "checkpoints")))
+    (ein:query-singleton-ajax
+     (list 'content-query-checkpoints url)
+     url
+     :type "GET"
+     :timeout ein:content-query-timeout
+     :parser #'ein:json-read
+     :sync ein:force-sync
+     :success (apply-partially #'ein:content-query-checkpoints-success content callback cbargs)
+     :error (apply-partially #'ein:content-query-checkpoints-error content))))
+
+(defun ein:content-create-checkpoint (content &optional callback cbargs)
+  (let* ((url (ein:content-url content "checkpoints")))
+    (ein:query-singleton-ajax
+     (list 'content-query-checkpoints url)
+     url
+     :type "POST"
+     :timeout ein:content-query-timeout
+     :parser #'ein:json-read
+     :sync ein:force-sync
+     :success (apply-partially #'ein:content-query-checkpoints-success content callback cbargs)
+     :error (apply-partially #'ein:content-query-checkpoints-error content))))
+
+(defun ein:content-restore-checkpoint (content checkpoint-id &optional callback cbargs)
+  (let* ((url (ein:content-url content "checkpoints" checkpoint-id)))
+    (ein:query-singleton-ajax
+     (list 'content-query-checkpoints url)
+     url
+     :type "POST"
+     :timeout ein:content-query-timeout
+     :parser #'ein:json-read
+     :sync ein:force-sync
+     :success (when callback
+                (apply callback cbargs))
+     :error (apply-partially #'ein:content-query-checkpoints-error content))))
+
+(defun ein:content-delete-checkpoint (content checkpoint-id &optional callback cbargs)
+  (let* ((url (ein:content-url content "checkpoints" checkpoint-id)))
+    (ein:query-singleton-ajax
+     (list 'content-query-checkpoints url)
+     url
+     :type "DELETE"
+     :timeout ein:content-query-timeout
+     :parser #'ein:json-read
+     :sync ein:force-sync
+     :success (when callback
+                (apply callback cbargs))
+     :error (apply-partially #'ein:content-query-checkpoints-error content))))
+
+(defun* ein:content-query-checkpoints-success (content cb cbargs &key data status response &allow-other-keys)
+  (setf (ein:$content-checkpoints content) data)
+  (when cb
+    (apply cb cbargs)))
+
+(defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
+  (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
 
 (provide 'ein-contents-api)
