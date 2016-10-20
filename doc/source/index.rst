@@ -566,6 +566,11 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+v0.11.0
+-------
+
+* Add support for creating and restoring checkpoints on the Jupyter server.
+
 v0.10.0
 -------
 
