@@ -63,8 +63,13 @@
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
 (defcustom ein:notebook-checkpoint-frequency 60
-  "Controls frequency (in seconds) at which checkpoints are
-generated for the current notebook."
+  "Sets the frequency (in seconds) at which checkpoints (i.e.
+autosaves) are generated for the current notebook.
+
+Autosaves are automatically enabled when a notebook is opened, but
+can be controlled manually via `ein:notebook-enable-checkpoints' and
+`ein:notebook-disable-checkpoints'.
+"
   :type 'number
   :group 'ein)
 
@@ -443,7 +448,8 @@ of minor mode."
 ;;; Initialization.
 
 (defun ein:notebook-enable-checkpoints (notebook)
-  "Enable checkpoints for notebook."
+  "Enable automatic saving of checkpoints to the Jupter server
+for notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
                         (completing-read
@@ -453,13 +459,13 @@ of minor mode."
   (if (stringp notebook)
       (error "Fix me!")) ;; FIXME
   (setf (ein:$notebook-checkpoint-timer notebook)
-        (run-at-time t ein:notebook-checkpoint-frequency #'ein:notebook-save-checkpoint notebook))
+        (run-at-time 0 ein:notebook-checkpoint-frequency #'ein:notebook-save-checkpoint notebook))
   (ein:log 'info "Enabling checkpoints for %s with frequency %s seconds."
            (ein:$notebook-notebook-name notebook)
            ein:notebook-checkpoint-frequency))
 
 (defun ein:notebook-disable-checkpoints (notebook)
-  "Stop automatically saving checkpoints for notebook."
+  "Disable automatic saving of checkpoints for current notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
                         (completing-read
@@ -935,17 +941,29 @@ notebook worksheets."
 (defun ein:notebook-save-checkpoint (notebook)
   (let ((content (ein:fast-content-from-notebook notebook)))
     (ein:content-create-checkpoint content
-                                   #'(lambda (content)
-                                       (ein:log 'info "Checkpoint for %s generated."
-                                                (ein:$notebook-notebook-name notebook))
-                                       (setf (ein:$notebook-checkpoints notebook)
-                                             (ein:$content-checkpoints content))))))
+                                   (lexical-let ((notebook notebook))
+                                     #'(lambda (content)
+                                         (ein:log 'info "Checkpoint %s for %s generated."
+                                                  (plist-get (first (ein:$content-checkpoints content)) :id)
+                                                  (ein:$notebook-notebook-name notebook))
+                                         (setf (ein:$notebook-checkpoints notebook)
+                                               (ein:$content-checkpoints content)))))))
 
 (defun ein:notebook-list-checkpoint-ids (notebook)
+  (unless (ein:$notebook-checkpoints notebook)
+    (ein:content-query-checkpoints (ein:fast-content-from-notebook notebook)
+                                   (lexical-let ((notebook notebook))
+                                     #'(lambda (content)
+                                         (setf (ein:$notebook-checkpoints notebook)
+                                               (ein:$content-checkpoints content)))))
+    (sleep-for 0.5))
   (loop for cp in (ein:$notebook-checkpoints notebook)
         collecting (plist-get cp :id)))
 
 (defun ein:notebook-restore-to-checkpoint (notebook checkpoint)
+  "Restore notebook to previous checkpoint saved on the Jupyter
+server. Note that if there are multiple checkpoints the user will
+be prompted on which one to use."
   (interactive
    (let* ((notebook (ein:get-notebook))
           (checkpoint (completing-read
@@ -1653,6 +1671,7 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   (when (ein:$notebook-p ein:%notebook%)
+    (ein:notebook-disable-checkpoints ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
