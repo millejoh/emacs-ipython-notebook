@@ -258,9 +258,10 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
-.. el:function:: ein:notebook-enable-checkpoints
-.. el:function:: ein:notebook-disable-checkpoints
+.. el.function:: ein:notebook-create-checkpoint
 .. el:function:: ein:notebook-restore-to-checkpoint
+.. el:function:: ein:notebook-enable-autosaves
+.. el:function:: ein:notebook-disable-autosaves
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -386,7 +387,8 @@ Notebook
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
 .. el.variable:: ein:worksheet-show-slide-data
-.. el.variable:: ein:notebook-checkpoint-frequency
+.. el.variable:: ein:notebook-autosave-frequency
+.. el.variable:: ein:notebook-create-checkpoint-on-save
 
 Console
 ^^^^^^^

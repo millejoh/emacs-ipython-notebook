@@ -62,15 +62,28 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
-(defcustom ein:notebook-checkpoint-frequency 60
-  "Sets the frequency (in seconds) at which checkpoints (i.e.
-autosaves) are generated for the current notebook.
+(defcustom ein:notebook-autosave-frequency 60
+  "Sets the frequency (in seconds) at which the notebook is
+automatically saved.
 
-Autosaves are automatically enabled when a notebook is opened, but
-can be controlled manually via `ein:notebook-enable-checkpoints' and
-`ein:notebook-disable-checkpoints'.
+Autosaves are automatically enabled when a notebook is opened,
+but can be controlled manually via `ein:notebook-enable-autosave'
+and `ein:notebook-disable-autosave'.
+
+If this parameter is changed than you must call
+`ein:notebook-disable-autosave' and then
+`ein:notebook-enable-autosave' on all open notebooks for the
+changes to take effect.
+
 "
   :type 'number
+  :group 'ein)
+
+(defcustom ein:notebook-create-checkpoint-on-save t
+  "If non-nil a checkpoint will be created every time the
+notebook is saved. Otherwise checkpoints must be created manually
+via `ein:notebook-create-checkpoint'."
+  :type 'boolean
   :group 'ein)
 
 (defcustom ein:notebook-discard-output-on-save 'no
@@ -238,7 +251,7 @@ Current buffer for these functions is set to the notebook buffer.")
   worksheets
   scratchsheets
   api-version
-  checkpoint-timer
+  autosave-timer
   checkpoints)
 
 (ein:deflocal ein:%notebook% nil
@@ -412,7 +425,7 @@ See `ein:notebook-open' for more information."
                               (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
-    (ein:notebook-enable-checkpoints notebook)
+    (ein:notebook-enable-autosaves notebook)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
 
@@ -447,9 +460,8 @@ of minor mode."
 
 ;;; Initialization.
 
-(defun ein:notebook-enable-checkpoints (notebook)
-  "Enable automatic saving of checkpoints to the Jupter server
-for notebook."
+(defun ein:notebook-enable-autosaves (notebook)
+  "Enable automatic, periodic saving for notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
                         (completing-read
@@ -458,14 +470,14 @@ for notebook."
      (list notebook)))
   (if (stringp notebook)
       (error "Fix me!")) ;; FIXME
-  (setf (ein:$notebook-checkpoint-timer notebook)
-        (run-at-time 0 ein:notebook-checkpoint-frequency #'ein:notebook-save-checkpoint notebook))
-  (ein:log 'info "Enabling checkpoints for %s with frequency %s seconds."
+  (setf (ein:$notebook-autosave-timer notebook)
+        (run-at-time 0 ein:notebook-autosave-frequency #'ein:notebook-save-notebook notebook 0))
+  (ein:log 'info "Enabling autosaves for %s with frequency %s seconds."
            (ein:$notebook-notebook-name notebook)
-           ein:notebook-checkpoint-frequency))
+           ein:notebook-autosave-frequency))
 
-(defun ein:notebook-disable-checkpoints (notebook)
-  "Disable automatic saving of checkpoints for current notebook."
+(defun ein:notebook-disable-autosaves (notebook)
+  "Disable automatic, periodic saving for current notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
                         (completing-read
@@ -473,8 +485,8 @@ for notebook."
                          (ein:notebook-opened-buffer-names)))))
      (list notebook)))
   (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
-  (when (ein:$notebook-checkpoint-timer notebook)
-    (cancel-timer (ein:$notebook-checkpoint-timer notebook))))
+  (when (ein:$notebook-autosave-timer notebook)
+    (cancel-timer (ein:$notebook-autosave-timer notebook))))
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
@@ -817,8 +829,8 @@ This is equivalent to do ``C-c`` in the console program."
     (ein:content-save content
                       #'ein:notebook-save-notebook-success
                       (list notebook callback cbargs)
-		      #'ein:notebook-save-notebook-error
-		      (list notebook))))
+                      #'ein:notebook-save-notebook-error
+                      (list notebook))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
@@ -858,7 +870,10 @@ This is equivalent to do ``C-c`` in the console program."
           (ein:worksheet-set-modified-p ws nil))
         (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
-                      'notebook_saved.Notebook))
+                      'notebook_saved.Notebook)
+  (when ein:notebook-create-checkpoint-on-save
+    (ein:notebook-create-checkpoint notebook)))
+
 ;; .. [#] Consider the following case.
 ;;    (1) Open worksheet WS0 and other worksheets.
 ;;    (2) Edit worksheet WS0 then save the notebook.
@@ -938,16 +953,23 @@ notebook worksheets."
                      :type "notebook"
                      :ipython-version (ein:$notebook-api-version notebook)))
 
-(defun ein:notebook-save-checkpoint (notebook)
-  (let ((content (ein:fast-content-from-notebook notebook)))
-    (ein:content-create-checkpoint content
-                                   (lexical-let ((notebook notebook))
-                                     #'(lambda (content)
-                                         (ein:log 'info "Checkpoint %s for %s generated."
-                                                  (plist-get (first (ein:$content-checkpoints content)) :id)
-                                                  (ein:$notebook-notebook-name notebook))
-                                         (setf (ein:$notebook-checkpoints notebook)
-                                               (ein:$content-checkpoints content)))))))
+(defun ein:notebook-create-checkpoint (notebook)
+  "Create checkpoint for current notebook based on most recent save."
+  (interactive
+   (let* ((notebook (ein:get-notebook)))
+     (list notebook)))
+  (ein:events-trigger (ein:$notebook-events notebook)
+                      'notebook_create_checkpoint.Notebook)
+  (ein:content-create-checkpoint (ein:fast-content-from-notebook notebook)
+                                 (lexical-let ((notebook notebook))
+                                   #'(lambda (content)
+                                       (ein:log 'info "Checkpoint %s for %s generated."
+                                                (plist-get (first (ein:$content-checkpoints content)) :id)
+                                                (ein:$notebook-notebook-name notebook))
+                                       (ein:events-trigger (ein:$notebook-events notebook)
+                                                           'notebook_checkpoint_created.Notebook)
+                                       (setf (ein:$notebook-checkpoints notebook)
+                                             (ein:$content-checkpoints content))))))
 
 (defun ein:notebook-list-checkpoint-ids (notebook)
   (unless (ein:$notebook-checkpoints notebook)
@@ -958,7 +980,7 @@ notebook worksheets."
                                                (ein:$content-checkpoints content)))))
     (sleep-for 0.5))
   (loop for cp in (ein:$notebook-checkpoints notebook)
-        collecting (plist-get cp :id)))
+        collecting (plist-get cp :last_modified)))
 
 (defun ein:notebook-restore-to-checkpoint (notebook checkpoint)
   "Restore notebook to previous checkpoint saved on the Jupyter
@@ -1671,7 +1693,7 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   (when (ein:$notebook-p ein:%notebook%)
-    (ein:notebook-disable-checkpoints ein:%notebook%)
+    (ein:notebook-disable-autosaves ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()

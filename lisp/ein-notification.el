@@ -87,7 +87,9 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
      "NotebookStatus"
      :s2m
      '((notebook_saving.Notebook       . "Saving Notebook...")
+       (notebook_create_checkpoint.Notebook . "Creating Checkpoint...")
        (notebook_saved.Notebook        . "Notebook is saved")
+       (notebook_checkpoint_created.Notebook . "Checkpoint created.")
        (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
     :type ein:notification-status)
    (kernel
@@ -121,6 +123,13 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                                    st   ; = event-type
                                    #'ein:notification--callback
                                    (cons ns st))))
+  (ein:events-on events
+                 'notebook_checkpoint_created.Notebook
+                 #'ein:notification--fadeout-callback
+                 (list (oref notification :notebook)
+                       "Checkpoint created."
+                       'notebook_checkpoint_created.Notebook
+                       nil))
   (ein:events-on events
                  'notebook_saved.Notebook
                  #'ein:notification--fadeout-callback
