@@ -96,9 +96,8 @@ Requirements
   The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
 * (optional) python-mode:
-  It should work with either python.el or python-mode.el.
-  Fabian Gallina's `python.el`_ is required to use
-  ``ein:console-open`` command.
+  It should work with either python.el or python-mode.el. `python.el`_ is
+  required to use ``ein:console-open`` command.
 * (optional) `auto-complete.el`_
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
@@ -114,8 +113,7 @@ Requirements
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
-It is known to work in Emacs 23.2, 24.1 and 24.2.
+EIEIO and json.el.
 
 .. _IPython: http://ipython.org/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
@@ -260,6 +258,10 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
+.. el.function:: ein:notebook-create-checkpoint
+.. el:function:: ein:notebook-restore-to-checkpoint
+.. el:function:: ein:notebook-enable-autosaves
+.. el:function:: ein:notebook-disable-autosaves
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -385,6 +387,8 @@ Notebook
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
 .. el.variable:: ein:worksheet-show-slide-data
+.. el.variable:: ein:notebook-autosave-frequency
+.. el.variable:: ein:notebook-create-checkpoint-on-save
 
 Console
 ^^^^^^^
@@ -563,6 +567,11 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.11.0
+-------
+
+* Add support for creating and restoring checkpoints on the Jupyter server.
 
 v0.10.0
 -------
