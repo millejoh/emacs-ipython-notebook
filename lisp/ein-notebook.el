@@ -863,7 +863,7 @@ This is equivalent to do ``C-c`` in the console program."
           response-status ein:notebook-save-retry-max)))))
 
 (defun ein:notebook-save-notebook-success (notebook &rest ignore)
-  (ein:log 'info "Notebook is saved.")
+  (ein:log 'verbose "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
   (mapc (lambda (ws)
           (ein:worksheet-save-cells ws) ; [#]_
@@ -963,7 +963,7 @@ notebook worksheets."
   (ein:content-create-checkpoint (ein:fast-content-from-notebook notebook)
                                  (lexical-let ((notebook notebook))
                                    #'(lambda (content)
-                                       (ein:log 'info "Checkpoint %s for %s generated."
+                                       (ein:log 'verbose "Checkpoint %s for %s generated."
                                                 (plist-get (first (ein:$content-checkpoints content)) :id)
                                                 (ein:$notebook-notebook-name notebook))
                                        (ein:events-trigger (ein:$notebook-events notebook)

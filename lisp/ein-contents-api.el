@@ -295,15 +295,15 @@ global setting.  For global setting and more information, see
     (ein:content-save-legacy content callback cbargs)))
 
 (defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
-  (ein:log 'info "Saving content successful with status %s" status)
+  (ein:log 'verbose "Saving content successful with status %s" status)
   (when callback
     (apply callback cbargs)))
 
 (defun* ein:content-save-error (url errcb errcbargs &key response status-code &allow-other-keys)
-  (ein:log 'verbose
+  (ein:log 'error
     "Error thrown: %S" (request-response-error-thrown response))
   (ein:log 'error
-    "Content list call %s failed with status %s." url status-code)
+    "Content save call %s failed with status %s." url status-code)
   (when errcb
     (apply errcb errcbargs)))
 
