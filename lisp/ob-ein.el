@@ -1,6 +1,6 @@
 ;;; ob-ein.el --- org-babel functions for template evaluation
 
-;; Copyright (C) John M. miller (
+;; Copyright (C) John M. Miller
 
 ;; Author: John M. Miller <millejoh at mac.com>
 ;;
@@ -29,7 +29,6 @@
 ;;; Code:
 (require 'ob)
 (require 'ob-python)
-;; possibly require modes required for your language
 (require 'cl)
 (require 'ein-notebook)
 (require 'ein-shared-output)
