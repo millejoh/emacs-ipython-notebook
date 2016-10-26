@@ -24,6 +24,7 @@
 ;; This code inspired by borrowing from org-src.el.
 
 ;;; Code:
+(require 'ein-cell)
 
 (defvar ein:src--cell nil)
 (defvar ein:src--ws nil)
@@ -33,6 +34,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c'" 'ein:edit-cell-exit)
     (define-key map "\C-c\C-k" 'ein:edit-cell-abort)
+    (define-key map "\C-c\C-c" 'ein:edit-cell-execute)
     (define-key map "\C-x\C-s" 'ein:edit-cell-save)
     map))
 
@@ -48,7 +50,7 @@
   (set (make-local-variable 'header-line-format)
        (substitute-command-keys
         "Edit, then exit with \\[ein:edit-cell-exit] or abort with \
-  \\[ein:edit-cell-abort]"))
+\\[ein:edit-cell-abort]"))
   ;; Possibly activate various auto-save features (for the edit buffer
   ;; or the source buffer).
   ;; (when org-edit-src-turn-on-auto-save
@@ -85,6 +87,15 @@
           (setq write-contents-functions '(ein:edit-cell-save)))
       (setq buffer-read-only t))))
 
+(defun ein:edit-cell-execute ()
+  "Execute buffer contents via `ein:shared-output-eval-string'."
+  (interactive)
+  (ein:edit-cell-save)
+  (ein:cell-execute-internal ein:src--cell
+                             (slot-value ein:src--cell 'kernel)
+                             (buffer-string)
+                             :silent nil))
+
 (defun ein:edit-cell-save ()
   (interactive)
   ;;(unless (ein:cell-edit-buffer-p) (user-error "Not in a sub-editing buffer"))
@@ -120,10 +131,10 @@
 
 (defun ein:edit-cell-contents ()
   (interactive)
-  (let* ((cell (or (ein:get-cell-at-point)
+  (let* ((cell (or (ein:worksheet-get-current-cell)
                    (error "Must be called from inside an EIN worksheet cell.")))
-         (ws ein:%worksheet%)
-         (contents (slot-value cell 'input))
+         (ws (ein:worksheet--get-ws-or-error))
+         (contents (ein:cell-get-text cell))
          (type (slot-value cell 'cell-type))
          (name (ein:construct-cell-edit-buffer-name (buffer-name) type))
          (buffer (generate-new-buffer-name name)))
