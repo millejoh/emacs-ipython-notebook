@@ -104,11 +104,11 @@
   ;;(unless (org-src-edit-buffer-p) (error "Not in a sub-editing buffer"))
   (let ((edit-buffer (current-buffer))
         (ws ein:src--ws))
-    (switch-to-buffer (ein:worksheet-buffer ws))
     (when ein:src--allow-write-back
       (ein:edit-cell-save))
     (kill-buffer edit-buffer)
-    ;; FIXME: put point at an appropriate location as org does?
+    (switch-to-buffer-other-window (ein:worksheet-buffer ws))
+        ;; FIXME: put point at an appropriate location as org does?
     ))
 
 (defun ein:edit-cell-abort ()
