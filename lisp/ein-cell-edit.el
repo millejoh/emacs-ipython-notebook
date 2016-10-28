@@ -119,10 +119,15 @@ or abort with \\[ein:edit-cell-abort]"))
 (defun ein:construct-cell-edit-buffer-name (bufname cell-type)
   (concat "*EIN Src " bufname "[ " cell-type " ]*" ))
 
+(defun ein:get-mode-for-kernel (kernelspec)
+  (cond ((string-match-p "python" (ein:get-kernelspec-language kernelspec)) 'python)
+        (t 'python)))
+
 (defun ein:edit-cell-contents ()
   (interactive)
   (let* ((cell (or (ein:worksheet-get-current-cell)
                    (error "Must be called from inside an EIN worksheet cell.")))
+         (nb (ein:notebook--get-nb-or-error))
          (ws (ein:worksheet--get-ws-or-error))
          (contents (ein:cell-get-text cell))
          (type (slot-value cell 'cell-type))
@@ -133,11 +138,13 @@ or abort with \\[ein:edit-cell-abort]"))
     (remove-text-properties (point-min) (point-max)
                             '(display nil invisible nil intangible nil))
     (set-buffer-modified-p nil)
-    (setq buffer-file-name nil)
+    (setq buffer-file-name buffer) ;; Breaks anaconda-mode without this special fix.
     (condition-case e
         (ein:case-equal type
           (("markdown") (markdown-mode))
-          (("code") (python-mode)))
+          (("code")
+           (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec nb))
+             (python (python-mode)))))
       (error (message "Language mode `%s' fails with: %S"
                       type (nth 1 e))))
     (set (make-local-variable 'ein:src--cell) cell)

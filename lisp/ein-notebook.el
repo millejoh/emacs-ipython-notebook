@@ -522,13 +522,14 @@ of minor mode."
 "
   name
   resources
-  spec)
+  spec
+  language)
 
 (defvar ein:available-kernelspecs (make-hash-table))
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
- `((:name . ,(ein:$kernelspec-name kernelspec))
+    `((:name . ,(ein:$kernelspec-name kernelspec))
       (:display_name . ,(format "%s" display-name)))))
 
 (defun ein:get-kernelspec (url-or-port name)
@@ -537,6 +538,9 @@ of minor mode."
                   (intern (format ":%s" name))
                 name)))
     (plist-get kernelspecs name)))
+
+(defun ein:get-kernelspec-language (kernelspec)
+  (plist-get (ein:$kernelspec-spec kernelspec) :language))
 
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
@@ -806,7 +810,7 @@ This is equivalent to do ``C-c`` in the console program."
       )))
 
 (defun ein:write-nbformat4-worksheets (notebook)
-  (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
+  (ein:log 'verbose "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
   (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
