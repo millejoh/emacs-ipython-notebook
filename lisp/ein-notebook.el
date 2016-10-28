@@ -472,7 +472,7 @@ of minor mode."
   (if (stringp notebook)
       (error "Fix me!")) ;; FIXME
   (setf (ein:$notebook-autosave-timer notebook)
-        (run-at-time 0 ein:notebook-autosave-frequency #'ein:notebook-save-notebook notebook 0))
+        (run-at-time 0 ein:notebook-autosave-frequency #'ein:notebook-maybe-save-notebook notebook 0))
   (ein:log 'info "Enabling autosaves for %s with frequency %s seconds."
            (ein:$notebook-notebook-name notebook)
            ein:notebook-autosave-frequency))
@@ -826,6 +826,13 @@ This is equivalent to do ``C-c`` in the console program."
       (cells . ,(apply #'vector all-cells)))
 
     ))
+
+(defun ein:notebook-maybe-save-notebook (notebook retry &optional callback cbargs)
+  (if (cl-some #'(lambda (ws)
+                   (buffer-modified-p
+                    (ein:worksheet-buffer ws)))
+               (ein:$notebook-worksheets notebook))
+      (ein:notebook-save-notebook notebook retry callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (let ((content (ein:content-from-notebook notebook)))
