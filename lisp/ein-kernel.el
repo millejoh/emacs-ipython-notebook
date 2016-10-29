@@ -298,7 +298,7 @@ See: https://github.com/ipython/ipython/pull/3307"
       (setf (ein:$websocket-onopen c)
             (lexical-let ((kernel kernel))
               (lambda ()
-                (ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel)))
+                ;(ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel))) ;; Deprecated starting in messaging version 5.1
                 ;; run `ein:$kernel-after-start-hook' if both
                 ;; channels are ready.
                 (when (ein:kernel-live-p kernel)

@@ -361,6 +361,8 @@ global setting.  For global setting and more information, see
 ;;; Sessions
 
 (defun ein:content-query-sessions (session-hash url-or-port &optional force-sync)
+  (unless force-sync
+    (setq force-sync ein:force-sync))
   (ein:query-singleton-ajax
      (list 'content-query-sessions)
      (ein:url url-or-port "api/sessions")
@@ -368,7 +370,7 @@ global setting.  For global setting and more information, see
      :parser #'ein:json-read
      :success (apply-partially #'ein:content-query-sessions-success session-hash url-or-port)
      :error #'ein:content-query-sessions-error
-     :sync ein:force-sync))
+     :sync force-sync))
 
 (defun* ein:content-query-sessions-success (session-hash url-or-port &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
