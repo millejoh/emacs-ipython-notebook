@@ -34,7 +34,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c'" 'ein:edit-cell-exit)
     (define-key map "\C-c\C-k" 'ein:edit-cell-abort)
-    (define-key map "\C-c\C-c" 'ein:edit-cell-execute)
+    (define-key map "\C-c\C-c" 'ein:edit-cell-save-and-execute)
     (define-key map "\C-x\C-s" 'ein:edit-cell-save)
     map))
 
@@ -86,7 +86,9 @@ or abort with \\[ein:edit-cell-abort]"))
           (setq write-contents-functions '(ein:edit-cell-save)))
       (setq buffer-read-only t))))
 
-(defun ein:edit-cell-execute ()
+(defun ein:edit-cell-save-and-execute ()
+  "Save, then execute the countents of the EIN source edit buffer
+and place results (if any) in output of original notebook cell."
   (interactive)
   (ein:edit-cell-save)
   (ein:cell-execute-internal ein:src--cell
@@ -95,6 +97,8 @@ or abort with \\[ein:edit-cell-abort]"))
                              :silent nil))
 
 (defun ein:edit-cell-save ()
+  "Save contents of EIN source edit buffer back to original notebook
+cell."
   (interactive)
   (set-buffer-modified-p nil)
   (let ((edited-code (buffer-string)))
@@ -102,6 +106,9 @@ or abort with \\[ein:edit-cell-abort]"))
     (ein:worksheet-render ein:src--ws)))
 
 (defun ein:edit-cell-exit ()
+  "Close the EIN source edit buffer, saving contents back to the
+original notebook cell, unless being called via
+`ein:edit-cell-abort'."
   (interactive)
   (let ((edit-buffer (current-buffer))
         (ws ein:src--ws))
@@ -113,6 +120,8 @@ or abort with \\[ein:edit-cell-abort]"))
     ))
 
 (defun ein:edit-cell-abort ()
+  "Abort editing the current cell, contents will revert to
+previous value."
   (interactive)
   (let (ein:src--allow-write-back) (ein:edit-cell-exit)))
 
@@ -124,6 +133,9 @@ or abort with \\[ein:edit-cell-abort]"))
         (t 'python)))
 
 (defun ein:edit-cell-contents ()
+  "Edit the contents of the current cell in a buffer using an
+appropriate language major mode. Functionality is very similar to
+`org-edit-special'."
   (interactive)
   (let* ((cell (or (ein:worksheet-get-current-cell)
                    (error "Must be called from inside an EIN worksheet cell.")))

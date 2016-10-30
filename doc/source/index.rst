@@ -247,7 +247,13 @@ port or URL of the IPython notebook server.
 Notebook
 ^^^^^^^^
 
-The following keybinds are available in notebook buffers.
+The following keybinds are available in notebook buffers. Modified notebooks are
+saved automatically with a frequency dependenant on the setting of
+`ein:notebook-autosave-frequency`. If `ein:notebook-create-checkpoint-on-save`
+is True than a checkpoint will also be generated in the Jupyter server every
+time the notebook is saved. A notebook can be returned to a previous checkpoint
+via `ein:notebook-restore-to-checkpoint`. Checkpoints can also be manually
+created via `ein:notebook-create-checkpoint`.
 
 .. el:keymap:: ein:notebook-mode-map
    :replace: s/C-c TAB/C-c C-i/
@@ -262,6 +268,24 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:notebook-restore-to-checkpoint
 .. el:function:: ein:notebook-enable-autosaves
 .. el:function:: ein:notebook-disable-autosaves
+
+Advanced Editing
+^^^^^^^^^^^^^^^^
+
+Worksheet cells can be edited in a manner similar to `source blocks`_ in Org
+buffers. Use ``C-c '`` to edit the contents of the current cell. You can execute
+the contents of the buffer and the results will be sent to the output of the
+cell being edited.
+
+.. el:keymap:: ein:edit-cell-mode-map
+
+.. el:function:: ein:edit-cell-contents
+.. el:function:: ein:edit-cell-exit
+.. el:function:: ein:edit-cell-abort
+.. el:function:: ein:edit-cell-save
+.. el:function:: ein:edit-cell-save-and-execute
+
+.. _`source blocks`: http://orgmode.org/manual/Editing-source-code.html#Editing-source-code
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -327,7 +351,22 @@ Misc
 Org-mode integration
 --------------------
 
-You can link to IPython notebook from org-mode_ files.
+You can execute org source blocks in EIN by adding `ein` to
+`org:babel-load-languages`. You need to specify a notebook via the :session
+argument. The format for the session argument is
+`{url-or-port}/{path-to-notbooke}`. For example:
+
+.. code:: python
+
+   #+BEGIN_SRC ein :session 8888/Untitled.ipynb
+   import sys
+
+   a = 14500
+   b = a+1000
+   sys.version
+   #+END_SRC
+
+You can also link to IPython notebook from org-mode_ files.
 
 1. Call org-mode function :el:symbol:`org-store-link`
    [#org-store-link]_ in notebook buffer.  You can select a region to
@@ -567,6 +606,12 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.12.0
+-------
+
+* Cell edit buffers ala org source block edit buffers.
+* Better integration with org source blocks.
 
 v0.11.0
 -------
