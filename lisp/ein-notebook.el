@@ -338,7 +338,7 @@ will be updated with kernel's cwd."
 (defun ein:notebook-url-from-url-and-id (url-or-port api-version path)
   (cond ((= 2 api-version)
          (ein:url url-or-port "api/notebooks" path))
-        ((= 3 api-version)
+        ((>= 3 api-version)
          (ein:url url-or-port "api/contents" path))))
 
 (defun ein:notebook-pop-to-current-buffer (&rest -ignore-)

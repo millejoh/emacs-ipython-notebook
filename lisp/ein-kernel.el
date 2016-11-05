@@ -316,7 +316,7 @@ See: https://github.com/ipython/ipython/pull/3307"
                             :early t)))
     (cond ((= api-version 2)
            (ein:start-channels-multiple-websocket kernel))
-          ((= api-version 3)
+          ((>= api-version 3)
            (ein:start-channels-single-websocket kernel)))
     ;; switch from early-close to late-close message after 1s
     (run-at-time

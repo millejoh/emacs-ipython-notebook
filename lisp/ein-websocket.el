@@ -100,7 +100,10 @@
                 (let ((websocket (websocket-client-data ws)))
                   (ein:aif (ein:$websocket-onclose websocket)
                       (apply it websocket
-                             (ein:$websocket-onclose-args websocket))))))))
+                             (ein:$websocket-onclose-args websocket)))))
+              :on-error
+              (lambda (ws action err)
+                (ein:log 'error "Error %s on websocket %s action %s." err ws action)))))
     (setf (websocket-client-data ws) websocket)
     (setf (ein:$websocket-ws websocket) ws)
     websocket))
@@ -125,7 +128,7 @@
          (ein:websocket-send
           (ein:$kernel-shell-channel kernel)
           (json-encode msg)))
-        ((= (ein:$kernel-api-version kernel) 3)
+        ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
           (ein:$kernel-channels kernel)
           (json-encode (plist-put msg :channel "shell"))))))
@@ -133,7 +136,7 @@
 (defun ein:websocket-send-stdin-channel (kernel msg)
   (cond ((= (ein:$kernel-api-version kernel) 2)
          (ein:log 'warn "Stdin messages only supported with IPython 3."))
-        ((= (ein:$kernel-api-version kernel) 3)
+        ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
           (ein:$kernel-channels kernel)
           (json-encode (plist-put msg :channel "stdin"))))))

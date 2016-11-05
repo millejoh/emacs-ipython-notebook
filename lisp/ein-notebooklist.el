@@ -474,7 +474,10 @@ Notebook list data is passed via the buffer local variable
     (erase-buffer))
   (remove-overlays)
   ;; Create notebook list
-  (widget-insert (format "IPython %s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%)))
+  (widget-insert
+   (if (< (ein:$notebooklist-api-version ein:%notebooklist%) 4)
+       (format "IPython v%s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%))
+     (format "Jupyter v%s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%))))
   (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
     (dolist (p breadcrumbs)
       (lexical-let ((name (car p))

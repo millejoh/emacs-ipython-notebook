@@ -28,6 +28,7 @@
 
 (defvar ein:src--cell nil)
 (defvar ein:src--ws nil)
+(defvar ein:src--point nil)
 (defvar ein:src--allow-write-back t)
 
 (defvar ein:edit-cell-mode-map
@@ -36,6 +37,7 @@
     (define-key map "\C-c\C-k" 'ein:edit-cell-abort)
     (define-key map "\C-c\C-c" 'ein:edit-cell-save-and-execute)
     (define-key map "\C-x\C-s" 'ein:edit-cell-save)
+    (define-key map "\C-c\C-x" 'ein:edit-cell-view-traceback)
     map))
 
 (define-minor-mode ein:edit-cell-mode
@@ -86,6 +88,14 @@ or abort with \\[ein:edit-cell-abort]"))
           (setq write-contents-functions '(ein:edit-cell-save)))
       (setq buffer-read-only t))))
 
+(defun ein:edit-cell-view-traceback ()
+  "Jump to traceback, if there is one, for current edit."
+  (interactive)
+  (save-excursion
+    (switch-to-buffer (ein:worksheet-buffer ein:src--ws))
+    (goto-char ein:src--point)
+    (ein:tb-show)))
+
 (defun ein:edit-cell-save-and-execute ()
   "Save, then execute the countents of the EIN source edit buffer
 and place results (if any) in output of original notebook cell."
@@ -116,6 +126,7 @@ original notebook cell, unless being called via
       (ein:edit-cell-save))
     (kill-buffer edit-buffer)
     (switch-to-buffer-other-window (ein:worksheet-buffer ws))
+    (goto-char ein:src--point)
     ;; FIXME: put point at an appropriate location as org does?
     ))
 
@@ -145,6 +156,7 @@ appropriate language major mode. Functionality is very similar to
          (type (slot-value cell 'cell-type))
          (name (ein:construct-cell-edit-buffer-name (buffer-name) type))
          (buffer (generate-new-buffer-name name)))
+    (set (make-local-variable 'ein:src--point) (point))
     (switch-to-buffer-other-window buffer)
     (insert contents)
     (remove-text-properties (point-min) (point-max)

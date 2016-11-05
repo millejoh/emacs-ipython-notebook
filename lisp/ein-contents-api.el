@@ -295,7 +295,7 @@ global setting.  For global setting and more information, see
     (ein:content-save-legacy content callback cbargs)))
 
 (defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
-  (ein:log 'verbose "Saving content successful with status %s" status)
+  ;;(ein:log 'verbose "Saving content successful with status %s" status)
   (when callback
     (apply callback cbargs)))
 
