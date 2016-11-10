@@ -141,7 +141,7 @@ jupyter kernels.
          (let* ((url-or-port (ein:org-babel-clean-url (car (split-string session "/"))))
                 (path (ein:join-str "/" (rest (split-string session "/")))))
            (values url-or-port path)))
-        (t (values (ein:org-babel-clean session) nil))))
+        (t (values (ein:org-babel-clean-url session) nil))))
 
 (defcustom ein:org-babel-default-session-name "ein_babel_session.ipynb"
   "Default name for org babel sessions running ein environments.
