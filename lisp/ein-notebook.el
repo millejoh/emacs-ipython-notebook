@@ -336,9 +336,9 @@ will be updated with kernel's cwd."
                                     (ein:$notebook-notebook-path notebook)))
 
 (defun ein:notebook-url-from-url-and-id (url-or-port api-version path)
-  (cond ((= 2 api-version)
+  (cond ((= api-version 2)
          (ein:url url-or-port "api/notebooks" path))
-        ((>= 3 api-version)
+        ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
 (defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
@@ -915,6 +915,22 @@ NAME is any non-empty string that does not contain '/' or '\\'."
         (old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
     (ein:content-rename content path #'ein:notebook-rename-success (list ein:%notebook% content))))
+
+(defun ein:notebook-save-to-command (path)
+  "Make a copy of the notebook and save it to a new path specified by NAME.
+NAME is any non-empty string that does not contain '/' or '\\'.
+"
+  (interactive
+   (list (read-string "Save copy to: " (ein:$notebook-notebook-path ein:%notebook%))))
+  (unless (and (string-match ".ipynb" path) (= (match-end 0) (length path)))
+    (setq path (format "%s.ipynb" path)))
+  (let* ((content (ein:content-from-notebook ein:%notebook%))
+         (name (substring path (or (cl-position ?/ path :from-end t) 0))))
+    (setf (ein:$content-path content) path
+          (ein:$content-name content) name)
+    (ein:content-save content #'ein:notebook-open
+                      (list (ein:$notebook-url-or-port ein:%notebook%)
+                            path))))
 
 ;; (defun* ein:notebook-rename-error (old new notebook &key symbol-status response
 ;;                                        error-thrown
