@@ -40,6 +40,16 @@ def _find_edit_target_013(*args, **kwds):
     inst = InteractiveShell.instance()
     return CodeMagics._find_edit_target(inst, *args, **kwds)
 
+def _find_edit_target_python(name):
+    from inspect import getsourcefile, getsourcelines
+    obj = eval(name)
+    sfile = getsourcefile(obj)
+    sline = getsourcelines(obj)[-1]
+    if sfile and sline:
+        return(sfile, sline, False)
+    else:
+        return False
+
 try:
     from IPython.core.magics import CodeMagics
     _find_edit_target = _find_edit_target_013
@@ -50,7 +60,7 @@ except ImportError:
 def find_source(name):
     """Given an object as string, `name`, print its place in source code."""
     # FIXME: use JSON display object instead of stdout
-    ret = _find_edit_target(name, {}, [])
+    ret =  _find_edit_target_python(name) or _find_edit_target(name, {}, [])
     if ret:
         (filename, lineno, use_temp) = ret
         if not use_temp:

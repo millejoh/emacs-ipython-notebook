@@ -87,7 +87,9 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
      "NotebookStatus"
      :s2m
      '((notebook_saving.Notebook       . "Saving Notebook...")
+       (notebook_create_checkpoint.Notebook . "Creating Checkpoint...")
        (notebook_saved.Notebook        . "Notebook is saved")
+       (notebook_checkpoint_created.Notebook . "Checkpoint created.")
        (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
     :type ein:notification-status)
    (kernel
@@ -121,6 +123,13 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                                    st   ; = event-type
                                    #'ein:notification--callback
                                    (cons ns st))))
+  (ein:events-on events
+                 'notebook_checkpoint_created.Notebook
+                 #'ein:notification--fadeout-callback
+                 (list (oref notification :notebook)
+                       "Checkpoint created."
+                       'notebook_checkpoint_created.Notebook
+                       nil))
   (ein:events-on events
                  'notebook_saved.Notebook
                  #'ein:notification--fadeout-callback
@@ -252,7 +261,9 @@ insert-prev insert-next move-prev move-next)"
                    'help-echo "Click (mouse-1) to insert a new tab."
                    'mouse-face 'highlight
                    'face 'ein:notification-tab-normal)
-       (propertize (format "|%s|" (ein:$kernelspec-name (ein:$notebook-kernelspec ein:%notebook%)))
+       (propertize (ein:aif (ein:$notebook-kernelspec ein:%notebook%)
+                       (format "|%s|" (ein:$kernelspec-name it))
+                     "|not connected|")
                    'keymap ein:header-line-switch-kernel-map
                    'help-echo "Click (mouse-1) to change the running kernel."
                    'mouse-face 'highlight
