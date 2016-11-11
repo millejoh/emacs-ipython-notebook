@@ -112,10 +112,16 @@ and place results (if any) in output of original notebook cell."
 cell."
   (interactive)
   (set-buffer-modified-p nil)
-  (let ((edited-code (buffer-string)))
+  (let* ((edited-code (buffer-string))
+         (overlay ein:src--overlay)
+         (read-only (overlay-get overlay 'modification-hooks)))
+    (overlay-put overlay 'modification-hooks nil)
+    (overlay-put overlay 'insert-in-front-hooks nil)
+    (overlay-put overlay 'insert-behind-hooks nil)
     (setf (slot-value ein:src--cell 'input) edited-code)
-    (ewoc-invalidate (oref ein:src--cell :ewoc)
-                     (ein:cell-element-get cell :input))))
+    (overlay-put overlay 'modification-hooks read-only)
+    (overlay-put overlay 'insert-in-front-hooks read-only)
+    (overlay-put overlay 'insert-behind-hooks read-only)))
 
 
 (defun ein:edit-cell-exit ()
@@ -126,9 +132,11 @@ original notebook cell, unless being called via
   (let ((edit-buffer (current-buffer))
         (ws ein:src--ws)
         (cell ein:src--cell))
+    (ein:remove-overlay)
     (when ein:src--allow-write-back
       (ein:edit-cell-save))
-    (ein:remove-overlay)
+    (ewoc-invalidate (oref ein:src--cell :ewoc)
+                     (ein:cell-element-get cell :input))
     (kill-buffer edit-buffer)
     (switch-to-buffer-other-window (ein:worksheet--get-buffer ws))
     (ein:cell-goto cell)))
@@ -168,10 +176,10 @@ END."
 		   (define-key map [mouse-1] 'ein:edit-src-continue)
 		   map))
     (let ((read-only
-	   (list
-	    (lambda (&rest _)
-	      (user-error
-	       "Cannot modify an area being edited in a dedicated buffer")))))
+           (list
+            (lambda (&rest _)
+              (user-error
+               "Cannot modify an area being edited in a dedicated buffer")))))
       (overlay-put overlay 'modification-hooks read-only)
       (overlay-put overlay 'insert-in-front-hooks read-only)
       (overlay-put overlay 'insert-behind-hooks read-only))
