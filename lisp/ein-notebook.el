@@ -1481,6 +1481,7 @@ This hook is run regardless the actual major mode used."
       ("File"
        ,@(ein:generate-menu
           '(("Save notebook" ein:notebook-save-notebook-command)
+            ("Copy and rename notebook" ein:notebook-save-to-command)
             ("Rename notebook" ein:notebook-rename-command)
             ("Close notebook without saving"
              ein:notebook-close)
@@ -1506,7 +1507,8 @@ This hook is run regardless the actual major mode used."
             )))
       ("Cell/Code"
        ,@(ein:generate-menu
-          '(("Execute cell" ein:worksheet-execute-cell
+          '(("Edit cell contents in dedicated buffer" ein:edit-cell-contents)
+            ("Execute cell" ein:worksheet-execute-cell
              :active (ein:worksheet-at-codecell-p))
             ("Execute cell and go to next"
              ein:worksheet-execute-cell-and-goto-next

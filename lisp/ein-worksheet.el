@@ -358,7 +358,7 @@ buffer or there is no cell in the current buffer, return `nil'."
     (if (funcall cell-p cell)
         cell
       (unless noerror
-        (error "No cell found at pos=%s" pos)))))
+        (error "No cell of type %s found at current position." cell-p)))))
 
 (defun ein:worksheet-at-codecell-p ()
   (ein:worksheet-get-current-cell :noerror t :cell-p #'ein:codecell-p))
