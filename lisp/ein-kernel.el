@@ -706,9 +706,8 @@ Example::
                         (msg (ein:kernel--get-msg kernel "input_reply" content)))
                    (ein:websocket-send-stdin-channel kernel msg)
                    (setf (ein:$kernel-stdin-activep kernel) nil))
-               (cond ((or (string-match "ipdb>" (plist-get content :prompt))
-                          (string-match "(Pdb)" (plist-get content :prompt)))
-                      (ein:run-ipdb-session kernel (plist-get content :prompt))))))))))
+               (cond ((string-match "ipdb>" (plist-get content :prompt)) (ein:run-ipdb-session kernel "ipdb> "))
+                     ((string-match "(Pdb)" (plist-get content :prompt)) (ein:run-ipdb-session kernel "(Pdb) ")))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
