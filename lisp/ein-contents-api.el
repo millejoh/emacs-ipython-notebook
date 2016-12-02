@@ -259,9 +259,9 @@ global setting.  For global setting and more information, see
                           (cons c
                                 (ein:make-content-hierarchy (ein:$content-path c) url-or-port)))
                          (t (progn 
-			      (setf (ein:$content-session-p c)
-				    (gethash (ein:$content-path c) active-sessions))
-			      c)))))))
+                              (setf (ein:$content-session-p c)
+                                    (gethash (ein:$content-path c) active-sessions))
+                              c)))))))
 
 (defun ein:refresh-content-hierarchy (&optional url-or-port)
   (let ((url-or-port (or url-or-port (ein:default-url-or-port))))
