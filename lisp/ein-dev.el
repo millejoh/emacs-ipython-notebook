@@ -326,7 +326,7 @@ Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
       (while t
         (forward-sexp)
         ;; Prettify nested s-exp.
-        (when (looking-back ")")
+        (when (looking-back ")" (1- (point)))
           (save-excursion
             (backward-sexp)
             (ein:dev--prettify-sexp)))
