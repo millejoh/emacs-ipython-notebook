@@ -168,7 +168,7 @@ Current buffer for these functions is set to the notebook buffer.")
 (defvar ein:base-kernel-url "/api/")
 (defvar ein:create-session-url "/api/sessions")
 ;; Currently there is no way to know this setting.  Maybe I should ask IPython
-;; developers for an API to get this from notebook server.  
+;; developers for an API to get this from notebook server.
 ;;
 ;; 10April2014 (JMM) - The most recent documentation for the RESTful interface
 ;; is at:
@@ -835,6 +835,7 @@ This is equivalent to do ``C-c`` in the console program."
       (ein:notebook-save-notebook notebook retry callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
+  (run-hooks 'before-save-hook)
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
@@ -1610,6 +1611,7 @@ This hook is run regardless the actual major mode used."
   (ein:aif ein:anything-kernel-history-search-key
       (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
   (ein:notebook-minor-mode +1)
+  (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
   (run-hooks 'ein:notebook-mode-hook))
 
 (add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
