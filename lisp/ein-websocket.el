@@ -54,17 +54,18 @@
   onopen-args
   closed-by-client)
 
-;; This seems redundant, but websocket does not seem to work otherwise.
+;; This seems redundant, but websocket does not work otherwise.
 (defun ein:websocket--prepare-cookies (url)
   (let* ((parsed-url (url-generic-parse-url url))
          (host-port (if (url-port-if-non-default parsed-url)
                         (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
                       (url-host parsed-url)))
          (securep (string-match "^wss://" url))
+         (http-only-cookies (request-cookie-alist (concat "#HttpOnly_" (url-host (url-generic-parse-url url))) "/" securep)) ;; Current version of Jupyter store cookies as HttpOnly)
          (cookies (request-cookie-alist (url-host (url-generic-parse-url url)) "/" securep)))
-    (when cookies
+    (when (or cookies http-only-cookies)
       (ein:log 'debug "Storing cookies in prep for opening websocket (%s)" cookies)
-      (dolist (c cookies)
+      (dolist (c (append cookies http-only-cookies))
         (url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)) securep)))))
 
 
