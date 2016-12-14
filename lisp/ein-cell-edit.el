@@ -151,8 +151,10 @@ previous value."
   (concat "*EIN Src " bufname "[ " cell-type " ]*" ))
 
 (defun ein:get-mode-for-kernel (kernelspec)
-  (cond ((string-match-p "python" (ein:get-kernelspec-language kernelspec)) 'python)
-        (t 'python)))
+  (if (null kernelspec)
+      'python ;; FIXME
+    (cond ((string-match-p "python" (ein:get-kernelspec-language kernelspec)) 'python)
+          (t 'python))))
 
 (defun ein:edit-src-continue (e)
   (interactive "e")

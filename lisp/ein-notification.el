@@ -263,7 +263,7 @@ insert-prev insert-next move-prev move-next)"
                    'face 'ein:notification-tab-normal)
        (propertize (ein:aif (ein:$notebook-kernelspec ein:%notebook%)
                        (format "|%s|" (ein:$kernelspec-name it))
-                     "|not connected|")
+                     "|unknown: please click and select a kernel|")
                    'keymap ein:header-line-switch-kernel-map
                    'help-echo "Click (mouse-1) to change the running kernel."
                    'mouse-face 'highlight
