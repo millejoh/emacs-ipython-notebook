@@ -29,6 +29,7 @@
 (require 'websocket)
 (require 'ein-core)
 (require 'url-cookie)
+(require 'request)
 
 (defstruct ein:$websocket
   "A wrapper object of `websocket'.
@@ -53,6 +54,37 @@
   onopen
   onopen-args
   closed-by-client)
+
+;; Fix issues reading cookies in request when using curl backend
+(defun fix-request-netscape-cookie-parse (next-method)
+  "Parse Netscape/Mozilla cookie format."
+  (goto-char (point-min))
+  (let ((tsv-re (concat "^\\="
+                        (cl-loop repeat 6 concat "\\([^\t\n]+\\)\t")
+                        "\\(.*\\)"))
+        cookies)
+    (forward-line 3) ;; Skip header (first three lines)
+    (while
+        (and
+         (cond
+          ((re-search-forward "^\\=$" nil t))
+          ((re-search-forward tsv-re)
+           (push (cl-loop for i from 1 to 7 collect (match-string i))
+                 cookies)
+           t))
+         (= (forward-line 1) 0)
+         (not (= (point) (point-max)))))
+    (setq cookies (nreverse cookies))
+    (cl-loop for (domain flag path secure expiration name value) in cookies
+             collect (list domain
+                           (equal flag "TRUE")
+                           path
+                           (equal secure "TRUE")
+                           (string-to-number expiration)
+                           name
+                           value))))
+
+(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
 
 ;; This seems redundant, but websocket does not work otherwise.
 (defun ein:websocket--prepare-cookies (url)
