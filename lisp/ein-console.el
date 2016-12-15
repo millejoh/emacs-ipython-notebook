@@ -83,7 +83,7 @@ function
                               url-or-port))))
   :group 'ein)
 
-(defcustom ein:console-executable (executable-find "ipython")
+(defcustom ein:console-executable (executable-find "jupyter")
   "IPython executable used for console.
 
 Example: ``\"/user/bin/ipython\"``.
@@ -101,7 +101,7 @@ Types same as `ein:console-security-dir' are valid."
                     (lambda (url-or-port) (executable-find "ipython"))))
   :group 'ein)
 
-(defcustom ein:console-args '("--profile" "nbserver")
+(defcustom ein:console-args '()
   "Additional argument when using console.
 
 .. warning:: Space-separated string is obsolete now.  Use a list

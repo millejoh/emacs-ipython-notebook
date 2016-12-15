@@ -32,14 +32,16 @@
 
 (defstruct ein:$ipdb-session
   buffer
+  notebook-buffer
   kernel
   current-payload)
 
-(defun ein:find-or-create-ipdb-session (kernel)
+(defun ein:find-or-create-ipdb-session (kernel &optional buffer)
   (ein:aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
       it
     (let ((db-session (make-ein:$ipdb-session
                        :kernel kernel
+                       :notebook-buffer buffer
                        :current-payload "Debugger started.")))
       (setf (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*) db-session)
       db-session)))
@@ -49,7 +51,7 @@
 
 (defun ein:run-ipdb-session (kernel prompt)
   (unless (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
-    (let ((pdb-session (ein:find-or-create-ipdb-session kernel)))
+    (let ((pdb-session (ein:find-or-create-ipdb-session kernel (current-buffer))))
       (setf (ein:$kernel-stdin-activep kernel) t)
       (ein:prepare-ipdb-session pdb-session prompt))))
 
@@ -120,7 +122,12 @@
                       (progn
                         (delete-region (point) (line-end-position))
                         ;(insert "\n")
-                        (ein:cell-append-text text)))))))))))
+                        (ein:cell-append-text text)))))
+              (when ein:ipdb--received-quit-p
+                (kill-buffer)
+                (ein:aif (ein:$ipdb-session-notebook-buffer session)
+                    (pop-to-buffer it)))))))))
+
 
 ;;; Now try with comint
 
@@ -132,20 +139,20 @@
            (kernel (ein:$ipdb-session-kernel session))
            (content (list :value input))
            (msg (ein:kernel--get-msg kernel "input_reply" content)))
-      (if (or (string= input "q")
-              (string= input "quit"))
-          (kill-this-buffer)
-        (progn
-          (comint-output-filter proc (format "#ipdb#\n"))
-          (ein:websocket-send-stdin-channel kernel msg)
-          (comint-output-filter proc ein:ipdb-buffer-prompt))))))
+      (comint-output-filter proc (format "#ipdb#\n"))
+      (ein:websocket-send-stdin-channel kernel msg)
+      (comint-output-filter proc ein:ipdb-buffer-prompt)
+      (when (or (string= input "q")
+                (string= input "quit"))
+        (setq ein:ipdb--received-quit-p t)))))
 
 (defun ein:ipdb-buffer-initialize ()
   "Helper function to initialize a newly minted ein:ipdb buffer."
   (setq comint-use-prompt-regexp t))
 
-(define-derived-mode
-    ein:ipdb-mode comint-mode "EIN:IPDB"
+(defvar ein:ipdb--received-quit-p nil)
+
+(define-derived-mode ein:ipdb-mode comint-mode "EIN:IPDB"
     "Run an EIN debug session.
 
 \\<ein:ipdb-mode-map>"
@@ -153,6 +160,14 @@
     (setq comint-prompt-regexp (concat "^" (regexp-quote ein:ipdb-buffer-prompt)))
     (setq comint-input-sender 'ein:ipdb-input-sender)
     (setq comint-prompt-read-only t)
+    (set (make-local-variable 'comint-output-filter-functions)
+         '(
+           ansi-color-process-output
+           ;;python-shell-comint-watch-for-first-prompt-output-filter
+           ;; python-pdbtrack-comint-output-filter-function
+           ;; python-comint-postoutput-scroll-to-bottom
+           ))
+    (set (make-local-variable 'ein:ipdb--received-quit-p) nil)
 
     (unless (comint-check-proc (current-buffer))
       ;; Was cat, but on non-Unix platforms that might not exist, so
@@ -163,8 +178,7 @@
                (file-error (start-process "ein:ipdb" (current-buffer) "hexl")))))
         (set-process-query-on-exit-flag fake-proc nil)
         (insert "EIN IPython Debugger\n")
-        (set-marker
-         (process-mark fake-proc) (point))
+        (set-marker (process-mark fake-proc) (point))
         (comint-output-filter fake-proc ein:ipdb-buffer-prompt))))
 
 (add-hook 'ein:ipdb-mode-hook 'ein:ipdb-buffer-initialize)
