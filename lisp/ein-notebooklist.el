@@ -515,7 +515,7 @@ Notebook list data is passed via the buffer local variable
 					:value (first kernels)
 					:notify (lambda (widget &rest ignore)
 						  (setq default-kernel
-							(ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
+                    (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
 						  (message "New notebooks will be started using the %s kernel."
 							   (widget-value widget))))))
       (dolist (k kernels)

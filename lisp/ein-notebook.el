@@ -563,7 +563,7 @@ on server url/port."
    :error (apply-partially #'ein:query-kernelspecs-error)))
 
 (defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
-  (let ((ks (list :default  (plist-get data :default)))
+  (let ((ks (list :default (plist-get data :default)))
         (specs (ein:plist-iter (plist-get data :kernelspecs))))
     (setf (gethash url-or-port ein:available-kernelspecs)
           (ein:flatten (dolist (spec specs ks)
