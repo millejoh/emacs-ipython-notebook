@@ -165,8 +165,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
     (if ein:slice-image
         (destructuring-bind (&optional rows cols)
             (when (listp ein:slice-image) ein:slice-image)
-          (insert-sliced-image img nil nil (or rows 20) cols))
-      (insert-image img))))
+          (insert-sliced-image img "." nil (or rows 20) cols))
+      (insert-image img "."))))
 
 
 ;;; Cell classes

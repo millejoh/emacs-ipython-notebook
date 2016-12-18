@@ -113,14 +113,14 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
 
 (defun ein:notebooklist-url (url-or-port version &optional path)
   (let ((base-path (cond ((= version 2) "api/notebooks")
-                         ((= version 3) "api/contents"))))
+                         ((>= version 3) "api/contents"))))
     (if path
         (ein:url url-or-port base-path (or path ""))
       (ein:url url-or-port base-path))))
 
 (defun ein:notebooklist-new-url (url-or-port version &optional path)
   (let ((base-path (cond ((= version 2) "api/notebooks")
-                         ((= version 3) "api/contents"))))
+                         ((>= version 3) "api/contents"))))
     (ein:log 'info "New notebook. Port: %s, Path: %s" url-or-port path)
     (if (and path (not (string= path "")))
         (ein:url url-or-port base-path path)
@@ -515,7 +515,7 @@ Notebook list data is passed via the buffer local variable
 					:value (first kernels)
 					:notify (lambda (widget &rest ignore)
 						  (setq default-kernel
-							(ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
+                    (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
 						  (message "New notebooks will be started using the %s kernel."
 							   (widget-value widget))))))
       (dolist (k kernels)

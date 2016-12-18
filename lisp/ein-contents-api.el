@@ -33,6 +33,11 @@
 (require 'cl)
 (require 'ein-core)
 (require 'ein-utils)
+(require 'ein-log)
+(require 'ein-query)
+
+(provide 'ein-contents-api) ; must provide before requiring ein-notebook:
+(require 'ein-notebook)     ; circular: depends on this file!
 
 (defcustom ein:content-query-timeout (* 60 1000) ; 1 min
   "Query timeout for getting content from Jupyter/IPython notebook.
@@ -181,7 +186,7 @@ global setting.  For global setting and more information, see
       ;; Content API in 2.x a bit inconsistent.
       (progn
         (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
-              (ein:$content-path content) path 
+              (ein:$content-path content) path
               (ein:$content-type content) "directory"
               ;;(ein:$content-created content) (plist-get data :created)
               ;;(ein:$content-last-modified content) (plist-get data :last_modified)
@@ -258,10 +263,10 @@ global setting.  For global setting and more information, see
                    (cond ((string= (ein:$content-type c) "directory")
                           (cons c
                                 (ein:make-content-hierarchy (ein:$content-path c) url-or-port)))
-                         (t (progn 
-			      (setf (ein:$content-session-p c)
-				    (gethash (ein:$content-path c) active-sessions))
-			      c)))))))
+                         (t (progn
+                              (setf (ein:$content-session-p c)
+                                    (gethash (ein:$content-path c) active-sessions))
+                              c)))))))
 
 (defun ein:refresh-content-hierarchy (&optional url-or-port)
   (let ((url-or-port (or url-or-port (ein:default-url-or-port))))
@@ -289,7 +294,7 @@ global setting.  For global setting and more information, see
        :type "PUT"
        :headers '(("Content-Type" . "application/json"))
        :timeout ein:content-query-timeout
-       :data (ein:content-to-json content)
+       :data (encode-coding-string (ein:content-to-json content) buffer-file-coding-system)
        :success (apply-partially #'ein:content-save-success callback cbargs)
        :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs))
     (ein:content-save-legacy content callback cbargs)))
@@ -449,5 +454,3 @@ global setting.  For global setting and more information, see
 
 (defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
   (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
-
-(provide 'ein-contents-api)

@@ -34,15 +34,15 @@ Jupyter.
 .. _Jupyter: http://jupyter.org
 
 
-Check out ob-ipython_!
-======================
+Org-mode Integration
+====================
 
-EIN unfortunately has limited integration_ with org-mode, but if you
-are looking to use the IPython kernel with your org files you should
-check out ob-ipython_ (available on MELPA).
+EIN now integrates_ with org-mode! The code was heavily inspired by ob-ipython_
+which is another project very much worth checking out. Find it on MELPA_.
 
-.. _integration: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _integrates: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython/
+.. _MELPA: http://melpa.org/#/ob-ipython
 
 Screenshot
 ==========
@@ -55,12 +55,12 @@ See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`
 Features
 ========
 
-The Emacs IPython Notebook (EIN) provides a client for IPython v2.x and 3.x
-(i.e. Jupyter) notebooks and an integrated REPL (like SLIME_) in Emacs.  EIN
-makes notebook editing very powerful by allowing you to use any Emacs features,
-it also expose IPython features such as code evaluation, object inspection and
-code completion to the Emacs side.  These features can be accessed anywhere in
-Emacs and improve Python code editing and reading in Emacs.
+The Emacs IPython Notebook (EIN) provides a client for IPython v2.x and 3.x and
+Jupyter notebooks via an integrated REPL (like SLIME_) in Emacs. EIN makes
+notebook editing very powerful by allowing you to use Emacs features; it also
+expose IPython features such as code evaluation, object inspection and code
+completion to the Emacs side. These features can be accessed anywhere in Emacs
+and improve Python code editing and reading in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
@@ -84,6 +84,8 @@ Other notebook features:
 * Syntax highlighting in each cell types (Python/Markdown)
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
+* Integration with org-mode
+* Support for debugging via %debug
 
 Links:
 
@@ -109,9 +111,10 @@ Links:
 Quick try
 =========
 
-This is a quick and clean way to try EIN separately from your Emacs
-setting.  If you want to try EIN but think preparing all the
-requirements is too much, try this!::
+Install from MELPA_! Seriously, installing from MELPA is the easiest way to
+ensure all of ein's dependencies are correctly installed. `zeroein.el` is from a
+bygone era and does not quite work the way it used to. If you are determined,
+and slightly masochistic, you can attempt the following::
 
    git clone git://github.com/millejoh/emacs-ipython-notebook.git
    cd emacs-ipython-notebook/
