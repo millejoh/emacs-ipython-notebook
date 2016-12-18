@@ -8,10 +8,15 @@ import glob
 import os
 import sys
 import re
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, check_output
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
+
+def cask_load_path():
+    path = check_output(['cask','load-path'])
+
+    return path.decode()
 
 def has_library(emacs, library):
     """
@@ -176,13 +181,17 @@ class TestRunner(BaseRunner):
             command.extend(['-L', path])
         for path in self.load:
             command.extend(['-l', path])
+
         command.extend(['-L', einlispdir(),
-                        '-L', einlibdir('websocket'),
-                        '-L', einlibdir('request'),
-                        '-L', einlibdir('auto-complete'),
-                        '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
+        # command.extend(['-L', einlispdir(),
+        #                 '-L', einlibdir('websocket'),
+        #                 '-L', einlibdir('request'),
+        #                 '-L', einlibdir('auto-complete'),
+        #                 '-L', einlibdir('popup'),
+        #                 '-L', eintestdir(),
+        #                 '-l', eintestdir(self.testfile)])
         return command
 
     @property
@@ -197,7 +206,7 @@ class TestRunner(BaseRunner):
     def show_sys_info(self):
         print(("*" * 50))
         command = self.base_command + [
-            '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
+            '-batch', '-l', 'lisp/ein-dev.el', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
@@ -429,7 +438,10 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
 
 def main():
     import sys
+    import os
     from argparse import ArgumentParser
+
+    os.environ['EMACSLOADPATH'] = cask_load_path()
     parser = ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument('--emacs', '-e', default='emacs',
                         help='Emacs executable.')
@@ -440,7 +452,7 @@ def main():
                         help="load lisp file before tests. "
                         "can be specified multiple times.")
     parser.add_argument('--load-ert', default=False, action='store_true',
-                        help="load ERT from git submodule. "
+                         help="load ERT from git submodule. "
                         "you need to update git submodule manually "
                         "if ert/ directory does not exist yet.")
     parser.add_argument('--no-auto-ert', default=True,
