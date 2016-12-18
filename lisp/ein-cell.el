@@ -736,7 +736,8 @@ PROP is a name of cell element.  Default is `:input'.
 \(fn cell relpos prop)"
   (unless relpos (setq relpos 0))
   (unless prop (setq prop :input))
-  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop))
+  (let ((goal-column nil))
+    (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop)))
   (let ((offset (case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
@@ -751,7 +752,8 @@ PROP is a name of cell element.  Default is `:input'.
 \(fn cell inputline prop)"
   (unless inputline (setq inputline 1))
   (unless prop (setq prop :input))
-  (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop))
+  (let ((goal-column nil))
+    (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop)))
   (let ((offset (case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
@@ -1092,7 +1094,7 @@ prettified text thus be used instead of HTML type."
                               ((and (equal otype "execute_result")
                                     (or (equal prop :text)
                                         (equal prop :html)
-					(equal prop :latex))) 
+					(equal prop :latex)))
                                (ein:log 'debug "Fixing execute_result (%s?)." otype)
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
