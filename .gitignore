@@ -1,6 +1,5 @@
 doc/build/
 env
-log
 .gitmodules
 *.stackdump
 *.elc
