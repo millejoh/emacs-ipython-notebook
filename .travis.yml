@@ -6,7 +6,7 @@ addons:
 matrix:
   fast_finish: true
   allow_failures:
-    - env: EVM_EMACS=snapshot
+    - env: EVM_EMACS=emacs-git-snapshot
 python:
   - "2.7"
   - "3.4"
@@ -17,6 +17,7 @@ before_install:
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
   - evm install $EVM_EMACS --use --skip
   - cask
+  - evm list
 install:
   - pip install jupyter==$JUPYTER
 env:
@@ -24,6 +25,6 @@ env:
   - EVM_EMACS=emacs-25.1-travis IPYCMD=jupyter JUPYTER=1.0.0
   - EVM_EMACS=emacs-git-snapshot-travis IPYCMD=jupyter JUPYTER=1.0.0
 script:
-  - $EVM_EMACS --version
-  - python tools/testein.py --emacs $EVM_EMACS --ipython $IPYCMD
+  - emacs/evm-emacs --version
+  - python tools/testein.py --emacs emacs/evm-emacs --ipython $IPYCMD
  
