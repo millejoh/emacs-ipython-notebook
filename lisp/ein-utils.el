@@ -32,6 +32,12 @@
 
 ;;; Macros and core functions/variables
 
+(defmacro ein:with-undo-disabled (&rest body)
+  "Temporarily disable undo recording while executing `body`
+while maintaining the undo list for the current buffer."
+  `(let ((buffer-undo-list t))
+     ,@body))
+
 (defmacro ein:aif (test-form then-form &rest else-forms)
   "Anaphoric IF.  Adapted from `e2wm:aif'."
   (declare (debug (form form &rest form)))

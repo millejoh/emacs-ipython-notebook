@@ -736,10 +736,9 @@ Example::
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (loop with events = (ein:$kernel-events kernel)
         for p in payload
-        for text = (if (= (ein:$kernel-api-version kernel) 2)
-                       (plist-get p :text)
-                     (plist-get (plist-get p :data)
-                                :text/plain))
+        for text = (or (plist-get p :text)
+                       (plist-get (plist-get p :data)
+                                  :text/plain))
         for source = (plist-get p :source)
         if (member source '("IPython.kernel.zmq.page.page"
                             "IPython.zmq.page.page"
@@ -751,7 +750,8 @@ Example::
         (member
          source
          '("IPython.kernel.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
-           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"))
+           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
+           "set_next_input"))
         do (let ((cb (plist-get callbacks :set_next_input)))
              (when cb (ein:funcall-packed cb text)))))
 
