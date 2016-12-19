@@ -446,6 +446,7 @@ def main():
     from argparse import ArgumentParser
 
     os.environ['EMACSLOADPATH'] = cask_load_path()
+    os.environ['LC_ALL'] = 'en_us.UTF-8'
     parser = ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument('--emacs', '-e', default='emacs',
                         help='Emacs executable.')
