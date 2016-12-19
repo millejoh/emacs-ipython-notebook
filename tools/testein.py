@@ -233,7 +233,7 @@ class TestRunner(BaseRunner):
     def make_process(self):
         print("Start test {0}".format(self.testfile))
         print("Emacs command {0}".format(self.command))
-        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT, shell=True)
+        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
         return self.proc
 
     def report(self):
