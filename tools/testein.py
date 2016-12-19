@@ -232,7 +232,8 @@ class TestRunner(BaseRunner):
 
     def make_process(self):
         print("Start test {0}".format(self.testfile))
-        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
+        print("Emacs command {0}".format(self.command))
+        self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT, shell=True)
         return self.proc
 
     def report(self):
@@ -331,6 +332,9 @@ class ServerRunner(BaseRunner):
 
     @staticmethod
     def _parse_port_line(line):
+        if line.find('token'):
+            port = line.rpartition('/')[0]
+
         port = line.strip().rsplit(':', 1)[-1].strip('/')
         return port
 
@@ -375,7 +379,7 @@ class ServerRunner(BaseRunner):
         )
         return self.command_template.format(**fmtdata)
 
-    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
+    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --NotebookApp.token='' --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
 
 
 def kill_subprocesses(pid, include=lambda x: True):
@@ -459,7 +463,7 @@ def main():
                         dest='auto_ert', action='store_false',
                         help="load ERT from git submodule. "
                         "if this Emacs has no build-in ERT module.")
-    parser.add_argument('--no-batch', '-B', default=True,
+    parser.add_argument('--batch', '-B', default=True,
                         dest='batch', action='store_false',
                         help="start interactive session.")
     parser.add_argument('--debug-on-error', '-d', default=False,
