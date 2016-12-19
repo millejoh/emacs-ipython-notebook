@@ -30,6 +30,7 @@
 (require 'ewoc)
 
 (require 'ein-core)
+(require 'ein-utils)
 (require 'ein-cell)
 (require 'ein-kill-ring)
 
@@ -738,7 +739,7 @@ It is set in `ein:notebook-multilang-mode'."
   (ein:aif (if up (ein:cell-prev cell) (ein:cell-next cell))
       (let ((inhibit-read-only t)
             (pivot-cell it))
-        (ein:temporarily-disable-undo
+        (ein:with-undo-disabled
          (ein:cell-save-text cell)
          (ein:worksheet-delete-cell ws cell)
          (funcall (if up
@@ -820,7 +821,7 @@ Do not clear input prompts when the prefix argument is given."
   (ein:kernel-if-ready (slot-value ws 'kernel)
     (push `(apply ein:undo-execute-cell ,ws ,cell ,(ein:cell-copy cell)) buffer-undo-list)
     (ein:log 'debug "buffer-undo-list: %s" (length buffer-undo-list))
-    (ein:temporarily-disable-undo
+    (ein:with-undo-disabled
      (ein:cell-execute cell)
      (oset ws :dirty t))
     (ein:log 'debug "buffer-undo-list: %s" (length buffer-undo-list))
