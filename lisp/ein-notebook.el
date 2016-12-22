@@ -514,6 +514,12 @@ of minor mode."
 `ein:$kernelspec-name' : string
   Name used to identify the kernel (like python2, or python3).
 
+`ein:$kernelspec-display-name' : string
+  Name used to display kernel to user.
+
+`ein:$kernelspec-language' : string
+  Programming language supported by kernel, like 'python'.
+
 `ein:$kernelspec-resources' : plist
   Resources, if any, used by the kernel.
 
@@ -521,6 +527,7 @@ of minor mode."
   How to start the kernel from the command line. Not used by ein (yet).
 "
   name
+  display-name
   resources
   spec
   language)
@@ -546,7 +553,8 @@ of minor mode."
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
         (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-              collecting (ein:$kernelspec-name spec)))))
+              collecting (cons (ein:$kernelspec-name spec)
+                               (ein:$kernelspec-display-name spec))))))
 
 (defun ein:query-kernelspecs (url-or-port)
   "Query jupyter server for the list of available
@@ -570,7 +578,11 @@ on server url/port."
                          (let ((name (car spec))
                                (info (cdr spec)))
                            (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+                                                                  :display-name (plist-get (plist-get info :spec)
+                                                                                           :display_name)
                                                                   :resources (plist-get info :resources)
+                                                                  :language (plist-get (plist-get info :spec)
+                                                                                       :language)
                                                                   :spec (plist-get info :spec)))
                                  ks)))))))
 
@@ -601,12 +613,14 @@ notebook buffer then the user will be prompted to select an opened notebook."
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
+         (kernel-lang (ein:$kernelspec-language (ein:$notebook-kernelspec notebook)))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  base-url
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (ein:pytools-setup-hooks kernel notebook)
+    (when (string-equal kernel-lang "python")
+      (ein:pytools-setup-hooks kernel notebook))
     (ein:kernel-start kernel notebook)))
 
 (defun ein:notebook-restart-kernel (notebook)

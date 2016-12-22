@@ -512,14 +512,16 @@ Notebook list data is passed via the buffer local variable
      "Open In Browser")
     (widget-insert "\n\nCreate New Notebooks Using Kernel: \n")
     (let* ((radio-widget (widget-create 'radio-button-choice
-					:value (first kernels)
-					:notify (lambda (widget &rest ignore)
-						  (setq default-kernel
-                    (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
-						  (message "New notebooks will be started using the %s kernel."
-							   (widget-value widget))))))
+                                        ;; :value (car (first kernels))
+                                        ;; :format (format  "%s\n" (cdr (first kernels)))
+                                        :notify (lambda (widget &rest ignore)
+                                                  (setq default-kernel
+                                                        (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
+                                                  (message "New notebooks will be started using the %s kernel."
+                                                           (widget-value widget))))))
       (dolist (k kernels)
-	(widget-radio-add-item radio-widget (list 'item :value k)))))
+        (widget-radio-add-item radio-widget (list 'item :value (car k)
+                                                  :format (format "%s\n" (cdr k)))))))
   (widget-insert "\n")
   (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%))
         (sessions (make-hash-table :test 'equal)))
