@@ -77,9 +77,9 @@ or abort with \\[ein:edit-cell-abort]"))
   )
 
 (defun ein:cell-configure-edit-buffer ()
-  (when (org-bound-and-true-p org-src--from-org-mode)
-    (org-add-hook 'kill-buffer-hook #'org-src--remove-overlay nil 'local)
-    (if (org-bound-and-true-p org-src--allow-write-back)
+  (when (bound-and-true-p org-src--from-org-mode)
+    (add-hook 'kill-buffer-hook #'org-src--remove-overlay nil 'local)
+    (if (bound-and-true-p org-src--allow-write-back)
         (progn
           (setq buffer-offer-save t)
           (setq buffer-file-name

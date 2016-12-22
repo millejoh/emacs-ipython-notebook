@@ -84,7 +84,7 @@
                            name
                            value))))
 
-(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
+;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
 
 ;; This seems redundant, but websocket does not work otherwise.
 (defun ein:websocket--prepare-cookies (url)
@@ -148,7 +148,9 @@
 
 (defun ein:websocket-send (websocket text)
   ;;  (ein:log 'info "WS: Sent message %s" text)
-  (websocket-send-text (ein:$websocket-ws websocket) text))
+  (condition-case-unless-debug err
+      (websocket-send-text (ein:$websocket-ws websocket) text)
+    (error (message "Error %s on sending websocket message %s." err text))))
 
 
 (defun ein:websocket-close (websocket)

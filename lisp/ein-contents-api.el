@@ -135,24 +135,27 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-query-contents (path &optional url-or-port force-sync callback)
   "Return the contents of the object at the specified path from the Jupyter server."
-  (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
-         (new-content (make-ein:$content
-                       :url-or-port url-or-port
-                       :ipython-version (ein:query-ipython-version url-or-port)
-                       :path path))
-         (url (ein:content-url new-content)))
-    (if (= 2 (ein:$content-ipython-version new-content))
-        (setq new-content (ein:content-query-contents-legacy path url-or-port ein:force-sync callback))
-      (ein:query-singleton-ajax
-       (list 'content-query-contents url-or-port path)
-       url
-       :type "GET"
-       :timeout ein:content-query-timeout
-       :parser #'ein:json-read
-       :sync ein:force-sync
-       :success (apply-partially #'ein:new-content new-content callback)
-       :error (apply-partially #'ein:content-query-contents-error url)))
-    new-content))
+  (condition-case err
+      (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
+             (new-content (make-ein:$content
+                           :url-or-port url-or-port
+                           :ipython-version (ein:query-ipython-version url-or-port)
+                           :path path))
+             (url (ein:content-url new-content)))
+        (if (= 2 (ein:$content-ipython-version new-content))
+            (setq new-content (ein:content-query-contents-legacy path url-or-port ein:force-sync callback))
+          (ein:query-singleton-ajax
+           (list 'content-query-contents url-or-port path)
+           url
+           :type "GET"
+           :timeout ein:content-query-timeout
+           :parser #'ein:json-read
+           :sync ein:force-sync
+           :success (apply-partially #'ein:new-content new-content callback)
+           :error (apply-partially #'ein:content-query-contents-error url)))
+        new-content)
+    (error (progn (message "Error %s on query contents, let's try logging in first..." err)
+                  (call-interactively #'ein:notebooklist-login)))))
 
 (defun ein:content-query-contents-legacy (path &optional url-or-port force-sync callback)
   "Return contents of object at specified path for IPython Notebook versions 2.x"
@@ -237,10 +240,16 @@ global setting.  For global setting and more information, see
 
 
 (defun* ein:content-query-contents-error (url &key symbol-status response &allow-other-keys)
-  (ein:log 'verbose
-    "Error thrown: %S" (request-response-error-thrown response))
-  (ein:log 'error
-    "Content list call %s failed with status %s." url symbol-status))
+  (if (eql symbol-status 'parse-error)
+      (progn
+        (message "Content list call failed, most likely because ein:notebooklist-login needs to be called first.")
+        (sleep-for 1)
+        (call-interactively #'ein:notebooklist-login))
+    (progn
+      (ein:log 'verbose
+        "Error thrown: %S" (request-response-error-thrown response))
+      (ein:log 'error
+        "Content list call %s failed with status %s." url symbol-status))))
 
 
 ;;; Managing/listing the content hierarchy

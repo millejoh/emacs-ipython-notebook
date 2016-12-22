@@ -887,7 +887,7 @@ to decrement index to less than or equal to 1."
               (+ ein:worksheet--history-index inc))
         (when (< ein:worksheet--history-index 1)
           (setq ein:worksheet--history-index 1)
-          (error "This is the latest input"))
+          (warn "This is the latest input"))
         ein:worksheet--history-index)
     (setq ein:worksheet--history-index 1)))
 
