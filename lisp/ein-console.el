@@ -197,6 +197,12 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 .. _python.el: https://github.com/fgallina/python.el"
   (interactive)
+  ;; FIXME: Workaround for running current version of Jupyter console on windows
+  (when (eql system-type 'windows-nt)
+    (if (string-match-p "jupyter" (ein:console-executable-get (or (ein:get-url-or-port)
+                                                                  (error "Cannot find notebook to connect!"))))
+        (setenv "JUPYTER_CONSOLE_TEST" "1")
+      (setenv "IPY_TEST_SIMPLE_PROMPT" "1")))
   (if (fboundp 'python-shell-switch-to-shell)
       (let ((cmd (mapconcat #'shell-quote-argument
                             (ein:console-make-command) " "))
@@ -209,8 +215,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
         ;; But as `run-python' changed the call signature in the new
         ;; version, let's do this manually.
         ;; See also: https://github.com/tkf/emacs-ipython-notebook/pull/50
-	(run-python cmd)
-        ;(python-shell-make-comint cmd (python-shell-get-process-name t))
+        (run-python cmd)
+                                        ;(python-shell-make-comint cmd (python-shell-get-process-name t))
         ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
     (let* ((command (ein:console-make-command))
