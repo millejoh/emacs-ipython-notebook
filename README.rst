@@ -31,7 +31,6 @@ Jupyter.
    :alt: MELPA stable version
 .. _2.x: http://ipython.org/ipython-doc/2/index.html
 .. _3.x: http://ipython.org/ipython-doc/3/index.html
-.. _Jupyter: http://jupyter.org
 
 
 Org-mode Integration
@@ -42,7 +41,6 @@ which is another project very much worth checking out. Find it on MELPA_.
 
 .. _integrates: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython/
-.. _MELPA: http://melpa.org/#/ob-ipython
 
 Screenshots
 ===========
@@ -216,7 +214,7 @@ Enable `smartrep.el`_::
 
 
 Keybindings - Notebook
--------------------
+----------------------
 
 .. (ein:dev-insert-mode-map "\\{ein:notebook-mode-map}")
 
