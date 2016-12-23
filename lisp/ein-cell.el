@@ -1251,10 +1251,12 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                           -metadata-not-used-)
+  ;; Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output
   (ein:cell-clear-output cell
-                         (plist-get content :stdout)
-                         (plist-get content :stderr)
-                         (plist-get content :other))
+                         t ;;(plist-get content :stdout)
+                         t ;;(plist-get content :stderr)
+                         t ;;(plist-get content :other)
+                         )
   (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Worksheet cell))
 
 

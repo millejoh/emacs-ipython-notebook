@@ -613,13 +613,13 @@ notebook buffer then the user will be prompted to select an opened notebook."
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
-         (kernel-lang (ein:$kernelspec-language (ein:$notebook-kernelspec notebook)))
+         (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  base-url
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (when (string-equal kernel-lang "python")
+    (when (and kernelspec (string-equal (ein:$kernelspec-language kernelspec) "python"))
       (ein:pytools-setup-hooks kernel notebook))
     (ein:kernel-start kernel notebook)))
 
