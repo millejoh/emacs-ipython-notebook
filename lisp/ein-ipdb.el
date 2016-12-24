@@ -114,15 +114,10 @@
                  (text (plist-get content :text)))
             (with-current-buffer buf
               (setf (ein:$ipdb-session-current-payload session) text)
-              (let ((buffer-read-only nil))
-                (save-excursion
-                  (if (re-search-backward
-                       (concat "#ipdb#")
-                       nil t)
-                      (progn
-                        (delete-region (point) (line-end-position))
-                        ;(insert "\n")
-                        (ein:cell-append-text text)))))
+              (let ((buffer-read-only nil)
+                    (proc (get-buffer-process buf)))
+                (comint-output-filter proc text)
+                (comint-output-filter proc ein:ipdb-buffer-prompt))
               (when ein:ipdb--received-quit-p
                 (kill-buffer)
                 (ein:aif (ein:$ipdb-session-notebook-buffer session)
@@ -139,9 +134,7 @@
            (kernel (ein:$ipdb-session-kernel session))
            (content (list :value input))
            (msg (ein:kernel--get-msg kernel "input_reply" content)))
-      (comint-output-filter proc (format "#ipdb#\n"))
       (ein:websocket-send-stdin-channel kernel msg)
-      (comint-output-filter proc ein:ipdb-buffer-prompt)
       (when (or (string= input "q")
                 (string= input "quit"))
         (setq ein:ipdb--received-quit-p t)))))
@@ -161,12 +154,8 @@
     (setq comint-input-sender 'ein:ipdb-input-sender)
     (setq comint-prompt-read-only t)
     (set (make-local-variable 'comint-output-filter-functions)
-         '(
-           ansi-color-process-output
-           ;;python-shell-comint-watch-for-first-prompt-output-filter
-           ;; python-pdbtrack-comint-output-filter-function
-           ;; python-comint-postoutput-scroll-to-bottom
-           ))
+         '(ansi-color-process-output
+           python-pdbtrack-comint-output-filter-function))
     (set (make-local-variable 'ein:ipdb--received-quit-p) nil)
 
     (unless (comint-check-proc (current-buffer))
@@ -177,7 +166,7 @@
                  (start-process "ein:ipdb" (current-buffer) "cat")
                (file-error (start-process "ein:ipdb" (current-buffer) "hexl")))))
         (set-process-query-on-exit-flag fake-proc nil)
-        (insert "EIN IPython Debugger\n")
+        (insert "=== EIN IPython Debugger ===\n")
         (set-marker (process-mark fake-proc) (point))
         (comint-output-filter fake-proc ein:ipdb-buffer-prompt))))
 
