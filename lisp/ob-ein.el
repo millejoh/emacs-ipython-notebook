@@ -90,6 +90,13 @@
 ;; - value means that the value of the last statement in the
 ;;   source code block will be returned
 ;;
+
+(defcustom ein:org-execute-timeout 30
+  "Query timeout, in seconds, for executing ein source blocks in
+  org files."
+  :type 'number
+  :group 'ein)
+
 (defun org-babel-execute:ein (body params)
   "Execute a block of python code with org-babel by way of
 emacs-ipython-notebook's facilities for communicating with
@@ -109,8 +116,8 @@ jupyter kernels.
     (ein:shared-output-eval-string full-body nil nil session-kernel)
     (let ((cell (ein:shared-output-get-cell)))
       (ein:wait-until #'(lambda ()
-                          (not (null (slot-value cell 'outputs))))
-                      nil nil)
+                          (null (slot-value cell 'running)))
+                      nil ein:org-execute-timeout)
       (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params))))
 
 ;; This function should be used to assign any variables in params in

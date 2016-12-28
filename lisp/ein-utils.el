@@ -524,13 +524,13 @@ NOTE: This function creates new list."
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
 
-(defun ein:wait-until (predicate &optional predargs max-count)
+(defun ein:wait-until (predicate &optional predargs timeout-seconds)
   "Wait until PREDICATE function returns non-`nil'.
 PREDARGS is argument list for the PREDICATE function.
-Make MAX-COUNT larger \(default 50) to wait longer before timeout."
+Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
   (ein:log 'debug "WAIT-UNTIL start")
-  (unless max-count (setq max-count 50))
-  (unless (loop repeat max-count
+  (unless timeout-seconds (setq timeout-seconds 5))
+  (unless (loop repeat (/ timeout-seconds 0.05)
                 when (apply predicate predargs)
                 return t
                 ;; borrowed from `deferred:sync!':
