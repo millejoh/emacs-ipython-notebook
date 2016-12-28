@@ -732,6 +732,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
 
 ;;; Login
 
+;;;###autoload
 (defun ein:notebooklist-login (url-or-port password)
   "Login to IPython notebook server."
   (interactive (list (ein:notebooklist-ask-url-or-port)
