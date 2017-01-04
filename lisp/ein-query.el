@@ -73,6 +73,13 @@ will be canceled \(see also `ein:query-singleton-ajax').
 
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
 
+(defun ein:query-prepare-header (url settings &optional securep)
+  (let ((cookies (request-cookie-alist (url-host (url-generic-parse-url url))
+                                       "/" securep)))
+    (ein:aif (assoc-string "_xsrf" cookies)
+        (plist-put settings :headers (list (cons "X-XSRFTOKEN" (cdr it))))
+      settings)))
+
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
                                       (timeout ein:query-timeout)
@@ -87,7 +94,8 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           (request-abort it)))            ; This will run callbacks
-    (let ((response (apply #'request (url-encode-url url) settings)))
+    (let ((response (apply #'request (url-encode-url url)
+                           (ein:query-prepare-header url settings))))
       (puthash key response ein:query-running-process-table)
       response)))
 
