@@ -849,7 +849,9 @@ This is equivalent to do ``C-c`` in the console program."
       (ein:notebook-save-notebook notebook retry callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
-  (run-hooks 'before-save-hook)
+  (condition-case err
+      (run-hooks 'before-save-hook)
+    (error (warn "Error running save hooks: '%s'. I will still try to save the notebook." (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)

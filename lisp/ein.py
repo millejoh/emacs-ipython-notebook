@@ -40,15 +40,20 @@ def _find_edit_target_013(*args, **kwds):
     inst = InteractiveShell.instance()
     return CodeMagics._find_edit_target(inst, *args, **kwds)
 
+
 def _find_edit_target_python(name):
     from inspect import getsourcefile, getsourcelines
-    obj = eval(name)
-    sfile = getsourcefile(obj)
-    sline = getsourcelines(obj)[-1]
-    if sfile and sline:
-        return(sfile, sline, False)
-    else:
+    try:
+        obj = eval(name)
+    except NameError:
         return False
+    else:
+        sfile = getsourcefile(obj)
+        sline = getsourcelines(obj)[-1]
+        if sfile and sline:
+            return(sfile, sline, False)
+        else:
+            return False
 
 try:
     from IPython.core.magics import CodeMagics
