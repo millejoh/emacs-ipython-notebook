@@ -202,7 +202,10 @@ global setting.  For global setting and more information, see
         content)
     (ein:new-content content callback :data data)))
 
-(defun* ein:new-content (content callback &key data &allow-other-keys)
+;; TODO: This is one place to check for redirects - update the url slot if so.
+;; Will need to pass the response object and check either request-response-history
+;; or request-response-url.
+(defun* ein:new-content (content callback &key data response &allow-other-keys)
   (setf (ein:$content-name content) (plist-get data :name)
         (ein:$content-path content) (plist-get data :path)
         (ein:$content-type content) (plist-get data :type)
@@ -212,6 +215,12 @@ global setting.  For global setting and more information, see
         (ein:$content-writable content) (plist-get data :writable)
         (ein:$content-mimetype content) (plist-get data :mimetype)
         (ein:$content-raw-content content) (plist-get data :content))
+  (if (length (request-response-history response))
+      (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
+        (setf (ein:$content-url-or-port content) (format "%s://%s:%s"
+                                                         (url-type url)
+                                                         (url-host url)
+                                                         (url-port url)))))
   (when callback
     (funcall callback content))
   content)

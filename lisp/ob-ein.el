@@ -118,7 +118,12 @@ jupyter kernels.
       (ein:wait-until #'(lambda ()
                           (null (slot-value cell 'running)))
                       nil ein:org-execute-timeout)
-      (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params))))
+      (if (and (slot-boundp cell 'traceback)
+               (slot-value cell 'traceback))
+          (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
+                                                        (format "%s\n" s))
+                                                    (slot-value cell 'traceback))))
+        (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params)))))
 
 ;; This function should be used to assign any variables in params in
 ;; the context of the session environment.

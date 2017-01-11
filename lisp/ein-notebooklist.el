@@ -163,7 +163,8 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
              (pop-to-buffer
               (funcall #'ein:notebooklist-url-retrieve-callback content))))))
     (ein:content-query-contents path url-or-port nil success))
-  (ein:notebooklist-get-buffer url-or-port))
+  ;(ein:notebooklist-get-buffer url-or-port)
+  )
 
 (defun* ein:notebooklist-url-retrieve-callback (content)
   "Called via `ein:notebooklist-open'."

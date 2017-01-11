@@ -154,19 +154,20 @@ This is called via `ac-next'/`ac-previous'/`ac-update' and set
 `document' property of the current candidate string.  If server
 replied within `ac-quick-help-delay' seconds, auto-complete will
 popup help string."
-  (let* ((candidate (ac-selected-candidate))
-         (kernel (ein:get-kernel))
-	 (api-version (ein:$kernel-api-version kernel))
-         (callbacks (list (if (< api-version 3)
-			      :object_info_reply
-			    :inspect_request)
-                          (cons #'ein:ac-set-document candidate))))
-    (when (and candidate
-               (ein:kernel-live-p kernel)
-               (not (get-text-property 0 'document candidate)))
-      (ein:log 'debug "Requesting object info for AC candidate %S"
-               candidate)
-      (ein:kernel-object-info-request kernel candidate callbacks))))
+  (ein:aif (ein:get-kernel)
+      (let* ((candidate (ac-selected-candidate))
+             (kernel it)
+             (api-version (ein:$kernel-api-version kernel))
+             (callbacks (list (if (< api-version 3)
+                                  :object_info_reply
+                                :inspect_request)
+                              (cons #'ein:ac-set-document candidate))))
+        (when (and candidate
+                   (ein:kernel-live-p kernel)
+                   (not (get-text-property 0 'document candidate)))
+          (ein:log 'debug "Requesting object info for AC candidate %S"
+                   candidate)
+          (ein:kernel-object-info-request kernel candidate callbacks)))))
 
 (defun ein:ac-set-document (candidate content -metadata-not-used-)
   (ein:log 'debug "EIN:AC-SET-DOCUMENT candidate=%S content=%S"

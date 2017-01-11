@@ -61,6 +61,12 @@ try:
 except ImportError:
     _find_edit_target = _find_edit_target_012
 
+def set_figure_size(*dim):
+    try:
+        from matplotlib.pyplot import rcParams
+        rcParams['figure.figsize'] = dim
+    except:
+        raise RuntimeError("Matplotlib not installed in this instance of python!")
 
 def find_source(name):
     """Given an object as string, `name`, print its place in source code."""
