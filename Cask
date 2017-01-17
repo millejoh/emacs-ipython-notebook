@@ -9,4 +9,5 @@
  (depends-on "websocket")
  (depends-on "request")
  (depends-on "cl-generic")
- (depends-on "ecukes"))
+ (depends-on "ecukes")
+ (depends-on "auto-complete"))

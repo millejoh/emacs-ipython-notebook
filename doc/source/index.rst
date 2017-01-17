@@ -1,13 +1,14 @@
-Welcome to Emacs IPython Notebook's documentation!
-==================================================
+The Emacs IPython Notebook
+==========================
 
 .. el:package:: ein
 
-Emacs IPython Notebook (EIN) provides a IPython Notebook client and integrated
-REPL (like SLIME_) in Emacs.  While EIN makes notebook editing very powerful by
+The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
+integrated REPL (like SLIME_) in Emacs. EIN improves notebook editing by
 allowing you to use Emacs, it also expose IPython features such as code
-evaluation, object inspection and code completion.  These features can be
-accessed anywhere in Emacs and improve Python code editing and reading in Emacs.
+evaluation, object inspection and code completion. These features can be
+accessed anywhere in Emacs and improve Python code editing and reading in
+general in Emacs.
 
 .. _`Emacs IPython Notebook (EIN)`:
   https://github.com/millejoh/emacs-ipython-notebook
@@ -25,6 +26,7 @@ Highlighted features:
   help, help browser and code completion are available in these buffers. [#]_
 * Jump to definition (go to the definition by hitting ``M-.`` over an
   object).
+* Execute code from an org-mode source block in a running kernel.
 
 Other notebook features:
 
@@ -188,6 +190,7 @@ don't use that optional package.
 
    emacs -Q -batch -L .          \  # don't forget the dot!
        -L PATH/TO/websocket/     \
+       -L PATH/TO/requests/      \
        -L PATH/TO/nxhtml/util/   \  # optional (for MuMaMo)
        -L PATH/TO/auto-complete/ \  # optional
        -L PATH/TO/popup/         \  # optional (for auto-complete)
@@ -366,7 +369,7 @@ argument. The format for the session argument is
    sys.version
    #+END_SRC
 
-You can also link to IPython notebook from org-mode_ files.
+You can also link to an IPython notebook from org-mode_ files.
 
 1. Call org-mode function :el:symbol:`org-store-link`
    [#org-store-link]_ in notebook buffer.  You can select a region to
@@ -606,6 +609,24 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.12.1
+-------
+
+* Improved support for undo cell movement, addition and deletion.
+* Compatibility with new security features in jupyter `notebook v4.3.1`.
+* EIN now does a better job following redirects (i.e. 302, 304, 307, etc) when
+  talking to a jupyter notebook server.
+* Correct encoding for notebooks with non-English characters.
+* Improved support for non-python kernels. R at least seems to work, if
+  imperfectly.
+* Yet another attempt to improve travis CI support - we almost have it.
+* Baby steps towards using cask to manage the project.
+* New theme, alabaster, for documentation. Isn't it pretty?
+* Numerous other bug fixes and small improvements.
+
+
+.. _`notebook v4.3.1`: https://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/
 
 v0.12.0
 -------
