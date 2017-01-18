@@ -1525,6 +1525,18 @@ argument. The format for the session argument is
 <span class="o">#+</span><span class="nv">END_SRC</span>
 </pre></div>
 </div>
+<p>If your code block generates an image, like from an matplotlib plot, then specify the file to save the image to using the <cite>:image</cite> argument as in the example below:</p>
+<div class="code python highlight-cl"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session 8888/Untitled.ipynb
+import matplotlib.pyplot as plt
+import numpy as np
+
+%matplotlib inline
+x = np.linspace(0, 1, 100)
+y = np.random.rand(100,1)
+plt.plot(x,y)
+#+END_SRC
+</pre></div>
+</div>
 <p>You can also link to an IPython notebook from <a class="reference external" href="http://orgmode.org/">org-mode</a> files.</p>
 <ol class="arabic simple">
 <li>Call org-mode function <code class="xref el el-symbol docutils literal"><span class="pre">org-store-link</span></code>
