@@ -375,7 +375,7 @@ example below:
 
 .. code:: python
 
-   #BEGIN_SRC ein :session 8888/Untitled.ipynb
+   #BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
    import matplotlib.pyplot as plt
    import numpy as np
 
