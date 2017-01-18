@@ -369,6 +369,22 @@ argument. The format for the session argument is
    sys.version
    #+END_SRC
 
+If your code block generates an image, like from an matplotlib plot, then
+specify the file to save the image to using the `:image` argument as in the
+example below:
+
+.. code:: python
+
+   #BEGIN_SRC ein :session 8888/Untitled.ipynb
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   %matplotlib inline
+   x = np.linspace(0, 1, 100)
+   y = np.random.rand(100,1)
+   plt.plot(x,y)
+   #+END_SRC
+
 You can also link to an IPython notebook from org-mode_ files.
 
 1. Call org-mode function :el:symbol:`org-store-link`
