@@ -137,6 +137,14 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (ein:dev-depatch-backtrace)
   (ein:dev-show-debug-setting))
 
+(defun ein:dev-pop-to-debug-channels ()
+  "Open notebok communication channels websocket log buffer."
+  (interactive)
+  (pop-to-buffer
+   (websocket-get-debug-buffer-create
+    (ein:$websocket-ws (ein:$kernel-channels
+                        (ein:$notebook-kernel ein:%notebook%))))))
+
 (defun ein:dev-pop-to-debug-shell ()
   "Open shell channel websocket log buffer."
   (interactive)
