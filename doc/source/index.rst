@@ -60,7 +60,6 @@ Links:
 .. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
-.. contents::
 
 
 Quick try
@@ -267,7 +266,7 @@ created via `ein:notebook-create-checkpoint`.
 .. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
-.. el.function:: ein:notebook-create-checkpoint
+.. el:function:: ein:notebook-create-checkpoint
 .. el:function:: ein:notebook-restore-to-checkpoint
 .. el:function:: ein:notebook-enable-autosaves
 .. el:function:: ein:notebook-disable-autosaves
@@ -444,9 +443,9 @@ Notebook
 .. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
-.. el.variable:: ein:worksheet-show-slide-data
-.. el.variable:: ein:notebook-autosave-frequency
-.. el.variable:: ein:notebook-create-checkpoint-on-save
+.. el:variable:: ein:worksheet-show-slide-data
+.. el:variable:: ein:notebook-autosave-frequency
+.. el:variable:: ein:notebook-create-checkpoint-on-save
 
 Console
 ^^^^^^^
