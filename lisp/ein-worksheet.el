@@ -200,7 +200,8 @@ this value."
   (oset ws :dirty dirty))
 
 (defun ein:worksheet-toggle-slideshow-view ()
-  "Changes the display of slideshow metadata in the current worksheet."
+  "Changes the display of
+ slideshow metadata in the current worksheet."
   (interactive)
   (let ((ws (ein:worksheet--get-ws-or-error)))
     (setf (ein:worksheet-show-slide-data-p ws)
@@ -224,7 +225,7 @@ this value."
                   cells)
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
-    (setq buffer-undo-list nil)  ; clear undo history
+    ;;(setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
     (ein:worksheet-bind-events ws)
@@ -422,7 +423,7 @@ kill-ring of Emacs (kill-ring for texts)."
     (mapc (lambda (c)
             (ein:cell-save-text c)
             (ein:worksheet-delete-cell ws c)
-            (ein:cell-deactivate c))
+            (ein:cell-deactivate c)
           cells)
     (ein:kill-new cells)
     (when focus
