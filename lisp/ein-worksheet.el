@@ -423,7 +423,7 @@ kill-ring of Emacs (kill-ring for texts)."
     (mapc (lambda (c)
             (ein:cell-save-text c)
             (ein:worksheet-delete-cell ws c)
-            (ein:cell-deactivate c)
+            (ein:cell-deactivate c))
           cells)
     (ein:kill-new cells)
     (when focus
