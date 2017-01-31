@@ -166,6 +166,34 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   ;(ein:notebooklist-get-buffer url-or-port)
   )
 
+(defcustom ein:notebooklist-keepalive-refresh-time 1
+  "When the notebook keepalive is enabled, the frequency, IN
+HOURS, with which to make calls to the jupyter content API to
+refresh the notebook connection."
+  :type 'float
+  :group 'ein)
+
+(defvar ein:notebooklist--keepalive-timer nil)
+
+;;;###autoload
+(defun ein:notebooklist-enable-keepalive (&optional url-or-port)
+  "Enable periodic calls to the notebook server t"
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
+  (let ((success
+         (lambda (content)
+           (ein:log 'info "Refreshing notebooklist connection.")))
+        (refresh-time (* ein:notebooklist-keepalive-refresh-time 60 60)))
+    (setq ein:notebooklist--keepalive-timer
+          (run-at-time 0.1 refresh-time #'ein:content-query-contents "" url-or-port nil success))))
+
+;;;###autoload
+(defun ein:notebooklist-disable-keepalive ()
+  ""
+  (interactive)
+  (cancel-timer ein:notebooklist--keepalive-timer))
+
+
+
 (defun* ein:notebooklist-url-retrieve-callback (content)
   "Called via `ein:notebooklist-open'."
   (let ((url-or-port (ein:$content-url-or-port content))

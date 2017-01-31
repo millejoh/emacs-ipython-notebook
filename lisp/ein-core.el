@@ -130,7 +130,11 @@ the source is in git repository."
 (defvar *running-ipython-version* (make-hash-table))
 
 (defun ein:get-ipython-major-version (vstr)
-  (string-to-number (car (split-string vstr "\\."))))
+  (if vstr
+      (string-to-number (car (split-string vstr "\\.")))
+    (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
+        (throw 'error "Null value passed to ein:get-ipython-major-version.")
+      (ein:log 'warn "Null value passed to ein:get-ipython-major-version."))))
 
 ;; TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
 (defun ein:query-ipython-version (&optional url-or-port force)
