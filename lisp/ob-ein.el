@@ -79,7 +79,7 @@
      (t (plist-get json type)))))
 
 (defun org-babel-ein-process-outputs (outputs params)
-  (let ((file (cdr (assoc :images params))))
+  (let ((file (cdr (assoc :image params))))
     (ein:join-str "\n"
                   (loop for o in outputs
                         collecting (ein:return-mime-type o file)))))
