@@ -514,7 +514,7 @@ Return language name as a string or `nil' when not defined.
 
 
 (defun ein:maybe-show-slideshow-data (cell)
-  (when (ein:worksheet-show-slide-data-p ein:%worksheet%)
+  (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
     (format " - Slide [%s]:" (or (ein:oref-safe cell :slidetype)  " "))))
 
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))

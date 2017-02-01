@@ -127,7 +127,7 @@ the source is in git repository."
       (concat ein:version "." it)
     ein:version))
 
-(defvar *running-ipython-version* (make-hash-table))
+(defvar *running-ipython-version* (make-hash-table :test #'equal))
 
 (defun ein:get-ipython-major-version (vstr)
   (if vstr

@@ -207,8 +207,8 @@ this value."
  slideshow metadata in the current worksheet."
   (interactive)
   (let ((ws (ein:worksheet--get-ws-or-error)))
-    (setf (ein:worksheet-show-slide-data-p ws)
-          (not (ein:worksheet-show-slide-data-p ws)))
+    (setf (ein:worksheet--show-slide-data-p ws)
+          (not (ein:worksheet--show-slide-data-p ws)))
     (ein:worksheet-render ws)))
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
