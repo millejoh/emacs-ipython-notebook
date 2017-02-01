@@ -177,7 +177,12 @@ refresh the notebook connection."
 
 ;;;###autoload
 (defun ein:notebooklist-enable-keepalive (&optional url-or-port)
-  "Enable periodic calls to the notebook server t"
+  "Enable periodic calls to the notebook server to keep long running sessions from expiring.
+By long running we mean sessions to last days, or weeks. The
+frequency of the refresh (which is very similar to a call to
+`ein:notebooklist-open`) is controlled by
+`ein:notebooklist-keepalive-refresh-time`, and is measured in
+terms of hours."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (let ((success
          (lambda (content)
@@ -188,11 +193,9 @@ refresh the notebook connection."
 
 ;;;###autoload
 (defun ein:notebooklist-disable-keepalive ()
-  ""
+  "Disable the notebooklist keepalive calls to the jupyter notebook server."
   (interactive)
   (cancel-timer ein:notebooklist--keepalive-timer))
-
-
 
 (defun* ein:notebooklist-url-retrieve-callback (content)
   "Called via `ein:notebooklist-open'."

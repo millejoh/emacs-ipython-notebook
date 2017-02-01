@@ -87,24 +87,27 @@ this value."
 
 (defclass ein:worksheet ()
   ((nbformat :initarg :nbformat :type integer)
-   (get-notebook-name :initarg :get-notebook-name :type cons)
+   (get-notebook-name :initarg :get-notebook-name :type cons
+                      :accessor ein:worksheet--notebook-name)
    ;; This slot introduces too much complexity so therefore must be
    ;; removed later.  This is here only for backward compatible
    ;; reason.
-   (discard-output-p :initarg :discard-output-p)
+   (discard-output-p :initarg :discard-output-p :accessor ein:worksheet--discard-output-p)
    (saved-cells :initarg :saved-cells :initform nil
+                :accessor ein:worksheet--saved-cells
                 :documentation
                 "Slot to cache cells for worksheet without buffer")
    (dont-save-cells :initarg :dont-save-cells :initform nil :type boolean
+                    :accessor ein:worksheet--dont-save-cells-p
                     :documentation "Don't cache cells when this flag is on.")
-   (ewoc :initarg :ewoc :type ewoc)
-   (kernel :initarg :kernel :type ein:$kernel)
-   (dirty :initarg :dirty :type boolean :initform nil)
-   (metadata :initarg :metadata :initform nil)
+   (ewoc :initarg :ewoc :type ewoc :accessor ein:worksheet--ewoc)
+   (kernel :initarg :kernel :type ein:$kernel :accessor ein:worksheet--kernel)
+   (dirty :initarg :dirty :type boolean :initform nil :accessor ein:worksheet--dirty-p)
+   (metadata :initarg :metadata :initform nil :accessor ein:worksheet--metadata)
    (show-slide-data-p :initarg :show-slide-data-p
                       :initform nil
-                      :accessor ein:worksheet-show-slide-data-p)
-   (events :initarg :events)))
+                      :accessor ein:worksheet--show-slide-data-p)
+   (events :initarg :events :accessor ein:worksheet--events)))
 
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
@@ -153,20 +156,20 @@ this value."
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
-  (ein:funcall-packed (oref ws :get-notebook-name)))
+  (ein:funcall-packed (ein:worksheet--notebook-name ws)))
 
 (defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
-  (ein:kernel-url-or-port (oref ws :kernel)))
+  (ein:kernel-url-or-port (ein:worksheet--kernel ws)))
 
 (defmethod ein:worksheet-name ((ws ein:worksheet))
-  (plist-get (oref ws :metadata) :name))
+  (plist-get (ein:worksheet--metadata ws) :name))
 
 (defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
   "Set worksheet name.
 
 \(fn ws name)"
   (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
-  (oset ws :metadata (plist-put (oref ws :metadata) :name name)))
+  (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
 
 (defmethod ein:worksheet-full-name ((ws ein:worksheet))
   (let ((nb-name (ein:worksheet-notebook-name ws)))
@@ -176,7 +179,7 @@ this value."
 
 (defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
-                 (ewoc (oref ws :ewoc))
+                 (ewoc (ein:worksheet--ewoc ws))
                  (buffer (ewoc-buffer ewoc))
                  ((buffer-live-p buffer)))
     buffer))
@@ -216,8 +219,8 @@ this value."
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
                                    nil t))
-            (cells (oref ws :saved-cells)))
-        (oset ws :ewoc ewoc)
+            (cells (ein:worksheet--saved-cells ws)))
+        (setf (ein:worksheet--ewoc ws) ewoc)
         (if cells
             (mapc (lambda (c)
                     (oset c :ewoc ewoc)
@@ -255,14 +258,14 @@ this value."
   "Convert worksheet WS into JSON ready alist.
 It sets buffer internally so that caller doesn not have to set
 current buffer."
-  (let* ((discard-output-p (oref ws :discard-output-p))
+  (let* ((discard-output-p (ein:worksheet--discard-output-p ws))
          (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
                             (ein:cell-to-json
                              c (ein:funcall-packed discard-output-p c)))
                           (ein:worksheet-get-cells ws)))))
     `((cells . ,(apply #'vector cells))
-      ,@(ein:aand (oref ws :metadata) `((metadata . ,it))))))
+      ,@(ein:aand (ein:worksheet--metadata ws) `((metadata . ,it))))))
 
 (defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
   (let* ((discard-output-p (oref ws :discard-output-p))
@@ -445,7 +448,8 @@ kill-ring of Emacs (kill-ring for texts)."
 (defun ein:worksheet-insert-clone-below (ws cell pivot)
   (let ((clone (ein:cell-copy cell)))
     ;; Cell can be from another buffer, so reset `ewoc'.
-    (oset clone :ewoc (oref ws :ewoc))
+    (setf (ein:worksheet--ewoc clone) (ein:worksheet--ewoc ws))
+    ;(oset clone :ewoc (oref ws :ewoc))
     (ein:worksheet-insert-cell-below ws clone pivot)
     clone))
 
@@ -466,7 +470,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet-maybe-new-cell (ws type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
-  (let ((cell (if (ein:basecell-child-p type-or-cell)
+  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)                    ;(ein:basecell-child-p type-or-cell)
                   type-or-cell
                 (ein:worksheet-cell-from-type ws type-or-cell))))
     ;; When newly created or copied, kernel is not attached or not the

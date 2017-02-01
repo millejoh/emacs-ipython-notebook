@@ -154,8 +154,9 @@ global setting.  For global setting and more information, see
            :success (apply-partially #'ein:new-content new-content callback)
            :error (apply-partially #'ein:content-query-contents-error url)))
         new-content)
-    (error (progn (message "Error %s on query contents, let's try logging in first..." err)
-                  (call-interactively #'ein:notebooklist-login)))))
+    (error (progn (message "Error %s on query contents, try calling `ein:notebooklist-login` first..." err)
+                  (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
+                      (throw 'error err))))))
 
 (defun ein:content-query-contents-legacy (path &optional url-or-port force-sync callback)
   "Return contents of object at specified path for IPython Notebook versions 2.x"
