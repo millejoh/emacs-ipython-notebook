@@ -128,7 +128,6 @@
                (nb (oref traceback :source-notebook))
                (ws (first (ein:$notebook-worksheets nb)))
                (cells (ein:worksheet-get-cells ws))
-               
                (it (find cellnum cells :key #'(lambda (x)
                                                 (if (same-class-p x 'ein:codecell)
                                                     (oref x :input-prompt-number))))))
