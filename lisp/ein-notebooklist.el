@@ -568,8 +568,7 @@ Notebook list data is passed via the buffer local variable
         (widget-radio-add-item radio-widget (list 'item :value (car k)
                                                   :format (format "%s\n" (cdr k)))))))
   (widget-insert "\n")
-  (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-        (sessions (make-hash-table :test 'equal)))
+  (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)

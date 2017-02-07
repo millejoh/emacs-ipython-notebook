@@ -57,7 +57,7 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
-
+(require 'ein-inspector)
 
 ;;; Configuration
 
@@ -1448,6 +1448,7 @@ This hook is run regardless the actual major mode used."
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
+  (define-key map "\C-ci" 'ein:inspect-object)
   (define-key map "\C-c'" 'ein:edit-cell-contents)
   (define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
