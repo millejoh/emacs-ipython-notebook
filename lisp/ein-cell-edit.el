@@ -138,8 +138,6 @@ original notebook cell, unless being called via
     (ein:remove-overlay)
     (when ein:src--allow-write-back
       (ein:edit-cell-save))
-    (ewoc-invalidate (slot-value ein:src--cell 'ewoc)
-                     (ein:cell-element-get cell :input))
     (kill-buffer edit-buffer)
     (switch-to-buffer-other-window (ein:worksheet--get-buffer ws))
     (ein:cell-goto cell)))
