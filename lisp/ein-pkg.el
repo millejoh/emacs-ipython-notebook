@@ -3,4 +3,5 @@
   "Emacs IPython Notebook"
   '((websocket "1.5")
     (request "0.2")
-    (cl-generic "0.2")))
+    (cl-generic "0.2")
+    (dash "2.13.0")))
