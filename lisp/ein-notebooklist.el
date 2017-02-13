@@ -557,6 +557,7 @@ Notebook list data is passed via the buffer local variable
   (widget-insert "\n")
   (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
+    (sit-for 0.2) ;; FIXME: What is the optimum number here?
     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
           for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
           for name = (plist-get note :name)

@@ -42,9 +42,9 @@
     (ein:aif (or (plist-get content :text) (plist-get content :data))
         (let ((oinfo (ein:json-read-from-string it)))
           (if (not (plist-get oinfo :type))
-              (ein:log 'warn "[EIN-INSPECTOR]: %s" (plist-get oinfo :error))
+              (ein:log 'warn "[EIN:INSPECTOR]: %s" (plist-get oinfo :error))
             (ein:render-inspector oinfo)))
-      (ein:log 'warn "[EIN-INSPECTOR]: Could not find inspect data for object at point!"))))
+      (ein:log 'warn "[EIN:INSPECTOR]: Could not find inspect data for object at point!"))))
 
 (defvar ein:inspector-visit-source-map (make-sparse-keymap))
 
@@ -89,5 +89,14 @@
 
 (defun ein:inspector-visit-source ()
   (message "Visit source!"))
+
+(defun ein:inspector-visit-thing ())
+
+(defun ein:inspector-section-toggle (section))
+
+(defun ein:inspector-section-show (section))
+
+(defun ein:inspector-section-hide (section)
+  )
 
 (provide 'ein-inspector)
