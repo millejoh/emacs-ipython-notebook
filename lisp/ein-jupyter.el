@@ -1,6 +1,6 @@
 ;;; ein-jupyter.el --- Manage the jupyter notebook server
 
-;; Copyright (C) 2017- John M. Miller
+;; Copyright (C) 2017 John M. Miller
 
 ;; Authors: John M. Miller <millejoh at mac.com>
 
@@ -39,6 +39,7 @@
         "notebook"
         (format "--notebook-dir=%s" dir)))
 
+;;;###autoload
 (defun ein:jupyter-server-start (server-path server-directory)
   "Start the jupyter notebook server at the given path.
 
@@ -82,6 +83,7 @@ the log of the running jupyter server."
       (sit-for 1.0)
       (ein:notebooklist-open url-or-port))))
 
+;;;###autoload
 (defun ein:jupyter-server-stop ()
   "Stop a running jupyter notebook server.
 
@@ -120,4 +122,4 @@ there is no running server then no action will be taken.
           (token (match-string 2)))
       (list url-or-port token))))
 
-
+(provide 'ein-jupyter)
