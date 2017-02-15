@@ -24,9 +24,10 @@
 ;;; Code:
 
 (defcustom ein:jupyter-server-buffer-name "*ein:jupyter-server*"
-  "The default name of the buffer to run a jupyter notebook
-  server session in."
-  :group 'ein)
+  "The name of the buffer to run a jupyter notebook server
+  session in."
+  :group 'ein
+  :type 'string)
 
 (defvar *ein:jupyter-server-accept-timeout* 60)
 (defvar %ein:jupyter-server-session% nil)
@@ -38,7 +39,20 @@
         "notebook"
         (format "--notebook-dir=%s" dir)))
 
-(defun ein:jupyter-server-start  (server-path server-directory)
+(defun ein:jupyter-server-start (server-path server-directory)
+  "Start the jupyter notebook server at the given path.
+
+This command opens an asynchronous process running the jupyter
+notebook server and then tries to detect the url and token to
+generate automatic calls to `ein:notebooklist-login' and
+`ein:notebooklist-open'.
+
+On executing the command will prompt the user for the path to the
+jupyter executable and the path for the root directory containing
+the notebooks the user wants to access.
+
+The buffer named by `ein:jupyter-server-buffer-name' will contain
+the log of the running jupyter server."
   (interactive (list
                 (read-file-name "Server Command: " default-directory nil nil *ein:last-jupyter-command*)
                 (read-directory-name "Notebook Directory: " *ein:last-jupyter-directory*)))
@@ -65,12 +79,34 @@
   (when (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (ein:notebooklist-login url-or-port token)
-      (sit-for 2.0)
+      (sit-for 1.0)
       (ein:notebooklist-open url-or-port))))
 
 (defun ein:jupyter-server-stop ()
+  "Stop a running jupyter notebook server.
+
+Use this command to stop a running jupyter notebook server. If
+there is no running server then no action will be taken.
+"
   (interactive)
-  (when %ein:jupyter-server-session%
+  (when (and %ein:jupyter-server-session%
+             (y-or-n-p "Kill jupyter server and close all open notebooks?"))
+    (let ((unsaved (ein:notebook-opened-notebooks #'ein:notebook-modified-p))
+          (check-for-saved (make-hash-table :test #'equal)))
+      (when unsaved
+        (loop for nb in unsaved
+              when (y-or-n-p (format "Save notebook %s before stopping the server?" (ein:$notebook-notebook-name nb)))
+              do (progn
+                   (setf (gethash (ein:$notebook-notebook-name nb) check-for-saved) t)
+                   (ein:notebook-save-notebook nb 0
+                                               #'(lambda (name check-hash)
+                                                   (remhash name check-hash))
+                                               (list (ein:$notebook-notebook-name nb) check-for-saved)))))
+      (loop for x upfrom 0 by 1
+            until (or (= (hash-table-count check-for-saved) 0)
+                      (> x 1000000))
+            do (sit-for 0.1)))
+    (mapc #'ein:notebook-close (ein:notebook-opened-notebooks))
     (delete-process %ein:jupyter-server-session%)
     (kill-buffer ein:jupyter-server-buffer-name)
     (setq %ein:jupyter-server-session% nil)
