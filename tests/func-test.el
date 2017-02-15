@@ -42,13 +42,14 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (when path
     (setq notebook-name (format "%s/%s" path notebook-name)))
-  (with-current-buffer (ein:notebooklist-open url-or-port path)
-    (sleep-for 1.0) ;; Because some computers are too fast???
-    (ein:testing-wait-until "ein:notebooklist-open" (lambda () ein:%notebooklist%))
-    (prog1
-        (ignore-errors
-          (ein:notebooklist-open-notebook-by-name notebook-name url-or-port))
-      (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
+  (let ((content (ein:notebooklist-open url-or-port path t)))
+    (sit-for 1.0) ;; Because some computers are too fast???
+    (ein:testing-wait-until "ein:notebooklist-open" (lambda () (ein:$content-url-or-port content)))
+    (with-current-buffer (ein:notebooklist-get-buffer (ein:$content-url-or-port content))
+      (prog1
+          (ignore-errors
+            (ein:notebooklist-open-notebook-by-name notebook-name (ein:$content-url-or-port content)))
+        (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end")))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
   (unless path (setq path ""))
