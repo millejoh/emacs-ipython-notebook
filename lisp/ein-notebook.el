@@ -57,7 +57,7 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
-
+(require 'ein-inspector)
 
 ;;; Configuration
 
@@ -891,7 +891,7 @@ This is equivalent to do ``C-c`` in the console program."
           "Status code (=%s) is not 200 and retry exceeds limit (=%s)."
           response-status ein:notebook-save-retry-max)))))
 
-(defun ein:notebook-save-notebook-success (notebook &rest ignore)
+(defun ein:notebook-save-notebook-success (notebook callback cbargs)
   (ein:log 'verbose "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
   (mapc (lambda (ws)
@@ -901,7 +901,9 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook)
   (when ein:notebook-create-checkpoint-on-save
-    (ein:notebook-create-checkpoint notebook)))
+    (ein:notebook-create-checkpoint notebook))
+  (when callback
+    (apply callback cbargs)))
 
 ;; .. [#] Consider the following case.
 ;;    (1) Open worksheet WS0 and other worksheets.
@@ -1430,6 +1432,7 @@ This hook is run regardless the actual major mode used."
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
+  (define-key map "\C-ci" 'ein:inspect-object)
   (define-key map "\C-c'" 'ein:edit-cell-contents)
   (define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)

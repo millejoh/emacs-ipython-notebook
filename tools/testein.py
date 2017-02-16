@@ -14,7 +14,10 @@ EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 def cask_load_path():
-    path = check_output(['cask','load-path'])
+    try:
+        path = check_output(['cask','load-path'])
+    except WindowsError:
+        path = check_output(['C:/Users/mille/.cask/bin/cask.bat', 'load-path'])
 
     return path.decode()
 
