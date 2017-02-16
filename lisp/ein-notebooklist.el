@@ -173,6 +173,13 @@ refresh the notebook connection."
   :type 'float
   :group 'ein)
 
+(defcustom ein:enable-keepalive nil
+  "When non-nil, will cause EIN to automatically call
+  `ein:notebooklist-enable-keepalive' after any call to
+  `ein:notebooklist-open'."
+  :type 'boolean
+  :group 'ein)
+
 (defvar ein:notebooklist--keepalive-timer nil)
 
 ;;;###autoload
@@ -184,17 +191,20 @@ frequency of the refresh (which is very similar to a call to
 `ein:notebooklist-keepalive-refresh-time`, and is measured in
 terms of hours."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
-  (let ((success
-         (lambda (content)
-           (ein:log 'info "Refreshing notebooklist connection.")))
-        (refresh-time (* ein:notebooklist-keepalive-refresh-time 60 60)))
-    (setq ein:notebooklist--keepalive-timer
-          (run-at-time 0.1 refresh-time #'ein:content-query-contents "" url-or-port nil success))))
+  (unless ein:notebooklist--keepalive-timer
+    (message "Enabling notebooklist keepalive...")
+    (let ((success
+           (lambda (content)
+             (ein:log 'info "Refreshing notebooklist connection.")))
+          (refresh-time (* ein:notebooklist-keepalive-refresh-time 60 60)))
+      (setq ein:notebooklist--keepalive-timer
+            (run-at-time 0.1 refresh-time #'ein:content-query-contents "" url-or-port nil success)))))
 
 ;;;###autoload
 (defun ein:notebooklist-disable-keepalive ()
   "Disable the notebooklist keepalive calls to the jupyter notebook server."
   (interactive)
+  (message "Disabling notebooklist keepalive...")
   (cancel-timer ein:notebooklist--keepalive-timer))
 
 (defun* ein:notebooklist-url-retrieve-callback (content)
@@ -221,6 +231,8 @@ terms of hours."
         (ein:log 'info "Opened notebook list at %s with path %s" url-or-port path)
         (unless already-opened-p
           (run-hooks 'ein:notebooklist-first-open-hook))
+        (when ein:enable-keepalive
+          (ein:notebooklist-enable-keepalive (ein:$content-url-or-port content)))
         (current-buffer)))))
 
 (defun* ein:notebooklist-open-error (url-or-port path
