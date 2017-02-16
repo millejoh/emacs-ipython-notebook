@@ -181,8 +181,9 @@ Usage
 =====
 
 1. Install from MELPA_.
-   Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
-   load path.  See `online documentation`_ for more information.
+   For manual install, put Emacs lisp ``ein*.el`` files and Python file
+   ``ein.py`` in your load path. See `online documentation`_ for more
+   information.
 
 2. Start the `Jupyter notebook server`_.
 
