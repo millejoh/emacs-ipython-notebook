@@ -464,7 +464,7 @@ Login to IPython notebook server.
 
 \(fn URL-OR-PORT PASSWORD)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '("ein:" "generate-breadcrumbs")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '(#("ein:" 0 4 (face font-lock-function-name-face fontified nil)) #("generate-breadcrumbs" 0 20 (face font-lock-function-name-face fontified nil)))))
 
 ;;;***
 
