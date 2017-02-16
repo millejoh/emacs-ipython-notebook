@@ -229,6 +229,20 @@ Commands/Keybinds
 
 .. _notebook-list-commands:
 
+Running a Jupyter Notebook Server from Emacs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using the commands below you start a jupyter notebook session from within emacs
+(i.e. no need to drop to the terminal shell and call ``jupyter notebook``). If
+you are particularly lucky ein will also determine the access url and token
+authentication for the running server and automatically log you in.
+
+Note that the below work best with current (> v4.3.1) versions of jupyter.
+
+.. el:function:: ein:jupyter-server-start
+.. el:function:: ein:jupyter-server-stop
+.. el:function:: ein:jupyter-server-login-and-open
+
 Notebook list
 ^^^^^^^^^^^^^
 
@@ -240,6 +254,8 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open-notebook-global
 .. el:function:: ein:notebooklist-login
 .. el:function:: ein:junk-new
+.. el:function:: ein:notebooklist-enable-keepalive
+.. el:function:: ein:notebooklist-disable-keepalive
 
 .. el:keymap:: ein:notebooklist-mode-map
    :exclude: widget-button
@@ -624,6 +640,17 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.13.0
+-------
+
+* Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
+  ``ein:jupyter-server-login-and-open``.
+* Added a very basic and quite silly object inspector that has almost no
+  features at the moment. Nonetheless, the curious can try executing ``C-c i``
+  over a defined object in a notebook buffer.
+* Add a keep-alive feature to prevent cookie expiration on very long-running
+  notebook sessions.
 
 v0.12.1
 -------
