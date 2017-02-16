@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.12.1 documentation</title>
+    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.13.0 documentation</title>
     
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.12.1',
+        VERSION:     '0.13.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -40,7 +40,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.12.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.0 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -210,22 +210,17 @@ object).</li>
 </table>
 <div class="section" id="quick-try">
 <h2>Quick try<a class="headerlink" href="#quick-try" title="Permalink to this headline">¶</a></h2>
-<p>If you want to try EIN but think preparing all the requirements is too much, try
-this!:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="nv">git</span> <span class="nv">clone</span> <span class="nv">git://github.com/millejoh/emacs-ipython-notebook.git</span>
-<span class="nv">cd</span> <span class="nv">emacs-ipython-notebook/</span>
-<span class="nv">lisp/zeroein.el</span>
-</pre></div>
-</div>
-<p>This will launch a new Emacs instance.</p>
-<p>You can use environment variable <code class="docutils literal"><span class="pre">EMACS</span></code> to control Emacs executable
-to use.:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="nv">EMACS=emacs-snapshot</span> <span class="nv">lisp/zeroein.el</span>
-</pre></div>
-</div>
-<p>The above command requires /bin/sh.  If the above command does not work
-(e.g., you are using MS Windows), try the following command:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="nv">emacs</span> <span class="nv">-Q</span> <span class="nv">-l</span> <span class="nv">lisp/zeroein.el</span>
+<p>The fastest way to get EIN running in this modern age is to download from <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a>
+or, if you are a <a class="reference external" href="http://spacemacs.org/">spacemacs</a> user, through installing the <a class="reference external" href="http://spacemacs.org/layers/+lang/ipython-notebook/README.html">ipython-notebook</a>
+layer. Using <a class="reference external" href="http://tkf.github.io/emacs-ipython-notebook/#quick-try">zeroein</a> is no longer supported, though in theory it should still
+work.</p>
+<p>If you are installing from <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> and have issues with some functions not being
+available after emacs starts, try adding the following to your emacs init file:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">package-initialize</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -335,6 +330,9 @@ don&#8217;t use that optional package.</p>
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
 <p>Here is the minimal configuration.  See <a class="reference internal" href="#customization">customization</a> for more details.</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2638,7 +2636,7 @@ See COPYING for details.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.12.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
