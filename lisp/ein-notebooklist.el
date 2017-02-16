@@ -189,7 +189,8 @@ By long running we mean sessions to last days, or weeks. The
 frequency of the refresh (which is very similar to a call to
 `ein:notebooklist-open`) is controlled by
 `ein:notebooklist-keepalive-refresh-time`, and is measured in
-terms of hours."
+terms of hours. If `ein:enable-keepalive' is non-nil this will
+automatically be called during calls to `ein:notebooklist-open`."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless ein:notebooklist--keepalive-timer
     (message "Enabling notebooklist keepalive...")
@@ -205,7 +206,8 @@ terms of hours."
   "Disable the notebooklist keepalive calls to the jupyter notebook server."
   (interactive)
   (message "Disabling notebooklist keepalive...")
-  (cancel-timer ein:notebooklist--keepalive-timer))
+  (cancel-timer ein:notebooklist--keepalive-timer)
+  (setq ein:notebooklist--keepalive-timer nil))
 
 (defun* ein:notebooklist-url-retrieve-callback (content)
   "Called via `ein:notebooklist-open'."

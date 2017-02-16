@@ -94,6 +94,13 @@ the log of the running jupyter server."
           (ein:jupyter-server-login-and-open)))))
 
 (defun ein:jupyter-server-login-and-open ()
+  "Log in and open a notebooklist buffer for a running jupyter notebook server.
+
+Determine if there is a running jupyter server (started via a
+call to `ein:jupyter-server-start') and then try to guess if
+token authentication is enabled. If a token is found use it to generate a
+call to `ein:notebooklist-login' and once authenticated open the notebooklist buffer
+via a call to `ein:notebooklist-open'."
   (interactive)
   (when (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
