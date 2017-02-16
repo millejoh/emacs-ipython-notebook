@@ -29,8 +29,23 @@
   :group 'ein
   :type 'string)
 
+(defcustom ein:jupyter-default-server-command nil
+  "If you are tired of always being queried for the location of
+the jupyter command, you can set it here for future calls to
+`ein:jupyter-server-start'"
+  :group 'ein
+  :type '(file))
+
+(defcustom ein:jupyter-default-notebook-directory nil
+  "If you are tired of always being queried for the location of
+the notebook directory, you can set it here for future calls to
+`ein:jupyter-server-start'"
+  :group 'ein
+  :type '(directory))
+
 (defvar *ein:jupyter-server-accept-timeout* 60)
 (defvar %ein:jupyter-server-session% nil)
+
 (defvar *ein:last-jupyter-command* nil)
 (defvar *ein:last-jupyter-directory* nil)
 
@@ -55,9 +70,12 @@ the notebooks the user wants to access.
 The buffer named by `ein:jupyter-server-buffer-name' will contain
 the log of the running jupyter server."
   (interactive (list
-                (read-file-name "Server Command: " default-directory nil nil *ein:last-jupyter-command*)
-                (read-directory-name "Notebook Directory: " *ein:last-jupyter-directory*)))
+                (read-file-name "Server Command: " default-directory nil nil (or *ein:last-jupyter-command*
+                                                                                 ein:jupyter-default-server-command))
+                (read-directory-name "Notebook Directory: " (or *ein:last-jupyter-directory*
+                                                                ein:jupyter-default-notebook-directory))))
   (assert (and (file-exists-p server-path)
+
                (file-executable-p server-path))
           t "Command %s is not valid!" server-path)
   (setf *ein:last-jupyter-command* server-path
