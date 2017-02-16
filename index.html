@@ -59,6 +59,7 @@
 </li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#commands-keybinds">Commands/Keybinds</a><ul>
+<li><a class="reference internal" href="#running-a-jupyter-notebook-server-from-emacs">Running a Jupyter Notebook Server from Emacs</a></li>
 <li><a class="reference internal" href="#notebook-list">Notebook list</a></li>
 <li><a class="reference internal" href="#notebook">Notebook</a></li>
 <li><a class="reference internal" href="#advanced-editing">Advanced Editing</a></li>
@@ -101,6 +102,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a><ul>
+<li><a class="reference internal" href="#v0-13-0">v0.13.0</a></li>
 <li><a class="reference internal" href="#v0-12-1">v0.12.1</a></li>
 <li><a class="reference internal" href="#v0-12-0">v0.12.0</a></li>
 <li><a class="reference internal" href="#v0-11-0">v0.11.0</a></li>
@@ -350,8 +352,50 @@ operations and commands available in the notebook buffer.</li>
 </div>
 <div class="section" id="commands-keybinds">
 <h2>Commands/Keybinds<a class="headerlink" href="#commands-keybinds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="running-a-jupyter-notebook-server-from-emacs">
+<span id="notebook-list-commands"></span><h3>Running a Jupyter Notebook Server from Emacs<a class="headerlink" href="#running-a-jupyter-notebook-server-from-emacs" title="Permalink to this headline">¶</a></h3>
+<p>Using the commands below you start a jupyter notebook session from within emacs
+(i.e. no need to drop to the terminal shell and call <code class="docutils literal"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>). If
+you are particularly lucky ein will also determine the access url and token
+authentication for the running server and automatically log you in.</p>
+<p>Note that the below work best with current (&gt; v4.3.1) versions of jupyter.</p>
+<dl class="function">
+<dt id="ein:jupyter-server-start">
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-path</em> <em>server-directory</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the jupyter notebook server at the given path.</p>
+<p>This command opens an asynchronous process running the jupyter
+notebook server and then tries to detect the url and token to
+generate automatic calls to <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a> and
+<a class="reference internal" href="#ein:notebooklist-open" title="ein:notebooklist-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-open</span></code></a>.</p>
+<p>On executing the command will prompt the user for the path to the
+jupyter executable and the path for the root directory containing
+the notebooks the user wants to access.</p>
+<p>The buffer named by <code class="xref el el-symbol docutils literal"><span class="pre">ein:jupyter-server-buffer-name</span></code> will contain
+the log of the running jupyter server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:jupyter-server-stop">
+<em class="property">function </em><code class="descname">ein:jupyter-server-stop</code><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop a running jupyter notebook server.</p>
+<p>Use this command to stop a running jupyter notebook server. If
+there is no running server then no action will be taken.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:jupyter-server-login-and-open">
+<em class="property">function </em><code class="descname">ein:jupyter-server-login-and-open</code><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log in and open a notebooklist buffer for a running jupyter notebook server.</p>
+<p>Determine if there is a running jupyter server (started via a
+call to <a class="reference internal" href="#ein:jupyter-server-start" title="ein:jupyter-server-start"><code class="xref el el-symbol docutils literal"><span class="pre">ein:jupyter-server-start</span></code></a>) and then try to guess if
+token authentication is enabled. If a token is found use it to generate a
+call to <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a> and once authenticated open the notebooklist buffer
+via a call to <a class="reference internal" href="#ein:notebooklist-open" title="ein:notebooklist-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-open</span></code></a>.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="notebook-list">
-<span id="notebook-list-commands"></span><h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
+<h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
 <p>You can start notebook by <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> and enter the
 port or URL of the IPython notebook server.</p>
 <dl class="function">
@@ -388,6 +432,24 @@ Notebook is specified by a string NBPATH whose format is
 Notebook name is determined based on
 <a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></code></a>.</p>
 <p>When prefix argument is given, it asks URL or port to use.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-enable-keepalive">
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-enable-keepalive </code><em>&amp;optional</em> <em>url-or-port</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-enable-keepalive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable periodic calls to the notebook server to keep long running sessions from expiring.
+By long running we mean sessions to last days, or weeks. The
+frequency of the refresh (which is very similar to a call to
+<cite>ein:notebooklist-open</cite>) is controlled by
+<cite>ein:notebooklist-keepalive-refresh-time</cite>, and is measured in
+terms of hours. If <code class="xref el el-symbol docutils literal"><span class="pre">ein:enable-keepalive</span></code> is non-nil this will
+automatically be called during calls to <cite>ein:notebooklist-open</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-disable-keepalive">
+<em class="property">function </em><code class="descname">ein:notebooklist-disable-keepalive</code><a class="headerlink" href="#ein:notebooklist-disable-keepalive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable the notebooklist keepalive calls to the jupyter notebook server.</p>
 </dd></dl>
 
 <p>Keymap for ein:notebooklist-mode.</p>
@@ -545,6 +607,11 @@ via <cite>ein:notebook-restore-to-checkpoint</cite>. Checkpoints can also be man
 created via <cite>ein:notebook-create-checkpoint</cite>.</p>
 <dl class="keybind">
 <dt>
+<code class="descname">C-c i</code><code class="descclassname"> ein:inspect-object</code></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
 <code class="descname">C-c '</code><code class="descclassname"> ein:edit-cell-contents</code></dt>
 <dd><dd class="first last"><p>Edit the contents of the current cell in a buffer using an
 appropriate language major mode. Functionality is very similar to
@@ -555,7 +622,10 @@ appropriate language major mode. Functionality is very similar to
 <dl class="keybind">
 <dt>
 <code class="descname">C-c S</code><code class="descclassname"> ein:worksheet-toggle-slideshow-view</code></dt>
-<dd><dd class="first last"><p>Changes the display of slideshow metadata in the current worksheet.</p>
+<dd><dd class="first last"><dl class="docutils">
+<dt>Changes the display of</dt>
+<dd>slideshow metadata in the current worksheet.</dd>
+</dl>
 </dd></dd>
 </dl>
 
@@ -2280,6 +2350,18 @@ everything the log buffer.  You can reset the patch and log level with
 </div>
 <div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-13-0">
+<h2>v0.13.0<a class="headerlink" href="#v0-13-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added commands <code class="docutils literal"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal"><span class="pre">ein:jupyter-server-stop</span></code>, and
+<code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
+<li>Added a very basic and quite silly object inspector that has almost no
+features at the moment. Nonetheless, the curious can try executing <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">i</span></code>
+over a defined object in a notebook buffer.</li>
+<li>Add a keep-alive feature to prevent cookie expiration on very long-running
+notebook sessions.</li>
+</ul>
+</div>
 <div class="section" id="v0-12-1">
 <h2>v0.12.1<a class="headerlink" href="#v0-12-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
