@@ -13,7 +13,6 @@
 (ein:setq-if-not ein:testing-dump-file-messages "test-batch-messages.log")
 (setq message-log-max t)
 
-
 (ein:load-files "^test-ein-.*\\.el$"
                 "./" ;(file-name-directory load-file-name)
                 t)                      ; ignore-compiled
