@@ -72,7 +72,7 @@ the log of the running jupyter server."
     (setq %ein:jupyter-server-session% proc)
     (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
         (progn
-          (sit-for 1.0)
+          (sit-for 1.0) ;; FIXME: Do better!
           (ein:jupyter-server-login-and-open)))))
 
 (defun ein:jupyter-server-login-and-open ()
@@ -80,7 +80,7 @@ the log of the running jupyter server."
   (when (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (ein:notebooklist-login url-or-port token)
-      (sit-for 1.0)
+      (sit-for 1.0) ;; FIXME: Do better!
       (ein:notebooklist-open url-or-port))))
 
 ;;;###autoload
