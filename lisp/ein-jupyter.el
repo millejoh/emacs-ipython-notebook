@@ -92,9 +92,14 @@ the log of the running jupyter server."
                              :command (ein:jupyter-server--cmd server-path server-directory))))
     (setq %ein:jupyter-server-session% proc)
     (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
-        (progn
-          (sit-for 1.0) ;; FIXME: Do better!
-          (ein:jupyter-server-login-and-open)))))
+        (with-current-buffer (process-buffer proc)
+          (goto-char (point-min))
+          (loop for x upfrom 0 by 1
+                until (or (search-forward "Notebook is running at:" nil t)
+                          (> x 100))
+                do (progn (sit-for 0.1)
+                          (goto-char (point-min))) 
+                finally (ein:jupyter-server-login-and-open))))))
 
 (defun ein:jupyter-server-login-and-open ()
   "Log in and open a notebooklist buffer for a running jupyter notebook server.
