@@ -133,7 +133,7 @@ global setting.  For global setting and more information, see
                                params))
       (url-encode-url (ein:url url-or-port "api/notebooks" path)))))
 
-(defun ein:content-query-contents (path &optional url-or-port force-sync callback)
+(defun ein:content-query-contents (path &optional url-or-port force-sync callback retry-p)
   "Return the contents of the object at the specified path from the Jupyter server."
   (condition-case err
       (let* ((url-or-port (or url-or-port (ein:default-url-or-port)))
@@ -152,7 +152,8 @@ global setting.  For global setting and more information, see
            :parser #'ein:json-read
            :sync ein:force-sync
            :success (apply-partially #'ein:new-content new-content callback)
-           :error (apply-partially #'ein:content-query-contents-error url)))
+           :error (apply-partially #'ein:content-query-contents-error url retry-p
+                                   (list path url-or-port force-sync callback t))))
         new-content)
     (error (progn (message "Error %s on query contents, try calling `ein:notebooklist-login` first..." err)
                   (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
@@ -249,12 +250,12 @@ global setting.  For global setting and more information, see
                        :raw-content nb-content)))
 
 
-(defun* ein:content-query-contents-error (url &key symbol-status response &allow-other-keys)
-  (if (eql symbol-status 'parse-error)
+(defun* ein:content-query-contents-error (url retry-p packed &key symbol-status response &allow-other-keys)
+  (if (and (eql symbol-status 'parse-error)
+           (not retry-p))
       (progn
-        (message "Content list call failed, most likely because ein:notebooklist-login needs to be called first.")
-        (sleep-for 1)
-        (call-interactively #'ein:notebooklist-login))
+        (message "Content list call failed, maybe because curl hasn't updated it's cookie jar yet? Let's try one more time....")
+        (apply #'ein:content-query-contents packed))
     (progn
       (ein:log 'verbose
         "Error thrown: %S" (request-response-error-thrown response))
