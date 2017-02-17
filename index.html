@@ -340,9 +340,14 @@ don&#8217;t use that optional package.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Start <a class="reference external" href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html">IPython notebook server</a>.</li>
-<li>Hit <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> to open notebook list.  This will
-open <a class="reference internal" href="#notebook-list-commands"><span class="std std-ref">notebook list</span></a> buffer.</li>
+<li>Start the <a class="reference external" href="https://jupyter.readthedocs.io/en/latest/running.html">Jupyter notebook server</a> from the terminal or call <code class="docutils literal"><span class="pre">M-x</span>
+<span class="pre">ein:jupyter-server-start</span></code> from emacs. Note starting the notebook server from
+emacs will automatically call <code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>, making
+steps 2 and 3 below unnecessary!</li>
+<li>If you have token or password authentication enabled then you will need to
+call <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code> and enter the appropriate password.</li>
+<li>Hit <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> to open notebook list. This will open
+<a class="reference internal" href="#notebook-list-commands"><span class="std std-ref">notebook list</span></a> buffer.</li>
 <li>In the notebook list buffer, you can open notebooks by selecting the
 <code class="docutils literal"><span class="pre">[Open]</span></code> buttons.  See the <a class="reference internal" href="#notebook-commands"><span class="std std-ref">notebook</span></a> section for
 operations and commands available in the notebook buffer.</li>
@@ -419,7 +424,7 @@ Notebook is specified by a string NBPATH whose format is
 
 <dl class="function">
 <dt id="ein:notebooklist-login">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-login </code><em>url-or-port</em> <em>password</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-login" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-login </code><em>url-or-port</em> <em>password</em> <em>&amp;optional</em> <em>retry-p</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-login" title="Permalink to this definition">¶</a></dt>
 <dd><p>Login to IPython notebook server.</p>
 </dd></dl>
 

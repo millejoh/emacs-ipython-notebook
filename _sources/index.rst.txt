@@ -214,17 +214,23 @@ Here is the minimal configuration.  See customization_ for more details.
 Usage
 -----
 
-1. Start `IPython notebook server`_.
+1. Start the `Jupyter notebook server`_ from the terminal or call ``M-x
+   ein:jupyter-server-start`` from emacs. Note starting the notebook server from
+   emacs will automatically call ``ein:jupyter-server-login-and-open``, making
+   steps 2 and 3 below unnecessary!
 
-2. Hit ``M-x ein:notebooklist-open`` to open notebook list.  This will
-   open :ref:`notebook list <notebook-list-commands>` buffer.
+2. If you have token or password authentication enabled then you will need to
+   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
 
-3. In the notebook list buffer, you can open notebooks by selecting the
+3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open
+   :ref:`notebook list <notebook-list-commands>` buffer.
+
+4. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
-.. _`IPython notebook server`:
-   http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
+.. _`Jupyter notebook server`:
+   https://jupyter.readthedocs.io/en/latest/running.html
 
 
 Commands/Keybinds
