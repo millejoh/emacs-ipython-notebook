@@ -39,6 +39,12 @@ the jupyter command, you can set it here for future calls to
   :group 'ein
   :type '(file))
 
+(defcustom ein:jupyter-server-args nil
+  "Add any additional command line options you wish to include
+with the call to the jupyter notebook."
+  :group 'ein
+  :type '(repeat string))
+
 (defcustom ein:jupyter-default-notebook-directory nil
   "If you are tired of always being queried for the location of
 the notebook directory, you can set it here for future calls to
@@ -53,9 +59,11 @@ the notebook directory, you can set it here for future calls to
 (defvar *ein:last-jupyter-directory* nil)
 
 (defun ein:jupyter-server--cmd (path dir)
-  (list path
-        "notebook"
-        (format "--notebook-dir=%s" dir)))
+  (append (list path
+                "notebook"
+                (format "--notebook-dir=%s" dir))
+          ein:jupyter-server-args))
+
 
 ;;;###autoload
 (defun ein:jupyter-server-start (server-path server-directory)
