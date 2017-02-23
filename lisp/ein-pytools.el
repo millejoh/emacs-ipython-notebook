@@ -153,6 +153,36 @@ pager buffer.  You can explicitly specify the object by selecting it."
                       "^.*<ipython-input-[^>\n]+>\n"
                       "^\n")))
 
+(defun ein:pytools-jump-to-source-1 (packed msg-type content -metadata-not-used-)
+  (ein:log 'debug "msg-type[[%s]] content[[%s]]" msg-type content)
+  (destructuring-bind (kernel object other-window notebook) packed
+    (ein:log 'debug "object[[%s]] other-window[[%s]]" object other-window)
+    (ein:case-equal msg-type
+      (("stream" "display_data")
+       (ein:aif (or (plist-get content :text) (plist-get content :data))
+           (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
+               (ein:log 'info
+                 "Jumping to the source of %s...Not found" object)
+             (destructuring-bind (filename &optional lineno &rest ignore)
+                 (split-string it "\n")
+               (setq lineno (string-to-number lineno)
+                     filename (ein:kernel-filename-from-python kernel filename))
+               (ein:log 'debug "filename[[%s]] lineno[[%s]] ignore[[%s]]"
+                        filename lineno ignore)
+               (if (not (file-exists-p filename))
+                   (ein:log 'info
+                     "Jumping to the source of %s...Not found" object)
+                 (let ((ein:connect-default-notebook nil))
+                   ;; Avoid auto connection to connect to the
+                   ;; NOTEBOOK instead of the default one.
+                   (ein:goto-file filename lineno other-window))
+                 ;; Connect current buffer to NOTEBOOK. No reconnection.
+                 (ein:connect-buffer-to-notebook notebook nil t)
+                 (push (point-marker) ein:pytools-jump-stack)
+                 (ein:log 'info "Jumping to the source of %s...Done" object))))))
+      (("pyerr" "error")
+       (ein:log 'info "Jumping to the source of %s...Not found" object)))))
+
 (defun ein:pytools-jump-to-source (kernel object &optional
                                           other-window notebook)
   (ein:log 'info "Jumping to the source of %s..." object)
@@ -167,33 +197,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
    (list
     :output
     (cons
-     (lambda (packed msg-type content -metadata-not-used-)
-       (destructuring-bind (kernel object other-window notebook)
-           packed
-         (ein:case-equal msg-type
-           (("stream" "display_data")
-            (ein:aif (or (plist-get content :text) (plist-get content :data))
-                (if (string-match ein:pytools-jump-to-source-not-found-regexp
-                                  it)
-                    (ein:log 'info
-                      "Jumping to the source of %s...Not found" object)
-                  (destructuring-bind (filename &optional lineno &rest ignore)
-                      (split-string it "\n")
-                    (setq lineno (string-to-number lineno))
-                    (setq filename
-                          (ein:kernel-filename-from-python kernel filename))
-                    (let ((ein:connect-default-notebook nil))
-                      ;; Avoid auto connection to connect to the
-                      ;; NOTEBOOK instead of the default one.
-                      (ein:goto-file filename lineno other-window))
-                    ;; Connect current buffer to NOTEBOOK. No reconnection.
-                    (ein:connect-buffer-to-notebook notebook nil t)
-                    (push (point-marker) ein:pytools-jump-stack)
-                    (ein:log 'info
-                      "Jumping to the source of %s...Done" object)))))
-           (("pyerr" "error")
-            (ein:log 'info
-              "Jumping to the source of %s...Not found" object)))))
+     #'ein:pytools-jump-to-source-1
      (list kernel object other-window notebook)))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
