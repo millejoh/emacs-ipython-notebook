@@ -174,7 +174,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
    (read-only :initarg :read-only :initform nil :type boolean)
-   (ewoc :initarg :ewoc :type ewoc)
+   (ewoc :initarg :ewoc :type ewoc :accessor ein:basecell--ewoc)
    (element :initarg :element :initform nil :type list
     :documentation "ewoc nodes")
    (element-names :initarg :element-names)
