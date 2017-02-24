@@ -448,7 +448,7 @@ kill-ring of Emacs (kill-ring for texts)."
 (defun ein:worksheet-insert-clone-below (ws cell pivot)
   (let ((clone (ein:cell-copy cell)))
     ;; Cell can be from another buffer, so reset `ewoc'.
-    (setf (ein:worksheet--ewoc clone) (ein:worksheet--ewoc ws))
+    (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws))
     ;(oset clone :ewoc (oref ws :ewoc))
     (ein:worksheet-insert-cell-below ws clone pivot)
     clone))
