@@ -137,6 +137,7 @@ compatibility with `ein:completer-finish-completing-default'."
   ;; I don't need to check if the point is at right position, as in
   ;; `ein:completer-finish-completing-default' because `auto-complete'
   ;; checks it anyway.
+
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING-AC: matched-text=%S matches=%S"
            matched-text matches)
   (ein:ac-prepare-completion matches)

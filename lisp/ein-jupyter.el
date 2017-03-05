@@ -86,7 +86,6 @@ the log of the running jupyter server."
                 (read-directory-name "Notebook Directory: " (or *ein:last-jupyter-directory*
                                                                 ein:jupyter-default-notebook-directory))))
   (assert (and (file-exists-p server-path)
-
                (file-executable-p server-path))
           t "Command %s is not valid!" server-path)
   (setf *ein:last-jupyter-command* server-path
