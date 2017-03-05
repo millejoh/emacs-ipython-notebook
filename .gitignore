@@ -25,3 +25,4 @@ Makefile~
 .ipynb_checkpoints
 .ipynb_checkpoints/*
 *.png
+tests/notebook
