@@ -1,24 +1,30 @@
-language: emacs-lisp
-before_install:
-  - git submodule --quiet update --init
-  - sudo apt-get install -qq python-virtualenv
-  - if [ "$EMACS" = "emacs24" ]; then
-        sudo apt-get remove -qq emacs
-        sudo apt-get install -qq emacs24
-    fi
-  - if [ "$EMACS" = 'emacs-snapshot' ]; then
-      sudo add-apt-repository -y ppa:cassou/emacs &&
-      sudo apt-get update -qq &&
-      sudo apt-get install -qq
-          emacs-snapshot-el emacs-snapshot-gtk emacs-snapshot;
-    fi
-env:
-  - EIN_TEST_TARGET=travis-ci-testein IPY_VERSION=3.0.0 EMACS=emacs24
+language: python
+addons:
+  apt:
+    packages:
+    - git
 matrix:
+  fast_finish: true
   allow_failures:
-    IPY_VERSION=dev
-    EMACS=emacs
-    # EMACS=emacs-snapshot
-
+    - env: EVM_EMACS=emacs-git-snapshot
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+before_install:
+  - sudo apt-get -yq update
+  - sudo apt-get -yq install git
+  - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
+  - evm install $EVM_EMACS --use --skip
+  - cask install
+  - evm list
+install:
+  - pip install jupyter==$JUPYTER
+env:
+  - EVM_EMACS=emacs-24.4-travis IPYCMD=jupyter JUPYTER=1.0.0
+  - EVM_EMACS=emacs-25.1-travis IPYCMD=jupyter JUPYTER=1.0.0
+  - EVM_EMACS=emacs-git-snapshot-travis IPYCMD=jupyter JUPYTER=1.0.0
 script:
-  make $EIN_TEST_TARGET IPY_VERSION=$IPY_VERSION
+  - emacs --version
+  - python tools/testein.py --emacs emacs --ipython $IPYCMD
+ 

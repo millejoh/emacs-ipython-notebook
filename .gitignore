@@ -1,6 +1,12 @@
 doc/build/
 env
-log
+.cask/*
+Cask.tmp
+index_error.py
+redirecting_server.py
+wiener_filtering.py
+UTF-8-demo.txt
+.gitmodules
 *.stackdump
 *.elc
 *.el#

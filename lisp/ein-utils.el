@@ -32,6 +32,12 @@
 
 ;;; Macros and core functions/variables
 
+(defmacro ein:with-undo-disabled (&rest body)
+  "Temporarily disable undo recording while executing `body`
+while maintaining the undo list for the current buffer."
+  `(let ((buffer-undo-list t))
+     ,@body))
+
 (defmacro ein:aif (test-form then-form &rest else-forms)
   "Anaphoric IF.  Adapted from `e2wm:aif'."
   (declare (debug (form form &rest form)))
@@ -517,6 +523,21 @@ NOTE: This function creates new list."
 (defun ein:truncate-lines-on ()
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
+
+(defun ein:wait-until (predicate &optional predargs timeout-seconds)
+  "Wait until PREDICATE function returns non-`nil'.
+PREDARGS is argument list for the PREDICATE function.
+Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
+  (ein:log 'debug "WAIT-UNTIL start")
+  (unless timeout-seconds (setq timeout-seconds 5))
+  (unless (loop repeat (/ timeout-seconds 0.05)
+                when (apply predicate predargs)
+                return t
+                ;; borrowed from `deferred:sync!':
+                do (sit-for 0.05)
+                do (sleep-for 0.05))
+    (warn "Timeout"))
+  (ein:log 'debug "WAIT-UNTIL end"))
 
 
 ;;; Emacs utilities

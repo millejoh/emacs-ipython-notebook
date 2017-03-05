@@ -1,5 +1,3 @@
-#! /bin/sh
-":"; exec ${EMACS:-emacs} --no-init -Q -l "$0" "$@" # -*-emacs-lisp-*-
 ;;; zeroein.el --- Zero setup Emacs IPython Notebook client
 
 ;; Copyright (C) 2012- Takafumi Arakaki
@@ -27,6 +25,7 @@
 
 ;;; Code:
 
+(package-initialize)
 (eval-when-compile (require 'cl))
 
 
@@ -50,6 +49,18 @@
   '("ein-mumamo" "nxhtml" "markdown-mode" "websocket" "request"
     "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
 
+(defvar zeroein:subtrees
+  '("lib/websocket https://github.com/ahyatt/emacs-websocket.git master --squash"
+    "lib/auto-complete https://github.com/auto-complete/auto-complete.git master --squash"
+    "lib/fuzzy https://github.com/auto-complete/fuzzy-el.git master --squash"
+    "lib/popup https://github.com/auto-complete/popup-el.git master --squash"
+    "lib/pos-tip https://github.com/emacsmirror/pos-tip.git master --sqaush"
+    "lib/smartrep https://github.com/myuhe/smartrep.el.git master --squash"
+    "lib/markdown-mode https://github.com/defunkt/markdown-mode.git master --squash"
+    "lib/ert https://github.com/ohler/ert.git master --squash"
+    "lib/request https://github.com/tkf/emacs-request master --squash"
+    "lib/ein-mumamo https://github.com/millejoh/ein-mumamo master --squash"))
+
 ;; Loading the new python.el fails in Emacs 23.
 (when (>= emacs-major-version 24)
   (add-to-list 'zeroein:dependencies "python"))
@@ -57,9 +68,9 @@
 
 ;;; Install dependencies
 
-(call-process "git" nil (get-buffer "*Messages*") nil
-              "submodule" "update" "--init")
-
+(loop for subtree in zeroein:subtrees
+      do (call-process "git" nil nil nil
+                        "subtree" "pull" "--prefix" subtree))
 
 
 ;;; `load-path' configurations

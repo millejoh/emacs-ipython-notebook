@@ -7,14 +7,14 @@
 Version 4.0 [[http://nbformat.readthedocs.org/en/latest/][documented]].
 
 Earlier versions might be documented less formally on the wiki. Can
-also look at the IPython source in the json viles.
+also look at the IPython source in the json files.
 
 ** Notebook Buffer
 
 Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][struct]]. Always associated with a buffer,
 [[file:lisp/ein-notebook.el::ein:notebook-buffer][ein:notebook-buffer]] is used to find buffer associated with a notebook.
 
-Notebook does not hold cells, that is delegated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
+Notebook does not hold cells, that is dehttp://glf.swim-team.us/legated to instances of the [[file:lisp/ein-worksheet.el::ein:worksheet][worksheet]]
 class. Instances are stored as a list in the `ein:$notebook-worksheets` slot.
 
 Opened notebooks are kept in the ~ein:notebook--opened-map~ hash
@@ -27,6 +27,9 @@ There are a number of helper functions for returning the struct for an opened no
   
 ** Notebooklist Buffer
 ** Kernel communication
+
+The [[https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging][messaging protocol]].
+
 ** Contents API
 
 Documented at the IPython Github [[https://github.com/ipython/ipython/wiki/IPEP-27%253A-Contents-Service][wiki.]]
@@ -49,20 +52,192 @@ package. The URL request is of the form:
 ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/channels?session_id={session id}
 #+END_QUOTE
 
-* Enhancements/Fixes
-** Errors on saving new notebook
-Happening because metadata slot is borked when creating new notebooks.
+** How a Worksheet is Displayed
+EIN relies heavily on EIEIO and EWOC.
 
+EWOC PP eventually calls ~[[file:lisp/ein-cell.el::ein:cell-append-mime-type][ein:cell-append-mime-type]]~ for output. Latex is
+considered text, but should be able to convert to image using dvitopng,
+imagemagick, other?
+
+** Testing
+This is too complex. Makefile is used to download dependencies and set up python
+virtual environment, then Python code actually runs the Emacs tests.
+
+Using Python is good, Makefile less so.
+
+Having project name changed from IPython to Jupyter complicates things (can't
+rely on ipy-version anymore).
+
+Having python2.7 and python3.x also complicates things.
+
+One option seems to be to do everything in setup.py.
+
+[[file:tools/testein.py::#!/usr/bin/env%20python][testein.py]] uses argparse. Maybe there are better [[https://realpython.com/blog/python/comparing-python-command-line-parsing-libraries-argparse-docopt-click/][options]]?
+
+You can use conda with [[http://conda.pydata.org/docs/travis.html][travis]].
+
+*** TODO Define testing workflow
+1. Update submodules: ~git submodule update --remote~
+2. Create/activate python environment.
+3. Run testein.py
+
+*** TODO Migrate from Makefile to setup.py
+*** TODO Use conda to create testing environments.
+For both Travis CI and local testing.
+
+- ~conda install notebooke~ to install Jupyter notebook.
+- ~conda install ipython=x.x~ to install pre-jupyter ipython notebook versions.
+
+* Enhancements/Fixes
+** Run dynamic javascript
+
+The development [[ipynb:(:url-or-port%208888%20:name%20"emacs-ipython-notebook/Embedding%20Altair%20Graphs.ipynb")][notebook]].
+
+Emacs is not a web browser, hence does not know how to execute javascript.
+
+Maybe we can get around this using [[https://github.com/skeeto/skewer-mode][skewer-mode]] or [[http://js-comint-el.sourceforge.net/][js-comint.el]].
+
+Skewer-mode uses JS client provided by a web browser, while js-comint depends on
+nodejs (you understand this difference, right? Right?).
+
+Another thought is to get python to do this for us. The packages [[][naked]] (an
+unfortunate name given my corporate firewall) and [[https://github.com/doloopwhile/PyExecJs][PyExecJs]].
+
+
+
+** Embedding [[https://github.com/ellisonbg/altair][Altair]] plots
+
+First get [[*Run dynamic javascript][dynamic javascript]] working...
+
+Relevant [[https://github.com/vega/ipyvega/issues/31][issue]], [[https://github.com/vega/ipyvega/pull/32][pull request]] and [[https://github.com/ellisonbg/ipyvega/blob/be19059068557c44cbdcbcf5ad509c3312b25763/src/index.js][code]].
+
+Appears the code has capability of returning javascript and png output. When
+calling from ein all that gets returned is javascript, which
+`ein:cell-append-mime-type` chokes on.
+
+Somehow, when running [[https://nbconvert.readthedocs.io/en/latest/][nbconvert]], the javascript gets turned into a png. How to trigger
+that when normally executing cells?
+
+** Mike DeCandia's Wish and Bug List
+*** Wishlist
+
+- switch kernel
+
+- getting a true Python mode when editing code in cells, without messing up the
+  other formatting
+
+- If one cuts and pastes read-only text into a cell it can’t be edited
+
+- A full undo history
+
+- Command history / autocomplete like one gets in regular ipython
+
+- Image resizing
+
+*** Bugs
+
+- emacs ipython notebook fails to follow redirects properly - This is mainly due
+  to the fact that it holds on the original site name internally.
+
+- cookie expiration for long running notebooks - On long running notebooks
+  tornado's default cookie expiration is 30 days. After the cookie expires emacs
+  will continue to attempt autosave, but the notebook will not save. The
+  workaround is to run ein:notebooklist-open to generate a new GET request
+  against /login to get another cookie.
+
+** Switch kernel in running notebook
+
+How? Probably by restarting kernel using a new kernelspec.
 
 ** Support company-mode
 ** Inline latex
 See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
 
-** Interactive Widgets
+*** For Further Investigation
+
+- [[https://github.com/zk-phi/magic-latex-buffer][magic-latex-buffer.el]]
+- [[https://www.gnu.org/software/auctex/preview-latex.html][preview-latex.el]]
+- Another [[https://github.com/aaptel/preview-latex/][preview-latex]] package (based on org-latex-preview).
+
+*** Inline using org-latex-preview
+
+[[http://orgmode.org/manual/Previewing-LaTeX-fragments.html#Previewing-LaTeX-fragments][Documentation]] for this facility in org.
+
+Does it work here?
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+Some inline Latex math $a^2=b$.
+
+Yes, but nedd MiKTeX installed if on windows.
+
+If org-latex-preview is working then [[https://github.com/aaptel/preview-latex][p]]x will also work, though the code for
+~[[file:~/.emacs.d/elpa/px-20141006.548/px.el::(defun%20px--create-preview%20(at)][px--create-preview]]~ needs to be patched as the signature for `org-format-latex`
+has changed.
+
+*** Using magic-latex-buffer
+Per the [[https://github.com/zk-phi/magic-latex-buffer][documentation]] all you need to do to configure is to add a hook:
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'latex-mode-hook 'magic-latex-buffer)
+#+END_SRC
+
+Or manually activate by calling ~M-x magic-latex-buffer~.
+
+Use variable ~ein:notebook-first-open-hook~ to enable?
+
+This works, at least for viewing, but the images that get inserted confuse ein
+when saving a notebook and generate errors in Jupter. Can be worked around by
+disabling ~magic-latex-buffer~ before saving. One hack is to advise
+~ein:notebook-save-notebook-command~?
+
+#+BEGIN_SRC emacs-lisp
+  (defvar ein:magic-latex-enabled-p nil)
+
+  (defun ein:disable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Disabling magic-latex.")
+      (magic-latex-buffer -1)))
+
+  (defun ein:enable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Enabling magic-latex.")
+      (magic-latex-buffer t)))
+
+  (advice-add #'ein:notebook-save-notebook :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:notebook-save-notebook :after #'ein:enable-magic-latex-maybe)
+
+  (advice-add #'ein:cell-execute-internal :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:cell-execute-internal :after #'ein:enable-magic-latex-maybe)
+
+#+END_SRC
+
+** XWidget Support/Interactive Widgets
 
 For the most part this is a non-starter since in Jupyter this is built on web
 and javascript, but maybe with emacs 25's coming integration with [[https://www.emacswiki.org/emacs/EmacsXWidgets][xwidgets]] there
 is hope?
+
+*** What Does ipywidgets.interact() return?
+
+A call to `ipywidgets.interact()` creates a [[http://jupyter-client.readthedocs.org/en/latest/messaging.html#custom-messages][custom communications channel]]
+with the jupyter server.
+
+1. What are message types (msg_type) comm_msg and comm_open for?
+
+   These are received when calling interact().
+
+**** Websocket data for comm_open
+#+BEGIN_SRC
+[WS] Received: {"msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "content": {"execution_state": "busy"}, "channel": "iopub", "metadata": {}, "msg_type": "status", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "status"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "content": {"execution_count": 3, "code": "interact(f, x=10)"}, "channel": "iopub", "metadata": {}, "msg_type": "execute_input", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_input"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "content": {"data": {"width": "", "_model_name": "BoxModel", "font_size": "", "children": [], "overflow_x": "", "padding": "", "font_style": "", "_dom_classes": ["widget-interact"], "box_style": "", "height": "", "_view_module": "", "margin": "", "color": null, "msg_throttle": 3, "border_color": null, "font_family": "", "_view_name": "BoxView", "_model_module": null, "version": 0, "overflow_y": "", "background_color": null, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "237329515cca473985d6fa52ec0c93a1", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "date": "2016-03-24T07:24:50.910702", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
+
+**** Websocket data for comm_msg
+#+BEGIN_SRC emacs-lisp
+[WS] Received: {"msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "content": {"data": {"description": "", "orientation": "horizontal", "continuous_update": true, "_model_name": "WidgetModel", "font_size": "", "step": 1, "background_color": null, "padding": "", "slider_color": null, "height": "", "_view_module": "", "margin": "", "color": null, "width": "", "font_family": "", "border_color": null, "_dom_classes": [], "min": -10, "_range": false, "disabled": false, "_model_module": null, "_view_name": "IntSliderView", "max": 30, "version": 0, "font_style": "", "msg_throttle": 3, "value": 10, "readout": true, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "c1059008e6d046209c9d63de036c1aff", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "date": "2016-03-24T07:24:50.948495", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "content": {"data": {"buffers": [], "state": {"description": "x"}, "method": "update"}, "comm_id": "c1059008e6d046209c9d63de036c1aff"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "content": {"data": {"buffers": [], "state": {"children": ["IPY_MODEL_c1059008e6d046209c9d63de036c1aff"]}, "method": "update"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "content": {"data": {"method": "display"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "content": {"wait": true}, "channel": "iopub", "metadata": {}, "msg_type": "clear_output", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "clear_output"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
 
 ** Working with jupyterhub
 
@@ -76,20 +251,20 @@ this.
 The REST API for this looks like POST http://{host}:{port}/hub/login, username and password
 parameters in the POST.
 
-Also looks like the content REST API has been modified so that querys are of the
+Also looks like the content REST API has been modified so that queries are of the
 form: /user/<username>/<command>.
 
 ** Imenu/Speedbar Cooperation
 Seems to be a couple ways of doing this:
 
- 1. Configuring `[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]` regex's.
+ 1. Configuring ~[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]~ regex's.
 
  2. Redefining imenu-create-index ala python.el.
 
 (2) seems to be the more elegant solution.
 
 EIN currently has minimal support for imenu through
-`[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]`, but all it does is look for
+~[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]~, but all it does is look for
 headings. Somehow this fails to work with speedbar and also does not handle
 indexing Python code (i.e. variables, function, classes, etc.).
 
@@ -127,6 +302,9 @@ Get rid of all those cl compile warnings?
 
 Also look at using [[https://github.com/magnars/s.el][s]] and [[https://github.com/rejeep/f.el][f]].
 
+** Us cl-generic?
+eieio is being deprecated and cl-generic is the recommended replacement..
+
 ** Access password protected notebooks (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/57][#57]])
 This is what I have found out so far:
 
@@ -146,7 +324,8 @@ Not sure if that makes sense, but for the moment that is my theory on what's
 happening. Somehow we need to provide the security cookie with the websocket
 connect request.
 
-<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more info with the connection header:
+<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more
+info with the connection header:
 
 1. Specify the port along with the url.
 2. Pass along a security cookie.

@@ -1,13 +1,14 @@
-Welcome to Emacs IPython Notebook's documentation!
-==================================================
+The Emacs IPython Notebook
+==========================
 
 .. el:package:: ein
 
-Emacs IPython Notebook (EIN) provides a IPython Notebook client and integrated
-REPL (like SLIME_) in Emacs.  While EIN makes notebook editing very powerful by
+The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
+integrated REPL (like SLIME_) in Emacs. EIN improves notebook editing by
 allowing you to use Emacs, it also expose IPython features such as code
-evaluation, object inspection and code completion.  These features can be
-accessed anywhere in Emacs and improve Python code editing and reading in Emacs.
+evaluation, object inspection and code completion. These features can be
+accessed anywhere in Emacs and improve Python code editing and reading in
+general in Emacs.
 
 .. _`Emacs IPython Notebook (EIN)`:
   https://github.com/millejoh/emacs-ipython-notebook
@@ -25,6 +26,7 @@ Highlighted features:
   help, help browser and code completion are available in these buffers. [#]_
 * Jump to definition (go to the definition by hitting ``M-.`` over an
   object).
+* Execute code from an org-mode source block in a running kernel.
 
 Other notebook features:
 
@@ -58,31 +60,30 @@ Links:
 .. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
 
-.. contents::
 
 
 Quick try
 ---------
 
-If you want to try EIN but think preparing all the requirements is too much, try
-this!::
+The fastest way to get EIN running in this modern age is to download from MELPA_
+or, if you are a spacemacs_ user, through installing the ipython-notebook_
+layer. Using zeroein_ is no longer supported, though in theory it should still
+work.
 
-   git clone git://github.com/millejoh/emacs-ipython-notebook.git
-   cd emacs-ipython-notebook/
-   lisp/zeroein.el
+If you are installing from MELPA_ and have issues with some functions not being
+available after emacs starts, try adding the following to your emacs init file:
 
-This will launch a new Emacs instance.
+.. sourcecode:: cl
 
-You can use environment variable ``EMACS`` to control Emacs executable
-to use.::
+   (package-initialize)
+   (require 'ein)
+   (require 'ein-loaddefs)
+   (require 'ein-notebook)
+   (require 'ein-subpackages)
 
-   EMACS=emacs-snapshot lisp/zeroein.el
-
-The above command requires /bin/sh.  If the above command does not work
-(e.g., you are using MS Windows), try the following command::
-
-  emacs -Q -l lisp/zeroein.el
-
+.. _spacemacs: http://spacemacs.org/
+.. _ipython-notebook: http://spacemacs.org/layers/+lang/ipython-notebook/README.html
+.. _zeroein: http://tkf.github.io/emacs-ipython-notebook/#quick-try
 
 Requirements
 ------------
@@ -96,9 +97,8 @@ Requirements
   The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
 * (optional) python-mode:
-  It should work with either python.el or python-mode.el.
-  Fabian Gallina's `python.el`_ is required to use
-  ``ein:console-open`` command.
+  It should work with either python.el or python-mode.el. `python.el`_ is
+  required to use ``ein:console-open`` command.
 * (optional) `auto-complete.el`_
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
@@ -114,8 +114,7 @@ Requirements
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
-It is known to work in Emacs 23.2, 24.1 and 24.2.
+EIEIO and json.el.
 
 .. _IPython: http://ipython.org/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
@@ -190,6 +189,7 @@ don't use that optional package.
 
    emacs -Q -batch -L .          \  # don't forget the dot!
        -L PATH/TO/websocket/     \
+       -L PATH/TO/requests/      \
        -L PATH/TO/nxhtml/util/   \  # optional (for MuMaMo)
        -L PATH/TO/auto-complete/ \  # optional
        -L PATH/TO/popup/         \  # optional (for auto-complete)
@@ -206,28 +206,51 @@ Here is the minimal configuration.  See customization_ for more details.
 .. sourcecode:: cl
 
    (require 'ein)
+   (require 'ein-loaddefs)
+   (require 'ein-notebook)
+   (require 'ein-subpackages)
 
 
 Usage
 -----
 
-1. Start `IPython notebook server`_.
+1. Start the `Jupyter notebook server`_ from the terminal or call ``M-x
+   ein:jupyter-server-start`` from emacs. Note starting the notebook server from
+   emacs will automatically call ``ein:jupyter-server-login-and-open``, making
+   steps 2 and 3 below unnecessary!
 
-2. Hit ``M-x ein:notebooklist-open`` to open notebook list.  This will
-   open :ref:`notebook list <notebook-list-commands>` buffer.
+2. If you have token or password authentication enabled then you will need to
+   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
 
-3. In the notebook list buffer, you can open notebooks by selecting the
+3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open
+   :ref:`notebook list <notebook-list-commands>` buffer.
+
+4. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
-.. _`IPython notebook server`:
-   http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
+.. _`Jupyter notebook server`:
+   https://jupyter.readthedocs.io/en/latest/running.html
 
 
 Commands/Keybinds
 -----------------
 
 .. _notebook-list-commands:
+
+Running a Jupyter Notebook Server from Emacs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using the commands below you start a jupyter notebook session from within emacs
+(i.e. no need to drop to the terminal shell and call ``jupyter notebook``). If
+you are particularly lucky ein will also determine the access url and token
+authentication for the running server and automatically log you in.
+
+Note that the below work best with current (> v4.3.1) versions of jupyter.
+
+.. el:function:: ein:jupyter-server-start
+.. el:function:: ein:jupyter-server-stop
+.. el:function:: ein:jupyter-server-login-and-open
 
 Notebook list
 ^^^^^^^^^^^^^
@@ -240,6 +263,8 @@ port or URL of the IPython notebook server.
 .. el:function:: ein:notebooklist-open-notebook-global
 .. el:function:: ein:notebooklist-login
 .. el:function:: ein:junk-new
+.. el:function:: ein:notebooklist-enable-keepalive
+.. el:function:: ein:notebooklist-disable-keepalive
 
 .. el:keymap:: ein:notebooklist-mode-map
    :exclude: widget-button
@@ -249,7 +274,13 @@ port or URL of the IPython notebook server.
 Notebook
 ^^^^^^^^
 
-The following keybinds are available in notebook buffers.
+The following keybinds are available in notebook buffers. Modified notebooks are
+saved automatically with a frequency dependenant on the setting of
+`ein:notebook-autosave-frequency`. If `ein:notebook-create-checkpoint-on-save`
+is True than a checkpoint will also be generated in the Jupyter server every
+time the notebook is saved. A notebook can be returned to a previous checkpoint
+via `ein:notebook-restore-to-checkpoint`. Checkpoints can also be manually
+created via `ein:notebook-create-checkpoint`.
 
 .. el:keymap:: ein:notebook-mode-map
    :replace: s/C-c TAB/C-c C-i/
@@ -260,6 +291,28 @@ The following keybinds are available in notebook buffers.
 .. el:function:: ein:junk-rename
 .. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
+.. el:function:: ein:notebook-create-checkpoint
+.. el:function:: ein:notebook-restore-to-checkpoint
+.. el:function:: ein:notebook-enable-autosaves
+.. el:function:: ein:notebook-disable-autosaves
+
+Advanced Editing
+^^^^^^^^^^^^^^^^
+
+Worksheet cells can be edited in a manner similar to `source blocks`_ in Org
+buffers. Use ``C-c '`` to edit the contents of the current cell. You can execute
+the contents of the buffer and the results will be sent to the output of the
+cell being edited.
+
+.. el:keymap:: ein:edit-cell-mode-map
+
+.. el:function:: ein:edit-cell-contents
+.. el:function:: ein:edit-cell-exit
+.. el:function:: ein:edit-cell-abort
+.. el:function:: ein:edit-cell-save
+.. el:function:: ein:edit-cell-save-and-execute
+
+.. _`source blocks`: http://orgmode.org/manual/Editing-source-code.html#Editing-source-code
 
 Connected buffer
 ^^^^^^^^^^^^^^^^
@@ -325,7 +378,38 @@ Misc
 Org-mode integration
 --------------------
 
-You can link to IPython notebook from org-mode_ files.
+You can execute org source blocks in EIN by adding `ein` to
+`org:babel-load-languages`. You need to specify a notebook via the :session
+argument. The format for the session argument is
+`{url-or-port}/{path-to-notbooke}`. For example:
+
+.. code:: python
+
+   #+BEGIN_SRC ein :session 8888/Untitled.ipynb
+   import sys
+
+   a = 14500
+   b = a+1000
+   sys.version
+   #+END_SRC
+
+If your code block generates an image, like from an matplotlib plot, then
+specify the file to save the image to using the `:image` argument as in the
+example below:
+
+.. code:: python
+
+   #BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   %matplotlib inline
+   x = np.linspace(0, 1, 100)
+   y = np.random.rand(100,1)
+   plt.plot(x,y)
+   #+END_SRC
+
+You can also link to an IPython notebook from org-mode_ files.
 
 1. Call org-mode function :el:symbol:`org-store-link`
    [#org-store-link]_ in notebook buffer.  You can select a region to
@@ -384,6 +468,9 @@ Notebook
 .. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
+.. el:variable:: ein:worksheet-show-slide-data
+.. el:variable:: ein:notebook-autosave-frequency
+.. el:variable:: ein:notebook-create-checkpoint-on-save
 
 Console
 ^^^^^^^
@@ -562,6 +649,75 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+v0.13.0
+-------
+
+* Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
+  ``ein:jupyter-server-login-and-open``.
+* Added a very basic and quite silly object inspector that has almost no
+  features at the moment. Nonetheless, the curious can try executing ``C-c i``
+  over a defined object in a notebook buffer.
+* Add a keep-alive feature to prevent cookie expiration on very long-running
+  notebook sessions.
+
+v0.12.1
+-------
+
+* Improved support for undo cell movement, addition and deletion.
+* Compatibility with new security features in jupyter `notebook v4.3.1`.
+* EIN now does a better job following redirects (i.e. 302, 304, 307, etc) when
+  talking to a jupyter notebook server.
+* Correct encoding for notebooks with non-English characters.
+* Improved support for non-python kernels. R at least seems to work, if
+  imperfectly.
+* Yet another attempt to improve travis CI support - we almost have it.
+* Baby steps towards using cask to manage the project.
+* New theme, alabaster, for documentation. Isn't it pretty?
+* Numerous other bug fixes and small improvements.
+
+
+.. _`notebook v4.3.1`: https://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/
+
+v0.12.0
+-------
+
+* Cell edit buffers ala org source block edit buffers.
+* Better integration with org source blocks.
+
+v0.11.0
+-------
+
+* Add support for creating and restoring checkpoints on the Jupyter server.
+
+v0.10.0
+-------
+
+* Allow user to change the kernel of a running notebook.
+* The notebooklist buffer now lists all opened notebook buffers.
+
+v0.9.1
+------
+
+* Fix issues with shared-output and notebook connected buffers.
+
+v0.9.0
+------
+
+* Add support for setting slide attributes for notebook/worksheet cells.
+
+v0.8.2
+------
+
+* Fixes for issues `#92`_ and `#91`_.
+
+.. _`#92`: https://github.com/millejoh/emacs-ipython-notebook/issues/92
+.. _`#91`: https://github.com/millejoh/emacs-ipython-notebook/issues/91
+
+v0.8.1
+------
+
+* Fix potential overwrite issue caused by setting buffer-file-name.
 
 v0.8.0
 ------

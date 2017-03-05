@@ -5,7 +5,7 @@
 ;; Author:  John Miller <millejoh at millejoh.com>, Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: http://millejoh.github.io/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.8.0
+;; Version: 0.13.0
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -115,5 +115,9 @@
 ;; See also:
 ;; `CLiki : naming conventions <http://www.cliki.net/naming%20conventions>`_
 
+;; Integrate ein into core emacs functionality
+(when (boundp 'mouse-buffer-menu-mode-groups)
+  (add-to-list 'mouse-buffer-menu-mode-groups
+               '("^ein:" . "ein")))
 
 ;;; ein.el ends here

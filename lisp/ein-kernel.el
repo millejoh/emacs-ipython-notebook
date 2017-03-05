@@ -105,6 +105,8 @@
             :msg_id (ein:utils-uuid)
             :username (ein:$kernel-username kernel)
             :session (ein:$kernel-session-id kernel)
+            ;; version?
+            :date (format-time-string "%Y-%m-%dT%T" (current-time)) ; ISO 8601 timestamp
             :msg_type msg-type)
    :metadata (make-hash-table)
    :content content
@@ -114,28 +116,28 @@
 (defun ein:kernel-start (kernel notebook)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
   (unless (ein:$kernel-running kernel)
-    (let ((kernelspec (ein:$notebook-kernelspec notebook)))
-      (if (= (ein:$kernel-api-version kernel) 2)
-	  (let ((path (substring (ein:$notebook-notebook-path notebook)
-				 0
-				 (or (position ?/ (ein:$notebook-notebook-path notebook)
-					       :from-end t)
-				     0))))
-	    (ein:kernel-start--legacy kernel
-				      (ein:$notebook-notebook-name notebook)
-				      path))
-	(ein:query-singleton-ajax
-	 (list 'kernel-start (ein:$kernel-kernel-id kernel))
-	 (ein:url (ein:$kernel-url-or-port kernel)
-		  "api/sessions")
-	 :type "POST"
-	 :data (json-encode `(("notebook" .
-			       (("path" . ,(ein:$notebook-notebook-path notebook))))
-			      ,@(if kernelspec
-				    `(("kernel" .
-				       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
-	 :parser #'ein:json-read
-	 :success (apply-partially #'ein:kernel--kernel-started kernel))))))
+    (if (= (ein:$kernel-api-version kernel) 2)
+        (let ((path (substring (ein:$notebook-notebook-path notebook)
+                               0
+                               (or (position ?/ (ein:$notebook-notebook-path notebook)
+                                             :from-end t)
+                                   0))))
+          (ein:kernel-start--legacy kernel
+                                    (ein:$notebook-notebook-name notebook)
+                                    path))
+      (let ((kernelspec (ein:$notebook-kernelspec notebook)))
+        (ein:query-singleton-ajax
+         (list 'kernel-start (ein:$kernel-kernel-id kernel))
+         (ein:url (ein:$kernel-url-or-port kernel)
+                  "api/sessions")
+         :type "POST"
+         :data (json-encode `(("notebook" .
+                               (("path" . ,(ein:$notebook-notebook-path notebook))))
+                              ,@(if kernelspec
+                                    `(("kernel" .
+                                       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+         :parser #'ein:json-read
+         :success (apply-partially #'ein:kernel--kernel-started kernel))))))
 
 (defun ein:kernel-start--legacy (kernel notebook-id path)
   (unless (ein:$kernel-running kernel)
@@ -146,7 +148,6 @@
      (ein:url (ein:$kernel-url-or-port kernel)
               "api/sessions")
      :type "POST"
-     
      :data (json-encode `(("notebook" .
                            (("name" . ,notebook-id)
                             ("path" . ,path)))))
@@ -207,7 +208,11 @@
 (defun ein:kernel--ws-url (url-or-port &optional securep)
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
-  (let ((protocol (if securep "wss" "ws")))
+  (let ((protocol (if (or securep
+                          (and (stringp url-or-port)
+                               (string-match "^https://" url-or-port)))
+                      "wss"
+                    "ws")))
     (if (integerp url-or-port)
         (format "%s://127.0.0.1:%s" protocol url-or-port)
       (let* ((url (if (string-match "^https?://" url-or-port)
@@ -293,7 +298,7 @@ See: https://github.com/ipython/ipython/pull/3307"
       (setf (ein:$websocket-onopen c)
             (lexical-let ((kernel kernel))
               (lambda ()
-                (ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel)))
+                ;(ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel))) ;; Deprecated starting in messaging version 5.1
                 ;; run `ein:$kernel-after-start-hook' if both
                 ;; channels are ready.
                 (when (ein:kernel-live-p kernel)
@@ -311,7 +316,7 @@ See: https://github.com/ipython/ipython/pull/3307"
                             :early t)))
     (cond ((= api-version 2)
            (ein:start-channels-multiple-websocket kernel))
-          ((= api-version 3)
+          ((>= api-version 3)
            (ein:start-channels-single-websocket kernel)))
     ;; switch from early-close to late-close message after 1s
     (run-at-time
@@ -701,9 +706,8 @@ Example::
                         (msg (ein:kernel--get-msg kernel "input_reply" content)))
                    (ein:websocket-send-stdin-channel kernel msg)
                    (setf (ein:$kernel-stdin-activep kernel) nil))
-               (cond ((or (string-match "ipdb>" (plist-get content :prompt))
-                          (string-match "(Pdb)" (plist-get content :prompt)))
-                      (ein:run-ipdb-session kernel (plist-get content :prompt))))))))))
+               (cond ((string-match "ipdb>" (plist-get content :prompt)) (ein:run-ipdb-session kernel "ipdb> "))
+                     ((string-match "(Pdb)" (plist-get content :prompt)) (ein:run-ipdb-session kernel "(Pdb) ")))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
@@ -732,10 +736,9 @@ Example::
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (loop with events = (ein:$kernel-events kernel)
         for p in payload
-        for text = (if (= (ein:$kernel-api-version kernel) 2)
-                       (plist-get p :text)
-                     (plist-get (plist-get p :data)
-                                :text/plain))
+        for text = (or (plist-get p :text)
+                       (plist-get (plist-get p :data)
+                                  :text/plain))
         for source = (plist-get p :source)
         if (member source '("IPython.kernel.zmq.page.page"
                             "IPython.zmq.page.page"
@@ -747,7 +750,8 @@ Example::
         (member
          source
          '("IPython.kernel.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
-           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"))
+           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
+           "set_next_input"))
         do (let ((cb (plist-get callbacks :set_next_input)))
              (when cb (ein:funcall-packed cb text)))))
 

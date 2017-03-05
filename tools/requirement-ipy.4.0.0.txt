@@ -1,4 +1,5 @@
-jupyter==1.0.0
+jupyter-notebook==4.0.0
 pyzmq
+jinja2
 tornado
 jsonschema

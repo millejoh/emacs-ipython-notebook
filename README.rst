@@ -1,10 +1,10 @@
-=============================================
- EIN -- Emacs IPython Notebook |build-status|
-=============================================
+========================================================================
+ EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
+========================================================================
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
-EIN works with IPython 2.x_, 3.x_, and Juptyer_! Note that remote and password
+EIN works with IPython 2.x_, 3.x_, and Jupyter_! Note that remote and password
 protected logins are working with IPython 3.x, but have not been tested with
 Jupyter.
 
@@ -21,39 +21,47 @@ Jupyter.
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
    :alt: Build Status
-
+.. |melpa-dev|
+   image:: http://melpa.milkbox.net/packages/ein-badge.svg
+   :target: http://melpa.milkbox.net/#/ein
+   :alt: MELPA development version
+.. |melpa-stable|
+   image:: http://melpa-stable.milkbox.net/packages/ein-badge.svg
+   :target: http://melpa-stable.milkbox.net/#/ein
+   :alt: MELPA stable version
 .. _2.x: http://ipython.org/ipython-doc/2/index.html
 .. _3.x: http://ipython.org/ipython-doc/3/index.html
-.. _Jupyter: http://jupyter.org
 
 
-Check out ob-ipython_!
-======================
+Org-mode Integration
+====================
 
-EIN unfortunately has limited integration_ with org-mode, but if you
-are looking to use the IPython kernel with your org files you should
-check out ob-ipython_ (available on MELPA).
+EIN now integrates_ with org-mode! The code was heavily inspired by ob-ipython_
+which is another project very much worth checking out. Find it on MELPA_.
 
-.. _integration: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _integrates: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython/
 
-Screenshot
-==========
+Screenshots
+===========
 
 .. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/demo_plotnormal.PNG
    :alt: Plotting in Emacs IPython Notebook
+
+.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/R-kernel-example.PNG
+   :alt: EIN connecting to an R kernel
 
 See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_!
 
 Features
 ========
 
-The Emacs IPython Notebook (EIN) provides a client for IPython v2.x and 3.x
-(i.e. Jupyter) notebooks and an integrated REPL (like SLIME_) in Emacs.  EIN
-makes notebook editing very powerful by allowing you to use any Emacs features,
-it also expose IPython features such as code evaluation, object inspection and
-code completion to the Emacs side.  These features can be accessed anywhere in
-Emacs and improve Python code editing and reading in Emacs.
+The Emacs IPython Notebook (EIN) provides a client for IPython v2.x and 3.x and
+Jupyter notebooks via an integrated REPL (like SLIME_) in Emacs. EIN makes
+notebook editing very powerful by allowing you to use Emacs features; it also
+expose IPython features such as code evaluation, object inspection and code
+completion to the Emacs side. These features can be accessed anywhere in Emacs
+and improve Python code editing and reading in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
@@ -74,9 +82,13 @@ Other notebook features:
 * Inline images
 * Auto/manual-completion
 * Popup (tooltip) help
-* Syntax highlighting in each cell types (Python/Markdown)
+* Syntax highlighting in each cell type (Python/Markdown)
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
+* Integration with org-mode
+* Support for debugging via %debug
+* Multiple python kernels
+* EXPERIMENTAL: Non-python kernels! R runs in EIN, see the screenshot above!
 
 Links:
 
@@ -102,9 +114,10 @@ Links:
 Quick try
 =========
 
-This is a quick and clean way to try EIN separately from your Emacs
-setting.  If you want to try EIN but think preparing all the
-requirements is too much, try this!::
+Install from MELPA_! Seriously, installing from MELPA is the easiest way to
+ensure all of ein's dependencies are correctly installed. `zeroein.el` is from a
+bygone era and does not quite work the way it used to. If you are determined,
+and slightly masochistic, you can attempt the following::
 
    git clone git://github.com/millejoh/emacs-ipython-notebook.git
    cd emacs-ipython-notebook/
@@ -126,13 +139,10 @@ The above command requires /bin/sh.  If the above command does not work
 Requirements
 ============
 
-* IPython_ 2.0 or higher.
+* IPython_ 2.0 or higher or current versions of Jupyter_
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ 1.3
 * `request.el`_ >= 0.2
-* (optional) mumamo_ developmental version:
-  It will be automatically loaded when it is on the path.
-  The official way to setup path is to load nXhtml_.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
@@ -154,14 +164,13 @@ Requirements
   
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
-It is known to work in Emacs 23.2, 24.1 and 24.2.
+It is known to work in Emacs 23.2, 24.x, 25.1, and development version (26.0.x).
 
 .. _IPython: http://ipython.org/
+.. _Jupyter: https://jupyter.readthedocs.io/en/latest/content-quickstart.html
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
-.. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
-.. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
@@ -171,21 +180,25 @@ It is known to work in Emacs 23.2, 24.1 and 24.2.
 Usage
 =====
 
-1. Install module.
-   Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in your
-   load path.  See `online documentation`_ for more information.
+1. Install from MELPA_.
+   For manual install, put Emacs lisp ``ein*.el`` files and Python file
+   ``ein.py`` in your load path. See `online documentation`_ for more
+   information.
 
-2. Require module::
+2. Start the `Jupyter notebook server`_.
 
-     (require 'ein)
+3. (Optional) Newer versions of Jupyter have token authentication_ enabled by
+   default so you will need to call ``M-x ein:notebooklist-login`` and enter the
+   token as the password.
 
-3. Start `IPython notebook server`_.
+4. Execute ``M-x ein:notebooklist-open`` to open notebook list.
 
-4. Hit ``M-x ein:notebooklist-open`` to open notebook list.
+.. _`Jupyter notebook server`:
+   https://jupyter.readthedocs.io/en/latest/content-quickstart.html
 
-.. _`IPython notebook server`:
-   http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html
+.. _MELPA: http://melpa.org/#/
 
+.. _authentication: http://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/
 
 Subpackages
 -----------
@@ -202,7 +215,7 @@ Enable `smartrep.el`_::
 
 
 Keybindings - Notebook
--------------------
+----------------------
 
 .. (ein:dev-insert-mode-map "\\{ein:notebook-mode-map}")
 
@@ -287,7 +300,7 @@ Keybindings - Notebook
 
 
 Keybindings - Connect
-------------------
+---------------------
 
 In Python (or any other) buffer, you can connect to any open notebook
 by ``M-x ein:connect-to-notebook`` then choose appropriate notebook.
