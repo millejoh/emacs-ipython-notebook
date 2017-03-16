@@ -50,10 +50,10 @@
 
 (defmethod ein:tb-get-buffer ((traceback ein:traceback))
   (unless (and (slot-boundp traceback :buffer)
-               (buffer-live-p (oref traceback :buffer)))
-    (let ((buf (get-buffer-create (oref traceback :buffer-name))))
-      (oset traceback :buffer buf)))
-  (oref traceback :buffer))
+               (buffer-live-p (slot-value traceback 'buffer)))
+    (let ((buf (get-buffer-create (slot-value traceback 'buffer-name))))
+      (setf (slot-value traceback 'buffer) buf)))
+  (slot-value traceback 'buffer))
 
 (defun ein:tb-pp (ewoc-data)
   (insert (ansi-color-apply ewoc-data)))
@@ -65,8 +65,8 @@
     (let ((inhibit-read-only t)
           (ewoc (ein:ewoc-create #'ein:tb-pp)))
       (erase-buffer)
-      (oset traceback :ewoc ewoc)
-      (oset traceback :tb-data tb-data)
+      (setf (slot-value traceback 'ewoc) ewoc)
+      (setf (slot-value traceback 'tb-data) tb-data)
       (mapc (lambda (data) (ewoc-enter-last ewoc data)) tb-data))
     (ein:traceback-mode)))
 
@@ -91,7 +91,7 @@
     (error "No traceback is available.")))
 
 (defmethod ein:tb-range-of-node-at-point ((traceback ein:traceback))
-  (let* ((ewoc (oref traceback :ewoc))
+  (let* ((ewoc (slot-value traceback 'ewoc))
          (ewoc-node (ewoc-locate ewoc))
          (beg (ewoc-location ewoc-node))
          (end (ein:aand (ewoc-next ewoc ewoc-node) (ewoc-location it))))
@@ -125,12 +125,12 @@
         (lineno (ein:tb-file-lineno-at-point traceback)))
     (if (string-match "<ipython-input-\\([0-9]+\\)-.*" file)
         (let* ((cellnum (string-to-number (match-string 1 file)))
-               (nb (oref traceback :source-notebook))
+               (nb (slot-value traceback 'source-notebook))
                (ws (first (ein:$notebook-worksheets nb)))
                (cells (ein:worksheet-get-cells ws))
                (it (find cellnum cells :key #'(lambda (x)
                                                 (if (same-class-p x 'ein:codecell)
-                                                    (oref x :input-prompt-number))))))
+                                                    (slot-value x 'input-prompt-number))))))
           (if it
               (progn
                 (pop-to-buffer (ein:notebook-buffer nb))
@@ -156,11 +156,11 @@
 
 (defun ein:tb-prev-item ()
   (interactive)
-  (ewoc-goto-prev (oref ein:%traceback% :ewoc) 1))
+  (ewoc-goto-prev (slot-value ein:%traceback% 'ewoc) 1))
 
 (defun ein:tb-next-item ()
   (interactive)
-  (ewoc-goto-next (oref ein:%traceback% :ewoc) 1))
+  (ewoc-goto-next (slot-value ein:%traceback% 'ewoc) 1))
 
 (defvar ein:traceback-mode-map
   (let ((map (make-sparse-keymap)))
