@@ -208,7 +208,7 @@ MOVE-PREV / MOVE-NEXT : function
 insert-prev insert-next move-prev move-next)"
   (with-current-buffer buffer
     (setq ein:%notification%
-          (ein:notification "NotificationWidget" :buffer buffer))
+          (ein:notification :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
     (oset ein:%notification% :tab
