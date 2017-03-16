@@ -46,7 +46,7 @@
 (defvar ein:tb-buffer-name-template "*ein:tb %s/%s*")
 
 (defun ein:tb-new (buffer-name notebook)
-  (ein:traceback "Traceback" :buffer-name buffer-name :source-notebook notebook))
+  (ein:traceback :buffer-name buffer-name :source-notebook notebook))
 
 (defmethod ein:tb-get-buffer ((traceback ein:traceback))
   (unless (and (slot-boundp traceback :buffer)

@@ -98,6 +98,8 @@ the log of the running jupyter server."
                              :buffer ein:jupyter-server-buffer-name
                              :command (ein:jupyter-server--cmd server-path server-directory))))
     (setq %ein:jupyter-server-session% proc)
+    (if (>= ein:log-level 40)
+        (switch-to-buffer ein:jupyter-server-buffer-name))
     (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
         (with-current-buffer (process-buffer proc)
           (goto-char (point-min))

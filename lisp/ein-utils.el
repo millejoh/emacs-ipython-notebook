@@ -205,29 +205,29 @@ See: http://api.jquery.com/jQuery.ajax/"
 (defun ein:json-any-to-bool (obj)
   (if (and obj (not (eq obj json-false))) t json-false))
 
-(defun ein:json-encode-char (char)
-  "Fixed `json-encode-char'."
-  (setq char (json-encode-char0 char 'ucs))
-  (let ((control-char (car (rassoc char json-special-chars))))
-    (cond
-     ;; Special JSON character (\n, \r, etc.).
-     (control-char
-      (format "\\%c" control-char))
-     ;; ASCIIish printable character.
-     ((and (> char 31) (< char 127))    ; s/161/127/
-      (format "%c" char))
-     ;; Fallback: UCS code point in \uNNNN form.
-     (t
-      (format "\\u%04x" char)))))
+;; (defun ein:json-encode-char (char)
+;;   "Fixed `json-encode-char'."
+;;   (setq char (json-encode-char0 char 'ucs))
+;;   (let ((control-char (car (rassoc char json-special-chars))))
+;;     (cond
+;;      ;; Special JSON character (\n, \r, etc.).
+;;      (control-char
+;;       (format "\\%c" control-char))
+;;      ;; ASCIIish printable character.
+;;      ((and (> char 31) (< char 127))    ; s/161/127/
+;;       (format "%c" char))
+;;      ;; Fallback: UCS code point in \uNNNN form.
+;;      (t
+;;       (format "\\u%04x" char)))))
 
-(defadvice json-encode-char (around ein:json-encode-char (char) activate)
-  "Replace `json-encode-char' with `ein:json-encode-char'."
-  (setq ad-return-value (ein:json-encode-char char)))
+;; (defadvice json-encode-char (around ein:json-encode-char (char) activate)
+;;   "Replace `json-encode-char' with `ein:json-encode-char'."
+;;   (setq ad-return-value (ein:json-encode-char char)))
 
-(defadvice json-encode (around encode-nil-as-json-empty-object activate)
-  (if (null object)
-    (setq ad-return-value "{}")
-    ad-do-it))
+;; (defadvice json-encode (around encode-nil-as-json-empty-object activate)
+;;   (if (null object)
+;;     (setq ad-return-value "{}")
+;;     ad-do-it))
 
 
 ;;; EWOC

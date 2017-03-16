@@ -102,7 +102,8 @@ node `(org) External links' and Info node `(org) Search options'"
 ;;;###autoload
 (eval-after-load "org"
   '(progn
-     (org-add-link-type "ipynb" 'ein:org-open)
+     (org-link-set-parameters "ipynb" :follow #'ein:org-open)
+     ;;(org-add-link-type "ipynb" :follow 'ein:org-open)
      (add-hook 'org-store-link-functions 'ein:org-store-link)))
 ;; The above expression is evaluated via loaddef file.  At the moment,
 ;; org.el nor ein-org.el need not be loaded.  When org-mode is used,
