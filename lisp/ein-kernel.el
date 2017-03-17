@@ -131,8 +131,10 @@
          (ein:url (ein:$kernel-url-or-port kernel)
                   "api/sessions")
          :type "POST"
-         :data (json-encode `(("notebook" .
-                               (("path" . ,(ein:$notebook-notebook-path notebook))))
+         :data (json-encode `(("path" . ,(ein:$notebook-notebook-path notebook)
+                               ;;(("path" . ,(ein:$notebook-notebook-path notebook)))
+                               )
+                              ("type" . "notebook")
                               ,@(if kernelspec
                                     `(("kernel" .
                                        (("name" . ,(ein:$kernelspec-name kernelspec))))))))
