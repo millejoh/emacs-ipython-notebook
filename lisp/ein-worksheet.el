@@ -940,6 +940,13 @@ in the history."
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))
 
+;; in edit-cell-mode, worksheet is bound as src--ws
+;; used by ein:get-kernel as a last option so completion, tooltips
+;; work in edit-cell-mode
+(defun ein:get-kernel--worksheet-in-edit-cell ()
+  "Get kernel when in edit-cell-mode."
+  (when (ein:worksheet-p ein:src--ws) (oref ein:src--ws :kernel)))
+
 (defun ein:get-cell-at-point--worksheet ()
   (ein:worksheet-get-current-cell :noerror t))
 
