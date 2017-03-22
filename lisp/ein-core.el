@@ -265,7 +265,8 @@ but can operate in different contexts."
   (ein:generic-getter '(ein:get-kernel--notebook
                         ein:get-kernel--worksheet
                         ein:get-kernel--shared-output
-                        ein:get-kernel--connect)))
+                        ein:get-kernel--connect
+                        ein:get-kernel--worksheet-in-edit-cell)))
 
 (defun ein:get-kernel-or-error ()
   (or (ein:get-kernel)
