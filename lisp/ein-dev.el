@@ -80,7 +80,9 @@ As code cells hold base64-encoded image data, backtrace tends to
 be VERY long.  So I am setting `print-level' to *1*.  Note that
 setting it globally via `setq' does not work because the value
 for debugger is hard-coded.  See `debugger-setup-buffer'."
-  (let ((print-level 1))
+  (let ((print-level 1)
+        (print-length 1)
+        (print-circle t))
     ad-do-it))
 
 (defun ein:dev-patch-backtrace ()

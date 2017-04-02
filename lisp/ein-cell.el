@@ -184,7 +184,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
    (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
    (slidetype :initarg :slidetype :initform "-" :type string)
-   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
+   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string
+            :accessor ein:cell-id))
   "Notebook cell base class")
 
 (defclass ein:codecell (ein:basecell)
