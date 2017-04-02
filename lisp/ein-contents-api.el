@@ -474,3 +474,48 @@ global setting.  For global setting and more information, see
 
 (defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
   (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
+
+
+;;; Uploads
+
+(defun ein:get-local-file (path)
+  "If path exists, get contents and try to guess type of file (one of file, notebook, or directory)
+and content format (one of json, text, or base64)."
+  (unless (file-readable-p path)
+    (error "File %s is not accessible and cannot be uploaded." path))
+  (let ((name (file-name-nondirectory path))
+        (type (file-name-extension path)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (cond ((string= type "ipynb")
+             (list name "notebook" "json" (buffer-string)))
+            ((eql buffer-file-coding-system 'no-conversion)
+             (list name "file" "base64" (buffer-string)))
+            (t (list name "file" "text" (buffer-string)))))))
+
+
+(defun ein:content-upload (path uploaded-file-path &optional url-or-port)
+  (multiple-value-bind (name type format contents) (ein:get-local-file uploaded-file-path)
+    (let* ((content (make-ein:$content :url-or-port (or url-or-port (ein:default-url-or-port))
+                                       :name name
+                                       :path (concat path "/" name)
+                                       :raw-content contents))
+           (data (make-hash-table)))
+      (setf (gethash 'path data) path
+            (gethash 'name data) name
+            (gethash 'type data) type
+            (gethash 'format data) format
+            (gethash 'content data) contents)
+      (ein:query-singleton-ajax
+       (list 'content-upload name)
+       (ein:content-url content)
+       :type "PUT"
+       :headers '(("Content-Type" . "application/json"))
+       :timeout ein:content-query-timeout
+       :data (json-encode data)
+       :success (lexical-let ((uploaded-file-path uploaded-file-path))
+                  #'(lambda (&rest -ignore-) (message "File %s succesfully uploaded." uploaded-file-path)))
+       :error (apply-partially #'ein:content-upload-error uploaded-file-path)))))
+
+(cl-defun ein:content-upload-error (path &key symbol-status response &allow-other-keys)
+  (ein:display-warning (format "Could not upload %s. Failed with status %s" path symbol-status)))
