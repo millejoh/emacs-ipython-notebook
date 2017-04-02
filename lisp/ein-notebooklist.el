@@ -271,12 +271,20 @@ This function is called via `ein:notebook-after-rename-hook'."
                      cbargs))
 
 ;;;###autoload
+(defun ein:notebooklist-upload-file (upload-path)
+  (interactive "fSelect file to upload:")
+  (unless ein:%notebooklist%
+    (error "Only works when called from an ein:notebooklist buffer."))
+  (let ((nb-path (ein:$notebooklist-path ein:%notebooklist%)))
+    (ein:content-upload nb-path upload-path)))
+
+;;;###autoload
 (defun ein:notebooklist-new-notebook (&optional url-or-port kernelspec path callback cbargs)
   "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)
-		     (completing-read
-		      "Select kernel [default]: "
-		      (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)) nil t nil nil "default" nil)))
+                     (completing-read
+                      "Select kernel [default]: "
+                      (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)) nil t nil nil "default" nil)))
   (let ((path (or path (ein:$notebooklist-path (or ein:%notebooklist%
                                                    (ein:notebooklist-list-get url-or-port)))))
         (version (ein:$notebooklist-api-version (or ein:%notebooklist%
