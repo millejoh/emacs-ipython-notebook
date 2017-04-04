@@ -299,6 +299,22 @@ call notebook destructor `ein:notebook-del'."
 
 ;;; Notebook utility functions
 
+(defun ein:notebook-update-url-or-port (new-url-or-port notebook)
+  "Change the url-or-port the notebook is saved under. Calling
+this will propagate the change to the kernel, trying to restart
+the kernel in the process. Use case for this command is when
+the jupyter server dies and restarted on a different port."
+  (interactive (list
+                (ein:notebooklist-ask-url-or-port)
+                (ein:get-notebook-or-error)))
+  (setf (ein:$notebook-url-or-port notebook) new-url-or-port
+        (ein:$kernel-url-or-port (ein:$notebook-kernel notebook)) new-url-or-port)
+  (ein:kernel-restart (ein:$notebook-kernel notebook))
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (rename-buffer (format ein:notebook-buffer-name-template
+                           (ein:$notebook-url-or-port notebook)
+                           (ein:$notebook-notebook-name notebook)))))
+
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   ;; FIXME: Find a better way to define notebook buffer!
