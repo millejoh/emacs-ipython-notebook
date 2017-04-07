@@ -61,12 +61,12 @@ the notebook directory, you can set it here for future calls to
 (defun ein:jupyter-server--cmd (path dir)
   (append (list path
                 "notebook"
-                (format "--notebook-dir=%s" dir))
+                (format "--notebook-dir=%s" (convert-standard-filename dir)))
           ein:jupyter-server-args))
 
 
 ;;;###autoload
-(defun ein:jupyter-server-start (server-path server-directory)
+(defun ein:jupyter-server-start (server-path server-directory &optional no-login-after-start-p)
   "Start the jupyter notebook server at the given path.
 
 This command opens an asynchronous process running the jupyter
@@ -108,7 +108,8 @@ the log of the running jupyter server."
                           (> x 100))
                 do (progn (sit-for 0.1)
                           (goto-char (point-min))) 
-                finally (ein:jupyter-server-login-and-open))))))
+                finally (unless no-login-after-start-p
+                          (ein:jupyter-server-login-and-open)))))))
 
 (defun ein:jupyter-server-login-and-open ()
   "Log in and open a notebooklist buffer for a running jupyter notebook server.
@@ -157,7 +158,10 @@ there is no running server then no action will be taken.
     (message "Stopped Jupyter notebook server.")))
 
 (defun ein:jupyter-server-conn-info ()
-  (with-current-buffer ein:jupyter-server-buffer-name
+  "Return the url and port for the currently running jupyter
+session, along with the login token."
+  (assert (processp %ein:jupyter-server-session%) t "Jupyter server has not started!")
+  (with-current-buffer (process-buffer %ein:jupyter-server-session%) ;;ein:jupyter-server-buffer-name
     (goto-char (point-min))
     (re-search-forward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil t)
     (let ((url-or-port (match-string 1))
