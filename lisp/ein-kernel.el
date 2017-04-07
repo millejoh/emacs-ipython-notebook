@@ -119,7 +119,7 @@
     (if (= (ein:$kernel-api-version kernel) 2)
         (let ((path (substring (ein:$notebook-notebook-path notebook)
                                0
-                               (or (position ?/ (ein:$notebook-notebook-path notebook)
+                               (or (cl-position ?/ (ein:$notebook-notebook-path notebook)
                                              :from-end t)
                                    0))))
           (ein:kernel-start--legacy kernel
@@ -144,7 +144,8 @@
                                  `(("kernel" .
                                     (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
          :parser #'ein:json-read
-         :success (apply-partially #'ein:kernel--kernel-started kernel))))))
+         :success (apply-partially #'ein:kernel--kernel-started kernel)
+         :error (apply-partially #'ein:kernel--start-failed kernel notebook))))))
 
 (defun ein:kernel-start--legacy (kernel notebook-id path)
   (unless (ein:$kernel-running kernel)
@@ -190,6 +191,7 @@
     (ein:kernel-start kernel notebook)))
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
+  (setq kernel-restart-try-count 0)
   (let ((session-id (plist-get data :id)))
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))

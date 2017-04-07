@@ -824,13 +824,17 @@ This is equivalent to do ``C-c`` in the console program."
            (3 (ein:write-nbformat3-worksheets notebook))
            (4 (ein:write-nbformat4-worksheets notebook))
            (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook))))))
-    (plist-put (cdr (assq 'metadata data))
-               :name (ein:$notebook-notebook-name notebook))
-    (ein:aif (ein:$notebook-nbformat-minor notebook)
-        ;; Do not set nbformat when it is not given from server.
-        (push `(nbformat_minor . ,it) data))
-    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
-    data))
+    ;; Apparently metadata can be either a hashtable or a plist...
+    (let ((metadata (cdr (assq 'metadata data))))
+      (if (hash-table-p metadata)
+          (setf (gethash 'name metadata) (ein:$notebook-notebook-name notebook))
+        (plist-put metadata
+                   :name (ein:$notebook-notebook-name notebook)))
+      (ein:aif (ein:$notebook-nbformat-minor notebook)
+          ;; Do not set nbformat when it is not given from server.
+          (push `(nbformat_minor . ,it) data))
+      (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+      data)))
 
 
 (defun ein:write-nbformat3-worksheets (notebook)

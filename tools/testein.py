@@ -141,11 +141,16 @@ class TestRunner(BaseRunner):
         quote = '"{0}"'.format
         self.logpath_log = self.logpath('log')
         self.logpath_messages = self.logpath('messages')
+        self.logpath_server = self.logpath('server')
+        self.notebook_dir = os.path.join(EIN_ROOT, "tests")
         self.lispvars = {
             'ein:testing-dump-file-log': quote(self.logpath_log),
+            'ein:testing-dump-server-log': quote(self.logpath_server),
             'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
+            'ein:testing-jupyter-server-command': quote(self.ipython),
+            'ein:testing-jupyter-server-directory': quote(os.path.normpath(self.notebook_dir))
         }
         if self.ein_debug:
             self.lispvars['ein:debug'] = "'t"
@@ -429,15 +434,15 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
     if func_test:
         for i in range(func_test_max_retries + 1):
             func_test_runner = TestRunner(testfile='func-test.el', **kwds)
-            with ServerRunner(testfile='func-test.el', **kwds) as port:
-                func_test_runner.setq('ein:testing-port', port)
-                if func_test_runner.run() == 0:
-                    print("Functional test succeeded after {0} retries." \
-                        .format(i))
-                    return 0
-                if not no_skip and func_test_runner.is_known_failure():
-                    print("All failures are known.  Ending functional test.")
-                    return 0
+            # with ServerRunner(testfile='func-test.el', **kwds) as port:
+            #     func_test_runner.setq('ein:testing-port', port)
+            if func_test_runner.run() == 0:
+                print("Functional test succeeded after {0} retries." \
+                      .format(i))
+                return 0
+            if not no_skip and func_test_runner.is_known_failure():
+                print("All failures are known.  Ending functional test.")
+                return 0
         print("Functional test failed after {0} retries.".format(i))
         return 1
     return 0
