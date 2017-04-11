@@ -177,7 +177,7 @@
 (defvar kernel-restart-try-count 0)
 (defvar max-kernel-restart-try-count 3)
 
-0(cl-defun ein:kernel--start-failed (kernel notebook &key error-thrown sybmol-status &allow-other-keys)
+(cl-defun ein:kernel--start-failed (kernel notebook &key error-thrown sybmol-status &allow-other-keys)
   (ein:log 'info "Encountered issue %s starting kernel, %s retries left."
            (car error-thrown)
            (- max-kernel-restart-try-count kernel-restart-try-count))
