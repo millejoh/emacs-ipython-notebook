@@ -548,7 +548,7 @@ of minor mode."
   spec
   language)
 
-(defvar ein:available-kernelspecs (make-hash-table))
+(defvar ein:available-kernelspecs (make-hash-table :test #'equal))
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
@@ -576,15 +576,16 @@ of minor mode."
   "Query jupyter server for the list of available
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
-  (ein:query-singleton-ajax
-   (list 'ein:qeury-kernelspecs url-or-port)
-   (ein:url url-or-port "api/kernelspecs")
-   :type "GET"
-   :timeout ein:content-query-timeout
-   :parser 'ein:json-read
-   :sync t
-   :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
-   :error (apply-partially #'ein:query-kernelspecs-error)))
+  (unless (gethash url-or-port ein:available-kernelspecs)
+    (ein:query-singleton-ajax
+     (list 'ein:qeury-kernelspecs url-or-port)
+     (ein:url url-or-port "api/kernelspecs")
+     :type "GET"
+     :timeout ein:content-query-timeout
+     :parser 'ein:json-read
+     :sync t
+     :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
+     :error (apply-partially #'ein:query-kernelspecs-error))))
 
 (defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))

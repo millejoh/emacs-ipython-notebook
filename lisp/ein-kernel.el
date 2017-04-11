@@ -173,6 +173,16 @@
     ;;  :success (apply-partially #'ein:kernel--kernel-started kernel))
     ))
 
+(defvar kernel-restart-try-count 0)
+(defvar max-kernel-restart-try-count 3)
+
+(cl-defun ein:kernel--start-failed (kernel notebook &key error-thrown sybmol-status &allow-other-keys)
+  (ein:log 'info "Encountered issue %s starting kernel, %s retries left."
+           (car error-thrown)
+           (- max-kernel-restart-try-count kernel-restart-try-count))
+  (unless (> kernel-restart-try-count max-kernel-restart-try-count)
+    (incf kernel-restart-try-count)
+    (ein:kernel-start kernel notebook)))
 
 (defun* ein:kernel--kernel-started (kernel &key data &allow-other-keys)
   (let ((session-id (plist-get data :id)))
