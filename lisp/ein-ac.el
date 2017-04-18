@@ -86,7 +86,7 @@ Maximum number of cache to store."
 ;; FIXME: Maybe this should be buffer-local?
 
 (defun ein:ac-direct-get-matches ()
-  (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
+ (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
 
 (eval '(ac-define-source ein-direct
                          '((candidates . ein:ac-direct-get-matches)
