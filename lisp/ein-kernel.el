@@ -109,12 +109,15 @@
             :date (format-time-string "%Y-%m-%dT%T" (current-time)) ; ISO 8601 timestamp
             :msg_type msg-type)
    :metadata (make-hash-table)
+
    :content content
    :parent_header (make-hash-table)))
 
 
 (defun ein:kernel-start (kernel notebook)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
+  (assert (and (ein:$notebook-p notebook)
+               (ein:$kernel-p kernel)))
   (unless (ein:$kernel-running kernel)
     (if (= (ein:$kernel-api-version kernel) 2)
         (let ((path (substring (ein:$notebook-notebook-path notebook)
