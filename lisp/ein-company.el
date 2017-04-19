@@ -31,6 +31,7 @@
 
 (require 'ein-core)
 
+;;;###autoload
 (defun ein:company-backend (command &optional arg &rest ignore)
   (interactive (list 'interactive))
   (cl-case command
@@ -60,8 +61,6 @@
     (condition-case err
         (funcall (car callback) matches)
       (error (error (format "Error %s running ein company completer." err))))))
-
-(add-to-list 'company-backends #'ein:company-backend)
 
 (setq ein:complete-on-dot nil)
 
