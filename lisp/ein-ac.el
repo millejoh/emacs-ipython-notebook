@@ -39,13 +39,6 @@
                             (default-value 'ac-sources))
   "Extra `ac-sources' used in notebook.")
 
-(make-obsolete-variable 'ein:ac-max-cache nil "0.1.2")
-(defcustom ein:ac-max-cache 1000
-  "[This value is not used anymore!]
-Maximum number of cache to store."
-  :type 'integer
-  :group 'ein)
-
 
 ;;; Chunk (adapted from auto-complete-chunk.el)
 

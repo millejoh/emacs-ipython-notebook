@@ -35,7 +35,8 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend) )
-    (prefix (and (--filter (and (boundp it) (symbol-value it)) minor-mode-list)
+    (prefix (and (--filter (and (boundp it) (symbol-value it) (eql it 'ein:notebook-minor-mode))
+                           minor-mode-list)
                  (thing-at-point 'line)))
     (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
                                  (arg arg)
@@ -56,7 +57,11 @@
          (matched-text (buffer-substring beg (- beg delta)))
          (matches (plist-get content :matches)))
     (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: matches=%s" matches)
-    (funcall callback matches)))
+    (condition-case err
+        (funcall (car callback) matches)
+      (error (error (format "Error %s running ein company completer." err))))))
+
+(add-to-list 'company-backends #'ein:company-backend)
 
 (setq ein:complete-on-dot nil)
 
