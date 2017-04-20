@@ -38,19 +38,20 @@
     (interactive (company-begin-backend 'ein:company-backend) )
     (prefix (and (--filter (and (boundp it) (symbol-value it) (eql it 'ein:notebook-minor-mode))
                            minor-mode-list)
-                 (cl-subseq (thing-at-point 'line) 0 -1) ))
+                 (cl-subseq (thing-at-point 'line) 0 -1)))
     (location nil)
     (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
+                                 (arg arg)
                                  (col (current-column)))
                      (cons :async
                            (lambda (cb)
                              (ein:kernel-complete kernel
-                                                  (thing-at-point 'line)
+                                                  arg
                                                   col
                                                   (list :complete_reply
                                                         (cons #'ein:completer-finish-completing-company (list :callback cb))))))))))
 
-(cl-defun ein:completer-finish-completing-company (callback content -metadata-not-used-)
+(cl-defun ein:completer-finish-completing-company (packed content -metadata-not-used-)
   (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: content=%S" content)
   (let* ((beg (point))
          (delta (- (plist-get content :cursor_end)
@@ -58,7 +59,7 @@
          (matched-text (buffer-substring beg (- beg delta)))
          (matches (plist-get content :matches)))
     (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: matches=%s" matches)
-    (funcall (plist-get callback :callback) matches)))
+    (funcall (plist-get packed :callback) matches)))
 
 (setq ein:complete-on-dot nil)
 
