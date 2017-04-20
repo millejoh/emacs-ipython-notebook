@@ -23,7 +23,7 @@
 ;;; Commentary:
 
 
-(defvar *ein:file-buffername-template* "/ein:%s:%s")
+(defvar *ein:file-buffername-template* "'/ein:%s:%s")
 (ein:deflocal ein:content-file-buffer--content nil)
 
 ;; (push '("^ein:.*" . ein:content-file-handler)
