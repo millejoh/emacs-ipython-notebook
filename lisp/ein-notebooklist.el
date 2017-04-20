@@ -31,6 +31,7 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
+(require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
 
@@ -269,6 +270,10 @@ This function is called via `ein:notebook-after-rename-hook'."
                      nil
                      callback
                      cbargs))
+
+(defun ein:notebooklist-open-file (url-or-port path)
+  (ein:file-open url-or-port
+                 path))
 
 ;;;###autoload
 (defun ein:notebooklist-upload-file (upload-path)
@@ -601,6 +606,23 @@ Notebook list data is passed via the buffer local variable
                                                         (ein:url (ein:$notebooklist-path ein:%notebooklist%)
                                                                  path))))
                      "Dir")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))
+          if (string= type "file")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((urlport urlport)
+                                           (path path))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open-file urlport path)))
+                     "Open")
+                    (widget-insert " ")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((path path))
+                               (lambda (&rest ignore)
+                                 (message "[EIN]: NBlist delete file command. Implement me!")))
+                     "Delete")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
           if (string= type "notebook")
