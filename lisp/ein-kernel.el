@@ -410,7 +410,7 @@ kill the kernel."
 ;;       its first argument.  It's like using `cons' instead of
 ;;       `$.proxy'.
 
-(defun ein:kernel-object-info-request (kernel objname callbacks)
+(defun ein:kernel-object-info-request (kernel objname callbacks &optional cursor-pos detail-level)
   "Send object info request of OBJNAME to KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -426,20 +426,26 @@ CONTENT and METADATA are given by `object_info_reply' message.
 `object_info_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-       (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
-       (when objname
-         (let ((content (list :oname (format "%s" objname)))
-               msg
-               msg-id)
-           (if (>= (ein:$kernel-api-version kernel) 3)
-               (setf msg (ein:kernel--get-msg kernel "inspect_request"
-                                              (append content (list :detail_level 1)))
-                     msg-id (plist-get (plist-get msg :header) :msg_id))
-             (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
-                   msg-id (plist-get (plist-get msg :header) :msg_id)))
-           (ein:websocket-send-shell-channel kernel msg)
-           (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
+  (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
+  (when objname
+    (let ((content (list :oname (format "%s" objname)))
+          msg
+          msg-id)
+      (if (>= (ein:$kernel-api-version kernel) 3)
+          (setf msg (ein:kernel--get-msg kernel "inspect_request"
+                                         (append content (list :detail_level 1)))
+                msg-id (plist-get (plist-get msg :header) :msg_id))
+        (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
+              msg-id (plist-get (plist-get msg :header) :msg_id)))
+      (ein:websocket-send-shell-channel kernel msg)
+      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
 
+(defun ein:legacy-kernel-object-info-request (kernel objname callbacks)
+  (let* ((content (list :oname (format "%s" objname)))
+         (msg (ein:kernel--get-msg kernel "object_info_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:websocket-send-shell-channel kernel msg)
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)))
 
 (defun* ein:kernel-execute (kernel code &optional callbacks
                                    &key

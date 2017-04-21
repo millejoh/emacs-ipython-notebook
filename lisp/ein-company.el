@@ -40,6 +40,10 @@
                            minor-mode-list)
                  (ein:object-at-point)))
     (location nil)
+    (doc-buffer (lexical-let ((arg arg))
+                  (cons :async
+                        (lambda (cb)
+                          (ein:company-handle-doc-buffer arg cb)))))
     (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
                                  (col (current-column)))
                      (cons :async
@@ -60,6 +64,19 @@
          (matches (plist-get content :matches)))
     (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: matches=%s" matches)
     (funcall (plist-get packed :callback) matches)))
+
+(defun ein:company-handle-doc-buffer-finish (packed content -metadata-not-used-)
+  (when (plist-get content :found)
+    (funcall (plist-get packed :callback) (company-doc-buffer
+                                           (ansi-color-apply (cadr (plist-get content :data)))))))
+
+(defun ein:company-handle-doc-buffer (object cb)
+  (ein:kernel-object-info-request (ein:get-kernel-or-error)
+                                  object
+                                  (list :inspect_reply
+                                        (cons #'ein:company-handle-doc-buffer-finish
+                                              (list :object object
+                                                    :callback cb)))))
 
 (setq ein:complete-on-dot nil)
 
