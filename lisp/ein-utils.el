@@ -310,13 +310,13 @@ Adapted from twittering-mode.el's `case-string'."
   `(cond
     ,@(mapcar
        (lambda (clause)
-	 (let ((keylist (car clause))
-	       (body (cdr clause)))
-	   `(,(if (listp keylist)
-		  `(or ,@(mapcar (lambda (key) `(equal ,str ,key))
-				 keylist))
-		't)
-	     ,@body)))
+         (let ((keylist (car clause))
+               (body (cdr clause)))
+           `(,(if (listp keylist)
+                  `(or ,@(mapcar (lambda (key) `(equal ,str ,key))
+                                 keylist))
+                't)
+             ,@body)))
        clauses)))
 
 

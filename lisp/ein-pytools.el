@@ -200,6 +200,40 @@ pager buffer.  You can explicitly specify the object by selecting it."
      #'ein:pytools-jump-to-source-1
      (list kernel object other-window notebook)))))
 
+(defun ein:pytools-find-source (kernel object &optional callback)
+  "Find the file and line where object is defined.
+This function mostly exists to support company-mode, but might be
+useful for other purposes. If the definition for object can be
+found and when callback isort specified, the callback will be
+called with a cons of the filename and line number where object
+is defined."
+  (ein:kernel-execute
+   kernel
+   (format "__import__('ein').find_source('%s')" object)
+   (list
+    :output
+    (cons
+     #'ein:pytools-finish-find-source
+     (list kernel object callback)))))
+
+(defun ein:pytools-finish-find-source (packed msg-type content -ignored-)
+  (destructuring-bind (kernel object callback) packed
+    (if (or (string= msg-type "stream")
+            (string= msg-type "display_data"))
+        (ein:aif (or (plist-get content :text) (plist-get content :data))
+            (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
+                (ein:log 'info
+                  "Source of %s not found" object)
+              (destructuring-bind (filename &optional lineno &rest ignore)
+                  (split-string it "\n")
+                (if callback
+                    (funcall callback
+                             (cons (ein:kernel-filename-from-python kernel filename)
+                                   (string-to-number lineno)))
+                  (cons (ein:kernel-filename-from-python kernel filename)
+                        (string-to-number lineno)))))) ;; FIXME Generator?
+      (ein:log 'info "Source of %s notebook found" object))))
+
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
 When the prefix argument ``C-u`` is given, open the source code
