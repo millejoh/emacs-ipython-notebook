@@ -42,10 +42,16 @@
   (with-current-buffer (get-buffer-create (ein:file-buffer-name (ein:$content-url-or-port content)
                                                                 (ein:$content-path content)))
     (setq ein:content-file-buffer--content content)
-    (insert (ein:$content-raw-content content))
+    (let ((raw-content (ein:$content-raw-content content)))
+      (if (eql system-type 'windows-nt)
+          (insert (decode-coding-string raw-content 'utf-8))
+        (insert raw-content)))
     (set-visited-file-name (buffer-name))
     (set-auto-mode)
-    (add-hook 'write-contents-functions 'ein:content-file-save)
+    (add-hook 'write-contents-functions 'ein:content-file-save) ;; FIXME Brittle, will not work
+                                                                ;; if user changes major mode.
+    (set-buffer-modified-p nil)
+    (goto-char (point-min))
     (pop-to-buffer (buffer-name))))
 
 (defun ein:content-file-save ()
