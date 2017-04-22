@@ -39,11 +39,16 @@
     (prefix (and (--filter (and (boundp it) (symbol-value it) (eql it 'ein:notebook-minor-mode))
                            minor-mode-list)
                  (ein:object-at-point)))
-    (location nil)
     (doc-buffer (lexical-let ((arg arg))
                   (cons :async
                         (lambda (cb)
                           (ein:company-handle-doc-buffer arg cb)))))
+    (location (lexical-let ((obj arg))
+                (cons :async
+                      (lambda (cb)
+                        (ein:pytools-find-source (ein:get-kernel-or-error)
+                                                 obj
+                                                 cb)))))
     (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
                                  (col (current-column)))
                      (cons :async
