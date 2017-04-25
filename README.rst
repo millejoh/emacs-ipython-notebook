@@ -163,8 +163,8 @@ Requirements
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
   
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
-It is known to work in Emacs 23.2, 24.x, 25.1, and development version (26.0.x).
+EIEIO and json.el.  EIN is currently known to work in Emacs 25.1 and development
+version (26.0.x).
 
 .. _IPython: http://ipython.org/
 .. _Jupyter: https://jupyter.readthedocs.io/en/latest/content-quickstart.html
