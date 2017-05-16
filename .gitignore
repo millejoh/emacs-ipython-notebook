@@ -18,3 +18,4 @@ test-batch-log.log
 Makefile~
 .ipynb_checkpoints
 .ipynb_checkpoints/*
+*.png
