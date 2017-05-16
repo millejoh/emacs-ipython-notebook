@@ -1048,7 +1048,6 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let* ((ss-table (ein:get-slide-show cell))
          (metadata (slot-value cell 'metadata))
@@ -1115,12 +1114,12 @@ prettified text thus be used instead of HTML type."
             `((execution_count . ,execute-count))
           `((execution_count)))
       (outputs . ,(apply #'vector (or renamed-outputs outputs)))
-      (metadata . ,metadata)))
+      (metadata . ,metadata))))
 
 
 (defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(oref cell :cell-type))
-    (source    . ,(ein:cell-get-text cell)))))
+    (source    . ,(ein:cell-get-text cell))))
 
 (defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
   (let ((metadata (slot-value cell 'metadata))
