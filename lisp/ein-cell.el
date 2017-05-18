@@ -255,7 +255,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
 (defun ein:get-slide-show (cell)
   (let ((slide-type (slot-value cell 'slidetype))
         (ss-table (make-hash-table)))
-    (setf (gethash 'slide-type ss-table) slide_type)
+    (setf (gethash 'slide-type ss-table) slide-type)
     ss-table))
 
 (defun ein:preprocess-nb4-cell (cell-data)
