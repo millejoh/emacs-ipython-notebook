@@ -131,13 +131,18 @@
          (ein:url (ein:$kernel-url-or-port kernel)
                   "api/sessions")
          :type "POST"
-         :data (json-encode `(("path" . ,(ein:$notebook-notebook-path notebook)
-                               ;;(("path" . ,(ein:$notebook-notebook-path notebook)))
-                               )
-                              ("type" . "notebook")
-                              ,@(if kernelspec
-                                    `(("kernel" .
-                                       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+         :data (json-encode
+                (cond ((<= (ein:$kernel-api-version kernel) 4)
+                       `(("notebook" .
+                          (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+                         ,@(if kernelspec
+                               `(("kernel" .
+                                  (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+                      (t `(("path" . ,(ein:$notebook-notebook-path notebook))
+                           ("type" . "notebook")
+                           ,@(if kernelspec
+                                 `(("kernel" .
+                                    (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
          :parser #'ein:json-read
          :success (apply-partially #'ein:kernel--kernel-started kernel))))))
 
@@ -220,18 +225,18 @@
 (defun ein:kernel--ws-url (url-or-port &optional securep)
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
-  (let ((protocol (if (or securep
-                          (and (stringp url-or-port)
-                               (string-match "^https://" url-or-port)))
-                      "wss"
-                    "ws")))
-    (if (integerp url-or-port)
-        (format "%s://127.0.0.1:%s" protocol url-or-port)
-      (let* ((url (if (string-match "^https?://" url-or-port)
-                      url-or-port
-                    (format "http://%s" url-or-port)))
-             (parsed-url (url-generic-parse-url url)))
-        (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url))))))
+       (let ((protocol (if (or securep
+                               (and (stringp url-or-port)
+                                    (string-match "^https://" url-or-port)))
+                           "wss"
+                         "ws")))
+         (if (integerp url-or-port)
+             (format "%s://127.0.0.1:%s" protocol url-or-port)
+           (let* ((url (if (string-match "^https?://" url-or-port)
+                           url-or-port
+                         (format "http://%s" url-or-port)))
+                  (parsed-url (url-generic-parse-url url)))
+             (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url))))))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
@@ -310,7 +315,7 @@ See: https://github.com/ipython/ipython/pull/3307"
       (setf (ein:$websocket-onopen c)
             (lexical-let ((kernel kernel))
               (lambda ()
-                ;(ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel))) ;; Deprecated starting in messaging version 5.1
+                                        ;(ein:kernel-connect-request kernel (list :kernel_connect_reply (cons 'ein:kernel-on-connect kernel))) ;; Deprecated starting in messaging version 5.1
                 ;; run `ein:$kernel-after-start-hook' if both
                 ;; channels are ready.
                 (when (ein:kernel-live-p kernel)
@@ -319,7 +324,7 @@ See: https://github.com/ipython/ipython/pull/3307"
             #'ein:kernel--ws-closed-callback))))
 
 (defun ein:kernel-start-channels (kernel)
-  ;(ein:kernel-stop kernel)
+                                        ;(ein:kernel-stop kernel)
   (let* ((api-version (ein:$kernel-api-version kernel))
          (ws-url (concat (ein:$kernel-ws-url kernel)
                          (ein:$kernel-kernel-url kernel)))
@@ -353,21 +358,21 @@ See: https://github.com/ipython/ipython/pull/3307"
 (defun ein:kernel-disconnect (kernel &optional callback)
   "Disconnect websocket connection to running kernel, but do not
 kill the kernel."
-  (when (ein:$kernel-channels kernel)
-    (setf (ein:$websocket-onclose (ein:$kernel-channels kernel)) nil)
-    (ein:websocket-close (ein:$kernel-channels kernel))
-    (setf (ein:$kernel-channels kernel) nil))
-  (when (ein:$kernel-shell-channel kernel)
-    (setf (ein:$websocket-onclose (ein:$kernel-shell-channel kernel)) nil)
-    (ein:websocket-close (ein:$kernel-shell-channel kernel))
-    (setf (ein:$kernel-shell-channel kernel) nil))
-  (when (ein:$kernel-iopub-channel kernel)
-    (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel)) nil)
-    (ein:websocket-close (ein:$kernel-iopub-channel kernel))
-    (setf (ein:$kernel-iopub-channel kernel) nil))
-  (setf (ein:$kernel-running kernel) nil)
-  (when callback
-    (funcall callback)))
+       (when (ein:$kernel-channels kernel)
+         (setf (ein:$websocket-onclose (ein:$kernel-channels kernel)) nil)
+         (ein:websocket-close (ein:$kernel-channels kernel))
+         (setf (ein:$kernel-channels kernel) nil))
+       (when (ein:$kernel-shell-channel kernel)
+         (setf (ein:$websocket-onclose (ein:$kernel-shell-channel kernel)) nil)
+         (ein:websocket-close (ein:$kernel-shell-channel kernel))
+         (setf (ein:$kernel-shell-channel kernel) nil))
+       (when (ein:$kernel-iopub-channel kernel)
+         (setf (ein:$websocket-onclose (ein:$kernel-iopub-channel kernel)) nil)
+         (ein:websocket-close (ein:$kernel-iopub-channel kernel))
+         (setf (ein:$kernel-iopub-channel kernel) nil))
+       (setf (ein:$kernel-running kernel) nil)
+       (when callback
+         (funcall callback)))
 
 (defun ein:kernel-reconnect (kernel notebook)
   (ein:kernel-disconnect kernel)
@@ -416,19 +421,19 @@ CONTENT and METADATA are given by `object_info_reply' message.
 `object_info_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
-  (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
-  (when objname
-    (let ((content (list :oname (format "%s" objname)))
-          msg
-          msg-id)
-      (if (>= (ein:$kernel-api-version kernel) 3)
-          (setf msg (ein:kernel--get-msg kernel "inspect_request"
-                                         (append content (list :detail_level 1)))
-                msg-id (plist-get (plist-get msg :header) :msg_id))
-        (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
-              msg-id (plist-get (plist-get msg :header) :msg_id)))
-      (ein:websocket-send-shell-channel kernel msg)
-      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
+       (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
+       (when objname
+         (let ((content (list :oname (format "%s" objname)))
+               msg
+               msg-id)
+           (if (>= (ein:$kernel-api-version kernel) 3)
+               (setf msg (ein:kernel--get-msg kernel "inspect_request"
+                                              (append content (list :detail_level 1)))
+                     msg-id (plist-get (plist-get msg :header) :msg_id))
+             (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
+                   msg-id (plist-get (plist-get msg :header) :msg_id)))
+           (ein:websocket-send-shell-channel kernel msg)
+           (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
 
 
 (defun* ein:kernel-execute (kernel code &optional callbacks
