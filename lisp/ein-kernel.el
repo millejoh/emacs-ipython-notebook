@@ -123,7 +123,7 @@
         (let ((path (substring (ein:$notebook-notebook-path notebook)
                                0
                                (or (cl-position ?/ (ein:$notebook-notebook-path notebook)
-                                             :from-end t)
+                                                :from-end t)
                                    0))))
           (ein:kernel-start--legacy kernel
                                     (ein:$notebook-notebook-name notebook)
