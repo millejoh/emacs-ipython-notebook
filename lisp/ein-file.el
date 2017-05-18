@@ -61,33 +61,5 @@
     (set-buffer-modified-p nil)
     t))
 
-(defun ein:content-file-name-directory (bufname)
-  (with-current-buffer bufname
-    (or (file-name-directory (ein:$file-path ein:content-file-buffer--info))
-        "/")))
-
-(defun ein:content-file-name-nondirectory (bufname)
-  (with-current-buffer bufname
-    (file-name-nondirectory (ein:$file-path ein:content-file-buffer--info))))
-
-(defun ein:content-file-handler (operation &rest args)
-  (case operation
-    (expand-file-name (multiple-value-bind (name dir) args
-                        name))
-    (file-name-directory (apply #'ein:content-file-name-directory args))
-    (file-name-nondirectory (apply #'ein:content-file-name-nondirectory args))
-    (file-name-case-insensitive-p nil)
-    (file-remote-p
-     (multiple-value-bind (fn id connect) args
-       fn))
-    (t (let ((inhibit-file-name-handlers
-              (cons 'ein:content-file-handler
-                    (and (eq inhibit-file-name-operation operation)
-                         inhibit-file-name-handlers)))
-             (inhibit-file-name-operation operation))
-         (apply operation args)))))
-
-(put 'ein:content-file-handler 'safe-magic t)
-
 (provide 'ein-file)
 
