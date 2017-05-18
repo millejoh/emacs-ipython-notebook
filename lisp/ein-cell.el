@@ -252,6 +252,12 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
+(defun ein:get-slide-show (cell)
+  (let ((slide-type (slot-value cell 'slidetype))
+        (ss-table (make-hash-table)))
+    (setf (gethash 'slide-type ss-table) slide_type)
+    ss-table))
+
 (defun ein:preprocess-nb4-cell (cell-data)
   (let ((source (plist-get cell-data :source)))
     (when (and  (string= (plist-get cell-data :cell_type) "markdown")
@@ -504,13 +510,6 @@ Return language name as a string or `nil' when not defined.
     (input  (ein:cell-insert-input data))
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer data))))
-
-(defun ein:get-slide-show (cell)
-  (setq slide_type (oref cell :slidetype))
-  (setq SS_table (make-hash-table))
-  (setf (gethash 'slide_type SS_table) slide_type)
-  SS_table)
-
 
 (defun ein:maybe-show-slideshow-data (cell)
   (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
@@ -1048,7 +1047,7 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+(defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let* ((ss-table (ein:get-slide-show cell))
          (metadata (slot-value cell 'metadata))
          (outputs (if discard-output []
