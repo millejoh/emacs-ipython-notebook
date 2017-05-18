@@ -123,7 +123,7 @@
         (let ((path (substring (ein:$notebook-notebook-path notebook)
                                0
                                (or (cl-position ?/ (ein:$notebook-notebook-path notebook)
-                                             :from-end t)
+                                                :from-end t)
                                    0))))
           (ein:kernel-start--legacy kernel
                                     (ein:$notebook-notebook-name notebook)
@@ -134,13 +134,18 @@
          (ein:url (ein:$kernel-url-or-port kernel)
                   "api/sessions")
          :type "POST"
-         :data (json-encode `(("path" . ,(ein:$notebook-notebook-path notebook)
-                               ;;(("path" . ,(ein:$notebook-notebook-path notebook)))
-                               )
-                              ("type" . "notebook")
-                              ,@(if kernelspec
-                                    `(("kernel" .
-                                       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+         :data (json-encode
+                (cond ((<= (ein:$kernel-api-version kernel) 4)
+                       `(("notebook" .
+                          (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+                         ,@(if kernelspec
+                               `(("kernel" .
+                                  (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+                      (t `(("path" . ,(ein:$notebook-notebook-path notebook))
+                           ("type" . "notebook")
+                           ,@(if kernelspec
+                                 `(("kernel" .
+                                    (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
          :parser #'ein:json-read
          :success (apply-partially #'ein:kernel--kernel-started kernel)
          :error (apply-partially #'ein:kernel--start-failed kernel notebook))))))
