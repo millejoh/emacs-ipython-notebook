@@ -650,16 +650,23 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+
 v0.13.0
 -------
 
 * Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
   ``ein:jupyter-server-login-and-open``.
-* Added a very basic and quite silly object inspector that has almost no
-  features at the moment. Nonetheless, the curious can try executing ``C-c i``
-  over a defined object in a notebook buffer.
-* Add a keep-alive feature to prevent cookie expiration on very long-running
-  notebook sessions.
+
+v0.12.3
+-------
+
+.. include:: changelog/v0_12_3.txt
+
+v0.12.2
+-------
+
+.. include:: changelog/v0_12_2.txt
+
 
 v0.12.1
 -------
