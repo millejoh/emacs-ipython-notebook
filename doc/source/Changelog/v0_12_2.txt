@@ -1,0 +1,13 @@
+.. _changelog_0_12_2:
+
+v0.12.2
+-------
+
+* Improve integration with org mode source code blocks.
+* Better cell editing buffers.
+* Add ~ein:notebooklist-enable-keepalive~ and
+  ~ein:notebooklist-disable-keepalive~ to keep long-running sessions from
+  expiring on the jupyter servier.
+
+
+
