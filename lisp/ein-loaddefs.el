@@ -159,6 +159,13 @@ Open a buffer with bug report template.
 
 ;;;***
 
+;;;### (autoloads nil "ein-file" "ein-file.el" (0 0 0 0))
+;;; Generated autoloads from ein-file.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-file" '("ein:" "*ein:file-buffername-template*")))
+
+;;;***
+
 ;;;### (autoloads nil "ein-helm" "ein-helm.el" (0 0 0 0))
 ;;; Generated autoloads from ein-helm.el
 
@@ -515,9 +522,9 @@ node `(org) External links' and Info node `(org) Search options'
 
 \(fn)" nil nil)
 
-(eval-after-load "org" '(progn (if (fboundp 'org-link-set-parameters) (org-link-set-parameters "ipynb" :follow #'ein:org-open) (org-add-link-type "ipynb" :follow 'ein:org-open)) (add-hook 'org-store-link-functions 'ein:org-store-link)))
+(eval-after-load "org" '(if (fboundp 'org-link-set-parameters) (org-link-set-parameters "ipynb" :follow 'ein:org-open :help-echo "Open ipython notebook." :store 'ein:org-store-link) (org-add-link-type "ipynb" :follow 'ein:org-open) (add-hook 'org-store-link-functions 'ein:org-store-link)))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-org" '("ein:org-goto-link")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-org" '(#("ein:org-goto-link" 0 17 (fontified nil)))))
 
 ;;;***
 
