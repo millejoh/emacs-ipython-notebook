@@ -864,8 +864,26 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
       (ein:notebooklist-login--success-1 url-or-port)
     (ein:notebooklist-login--error-1 url-or-port)))
 
+;;;###autoload
+(defun ein:notebooklist-change-url-port (new-url-or-port)
+  "Update the ipython/jupyter notebook server URL for all the
+notebooks currently opened from the current notebooklist buffer.
+
+This function works by calling `ein:notebook-update-url-or-port'
+on all the notebooks opened from the current notebooklist."
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
+  (unless (eql major-mode 'ein:notebooklist-mode)
+    (error "This command needs to be called from within a notebooklist buffer."))
+  (let* ((current-nblist ein:%notebooklist%)
+         (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
+                                                     (equal (ein:$notebook-url-or-port nb)
+                                                            (ein:$notebooklist-url-or-port current-nblist))))))
+    (dolist (nb open-nb)
+      (ein:notebook-update-url-or-port new-url-or-port nb))))
+
 
 ;;; Generic getter
+
 
 (defun ein:get-url-or-port--notebooklist ()
   (when (ein:$notebooklist-p ein:%notebooklist%)
