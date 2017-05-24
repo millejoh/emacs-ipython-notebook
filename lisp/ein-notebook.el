@@ -314,10 +314,12 @@ jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
   (interactive (list
                 (ein:notebooklist-ask-url-or-port)
                 (ein:get-notebook-or-error)))
+  (message "Updating server info and restarting kernel for notebooklist %s"
+           (ein:$notebook-notebook-name notebook))
   (setf (ein:$notebook-url-or-port notebook) new-url-or-port
         (ein:$kernel-url-or-port (ein:$notebook-kernel notebook)) new-url-or-port)
-  (ein:kernel-restart (ein:$notebook-kernel notebook))
   (with-current-buffer (ein:notebook-buffer notebook)
+    (ein:kernel-restart (ein:$notebook-kernel notebook))
     (rename-buffer (format ein:notebook-buffer-name-template
                            (ein:$notebook-url-or-port notebook)
                            (ein:$notebook-notebook-name notebook)))))
