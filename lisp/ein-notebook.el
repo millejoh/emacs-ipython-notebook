@@ -300,10 +300,17 @@ call notebook destructor `ein:notebook-del'."
 ;;; Notebook utility functions
 
 (defun ein:notebook-update-url-or-port (new-url-or-port notebook)
-  "Change the url-or-port the notebook is saved under. Calling
+  "Change the url and port the notebook is saved to. Calling
 this will propagate the change to the kernel, trying to restart
 the kernel in the process. Use case for this command is when
-the jupyter server dies and restarted on a different port."
+the jupyter server dies and restarted on a different port.
+
+If you have enabled token or password security on server running
+at the new url/port, then please be aware that this new url-port
+combo must match exactly these url/port you used format
+`ein:notebooklist-login'. For example, as far as Emacs and
+jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
+*not* the same URL."
   (interactive (list
                 (ein:notebooklist-ask-url-or-port)
                 (ein:get-notebook-or-error)))
