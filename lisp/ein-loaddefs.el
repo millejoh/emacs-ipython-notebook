@@ -389,7 +389,7 @@ Notebook mode with multiple language fontification.
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '(#("ein:" 0 4 (fontified nil)))))
 
 ;;;***
 
@@ -479,7 +479,16 @@ Login to IPython notebook server.
 
 \(fn URL-OR-PORT PASSWORD &optional RETRY-P)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '("ein:" "generate-breadcrumbs")))
+(autoload 'ein:notebooklist-change-url-port "ein-notebooklist" "\
+Update the ipython/jupyter notebook server URL for all the
+notebooks currently opened from the current notebooklist buffer.
+
+This function works by calling `ein:notebook-update-url-or-port'
+on all the notebooks opened from the current notebooklist.
+
+\(fn NEW-URL-OR-PORT)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '(#("ein:" 0 4 (face font-lock-function-name-face fontified nil)) #("generate-breadcrumbs" 0 20 (face font-lock-function-name-face fontified nil)))))
 
 ;;;***
 
