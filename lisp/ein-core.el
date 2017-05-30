@@ -146,14 +146,18 @@ the source is in git repository."
                          :parser #'(lambda ()
                                      (ignore-errors
                                        (ein:json-read)))
-                         :timeout 0.5
+                         :timeout 5.0
                          :sync t)))
-      (if (eql 404 (request-response-status-code resp))
+      (if (eql 408 (request-response-status-code resp))
           (progn
-            (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
-            (setf (gethash url-or-port *running-ipython-version*) 2))
-        (setf (gethash url-or-port *running-ipython-version*)
-              (ein:get-ipython-major-version (plist-get (request-response-data resp) :version)))))))
+            (ein:log 'blather "Version request timed out, could be the server is still warming up. Assuming we are working Jupyter 4.x, and will recheck later.")
+            4)
+        (if (eql 404 (request-response-status-code resp))
+            (progn
+              (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
+              (setf (gethash url-or-port *running-ipython-version*) 2))
+          (setf (gethash url-or-port *running-ipython-version*)
+                (ein:get-ipython-major-version (plist-get (request-response-data resp) :version))))))))
 
 (defun ein:force-ipython-version-check ()
   (interactive)
