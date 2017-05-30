@@ -878,8 +878,17 @@ on all the notebooks opened from the current notebooklist."
          (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
                                                      (equal (ein:$notebook-url-or-port nb)
                                                             (ein:$notebooklist-url-or-port current-nblist))))))
-    (dolist (nb open-nb)
-      (ein:notebook-update-url-or-port new-url-or-port nb))))
+    (deferred:$
+      (deferred:next
+        (ein:notebooklist-open new-url-or-port "/" nil)
+        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+              do (sit-for 0.1)))
+      (deferred:nextc it
+        (dolist (nb open-nb)
+          (ein:notebook-update-url-or-port new-url-or-port nb))))))
+
+(defun ein:notebooklist-change-url-port--callback (content new-host notebooks)
+  )
 
 
 ;;; Generic getter

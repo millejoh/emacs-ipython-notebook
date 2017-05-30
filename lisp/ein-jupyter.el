@@ -107,7 +107,7 @@ the log of the running jupyter server."
                 until (or (search-forward "Notebook is running at:" nil t)
                           (> x 100))
                 do (progn (sit-for 0.1)
-                          (goto-char (point-min))) 
+                          (goto-char (point-min)))
                 finally (unless no-login-after-start-p
                           (ein:jupyter-server-login-and-open)))))))
 
