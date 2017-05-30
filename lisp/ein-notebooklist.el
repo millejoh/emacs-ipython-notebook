@@ -34,6 +34,7 @@
 (require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
+(require 'deferred)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
@@ -874,21 +875,21 @@ on all the notebooks opened from the current notebooklist."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless (eql major-mode 'ein:notebooklist-mode)
     (error "This command needs to be called from within a notebooklist buffer."))
-  (let* ((current-nblist ein:%notebooklist%)
-         (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
-                                                     (equal (ein:$notebook-url-or-port nb)
-                                                            (ein:$notebooklist-url-or-port current-nblist))))))
+  (lexical-let* ((current-nblist ein:%notebooklist%)
+		             (new-url-or-port new-url-or-port)
+		             (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
+							                                               (equal (ein:$notebook-url-or-port nb)
+								                                                    (ein:$notebooklist-url-or-port current-nblist))))))
     (deferred:$
       (deferred:next
-        (ein:notebooklist-open new-url-or-port "/" nil)
-        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
-              do (sit-for 0.1)))
+	      (lambda ()
+	        (ein:notebooklist-open new-url-or-port "/" nil)
+	        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+		            do (sit-for 0.1))))
       (deferred:nextc it
-        (dolist (nb open-nb)
-          (ein:notebook-update-url-or-port new-url-or-port nb))))))
-
-(defun ein:notebooklist-change-url-port--callback (content new-host notebooks)
-  )
+	      (lambda ()
+	        (dolist (nb open-nb)
+	          (ein:notebook-update-url-or-port new-url-or-port nb)))))))
 
 
 ;;; Generic getter
