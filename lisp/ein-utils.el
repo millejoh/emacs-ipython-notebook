@@ -32,6 +32,12 @@
 
 ;;; Macros and core functions/variables
 
+(defmacro ein:with-undo-disabled (&rest body)
+  "Temporarily disable undo recording while executing `body`
+while maintaining the undo list for the current buffer."
+  `(let ((buffer-undo-list t))
+     ,@body))
+
 (defmacro ein:aif (test-form then-form &rest else-forms)
   "Anaphoric IF.  Adapted from `e2wm:aif'."
   (declare (debug (form form &rest form)))
@@ -199,29 +205,29 @@ See: http://api.jquery.com/jQuery.ajax/"
 (defun ein:json-any-to-bool (obj)
   (if (and obj (not (eq obj json-false))) t json-false))
 
-(defun ein:json-encode-char (char)
-  "Fixed `json-encode-char'."
-  (setq char (json-encode-char0 char 'ucs))
-  (let ((control-char (car (rassoc char json-special-chars))))
-    (cond
-     ;; Special JSON character (\n, \r, etc.).
-     (control-char
-      (format "\\%c" control-char))
-     ;; ASCIIish printable character.
-     ((and (> char 31) (< char 127))    ; s/161/127/
-      (format "%c" char))
-     ;; Fallback: UCS code point in \uNNNN form.
-     (t
-      (format "\\u%04x" char)))))
+;; (defun ein:json-encode-char (char)
+;;   "Fixed `json-encode-char'."
+;;   (setq char (json-encode-char0 char 'ucs))
+;;   (let ((control-char (car (rassoc char json-special-chars))))
+;;     (cond
+;;      ;; Special JSON character (\n, \r, etc.).
+;;      (control-char
+;;       (format "\\%c" control-char))
+;;      ;; ASCIIish printable character.
+;;      ((and (> char 31) (< char 127))    ; s/161/127/
+;;       (format "%c" char))
+;;      ;; Fallback: UCS code point in \uNNNN form.
+;;      (t
+;;       (format "\\u%04x" char)))))
 
-(defadvice json-encode-char (around ein:json-encode-char (char) activate)
-  "Replace `json-encode-char' with `ein:json-encode-char'."
-  (setq ad-return-value (ein:json-encode-char char)))
+;; (defadvice json-encode-char (around ein:json-encode-char (char) activate)
+;;   "Replace `json-encode-char' with `ein:json-encode-char'."
+;;   (setq ad-return-value (ein:json-encode-char char)))
 
-(defadvice json-encode (around encode-nil-as-json-empty-object activate)
-  (if (null object)
-    (setq ad-return-value "{}")
-    ad-do-it))
+;; (defadvice json-encode (around encode-nil-as-json-empty-object activate)
+;;   (if (null object)
+;;     (setq ad-return-value "{}")
+;;     ad-do-it))
 
 
 ;;; EWOC
@@ -304,13 +310,13 @@ Adapted from twittering-mode.el's `case-string'."
   `(cond
     ,@(mapcar
        (lambda (clause)
-	 (let ((keylist (car clause))
-	       (body (cdr clause)))
-	   `(,(if (listp keylist)
-		  `(or ,@(mapcar (lambda (key) `(equal ,str ,key))
-				 keylist))
-		't)
-	     ,@body)))
+         (let ((keylist (car clause))
+               (body (cdr clause)))
+           `(,(if (listp keylist)
+                  `(or ,@(mapcar (lambda (key) `(equal ,str ,key))
+                                 keylist))
+                't)
+             ,@body)))
        clauses)))
 
 
@@ -517,6 +523,21 @@ NOTE: This function creates new list."
 (defun ein:truncate-lines-on ()
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
+
+(defun ein:wait-until (predicate &optional predargs timeout-seconds)
+  "Wait until PREDICATE function returns non-`nil'.
+PREDARGS is argument list for the PREDICATE function.
+Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
+  (ein:log 'debug "WAIT-UNTIL start")
+  (unless timeout-seconds (setq timeout-seconds 5))
+  (unless (loop repeat (/ timeout-seconds 0.05)
+                when (apply predicate predargs)
+                return t
+                ;; borrowed from `deferred:sync!':
+                do (sit-for 0.05)
+                do (sleep-for 0.05))
+    (warn "Timeout"))
+  (ein:log 'debug "WAIT-UNTIL end"))
 
 
 ;;; Emacs utilities

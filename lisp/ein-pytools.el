@@ -153,6 +153,36 @@ pager buffer.  You can explicitly specify the object by selecting it."
                       "^.*<ipython-input-[^>\n]+>\n"
                       "^\n")))
 
+(defun ein:pytools-jump-to-source-1 (packed msg-type content -metadata-not-used-)
+  (ein:log 'debug "msg-type[[%s]] content[[%s]]" msg-type content)
+  (destructuring-bind (kernel object other-window notebook) packed
+    (ein:log 'debug "object[[%s]] other-window[[%s]]" object other-window)
+    (ein:case-equal msg-type
+      (("stream" "display_data")
+       (ein:aif (or (plist-get content :text) (plist-get content :data))
+           (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
+               (ein:log 'info
+                 "Jumping to the source of %s...Not found" object)
+             (destructuring-bind (filename &optional lineno &rest ignore)
+                 (split-string it "\n")
+               (setq lineno (string-to-number lineno)
+                     filename (ein:kernel-filename-from-python kernel filename))
+               (ein:log 'debug "filename[[%s]] lineno[[%s]] ignore[[%s]]"
+                        filename lineno ignore)
+               (if (not (file-exists-p filename))
+                   (ein:log 'info
+                     "Jumping to the source of %s...Not found" object)
+                 (let ((ein:connect-default-notebook nil))
+                   ;; Avoid auto connection to connect to the
+                   ;; NOTEBOOK instead of the default one.
+                   (ein:goto-file filename lineno other-window))
+                 ;; Connect current buffer to NOTEBOOK. No reconnection.
+                 (ein:connect-buffer-to-notebook notebook nil t)
+                 (push (point-marker) ein:pytools-jump-stack)
+                 (ein:log 'info "Jumping to the source of %s...Done" object))))))
+      (("pyerr" "error")
+       (ein:log 'info "Jumping to the source of %s...Not found" object)))))
+
 (defun ein:pytools-jump-to-source (kernel object &optional
                                           other-window notebook)
   (ein:log 'info "Jumping to the source of %s..." object)
@@ -167,34 +197,42 @@ pager buffer.  You can explicitly specify the object by selecting it."
    (list
     :output
     (cons
-     (lambda (packed msg-type content -metadata-not-used-)
-       (destructuring-bind (kernel object other-window notebook)
-           packed
-         (ein:case-equal msg-type
-           (("stream" "display_data")
-            (ein:aif (or (plist-get content :text) (plist-get content :data))
-                (if (string-match ein:pytools-jump-to-source-not-found-regexp
-                                  it)
-                    (ein:log 'info
-                      "Jumping to the source of %s...Not found" object)
-                  (destructuring-bind (filename &optional lineno &rest ignore)
-                      (split-string it "\n")
-                    (setq lineno (string-to-number lineno))
-                    (setq filename
-                          (ein:kernel-filename-from-python kernel filename))
-                    (let ((ein:connect-default-notebook nil))
-                      ;; Avoid auto connection to connect to the
-                      ;; NOTEBOOK instead of the default one.
-                      (ein:goto-file filename lineno other-window))
-                    ;; Connect current buffer to NOTEBOOK. No reconnection.
-                    (ein:connect-buffer-to-notebook notebook nil t)
-                    (push (point-marker) ein:pytools-jump-stack)
-                    (ein:log 'info
-                      "Jumping to the source of %s...Done" object)))))
-           (("pyerr" "error")
-            (ein:log 'info
-              "Jumping to the source of %s...Not found" object)))))
+     #'ein:pytools-jump-to-source-1
      (list kernel object other-window notebook)))))
+
+(defun ein:pytools-find-source (kernel object &optional callback)
+  "Find the file and line where object is defined.
+This function mostly exists to support company-mode, but might be
+useful for other purposes. If the definition for object can be
+found and when callback isort specified, the callback will be
+called with a cons of the filename and line number where object
+is defined."
+  (ein:kernel-execute
+   kernel
+   (format "__import__('ein').find_source('%s')" object)
+   (list
+    :output
+    (cons
+     #'ein:pytools-finish-find-source
+     (list kernel object callback)))))
+
+(defun ein:pytools-finish-find-source (packed msg-type content -ignored-)
+  (destructuring-bind (kernel object callback) packed
+    (if (or (string= msg-type "stream")
+            (string= msg-type "display_data"))
+        (ein:aif (or (plist-get content :text) (plist-get content :data))
+            (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
+                (ein:log 'info
+                  "Source of %s not found" object)
+              (destructuring-bind (filename &optional lineno &rest ignore)
+                  (split-string it "\n")
+                (if callback
+                    (funcall callback
+                             (cons (ein:kernel-filename-from-python kernel filename)
+                                   (string-to-number lineno)))
+                  (cons (ein:kernel-filename-from-python kernel filename)
+                        (string-to-number lineno)))))) ;; FIXME Generator?
+      (ein:log 'info "Source of %s notebook found" object))))
 
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
@@ -335,7 +373,14 @@ Currently EIN/IPython supports exporting to the following formats:
        (list buffer)))
     (switch-to-buffer buffer)))
 
+
 
+;;;; Helper functions for working with matplotlib
+
+(defun ein:pytools-set-figure-size (width height)
+  "Set the default figure size for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
+  (interactive "nWidth: \nnHeight: ")
+  (ein:shared-output-eval-string (format "__import__('ein').set_figure_size(%s,%s)" width height)))
 
 (provide 'ein-pytools)
 

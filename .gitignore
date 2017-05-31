@@ -1,6 +1,11 @@
 doc/build/
 env
-log
+.cask/*
+Cask.tmp
+index_error.py
+redirecting_server.py
+wiener_filtering.py
+UTF-8-demo.txt
 .gitmodules
 *.stackdump
 *.elc
@@ -19,3 +24,5 @@ test-batch-log.log
 Makefile~
 .ipynb_checkpoints
 .ipynb_checkpoints/*
+*.png
+tests/notebook

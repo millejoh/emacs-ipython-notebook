@@ -165,8 +165,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
     (if ein:slice-image
         (destructuring-bind (&optional rows cols)
             (when (listp ein:slice-image) ein:slice-image)
-          (insert-sliced-image img nil nil (or rows 20) cols))
-      (insert-image img))))
+          (insert-sliced-image img "." nil (or rows 20) cols))
+      (insert-image img "."))))
 
 
 ;;; Cell classes
@@ -174,7 +174,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 (defclass ein:basecell ()
   ((cell-type :initarg :cell-type :type string)
    (read-only :initarg :read-only :initform nil :type boolean)
-   (ewoc :initarg :ewoc :type ewoc)
+   (ewoc :initarg :ewoc :type ewoc :accessor ein:basecell--ewoc)
    (element :initarg :element :initform nil :type list
     :documentation "ewoc nodes")
    (element-names :initarg :element-names)
@@ -184,7 +184,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
    (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
    (slidetype :initarg :slidetype :initform "-" :type string)
-   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string))
+   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string
+            :accessor ein:cell-id))
   "Notebook cell base class")
 
 (defclass ein:codecell (ein:basecell)
@@ -251,6 +252,12 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
+(defun ein:get-slide-show (cell)
+  (let ((slide-type (slot-value cell 'slidetype))
+        (ss-table (make-hash-table)))
+    (setf (gethash 'slide-type ss-table) slide-type)
+    ss-table))
+
 (defun ein:preprocess-nb4-cell (cell-data)
   (let ((source (plist-get cell-data :source)))
     (when (and  (string= (plist-get cell-data :cell_type) "markdown")
@@ -270,15 +277,13 @@ auto-execution mode flag in the connected buffer is `t'.")))
   (setq cell (ein:cell-init (apply #'ein:cell-from-type
 					 (plist-get data :cell_type) args)
 				  data))
-  (if (plist-get data :metadata)
-      (ein:oset-if-empty cell 'metadata (plist-get data :metadata)))
-  (setq slideshow (plist-get (slot-value cell 'metadata) :slideshow))
-  (if (not (null slideshow))
-    (progn
-      (setq slide_type (nth 0 (cdr slideshow)))
-      (setf (slot-value cell 'slidetype) slide_type)))
-  (message "read slidetype %s" (slot-value cell 'slidetype))
-  (message "reconstructed slideshow %s" (ein:get-slide-show cell))
+  (when (plist-get data :metadata)
+    (ein:oset-if-empty cell :metadata (plist-get data :metadata))
+    (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
+        (let ((slide-type (nth 0 (cdr it))))
+          (setf (slot-value cell 'slidetype) slide-type)
+          (message "read slidetype %s" (slot-value cell 'slidetype))
+          (message "reconstructed slideshow %s" (ein:get-slide-show cell)))))
   cell)
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
@@ -506,16 +511,9 @@ Return language name as a string or `nil' when not defined.
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer data))))
 
-(defun ein:get-slide-show (cell)
-  (setq slide_type (slot-value cell 'slidetype))
-  (setq SS_table (make-hash-table))
-  (setf (gethash 'slide_type SS_table) slide_type)
-  SS_table)
-
-
 (defun ein:maybe-show-slideshow-data (cell)
-  (when (ein:worksheet-show-slide-data-p ein:%worksheet%)
-    (format " - Slide [%s]:" (or (ein:oref-safe cell 'slidetype)  " "))))
+  (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
+    (format " - Slide [%s]:" (or (ein:oref-safe cell :slidetype)  " "))))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
@@ -750,7 +748,8 @@ PROP is a name of cell element.  Default is `:input'.
 \(fn cell inputline prop)"
   (unless inputline (setq inputline 1))
   (unless prop (setq prop :input))
-  (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop))
+  (let ((goal-column nil))
+    (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop)))
   (let ((offset (case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
@@ -1046,19 +1045,18 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
-
-  (setq SS_table (ein:get-slide-show cell))
-  (let ((metadata `((collapsed . ,(if (slot-value cell 'collapsed) t json-false))
-                    (autoscroll . ,json-false)
-                    (ein.tags . (,(format "worksheet-%s" wsidx)))
-                    (slideshow . ,SS_table)))
-        (outputs (if discard-output []
-                   (slot-value cell 'outputs)))
-        (renamed-outputs '())
-        (execute-count (ein:aif (ein:oref-safe cell 'input-prompt-number)
-                           (and (numberp it) it))))
+(defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+  (let* ((ss-table (ein:get-slide-show cell))
+         (metadata (slot-value cell 'metadata))
+         (outputs (if discard-output []
+                    (slot-value cell 'outputs)))
+         (renamed-outputs '())
+         (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+                            (and (numberp it) it))))
+    (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
+    (setq metadata (plist-put metadata :autoscroll json-false))
+    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
+    (setq metadata (plist-put metadata :slideshow ss-table))
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
@@ -1076,7 +1074,7 @@ prettified text thus be used instead of HTML type."
                                       prop otype)
                              (cond
                               ((equal prop :stream) (progn (push value new-output)
-                                                                (push :name new-output)))
+                                                           (push :name new-output)))
 
                               ((and (equal otype "display_data")
                                     (ein:output-property-p prop))
@@ -1091,7 +1089,7 @@ prettified text thus be used instead of HTML type."
                               ((and (equal otype "execute_result")
                                     (or (equal prop :text)
                                         (equal prop :html)
-					(equal prop :latex))) 
+					                              (equal prop :latex)))
                                (ein:log 'debug "Fixing execute_result (%s?)." otype)
                                (let ((new-prop (cdr (ein:output-property-p prop))))
                                  (push (list new-prop (list value)) new-output)
@@ -1120,20 +1118,24 @@ prettified text thus be used instead of HTML type."
   `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
-  (setq SS_table (ein:get-slide-show cell))
-  `((cell_type . ,(slot-value cell 'cell-type))
-    (source    . ,(ein:cell-get-text cell))
-    (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
-		 (slideshow . ,SS_table)))))
+(defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
+  (let ((metadata (slot-value cell 'metadata))
+        (ss-table (ein:get-slide-show cell)))
+    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
+    (setq metadata (plist-put metadata :slideshow ss-table))
+    `((cell_type . ,(slot-value cell 'cell-type))
+      (source    . ,(ein:cell-get-text cell))
+      (metadata . ,metadata))))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
-  (setq SS_table (ein:get-slide-show cell))
-  (let ((header (make-string (slot-value cell 'level) ?#)))
+(defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
+  (let ((metadata (slot-value cell 'metadata))
+        (ss-table (ein:get-slide-show cell))
+        (header (make-string (oref cell :level) ?#)))
+    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
+    (setq metadata (plist-put metadata :slideshow ss-table))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
-      (metadata . ((ein.tags . (,(format "worksheet-%s" wsidx)))
-                   (slideshow . ,SS_table))))))
+      (metadata . ,metadata))))
 
 (cl-defmethod ein:cell-to-json :around ((cell ein:headingcell) &optional discard-output)
   (let ((json (cl-call-next-method)))
@@ -1248,11 +1250,13 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                           -metadata-not-used-)
+  ;; Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output
   (ein:cell-clear-output cell
-                         (plist-get content :stdout)
-                         (plist-get content :stderr)
-                         (plist-get content :other))
-  (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
+                         t ;;(plist-get content :stdout)
+                         t ;;(plist-get content :stderr)
+                         t ;;(plist-get content :other)
+                         )
+  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Worksheet cell))
 
 
 ;;; Misc.

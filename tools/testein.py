@@ -8,10 +8,18 @@ import glob
 import os
 import sys
 import re
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, check_output
 
 EIN_ROOT = os.path.normpath(
     os.path.join(os.path.dirname(__file__), os.path.pardir))
+
+def cask_load_path():
+    try:
+        path = check_output(['cask','load-path'])
+    except WindowsError:
+        path = check_output(['C:/Users/mille/.cask/bin/cask.bat', 'load-path'])
+
+    return path.decode()
 
 def has_library(emacs, library):
     """
@@ -133,11 +141,16 @@ class TestRunner(BaseRunner):
         quote = '"{0}"'.format
         self.logpath_log = self.logpath('log')
         self.logpath_messages = self.logpath('messages')
+        self.logpath_server = self.logpath('server')
+        self.notebook_dir = os.path.join(EIN_ROOT, "tests")
         self.lispvars = {
             'ein:testing-dump-file-log': quote(self.logpath_log),
+            'ein:testing-dump-server-log': quote(self.logpath_server),
             'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
             'ein:log-message-level': self.ein_message_level,
+            'ein:testing-jupyter-server-command': quote(self.ipython),
+            'ein:testing-jupyter-server-directory': quote(os.path.normpath(self.notebook_dir))
         }
         if self.ein_debug:
             self.lispvars['ein:debug'] = "'t"
@@ -176,13 +189,17 @@ class TestRunner(BaseRunner):
             command.extend(['-L', path])
         for path in self.load:
             command.extend(['-l', path])
+
         command.extend(['-L', einlispdir(),
-                        '-L', einlibdir('websocket'),
-                        '-L', einlibdir('request'),
-                        '-L', einlibdir('auto-complete'),
-                        '-L', einlibdir('popup'),
                         '-L', eintestdir(),
                         '-l', eintestdir(self.testfile)])
+        # command.extend(['-L', einlispdir(),
+        #                 '-L', einlibdir('websocket'),
+        #                 '-L', einlibdir('request'),
+        #                 '-L', einlibdir('auto-complete'),
+        #                 '-L', einlibdir('popup'),
+        #                 '-L', eintestdir(),
+        #                 '-l', eintestdir(self.testfile)])
         return command
 
     @property
@@ -197,7 +214,7 @@ class TestRunner(BaseRunner):
     def show_sys_info(self):
         print(("*" * 50))
         command = self.base_command + [
-            '-batch', '-l', 'ein-dev', '-f', 'ein:dev-print-sys-info']
+            '-batch', '-l', 'lisp/ein-dev.el', '-f', 'ein:dev-print-sys-info']
         proc = Popen(command, stderr=PIPE)
         err = proc.stderr.read()
         proc.wait()
@@ -223,6 +240,7 @@ class TestRunner(BaseRunner):
 
     def make_process(self):
         print("Start test {0}".format(self.testfile))
+        print("Emacs command {0}".format(self.command))
         self.proc = Popen(self.command, stdout=PIPE, stderr=STDOUT)
         return self.proc
 
@@ -322,6 +340,9 @@ class ServerRunner(BaseRunner):
 
     @staticmethod
     def _parse_port_line(line):
+        if line.find('token'):
+            port = line.rpartition('/')[0]
+
         port = line.strip().rsplit(':', 1)[-1].strip('/')
         return port
 
@@ -366,7 +387,7 @@ class ServerRunner(BaseRunner):
         )
         return self.command_template.format(**fmtdata)
 
-    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
+    command_template = r"""{ipython} notebook --notebook-dir {notebook_dir} --no-browser --NotebookApp.token='' --debug 2>&1 | tee {server_log} | grep --line-buffered 'Notebook is running at' | head -n1"""
 
 
 def kill_subprocesses(pid, include=lambda x: True):
@@ -413,15 +434,15 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
     if func_test:
         for i in range(func_test_max_retries + 1):
             func_test_runner = TestRunner(testfile='func-test.el', **kwds)
-            with ServerRunner(testfile='func-test.el', **kwds) as port:
-                func_test_runner.setq('ein:testing-port', port)
-                if func_test_runner.run() == 0:
-                    print("Functional test succeeded after {0} retries." \
-                        .format(i))
-                    return 0
-                if not no_skip and func_test_runner.is_known_failure():
-                    print("All failures are known.  Ending functional test.")
-                    return 0
+            # with ServerRunner(testfile='func-test.el', **kwds) as port:
+            #     func_test_runner.setq('ein:testing-port', port)
+            if func_test_runner.run() == 0:
+                print("Functional test succeeded after {0} retries." \
+                      .format(i))
+                return 0
+            if not no_skip and func_test_runner.is_known_failure():
+                print("All failures are known.  Ending functional test.")
+                return 0
         print("Functional test failed after {0} retries.".format(i))
         return 1
     return 0
@@ -429,7 +450,11 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
 
 def main():
     import sys
+    import os
     from argparse import ArgumentParser
+
+    os.environ['EMACSLOADPATH'] = cask_load_path()
+    os.environ['LC_ALL'] = 'en_us.UTF-8'
     parser = ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument('--emacs', '-e', default='emacs',
                         help='Emacs executable.')
@@ -440,14 +465,14 @@ def main():
                         help="load lisp file before tests. "
                         "can be specified multiple times.")
     parser.add_argument('--load-ert', default=False, action='store_true',
-                        help="load ERT from git submodule. "
+                         help="load ERT from git submodule. "
                         "you need to update git submodule manually "
                         "if ert/ directory does not exist yet.")
     parser.add_argument('--no-auto-ert', default=True,
                         dest='auto_ert', action='store_false',
                         help="load ERT from git submodule. "
                         "if this Emacs has no build-in ERT module.")
-    parser.add_argument('--no-batch', '-B', default=True,
+    parser.add_argument('--batch', '-B', default=True,
                         dest='batch', action='store_false',
                         help="start interactive session.")
     parser.add_argument('--debug-on-error', '-d', default=False,

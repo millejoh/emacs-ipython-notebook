@@ -62,7 +62,8 @@
 (defun ein:pager-append-text (pager text)
   (ein:with-read-only-buffer (get-buffer-create pager)
     (insert (ansi-color-apply text))
-    (ein:pager-mode)))
+    (unless (eql 'ein:pager-mode major-mode)
+      (ein:pager-mode))))
 
 ;; FIXME: this should be automatically called when opening pager.
 (defun ein:pager-goto-docstring-bset-loc ()

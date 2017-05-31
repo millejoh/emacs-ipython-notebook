@@ -25,12 +25,12 @@
 
 ;;; Code:
 
-
 (eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ewoc)
 
 (require 'ein-core)
+(require 'ein-utils)
 (require 'ein-cell)
 (require 'ein-kill-ring)
 
@@ -76,8 +76,9 @@ this value."
 
 (defun ein:worksheet-empty-undo-maybe ()
   "Empty `buffer-undo-list' if `ein:worksheet-enable-undo' is `yes'."
-  (when (eq ein:worksheet-enable-undo 'yes)
-    (setq buffer-undo-list nil)))
+  ;; (when (eq ein:worksheet-enable-undo 'yes)
+  ;;   (setq buffer-undo-list nil))
+  )
 
 
 ;;; Class and variable
@@ -86,24 +87,27 @@ this value."
 
 (defclass ein:worksheet ()
   ((nbformat :initarg :nbformat :type integer)
-   (get-notebook-name :initarg :get-notebook-name :type cons)
+   (get-notebook-name :initarg :get-notebook-name :type cons
+                      :accessor ein:worksheet--notebook-name)
    ;; This slot introduces too much complexity so therefore must be
    ;; removed later.  This is here only for backward compatible
    ;; reason.
-   (discard-output-p :initarg :discard-output-p)
+   (discard-output-p :initarg :discard-output-p :accessor ein:worksheet--discard-output-p)
    (saved-cells :initarg :saved-cells :initform nil
+                :accessor ein:worksheet--saved-cells
                 :documentation
                 "Slot to cache cells for worksheet without buffer")
    (dont-save-cells :initarg :dont-save-cells :initform nil :type boolean
+                    :accessor ein:worksheet--dont-save-cells-p
                     :documentation "Don't cache cells when this flag is on.")
-   (ewoc :initarg :ewoc :type ewoc)
-   (kernel :initarg :kernel :type ein:$kernel)
-   (dirty :initarg :dirty :type boolean :initform nil)
-   (metadata :initarg :metadata :initform nil)
+   (ewoc :initarg :ewoc :type ewoc :accessor ein:worksheet--ewoc)
+   (kernel :initarg :kernel :type ein:$kernel :accessor ein:worksheet--kernel)
+   (dirty :initarg :dirty :type boolean :initform nil :accessor ein:worksheet--dirty-p)
+   (metadata :initarg :metadata :initform nil :accessor ein:worksheet--metadata)
    (show-slide-data-p :initarg :show-slide-data-p
                       :initform nil
-                      :accessor ein:worksheet-show-slide-data-p)
-   (events :initarg :events)))
+                      :accessor ein:worksheet--show-slide-data-p)
+   (events :initarg :events :accessor ein:worksheet--events)))
 
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
@@ -152,20 +156,20 @@ this value."
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
 (defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
-  (ein:funcall-packed (slot-value ws 'get-notebook-name)))
+  (ein:funcall-packed (ein:worksheet--notebook-name ws)))
 
 (defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
-  (ein:kernel-url-or-port (slot-value ws 'kernel)))
+  (ein:kernel-url-or-port (ein:worksheet--kernel ws)))
 
 (defmethod ein:worksheet-name ((ws ein:worksheet))
-  (plist-get (slot-value ws 'metadata) :name))
+  (plist-get (ein:worksheet--metadata ws) :name))
 
 (defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
   "Set worksheet name.
 
 \(fn ws name)"
   (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
-  (setf (slot-value ws 'metadata) (plist-put (slot-value ws 'metadata) :name name)))
+  (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
 
 (defmethod ein:worksheet-full-name ((ws ein:worksheet))
   (let ((nb-name (ein:worksheet-notebook-name ws)))
@@ -175,7 +179,7 @@ this value."
 
 (defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
-                 (ewoc (slot-value ws 'ewoc))
+                 (ewoc (ein:worksheet--ewoc ws))
                  (buffer (ewoc-buffer ewoc))
                  ((buffer-live-p buffer)))
     buffer))
@@ -199,11 +203,12 @@ this value."
   (setf (slot-value ws 'dirty) dirty))
 
 (defun ein:worksheet-toggle-slideshow-view ()
-  "Changes the display of slideshow metadata in the current worksheet."
+  "Changes the display of
+ slideshow metadata in the current worksheet."
   (interactive)
   (let ((ws (ein:worksheet--get-ws-or-error)))
-    (setf (ein:worksheet-show-slide-data-p ws)
-          (not (ein:worksheet-show-slide-data-p ws)))
+    (setf (ein:worksheet--show-slide-data-p ws)
+          (not (ein:worksheet--show-slide-data-p ws)))
     (ein:worksheet-render ws)))
 
 (defmethod ein:worksheet-render ((ws ein:worksheet))
@@ -214,8 +219,8 @@ this value."
       (let ((ewoc (ein:ewoc-create 'ein:worksheet-pp
                                    (ein:propertize-read-only "\n")
                                    nil t))
-            (cells (slot-value ws 'saved-cells)))
-        (setf (slot-value ws 'ewoc) ewoc)
+            (cells (ein:worksheet--saved-cells ws)))
+        (setf (ein:worksheet--ewoc ws) ewoc)
         (if cells
             (mapc (lambda (c)
                     (setf (slot-value c 'ewoc) ewoc)
@@ -223,7 +228,7 @@ this value."
                   cells)
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
-    (setq buffer-undo-list nil)  ; clear undo history
+    ;;(setq buffer-undo-list nil)  ; clear undo history
     (when (eq ein:worksheet-enable-undo 'no)
       (setq buffer-undo-list t))
     (ein:worksheet-bind-events ws)
@@ -253,14 +258,14 @@ this value."
   "Convert worksheet WS into JSON ready alist.
 It sets buffer internally so that caller doesn not have to set
 current buffer."
-  (let* ((discard-output-p (slot-value ws 'discard-output-p))
+  (let* ((discard-output-p (ein:worksheet--discard-output-p ws))
          (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
                             (ein:cell-to-json
                              c (ein:funcall-packed discard-output-p c)))
                           (ein:worksheet-get-cells ws)))))
     `((cells . ,(apply #'vector cells))
-      ,@(ein:aand (slot-value ws 'metadata) `((metadata . ,it))))))
+      ,@(ein:aand (ein:worksheet--metadata ws) `((metadata . ,it))))))
 
 (defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
   (let* ((discard-output-p (slot-value ws 'discard-output-p))
@@ -359,7 +364,7 @@ buffer or there is no cell in the current buffer, return `nil'."
     (if (funcall cell-p cell)
         cell
       (unless noerror
-        (error "No cell found at pos=%s" pos)))))
+        (error "No cell of type %s found at current position." cell-p)))))
 
 (defun ein:worksheet-at-codecell-p ()
   (ein:worksheet-get-current-cell :noerror t :cell-p #'ein:codecell-p))
@@ -406,8 +411,8 @@ If you really want use this command, you can do something like this
     (apply #'ewoc-delete
            (slot-value ws 'ewoc)
            (ein:cell-all-element cell)))
-  (setf (slot-value ws 'dirty) t)
-  (ein:worksheet-empty-undo-maybe)
+  (oset ws :dirty t)
+  ;;(ein:worksheet-empty-undo-maybe)
   (when focus (ein:worksheet-focus-cell)))
 
 (defun ein:worksheet-kill-cell (ws cells &optional focus)
@@ -443,7 +448,8 @@ kill-ring of Emacs (kill-ring for texts)."
 (defun ein:worksheet-insert-clone-below (ws cell pivot)
   (let ((clone (ein:cell-copy cell)))
     ;; Cell can be from another buffer, so reset `ewoc'.
-    (setf (slot-value clone 'ewoc) (slot-value ws 'ewoc))
+    (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws))
+    ;(oset clone :ewoc (oref ws :ewoc))
     (ein:worksheet-insert-cell-below ws clone pivot)
     clone))
 
@@ -464,7 +470,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet-maybe-new-cell (ws type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
-  (let ((cell (if (ein:basecell-child-p type-or-cell)
+  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)                    ;(ein:basecell-child-p type-or-cell)
                   type-or-cell
                 (ein:worksheet-cell-from-type ws type-or-cell))))
     ;; When newly created or copied, kernel is not attached or not the
@@ -492,8 +498,9 @@ after PIVOT and return the new cell."
       (ein:cell-insert-below pivot cell))
      (t (error
          "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
-    (ein:worksheet-empty-undo-maybe)
-    (setf (slot-value ws 'dirty) t)
+                                        ;(ein:worksheet-empty-undo-maybe)
+    (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list)
+    (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
 
@@ -516,8 +523,8 @@ See also: `ein:worksheet-insert-cell-below'."
           (ein:cell-enter-first cell))))
      (t (error
          "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
-    (ein:worksheet-empty-undo-maybe)
-    (setf (slot-value ws 'dirty) t)
+    (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list)
+    (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
 
@@ -555,18 +562,18 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((new_slide_type (ein:case-equal (slot-value cell 'slidetype)
+  (let ((new-slide-type (ein:case-equal (oref cell :slidetype)
                           (("-") "slide")
                           (("slide") "subslide")
                           (("subslide") "fragment")
                           (("fragment") "skip")
                           (("skip") "notes")
                           (("notes") "-"))))
-    (message "changing slide type %s" new_slide_type)
-    (setf (slot-value cell 'slidetype) new_slide_type)
-    (ewoc-invalidate (slot-value cell 'ewoc) (ein:cell-element-get cell :prompt))
-    (ein:worksheet-empty-undo-maybe)
-    (when focus (ein:cell-goto cell))))
+    (message "changing slide type %s" new-slide-type)
+    (oset cell :slidetype new-slide-type))
+  (ewoc-invalidate (oref cell :ewoc) (ein:cell-element-get cell :prompt))
+  (ein:worksheet-empty-undo-maybe)
+  (when focus (ein:cell-goto cell)))
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
   "Change the cell type of the current cell.
@@ -737,14 +744,16 @@ It is set in `ein:notebook-multilang-mode'."
   (ein:aif (if up (ein:cell-prev cell) (ein:cell-next cell))
       (let ((inhibit-read-only t)
             (pivot-cell it))
-        (ein:cell-save-text cell)
-        (ein:worksheet-delete-cell ws cell)
-        (funcall (if up
-                     #'ein:worksheet-insert-cell-above
-                   #'ein:worksheet-insert-cell-below)
-                 ws cell pivot-cell)
-        (ein:cell-goto cell)
-        (setf (slot-value ws 'dirty) t))
+        (ein:with-undo-disabled
+         (ein:cell-save-text cell)
+         (ein:worksheet-delete-cell ws cell)
+         (funcall (if up
+                      #'ein:worksheet-insert-cell-above
+                    #'ein:worksheet-insert-cell-below)
+                  ws cell pivot-cell)
+         (ein:cell-goto cell)
+         (oset ws :dirty t))
+        (push `(apply ein:worksheet-move-cell ,ws ,cell ,(not up)) buffer-undo-list))
     (error "No %s cell" (if up "previous" "next"))))
 
 (defun ein:worksheet-move-cell-up (ws cell)
@@ -805,14 +814,22 @@ Do not clear input prompts when the prefix argument is given."
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
+(defun ein:undo-execute-cell (ws cell old-cell)
+  (ein:worksheet-insert-cell-below ws old-cell cell)
+  (ein:worksheet-delete-cell ws cell))
+
 (defun ein:worksheet-execute-cell (ws cell)
   "Execute code type CELL."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-if-ready (slot-value ws 'kernel)
-    (ein:cell-execute cell)
-    (setf (slot-value ws 'dirty) t)
+    (push `(apply ein:undo-execute-cell ,ws ,cell ,(ein:cell-copy cell)) buffer-undo-list)
+    (ein:log 'debug "buffer-undo-list: %s" (length buffer-undo-list))
+    (ein:with-undo-disabled
+     (ein:cell-execute cell)
+     (oset ws :dirty t))
+    (ein:log 'debug "buffer-undo-list: %s" (length buffer-undo-list))
     cell))
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
@@ -875,7 +892,7 @@ to decrement index to less than or equal to 1."
               (+ ein:worksheet--history-index inc))
         (when (< ein:worksheet--history-index 1)
           (setq ein:worksheet--history-index 1)
-          (error "This is the latest input"))
+          (warn "This is the latest input"))
         ein:worksheet--history-index)
     (setq ein:worksheet--history-index 1)))
 
@@ -922,6 +939,13 @@ in the history."
 
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (slot-value ein:%worksheet% 'kernel)))
+
+;; in edit-cell-mode, worksheet is bound as src--ws
+;; used by ein:get-kernel as a last option so completion, tooltips
+;; work in edit-cell-mode
+(defun ein:get-kernel--worksheet-in-edit-cell ()
+  "Get kernel when in edit-cell-mode."
+  (when (ein:worksheet-p ein:src--ws) (oref ein:src--ws :kernel)))
 
 (defun ein:get-cell-at-point--worksheet ()
   (ein:worksheet-get-current-cell :noerror t))

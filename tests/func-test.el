@@ -3,6 +3,7 @@
 
 (require 'ein-loaddefs)
 (require 'ein-notebooklist)
+(require 'ein-jupyter)
 (require 'wid-edit)
 (require 'ein-testing)
 (require 'ein-testing-cell)
@@ -14,10 +15,32 @@
 
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
+(ein:setq-if-not ein:testing-dump-server-log "func-test_server_batch_emacs.log")
+(ein:setq-if-not ein:testing-jupyter-server-command "c:/Users/mille/Miniconda3/envs/anaconda/Scripts/jupyter.exe")
+(ein:setq-if-not ein:testing-jupyter-server-directory "c:/Users/mille/Dropbox/Projects/emacs-ipython-notebook/tests/notebook/nbformat4")
+
 (setq message-log-max t)
 
+(defvar ein:testing-port nil)
+(defvar ein:testing-token nil)
 
-(defvar ein:testing-port 8889)
+(defun ein:testing-start-server ()
+  (unless (and (boundp '%ein:jupyter-server-session%) (processp %ein:jupyter-server-session%) (bufferp (process-buffer %ein:jupyter-server-session%)))
+    (ein:log 'debug "TESTING-START-SERVER starting jupyter server.")
+    (ein:jupyter-server-start ein:testing-jupyter-server-command ein:testing-jupyter-server-directory t)
+    (ein:testing-wait-until "Jupyter notebook server."
+                            #'(lambda (buf)
+                                (with-current-buffer buf
+                                  (goto-char (point-min))
+                                  (search-forward "Copy/paste this URL into your browser" nil t)))
+                            (list (process-buffer %ein:jupyter-server-session%))
+                            5000)
+    (ein:log 'debug "TESTING-START-SERVER logging in.")
+    (multiple-value-bind (url token) (ein:jupyter-server-conn-info)
+      (ein:notebooklist-login url token)
+      (setq ein:testing-port url)
+      (setq ein:testing-token token))
+    (ein:log 'debug "TESTING-START-SERVER succesfully logged in.")))
 
 (defun ein:testing-wait-until (message predicate &optional predargs max-count)
   "Wait until PREDICATE function returns non-`nil'.
@@ -30,8 +53,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                 when (apply predicate predargs)
                 return t
                 ;; borrowed from `deferred:sync!':
-                do (sit-for 0.05)
-                do (sleep-for 0.05))
+                do (sit-for 0.2)
+                do (sleep-for 0.2))
     (error "Timeout"))
   (ein:log 'debug "TESTING-WAIT-UNTIL end"))
 
@@ -42,13 +65,14 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (when path
     (setq notebook-name (format "%s/%s" path notebook-name)))
-  (with-current-buffer (ein:notebooklist-open url-or-port path)
-    (sleep-for 1.0) ;; Because some computers are too fast???
-    (ein:testing-wait-until "ein:notebooklist-open" (lambda () ein:%notebooklist%))
-    (prog1
-        (ignore-errors
-          (ein:notebooklist-open-notebook-by-name notebook-name url-or-port))
-      (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
+  (let ((content (ein:notebooklist-open url-or-port path t)))
+    ;; (sit-for 1.0) ;; Because some computers are too fast???
+    (ein:testing-wait-until "ein:notebooklist-open" (lambda () (ein:$content-url-or-port content)))
+    (with-current-buffer (ein:notebooklist-get-buffer (ein:$content-url-or-port content))
+      (prog1
+          (ignore-errors
+            (ein:notebooklist-open-notebook-by-name notebook-name (ein:$content-url-or-port content)))
+        (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end")))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
   (unless path (setq path ""))
@@ -80,15 +104,23 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 
 (defun ein:testing-delete-notebook (url-or-port notebook &optional path)
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK start")
-  (ein:notebook-close notebook)
-  (with-current-buffer (ein:notebooklist-open url-or-port path)
-    (ein:testing-wait-until "ein:notebooklist-open"
-                            (lambda () ein:%notebooklist%))
+  (ein:notebooklist-open url-or-port (ein:$notebook-notebook-path notebook) t)
+  (ein:testing-wait-until "ein:notebooklist-open"
+                          (lambda () (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))))
+  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+    (ein:log 'debug "TESTING-DELETE-NOTEBOOK deleting notebook")
     (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook)))
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK end"))
 
+(ert-deftest ein:testing-jupyter-start-server ()
+  (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER start")
+  (ein:testing-start-server)
+  (should (processp %ein:jupyter-server-session%))
+  (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER end"))
+
 (ert-deftest ein:testing-get-untitled0-or-create ()
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE start")
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
@@ -103,10 +135,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'verbose "----------------------------------")
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 start")
   (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 creating notebook")
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:test-get-untitled0-or-create"
-     (lambda () (ein:aand (ein:$notebook-kernel notebook)
+     (lambda () (ein:aand notebook
+                          (ein:$notebook-kernel it)
                           (ein:kernel-live-p it))))
     (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 delete notebook")
     (ein:testing-delete-notebook ein:testing-port notebook))
@@ -120,6 +154,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 end"))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
@@ -130,7 +165,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (insert "a = 100\na")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until "ein:worksheet-execute-cell"
-                                (lambda () (not (oref cell :running)))))
+                                (lambda () (not (slot-value cell 'running)))))
       ;; (message "%s" (buffer-string))
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
@@ -139,11 +174,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 (defun ein:testing-image-type (image)
   "Return the type of IMAGE.
 See the definition of `create-image' for how it works."
-  (assert (and (listp image) (eq (car image) 'image)) nil
+  (assert (and (listp image) (cl-find 'image image :key #'car)) nil
           "%S is not an image." image)
-  (plist-get (cdr image) :type))
+  (plist-get (cdr (cl-find 'image image :key #'car)) :type))
 
 (ert-deftest ein:notebook-execute-current-cell-pyout-image ()
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
@@ -161,7 +197,7 @@ See the definition of `create-image' for how it works."
         ;; well sometimes.  Probably "output reply" (iopub) comes
         ;; before "execute reply" in this case.
         (ein:testing-wait-until "ein:worksheet-execute-cell"
-                                (lambda () (oref cell :outputs)))
+                                (lambda () (slot-value cell 'outputs)))
         ;; This cell has only one input
         (should (= (length (oref cell :outputs)) 1))
         ;; This output is a SVG image
@@ -179,6 +215,7 @@ See the definition of `create-image' for how it works."
             "Skipping image check as SVG image type is not available."))))))
 
 (ert-deftest ein:notebook-execute-current-cell-stream ()
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
@@ -195,6 +232,7 @@ See the definition of `create-image' for how it works."
         (should (search-forward-regexp "^Hello$" nil t))))))
 
 (ert-deftest ein:notebook-execute-current-cell-question ()
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
@@ -211,6 +249,7 @@ See the definition of `create-image' for how it works."
         (should (search-forward "Docstring:"))))))
 
 (ert-deftest ein:notebook-request-help ()
+  (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"

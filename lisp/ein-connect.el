@@ -151,7 +151,7 @@ class.")))
 (defun ein:connect-setup (notebook buffer)
   (with-current-buffer buffer
     (setq ein:%connect%
-          (ein:connect "Connect" :notebook notebook :buffer buffer))
+          (ein:connect :notebook notebook :buffer buffer))
     ein:%connect%))
 
 

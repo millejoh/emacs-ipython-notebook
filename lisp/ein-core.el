@@ -43,7 +43,7 @@
   :group 'applications
   :prefix "ein:")
 
-(defvar ein:version "0.10.1"
+(defvar ein:version "0.13.0"
   "Version number for Emacs IPython Notebook (EIN).")
 
 
@@ -127,7 +127,14 @@ the source is in git repository."
       (concat ein:version "." it)
     ein:version))
 
-(defvar *running-ipython-version* (make-hash-table))
+(defvar *running-ipython-version* (make-hash-table :test #'equal))
+
+(defun ein:get-ipython-major-version (vstr)
+  (if vstr
+      (string-to-number (car (split-string vstr "\\.")))
+    (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
+        (throw 'error "Null value passed to ein:get-ipython-major-version.")
+      (ein:log 'warn "Null value passed to ein:get-ipython-major-version."))))
 
 ;; TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
 (defun ein:query-ipython-version (&optional url-or-port force)
@@ -135,17 +142,22 @@ the source is in git repository."
       it
     (let ((resp (request (ein:url (or url-or-port
                                       (ein:default-url-or-port))
-                                  "api/contents")
+                                  "api")
                          :parser #'(lambda ()
                                      (ignore-errors
                                        (ein:json-read)))
-                         :timeout 0.5
+                         :timeout 5.0
                          :sync t)))
-      (if (eql 404 (request-response-status-code resp))
-                (progn
-                  (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
-                  (setf (gethash url-or-port *running-ipython-version*) 2))
-              (setf (gethash url-or-port *running-ipython-version*) 3)))))
+      (if (eql 408 (request-response-status-code resp))
+          (progn
+            (ein:log 'blather "Version request timed out, could be the server is still warming up. Assuming we are working Jupyter 4.x, and will recheck later.")
+            4)
+        (if (eql 404 (request-response-status-code resp))
+            (progn
+              (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
+              (setf (gethash url-or-port *running-ipython-version*) 2))
+          (setf (gethash url-or-port *running-ipython-version*)
+                (ein:get-ipython-major-version (plist-get (request-response-data resp) :version))))))))
 
 (defun ein:force-ipython-version-check ()
   (interactive)
@@ -257,7 +269,8 @@ but can operate in different contexts."
   (ein:generic-getter '(ein:get-kernel--notebook
                         ein:get-kernel--worksheet
                         ein:get-kernel--shared-output
-                        ein:get-kernel--connect)))
+                        ein:get-kernel--connect
+                        ein:get-kernel--worksheet-in-edit-cell)))
 
 (defun ein:get-kernel-or-error ()
   (or (ein:get-kernel)

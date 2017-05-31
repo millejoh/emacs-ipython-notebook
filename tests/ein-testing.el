@@ -38,6 +38,14 @@
 
 (defvar ein:testing-dump-file-debug nil)
 
+(defvar ein:testing-dump-server-log nil)
+
+(defvar ein:testing-jupyter-server-command nil
+  "Path to command that starts the jupyter notebook server.")
+
+(defvar ein:testing-jupyter-server-directory nil
+  "Location where to start the jupyter notebook server.")
+
 (defun ein:testing-save-buffer (buffer-or-name file-name)
   (when (and buffer-or-name file-name)
     (with-current-buffer (get-buffer buffer-or-name)
@@ -45,6 +53,7 @@
 
 (defun ein:testing-dump-logs ()
   (ein:testing-save-buffer "*Messages*" ein:testing-dump-file-messages)
+  (ein:testing-save-buffer "*ein:jupyter-server*" ein:testing-dump-server-log)
   (ein:testing-save-buffer ein:log-all-buffer-name ein:testing-dump-file-log))
 
 (defvar ein:testing-dump-logs--saved nil)

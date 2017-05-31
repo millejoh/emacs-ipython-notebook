@@ -44,6 +44,7 @@
 (require 'ein-kernel)
 (require 'ein-kernelinfo)
 (require 'ein-cell)
+(require 'ein-cell-edit)
 (require 'ein-cell-output)
 (require 'ein-worksheet)
 (require 'ein-scratchsheet)
@@ -56,11 +57,35 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
-
+(require 'ein-inspector)
 
 ;;; Configuration
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
+
+(defcustom ein:notebook-autosave-frequency 60
+  "Sets the frequency (in seconds) at which the notebook is
+automatically saved.
+
+Autosaves are automatically enabled when a notebook is opened,
+but can be controlled manually via `ein:notebook-enable-autosave'
+and `ein:notebook-disable-autosave'.
+
+If this parameter is changed than you must call
+`ein:notebook-disable-autosave' and then
+`ein:notebook-enable-autosave' on all open notebooks for the
+changes to take effect.
+
+"
+  :type 'number
+  :group 'ein)
+
+(defcustom ein:notebook-create-checkpoint-on-save t
+  "If non-nil a checkpoint will be created every time the
+notebook is saved. Otherwise checkpoints must be created manually
+via `ein:notebook-create-checkpoint'."
+  :type 'boolean
+  :group 'ein)
 
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
@@ -143,7 +168,7 @@ Current buffer for these functions is set to the notebook buffer.")
 (defvar ein:base-kernel-url "/api/")
 (defvar ein:create-session-url "/api/sessions")
 ;; Currently there is no way to know this setting.  Maybe I should ask IPython
-;; developers for an API to get this from notebook server.  
+;; developers for an API to get this from notebook server.
 ;;
 ;; 10April2014 (JMM) - The most recent documentation for the RESTful interface
 ;; is at:
@@ -206,6 +231,10 @@ Current buffer for these functions is set to the notebook buffer.")
 
 `ein:$notebook-api-version' : integer
    Major version of the IPython notebook server we are talking to.
+
+`ein:$notebook-checkpoints'
+  Names auto-saved checkpoints for content. Stored as a list
+  of (<id> . <last_modified>) pairs.
 "
   url-or-port
   notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
@@ -223,7 +252,8 @@ Current buffer for these functions is set to the notebook buffer.")
   worksheets
   scratchsheets
   api-version
-  )
+  autosave-timer
+  checkpoints)
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
@@ -269,6 +299,31 @@ call notebook destructor `ein:notebook-del'."
 
 ;;; Notebook utility functions
 
+(defun ein:notebook-update-url-or-port (new-url-or-port notebook)
+  "Change the url and port the notebook is saved to. Calling
+this will propagate the change to the kernel, trying to restart
+the kernel in the process. Use case for this command is when
+the jupyter server dies and restarted on a different port.
+
+If you have enabled token or password security on server running
+at the new url/port, then please be aware that this new url-port
+combo must match exactly these url/port you used format
+`ein:notebooklist-login'. For example, as far as Emacs and
+jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
+*not* the same URL."
+  (interactive (list
+                (ein:notebooklist-ask-url-or-port)
+                (ein:get-notebook-or-error)))
+  (message "Updating server info and restarting kernel for notebooklist %s"
+           (ein:$notebook-notebook-name notebook))
+  (setf (ein:$notebook-url-or-port notebook) new-url-or-port
+        (ein:$kernel-url-or-port (ein:$notebook-kernel notebook)) new-url-or-port)
+  (with-current-buffer (ein:notebook-buffer notebook)
+    (ein:kernel-restart (ein:$notebook-kernel notebook))
+    (rename-buffer (format ein:notebook-buffer-name-template
+                           (ein:$notebook-url-or-port notebook)
+                           (ein:$notebook-notebook-name notebook)))))
+
 (defun ein:notebook-buffer (notebook)
   "Return the buffer that is associated with NOTEBOOK."
   ;; FIXME: Find a better way to define notebook buffer!
@@ -306,9 +361,9 @@ will be updated with kernel's cwd."
                                     (ein:$notebook-notebook-path notebook)))
 
 (defun ein:notebook-url-from-url-and-id (url-or-port api-version path)
-  (cond ((= 2 api-version)
+  (cond ((= api-version 2)
          (ein:url url-or-port "api/notebooks" path))
-        ((= 3 api-version)
+        ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
 (defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
@@ -396,8 +451,10 @@ See `ein:notebook-open' for more information."
                               (cons #'ein:notebook-buffer-list notebook)))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
+    (ein:notebook-enable-autosaves notebook)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
+
 
 (defun ein:notebook--different-number (n1 n2)
   (and (numberp n1) (numberp n2) (not (= n1 n2))))
@@ -429,6 +486,34 @@ of minor mode."
 
 ;;; Initialization.
 
+(defun ein:notebook-enable-autosaves (notebook)
+  "Enable automatic, periodic saving for notebook."
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names)))))
+     (list notebook)))
+  (if (stringp notebook)
+      (error "Fix me!")) ;; FIXME
+  (setf (ein:$notebook-autosave-timer notebook)
+        (run-at-time 0 ein:notebook-autosave-frequency #'ein:notebook-maybe-save-notebook notebook 0))
+  (ein:log 'info "Enabling autosaves for %s with frequency %s seconds."
+           (ein:$notebook-notebook-name notebook)
+           ein:notebook-autosave-frequency))
+
+(defun ein:notebook-disable-autosaves (notebook)
+  "Disable automatic, periodic saving for current notebook."
+  (interactive
+   (let* ((notebook (or (ein:get-notebook)
+                        (completing-read
+                         "Select notebook [URL-OR-PORT/NAME]: "
+                         (ein:notebook-opened-buffer-names)))))
+     (list notebook)))
+  (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
+  (when (ein:$notebook-autosave-timer notebook)
+    (cancel-timer (ein:$notebook-autosave-timer notebook))))
+
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
@@ -454,6 +539,12 @@ of minor mode."
 `ein:$kernelspec-name' : string
   Name used to identify the kernel (like python2, or python3).
 
+`ein:$kernelspec-display-name' : string
+  Name used to display kernel to user.
+
+`ein:$kernelspec-language' : string
+  Programming language supported by kernel, like 'python'.
+
 `ein:$kernelspec-resources' : plist
   Resources, if any, used by the kernel.
 
@@ -461,14 +552,16 @@ of minor mode."
   How to start the kernel from the command line. Not used by ein (yet).
 "
   name
+  display-name
   resources
-  spec)
+  spec
+  language)
 
-(defvar ein:available-kernelspecs (make-hash-table))
+(defvar ein:available-kernelspecs (make-hash-table :test #'equal))
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
- `((:name . ,(ein:$kernelspec-name kernelspec))
+    `((:name . ,(ein:$kernelspec-name kernelspec))
       (:display_name . ,(format "%s" display-name)))))
 
 (defun ein:get-kernelspec (url-or-port name)
@@ -478,35 +571,44 @@ of minor mode."
                 name)))
     (plist-get kernelspecs name)))
 
+(defun ein:get-kernelspec-language (kernelspec)
+  (plist-get (ein:$kernelspec-spec kernelspec) :language))
+
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
         (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-              collecting (ein:$kernelspec-name spec)))))
+              collecting (cons (ein:$kernelspec-name spec)
+                               (ein:$kernelspec-display-name spec))))))
 
 (defun ein:query-kernelspecs (url-or-port)
   "Query jupyter server for the list of available
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
-  (ein:query-singleton-ajax
-   (list 'ein:qeury-kernelspecs url-or-port)
-   (ein:url url-or-port "api/kernelspecs")
-   :type "GET"
-   :timeout ein:content-query-timeout
-   :parser 'ein:json-read
-   :sync t
-   :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
-   :error (apply-partially #'ein:query-kernelspecs-error)))
+  (unless (gethash url-or-port ein:available-kernelspecs)
+    (ein:query-singleton-ajax
+     (list 'ein:qeury-kernelspecs url-or-port)
+     (ein:url url-or-port "api/kernelspecs")
+     :type "GET"
+     :timeout ein:content-query-timeout
+     :parser 'ein:json-read
+     :sync t
+     :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
+     :error (apply-partially #'ein:query-kernelspecs-error))))
 
 (defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
-  (let ((ks (list :default  (plist-get data :default)))
+  (let ((ks (list :default (plist-get data :default)))
         (specs (ein:plist-iter (plist-get data :kernelspecs))))
     (setf (gethash url-or-port ein:available-kernelspecs)
           (ein:flatten (dolist (spec specs ks)
                          (let ((name (car spec))
                                (info (cdr spec)))
                            (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+                                                                  :display-name (plist-get (plist-get info :spec)
+                                                                                           :display_name)
                                                                   :resources (plist-get info :resources)
+                                                                  :language (plist-get (plist-get info :spec)
+                                                                                       :language)
                                                                   :spec (plist-get info :spec)))
                                  ks)))))))
 
@@ -525,8 +627,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
                          "Select notebook [URL-OR-PORT/NAME]: "
                          (ein:notebook-opened-buffer-names))))
           (kernel-name (completing-read
-                       "Select kernel: "
-                       (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
+                        "Select kernel: "
+                        (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
   (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
                                                                 kernel-name))
@@ -537,12 +639,14 @@ notebook buffer then the user will be prompted to select an opened notebook."
 ;;; notebook, which will automatically create and associate a kernel with the notebook.
 (defun ein:notebook-start-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
+         (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  base-url
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (ein:pytools-setup-hooks kernel notebook)
+    (when (and kernelspec (string-equal (ein:$kernelspec-language kernelspec) "python"))
+      (ein:pytools-setup-hooks kernel notebook))
     (ein:kernel-start kernel notebook)))
 
 (defun ein:notebook-restart-kernel (notebook)
@@ -729,13 +833,17 @@ This is equivalent to do ``C-c`` in the console program."
            (3 (ein:write-nbformat3-worksheets notebook))
            (4 (ein:write-nbformat4-worksheets notebook))
            (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook))))))
-    (plist-put (cdr (assq 'metadata data))
-               :name (ein:$notebook-notebook-name notebook))
-    (ein:aif (ein:$notebook-nbformat-minor notebook)
-        ;; Do not set nbformat when it is not given from server.
-        (push `(nbformat_minor . ,it) data))
-    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
-    data))
+    ;; Apparently metadata can be either a hashtable or a plist...
+    (let ((metadata (cdr (assq 'metadata data))))
+      (if (hash-table-p metadata)
+          (setf (gethash 'name metadata) (ein:$notebook-notebook-name notebook))
+        (plist-put metadata
+                   :name (ein:$notebook-notebook-name notebook)))
+      (ein:aif (ein:$notebook-nbformat-minor notebook)
+          ;; Do not set nbformat when it is not given from server.
+          (push `(nbformat_minor . ,it) data))
+      (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+      data)))
 
 
 (defun ein:write-nbformat3-worksheets (notebook)
@@ -746,7 +854,7 @@ This is equivalent to do ``C-c`` in the console program."
       )))
 
 (defun ein:write-nbformat4-worksheets (notebook)
-  (ein:log 'info "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
+  (ein:log 'verbose "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
   (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
@@ -763,15 +871,26 @@ This is equivalent to do ``C-c`` in the console program."
 
     ))
 
+(defun ein:notebook-maybe-save-notebook (notebook retry &optional callback cbargs)
+  (if (cl-some #'(lambda (ws)
+                   (buffer-modified-p
+                    (ein:worksheet-buffer ws)))
+               (ein:$notebook-worksheets notebook))
+      (ein:notebook-save-notebook notebook retry callback cbargs)))
+
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
+  (condition-case err
+      (with-current-buffer (ein:notebook-buffer notebook)
+        (run-hooks 'before-save-hook))
+    (error (ein:log 'warn "Error running save hooks: '%s'. I will still try to save the notebook." (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
     (ein:content-save content
                       #'ein:notebook-save-notebook-success
                       (list notebook callback cbargs)
-		      #'ein:notebook-save-notebook-error
-		      (list notebook))))
+                      #'ein:notebook-save-notebook-error
+                      (list notebook))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
@@ -803,15 +922,20 @@ This is equivalent to do ``C-c`` in the console program."
           "Status code (=%s) is not 200 and retry exceeds limit (=%s)."
           response-status ein:notebook-save-retry-max)))))
 
-(defun ein:notebook-save-notebook-success (notebook &rest ignore)
-  (ein:log 'info "Notebook is saved.")
+(defun ein:notebook-save-notebook-success (notebook callback cbargs)
+  (ein:log 'verbose "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
   (mapc (lambda (ws)
           (ein:worksheet-save-cells ws) ; [#]_
           (ein:worksheet-set-modified-p ws nil))
         (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
-                      'notebook_saved.Notebook))
+                      'notebook_saved.Notebook)
+  (when ein:notebook-create-checkpoint-on-save
+    (ein:notebook-create-checkpoint notebook))
+  (when callback
+    (apply callback cbargs)))
+
 ;; .. [#] Consider the following case.
 ;;    (1) Open worksheet WS0 and other worksheets.
 ;;    (2) Edit worksheet WS0 then save the notebook.
@@ -841,6 +965,22 @@ NAME is any non-empty string that does not contain '/' or '\\'."
         (old-name (ein:$notebook-notebook-name ein:%notebook%)))
     (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
     (ein:content-rename content path #'ein:notebook-rename-success (list ein:%notebook% content))))
+
+(defun ein:notebook-save-to-command (path)
+  "Make a copy of the notebook and save it to a new path specified by NAME.
+NAME is any non-empty string that does not contain '/' or '\\'.
+"
+  (interactive
+   (list (read-string "Save copy to: " (ein:$notebook-notebook-path ein:%notebook%))))
+  (unless (and (string-match ".ipynb" path) (= (match-end 0) (length path)))
+    (setq path (format "%s.ipynb" path)))
+  (let* ((content (ein:content-from-notebook ein:%notebook%))
+         (name (substring path (or (cl-position ?/ path :from-end t) 0))))
+    (setf (ein:$content-path content) path
+          (ein:$content-name content) name)
+    (ein:content-save content #'ein:notebook-open
+                      (list (ein:$notebook-url-or-port ein:%notebook%)
+                            path))))
 
 ;; (defun* ein:notebook-rename-error (old new notebook &key symbol-status response
 ;;                                        error-thrown
@@ -880,6 +1020,61 @@ as usual."
       (if (ein:kernel-live-p kernel)
           (ein:kernel-kill kernel #'ein:notebook-close (list ein:%notebook%))
         (ein:notebook-close ein:%notebook%)))))
+
+(defun ein:fast-content-from-notebook (notebook)
+  "Quickly generate a basic content structure from notebook. This
+function does not generate the full json representation of the
+notebook worksheets."
+  (make-ein:$content :name (ein:$notebook-notebook-name notebook)
+                     :path (ein:$notebook-notebook-path notebook)
+                     :url-or-port (ein:$notebook-url-or-port notebook)
+                     :type "notebook"
+                     :ipython-version (ein:$notebook-api-version notebook)))
+
+(defun ein:notebook-create-checkpoint (notebook)
+  "Create checkpoint for current notebook based on most recent save."
+  (interactive
+   (let* ((notebook (ein:get-notebook)))
+     (list notebook)))
+  (ein:events-trigger (ein:$notebook-events notebook)
+                      'notebook_create_checkpoint.Notebook)
+  (ein:content-create-checkpoint (ein:fast-content-from-notebook notebook)
+                                 (lexical-let ((notebook notebook))
+                                   #'(lambda (content)
+                                       (ein:log 'verbose "Checkpoint %s for %s generated."
+                                                (plist-get (first (ein:$content-checkpoints content)) :id)
+                                                (ein:$notebook-notebook-name notebook))
+                                       (ein:events-trigger (ein:$notebook-events notebook)
+                                                           'notebook_checkpoint_created.Notebook)
+                                       (setf (ein:$notebook-checkpoints notebook)
+                                             (ein:$content-checkpoints content))))))
+
+(defun ein:notebook-list-checkpoint-ids (notebook)
+  (unless (ein:$notebook-checkpoints notebook)
+    (ein:content-query-checkpoints (ein:fast-content-from-notebook notebook)
+                                   (lexical-let ((notebook notebook))
+                                     #'(lambda (content)
+                                         (setf (ein:$notebook-checkpoints notebook)
+                                               (ein:$content-checkpoints content)))))
+    (sleep-for 0.5))
+  (loop for cp in (ein:$notebook-checkpoints notebook)
+        collecting (plist-get cp :last_modified)))
+
+(defun ein:notebook-restore-to-checkpoint (notebook checkpoint)
+  "Restore notebook to previous checkpoint saved on the Jupyter
+server. Note that if there are multiple checkpoints the user will
+be prompted on which one to use."
+  (interactive
+   (let* ((notebook (ein:get-notebook))
+          (checkpoint (completing-read
+                       "Select checkpoint: "
+                       (ein:notebook-list-checkpoint-ids notebook))))
+     (list notebook checkpoint)))
+  (ein:content-restore-checkpoint (ein:fast-content-from-notebook notebook)
+                                  checkpoint)
+  (ein:notebook-close notebook)
+  (ein:notebook-open (ein:$notebook-url-or-port notebook)
+                     (ein:$notebook-notebook-path notebook)))
 
 
 ;;; Worksheet
@@ -1268,6 +1463,8 @@ This hook is run regardless the actual major mode used."
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (let ((map ein:notebook-mode-map))
+  (define-key map "\C-ci" 'ein:inspect-object)
+  (define-key map "\C-c'" 'ein:edit-cell-contents)
   (define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
@@ -1335,6 +1532,7 @@ This hook is run regardless the actual major mode used."
       ("File"
        ,@(ein:generate-menu
           '(("Save notebook" ein:notebook-save-notebook-command)
+            ("Copy and rename notebook" ein:notebook-save-to-command)
             ("Rename notebook" ein:notebook-rename-command)
             ("Close notebook without saving"
              ein:notebook-close)
@@ -1360,7 +1558,8 @@ This hook is run regardless the actual major mode used."
             )))
       ("Cell/Code"
        ,@(ein:generate-menu
-          '(("Execute cell" ein:worksheet-execute-cell
+          '(("Edit cell contents in dedicated buffer" ein:edit-cell-contents)
+            ("Execute cell" ein:worksheet-execute-cell
              :active (ein:worksheet-at-codecell-p))
             ("Execute cell and go to next"
              ein:worksheet-execute-cell-and-goto-next
@@ -1462,6 +1661,7 @@ This hook is run regardless the actual major mode used."
   (ein:aif ein:anything-kernel-history-search-key
       (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
   (ein:notebook-minor-mode +1)
+  (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
   (run-hooks 'ein:notebook-mode-hook))
 
 (add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
@@ -1576,6 +1776,7 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   (when (ein:$notebook-p ein:%notebook%)
+    (ein:notebook-disable-autosaves ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
