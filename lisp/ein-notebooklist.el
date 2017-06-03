@@ -876,6 +876,7 @@ on all the notebooks opened from the current notebooklist."
   (unless (eql major-mode 'ein:notebooklist-mode)
     (error "This command needs to be called from within a notebooklist buffer."))
   (lexical-let* ((current-nblist ein:%notebooklist%)
+                 (old-url (ein:$notebooklist-url-or-port current-nblist))
 		             (new-url-or-port new-url-or-port)
 		             (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
 							                                               (equal (ein:$notebook-url-or-port nb)
@@ -883,13 +884,17 @@ on all the notebooks opened from the current notebooklist."
     (deferred:$
       (deferred:next
 	      (lambda ()
-	        (ein:notebooklist-open new-url-or-port "/" nil)
+	        (ein:notebooklist-open new-url-or-port "/" t)
 	        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
 		            do (sit-for 0.1))))
       (deferred:nextc it
 	      (lambda ()
 	        (dolist (nb open-nb)
-	          (ein:notebook-update-url-or-port new-url-or-port nb)))))))
+	          (ein:notebook-update-url-or-port new-url-or-port nb))))
+      (deferred:nextc it
+        (lambda ()
+          (kill-buffer (ein:notebooklist-get-buffer old-url))
+          (ein:notebooklist-open new-url-or-port "/" nil))))))
 
 
 ;;; Generic getter
