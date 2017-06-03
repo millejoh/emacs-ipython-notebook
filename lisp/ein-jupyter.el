@@ -100,16 +100,31 @@ the log of the running jupyter server."
     (setq %ein:jupyter-server-session% proc)
     (if (>= ein:log-level 40)
         (switch-to-buffer ein:jupyter-server-buffer-name))
-    (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
+    (deferred:$
+      (deferred:next
         (with-current-buffer (process-buffer proc)
           (goto-char (point-min))
           (loop for x upfrom 0 by 1
                 until (or (search-forward "Notebook is running at:" nil t)
-                          (> x 100))
+                          (> x 1000))
                 do (progn (sit-for 0.1)
                           (goto-char (point-min)))
-                finally (unless no-login-after-start-p
-                          (ein:jupyter-server-login-and-open)))))))
+                finally return no-login-after-start-p)))
+      (deferred:nextc it
+        (lambda (no-login-p)
+          (unless no-login-p
+            (ein:jupyter-server-login-and-open)))))
+    ;; (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
+    ;;     (with-current-buffer (process-buffer proc)
+    ;;       (goto-char (point-min))
+    ;;       (loop for x upfrom 0 by 1
+    ;;             until (or (search-forward "Notebook is running at:" nil t)
+    ;;                       (> x 100))
+    ;;             do (progn (sit-for 0.1)
+    ;;                       (goto-char (point-min)))
+    ;;             finally (unless no-login-after-start-p
+    ;;                       (ein:jupyter-server-login-and-open)))))
+    ))
 
 (defun ein:jupyter-server-login-and-open ()
   "Log in and open a notebooklist buffer for a running jupyter notebook server.
