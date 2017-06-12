@@ -156,8 +156,10 @@ the source is in git repository."
             (progn
               (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
               (setf (gethash url-or-port *running-ipython-version*) 2))
-          (setf (gethash url-or-port *running-ipython-version*)
-                (ein:get-ipython-major-version (plist-get (request-response-data resp) :version))))))))
+          (condition-case nil
+              (setf (gethash url-or-port *running-ipython-version*)
+                    (ein:get-ipython-major-version (plist-get (request-response-data resp) :version)))
+            (error (ein:force-ipython-version-check))))))))
 
 (defun ein:force-ipython-version-check ()
   (interactive)

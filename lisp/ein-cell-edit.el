@@ -102,10 +102,12 @@ or abort with \\[ein:edit-cell-abort]"))
 and place results (if any) in output of original notebook cell."
   (interactive)
   (ein:edit-cell-save)
-  (ein:cell-execute-internal ein:src--cell
-                             (slot-value ein:src--cell 'kernel)
-                             (buffer-string)
-                             :silent nil))
+  (when (and (slot-exists-p ein:src--cell 'kernel)
+             (slot-boundp ein:src--cell 'kernel))
+    (ein:cell-execute-internal ein:src--cell
+                               (slot-value ein:src--cell 'kernel)
+                               (buffer-string)
+                               :silent nil)))
 
 (defun ein:edit-cell-save ()
   "Save contents of EIN source edit buffer back to original notebook
@@ -192,6 +194,12 @@ END."
   "Remove overlay from current source buffer."
   (when (overlayp ein:src--overlay) (delete-overlay ein:src--overlay)))
 
+(defcustom ein:raw-cell-default-edit-mode 'LaTeX-mode
+  "The major mode to use when editing a cell of type 'Raw' in the
+  dedicated edit buffer. By default we use LaTeX-mode."
+  :type 'symbol
+  :group 'ein)
+
 (defun ein:edit-cell-contents ()
   "Edit the contents of the current cell in a buffer using an
 appropriate language major mode. Functionality is very similar to
@@ -206,6 +214,20 @@ appropriate language major mode. Functionality is very similar to
     (ein:aif (get-buffer name)
         (switch-to-buffer-other-window it)
       (ein:create-edit-cell-buffer name cell nb ws))))
+
+(defun ein:edit-cell-detect-type (contents notebook &optional raw-cell-p)
+  (if (string-match "^%%\\(.*\\)" contents)
+      (ein:case-equal (match-string 1 contents)
+        (("html" "HTML") (html-mode))
+        (("latex" "LATEX") (LaTeX-mode))
+        (("ruby") (ruby-mode))
+        (("sh" "bash") (sh-mode))
+        (("javascript" "js") (javascript-mode))
+        (t (funcall ein:raw-cell-default-edit-mode)))
+    (if raw-cell-p
+        (funcall ein:raw-cell-default-edit-mode)
+      (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
+        (python (python-mode))))))
 
 (defun ein:create-edit-cell-buffer (name cell notebook worksheet)
   (let* ((contents (ein:cell-get-text cell))
@@ -224,9 +246,8 @@ appropriate language major mode. Functionality is very similar to
     (condition-case e
         (ein:case-equal type
           (("markdown") (markdown-mode))
-          (("code")
-           (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
-             (python (python-mode)))))
+          (("raw") (ein:edit-cell-detect-type contents notebook t))
+          (("code") (ein:edit-cell-detect-type contents notebook)))
       (error (message "Language mode `%s' fails with: %S"
                       type (nth 1 e))))
     (set (make-local-variable 'ein:src--overlay) overlay)
