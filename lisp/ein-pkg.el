@@ -5,4 +5,5 @@
     (request "0.3")
     (deferred "0.5")
     (cl-generic "0.3")
-    (dash "2.13.0")))
+    (dash "2.13.0")
+    (skewer-mode "1.6.2")))
