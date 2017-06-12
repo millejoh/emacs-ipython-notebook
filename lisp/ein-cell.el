@@ -41,6 +41,7 @@
 (require 'ein-node)
 (require 'ein-kernel)
 (require 'ein-output-area)
+(require 'ein-skewer)
 
 
 ;;; Faces
@@ -108,6 +109,13 @@
 
 
 ;;; Customization
+
+(defcustom ein:enable-dynamic-javascript nil
+    "[EXPERIMENTAL] When non-nil enable support in ein for
+executing dynamic javascript. This feature requires installation
+of the skewer package."
+    :type 'boolean
+    :group 'ein)
 
 (defcustom ein:cell-traceback-level 1
   "Number of traceback stack to show.
@@ -940,8 +948,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json (slot-value cell 'dynamic))
-  (ein:insert-read-only "\n"))
+  (if (and (plist-get json :javascript)
+           (oref cell :dynamic) ein:enable-dynamic-javascript)
+      (ein:execute-javascript cell json)
+    (progn
+      (ein:cell-append-mime-type json (oref cell :dynamic))
+      (ein:insert-read-only "\n"))))
 
 (defcustom ein:output-type-preference
   (if (and (fboundp 'shr-insert-document)
