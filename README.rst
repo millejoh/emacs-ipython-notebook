@@ -16,7 +16,7 @@ Jupyter.
           check the code running against IPython's suite of sample
           notebooks. It's a worse-is-better solution to problem requiring a
           time-consuming solution.
-   
+
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
@@ -143,6 +143,8 @@ Requirements
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ 1.3
 * `request.el`_ >= 0.2
+* `deferred.el`_
+* `skewer-mode.el`_
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
@@ -161,7 +163,7 @@ Requirements
   emacs initialization file add
 
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
-  
+
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.  EIN is currently known to work in Emacs 25.1 and development
 version (26.0.x).
@@ -171,6 +173,8 @@ version (26.0.x).
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
+.. _deferred.el: https://github.com/kiwanami/emacs-deferred
+.. _skewer-mode.el: https://github.com/skeeto/skewer-mode
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
