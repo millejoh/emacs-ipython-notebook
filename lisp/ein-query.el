@@ -74,6 +74,8 @@ will be canceled \(see also `ein:query-singleton-ajax').
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
 
 (defun ein:query-prepare-header (url settings &optional securep)
+  "Ensure that REST calls to the jupyter server have the correct
+_xsrf argument."
   (let ((cookies (request-cookie-alist (url-host (url-generic-parse-url url))
                                        "/" securep)))
     (ein:aif (assoc-string "_xsrf" cookies)

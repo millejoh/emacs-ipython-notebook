@@ -145,14 +145,14 @@ Requirements
 * `request.el`_ >= 0.2
 * `deferred.el`_
 * `skewer-mode.el`_
+* `auto-complete.el`_
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
   ``ein:console-open`` command.
-* (optional) `auto-complete.el`_
-  You need to configure subpackage ``ein-ac`` to enable
-  this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
