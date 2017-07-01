@@ -1057,7 +1057,7 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-(defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let* ((ss-table (ein:get-slide-show cell))
          (metadata (slot-value cell 'metadata))
          (outputs (if discard-output []
@@ -1077,46 +1077,54 @@ prettified text thus be used instead of HTML type."
                        (equal otype "execute_result"))
                    (null (plist-get output :metadata)))
               (plist-put output :metadata (make-hash-table)))
-          (push (let ((ocopy (copy-list output))
-                      (new-output '()))
-                  (loop while ocopy
-                        do (let ((prop (pop ocopy))
-                                 (value (pop ocopy)))
-                             (ein:log 'debug "Checking property %s for output type '%s'"
-                                      prop otype)
-                             (cond
-                              ((equal prop :stream) (progn (push value new-output)
-                                                           (push :name new-output)))
+          (setq renamed-outputs
+                (append renamed-outputs
+                        (list (let ((ocopy (copy-list output))
+                                    (new-output '()))
+                                (loop while ocopy
+                                      do (let ((prop (pop ocopy))
+                                               (value (pop ocopy)))
+                                           (ein:log 'debug "Checking property %s for output type '%s'"
+                                                    prop otype)
+                                           (cond
+                                            ((equal prop :stream) (progn (push value new-output)
+                                                                         (push :name new-output)))
 
-                              ((and (equal otype "display_data")
-                                    (ein:output-property-p prop))
-                               (let ((new-prop (cdr (ein:output-property-p prop))))
-                                 (push (list new-prop (list value)) new-output)
-                                 (push :data new-output)))
+                                            ((and (equal otype "display_data")
+                                                  (ein:output-property-p prop))
+                                             (let ((new-prop (cdr (ein:output-property-p prop))))
+                                               (if (plist-member new-output :data)
+                                                   (setq new-output (plist-put new-output :data
+                                                                               (append (plist-get new-output :data)
+                                                                                       (list new-prop (list value))
+                                                                                       )))
+                                                 (push (list new-prop (list value)) new-output)
+                                                 (push :data new-output))
+                                               ))
 
-                              ((and (equal otype "display_data")
-                                    (equal prop :text))
-                               (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
+                                            ((and (equal otype "display_data")
+                                                  (equal prop :text))
+                                             (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
 
-                              ((and (equal otype "execute_result")
-                                    (or (equal prop :text)
-                                        (equal prop :html)
-					                              (equal prop :latex)))
-                               (ein:log 'debug "Fixing execute_result (%s?)." otype)
-                               (let ((new-prop (cdr (ein:output-property-p prop))))
-                                 (push (list new-prop (list value)) new-output)
-                                 (push :data new-output)))
+                                            ((and (equal otype "execute_result")
+                                                  (or (equal prop :text)
+                                                      (equal prop :html)
+                                                      (equal prop :latex)))
+                                             (ein:log 'debug "Fixing execute_result (%s?)." otype)
+                                             (let ((new-prop (cdr (ein:output-property-p prop))))
+                                               (push (list new-prop (list value)) new-output)
+                                               (push :data new-output)))
 
 
-                              ((and (equal otype "execute_result")
-                                    (equal prop :prompt_number))
-                               (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
-                               (push value new-output)
-                               (push :execution_count new-output))
+                                            ((and (equal otype "execute_result")
+                                                  (equal prop :prompt_number))
+                                             (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
+                                             (push value new-output)
+                                             (push :execution_count new-output))
 
-                              (t (progn (push value new-output) (push prop new-output)))))
-                        finally return new-output))
-                renamed-outputs))))
+                                            (t (progn (push value new-output) (push prop new-output)))))
+                                      finally return new-output))))
+                ))))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
       ,@(if execute-count

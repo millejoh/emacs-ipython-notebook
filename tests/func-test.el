@@ -16,7 +16,7 @@
 (ein:setq-if-not ein:testing-dump-file-log "func-test-batch-log.log")
 (ein:setq-if-not ein:testing-dump-file-messages "func-test-batch-messages.log")
 (ein:setq-if-not ein:testing-dump-server-log "func-test_server_batch_emacs.log")
-(ein:setq-if-not ein:testing-jupyter-server-command "c:/Users/mille/Miniconda3/envs/anaconda/Scripts/jupyter.exe")
+(ein:setq-if-not ein:testing-jupyter-server-command "c:/Users/mille/Miniconda3/envs/jupyter/Scripts/jupyter.exe")
 (ein:setq-if-not ein:testing-jupyter-server-directory "c:/Users/mille/Dropbox/Projects/emacs-ipython-notebook/tests/notebook/nbformat4")
 
 (setq message-log-max t)
@@ -34,13 +34,14 @@
                                   (goto-char (point-min))
                                   (search-forward "Copy/paste this URL into your browser" nil t)))
                             (list (process-buffer %ein:jupyter-server-session%))
-                            5000)
+                            500000)
     (ein:log 'debug "TESTING-START-SERVER logging in.")
     (multiple-value-bind (url token) (ein:jupyter-server-conn-info)
       (ein:notebooklist-login url token)
       (setq ein:testing-port url)
-      (setq ein:testing-token token))
-    (ein:log 'debug "TESTING-START-SERVER succesfully logged in.")))
+      (setq ein:testing-token token)
+      (ein:log 'debug "TESTING-START-SERVER succesfully logged in.")
+      url)))
 
 (defun ein:testing-wait-until (message predicate &optional predargs max-count)
   "Wait until PREDICATE function returns non-`nil'.
@@ -48,7 +49,7 @@ PREDARGS is argument list for the PREDICATE function.
 Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "TESTING-WAIT-UNTIL start")
   (ein:log 'debug "TESTING-WAIT-UNTIL waiting on: %s" message)
-  (unless (setq max-count 50))
+  (unless max-count (setq max-count 50000))
   (unless (loop repeat max-count
                 when (apply predicate predargs)
                 return t
@@ -67,7 +68,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (setq notebook-name (format "%s/%s" path notebook-name)))
   (let ((content (ein:notebooklist-open url-or-port path t)))
     ;; (sit-for 1.0) ;; Because some computers are too fast???
-    (ein:testing-wait-until "ein:notebooklist-open" (lambda () (ein:$content-url-or-port content)))
+    (ein:testing-wait-until "ein:notebooklist-open"
+                            (lambda () (and content
+                                            (ein:$content-url-or-port content))))
     (with-current-buffer (ein:notebooklist-get-buffer (ein:$content-url-or-port content))
       (prog1
           (ignore-errors
@@ -106,8 +109,14 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK start")
   (ein:notebooklist-open url-or-port (ein:$notebook-notebook-path notebook) t)
   (ein:testing-wait-until "ein:notebooklist-open"
-                          (lambda () (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))))
+                          (lambda ()
+                            (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port))))
+                          nil 500000)
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+    (ein:testing-wait-until "ein:notebooklist-get-buffer"
+                            (lambda () (eql major-mode 'ein:notebooklist-mode))
+                            nil
+                            50000)
     (ein:log 'debug "TESTING-DELETE-NOTEBOOK deleting notebook")
     (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook)))
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK end"))
@@ -125,7 +134,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it))))
+                          (ein:kernel-live-p it)))
+     nil 50000)
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:%notebook%)
                      "Untitled.ipynb"))))
@@ -134,24 +144,27 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 (ert-deftest ein:testing-delete-untitled0 ()
   (ein:log 'verbose "----------------------------------")
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 start")
-  (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 creating notebook")
   (ein:testing-start-server)
+
+  (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 creating notebook")
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
      "ein:test-get-untitled0-or-create"
-     (lambda () (ein:aand notebook
-                          (ein:$notebook-kernel it)
-                          (ein:kernel-live-p it))))
-    (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 delete notebook")
+     (lambda ()
+       (ein:aand notebook
+                 (ein:$notebook-kernel it)
+                 (ein:kernel-live-p it)))
+     nil 50000)
+    (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 deleting notebook")
     (ein:testing-delete-notebook ein:testing-port notebook))
-  (ein:log 'debug
+  (ein:log 'verbose
     "ERT TESTING-DELETE-UNTITLED0 check that the notebook is deleted")
   (let ((num-notebook
          (length (ein:testing-get-notebook-by-name ein:testing-port
                                                    "Untitled.ipynb"
                                                    ""))))
     (should (= num-notebook 0)))
-  (ein:log 'debug "ERT TESTING-DELETE-UNTITLED0 end"))
+  (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 end"))
 
 (ert-deftest ein:notebook-execute-current-cell-simple ()
   (ein:testing-start-server)
@@ -159,13 +172,16 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it))))
+                          (ein:kernel-live-p it)))
+     nil 50000)
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "a = 100\na")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until "ein:worksheet-execute-cell"
-                                (lambda () (not (slot-value cell 'running)))))
+                                (lambda () (not (slot-value cell 'running)))
+                                nil
+                                50000))
       ;; (message "%s" (buffer-string))
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
@@ -197,7 +213,9 @@ See the definition of `create-image' for how it works."
         ;; well sometimes.  Probably "output reply" (iopub) comes
         ;; before "execute reply" in this case.
         (ein:testing-wait-until "ein:worksheet-execute-cell"
-                                (lambda () (slot-value cell 'outputs)))
+                                (lambda () (slot-value cell 'outputs))
+                                nil
+                                50000)
         ;; This cell has only one input
         (should (= (length (oref cell :outputs)) 1))
         ;; This output is a SVG image
@@ -220,13 +238,16 @@ See the definition of `create-image' for how it works."
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it))))
+                          (ein:kernel-live-p it)))
+     nil 50000)
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "print('Hello')")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until "ein:worksheet-execute-cell"
-                                (lambda () (not (oref cell :running)))))
+                                (lambda () (not (oref cell :running)))
+                                nil
+                                50000))
       (save-excursion
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
@@ -237,14 +258,16 @@ See the definition of `create-image' for how it works."
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it))))
+                          (ein:kernel-live-p it)))
+     nil 50000)
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "range?")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until
          "ein:worksheet-execute-cell"
-         (lambda () (not (oref cell :running)))))
+         (lambda () (not (oref cell :running)))
+         nil 50000))
       (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
         (should (search-forward "Docstring:"))))))
 
@@ -254,7 +277,8 @@ See the definition of `create-image' for how it works."
     (ein:testing-wait-until
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it))))
+                          (ein:kernel-live-p it)))
+     nil 50000)
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (let ((pager-name (ein:$notebook-pager ein:%notebook%)))
@@ -265,6 +289,7 @@ See the definition of `create-image' for how it works."
         ;; Pager buffer will be created when got the response
         (ein:testing-wait-until
          "ein:pythools-request-help"
-         (lambda () (get-buffer pager-name)))
+         (lambda () (get-buffer pager-name))
+         nil 50000)
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))
