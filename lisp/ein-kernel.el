@@ -109,18 +109,21 @@
             :date (format-time-string "%Y-%m-%dT%T" (current-time)) ; ISO 8601 timestamp
             :msg_type msg-type)
    :metadata (make-hash-table)
+
    :content content
    :parent_header (make-hash-table)))
 
 
 (defun ein:kernel-start (kernel notebook)
   "Start kernel of the notebook whose id is NOTEBOOK-ID."
+  (assert (and (ein:$notebook-p notebook)
+               (ein:$kernel-p kernel)))
   (unless (ein:$kernel-running kernel)
     (if (= (ein:$kernel-api-version kernel) 2)
         (let ((path (substring (ein:$notebook-notebook-path notebook)
                                0
                                (or (cl-position ?/ (ein:$notebook-notebook-path notebook)
-                                             :from-end t)
+                                                :from-end t)
                                    0))))
           (ein:kernel-start--legacy kernel
                                     (ein:$notebook-notebook-name notebook)
@@ -131,13 +134,18 @@
          (ein:url (ein:$kernel-url-or-port kernel)
                   "api/sessions")
          :type "POST"
-         :data (json-encode `(("path" . ,(ein:$notebook-notebook-path notebook)
-                               ;;(("path" . ,(ein:$notebook-notebook-path notebook)))
-                               )
-                              ("type" . "notebook")
-                              ,@(if kernelspec
-                                    `(("kernel" .
-                                       (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+         :data (json-encode
+                (cond ((<= (ein:$kernel-api-version kernel) 4)
+                       `(("notebook" .
+                          (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+                         ,@(if kernelspec
+                               `(("kernel" .
+                                  (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+                      (t `(("path" . ,(ein:$notebook-notebook-path notebook))
+                           ("type" . "notebook")
+                           ,@(if kernelspec
+                                 `(("kernel" .
+                                    (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
          :parser #'ein:json-read
          :success (apply-partially #'ein:kernel--kernel-started kernel)
          :error (apply-partially #'ein:kernel--start-failed kernel notebook))))))
@@ -177,7 +185,7 @@
 (defvar kernel-restart-try-count 0)
 (defvar max-kernel-restart-try-count 3)
 
-0(cl-defun ein:kernel--start-failed (kernel notebook &key error-thrown sybmol-status &allow-other-keys)
+(cl-defun ein:kernel--start-failed (kernel notebook &key error-thrown sybmol-status &allow-other-keys)
   (ein:log 'info "Encountered issue %s starting kernel, %s retries left."
            (car error-thrown)
            (- max-kernel-restart-try-count kernel-restart-try-count))
@@ -402,7 +410,7 @@ kill the kernel."
 ;;       its first argument.  It's like using `cons' instead of
 ;;       `$.proxy'.
 
-(defun ein:kernel-object-info-request (kernel objname callbacks)
+(defun ein:kernel-object-info-request (kernel objname callbacks &optional cursor-pos detail-level)
   "Send object info request of OBJNAME to KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -420,18 +428,23 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 "
   (assert (ein:kernel-live-p kernel) nil "object_info_reply: Kernel is not active.")
   (when objname
-    (let ((content (list :oname (format "%s" objname)))
-          msg
-          msg-id)
-      (if (>= (ein:$kernel-api-version kernel) 3)
-          (setf msg (ein:kernel--get-msg kernel "inspect_request"
-                                         (append content (list :detail_level 1)))
-                msg-id (plist-get (plist-get msg :header) :msg_id))
-        (setf msg (ein:kernel--get-msg kernel "object_info_request" content)
-              msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (if (= (ein:$kernel-api-version kernel) 2)
+        (ein:legacy-kernel-object-info-request kernel objname callbacks))
+    (let* ((content (list :oname (format "%s" objname)
+                          :cursor_pos (or cursor-pos 0)
+                          :detail_level (or detail-level 0)))
+           (msg (ein:kernel--get-msg kernel "inspect_request"
+                                     (append content (list :detail_level 1))))
+           (msg-id (plist-get (plist-get msg :header) :msg_id)))
       (ein:websocket-send-shell-channel kernel msg)
       (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
 
+(defun ein:legacy-kernel-object-info-request (kernel objname callbacks)
+  (let* ((content (list :oname (format "%s" objname)))
+         (msg (ein:kernel--get-msg kernel "object_info_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:websocket-send-shell-channel kernel msg)
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)))
 
 (defun* ein:kernel-execute (kernel code &optional callbacks
                                    &key

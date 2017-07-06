@@ -300,17 +300,26 @@ call notebook destructor `ein:notebook-del'."
 ;;; Notebook utility functions
 
 (defun ein:notebook-update-url-or-port (new-url-or-port notebook)
-  "Change the url-or-port the notebook is saved under. Calling
+  "Change the url and port the notebook is saved to. Calling
 this will propagate the change to the kernel, trying to restart
 the kernel in the process. Use case for this command is when
-the jupyter server dies and restarted on a different port."
+the jupyter server dies and restarted on a different port.
+
+If you have enabled token or password security on server running
+at the new url/port, then please be aware that this new url-port
+combo must match exactly these url/port you used format
+`ein:notebooklist-login'. For example, as far as Emacs and
+jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
+*not* the same URL."
   (interactive (list
                 (ein:notebooklist-ask-url-or-port)
                 (ein:get-notebook-or-error)))
+  (message "Updating server info and restarting kernel for notebooklist %s"
+           (ein:$notebook-notebook-name notebook))
   (setf (ein:$notebook-url-or-port notebook) new-url-or-port
         (ein:$kernel-url-or-port (ein:$notebook-kernel notebook)) new-url-or-port)
-  (ein:kernel-restart (ein:$notebook-kernel notebook))
   (with-current-buffer (ein:notebook-buffer notebook)
+    (ein:kernel-restart (ein:$notebook-kernel notebook))
     (rename-buffer (format ein:notebook-buffer-name-template
                            (ein:$notebook-url-or-port notebook)
                            (ein:$notebook-notebook-name notebook)))))
@@ -548,7 +557,7 @@ of minor mode."
   spec
   language)
 
-(defvar ein:available-kernelspecs (make-hash-table))
+(defvar ein:available-kernelspecs (make-hash-table :test #'equal))
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
@@ -576,15 +585,16 @@ of minor mode."
   "Query jupyter server for the list of available
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
-  (ein:query-singleton-ajax
-   (list 'ein:qeury-kernelspecs url-or-port)
-   (ein:url url-or-port "api/kernelspecs")
-   :type "GET"
-   :timeout ein:content-query-timeout
-   :parser 'ein:json-read
-   :sync t
-   :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
-   :error (apply-partially #'ein:query-kernelspecs-error)))
+  (unless (gethash url-or-port ein:available-kernelspecs)
+    (ein:query-singleton-ajax
+     (list 'ein:qeury-kernelspecs url-or-port)
+     (ein:url url-or-port "api/kernelspecs")
+     :type "GET"
+     :timeout ein:content-query-timeout
+     :parser 'ein:json-read
+     :sync t
+     :success (apply-partially #'ein:query-kernelspecs-success url-or-port)
+     :error (apply-partially #'ein:query-kernelspecs-error))))
 
 (defun* ein:query-kernelspecs-success (url-or-port &key data &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))
@@ -870,7 +880,8 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
   (condition-case err
-      (run-hooks 'before-save-hook)
+      (with-current-buffer (ein:notebook-buffer notebook)
+        (run-hooks 'before-save-hook))
     (error (ein:log 'warn "Error running save hooks: '%s'. I will still try to save the notebook." (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)

@@ -16,7 +16,7 @@ Jupyter.
           check the code running against IPython's suite of sample
           notebooks. It's a worse-is-better solution to problem requiring a
           time-consuming solution.
-   
+
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
    :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
@@ -143,14 +143,16 @@ Requirements
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ 1.3
 * `request.el`_ >= 0.2
+* `deferred.el`_
+* `skewer-mode.el`_
+* `auto-complete.el`_
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el.
   Fabian Gallina's `python.el`_ is required to use
   ``ein:console-open`` command.
-* (optional) `auto-complete.el`_
-  You need to configure subpackage ``ein-ac`` to enable
-  this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
@@ -161,16 +163,18 @@ Requirements
   emacs initialization file add
 
   ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
-  
+
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently tested against Emacs 23.3 and 24.3.
-It is known to work in Emacs 23.2, 24.x, 25.1, and development version (26.0.x).
+EIEIO and json.el.  EIN is currently known to work in Emacs 25.1 and development
+version (26.0.x).
 
 .. _IPython: http://ipython.org/
 .. _Jupyter: https://jupyter.readthedocs.io/en/latest/content-quickstart.html
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
+.. _deferred.el: https://github.com/kiwanami/emacs-deferred
+.. _skewer-mode.el: https://github.com/skeeto/skewer-mode
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el

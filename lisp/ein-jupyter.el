@@ -64,9 +64,8 @@ the notebook directory, you can set it here for future calls to
                 (format "--notebook-dir=%s" (convert-standard-filename dir)))
           ein:jupyter-server-args))
 
-
 ;;;###autoload
-(defun ein:jupyter-server-start (server-path server-directory &optional no-login-after-start-p)
+(defun ein:jupyter-server-start (server-cmd-path notebook-directory &optional no-login-after-start-p)
   "Start the jupyter notebook server at the given path.
 
 This command opens an asynchronous process running the jupyter
@@ -85,31 +84,41 @@ the log of the running jupyter server."
                                                                                  ein:jupyter-default-server-command))
                 (read-directory-name "Notebook Directory: " (or *ein:last-jupyter-directory*
                                                                 ein:jupyter-default-notebook-directory))))
-  (assert (and (file-exists-p server-path)
-               (file-executable-p server-path))
-          t "Command %s is not valid!" server-path)
-  (setf *ein:last-jupyter-command* server-path
-        *ein:last-jupyter-directory* server-directory)
+  (assert (and (file-exists-p server-cmd-path)
+               (file-executable-p server-cmd-path))
+          t "Command %s is not valid!" server-cmd-path)
+  (setf *ein:last-jupyter-command* server-cmd-path
+        *ein:last-jupyter-directory* notebook-directory)
   (if (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
       (message "Notebook session is already running, check the contents of %s"
                ein:jupyter-server-buffer-name))
-  (message "Starting notebook server in directory: %s" server-directory)
-  (let* ((proc (make-process :name "EIN: Jupyter notebook server"
-                             :buffer ein:jupyter-server-buffer-name
-                             :command (ein:jupyter-server--cmd server-path server-directory))))
+  (message "Starting notebook server in directory: %s" notebook-directory)
+  (lexical-let* ((proc (apply #'start-process
+                              "EIN: Jupyter notebook server"
+                              ein:jupyter-server-buffer-name
+                              server-cmd-path
+                              "notebook"
+                              (format "--notebook-dir=%s" (convert-standard-filename notebook-directory))
+                              ein:jupyter-server-args)))
     (setq %ein:jupyter-server-session% proc)
     (if (>= ein:log-level 40)
         (switch-to-buffer ein:jupyter-server-buffer-name))
-    (if (accept-process-output proc *ein:jupyter-server-accept-timeout*)
-        (with-current-buffer (process-buffer proc)
-          (goto-char (point-min))
-          (loop for x upfrom 0 by 1
-                until (or (search-forward "Notebook is running at:" nil t)
-                          (> x 100))
-                do (progn (sit-for 0.1)
-                          (goto-char (point-min))) 
-                finally (unless no-login-after-start-p
-                          (ein:jupyter-server-login-and-open)))))))
+    (deferred:$
+      (deferred:timeout
+        (* 30 1000) nil
+        (deferred:next
+          (with-current-buffer (process-buffer proc)
+            (goto-char (point-min))
+            (loop for x upfrom 0 by 1
+                  until (or (search-forward "Notebook is running at:" nil t)
+                            (search-forward "Use Control-C" nil t))
+                  do (progn (sit-for 0.1)
+                            (goto-char (point-min)))
+                  finally return no-login-after-start-p))))
+      (deferred:nextc it
+        (lambda (no-login-p)
+          (unless no-login-p
+            (ein:jupyter-server-login-and-open)))))))
 
 (defun ein:jupyter-server-login-and-open ()
   "Log in and open a notebooklist buffer for a running jupyter notebook server.
@@ -122,9 +131,14 @@ via a call to `ein:notebooklist-open'."
   (interactive)
   (when (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (ein:notebooklist-login url-or-port token)
-      (sit-for 1.0) ;; FIXME: Do better!
-      (ein:notebooklist-open url-or-port))))
+      (if (and url-or-port token)
+          (progn
+            (ein:notebooklist-login url-or-port token)
+            (sit-for 1.0) ;; FIXME: Do better!
+            (ein:notebooklist-open url-or-port))
+        (if url-or-port
+            (ein:notebooklist-open url-or-port)
+          (ein:log 'info "Could not determine port nor login info for jupyter server."))))))
 
 ;;;###autoload
 (defun ein:jupyter-server-stop ()
@@ -161,11 +175,17 @@ there is no running server then no action will be taken.
   "Return the url and port for the currently running jupyter
 session, along with the login token."
   (assert (processp %ein:jupyter-server-session%) t "Jupyter server has not started!")
-  (with-current-buffer (process-buffer %ein:jupyter-server-session%) ;;ein:jupyter-server-buffer-name
-    (goto-char (point-min))
-    (re-search-forward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil t)
-    (let ((url-or-port (match-string 1))
-          (token (match-string 2)))
-      (list url-or-port token))))
+  (condition-case err
+      (with-current-buffer (process-buffer %ein:jupyter-server-session%) ;;ein:jupyter-server-buffer-name
+        (goto-char (point-min))
+        (re-search-forward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil)
+        (let ((url-or-port (match-string 1))
+              (token (match-string 2)))
+          (list url-or-port token)))
+    (error (with-current-buffer (process-buffer %ein:jupyter-server-session%)
+             (goto-char (point-min))
+             (if (re-search-forward "\\(https?://.*:[0-9]+\\)" nil t)
+                 (list (match-string 1) nil)
+               (list nil nil))))))
 
 (provide 'ein-jupyter)

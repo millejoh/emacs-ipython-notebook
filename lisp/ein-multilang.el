@@ -122,10 +122,10 @@ This function may raise an error."
     ;; FIXME: write keymap setup for python-mode.el
     )))
 
-(defun ein:ml-lang-setup-markdown ()
-  "Use `markdown-mode-map'.  NOTE: This function is not used now."
-  (when (featurep 'markdown-mode)
-    (set-keymap-parent ein:notebook-multilang-mode-map markdown-mode-map)))
+;; (defun ein:ml-lang-setup-markdown ()
+;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."
+;;   (when (featurep 'markdown-mode)
+;;     (set-keymap-parent ein:notebook-multilang-mode-map markdown-mode-map)))
 
 ;; FIXME: dynamically call ein:ml-lang-setup-LANG using
 ;;        `post-command-hook'.

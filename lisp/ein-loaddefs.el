@@ -32,6 +32,16 @@
 
 ;;;***
 
+;;;### (autoloads nil "ein-company" "ein-company.el" (0 0 0 0))
+;;; Generated autoloads from ein-company.el
+
+(autoload 'ein:company-backend "ein-company" "\
+
+
+\(fn COMMAND &optional ARG &rest IGNORE)" t nil)
+
+;;;***
+
 ;;;### (autoloads nil "ein-completer" "ein-completer.el" (0 0 0 0))
 ;;; Generated autoloads from ein-completer.el
 
@@ -146,6 +156,13 @@ Open a buffer with bug report template.
 ;;; Generated autoloads from ein-events.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-events" '("ein:events")))
+
+;;;***
+
+;;;### (autoloads nil "ein-file" "ein-file.el" (0 0 0 0))
+;;; Generated autoloads from ein-file.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-file" '("ein:" "*ein:file-buffername-template*")))
 
 ;;;***
 
@@ -293,7 +310,7 @@ the notebooks the user wants to access.
 The buffer named by `ein:jupyter-server-buffer-name' will contain
 the log of the running jupyter server.
 
-\(fn SERVER-PATH SERVER-DIRECTORY)" t nil)
+\(fn SERVER-PATH SERVER-DIRECTORY &optional NO-LOGIN-AFTER-START-P)" t nil)
 
 (autoload 'ein:jupyter-server-stop "ein-jupyter" "\
 Stop a running jupyter notebook server.
@@ -303,15 +320,7 @@ there is no running server then no action will be taken.
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyter" '(#("ein:jupyter-server-" 0 19 (fontified t face font-lock-function-name-face)) #("*ein:" 0 5 (face font-lock-variable-name-face fontified t)) #("%ein:jupyter-server-session%" 0 28 (face font-lock-variable-name-face fontified t)))))
-
-;;;***
-
-;;;### (autoloads nil "ein-jupyterhub" "ein-jupyterhub.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from ein-jupyterhub.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyterhub" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyter" '("ein:jupyter-" "*ein:" "%ein:jupyter-server-session%")))
 
 ;;;***
 
@@ -322,7 +331,7 @@ there is no running server then no action will be taken.
 
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-kernel" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-kernel" '("ein:" "max-kernel-restart-try-count" "kernel-restart-try-count")))
 
 ;;;***
 
@@ -380,7 +389,7 @@ Notebook mode with multiple language fontification.
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '(#("ein:" 0 4 (fontified nil)))))
 
 ;;;***
 
@@ -399,7 +408,8 @@ By long running we mean sessions to last days, or weeks. The
 frequency of the refresh (which is very similar to a call to
 `ein:notebooklist-open`) is controlled by
 `ein:notebooklist-keepalive-refresh-time`, and is measured in
-terms of hours.
+terms of hours. If `ein:enable-keepalive' is non-nil this will
+automatically be called during calls to `ein:notebooklist-open`.
 
 \(fn &optional URL-OR-PORT)" t nil)
 
@@ -412,6 +422,11 @@ Disable the notebooklist keepalive calls to the jupyter notebook server.
 Reload current Notebook list.
 
 \(fn &optional NOTEBOOKLIST)" t nil)
+
+(autoload 'ein:notebooklist-upload-file "ein-notebooklist" "\
+
+
+\(fn UPLOAD-PATH)" t nil)
 
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist" "\
 Ask server to create a new notebook and open it in a new buffer.
@@ -462,7 +477,16 @@ See also:
 (autoload 'ein:notebooklist-login "ein-notebooklist" "\
 Login to IPython notebook server.
 
-\(fn URL-OR-PORT PASSWORD)" t nil)
+\(fn URL-OR-PORT PASSWORD &optional RETRY-P)" t nil)
+
+(autoload 'ein:notebooklist-change-url-port "ein-notebooklist" "\
+Update the ipython/jupyter notebook server URL for all the
+notebooks currently opened from the current notebooklist buffer.
+
+This function works by calling `ein:notebook-update-url-or-port'
+on all the notebooks opened from the current notebooklist.
+
+\(fn NEW-URL-OR-PORT)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '(#("ein:" 0 4 (face font-lock-function-name-face fontified nil)) #("generate-breadcrumbs" 0 20 (face font-lock-function-name-face fontified nil)))))
 
@@ -507,9 +531,9 @@ node `(org) External links' and Info node `(org) Search options'
 
 \(fn)" nil nil)
 
-(eval-after-load "org" '(progn (org-add-link-type "ipynb" 'ein:org-open) (add-hook 'org-store-link-functions 'ein:org-store-link)))
+(eval-after-load "org" '(if (fboundp 'org-link-set-parameters) (org-link-set-parameters "ipynb" :follow 'ein:org-open :help-echo "Open ipython notebook." :store 'ein:org-store-link) (org-add-link-type "ipynb" :follow 'ein:org-open) (add-hook 'org-store-link-functions 'ein:org-store-link)))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-org" '("ein:org-goto-link")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-org" '(#("ein:org-goto-link" 0 17 (fontified nil)))))
 
 ;;;***
 
@@ -567,13 +591,6 @@ Pseudo console mode.  Hit RET to execute code.
 ;;; Generated autoloads from ein-scratchsheet.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-scratchsheet" '("ein:")))
-
-;;;***
-
-;;;### (autoloads nil "ein-sections" "ein-sections.el" (0 0 0 0))
-;;; Generated autoloads from ein-sections.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-sections" '("magit-" "ein:")))
 
 ;;;***
 

@@ -101,11 +101,14 @@ node `(org) External links' and Info node `(org) Search options'"
 
 ;;;###autoload
 (eval-after-load "org"
-  '(progn
-     (if (fboundp 'org-link-set-parameters)
-         (org-link-set-parameters "ipynb" :follow #'ein:org-open)
-       (org-add-link-type "ipynb" :follow 'ein:org-open))
+  '(if (fboundp 'org-link-set-parameters)
+       (org-link-set-parameters "ipynb"
+                                :follow 'ein:org-open
+                                :help-echo "Open ipython notebook."
+                                :store 'ein:org-store-link)
+     (org-add-link-type "ipynb" :follow 'ein:org-open)
      (add-hook 'org-store-link-functions 'ein:org-store-link)))
+
 ;; The above expression is evaluated via loaddef file.  At the moment,
 ;; org.el nor ein-org.el need not be loaded.  When org-mode is used,
 ;; the above `progn' is executed but still ein-org.el is not loaded.
@@ -113,7 +116,6 @@ node `(org) External links' and Info node `(org) Search options'"
 ;; or storing ipynb link, ein-org.el is loaded finally.  (When
 ;; ein-org.el is loaded the above expression is evaluated again, but
 ;; that's OK as the expression is idempotent.)
-
 
 (provide 'ein-org)
 

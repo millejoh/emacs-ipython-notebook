@@ -31,8 +31,10 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
+(require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
+(require 'deferred)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
@@ -162,7 +164,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
            (lambda (content)
              (pop-to-buffer
               (funcall #'ein:notebooklist-url-retrieve-callback content))))))
-    (ein:content-query-contents path url-or-port nil success))
+    (ein:content-query-contents path url-or-port t success))
   ;(ein:notebooklist-get-buffer url-or-port)
   )
 
@@ -269,6 +271,10 @@ This function is called via `ein:notebook-after-rename-hook'."
                      nil
                      callback
                      cbargs))
+
+(defun ein:notebooklist-open-file (url-or-port path)
+  (ein:file-open url-or-port
+                 path))
 
 ;;;###autoload
 (defun ein:notebooklist-upload-file (upload-path)
@@ -603,6 +609,23 @@ Notebook list data is passed via the buffer local variable
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
+          if (string= type "file")
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((urlport urlport)
+                                           (path path))
+                               (lambda (&rest ignore)
+                                 (ein:notebooklist-open-file urlport path)))
+                     "Open")
+                    (widget-insert " ")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((path path))
+                               (lambda (&rest ignore)
+                                 (message "[EIN]: NBlist delete file command. Implement me!")))
+                     "Delete")
+                    (widget-insert " : " name)
+                    (widget-insert "\n"))
           if (string= type "notebook")
           do (progn (widget-create
                      'link
@@ -842,8 +865,40 @@ Now you can open notebook list by `ein:notebooklist-open'." url-or-port))
       (ein:notebooklist-login--success-1 url-or-port)
     (ein:notebooklist-login--error-1 url-or-port)))
 
+;;;###autoload
+(defun ein:notebooklist-change-url-port (new-url-or-port)
+  "Update the ipython/jupyter notebook server URL for all the
+notebooks currently opened from the current notebooklist buffer.
+
+This function works by calling `ein:notebook-update-url-or-port'
+on all the notebooks opened from the current notebooklist."
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
+  (unless (eql major-mode 'ein:notebooklist-mode)
+    (error "This command needs to be called from within a notebooklist buffer."))
+  (lexical-let* ((current-nblist ein:%notebooklist%)
+                 (old-url (ein:$notebooklist-url-or-port current-nblist))
+		             (new-url-or-port new-url-or-port)
+		             (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
+							                                               (equal (ein:$notebook-url-or-port nb)
+								                                                    (ein:$notebooklist-url-or-port current-nblist))))))
+    (deferred:$
+      (deferred:next
+	      (lambda ()
+	        (ein:notebooklist-open new-url-or-port "/" t)
+	        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+		            do (sit-for 0.1))))
+      (deferred:nextc it
+	      (lambda ()
+	        (dolist (nb open-nb)
+	          (ein:notebook-update-url-or-port new-url-or-port nb))))
+      (deferred:nextc it
+        (lambda ()
+          (kill-buffer (ein:notebooklist-get-buffer old-url))
+          (ein:notebooklist-open new-url-or-port "/" nil))))))
+
 
 ;;; Generic getter
+
 
 (defun ein:get-url-or-port--notebooklist ()
   (when (ein:$notebooklist-p ein:%notebooklist%)

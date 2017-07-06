@@ -126,7 +126,7 @@ this value."
 (defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   (with-slots (events) ws
     ;; Bind events for sub components:
-    (mapc (lambda (cell) (oset cell :events events))
+    (mapc (lambda (cell) (setf (slot-value cell 'events) events))
           (ein:worksheet-get-cells ws))))
 
 (defun ein:worksheet-class-bind-events (events)
@@ -147,7 +147,7 @@ this value."
                      (new-cell
                       (ein:worksheet-insert-cell-below ws 'code cell)))
         (ein:cell-set-text new-cell text)
-        (oset ws :dirty t)))))
+        (setf (slot-value ws 'dirty) t)))))
 
 (defun ein:worksheet--set-dirty (-ignore- data)
   "Set dirty flag of worksheet in which CELL in DATA locates."
@@ -200,7 +200,7 @@ this value."
 (defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (set-buffer-modified-p dirty))
-  (oset ws :dirty dirty))
+  (setf (slot-value ws 'dirty) dirty))
 
 (defun ein:worksheet-toggle-slideshow-view ()
   "Changes the display of
@@ -223,7 +223,7 @@ this value."
         (setf (ein:worksheet--ewoc ws) ewoc)
         (if cells
             (mapc (lambda (c)
-                    (oset c :ewoc ewoc)
+                    (setf (slot-value c 'ewoc) ewoc)
                     (ein:cell-enter-last c))
                   cells)
           (ein:worksheet-insert-cell-below ws 'code nil t))))
@@ -246,8 +246,8 @@ this value."
 
 (defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (destructuring-bind (&key cells metadata &allow-other-keys) data
-    (oset ws :metadata metadata)
-    (oset ws :saved-cells
+    (setf (slot-value ws 'metadata) metadata)
+    (setf (slot-value ws 'saved-cells)
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
@@ -268,7 +268,7 @@ current buffer."
       ,@(ein:aand (ein:worksheet--metadata ws) `((metadata . ,it))))))
 
 (defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
-  (let* ((discard-output-p (oref ws :discard-output-p))
+  (let* ((discard-output-p (slot-value ws 'discard-output-p))
          (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
                             (ein:cell-to-nb4-json
@@ -296,22 +296,22 @@ worksheet WS is reopened.
 
 \(fn ws deactivate)"
   (when (ein:worksheet-has-buffer-p ws)
-    (unless (oref ws :dont-save-cells)
+    (unless (slot-value ws 'dont-save-cells)
       (let ((cells (ein:worksheet-get-cells ws)))
         (with-current-buffer (ein:worksheet-buffer ws)
           (mapc #'ein:cell-save-text cells))
         (when deactivate (mapc #'ein:cell-deactivate cells))
-        (oset ws :saved-cells cells)))
+        (setf (slot-value ws 'saved-cells) cells)))
     (when deactivate
-      (mapc #'ein:cell-deactivate (oref ws :saved-cells))))
-  (oset ws :dont-save-cells nil))
+      (mapc #'ein:cell-deactivate (slot-value ws 'saved-cells))))
+  (setf (slot-value ws 'dont-save-cells) nil))
 
 (defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
   "Turn on `:dont-save-cells' flag so that next call on
 `ein:worksheet-save-cells' actually do nothing.
 
 \(fn ws)"
-  (oset ws :dont-save-cells t))
+  (setf (slot-value ws 'dont-save-cells) t))
 
 
 ;;; Cell indexing, retrieval, etc.
@@ -321,23 +321,23 @@ worksheet WS is reopened.
   ;; FIXME: unify type of TYPE to symbol or string.
   (apply #'ein:cell-from-type
          (format "%s" type)
-         :ewoc (oref ws :ewoc)
-         :events (oref ws :events)
+         :ewoc (slot-value ws 'ewoc)
+         :events (slot-value ws 'events)
          args))
 
 (defmethod ein:worksheet-get-cells ((ws ein:worksheet))
   (if (ein:worksheet-has-buffer-p ws)
-      (let* ((ewoc (oref ws :ewoc))
+      (let* ((ewoc (slot-value ws 'ewoc))
              (nodes (ewoc-collect ewoc
                                   (lambda (n) (ein:cell-node-p n 'prompt)))))
         (mapcar #'ein:$node-data nodes))
-    (oref ws :saved-cells)))
+    (slot-value ws 'saved-cells)))
 
 (defmethod ein:worksheet-ncells ((ws ein:worksheet))
   (length (ein:worksheet-get-cells ws)))
 
 (defun ein:worksheet-get-ewoc (&optional ws)
-  (ein:aand (or ws ein:%worksheet%) (oref it :ewoc)))
+  (ein:aand (or ws ein:%worksheet%) (slot-value it 'ewoc)))
 
 (defun ein:worksheet-get-current-ewoc-node (&optional pos)
   (ein:aand (ein:worksheet-get-ewoc) (ewoc-locate it pos)))
@@ -351,7 +351,7 @@ worksheet WS is reopened.
                               (funcall cell-p
                                        (ein:cell-from-ewoc-node ewoc-node))
                             t))))
-      (setq ewoc-node (ewoc-next (oref ein:%worksheet% :ewoc) ewoc-node)))
+      (setq ewoc-node (ewoc-next (slot-value ein:%worksheet% 'ewoc) ewoc-node)))
     ewoc-node))
 
 (defun* ein:worksheet-get-current-cell (&key pos noerror
@@ -409,7 +409,7 @@ If you really want use this command, you can do something like this
   (let ((inhibit-read-only t)
         (buffer-undo-list t))        ; disable undo recording
     (apply #'ewoc-delete
-           (oref ws :ewoc)
+           (slot-value ws 'ewoc)
            (ein:cell-all-element cell)))
   (oset ws :dirty t)
   ;;(ein:worksheet-empty-undo-maybe)
@@ -476,8 +476,8 @@ Prefixes are act same as the normal `yank' command."
     ;; When newly created or copied, kernel is not attached or not the
     ;; kernel of this worksheet.  So reset it here.
     (when (ein:codecell-p cell)
-      (oset cell :kernel (oref ws :kernel)))
-    (oset cell :events (oref ws :events))
+      (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
+    (setf (slot-value cell 'events) (slot-value ws 'events))
     cell))
 
 (defun ein:worksheet-insert-cell-below (ws type-or-cell pivot &optional focus)
@@ -535,23 +535,23 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (oref ws :nbformat)
-                (2 (ein:case-equal (oref cell :cell-type)
+  (let ((type (case (slot-value ws 'nbformat)
+                (2 (ein:case-equal (slot-value cell 'cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
-                (3 (ein:case-equal (oref cell :cell-type)
+                (3 (ein:case-equal (slot-value cell 'cell-type)
                      (("code") "markdown")
                      (("markdown") "raw")
                      (("raw") "heading")
                      (("heading") "code")))
-                (4 (ein:case-equal (oref cell :cell-type)
+                (4 (ein:case-equal (slot-value cell 'cell-type)
                      (("code") "markdown")
                      (("markdown") "raw")
                      (("raw") "code"))))))
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
-        (oset new :kernel (oref ws :kernel)))
+        (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
       (ein:worksheet-empty-undo-maybe)
       (when focus (ein:cell-goto new relpos))))
   )
@@ -562,15 +562,15 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((new_slide_type (ein:case-equal (oref cell :slidetype)
+  (let ((new-slide-type (ein:case-equal (oref cell :slidetype)
                           (("-") "slide")
                           (("slide") "subslide")
                           (("subslide") "fragment")
                           (("fragment") "skip")
                           (("skip") "notes")
                           (("notes") "-"))))
-    (message "changing slide type %s" new_slide_type)
-    (oset cell :slidetype new_slide_type))
+    (message "changing slide type %s" new-slide-type)
+    (oset cell :slidetype new-slide-type))
   (ewoc-invalidate (oref cell :ewoc) (ein:cell-element-get cell :prompt))
   (ein:worksheet-empty-undo-maybe)
   (when focus (ein:cell-goto cell)))
@@ -585,7 +585,7 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (oref ws :nbformat)
+          (choices (case (slot-value ws 'nbformat)
                      (2 "cm")
                      (3 "cmr123456")
                      (4 "cmr123456")))
@@ -603,7 +603,7 @@ an integer used only when the TYPE is \"heading\"."
   (let ((relpos (ein:cell-relative-point cell))
         (new (ein:cell-convert-inplace cell type)))
     (when (ein:codecell-p new)
-      (oset new :kernel (oref ws :kernel)))
+      (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
     (when level
       (ein:cell-change-level new level))
     (ein:worksheet-empty-undo-maybe)
@@ -622,10 +622,10 @@ argument \(C-u)."
          (pos (point-marker))
          (head (buffer-substring beg pos))
          (new (ein:worksheet-insert-cell-above ws
-                                               (oref cell :cell-type)
+                                               (slot-value cell 'cell-type)
                                                cell)))
     (when (ein:headingcell-p cell)
-      (ein:cell-change-level new (oref cell :level)))
+      (ein:cell-change-level new (slot-value cell 'level)))
     (delete-region beg pos)
     (unless no-trim
       (setq head (ein:trim-right head "\n"))
@@ -777,7 +777,7 @@ This does not alter the actual data stored in the cell."
                       :cell-p #'ein:codecell-p)))
   (ein:cell-toggle-output cell)
   (ein:worksheet-empty-undo-maybe)
-  (oset ws :dirty t))
+  (setf (slot-value ws 'dirty) t))
 
 (defun ein:worksheet-set-output-visibility-all (ws &optional collapsed)
   "Show all cell output.  When prefix is given, hide all cell output."
@@ -787,7 +787,7 @@ This does not alter the actual data stored in the cell."
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:worksheet-get-cells ws))
   (ein:worksheet-empty-undo-maybe)
-  (oset ws :dirty t))
+  (setf (slot-value ws 'dirty) t))
 
 (defun ein:worksheet-clear-output (cell &optional preserve-input-prompt)
   "Clear output from the current cell at point.
@@ -811,7 +811,7 @@ Do not clear input prompts when the prefix argument is given."
 ;;; Kernel related things
 
 (defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
-  (mapc (lambda (cell) (oset cell :kernel (oref ws :kernel)))
+  (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
         (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 (defun ein:undo-execute-cell (ws cell old-cell)
@@ -859,7 +859,7 @@ cell bellow."
 (defun ein:worksheet-insert-last-input-history (ws cell index)
   "Insert INDEX-th previous history into CELL in worksheet WS."
   (ein:kernel-history-request
-   (oref ws :kernel)
+   (slot-value ws 'kernel)
    (list
     :history_reply
     (cons
@@ -938,7 +938,7 @@ in the history."
     (ein:worksheet-url-or-port ein:%worksheet%)))
 
 (defun ein:get-kernel--worksheet ()
-  (when (ein:worksheet-p ein:%worksheet%) (oref ein:%worksheet% :kernel)))
+  (when (ein:worksheet-p ein:%worksheet%) (slot-value ein:%worksheet% 'kernel)))
 
 ;; in edit-cell-mode, worksheet is bound as src--ws
 ;; used by ein:get-kernel as a last option so completion, tooltips
@@ -966,7 +966,7 @@ in the history."
 (defmethod ein:worksheet-modified-p ((ws ein:worksheet))
   (let ((buffer (ein:worksheet-buffer ws)))
     (and (buffer-live-p buffer)
-         (or (oref ws :dirty)
+         (or (slot-value ws 'dirty)
              (buffer-modified-p buffer)))))
 
 
@@ -1011,7 +1011,7 @@ buffer, so you don't need to set current buffer to call this
 function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (ein:kernel-if-ready (oref ws :kernel)
+    (ein:kernel-if-ready (slot-value ws 'kernel)
       (mapc #'ein:cell-execute
             (ein:filter #'ein:cell-autoexec-p
                         (ein:worksheet-get-cells ws))))))
@@ -1026,7 +1026,7 @@ function."
   (loop for cell in (when (ein:worksheet-p ein:%worksheet%)
                       (ein:filter #'ein:headingcell-p
                                   (ein:worksheet-get-cells ein:%worksheet%)))
-        for sharps = (loop repeat (oref cell :level) collect "#")
+        for sharps = (loop repeat (slot-value cell 'level) collect "#")
         for text = (ein:cell-get-text cell)
         for name = (ein:join-str "" (append sharps (list " " text)))
         collect (cons name (ein:cell-input-pos-min cell))))
