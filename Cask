@@ -12,4 +12,6 @@
  (depends-on "cl-generic")
  (depends-on "ecukes")
  (depends-on "mocker")
+ (depends-on "skewer-mode")
+ (depends-on "deferred")
  (depends-on "auto-complete"))
