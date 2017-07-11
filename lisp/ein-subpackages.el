@@ -1,4 +1,4 @@
-;;; ein-subpackages.el --- Subpacakge management
+;;; ein-subpackages.el --- Subpackage management
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
