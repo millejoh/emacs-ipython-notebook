@@ -1,0 +1,9 @@
+.. _changelog_0_13_0:
+
+
+v0.13.0
+-------
+
+* Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
+  ``ein:jupyter-server-login-and-open``.
+
