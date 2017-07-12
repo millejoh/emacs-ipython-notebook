@@ -32,6 +32,7 @@
 
 (require 'cl)
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-utils)
 (require 'ein-log)
 (require 'ein-query)
@@ -53,62 +54,6 @@ global setting.  For global setting and more information, see
   "If T, force ein to communicate with the IPython/Jupyter contents API synchronously. If not, use asynchronous communication. If you are seeing odd errors while using ein try setting this to T, though note that Emacs will likely be less responsive as it blocks while waiting for the IPython/Jupyter notebook server to respond"
   :type 'boolean
   :group 'ein)
-
-(defstruct ein:$content
-  "Content returned from the Jupyter notebook server:
-`ein:$content-url-or-port'
-  URL or port of Jupyter server.
-
-`ein:$content-name'
-  The name/filename of the content. Always equivalent to the last
-  part of the path field
-
-`ein:$content-path'
- The full file path. It will not start with /, and it will be /-delimited.
-
-`ein:$content-type'
- One of three values: :directory, :file, :notebook.
-
-`ein:$content-writable'
-  Indicates if requester has permission to modified the requested content.
-
-`ein:$content-created'
-
-`ein:$content-last-modified'
-
-`ein:$content-mimetype'
-  Specify the mime-type of :file content, null otherwise.
-
-`ein:$content-raw-content'
-  Contents of resource as returned by Jupyter.  Depending on content-type will hold:
-    :directory : JSON list of models for each item in the directory.
-    :file      : Text of file as a string or base64 encoded string if mimetype
-                 is other than 'text/plain'.
-    :notebook  : JSON structure of the file.
-
-`ein:$content-format'
-  Value will depend on content-type:
-    :directory : :json.
-    :file      : Either :text or :base64
-    :notebook  : :json.
-
-`ein:$content-checkpoints'
-  Names auto-saved checkpoints for content. Stored as a list
-  of (<id> . <last_modified>) pairs.
-"
-  url-or-port
-  ipython-version
-  name
-  path
-  type
-  writable
-  created
-  last-modified
-  mimetype
-  raw-content
-  format
-  session-p
-  checkpoints)
 
 (defun ein:content-url (content &rest params)
   (let ((url-or-port (ein:$content-url-or-port content))

@@ -29,6 +29,7 @@
 (require 'eieio)
 
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-events)
 
 
@@ -51,58 +52,6 @@ M-mouse-1/3 (Alt + left/right click): insert new tab to left/right
 S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   "Help message.")
 ;; Note: can't put this below of `ein:notification-setup'...
-
-(defclass ein:notification-status ()
-  ((status :initarg :status :initform nil)
-   (message :initarg :message :initform nil)
-   (s2m :initarg :s2m))
-  "Hold status and it's string representation (message).")
-
-(defclass ein:notification-tab ()
-  ((get-list :initarg :get-list :type function)
-   (get-current :initarg :get-current :type function)
-   (get-name :initarg :get-name :type function)
-   (get-buffer :initarg :get-buffer :type function)
-   (delete :initarg :delete :type function)
-   (insert-prev :initarg :insert-prev :type function)
-   (insert-next :initarg :insert-next :type function)
-   (move-prev :initarg :move-prev :type function)
-   (move-next :initarg :move-next :type function)
-   )
-  ;; These "methods" are for not depending on what the TABs for.
-  ;; Probably I'd want change this to be a separated Emacs lisp
-  ;; library at some point.
-  "See `ein:notification-setup' for explanation.")
-
-(defclass ein:notification ()
-  ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
-   (tab :initarg :tab :type ein:notification-tab)
-   (execution-count
-    :initform "y" :initarg :execution-count
-    :documentation "Last `execution_count' sent by `execute_reply'.")
-   (notebook
-    :initarg :notebook
-    :initform
-    (ein:notification-status
-     "NotebookStatus"
-     :s2m
-     '((notebook_saving.Notebook       . "Saving Notebook...")
-       (notebook_create_checkpoint.Notebook . "Creating Checkpoint...")
-       (notebook_saved.Notebook        . "Notebook is saved")
-       (notebook_checkpoint_created.Notebook . "Checkpoint created.")
-       (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
-    :type ein:notification-status)
-   (kernel
-    :initarg :kernel
-    :initform
-    (ein:notification-status
-     "KernelStatus"
-     :s2m
-     '((status_idle.Kernel . nil)
-       (status_busy.Kernel . "Kernel is busy...")
-       (status_dead.Kernel . "Kernel is dead. Need restart.")))
-    :type ein:notification-status))
-  "Notification widget for Notebook.")
 
 (defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (oref ns :s2m)))))
@@ -208,7 +157,8 @@ MOVE-PREV / MOVE-NEXT : function
 insert-prev insert-next move-prev move-next)"
   (with-current-buffer buffer
     (setq ein:%notification%
-          (ein:notification :buffer buffer))
+          (make-instance 'ein:notification
+                         :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
     (oset ein:%notification% :tab

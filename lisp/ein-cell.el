@@ -37,6 +37,7 @@
 (require 'comint)
 
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-kernel)
@@ -177,75 +178,6 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
       (insert-image img "."))))
 
 
-;;; Cell classes
-
-(defclass ein:basecell ()
-  ((cell-type :initarg :cell-type :type string)
-   (read-only :initarg :read-only :initform nil :type boolean)
-   (ewoc :initarg :ewoc :type ewoc :accessor ein:basecell--ewoc)
-   (element :initarg :element :initform nil :type list
-    :documentation "ewoc nodes")
-   (element-names :initarg :element-names)
-   (input :initarg :input :type string
-    :documentation "Place to hold data until it is rendered via `ewoc'.")
-   (outputs :initarg :outputs :initform nil :type list)
-   (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
-   (events :initarg :events :type ein:events)
-   (slidetype :initarg :slidetype :initform "-" :type string)
-   (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string
-            :accessor ein:cell-id))
-  "Notebook cell base class")
-
-(defclass ein:codecell (ein:basecell)
-  ((traceback :initform nil :initarg :traceback :type list)
-   (cell-type :initarg :cell-type :initform "code")
-   (kernel :initarg :kernel :type ein:$kernel)
-   (element-names :initform (:prompt :input :output :footer :slidetype))
-   (input-prompt-number :initarg :input-prompt-number
-                        :documentation "\
-Integer or \"*\" (running state).
-Implementation note:
-Typed `:input-prompt-number' becomes a problem when reading a
-notebook that saved "*".  So don't add `:type'!")
-   (collapsed :initarg :collapsed :initform nil :type boolean)
-   (running :initarg :running :initform nil :type boolean)
-   (dynamic :initarg :dynamic :initform nil :type boolean
-            :documentation "\
-Whether cell output is evaluated dynamically or not.
-
-Only Emacs lisp type output data will be affected by this
-slot (Javascript will not be evaluated).  This value must be set
-to `t' when executing cell.  See `ein:notebook-execute-cell'.
-In the implantation of IPython web client it is passed around via
-argument, but since it is difficult to pass argument to EWOC
-pretty printer, `ein:codecell' instance holds this setting in a
-slot.")
-   (autoexec :initarg :autoexec :initform nil :type boolean
-             :documentation "Auto-execution flag.
-
-This cell is executed when the connected buffer is saved,
-provided that (1) this flag is `t' and (2) corresponding
-auto-execution mode flag in the connected buffer is `t'.")))
-
-
-(defclass ein:textcell (ein:basecell)
-  ((cell-type :initarg :cell-type :initform "text")
-   (element-names :initform (:prompt :input :footer :slidetype))))
-
-(defclass ein:htmlcell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "html")))
-
-(defclass ein:markdowncell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "markdown")))
-
-(defclass ein:rawcell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "raw")))
-
-(defclass ein:headingcell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "heading")
-   (level :initarg :level :initform 1)))
-
-
 ;;; Cell factory
 
 (defun ein:cell-class-from-type (type)
@@ -314,13 +246,13 @@ auto-execution mode flag in the connected buffer is `t'.")))
       (setf (slot-value cell 'input) it))
   cell)
 
-(cl-defmethod ein:cell-init :after ((cell ein:headingcell) data)
-  ;(call-next-method)
+(defmethod ein:cell-init :after ((cell ein:headingcell) data)
+  (call-next-method)
   (ein:aif (plist-get data :level)
       (setf (slot-value cell 'level) it))
   cell)
 
-(cl-defmethod ein:cell-convert ((cell ein:basecell) type)
+(defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
     (loop for k in '(:read-only :ewoc)
@@ -336,23 +268,23 @@ auto-execution mode flag in the connected buffer is `t'.")))
       (setf (slot-value new 'outputs) (mapcar 'identity (slot-value cell 'outputs))))
     new))
 
-(cl-defmethod ein:cell-convert :around ((cell ein:codecell) type)
-  (let ((new (cl-call-next-method)))
+(defmethod ein:cell-convert ((cell ein:codecell) type)
+  (let ((new (call-next-method)))
     (when (and (ein:codecell-child-p new)
                (slot-boundp cell :kernel))
       (setf (slot-value new 'kernel) (slot-value cell 'kernel)))
     new))
 
-(cl-defmethod ein:cell-convert :around ((cell ein:headingcell) type)
-  (let ((new (cl-call-next-method)))
+(defmethod ein:cell-convert ((cell ein:headingcell) type)
+  (let ((new (call-next-method)))
     (when (ein:headingcell-p new)
       (setf (slot-value new 'level) (slot-value cell 'level)))
     new))
 
-(cl-defmethod ein:cell-copy ((cell ein:basecell))
+(defmethod ein:cell-copy ((cell ein:basecell))
   (ein:cell-convert cell (slot-value cell 'cell-type)))
 
-(cl-defmethod ein:cell-convert-inplace ((cell ein:basecell) type)
+(defmethod ein:cell-convert-inplace ((cell ein:basecell) type)
   "Convert CELL to TYPE and redraw corresponding ewoc nodes."
   (let ((new (ein:cell-convert cell type)))
     ;; copy element attribute
@@ -385,7 +317,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
             do (ewoc-invalidate ewoc en)))
     new))
 
-(cl-defmethod ein:cell-change-level ((cell ein:headingcell) level)
+(defmethod ein:cell-change-level ((cell ein:headingcell) level)
   (assert (integerp level))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))         ; disable undo recording
@@ -398,13 +330,13 @@ auto-execution mode flag in the connected buffer is `t'.")))
 
 ;;; Getter/setter
 
-(cl-defmethod ein:cell-num-outputs ((cell ein:codecell))
+(defmethod ein:cell-num-outputs ((cell ein:codecell))
   (length (slot-value cell 'outputs)))
 
-(cl-defmethod ein:cell-num-outputs ((cell ein:textcell))
+(defmethod ein:cell-num-outputs ((cell ein:textcell))
   0)
 
-(cl-defmethod ein:cell-element-get ((cell ein:basecell) prop &rest args)
+(defmethod ein:cell-element-get ((cell ein:basecell) prop &rest args)
   "Return ewoc node named PROP in CELL.
 If PROP is `:output' a list of ewoc nodes is returned.
 A specific node can be specified using optional ARGS."
@@ -412,7 +344,7 @@ A specific node can be specified using optional ARGS."
       (plist-get (slot-value cell 'element) prop)
     (error "PROP %s is not supported." prop)))
 
-(cl-defmethod ein:cell-element-get :around ((cell ein:codecell) prop &optional index)
+(defmethod ein:cell-element-get ((cell ein:codecell) prop &optional index)
   (let ((element (slot-value cell 'element)))
     (if index
         (progn
@@ -430,34 +362,34 @@ A specific node can be specified using optional ARGS."
          (ein:aif (plist-get element :output)
              (car (last it))
            (plist-get element :input)))
-        (t (cl-call-next-method))))))
+        (t (call-next-method))))))
 
-(cl-defmethod ein:cell-element-get :around ((cell ein:textcell) prop)
+(defmethod ein:cell-element-get ((cell ein:textcell) prop)
   (let ((element (slot-value cell 'element)))
     (case prop
       (:after-input (plist-get element :footer))
       (:before-input (plist-get element :prompt))
-      (t (cl-call-next-method)))))
+      (t (call-next-method)))))
 
-(cl-defmethod ein:cell-all-element ((cell ein:basecell))
+(defmethod ein:cell-all-element ((cell ein:basecell))
   (list (ein:cell-element-get cell :prompt)
         (ein:cell-element-get cell :input)
         (ein:cell-element-get cell :footer)))
 
-(cl-defmethod ein:cell-all-element :around ((cell ein:codecell))
-  (append (cl-call-next-method)
+(defmethod ein:cell-all-element  ((cell ein:codecell))
+  (append (call-next-method)
           (ein:cell-element-get cell :output)))
 
-(cl-defmethod ein:cell-language ((cell ein:basecell))
+(defmethod ein:cell-language ((cell ein:basecell))
   "Programming language used for CELL.
 Return language name as a string or `nil' when not defined.
 
 \(fn cell)")
 
-(cl-defmethod ein:cell-language ((cell ein:codecell)) nil "python")
-(cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
-(cl-defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
-(cl-defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
+(defmethod ein:cell-language ((cell ein:codecell)) nil "python")
+(defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
+(defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
+(defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
 
 
 ;; EWOC
@@ -471,7 +403,7 @@ Return language name as a string or `nil' when not defined.
                    collect (funcall make-node 'output i))
      :footer (funcall make-node 'footer))))
 
-(cl-defmethod ein:cell-enter-last ((cell ein:basecell))
+(defmethod ein:cell-enter-last ((cell ein:basecell))
   (let* ((ewoc (slot-value cell 'ewoc))
          ;; Use `cell' as data for ewoc.  Use the whole cell data even
          ;; if it is not used, to access it from the notebook buffer.
@@ -485,7 +417,7 @@ Return language name as a string or `nil' when not defined.
     (setf (slot-value cell 'element) element)
     cell))
 
-(cl-defmethod ein:cell-enter-first ((cell ein:basecell))
+(defmethod ein:cell-enter-first ((cell ein:basecell))
   (let* ((ewoc (slot-value cell 'ewoc))
          (node nil)
          (make-node
@@ -500,7 +432,7 @@ Return language name as a string or `nil' when not defined.
     (setf (slot-value cell 'element) element)
     cell))
 
-(cl-defmethod ein:cell-insert-below ((base-cell ein:basecell) other-cell)
+(defmethod ein:cell-insert-below ((base-cell ein:basecell) other-cell)
   (let* ((ewoc (slot-value base-cell 'ewoc))
          (node (ein:cell-element-get base-cell :footer))
          (make-node
@@ -523,7 +455,7 @@ Return language name as a string or `nil' when not defined.
   (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
     (format " - Slide [%s]:" (or (ein:oref-safe cell :slidetype)  " "))))
 
-(cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
+(defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
@@ -534,21 +466,21 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-insert-prompt ((cell ein:textcell))
+(defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
    (concat
     (format "%s:" (slot-value cell 'cell-type))
     (ein:maybe-show-slideshow-data cell))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-insert-prompt ((cell ein:headingcell))
+(defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
    (concat
     (format "h%s:" (slot-value cell 'level))
     (ein:maybe-show-slideshow-data cell))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-insert-input ((cell ein:basecell))
+(defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   (let ((start (1+ (point))))
@@ -562,11 +494,11 @@ Called from ewoc pretty printer via `ein:cell-pp'."
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t))))
 
-(cl-defmethod ein:cell-get-input-area-face ((cell ein:basecell))
+(defmethod ein:cell-get-input-area-face ((cell ein:basecell))
   "Return the face (symbol) for input area."
   'ein:cell-input-area)
 
-(cl-defmethod ein:cell-get-input-area-face ((cell ein:headingcell))
+(defmethod ein:cell-get-input-area-face ((cell ein:headingcell))
   (intern (format "ein:cell-heading-%d" (slot-value cell 'level))))
 
 (defun ein:cell-insert-output (index cell)
@@ -608,12 +540,12 @@ Called from ewoc pretty printer via `ein:cell-pp'."
         (("execute_result") (ein:cell-append-pyout cell out))
         (("stream")         (ein:cell-append-stream       cell out))))))
 
-(cl-defmethod ein:cell-insert-footer ((cell ein:basecell))
+(defmethod ein:cell-insert-footer ((cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
 
-(cl-defmethod ein:cell-insert-footer :before ((cell ein:codecell))
+(defmethod ein:cell-insert-footer :before ((cell ein:codecell))
   (if (or (slot-value cell 'collapsed)
           (and ein:cell-max-num-outputs
                (> (ein:cell-num-outputs cell) ein:cell-max-num-outputs)))
@@ -637,14 +569,14 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 (defun ein:cell-from-ewoc-node (ewoc-node)
   (ein:aand ewoc-node (ewoc-data it) (ein:$node-data it)))
 
-(cl-defmethod ein:cell-input-pos-min ((cell ein:basecell))
+(defmethod ein:cell-input-pos-min ((cell ein:basecell))
   "Return editable minimum point in the input area of the CELL.
 If the input area of the CELL does not exist, return `nil'"
   (let* ((input-node (ein:cell-element-get cell :input)))
     ;; 1+ for skipping newline
     (when input-node (1+ (ewoc-location input-node)))))
 
-(cl-defmethod ein:cell-input-pos-max ((cell ein:basecell))
+(defmethod ein:cell-input-pos-max ((cell ein:basecell))
   "Return editable maximum point in the input area of the CELL.
 If the input area of the CELL does not exist, return `nil'"
   (let* ((ewoc (slot-value cell 'ewoc))
@@ -652,7 +584,7 @@ If the input area of the CELL does not exist, return `nil'"
     ;; 1- for skipping newline
     (when input-node (1- (ewoc-location (ewoc-next ewoc input-node))))))
 
-(cl-defmethod ein:cell-get-text ((cell ein:basecell))
+(defmethod ein:cell-get-text ((cell ein:basecell))
   "Grab text in the input area of the cell at point."
   (if (ein:cell-active-p cell)
       (let* ((beg (ein:cell-input-pos-min cell))
@@ -660,7 +592,7 @@ If the input area of the CELL does not exist, return `nil'"
         (buffer-substring beg end))
     (slot-value cell 'input)))
 
-(cl-defmethod ein:cell-set-text ((cell ein:basecell) text)
+(defmethod ein:cell-set-text ((cell ein:basecell) text)
   (let* ((input-node (ein:cell-element-get cell :input))
          (ewoc (slot-value cell 'ewoc))
            ;; 1+/1- is for skipping newline
@@ -672,21 +604,21 @@ If the input area of the CELL does not exist, return `nil'"
       (delete-region beg end)
       (insert text))))
 
-(cl-defmethod ein:cell-save-text ((cell ein:basecell))
+(defmethod ein:cell-save-text ((cell ein:basecell))
   (setf (slot-value cell 'input) (ein:cell-get-text cell)))
 
-(cl-defmethod ein:cell-deactivate ((cell ein:basecell))
+(defmethod ein:cell-deactivate ((cell ein:basecell))
   (setf (slot-value cell 'element) nil)
   cell)
 
-(cl-defmethod ein:cell-active-p ((cell ein:basecell))
+(defmethod ein:cell-active-p ((cell ein:basecell))
   (slot-value cell 'element))
 
-(cl-defmethod ein:cell-running-set ((cell ein:codecell) running)
+(defmethod ein:cell-running-set ((cell ein:codecell) running)
   ;; FIXME: change the appearance of the cell
   (setf (slot-value cell 'running) running))
 
-(cl-defmethod ein:cell-set-collapsed ((cell ein:codecell) collapsed)
+(defmethod ein:cell-set-collapsed ((cell ein:codecell) collapsed)
   "Set `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (unless (eq (slot-value cell 'collapsed) collapsed)
     (setf (slot-value cell 'collapsed) collapsed)
@@ -694,46 +626,46 @@ If the input area of the CELL does not exist, return `nil'"
            (slot-value cell 'ewoc)
            (ein:cell-element-get cell :output))))
 
-(cl-defmethod ein:cell-collapse ((cell ein:codecell))
+(defmethod ein:cell-collapse ((cell ein:codecell))
   (ein:cell-set-collapsed cell t))
 
-(cl-defmethod ein:cell-expand ((cell ein:codecell))
+(defmethod ein:cell-expand ((cell ein:codecell))
   (ein:cell-set-collapsed cell nil))
 
-(cl-defmethod ein:cell-toggle-output ((cell ein:codecell))
+(defmethod ein:cell-toggle-output ((cell ein:codecell))
   "Toggle `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (ein:cell-set-collapsed cell (not (slot-value cell 'collapsed))))
 
-(cl-defmethod ein:cell-invalidate-prompt ((cell ein:codecell))
+(defmethod ein:cell-invalidate-prompt ((cell ein:codecell))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))           ; disable undo recording
     (ewoc-invalidate (slot-value cell 'ewoc)
                      (ein:cell-element-get cell :prompt))))
 
-(cl-defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
+(defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
   (setf (slot-value cell 'input-prompt-number) number)
   (ein:cell-invalidate-prompt cell))
 
-(cl-defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
+(defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
   "Set auto-execution flag of CELL to BOOL and invalidate the
 prompt EWOC node."
   (setf (slot-value cell 'autoexec) bool)
   (ein:cell-invalidate-prompt cell))
 
-(cl-defmethod ein:cell-autoexec-p ((cell ein:basecell))
+(defmethod ein:cell-autoexec-p ((cell ein:basecell))
   "Auto-execution flag set to CELL.
 Return `nil' always for non-code cells."
   nil)
 
-(cl-defmethod ein:cell-autoexec-p ((cell ein:codecell))
+(defmethod ein:cell-autoexec-p ((cell ein:codecell))
   (slot-value cell 'autoexec))
 
-(cl-defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
+(defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
   "Toggle auto-execution flag of CELL to BOOL and invalidate the
 prompt EWOC node."
   (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
-(cl-defmethod ein:cell-goto ((cell ein:basecell) &optional relpos prop)
+(defmethod ein:cell-goto ((cell ein:basecell) &optional relpos prop)
   "Go to the input area of the given CELL.
 RELPOS is the position relative to the input area.  Default is 0.
 PROP is a name of cell element.  Default is `:input'.
@@ -748,7 +680,7 @@ PROP is a name of cell element.  Default is `:input'.
                   (t 0))))
     (forward-char (+ relpos offset))))
 
-(cl-defmethod ein:cell-goto-line ((cell ein:basecell) &optional inputline prop)
+(defmethod ein:cell-goto-line ((cell ein:basecell) &optional inputline prop)
   "Go to the input area of the given CELL.
 INPUTLINE is the line number relative to the input area.  Default is 1.
 PROP is a name of cell element.  Default is `:input'.
@@ -766,13 +698,13 @@ PROP is a name of cell element.  Default is `:input'.
     (forward-line (- inputline 1))))
 
 
-(cl-defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
+(defmethod ein:cell-relative-point ((cell ein:basecell) &optional pos)
   "Return the point relative to the input area of CELL.
 If the position POS is not given, current point is considered."
   (unless pos (setq pos (point)))
   (- pos (1+ (ewoc-location (ein:cell-element-get cell :input)))))
 
-(cl-defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
+(defmethod ein:cell-location ((cell ein:basecell) &optional elm end)
   "Return the starting location of CELL.
 ELM is a name (keyword) of element that `ein:cell-element-get'
 understands.  Note that you can't use `:output' since it returns
@@ -793,14 +725,14 @@ If END is non-`nil', return the location of next element."
       (assert end)
       (point-max))))
 
-(cl-defmethod ein:cell-buffer ((cell ein:basecell))
+(defmethod ein:cell-buffer ((cell ein:basecell))
   "Return a buffer associated by CELL (if any)."
   (ein:aand (ein:oref-safe cell 'ewoc) (ewoc-buffer it)))
 
 
 ;; Data manipulation
 
-(cl-defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
+(defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
   ;; codecell.js in IPython implements it using timeout and callback.
   ;; As it is unclear why timeout is needed, just clear output
   ;; instantaneously for now.
@@ -861,7 +793,7 @@ If END is non-`nil', return the location of next element."
      (list 'output-stream 'output-subarea
            (intern (format "output-%s" (plist-get json :stream)))))))
 
-(cl-defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
+(defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
   ;; When there is a python error, we actually get two identical tracebacks back
   ;; from the kernel, one from the "shell" channel, and one from the "iopub"
   ;; channel.  As a workaround, we remember the cell's traceback and ignore
@@ -875,7 +807,7 @@ If END is non-`nil', return the location of next element."
       (ein:cell-actually-append-output cell json dynamic))
     (setf (slot-value cell 'traceback) new-tb)))
 
-(cl-defmethod ein:cell-actually-append-output ((cell ein:codecell) json dynamic)
+(defmethod ein:cell-actually-append-output ((cell ein:codecell) json dynamic)
   (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
@@ -895,7 +827,7 @@ If END is non-`nil', return the location of next element."
                (append (plist-get element :output) (list ewoc-node)))
     (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
-(cl-defmethod ein:cell-append-pyout ((cell ein:codecell) json)
+(defmethod ein:cell-append-pyout ((cell ein:codecell) json)
   "Insert pyout type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:insert-read-only (format "Out [%s]:"
@@ -905,7 +837,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-append-mime-type json (slot-value cell 'dynamic))
   (ein:insert-read-only "\n"))
 
-(cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
+(defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
   "Insert pyerr type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
@@ -922,7 +854,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (ein:deflocal ein:%cell-append-stream-last-cell% nil
   "The last cell in which `ein:cell-append-stream' is used.")
 
-(cl-defmethod ein:cell-append-stream ((cell ein:codecell) json)
+(defmethod ein:cell-append-stream ((cell ein:codecell) json)
   "Insert stream type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (unless (plist-get json :stream)
@@ -945,7 +877,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:cell-append-text text 'font-lock-face 'ein:cell-output-stderr)
     (ein:cell-append-text text)))
 
-(cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
+(defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (if (and (plist-get json :javascript)
@@ -1039,7 +971,7 @@ prettified text thus be used instead of HTML type."
                text)
       (format "Error: %S" err)))))
 
-(cl-defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
+(defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
@@ -1057,7 +989,7 @@ prettified text thus be used instead of HTML type."
 (defun ein:output-property-p (maybe-property)
   (assoc maybe-property ein:output-type-map))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
+(defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
   (let* ((ss-table (ein:get-slide-show cell))
          (metadata (slot-value cell 'metadata))
          (outputs (if discard-output []
@@ -1134,7 +1066,7 @@ prettified text thus be used instead of HTML type."
       (metadata . ,metadata))))
 
 
-(cl-defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
+(defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
   `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
@@ -1157,11 +1089,11 @@ prettified text thus be used instead of HTML type."
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
       (metadata . ,metadata))))
 
-(cl-defmethod ein:cell-to-json :around ((cell ein:headingcell) &optional discard-output)
-  (let ((json (cl-call-next-method)))
+(defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
+  (let ((json (call-next-method)))
     (append json `((level . ,(slot-value cell 'level))))))
 
-(cl-defmethod ein:cell-next ((cell ein:basecell))
+(defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
   (ein:aif (ewoc-next (slot-value cell 'ewoc)
                       (ein:cell-element-get cell :footer))
@@ -1169,7 +1101,7 @@ prettified text thus be used instead of HTML type."
         (when (ein:basecell-child-p cell)
           cell))))
 
-(cl-defmethod ein:cell-prev ((cell ein:basecell))
+(defmethod ein:cell-prev ((cell ein:basecell))
   "Return previous cell of the given CELL or nil if CELL is the first one."
   (ein:aif (ewoc-prev (slot-value cell 'ewoc)
                       (ein:cell-element-get cell :prompt))
@@ -1180,17 +1112,17 @@ prettified text thus be used instead of HTML type."
 
 ;;; Kernel related calls.
 
-(cl-defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
+(defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
   (setf (slot-value cell 'kernel) kernel))
 
 
-(cl-defmethod ein:cell-execute ((cell ein:codecell))
+(defmethod ein:cell-execute ((cell ein:codecell))
   (ein:cell-execute-internal cell
                              (slot-value cell 'kernel)
                              (ein:cell-get-text cell)
                              :silent nil))
 
-(cl-defmethod ein:cell-execute-internal ((cell ein:codecell)
+(defmethod ein:cell-execute-internal ((cell ein:codecell)
                                       kernel code &rest args)
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
@@ -1198,14 +1130,14 @@ prettified text thus be used instead of HTML type."
   (setf (slot-value cell 'dynamic) t)
   (apply #'ein:kernel-execute kernel code (ein:cell-make-callbacks cell) args))
 
-(cl-defmethod ein:cell-make-callbacks ((cell ein:codecell))
+(defmethod ein:cell-make-callbacks ((cell ein:codecell))
   (list
    :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
    :output         (cons #'ein:cell--handle-output         cell)
    :clear_output   (cons #'ein:cell--handle-clear-output   cell)
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
-(cl-defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content
+(defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content
                                            -metadata-not-used-)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
@@ -1215,7 +1147,7 @@ prettified text thus be used instead of HTML type."
       (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
       (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))
 
-(cl-defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
+(defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
   (let ((events (slot-value cell 'events)))
     (ein:events-trigger events 'set_next_input.Worksheet
                         (list :cell cell :text text))
@@ -1229,7 +1161,7 @@ prettified text thus be used instead of HTML type."
 ;; EWOC is connected in complicated way, I will leave them in
 ;; ein-cell.el.
 
-(cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content
+(defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content
                                     -metadata-not-used-)
   (let* ((json (list :output_type msg-type)))
     (ein:case-equal msg-type
@@ -1268,7 +1200,7 @@ prettified text thus be used instead of HTML type."
   json)
 
 
-(cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
+(defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                           -metadata-not-used-)
   ;; Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output
   (ein:cell-clear-output cell
@@ -1281,7 +1213,7 @@ prettified text thus be used instead of HTML type."
 
 ;;; Misc.
 
-(cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
+(defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
   (loop for out in (slot-value cell 'outputs)
         when (or (plist-member out :svg)
@@ -1292,10 +1224,10 @@ prettified text thus be used instead of HTML type."
                  (plist-member out :image/jpeg))
         return t))
 
-(cl-defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
+(defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
   nil)
 
-(cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
+(defmethod ein:cell-get-tb-data ((cell ein:codecell))
   (loop for out in (slot-value cell 'outputs)
         when (and
               (not (null (plist-get out :traceback)))

@@ -28,32 +28,9 @@
 (eval-when-compile (require 'cl))
 (require 'websocket)
 (require 'ein-core)
+(require 'ein-classes)
 (require 'url-cookie)
 (require 'request)
-
-(defstruct ein:$websocket
-  "A wrapper object of `websocket'.
-
-`ein:$websocket-ws'               : an instance returned by `websocket-open'
-
-`ein:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
-`ein:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
-`ein:$websocket-onopen'           : function called with (&rest ARGS)'
-
-`ein:$websocket-onmessage-args'   : optional arguments for onmessage callback'
-`ein:$websocket-onclose-args'     : optional arguments for onclose callback'
-`ein:$websocket-onopen-args'      : optional arguments for onopen callback'
-
-`ein:$websocket-closed-by-client' : t/nil'
-"
-  ws
-  onmessage
-  onmessage-args
-  onclose
-  onclose-args
-  onopen
-  onopen-args
-  closed-by-client)
 
 ;; Fix issues reading cookies in request when using curl backend
 (defun fix-request-netscape-cookie-parse (next-method)

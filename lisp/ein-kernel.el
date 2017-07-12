@@ -29,40 +29,13 @@
 (require 'ansi-color)
 
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-log)
 ;; FIXME: use websocket.el directly once v1.0 is released.
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)
 (require 'ein-ipdb)
-
-;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
-;;        testing since I can mock I/O using method overriding.
-(defstruct ein:$kernel
-  "Hold kernel variables.
-
-`ein:$kernel-url-or-port'
-  URL or port of IPython server.
-"
-  url-or-port
-  events
-  api-version
-  session-id
-  kernel-id
-  shell-channel
-  iopub-channel
-  channels                              ; For IPython 3.x+
-  base-url                              ; /api/kernels/
-  kernel-url                            ; /api/kernels/<KERNEL-ID>
-  ws-url                                ; ws://<URL>[:<PORT>]
-  stdin-activep
-  running
-  username
-  msg-callbacks
-  ;; FIXME: Use event instead of hook.
-  after-start-hook
-  after-execute-hook)
-
 ;; "Public" getters.  Use them outside of this package.
 
 (defun ein:$kernel-session-url (kernel)
