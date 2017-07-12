@@ -2,7 +2,6 @@
 
 <!doctype html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -33,7 +32,7 @@
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
     <![endif]-->
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -103,6 +102,8 @@
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a><ul>
 <li><a class="reference internal" href="#v0-13-0">v0.13.0</a></li>
+<li><a class="reference internal" href="#v0-12-3">v0.12.3</a></li>
+<li><a class="reference internal" href="#v0-12-2">v0.12.2</a></li>
 <li><a class="reference internal" href="#v0-12-1">v0.12.1</a></li>
 <li><a class="reference internal" href="#v0-12-0">v0.12.0</a></li>
 <li><a class="reference internal" href="#v0-11-0">v0.11.0</a></li>
@@ -156,6 +157,7 @@
             
   <div class="section" id="the-emacs-ipython-notebook">
 <h1>The Emacs IPython Notebook<a class="headerlink" href="#the-emacs-ipython-notebook" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/ein_logo.jpg" src="_images/ein_logo.jpg" />
 <p>The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
 integrated REPL (like <a class="reference external" href="http://common-lisp.net/project/slime/">SLIME</a>) in Emacs. EIN improves notebook editing by
 allowing you to use Emacs, it also expose IPython features such as code
@@ -168,7 +170,7 @@ general in Emacs.</p>
 <li>Console integration: You can easily connect to a kernel via a console
 application.  This enables you to start debugging in the same kernel.  It is
 even possible to connect a console over ssh <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</li>
-<li>IPython kernel can be &#8220;connected&#8221; to a buffer.  This enables you to evaluate
+<li>IPython kernel can be “connected” to a buffer.  This enables you to evaluate
 buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
 help, help browser and code completion are available in these buffers. <a class="footnote-reference" href="#id4" id="id2">[2]</a></li>
 <li>Jump to definition (go to the definition by hitting <code class="docutils literal"><span class="pre">M-.</span></code> over an
@@ -286,7 +288,7 @@ IPython Notebook is registered as package <code class="docutils literal"><span c
 for more information.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>If you get error &#8220;Cannot open load file: request&#8221; that means you have
+<p>If you get error “Cannot open load file: request” that means you have
 an older version of el-get.  You can fix this problem by either (1)
 installing request.el manually, (2) using the latest recipe, or (3) updating
 el-get to its master.</p>
@@ -310,9 +312,9 @@ is added to its setting. See <a class="reference external" href="https://github.
 a directory defined in your <code class="xref el el-symbol docutils literal"><span class="pre">load-path</span></code>.</p>
 <p>You should byte compile EIN, especially when using MuMaMo, otherwise
 editing large notebook will be very slow.  You can use the following
-command to compile EIN.  If you don&#8217;t specify all the optional
+command to compile EIN.  If you don’t specify all the optional
 packages, there will be compiler warning but that is OK as long as you
-don&#8217;t use that optional package.</p>
+don’t use that optional package.</p>
 <div class="highlight-sh"><div class="highlight"><pre><span></span>emacs -Q -batch -L .          <span class="se">\ </span> <span class="c1"># don&#39;t forget the dot!</span>
     -L PATH/TO/websocket/     <span class="se">\</span>
     -L PATH/TO/requests/      <span class="se">\</span>
@@ -364,16 +366,16 @@ authentication for the running server and automatically log you in.</p>
 <p>Note that the below work best with current (&gt; v4.3.1) versions of jupyter.</p>
 <dl class="function">
 <dt id="ein:jupyter-server-start">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-path</em> <em>server-directory</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-after-start-p</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the jupyter notebook server at the given path.</p>
 <p>This command opens an asynchronous process running the jupyter
 notebook server and then tries to detect the url and token to
-generate automatic calls to <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a> and
-<a class="reference internal" href="#ein:notebooklist-open" title="ein:notebooklist-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-open</span></code></a>.</p>
+generate automatic calls to ‘ein:notebooklist-login’ and
+‘ein:notebooklist-open’.</p>
 <p>On executing the command will prompt the user for the path to the
 jupyter executable and the path for the root directory containing
 the notebooks the user wants to access.</p>
-<p>The buffer named by <code class="xref el el-symbol docutils literal"><span class="pre">ein:jupyter-server-buffer-name</span></code> will contain
+<p>The buffer named by ‘ein:jupyter-server-buffer-name’ will contain
 the log of the running jupyter server.</p>
 </dd></dl>
 
@@ -390,10 +392,10 @@ there is no running server then no action will be taken.</p>
 <em class="property">function </em><code class="descname">ein:jupyter-server-login-and-open</code><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log in and open a notebooklist buffer for a running jupyter notebook server.</p>
 <p>Determine if there is a running jupyter server (started via a
-call to <a class="reference internal" href="#ein:jupyter-server-start" title="ein:jupyter-server-start"><code class="xref el el-symbol docutils literal"><span class="pre">ein:jupyter-server-start</span></code></a>) and then try to guess if
+call to ‘ein:jupyter-server-start’) and then try to guess if
 token authentication is enabled. If a token is found use it to generate a
-call to <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a> and once authenticated open the notebooklist buffer
-via a call to <a class="reference internal" href="#ein:notebooklist-open" title="ein:notebooklist-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-open</span></code></a>.</p>
+call to ‘ein:notebooklist-login’ and once authenticated open the notebooklist buffer
+via a call to ‘ein:notebooklist-open’.</p>
 </dd></dl>
 
 </div>
@@ -418,8 +420,8 @@ port or URL of the IPython notebook server.</p>
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-open-notebook-global </code><em>nbpath</em> <em>&amp;optional</em> <em>callback</em> <em>cbargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
 <dd><p>Choose notebook from all opened notebook list and open it.
 Notebook is specified by a string NBPATH whose format is
-&#8220;URL-OR-PORT/NOTEBOOK-NAME&#8221;.</p>
-<p>When used in lisp, CALLBACK and CBARGS are passed to <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-open</span></code>.</p>
+“URL-OR-PORT/NOTEBOOK-NAME”.</p>
+<p>When used in lisp, CALLBACK and CBARGS are passed to ‘ein:notebook-open’.</p>
 </dd></dl>
 
 <dl class="function">
@@ -433,7 +435,7 @@ Notebook is specified by a string NBPATH whose format is
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:junk-new </code><em>name</em> <em>kernelspec</em> <em>url-or-port</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:junk-new" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a notebook to try random thing.
 Notebook name is determined based on
-<a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></code></a>.</p>
+‘ein:junk-notebook-name-template’.</p>
 <p>When prefix argument is given, it asks URL or port to use.</p>
 </dd></dl>
 
@@ -443,10 +445,10 @@ Notebook name is determined based on
 <dd><p>Enable periodic calls to the notebook server to keep long running sessions from expiring.
 By long running we mean sessions to last days, or weeks. The
 frequency of the refresh (which is very similar to a call to
-<cite>ein:notebooklist-open</cite>) is controlled by
-<cite>ein:notebooklist-keepalive-refresh-time</cite>, and is measured in
-terms of hours. If <code class="xref el el-symbol docutils literal"><span class="pre">ein:enable-keepalive</span></code> is non-nil this will
-automatically be called during calls to <cite>ein:notebooklist-open</cite>.</p>
+‘ein:notebooklist-open‘) is controlled by
+‘ein:notebooklist-keepalive-refresh-time‘, and is measured in
+terms of hours. If ‘ein:enable-keepalive’ is non-nil this will
+automatically be called during calls to ‘ein:notebooklist-open‘.</p>
 </dd></dl>
 
 <dl class="function">
@@ -584,6 +586,7 @@ automatically be called during calls to <cite>ein:notebooklist-open</cite>.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-r</code><code class="descclassname"> ein:notebooklist-reload</code></dt>
+</dt>
 <dd><dd class="first last"><p>Reload current Notebook list.</p>
 </dd></dd>
 </dl>
@@ -616,15 +619,17 @@ created via <cite>ein:notebook-create-checkpoint</cite>.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c '</code><code class="descclassname"> ein:edit-cell-contents</code></dt>
+</dt>
 <dd><dd class="first last"><p>Edit the contents of the current cell in a buffer using an
 appropriate language major mode. Functionality is very similar to
-<code class="xref el el-symbol docutils literal"><span class="pre">org-edit-special</span></code>.</p>
+‘org-edit-special’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c S</code><code class="descclassname"> ein:worksheet-toggle-slideshow-view</code></dt>
+</dt>
 <dd><dd class="first last"><dl class="docutils">
 <dt>Changes the display of</dt>
 <dd>slideshow metadata in the current worksheet.</dd>
@@ -635,6 +640,7 @@ appropriate language major mode. Functionality is very similar to
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-c</code><code class="descclassname"> ein:worksheet-execute-cell</code></dt>
+</dt>
 <dd><dd class="first last"><p>Execute code type CELL.</p>
 </dd></dd>
 </dl>
@@ -642,10 +648,11 @@ appropriate language major mode. Functionality is very similar to
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-'</code><code class="descclassname"> ein:worksheet-turn-on-autoexec</code></dt>
+</dt>
 <dd><dd class="first last"><p>Turn on auto-execution flag of the cells in region or cell at point.
 When the prefix argument is given, turn off the flag instead.</p>
 <p>To use autoexec feature, you need to turn on auto-execution mode
-in connected buffers, using the <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-toggle-autoexec</span></code>
+in connected buffers, using the ‘ein:connect-toggle-autoexec’
 command.</p>
 </dd></dd>
 </dl>
@@ -653,6 +660,7 @@ command.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-e</code><code class="descclassname"> ein:worksheet-toggle-output</code></dt>
+</dt>
 <dd><dd class="first last"><p>Toggle the visibility of the output of the cell at point.
 This does not alter the actual data stored in the cell.</p>
 </dd></dd>
@@ -661,6 +669,7 @@ This does not alter the actual data stored in the cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-v</code><code class="descclassname"> ein:worksheet-set-output-visibility-all</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show all cell output.  When prefix is given, hide all cell output.</p>
 </dd></dd>
 </dl>
@@ -668,6 +677,7 @@ This does not alter the actual data stored in the cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-l</code><code class="descclassname"> ein:worksheet-clear-output</code></dt>
+</dt>
 <dd><dd class="first last"><p>Clear output from the current cell at point.
 Do not clear input prompt when the prefix argument is given.</p>
 </dd></dd>
@@ -676,6 +686,7 @@ Do not clear input prompt when the prefix argument is given.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-S-l</code><code class="descclassname"> ein:worksheet-clear-all-output</code></dt>
+</dt>
 <dd><dd class="first last"><p>Clear output from all cells.
 Do not clear input prompts when the prefix argument is given.</p>
 </dd></dd>
@@ -684,16 +695,18 @@ Do not clear input prompts when the prefix argument is given.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-;</code><code class="descclassname"> ein:shared-output-show-code-cell-at-point</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show code cell at point in shared-output buffer.
 It is useful when the output of the cell at point is truncated.
-See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:cell-max-num-outputs</span></code>.</p>
+See also ‘ein:cell-max-num-outputs’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-k</code><code class="descclassname"> ein:worksheet-kill-cell</code></dt>
-<dd><dd class="first last"><p>Kill (&#8220;cut&#8221;) the cell at point or cells in region.
+</dt>
+<dd><dd class="first last"><p>Kill (“cut”) the cell at point or cells in region.
 Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts).</p>
 </dd></dd>
@@ -702,6 +715,7 @@ kill-ring of Emacs (kill-ring for texts).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c M-w</code><code class="descclassname"> ein:worksheet-copy-cell</code></dt>
+</dt>
 <dd><dd class="first last"><p>Copy the cell at point.  (Put the current cell into the kill-ring.)</p>
 </dd></dd>
 </dl>
@@ -709,6 +723,7 @@ kill-ring of Emacs (kill-ring for texts).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c M-{</code><code class="descclassname"> ein:notebook-worksheet-move-prev</code></dt>
+</dt>
 <dd><dd class="first last"><p>Switch the current worksheet with the previous one.</p>
 </dd></dd>
 </dl>
@@ -716,6 +731,7 @@ kill-ring of Emacs (kill-ring for texts).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c M-}</code><code class="descclassname"> ein:notebook-worksheet-move-next</code></dt>
+</dt>
 <dd><dd class="first last"><p>Switch the current worksheet with the previous one.</p>
 </dd></dd>
 </dl>
@@ -723,15 +739,17 @@ kill-ring of Emacs (kill-ring for texts).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c M-+</code><code class="descclassname"> ein:notebook-worksheet-insert-prev</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert a new worksheet before this worksheet and open it.
-See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-insert-next</span></code>.</p>
-<p>(fn NOTEBOOK WS &amp;optional (RENDER t) (SHOW #&#8217;switch-to-buffer))</p>
+See also ‘ein:notebook-worksheet-insert-next’.</p>
+<p>(fn NOTEBOOK WS &amp;optional (RENDER t) (SHOW #’switch-to-buffer))</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-w</code><code class="descclassname"> ein:worksheet-copy-cell</code></dt>
+</dt>
 <dd><dd class="first last"><p>Copy the cell at point.  (Put the current cell into the kill-ring.)</p>
 </dd></dd>
 </dl>
@@ -739,23 +757,26 @@ See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-y</code><code class="descclassname"> ein:worksheet-yank-cell</code></dt>
-<dd><dd class="first last"><p>Insert (&#8220;paste&#8221;) the latest killed cell.
-Prefixes are act same as the normal <code class="xref el el-symbol docutils literal"><span class="pre">yank</span></code> command.</p>
+</dt>
+<dd><dd class="first last"><p>Insert (“paste”) the latest killed cell.
+Prefixes are act same as the normal ‘yank’ command.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-a</code><code class="descclassname"> ein:worksheet-insert-cell-above</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert cell above.  Insert markdown cell instead of code cell
 when the prefix argument is given.
-See also: <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-insert-cell-below</span></code>.</p>
+See also: ‘ein:worksheet-insert-cell-below’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-b</code><code class="descclassname"> ein:worksheet-insert-cell-below</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert cell below.  Insert markdown cell instead of code cell
 when the prefix argument is given.</p>
 <p>When used as a lisp function, insert a cell of TYPE-OR-CELL just
@@ -766,8 +787,9 @@ after PIVOT and return the new cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-t</code><code class="descclassname"> ein:worksheet-toggle-cell-type</code></dt>
+</dt>
 <dd><dd class="first last"><p>Toggle the cell type of the cell at point.
-Use <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-change-cell-type</span></code> to change the cell type
+Use ‘ein:worksheet-change-cell-type’ to change the cell type
 directly.</p>
 </dd></dd>
 </dl>
@@ -775,6 +797,7 @@ directly.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-d</code><code class="descclassname"> ein:worksheet-toggle-slide-type</code></dt>
+</dt>
 <dd><dd class="first last"><dl class="docutils">
 <dt>Toggle the slide metadata of the cell at point. Available slide settings are:</dt>
 <dd>[slide, subslide, fragment, skip, notes, - (none)].</dd>
@@ -785,17 +808,19 @@ directly.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-u</code><code class="descclassname"> ein:worksheet-change-cell-type</code></dt>
+</dt>
 <dd><dd class="first last"><p>Change the cell type of the current cell.
 Prompt will appear in the minibuffer.</p>
 <p>When used in as a Lisp function, TYPE (string) should be chose
-from &#8220;code&#8221;, &#8220;markdown&#8221;, &#8220;raw&#8221; and &#8220;heading&#8221;.  LEVEL is
-an integer used only when the TYPE is &#8220;heading&#8221;.</p>
+from “code”, “markdown”, “raw” and “heading”.  LEVEL is
+an integer used only when the TYPE is “heading”.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-s</code><code class="descclassname"> ein:worksheet-split-cell-at-point</code></dt>
+</dt>
 <dd><dd class="first last"><p>Split cell at current position. Newlines at the splitting
 point will be removed. This can be omitted by giving a prefix
 argument (C-u).</p>
@@ -805,6 +830,7 @@ argument (C-u).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-m</code><code class="descclassname"> ein:worksheet-merge-cell</code></dt>
+</dt>
 <dd><dd class="first last"><p>Merge previous cell into current cell.
 If prefix is given, merge current cell into next cell.</p>
 </dd></dd>
@@ -833,8 +859,9 @@ If prefix is given, merge current cell into next cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-f</code><code class="descclassname"> ein:pytools-request-tooltip-or-help</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show the help for the object at point using tooltip.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the help in the
+When the prefix argument ‘‘C-u‘‘ is given, open the help in the
 pager buffer.  You can explicitly specify the object by selecting it.</p>
 </dd></dd>
 </dl>
@@ -842,6 +869,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-i</code><code class="descclassname"> ein:completer-complete</code></dt>
+</dt>
 <dd><dd class="first last"><p>Start completion for the code at point.</p>
 <p>(fn KERNEL &amp;rest ARGS &amp;key CALLBACKS &amp;allow-other-keys)</p>
 </dd></dd>
@@ -850,6 +878,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-x</code><code class="descclassname"> ein:tb-show</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
@@ -857,6 +886,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-r</code><code class="descclassname"> ein:notebook-restart-kernel-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Send request to the server to restart kernel.</p>
 </dd></dd>
 </dl>
@@ -864,14 +894,16 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-z</code><code class="descclassname"> ein:notebook-kernel-interrupt-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Interrupt the kernel.
-This is equivalent to do <code class="docutils literal"><span class="pre">C-c</span></code> in the console program.</p>
+This is equivalent to do ‘‘C-c‘‘ in the console program.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-q</code><code class="descclassname"> ein:notebook-kill-kernel-then-close-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual.</p>
@@ -881,6 +913,7 @@ as usual.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-#</code><code class="descclassname"> ein:notebook-close</code></dt>
+</dt>
 <dd><dd class="first last"><p>Close NOTEBOOK and kill its buffer.</p>
 </dd></dd>
 </dl>
@@ -888,12 +921,13 @@ as usual.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-o</code><code class="descclassname"> ein:console-open</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open IPython console.
-To use this function, <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a> and
-<a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-args</span></code></a> must be set properly.
+To use this function, ‘ein:console-security-dir’ and
+‘ein:console-args’ must be set properly.
 This function works best with the new <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> which is shipped
-with Emacs 24.2 or later.  If you don&#8217;t have it, this function
-opens a &#8220;plain&#8221; command line interpreter (comint) buffer where
+with Emacs 24.2 or later.  If you don’t have it, this function
+opens a “plain” command line interpreter (comint) buffer where
 you cannot use fancy stuff such as TAB completion.
 It should be possible to support python-mode.el.  Patches are welcome!</p>
 </dd></dd>
@@ -902,8 +936,9 @@ It should be possible to support python-mode.el.  Patches are welcome!</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -912,8 +947,9 @@ selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-,</code><code class="descclassname"> ein:pytools-jump-back-command</code></dt>
-<dd><dd class="first last"><p>Go back to the point where <code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></code>
-is executed last time.  When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is
+</dt>
+<dd><dd class="first last"><p>Go back to the point where ‘ein:pytools-jump-to-source-command’
+is executed last time.  When the prefix argument ‘‘C-u‘‘ is
 given, open the last point in the other window.</p>
 </dd></dd>
 </dl>
@@ -921,7 +957,8 @@ given, open the last point in the other window.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-/</code><code class="descclassname"> ein:notebook-scratchsheet-open</code></dt>
-<dd><dd class="first last"><p>Open &#8220;scratch sheet&#8221;.
+</dt>
+<dd><dd class="first last"><p>Open “scratch sheet”.
 Open a new one when prefix argument is given.
 Scratch sheet is almost identical to worksheet.  However, EIN
 will not save the buffer.  Use this buffer like of normal IPython
@@ -933,6 +970,7 @@ worksheet to save result.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c !</code><code class="descclassname"> ein:worksheet-rename-sheet</code></dt>
+</dt>
 <dd><dd class="first last"><p>Change worksheet name (<em>not</em> notebook name).</p>
 </dd></dd>
 </dl>
@@ -940,18 +978,20 @@ worksheet to save result.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c {</code><code class="descclassname"> ein:notebook-worksheet-open-prev-or-last</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open previous or last worksheet.
-See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-next-or-first</span></code> and
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-prev</span></code>.</p>
+See also ‘ein:notebook-worksheet-open-next-or-first’ and
+‘ein:notebook-worksheet-open-prev’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c }</code><code class="descclassname"> ein:notebook-worksheet-open-next-or-first</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open next or first worksheet.</p>
 <p>Try to open the worksheet to the worksheet WS using the function
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-open-next</span></code>, open the first worksheet if
+‘ein:notebook-worksheet-open-next’, open the first worksheet if
 not found.</p>
 <p>SHOW is a function to be called with the worksheet buffer if
 given.</p>
@@ -961,15 +1001,17 @@ given.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c +</code><code class="descclassname"> ein:notebook-worksheet-insert-next</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert a new worksheet after this worksheet and open it.
-See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-worksheet-insert-prev</span></code>.</p>
-<p>(fn NOTEBOOK WS &amp;optional (RENDER t) (SHOW #&#8217;switch-to-buffer))</p>
+See also ‘ein:notebook-worksheet-insert-prev’.</p>
+<p>(fn NOTEBOOK WS &amp;optional (RENDER t) (SHOW #’switch-to-buffer))</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c -</code><code class="descclassname"> ein:notebook-worksheet-delete</code></dt>
+</dt>
 <dd><dd class="first last"><p>Delete the current worksheet.
 When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 </dd></dd>
@@ -978,6 +1020,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 1</code><code class="descclassname"> ein:notebook-worksheet-open-1th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 1-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -985,6 +1028,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 2</code><code class="descclassname"> ein:notebook-worksheet-open-2th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 2-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -992,6 +1036,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 3</code><code class="descclassname"> ein:notebook-worksheet-open-3th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 3-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -999,6 +1044,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 4</code><code class="descclassname"> ein:notebook-worksheet-open-4th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 4-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -1006,6 +1052,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 5</code><code class="descclassname"> ein:notebook-worksheet-open-5th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 5-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -1013,6 +1060,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 6</code><code class="descclassname"> ein:notebook-worksheet-open-6th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 6-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -1020,6 +1068,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 7</code><code class="descclassname"> ein:notebook-worksheet-open-7th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 7-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -1027,6 +1076,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 8</code><code class="descclassname"> ein:notebook-worksheet-open-8th</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open 8-th worksheet.</p>
 </dd></dd>
 </dl>
@@ -1034,6 +1084,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c 9</code><code class="descclassname"> ein:notebook-worksheet-open-last</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open the last worksheet.</p>
 </dd></dd>
 </dl>
@@ -1041,6 +1092,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-RET</code><code class="descclassname"> ein:worksheet-execute-cell-and-goto-next</code></dt>
+</dt>
 <dd><dd class="first last"><p>Execute cell at point if it is a code cell and move to the
 next cell, or insert if none.</p>
 </dd></dd>
@@ -1049,8 +1101,9 @@ next cell, or insert if none.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -1059,8 +1112,9 @@ selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-,</code><code class="descclassname"> ein:pytools-jump-back-command</code></dt>
-<dd><dd class="first last"><p>Go back to the point where <code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></code>
-is executed last time.  When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is
+</dt>
+<dd><dd class="first last"><p>Go back to the point where ‘ein:pytools-jump-to-source-command’
+is executed last time.  When the prefix argument ‘‘C-u‘‘ is
 given, open the last point in the other window.</p>
 </dd></dd>
 </dl>
@@ -1068,9 +1122,10 @@ given, open the last point in the other window.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-p</code><code class="descclassname"> ein:worksheet-previous-input-history</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert the previous input in the execution history.
 You can go back further in the history by repeating this command.
-Use <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-next-input-history</span></code> to go forward in the
+Use ‘ein:worksheet-next-input-history’ to go forward in the
 history.</p>
 </dd></dd>
 </dl>
@@ -1078,9 +1133,10 @@ history.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-n</code><code class="descclassname"> ein:worksheet-next-input-history</code></dt>
+</dt>
 <dd><dd class="first last"><p>Insert next input in the execution history.
 You can go forward further in the history by repeating this
-command.  Use <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-previous-input-history</span></code> to go back
+command.  Use ‘ein:worksheet-previous-input-history’ to go back
 in the history.</p>
 </dd></dd>
 </dl>
@@ -1088,6 +1144,7 @@ in the history.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">&lt;M-S-return&gt;</code><code class="descclassname"> ein:worksheet-execute-cell-and-insert-below</code></dt>
+</dt>
 <dd><dd class="first last"><p>Execute cell at point if it is a code cell and insert a
 cell bellow.</p>
 </dd></dd>
@@ -1116,17 +1173,19 @@ cell bellow.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-:</code><code class="descclassname"> ein:shared-output-eval-string</code></dt>
+</dt>
 <dd><dd class="first last"><p>Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
-<a class="reference internal" href="#ein:shared-output-pop-to-buffer" title="ein:shared-output-pop-to-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:shared-output-pop-to-buffer</span></code></a>.</p>
+‘ein:shared-output-pop-to-buffer’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-x C-s</code><code class="descclassname"> ein:notebook-save-notebook-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Save the notebook.</p>
 </dd></dd>
 </dl>
@@ -1134,8 +1193,9 @@ shared output buffer.  You can open the buffer by the command
 <dl class="keybind">
 <dt>
 <code class="descname">C-x C-w</code><code class="descclassname"> ein:notebook-rename-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Rename current notebook and save it immediately.</p>
-<p>NAME is any non-empty string that does not contain &#8216;/&#8217; or &#8216;&#8217;.</p>
+<p>NAME is any non-empty string that does not contain ’/’ or ’’.</p>
 </dd></dd>
 </dl>
 
@@ -1153,8 +1213,8 @@ This command has no key binding because there is no way to undo
 deletion.  Use kill to play on the safe side.</p>
 <p>If you really want use this command, you can do something like this
 (but be careful when using it!):</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">define-key</span> <span class="nv">ein:notebook-mode-map</span> <span class="s">&quot;\C-c\C-d&quot;</span>
-            <span class="ss">&#39;ein:worksheet-delete-cell</span><span class="p">)</span>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>(define-key ein:notebook-mode-map &quot;\C-c\C-d&quot;
+            ’ein:worksheet-delete-cell)
 </pre></div>
 </div>
 </dd></dl>
@@ -1162,7 +1222,7 @@ deletion.  Use kill to play on the safe side.</p>
 <dl class="function">
 <dt id="ein:junk-rename">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:junk-rename </code><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:junk-rename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rename the current notebook based on <a class="reference internal" href="#ein:junk-notebook-name-template" title="ein:junk-notebook-name-template"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-notebook-name-template</span></code></a>
+<dd><p>Rename the current notebook based on ‘ein:junk-notebook-name-template’
 and save it immediately.</p>
 </dd></dl>
 
@@ -1216,15 +1276,17 @@ cell being edited.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c '</code><code class="descclassname"> ein:edit-cell-exit</code></dt>
+</dt>
 <dd><dd class="first last"><p>Close the EIN source edit buffer, saving contents back to the
 original notebook cell, unless being called via
-<a class="reference internal" href="#ein:edit-cell-abort" title="ein:edit-cell-abort"><code class="xref el el-symbol docutils literal"><span class="pre">ein:edit-cell-abort</span></code></a>.</p>
+‘ein:edit-cell-abort’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-k</code><code class="descclassname"> ein:edit-cell-abort</code></dt>
+</dt>
 <dd><dd class="first last"><p>Abort editing the current cell, contents will revert to
 previous value.</p>
 </dd></dd>
@@ -1233,6 +1295,7 @@ previous value.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-c</code><code class="descclassname"> ein:edit-cell-save-and-execute</code></dt>
+</dt>
 <dd><dd class="first last"><p>Save, then execute the countents of the EIN source edit buffer
 and place results (if any) in output of original notebook cell.</p>
 </dd></dd>
@@ -1241,6 +1304,7 @@ and place results (if any) in output of original notebook cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-x</code><code class="descclassname"> ein:edit-cell-view-traceback</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to traceback, if there is one, for current edit.</p>
 </dd></dd>
 </dl>
@@ -1248,6 +1312,7 @@ and place results (if any) in output of original notebook cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-x C-s</code><code class="descclassname"> ein:edit-cell-save</code></dt>
+</dt>
 <dd><dd class="first last"><p>Save contents of EIN source edit buffer back to original notebook
 cell.</p>
 </dd></dd>
@@ -1258,7 +1323,7 @@ cell.</p>
 <em class="property">function </em><code class="descname">ein:edit-cell-contents</code><a class="headerlink" href="#ein:edit-cell-contents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Edit the contents of the current cell in a buffer using an
 appropriate language major mode. Functionality is very similar to
-<code class="xref el el-symbol docutils literal"><span class="pre">org-edit-special</span></code>.</p>
+‘org-edit-special’.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1266,7 +1331,7 @@ appropriate language major mode. Functionality is very similar to
 <em class="property">function </em><code class="descname">ein:edit-cell-exit</code><a class="headerlink" href="#ein:edit-cell-exit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the EIN source edit buffer, saving contents back to the
 original notebook cell, unless being called via
-<a class="reference internal" href="#ein:edit-cell-abort" title="ein:edit-cell-abort"><code class="xref el el-symbol docutils literal"><span class="pre">ein:edit-cell-abort</span></code></a>.</p>
+‘ein:edit-cell-abort’.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1301,18 +1366,20 @@ enabled and the following keybinds are available.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-c</code><code class="descclassname"> ein:connect-run-or-eval-buffer</code></dt>
-<dd><dd class="first last"><p>Run buffer using the <code class="docutils literal"><span class="pre">%run</span></code> magic command or eval whole
-buffer if the prefix <code class="docutils literal"><span class="pre">C-u</span></code> is given.
-Variable <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-command</span></code></a> sets the command to run.
+</dt>
+<dd><dd class="first last"><p>Run buffer using the ‘‘%run‘‘ magic command or eval whole
+buffer if the prefix ‘‘C-u‘‘ is given.
+Variable ‘ein:connect-run-command’ sets the command to run.
 You can change the command and/or set the options.
-See also: <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a>, <a class="reference internal" href="#ein:connect-eval-buffer" title="ein:connect-eval-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-eval-buffer</span></code></a>.</p>
+See also: ‘ein:connect-run-buffer’, ‘ein:connect-eval-buffer’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-l</code><code class="descclassname"> ein:connect-reload-buffer</code></dt>
-<dd><dd class="first last"><p>Reload buffer using the command set by <a class="reference internal" href="#ein:connect-reload-command" title="ein:connect-reload-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-reload-command</span></code></a>.</p>
+</dt>
+<dd><dd class="first last"><p>Reload buffer using the command set by ‘ein:connect-reload-command’.</p>
 </dd></dd>
 </dl>
 
@@ -1324,8 +1391,9 @@ See also: <a class="reference internal" href="#ein:connect-run-buffer" title="ei
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-f</code><code class="descclassname"> ein:pytools-request-tooltip-or-help</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show the help for the object at point using tooltip.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the help in the
+When the prefix argument ‘‘C-u‘‘ is given, open the help in the
 pager buffer.  You can explicitly specify the object by selecting it.</p>
 </dd></dd>
 </dl>
@@ -1333,6 +1401,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-i</code><code class="descclassname"> ein:completer-complete</code></dt>
+</dt>
 <dd><dd class="first last"><p>Start completion for the code at point.</p>
 <p>(fn KERNEL &amp;rest ARGS &amp;key CALLBACKS &amp;allow-other-keys)</p>
 </dd></dd>
@@ -1346,6 +1415,7 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-a</code><code class="descclassname"> ein:connect-toggle-autoexec</code></dt>
+</dt>
 <dd><dd class="first last"><p>Toggle auto-execution mode of the current connected buffer.</p>
 <p>When auto-execution mode is on, cells in connected notebook will
 be automatically executed whenever run, eval or reload command <a class="footnote-reference" href="#id5" id="id7">[3]</a>
@@ -1355,17 +1425,17 @@ is called in this buffer.</p>
 <tbody valign="top">
 <tr><td class="label">[4]</td><td><p class="first">Namely, one of</p>
 <ul class="last simple">
-<li><a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a></li>
-<li><a class="reference internal" href="#ein:connect-eval-buffer" title="ein:connect-eval-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-eval-buffer</span></code></a></li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-or-eval-buffer</span></code></li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-reload-buffer</span></code></li>
+<li>‘ein:connect-run-buffer’</li>
+<li>‘ein:connect-eval-buffer’</li>
+<li>‘ein:connect-run-or-eval-buffer’</li>
+<li>‘ein:connect-reload-buffer’</li>
 </ul>
 </td></tr>
 </tbody>
 </table>
 <p>Note that you need to set cells to run in the connecting buffer
 or no cell will be executed.
-Use the <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-turn-on-autoexec</span></code> command in notebook to
+Use the ‘ein:worksheet-turn-on-autoexec’ command in notebook to
 change the cells to run.</p>
 </dd></dd>
 </dl>
@@ -1373,12 +1443,13 @@ change the cells to run.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-o</code><code class="descclassname"> ein:console-open</code></dt>
+</dt>
 <dd><dd class="first last"><p>Open IPython console.
-To use this function, <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a> and
-<a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-args</span></code></a> must be set properly.
+To use this function, ‘ein:console-security-dir’ and
+‘ein:console-args’ must be set properly.
 This function works best with the new <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> which is shipped
-with Emacs 24.2 or later.  If you don&#8217;t have it, this function
-opens a &#8220;plain&#8221; command line interpreter (comint) buffer where
+with Emacs 24.2 or later.  If you don’t have it, this function
+opens a “plain” command line interpreter (comint) buffer where
 you cannot use fancy stuff such as TAB completion.
 It should be possible to support python-mode.el.  Patches are welcome!</p>
 </dd></dd>
@@ -1387,6 +1458,7 @@ It should be possible to support python-mode.el.  Patches are welcome!</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-x</code><code class="descclassname"> ein:tb-show</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
@@ -1394,8 +1466,9 @@ It should be possible to support python-mode.el.  Patches are welcome!</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -1404,8 +1477,9 @@ selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-,</code><code class="descclassname"> ein:pytools-jump-back-command</code></dt>
-<dd><dd class="first last"><p>Go back to the point where <code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></code>
-is executed last time.  When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is
+</dt>
+<dd><dd class="first last"><p>Go back to the point where ‘ein:pytools-jump-to-source-command’
+is executed last time.  When the prefix argument ‘‘C-u‘‘ is
 given, open the last point in the other window.</p>
 </dd></dd>
 </dl>
@@ -1413,7 +1487,8 @@ given, open the last point in the other window.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-/</code><code class="descclassname"> ein:notebook-scratchsheet-open</code></dt>
-<dd><dd class="first last"><p>Open &#8220;scratch sheet&#8221;.
+</dt>
+<dd><dd class="first last"><p>Open “scratch sheet”.
 Open a new one when prefix argument is given.
 Scratch sheet is almost identical to worksheet.  However, EIN
 will not save the buffer.  Use this buffer like of normal IPython
@@ -1425,19 +1500,21 @@ worksheet to save result.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-:</code><code class="descclassname"> ein:shared-output-eval-string</code></dt>
+</dt>
 <dd><dd class="first last"><p>Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
-<a class="reference internal" href="#ein:shared-output-pop-to-buffer" title="ein:shared-output-pop-to-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:shared-output-pop-to-buffer</span></code></a>.</p>
+‘ein:shared-output-pop-to-buffer’.</p>
 </dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">M-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -1446,8 +1523,9 @@ selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-,</code><code class="descclassname"> ein:pytools-jump-back-command</code></dt>
-<dd><dd class="first last"><p>Go back to the point where <code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-jump-to-source-command</span></code>
-is executed last time.  When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is
+</dt>
+<dd><dd class="first last"><p>Go back to the point where ‘ein:pytools-jump-to-source-command’
+is executed last time.  When the prefix argument ‘‘C-u‘‘ is
 given, open the last point in the other window.</p>
 </dd></dd>
 </dl>
@@ -1466,14 +1544,14 @@ notebooks.</p>
 <dt id="ein:connect-eval-buffer">
 <em class="property">function </em><code class="descname">ein:connect-eval-buffer</code><a class="headerlink" href="#ein:connect-eval-buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate the whole buffer.  Note that this will run the code
-inside the <code class="docutils literal"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></code> block.</p>
+inside the ‘‘if __name__ == “__main__”:‘‘ block.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="ein:connect-run-buffer">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:connect-run-buffer </code><em>&amp;optional</em> <em>ask-command</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:connect-run-buffer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run buffer using <code class="docutils literal"><span class="pre">%run</span></code>.  Ask for command if the prefix <code class="docutils literal"><span class="pre">C-u</span></code> is given.
-Variable <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-command</span></code></a> sets the default command.</p>
+<dd><p>Run buffer using ‘‘%run‘‘.  Ask for command if the prefix ‘‘C-u‘‘ is given.
+Variable ‘ein:connect-run-command’ sets the default command.</p>
 </dd></dl>
 
 </div>
@@ -1489,6 +1567,7 @@ Variable <a class="reference internal" href="#ein:connect-run-command" title="ei
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-x</code><code class="descclassname"> ein:tb-show</code></dt>
+</dt>
 <dd><dd class="first last"><p>Show full traceback in traceback viewer.</p>
 </dd></dd>
 </dl>
@@ -1496,8 +1575,9 @@ Variable <a class="reference internal" href="#ein:connect-run-command" title="ei
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -1506,8 +1586,9 @@ selecting it.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">M-.</code><code class="descclassname"> ein:pytools-jump-to-source-command</code></dt>
+</dt>
 <dd><dd class="first last"><p>Jump to the source code of the object at point.
-When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the source code
+When the prefix argument ‘‘C-u‘‘ is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it.</p>
 </dd></dd>
@@ -1549,7 +1630,7 @@ buffer.</p>
 <dl class="function">
 <dt id="ein:pytools-whos">
 <em class="property">function </em><code class="descname">ein:pytools-whos</code><a class="headerlink" href="#ein:pytools-whos" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute <code class="docutils literal"><span class="pre">%whos</span></code> magic command and popup the result.</p>
+<dd><p>Execute ‘‘%whos‘‘ magic command and popup the result.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1564,8 +1645,8 @@ You can explicitly specify the object by selecting it.</p>
 <dt id="ein:pytools-pandas-to-ses">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:pytools-pandas-to-ses </code><em>dataframe</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:pytools-pandas-to-ses" title="Permalink to this definition">¶</a></dt>
 <dd><p>View <a class="reference external" href="http://pandas.pydata.org">pandas</a> DataFrame in <a class="reference external" href="http://www.gnu.org/software/emacs/manual/html_node/ses/index.html">SES</a> (Simple Emacs Spreadsheet).
-Open a <code class="xref el el-symbol docutils literal"><span class="pre">ses-mode</span></code> buffer and import DataFrame object into it.</p>
-<p><a class="reference external" href="http://www.gnu.org/software/emacs/manual/html_node/ses/index.html">SES</a> is distributed with Emacs since Emacs 22, so you don&#8217;t need
+Open a ‘ses-mode’ buffer and import DataFrame object into it.</p>
+<p><a class="reference external" href="http://www.gnu.org/software/emacs/manual/html_node/ses/index.html">SES</a> is distributed with Emacs since Emacs 22, so you don’t need
 to install it if you are using newer Emacs.</p>
 </dd></dl>
 
@@ -1688,9 +1769,7 @@ When this option is enabled, cached omni completion is available.</p>
 <dl class="variable">
 <dt id="ein:ac-max-cache">
 <em class="property">variable </em><code class="descname">ein:ac-max-cache</code><a class="headerlink" href="#ein:ac-max-cache" title="Permalink to this definition">¶</a></dt>
-<dd><p>[This value is not used anymore!]
-Maximum number of cache to store.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="variable">
 <dt id="ein:use-smartrep">
@@ -1738,18 +1817,18 @@ Notebook server.</p>
 <dd><p>Load notebook list but do not pop-up the notebook list buffer.</p>
 <p>For example, if you want to load notebook list when Emacs starts,
 add this in the Emacs initialization file:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">add-to-hook</span> <span class="ss">&#39;after-init-hook</span> <span class="ss">&#39;ein:notebooklist-load</span><span class="p">)</span>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>(add-to-hook ’after-init-hook ’ein:notebooklist-load)
 </pre></div>
 </div>
 <p>or even this (if you want fast Emacs start-up):</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="c1">;; load notebook list if Emacs is idle for 3 sec after start-up</span>
-<span class="p">(</span><span class="nv">run-with-idle-timer</span> <span class="mi">3</span> <span class="no">nil</span> <span class="nf">#&#39;</span><span class="nv">ein:notebooklist-load</span><span class="p">)</span>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>;; load notebook list if Emacs is idle for 3 sec after start-up
+(run-with-idle-timer 3 nil #’ein:notebooklist-load)
 </pre></div>
 </div>
-<p>You should setup <a class="reference internal" href="#ein:url-or-port" title="ein:url-or-port"><code class="xref el el-symbol docutils literal"><span class="pre">ein:url-or-port</span></code></a> or <a class="reference internal" href="#ein:default-url-or-port" title="ein:default-url-or-port"><code class="xref el el-symbol docutils literal"><span class="pre">ein:default-url-or-port</span></code></a>
+<p>You should setup ‘ein:url-or-port’ or ‘ein:default-url-or-port’
 in order to make this code work.</p>
 <p>See also:
-<a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a>, <a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></code></a>.</p>
+‘ein:connect-to-default-notebook’, ‘ein:connect-default-notebook’.</p>
 </dd></dl>
 
 </div>
@@ -1760,14 +1839,14 @@ in order to make this code work.</p>
 <em class="property">variable </em><code class="descname">ein:worksheet-enable-undo</code><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure undo in notebook buffers.</p>
 <dl class="docutils">
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">no</span></code></dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span><dd>Do not use undo in notebook buffers.  It is the safest option.</dd>
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">yes</span></code></dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span><dd>Enable undo in notebook buffers.  You can&#8217;t undo after
+<dt><code class="xref el el-symbol docutils literal"><span class="pre">no</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Do not use undo in notebook buffers.  It is the safest option.</dd>
+<dt><code class="xref el el-symbol docutils literal"><span class="pre">yes</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Enable undo in notebook buffers.  You can’t undo after
 modification of cell (execution, add, remove, etc.).  This
 is default.</dd>
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">full</span></code></dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span><dd>Enable full undo in notebook buffers.  It is powerful but
+<dt><code class="xref el el-symbol docutils literal"><span class="pre">full</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
+<dd>Enable full undo in notebook buffers.  It is powerful but
 sometime (typically after the cell specific commands) undo
 mess up notebook buffer.  Use it on your own risk.  When the
 buffer is messed up, you can just redo and continue editing,
@@ -1892,9 +1971,9 @@ notebook buffers and connected buffers.</p>
 <em class="property">variable </em><code class="descname">ein:helm-kernel-history-search-auto-pattern</code><a class="headerlink" href="#ein:helm-kernel-history-search-auto-pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Automatically construct search pattern when non-<code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code>.</p>
 <ol class="arabic simple">
-<li>Single space is converted to &#8220;*&#8221;.</li>
+<li>Single space is converted to “*”.</li>
 <li>A backslash followed by a space is converted to a single space.</li>
-<li>A &#8220;*&#8221; is added at the beginning and end of the pattern.</li>
+<li>A “*” is added at the beginning and end of the pattern.</li>
 </ol>
 <p>This variable applies to both <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></code></a> and
 <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></code></a>.</p>
@@ -1980,7 +2059,7 @@ via <a class="reference internal" href="#ein:notebook-create-checkpoint" title="
 <dd>Use this value as a path to security directory.
 Handy when you have only one IPython server.</dd>
 <dt>alist</dt>
-<dd>An alist whose element is &#8220;(URL-OR-PORT . DIR)&#8221;.
+<dd>An alist whose element is “(URL-OR-PORT . DIR)”.
 Key (URL-OR-PORT) can be string (URL), integer (port), or
 <code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> (symbol).  The value of <code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> is used when
 other key does not much.  Normally you should have this
@@ -2008,7 +2087,7 @@ Types same as <a class="reference internal" href="#ein:console-security-dir" tit
 <p class="last">Space-separated string is obsolete now.  Use a list
 of string as value now.</p>
 </div>
-<p>Setting to use IPython profile named &#8220;YOUR-IPYTHON-PROFILE&#8221;:</p>
+<p>Setting to use IPython profile named “YOUR-IPYTHON-PROFILE”:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--profile&quot;</span> <span class="s">&quot;YOUR-IPYTHON-PROFILE&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -2074,7 +2153,7 @@ as <a class="reference internal" href="#ein:cell-autoexec-prompt" title="ein:cel
 <dt id="ein:connect-default-notebook">
 <em class="property">variable </em><code class="descname">ein:connect-default-notebook</code><a class="headerlink" href="#ein:connect-default-notebook" title="Permalink to this definition">¶</a></dt>
 <dd><p>Notebook to be connect when <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a> is called.</p>
-<p>Example setting to connect to &#8220;My_Notebook&#8221; in the server at
+<p>Example setting to connect to “My_Notebook” in the server at
 port 8888 when opening any buffer in <code class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></code>:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:connect-default-notebook</span> <span class="s">&quot;8888/My_Notebook&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="nv">add-hook</span> <span class="ss">&#39;python-mode-hook</span> <span class="ss">&#39;ein:connect-to-default-notebook</span><span class="p">)</span>
@@ -2082,7 +2161,7 @@ port 8888 when opening any buffer in <code class="xref el el-symbol docutils lit
 </div>
 <p><a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></code></a> can also be a function without any
 argument.  This function must return a string (notebook path of
-the form &#8220;URL-OR-PORT/NOTEBOOK-NAME&#8221;).</p>
+the form “URL-OR-PORT/NOTEBOOK-NAME”).</p>
 <p>As <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a> requires notebook list to be
 loaded, consider using <a class="reference internal" href="#ein:notebooklist-load" title="ein:notebooklist-load"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-load</span></code></a> to load notebook
 list if you want to connect to notebook without manually opening
@@ -2093,7 +2172,7 @@ notebook list.</p>
 <dt id="ein:connect-to-default-notebook">
 <em class="property">function </em><code class="descname">ein:connect-to-default-notebook</code><a class="headerlink" href="#ein:connect-to-default-notebook" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to the default notebook specified by
-<a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></code></a>.  Set this to <code class="xref el el-symbol docutils literal"><span class="pre">python-mode-hook</span></code>
+‘ein:connect-default-notebook’.  Set this to ‘python-mode-hook’
 to automatically connect any python-mode buffer to the
 notebook.</p>
 </dd></dl>
@@ -2106,7 +2185,7 @@ notebook.</p>
 <dd><p>Setup auto-completion using EIN and <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> together.</p>
 <p><a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> is a Python auto-completion library for Emacs.
 To use EIN and Jedi together, add the following in your Emacs setup.:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">add-hook</span> <span class="ss">&#39;ein:connect-mode-hook</span> <span class="ss">&#39;ein:jedi-setup</span><span class="p">)</span>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>(add-hook ’ein:connect-mode-hook ’ein:jedi-setup)
 </pre></div>
 </div>
 </dd></dl>
@@ -2191,22 +2270,22 @@ pair of TO-PYTHON and FROM-PYTHON.</p>
 <dt id="ein:tramp-create-filename-translator">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:tramp-create-filename-translator </code><em>remote-host</em> <em>&amp;optional</em> <em>username</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:tramp-create-filename-translator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a pair of TO-PYTHON and FROM-PYTHON for
-<a class="reference internal" href="#ein:filename-translations" title="ein:filename-translations"><code class="xref el el-symbol docutils literal"><span class="pre">ein:filename-translations</span></code></a>.</p>
+‘ein:filename-translations’.</p>
 <p>Usage:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:filename-translations</span>
-      <span class="o">`</span><span class="p">((</span><span class="mi">8888</span>
-         <span class="o">.</span> <span class="o">,</span><span class="p">(</span><span class="nv">ein:tramp-create-filename-translator</span> <span class="s">&quot;MY-HOSTNAME&quot;</span><span class="p">))))</span>
-<span class="c1">;; Equivalently:</span>
-<span class="p">(</span><span class="k">setq</span> <span class="nv">ein:filename-translations</span>
-      <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">url-or-port</span><span class="p">)</span>
-        <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nb">equal</span> <span class="nv">url-or-port</span> <span class="mi">8888</span><span class="p">)</span>
-          <span class="p">(</span><span class="nv">ein:tramp-create-filename-translator</span> <span class="s">&quot;MY-HOSTNAME&quot;</span><span class="p">))))</span>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>(setq ein:filename-translations
+      ‘((8888
+         . ,(ein:tramp-create-filename-translator &quot;MY-HOSTNAME&quot;))))
+;; Equivalently:
+(setq ein:filename-translations
+      (lambda (url-or-port)
+        (when (equal url-or-port 8888)
+          (ein:tramp-create-filename-translator &quot;MY-HOSTNAME&quot;))))
 </pre></div>
 </div>
 <p>This setting assumes that the IPython server which can be
 connected using the port 8888 in localhost is actually running in
 the host named MY-HOSTNAME.</p>
-<p>Adapted from <code class="xref el el-symbol docutils literal"><span class="pre">slime-create-filename-translator</span></code>.</p>
+<p>Adapted from ‘slime-create-filename-translator’.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -2239,14 +2318,14 @@ let me know or send pull request at github!
 <h2>Gotchas and caveats<a class="headerlink" href="#gotchas-and-caveats" title="Permalink to this headline">¶</a></h2>
 <p>Although EIN mostly works fine, there are some deficits I noticed but
 have not fixed yet.  It seems that they originate from some upstream
-bugs so there is little I can do in EIN (but I&#8217;m not sure &#8211; it&#8217;s
+bugs so there is little I can do in EIN (but I’m not sure – it’s
 possible that I am misusing the libraries!).</p>
 <p>If you know how to fix/workaround them, patches are very welcome.</p>
 <div class="section" id="url-retrieve">
 <h3><code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
 <p>While using EIN, probably most of the error messages are about server
 connections.  It looks like the problem is in <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code>.
-But in those cases you don&#8217;t lose any notebook data and your IPython
+But in those cases you don’t lose any notebook data and your IPython
 kernel is fine.  You can just type the command again and it will go
 fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> to
@@ -2354,15 +2433,28 @@ everything the log buffer.  You can reset the patch and log level with
 <div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="v0-13-0">
-<h2>v0.13.0<a class="headerlink" href="#v0-13-0" title="Permalink to this headline">¶</a></h2>
+<span id="changelog-0-13-0"></span><h2>v0.13.0<a class="headerlink" href="#v0-13-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Added commands <code class="docutils literal"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal"><span class="pre">ein:jupyter-server-stop</span></code>, and
 <code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
-<li>Added a very basic and quite silly object inspector that has almost no
-features at the moment. Nonetheless, the curious can try executing <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">i</span></code>
-over a defined object in a notebook buffer.</li>
-<li>Add a keep-alive feature to prevent cookie expiration on very long-running
-notebook sessions.</li>
+</ul>
+</div>
+<div class="section" id="v0-12-3">
+<span id="changelog-0-12-3"></span><h2>v0.12.3<a class="headerlink" href="#v0-12-3" title="Permalink to this headline">¶</a></h2>
+<p>This release is an attempt to cherry-pick some of the more recent bugfixes and
+enhancments while still maintaining compatibility with Emacs 24. Note that
+support for running a jupyter server in an Emacs buffer will likely <em>not</em> be
+possible in Emacs 24 due to the lack of the <cite>make-process</cite> command, i.e.
+asyncronous communication with external processes.</p>
+</div>
+<div class="section" id="v0-12-2">
+<span id="changelog-0-12-2"></span><h2>v0.12.2<a class="headerlink" href="#v0-12-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Improve integration with org mode source code blocks.</li>
+<li>Better cell editing buffers.</li>
+<li>Add ~ein:notebooklist-enable-keepalive~ and
+~ein:notebooklist-disable-keepalive~ to keep long-running sessions from
+expiring on the jupyter servier.</li>
 </ul>
 </div>
 <div class="section" id="v0-12-1">
@@ -2377,7 +2469,7 @@ talking to a jupyter notebook server.</li>
 imperfectly.</li>
 <li>Yet another attempt to improve travis CI support - we almost have it.</li>
 <li>Baby steps towards using cask to manage the project.</li>
-<li>New theme, alabaster, for documentation. Isn&#8217;t it pretty?</li>
+<li>New theme, alabaster, for documentation. Isn’t it pretty?</li>
 <li>Numerous other bug fixes and small improvements.</li>
 </ul>
 </div>
@@ -2466,7 +2558,7 @@ any language supported by a Jupyter kernel.</li>
 <ul class="simple">
 <li>Finalizing support for IPython 3.0.</li>
 <li>Better support for globally opening notebooks stored in a directory hierarchy.</li>
-<li>Partial refactoring of the interace to IPython&#8217;s content/notebook REST interface into
+<li>Partial refactoring of the interace to IPython’s content/notebook REST interface into
 ein-contents-api.el.</li>
 <li>ein-mumamo.el has been moved into its own package, ein-mumamo. This should get rid
 of compilation errors for anyone who does not happen to have nxhtml installed.</li>
@@ -2513,7 +2605,7 @@ This protocol is not used in EIN anywhere yet.</li>
 <ul class="simple">
 <li>Preliminary login support.  See <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a>.</li>
 <li>Code completion in notebook happens <em>really</em> automatically.
-You don&#8217;t need to hit a key to start completion.</li>
+You don’t need to hit a key to start completion.</li>
 <li><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-open</span></code> works without <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a>.</li>
 <li>Expand code cell output on execution.
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/88">#88</a>).</li>
@@ -2532,8 +2624,8 @@ See also the configurable options to use these commands:
 <a class="reference internal" href="#ein:helm-kernel-history-search-key" title="ein:helm-kernel-history-search-key"><code class="xref el el-symbol docutils literal"><span class="pre">ein:helm-kernel-history-search-key</span></code></a> and
 <a class="reference internal" href="#ein:anything-kernel-history-search-key" title="ein:anything-kernel-history-search-key"><code class="xref el el-symbol docutils literal"><span class="pre">ein:anything-kernel-history-search-key</span></code></a>.</li>
 <li>Preliminary support for multiple worksheets.</li>
-<li>Rename notion of &#8220;scratch notebook&#8221; to &#8220;junk notebook&#8221;.
-This is to avoid confusion with newly added &#8220;scratch sheet&#8221;.
+<li>Rename notion of “scratch notebook” to “junk notebook”.
+This is to avoid confusion with newly added “scratch sheet”.
 Old commands are renamed to <a class="reference internal" href="#ein:junk-new" title="ein:junk-new"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-new</span></code></a> and
 <a class="reference internal" href="#ein:junk-rename" title="ein:junk-rename"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-rename</span></code></a>.</li>
 <li>Preferred MIME types to be used can be configured using the variable
@@ -2546,8 +2638,8 @@ Use <a class="reference internal" href="#ein:shr-env" title="ein:shr-env"><code 
 <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-next-input-history</span></code> can be used
 to insert previously executed code into the current cell.</li>
 <li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:pseudo-console-mode</span></code>.</li>
-<li>Add &#8220;scratch sheet&#8221;.  This acts almost as same as worksheet, but you
-don&#8217;t need to save it.  You can use try any code without saving
+<li>Add “scratch sheet”.  This acts almost as same as worksheet, but you
+don’t need to save it.  You can use try any code without saving
 junks in your notebook.  Use the command
 <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-scratchsheet-open</span></code> to open scratch sheet.</li>
 <li>Menu support in notebook mode and notebook list mode.</li>
@@ -2579,7 +2671,7 @@ now actually runs buffer instead of loading it.</li>
 <div class="section" id="v0-1-1">
 <h2>v0.1.1<a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>&#8216;s popup/quick help.</li>
+<li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>’s popup/quick help.</li>
 <li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-first-open-hook</span></code>.</li>
 <li>Handle carriage return
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/13">#13</a>).</li>
@@ -2598,7 +2690,7 @@ See <a class="reference internal" href="#ein:use-mumamo-indent-line-function-wor
 <li>Add auto-execution mode
 (see <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-toggle-autoexec</span></code> and
 <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-turn-on-autoexec</span></code>).</li>
-<li>Start completion when &#8221;.&#8221; is inserted.
+<li>Start completion when “.” is inserted.
 Use <a class="reference internal" href="#ein:complete-on-dot" title="ein:complete-on-dot"><code class="xref el el-symbol docutils literal"><span class="pre">ein:complete-on-dot</span></code></a> to disable this feature.</li>
 <li>Support tramp.  See <a class="reference internal" href="#ein:filename-translations" title="ein:filename-translations"><code class="xref el el-symbol docutils literal"><span class="pre">ein:filename-translations</span></code></a>.</li>
 <li>Change callback API in <code class="xref el el-symbol docutils literal"><span class="pre">ein:kernel-execute</span></code>
@@ -2646,7 +2738,7 @@ See COPYING for details.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, John Miller.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
     </div>
   </body>
 </html>
