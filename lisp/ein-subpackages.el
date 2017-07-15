@@ -32,15 +32,15 @@
 (declare-function ein:smartrep-config-once "ein-smartrep")
 
 (defcustom ein:completion-backend 'ein:use-ac-backend
-  "Determines which completion backend to used in opened EIN notebooks.
+  "Determines which completion backend to use in opened EIN notebooks.
 
 After changing the value of this variable it is recommended that
-you restart Emacs. The available completion backends are:
+you restart Emacs. The available completion backends are::
 
-* ein:use-ac-backend : Use auto-complete with IPython's builtin completion engine.
-* ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
-* ein:use-company-backend : Use company-mode with IPython's builtin completiong engine.
-* ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
+ * ein:use-ac-backend : Use auto-complete with IPython's builtin completion engine.
+ * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
+ * ein:use-company-backend : Use company-mode with IPython's builtin completiong engine.
+ * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
 "
   :type '(radio
           (const :tag "Auto-Complete" 'ein:use-ac-backend)

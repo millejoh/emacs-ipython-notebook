@@ -436,7 +436,7 @@ configurable variables are listed below.
 Subpackages
 ^^^^^^^^^^^
 
-.. el:variable:: ein:use-auto-complete
+.. el:variable:: ein:completion-backend
 .. el:variable:: ein:use-auto-complete-superpack
 .. el:variable:: ein:ac-max-cache
 .. el:variable:: ein:use-smartrep

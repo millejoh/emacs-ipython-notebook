@@ -6,4 +6,8 @@ v0.13.0
 
 * Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
   ``ein:jupyter-server-login-and-open``.
+* New interface for configuring code completion. See the new customizable
+  variable `ein:completion-backend`.
+* Because of this `ein:use-auto-complete` is now deprecated, but EIN will still
+  try to do the right thing if it sees this variable is still defined.
 
