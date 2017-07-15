@@ -1752,11 +1752,17 @@ configurable variables are listed below.</p>
 <div class="section" id="subpackages">
 <h3>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
-<dt id="ein:use-auto-complete">
-<em class="property">variable </em><code class="descname">ein:use-auto-complete</code><a class="headerlink" href="#ein:use-auto-complete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to use preset auto-complete configuration.
-Use <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></code></a> when you need more powerful
-auto completion.</p>
+<dt id="ein:completion-backend">
+<em class="property">variable </em><code class="descname">ein:completion-backend</code><a class="headerlink" href="#ein:completion-backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines which completion backend to use in opened EIN notebooks.</p>
+<p>After changing the value of this variable it is recommended that
+you restart Emacs. The available completion backends are:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>* ein:use-ac-backend : Use auto-complete with IPython&#39;s builtin completion engine.
+* ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
+* ein:use-company-backend : Use company-mode with IPython&#39;s builtin completiong engine.
+* ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="variable">
@@ -1939,7 +1945,7 @@ format string which can be passed to <code class="xref el el-symbol docutils lit
 <dt id="ein:complete-on-dot">
 <em class="property">variable </em><code class="descname">ein:complete-on-dot</code><a class="headerlink" href="#ein:complete-on-dot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start completion when inserting a dot.  Note that
-<a class="reference internal" href="#ein:use-auto-complete" title="ein:use-auto-complete"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></code></a> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></code></a>)
+<code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></code> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></code></a>)
 must be <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to enable this option.  This variable has effect on
 notebook buffers and connected buffers.</p>
 </dd></dl>
@@ -2184,8 +2190,8 @@ notebook.</p>
 <em class="property">function </em><code class="descname">ein:jedi-setup</code><a class="headerlink" href="#ein:jedi-setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup auto-completion using EIN and <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> together.</p>
 <p><a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> is a Python auto-completion library for Emacs.
-To use EIN and Jedi together, add the following in your Emacs setup.:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(add-hook ’ein:connect-mode-hook ’ein:jedi-setup)
+To use EIN and Jedi together, add the following in your Emacs setup before loading EIN.:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span></span>(setq ein:completion-backend ’ein:use-ac-jedi-backend)
 </pre></div>
 </div>
 </dd></dl>
@@ -2437,6 +2443,10 @@ everything the log buffer.  You can reset the patch and log level with
 <ul class="simple">
 <li>Added commands <code class="docutils literal"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal"><span class="pre">ein:jupyter-server-stop</span></code>, and
 <code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
+<li>New interface for configuring code completion. See the new customizable
+variable <cite>ein:completion-backend</cite>.</li>
+<li>Because of this <cite>ein:use-auto-complete</cite> is now deprecated, but EIN will still
+try to do the right thing if it sees this variable is still defined.</li>
 </ul>
 </div>
 <div class="section" id="v0-12-3">
