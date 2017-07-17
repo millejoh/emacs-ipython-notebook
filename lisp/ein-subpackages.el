@@ -31,19 +31,36 @@
 (declare-function ein:ac-config-once "ein-ac")
 (declare-function ein:smartrep-config-once "ein-smartrep")
 
+(defcustom ein:completion-backend 'ein:use-ac-backend
+  "Determines which completion backend to use in opened EIN notebooks.
 
-(defcustom ein:use-auto-complete nil
-  "Set to `t' to use preset auto-complete configuration.
-Use `ein:use-auto-complete-superpack' when you need more powerful
-auto completion."
-  :type 'boolean
-  :group 'ein)
+After changing the value of this variable it is recommended that
+you restart Emacs. The available completion backends are::
+
+ * ein:use-ac-backend : Use auto-complete with IPython's builtin completion engine.
+ * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
+ * ein:use-company-backend : Use company-mode with IPython's builtin completiong engine.
+ * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
+"
+  :type '(radio
+          (const :tag "Auto-Complete" 'ein:use-ac-backend)
+          (const :tag "Auto-Complete + Jedi" 'ein:use-ac-jedi-backend)
+          (const :tag "Company Mode" 'ein:use-company-backend)
+          (const :tag "Company Mode + Jedi" 'ein:use-company-jedi-backend))
+  :group 'ein-completion)
+
+;; (defcustom ein:use-auto-complete nil
+;;   "Set to `t' to use preset auto-complete configuration.
+;; Use `ein:use-auto-complete-superpack' when you need more powerful
+;; auto completion."
+;;   :type 'boolean
+;;   :group 'ein-completion)
 
 (defcustom ein:use-auto-complete-superpack nil
   "Set to `t' to use preset a little bit hacky auto-complete configuration.
 When this option is enabled, cached omni completion is available."
   :type 'boolean
-  :group 'ein)
+  :group 'ein-completion)
 
 (defcustom ein:use-smartrep nil
   "Set to `t' to use preset smartrep configuration.
@@ -68,15 +85,22 @@ When this option is enabled, cached omni completion is available."
 
 (defun ein:subpackages-load ()
   "Load sub-packages depending on configurations."
-  (when (or ein:use-auto-complete
-            ein:use-auto-complete-superpack)
-    (require 'ein-ac)
-    (ein:ac-config-once ein:use-auto-complete-superpack))
+  (case ein:completion-backend
+    ((ein:use-ac-backend ein:use-ac-jedi-backend)
+     (require 'ein-ac)
+     (ein:ac-config-once ein:use-auto-complete-superpack))
+    (t (if (boundp 'ein:use-auto-complete)
+           (progn
+             (warn "ein:use-auto-complete has been deprecated. Please see `ein:completion-backend' for configuring autocompletion in ein.")
+             (setq ein:completion-backend 'ein:use-ac-backend)
+             (require 'ein-ac)
+             (ein:ac-config-once ein:use-auto-complete-superpack)))))
   (when ein:use-smartrep
     (require 'ein-smartrep)
     (ein:smartrep-config-once))
   (when ein:load-dev
     (require 'ein-dev)))
+
 
 (defun ein:subpackages-reload ()
   "Reload sub-packages."

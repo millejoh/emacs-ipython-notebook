@@ -577,9 +577,11 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-complete-dot ()
   "Insert dot and request completion."
   (interactive)
-  (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
-      (ein:completer-dot-complete)
-    (insert ".")))
+  (unless (or (eql ein:completion-backend 'ein:use-company-backend)
+              (eql ein:completion-backend 'ein:use-company-jedi-backend))
+    (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
+        (ein:completer-dot-complete)
+      (insert "."))))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
@@ -1558,8 +1560,20 @@ This hook is run regardless the actual major mode used."
 
 (defun ein:notebook-mode ()
   (funcall (ein:notebook-choose-mode))
-  (ein:complete-on-dot-install
-   ein:notebook-mode-map 'ein:notebook-complete-dot)
+  (case ein:completion-backend
+    (ein:use-ac-backend (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
+                        (auto-complete-mode +1))
+    (ein:use-ac-jedi-backend (jedi:setup)
+                             (add-to-list 'ein:connect-mode-hook 'ein:jedi-setup)
+                             (auto-complete-mode +1))
+    (ein:use-company-backend (require 'ein-company)
+                             (add-to-list 'company-backends 'ein:company-backend)
+                             (company-mode +1))
+    (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
+                                  (require 'ein-company)
+                                  (add-to-list 'company-backends 'ein:company-backend)
+                                  (company-mode +1))
+    (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'.")))
   (ein:aif ein:helm-kernel-history-search-key
       (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
   (ein:aif ein:anything-kernel-history-search-key

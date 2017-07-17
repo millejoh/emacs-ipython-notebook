@@ -1,5 +1,6 @@
 The Emacs IPython Notebook
-==========================
+=====================================
+.. image:: ein_logo.jpg
 
 .. el:package:: ein
 
@@ -10,8 +11,7 @@ evaluation, object inspection and code completion. These features can be
 accessed anywhere in Emacs and improve Python code editing and reading in
 general in Emacs.
 
-.. _`Emacs IPython Notebook (EIN)`:
-  https://github.com/millejoh/emacs-ipython-notebook
+.. _`Emacs IPython Notebook (EIN)`: https://github.com/millejoh/emacs-ipython-notebook
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
@@ -59,7 +59,6 @@ Links:
 
 .. [#] You need to setup :el:symbol:`ein:console-args` properly
 .. [#] Use the command :el:symbol:`ein:connect-to-notebook-command`.
-
 
 
 Quick try
@@ -437,7 +436,7 @@ configurable variables are listed below.
 Subpackages
 ^^^^^^^^^^^
 
-.. el:variable:: ein:use-auto-complete
+.. el:variable:: ein:completion-backend
 .. el:variable:: ein:use-auto-complete-superpack
 .. el:variable:: ein:ac-max-cache
 .. el:variable:: ein:use-smartrep
@@ -651,21 +650,11 @@ Change Log
 ==========
 
 
-v0.13.0
--------
+.. include:: Changelog/v0_13_0.txt
 
-* Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
-  ``ein:jupyter-server-login-and-open``.
+.. include:: Changelog/v0_12_3.txt
 
-v0.12.3
--------
-
-.. include:: changelog/v0_12_3.txt
-
-v0.12.2
--------
-
-.. include:: changelog/v0_12_2.txt
+.. include:: Changelog/v0_12_2.txt
 
 
 v0.12.1
