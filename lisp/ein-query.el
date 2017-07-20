@@ -27,6 +27,7 @@
 
 (eval-when-compile (require 'cl))
 (require 'request)
+(require 'request-deferred)
 (require 'url)
 
 (require 'ein-core)
@@ -100,6 +101,14 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
                            (ein:query-prepare-header url settings))))
       (puthash key response ein:query-running-process-table)
       response)))
+
+(defun* ein:query-deferred (url &rest settings
+                                &key
+                                (timeout ein:query-timeout)
+                                &allow-other-keys)
+  ""
+  (apply #'request-deferred (url-encode-url url)
+         (ein:query-prepare-header url settings)))
 
 (defun ein:query-gc-running-process-table ()
   "Garbage collect dead processes in `ein:query-running-process-table'."
