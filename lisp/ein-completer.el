@@ -38,8 +38,8 @@
   (when (require 'auto-complete nil t)
     (require 'ein-ac))
   (cond
-   ((and (or ein:use-auto-complete
-             ein:use-auto-complete-superpack)
+   ((and (or (eql ein:completion-backend 'ein:use-ac-backend)
+             (eql ein:completion-backend 'ein:use-ac-jedi-backend))
          (ein:eval-if-bound 'auto-complete-mode)
          (fboundp 'ein:completer-finish-completing-ac))
     #'ein:completer-finish-completing-ac)
@@ -67,7 +67,7 @@
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
                    (completing-read "Complete: " matches
-                                    nil nil matched-text)))) 
+                                    nil nil matched-text))))
     (when word
       (delete-region beg end)
       (insert word))))
@@ -115,13 +115,13 @@
 must be `t' to enable this option.  This variable has effect on
 notebook buffers and connected buffers."
   :type 'boolean
-  :group 'ein)
+  :group 'ein-completion)
 
 (defun ein:complete-on-dot-install (map &optional func)
   (if (and ein:complete-on-dot
            (featurep 'auto-complete)
-           (or ein:use-auto-complete
-               ein:use-auto-complete-superpack))
+           (or (eql ein:completion-backend 'ein:use-ac-backend)
+               (eql ein:completion-backend 'ein:use-ac-jedi-backend)))
       (define-key map "." (or func #'ein:completer-dot-complete))
     (define-key map "." nil)))
 

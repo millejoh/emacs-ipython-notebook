@@ -38,7 +38,6 @@
 (require 'markdown-mode nil t)
 (require 'rst nil t)
 
-(declare-function ein:ac-config "ein-ac")
 (declare-function global-auto-complete-mode "auto-complete")
 (when (featurep 'auto-complete)
   (global-auto-complete-mode t)

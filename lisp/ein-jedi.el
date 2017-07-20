@@ -86,9 +86,9 @@
   "Setup auto-completion using EIN and Jedi.el_ together.
 
 Jedi.el_ is a Python auto-completion library for Emacs.
-To use EIN and Jedi together, add the following in your Emacs setup.::
+To use EIN and Jedi together, add the following in your Emacs setup before loading EIN.::
 
-  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)
+  (setq ein:completion-backend 'ein:use-ac-jedi-backend)
 
 .. _Jedi.el: https://github.com/tkf/emacs-jedi"
   (let ((map ein:connect-mode-map))
