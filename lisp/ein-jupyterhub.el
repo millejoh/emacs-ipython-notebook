@@ -48,7 +48,7 @@
   groups
   server
   pending
-  last_activity)
+  last-activity)
 
 (defun ein:get-jh-conn (url)
   (gethash url *ein:jupyterhub-servers*))
@@ -61,16 +61,24 @@
 request to Jupyterhub's REST API. Also perform the usual header
 preparation ala `ein:query-prepare-header', i.e. added XSRF token
 and configure cookies."
-  (let ((_settings (ein:query-prepare-header (ein:$jh-conn-url conn) settings securep)))
-    (if (boundp (ein:$jh-conn-token conn))
-        (setq _settings (plist-put _settings :headers (append (plist-get _settings :headers)
-                                                              (list (cons "Authorization" (ein:$jh-conn-token conn)))))))
-    _settings))
+  (let ((s (ein:query-prepare-header (ein:$jh-conn-url conn) settings securep)))
+    (if (ein:$jh-conn-token conn)
+        (setq s (plist-put s :headers (append (plist-get s :headers)
+                                              (list (cons "Authorization"
+                                                          (format "token %s"
+                                                                  (ein:$jh-conn-token conn))))))))
+    s))
 
 (defun ein:jupyterhub-api-url (url-or-port command &rest args)
   (if args
-      (ein:url url-or-port "hub/api" command args)
+      (apply #'ein:url url-or-port "hub/api" command args)
     (ein:url url-or-port "hub/api" command)))
+
+(defun* ein:jupyterhub-query (conn url &rest settings)
+  ""
+  (apply #'request-deferred
+         (url-encode-url (ein:jupyterhub-api-url (ein:$jh-conn-url conn) url))
+         (ein:jupyterhub-prepare-headers conn settings)))
 
 (defun ein:jupyterhub-connect (url-or-port user password)
   (deferred:$
@@ -92,15 +100,8 @@ and configure cookies."
         (ein:jupyterhub-token-request conn user password)))
     (deferred:nextc it
       (lambda (conn)
-        (setf (gethash (ein:$jh-conn-url conn) *ein:jupyterhub-servers*) conn)))))
-
-(defun ein:jupyterhub-get-user (conn username)
-  (deferred:$
-    (ein:query-deferred
-     (ein:jupyterhub-api-url (ein:$jh-conn-url conn) "users" username))
-    (deferred:nextc it
-      (lambda (response)
-        (message "Response: %s" (request-response-data response))))))
+        (setf (gethash (ein:$jh-conn-url conn) *ein:jupyterhub-servers*) conn)
+        (ein:jupyterhub-start-server conn user)))))
 
 (defun ein:jupyterhub-token-request (conn username password)
   (deferred:$
@@ -119,55 +120,54 @@ and configure cookies."
         (setf (ein:$jh-conn-token conn) (cadr (request-response-data response)))
         conn))))
 
-(defun ein:hub-url (url-or-port &optional path)
-  (if path
-      (ein:url url-or-port "hub/api" path)
-    (ein:url url-or-port "hub/api")))
-
-(defun ein:jupyterhub-version (url-or-port &optional callback cbargs)
-  (let ((url (ein:hub-url url-or-port)))
-    (ein:query-singleton-ajax
-     (list 'jupyterhub-version url-or-port)
-     url
+(defun ein:jupyterhub-get-user (conn username)
+  (deferred:$
+    (ein:jupyterhub-query
+     conn
+     (ein:url "users" username)
      :type "GET"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     :success (apply-partially #'ein:jupyterhub-version-success callback cbargs))))
+     :parser #'ein:json-read)
+    (deferred:nextc it
+      (lambda (response)
+        (let ((data (request-response-data response)))
+          (message "Response: %s" data)
+          (make-ein:$jh-user :name (plist-get :name data)
+                             :admin (plist-get :admin data)
+                             :groups (plist-get :groups data)
+                             :server (plist-get :server data)
+                             :pending (plist-get :pending data)
+                             :last-activity (plist-get :last_activity data)))))))
 
-(defun* ein:jupyterhub-version-success (callback cbargs &key data &allow-other-keys)
-  (let ((version (plist-get data :version)))
-    (when callback
-      (apply called-interactively-p-functions data cbargs))))
-
-
-(defun ein:jupyterhub-login (url-or-port username password &optional callback)
-  (let ((url (ein:url url-or-port "hub/login")))
-    (ein:query-singleton-ajax
-     (list 'jupyterhub-login url-or-port)
-     url
+(defun ein:jupyterhub-start-server (conn username)
+  (deferred:$
+    (ein:jupyterhub-query
+     conn
+     (ein:url "users" username "server")
      :type "POST"
-     :data (concat "username=" (url-hexify-string username)
-                   "&password=" (url-hexify-string password))
-     :timeout ein:content-query-timeout
-     :success #'ein:jupyterhub-login-success
-     :status-code '((302 . #'ein:jupyterhub-login-redirect)))))
+     :parser #'ein:json-read)
+    (deferred:nextc it
+      (lambda (response)
+        (if (eql 201 (request-response-status-code response))
+            (ein:jupyterhub-get-user conn username)
+          (message "Response status: %s" (request-response-status-code response))
+          )))
+    (deferred:nextc it
+      (lambda (user)
+        (when (ein:$jh-user-p user)
+          (let ((serverurl (ein:url (ein:$jh-conn-url conn) (ein:$jh-user-server user))))
+            (ein:notebooklist-open serverurl)))))))
 
-(defun* ein:jupyterhub-login-redirect (&key data response &allow-other-keys)
-  (message "Login redirect!"))
-
-(defun* ein:jupyterhub-login-success (&key data response &allow-other-keys)
-  response
-  )
-
-(defun ein:jupyterhub-services (url-or-port)
-  (let ((url (ein:hub-url url-or-port "services")))
-    (ein:query-singleton-ajax
-     (list 'jupyterhub-version url-or-port)
-     url
+(defun ein:jupyterhub-list-users (conn)
+  (deferred:$
+    (ein:jupyterhub-query
+     conn
+     "users"
      :type "GET"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     )))
+     :parser #'ein:json-read)
+    (deferred:nextc it
+      (lambda (response)
+        (message "Response: %s" (request-response-data response))
+        response))))
 
 
 (provide 'ein-jupyterhub)
