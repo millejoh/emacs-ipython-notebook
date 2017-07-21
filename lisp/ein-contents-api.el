@@ -217,12 +217,14 @@ global setting.  For global setting and more information, see
         (ein:$content-writable content) (plist-get data :writable)
         (ein:$content-mimetype content) (plist-get data :mimetype)
         (ein:$content-raw-content content) (plist-get data :content))
-  (if (length (request-response-history response))
-      (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
-        (setf (ein:$content-url-or-port content) (format "%s://%s:%s"
-                                                         (url-type url)
-                                                         (url-host url)
-                                                         (url-port url)))))
+  (ein:aif (ein:get-response-redirect response)
+      (setf (ein:$content-url-or-port content) it))
+  ;; (if (length (request-response-history response))
+  ;;     (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
+  ;;       (setf (ein:$content-url-or-port content) (format "%s://%s:%s"
+  ;;                                                        (url-type url)
+  ;;                                                        (url-host url)
+  ;;                                                        (url-port url)))))
   (when callback
     (funcall callback content))
   content)
