@@ -80,7 +80,7 @@ and configure cookies."
          (url-encode-url (ein:jupyterhub-api-url (ein:$jh-conn-url conn) url))
          (ein:jupyterhub-prepare-headers conn settings)))
 
-(defun ein:jupyterhub-connect (url-or-port user password)
+(defun ein:jupyterhub--do-connect (url-or-port user password)
   (deferred:$
     (ein:query-deferred
      (ein:jupyterhub-api-url url-or-port "/")
@@ -169,5 +169,10 @@ and configure cookies."
         (message "Response: %s" (request-response-data response))
         response))))
 
+(defun ein:jupyterhub-connect (url user password)
+  (interactive (list (ein:notebooklist-ask-url-or-port)
+                     (read-string "User: ")
+                     (read-passwd "Password: ")))
+  (ein:jupyterhub--do-connect url user password))
 
 (provide 'ein-jupyterhub)
