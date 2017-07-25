@@ -100,7 +100,11 @@ will be canceled \(see also `ein:query-singleton-ajax').
 (defun ein:jupyterhub-url-p (url)
   "Does URL reference a jupyterhub server? If so then return the
 connection structure representing the server."
-  (gethash url *ein:jupyterhub-servers*))
+  (let ((parsed (url-generic-parse-url url)))
+    (or (gethash (format "http://%s:%s" (url-host parsed) (url-port parsed))
+                 *ein:jupyterhub-servers*)
+        (gethash (format "https://%s:%s" (url-host parsed) (url-port parsed))
+                 *ein:jupyterhub-servers*))))
 
 (defun ein:jupyterhub-correct-query-url-maybe (url-or-port)
   (let* ((parsed-url (url-generic-parse-url url-or-port))

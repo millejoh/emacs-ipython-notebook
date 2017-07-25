@@ -244,11 +244,12 @@ See: https://github.com/ipython/ipython/pull/3307"
                     (format "http://%s" url-or-port)))
              (parsed-url (url-generic-parse-url url)))
         (if (ein:jupyterhub-url-p base-url)
-            (format "%s://%s:%s/%s"
-                    protocol
-                    (url-host parsed-url)
-                    (url-port parsed-url)
-                    (url-filename parsed-url))
+            (ein:trim-right (format "%s://%s:%s%s"
+                                    protocol
+                                    (url-host parsed-url)
+                                    (url-port parsed-url)
+                                    (url-filename parsed-url))
+                            "/")
           (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url)))))))
 
 
