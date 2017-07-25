@@ -70,6 +70,49 @@ will be canceled \(see also `ein:query-singleton-ajax').
   :group 'ein)
 
 
+;;; Jupyterhub
+(defvar *ein:jupyterhub-servers* (make-hash-table :test #'equal))
+
+(defstruct ein:$jh-conn
+  "Data representing a connection to a jupyterhub server."
+  url
+  version
+  user
+  token)
+
+(defstruct ein:$jh-user
+  "A jupyterhub user, per https://jupyterhub.readthedocs.io/en/latest/_static/rest-api/index.html#/definitions/User."
+  name
+  admin
+  groups
+  server
+  pending
+  last-activity)
+
+
+
+(defun ein:get-jh-conn (url)
+  (gethash url *ein:jupyterhub-servers*))
+
+(defun ein:reset-jh-servers ()
+  (setq *ein:jupyterhub-servers* (make-hash-table :test #'equal)))
+
+(defun ein:jupyterhub-url-p (url)
+  "Does URL reference a jupyterhub server? If so then return the
+connection structure representing the server."
+  (gethash url *ein:jupyterhub-servers*))
+
+(defun ein:jupyterhub-correct-query-url-maybe (url-or-port)
+  (let* ((parsed-url (url-generic-parse-url url-or-port))
+         (hostport (format "http://%s:%s" (url-host parsed-url) (url-port parsed-url)))
+         (command (url-filename parsed-url)))
+    (ein:aif (ein:jupyterhub-url-p hostport)
+        (let ((user-server-path (ein:$jh-user-server (ein:$jh-conn-user it))))
+          (ein:url hostport
+                   user-server-path
+                   command))
+      url-or-port)))
+
 ;;; Functions
 
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
@@ -77,11 +120,25 @@ will be canceled \(see also `ein:query-singleton-ajax').
 (defun ein:query-prepare-header (url settings &optional securep)
   "Ensure that REST calls to the jupyter server have the correct
 _xsrf argument."
-  (let ((cookies (request-cookie-alist (url-host (url-generic-parse-url url))
+  (let* ((parsed-url (url-generic-parse-url url))
+         (cookies (request-cookie-alist (url-host parsed-url)
                                        "/" securep)))
     (ein:aif (assoc-string "_xsrf" cookies)
-        (plist-put settings :headers (list (cons "X-XSRFTOKEN" (cdr it))))
-      settings)))
+        (setq settings (plist-put settings :headers (list (cons "X-XSRFTOKEN" (cdr it))))))
+    (ein:aif (ein:jupyterhub-url-p (format "http://%s:%s" (url-host parsed-url) (url-port parsed-url)))
+        (progn
+          (unless (string-equal (ein:$jh-conn-url it)
+                                (ein:url (ein:$jh-conn-url it) "hub/login"))
+            (setq settings (plist-put settings :headers (append (plist-get settings :headers)
+                                                                (list (cons "Referer"
+                                                                            (ein:url (ein:$jh-conn-url it)
+                                                                       "hub/login")))))))
+          (when (ein:$jh-conn-token it)
+            (setq settings (plist-put settings :headers (append (plist-get settings :headers)
+                                                                (list (cons "Authorization"
+                                                                            (format "token %s"
+                                                                                    (ein:$jh-conn-token it))))))))))
+    settings))
 
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
@@ -97,7 +154,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           (request-abort it)))            ; This will run callbacks
-    (let ((response (apply #'request (url-encode-url url)
+    (let ((response (apply #'request (url-encode-url (ein:jupyterhub-correct-query-url-maybe url))
                            (ein:query-prepare-header url settings))))
       (puthash key response ein:query-running-process-table)
       response)))
@@ -126,6 +183,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
                 (url-type url)
                 (url-host url)
                 (url-port url)))))
+
 
 ;;; Cookie
 

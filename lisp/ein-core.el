@@ -140,14 +140,15 @@ the source is in git repository."
 (defun ein:query-ipython-version (&optional url-or-port force)
   (ein:aif (and (not force) (gethash (or url-or-port (ein:default-url-or-port)) *running-ipython-version*))
       it
-    (let ((resp (request (ein:url (or url-or-port
-                                      (ein:default-url-or-port))
-                                  "api")
-                         :parser #'(lambda ()
-                                     (ignore-errors
-                                       (ein:json-read)))
-                         :timeout 5.0
-                         :sync t)))
+    (let ((resp (request
+                 (ein:jupyterhub-correct-query-url-maybe (ein:url (or url-or-port
+                                                                      (ein:default-url-or-port))
+                                                                  "api"))
+                 :parser #'(lambda ()
+                             (ignore-errors
+                               (ein:json-read)))
+                 :timeout 5.0
+                 :sync t)))
       (if (eql 408 (request-response-status-code resp))
           (progn
             (ein:log 'blather "Version request timed out, could be the server is still warming up. Assuming we are working Jupyter 4.x, and will recheck later.")

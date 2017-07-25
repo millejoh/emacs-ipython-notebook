@@ -230,7 +230,9 @@
 (defun ein:kernel--ws-url (url-or-port &optional securep)
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
 See: https://github.com/ipython/ipython/pull/3307"
-  (let ((protocol (if (or securep
+  (let* ((base-url url-or-port)
+         (url-or-port (ein:jupyterhub-correct-query-url-maybe url-or-port))
+         (protocol (if (or securep
                           (and (stringp url-or-port)
                                (string-match "^https://" url-or-port)))
                       "wss"
@@ -241,7 +243,13 @@ See: https://github.com/ipython/ipython/pull/3307"
                       url-or-port
                     (format "http://%s" url-or-port)))
              (parsed-url (url-generic-parse-url url)))
-        (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url))))))
+        (if (ein:jupyterhub-url-p base-url)
+            (format "%s://%s:%s/%s"
+                    protocol
+                    (url-host parsed-url)
+                    (url-port parsed-url)
+                    (url-filename parsed-url))
+          (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url)))))))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)

@@ -585,6 +585,10 @@ of minor mode."
   "Query jupyter server for the list of available
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
+  (ein:aif (ein:jupyterhub-url-p url-or-port)
+      (let ((user-server-path (ein:$jh-user-server (ein:$jh-conn-user it))))
+        (setf url-or-port (ein:url (ein:$jh-conn-url it)
+                                   user-server-path))))
   (unless (gethash url-or-port ein:available-kernelspecs)
     (ein:query-singleton-ajax
      (list 'ein:qeury-kernelspecs url-or-port)
