@@ -23,6 +23,7 @@
 
 
 ;;; Content
+(require 'eieio)
 
 (defstruct ein:$content
   "Content returned from the Jupyter notebook server:

@@ -32,10 +32,8 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'eieio)
 (require 'ansi-color)
 (require 'comint)
-
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-log)
@@ -246,7 +244,7 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
       (setf (slot-value cell 'input) it))
   cell)
 
-(defmethod ein:cell-init :around ((cell ein:headingcell) data) ;; FIXME: Was :after method
+(defmethod ein:cell-init ((cell ein:headingcell) data) ;; FIXME: Was :after method
   (call-next-method)
   (ein:aif (plist-get data :level)
       (setf (slot-value cell 'level) it))

@@ -8,6 +8,7 @@
 (development
  (depends-on "websocket")
  (depends-on "request")
+ (depends-on "request-deferred")
  (depends-on "dash")
  (depends-on "cl-generic")
  (depends-on "ert-runner")

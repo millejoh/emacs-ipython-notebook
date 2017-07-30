@@ -155,6 +155,7 @@
 
 ;;;###autoload
 (defun ein:jupyterhub-connect (url user password)
+  "Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater."
   (interactive (list (ein:jh-ask-url-or-port)
                      (read-string "User: ")
                      (read-passwd "Password: ")))

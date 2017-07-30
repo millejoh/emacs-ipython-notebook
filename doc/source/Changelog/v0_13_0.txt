@@ -4,10 +4,17 @@
 v0.13.0
 -------
 
+* Update dependencies (see :ref:`requirements-label`)
+* EIN should once again run on all recent versions of EMACsen.
+* EIN can login to Jupyterhub servers now, see ``ein:jupyterhub-connect``.
 * Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
   ``ein:jupyter-server-login-and-open``.
 * New interface for configuring code completion. See the new customizable
   variable `ein:completion-backend`.
 * Because of this `ein:use-auto-complete` is now deprecated, but EIN will still
   try to do the right thing if it sees this variable is still defined.
+* Fix for saving images in notebooks
+* Basic support, via skewer-mode for executing dynamic javascript in the
+  notebook.
+* Say hello to our new mascot.
 

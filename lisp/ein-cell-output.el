@@ -27,8 +27,6 @@
 ;;; Code:
 
 (require 'ein-cell)
-(require 'cl-generic)
-
 
 (defvar ein:output-type-map
   '((:svg . :image/svg) (:png . :image/png) (:jpeg . :image/jpeg)

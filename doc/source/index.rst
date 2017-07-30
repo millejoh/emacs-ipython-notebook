@@ -84,23 +84,36 @@ available after emacs starts, try adding the following to your emacs init file:
 .. _ipython-notebook: http://spacemacs.org/layers/+lang/ipython-notebook/README.html
 .. _zeroein: http://tkf.github.io/emacs-ipython-notebook/#quick-try
 
+.. _requirements-label:
+
 Requirements
 ------------
 
+* EMACS 24.5, 25.2, or 26
 * IPython_ 2.0 or higher.
 * Tornado_ 4.0.2 or higher.
-* `websocket.el`_ 1.3
-* `request.el`_ >= 0.2
+* `websocket.el`_ 1.7
+* `request.el`_ >= 0.3
+* `request-deferred`_ >= 0.2
+* `dash`_ >= 2.13
+* `auto-complete.el`_ >= 1.4:
+  You need to configure subpackage ``ein-ac`` to enable
+  this feature.
+* `skewer-mode`_ >= 1.6.2:
+  Skewer mode gives EIN the ability to execute dynamic javascript in the
+  note book.
+* (optional) Jupyterhub_ 0.8 or higher:
+  EIN supports logging in to Jupyterhub servers using PAM authentication,
+  though this only works with v0.8, which currently is the development version
+  of Jupyterhub.
 * (optional) mumamo_ developmental version:
   It will be automatically loaded when it is on the path.
   The official way to setup path is to load nXhtml_.
+  NOTE: MUMAMO is no longer actively developed and will not work on more recent versions of Emacs.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el. `python.el`_ is
   required to use ``ein:console-open`` command.
-* (optional) `auto-complete.el`_
-  You need to configure subpackage ``ein-ac`` to enable
-  this feature.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
@@ -119,6 +132,9 @@ EIEIO and json.el.
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
+.. _request-deferred.el: https://github.com/tkf/emacs-request/blob/master/request-deferred.el
+.. _dash: https://github.com/magnars/dash.el
+.. _skewer-mode: https://github.com/skeeto/skewer-mode
 .. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
