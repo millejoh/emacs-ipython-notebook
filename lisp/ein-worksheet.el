@@ -85,30 +85,6 @@ this value."
 
 (defvar ein:worksheet-buffer-name-template "*ein: %s/%s*")
 
-(defclass ein:worksheet ()
-  ((nbformat :initarg :nbformat :type integer)
-   (get-notebook-name :initarg :get-notebook-name :type cons
-                      :accessor ein:worksheet--notebook-name)
-   ;; This slot introduces too much complexity so therefore must be
-   ;; removed later.  This is here only for backward compatible
-   ;; reason.
-   (discard-output-p :initarg :discard-output-p :accessor ein:worksheet--discard-output-p)
-   (saved-cells :initarg :saved-cells :initform nil
-                :accessor ein:worksheet--saved-cells
-                :documentation
-                "Slot to cache cells for worksheet without buffer")
-   (dont-save-cells :initarg :dont-save-cells :initform nil :type boolean
-                    :accessor ein:worksheet--dont-save-cells-p
-                    :documentation "Don't cache cells when this flag is on.")
-   (ewoc :initarg :ewoc :type ewoc :accessor ein:worksheet--ewoc)
-   (kernel :initarg :kernel :type ein:$kernel :accessor ein:worksheet--kernel)
-   (dirty :initarg :dirty :type boolean :initform nil :accessor ein:worksheet--dirty-p)
-   (metadata :initarg :metadata :initform nil :accessor ein:worksheet--metadata)
-   (show-slide-data-p :initarg :show-slide-data-p
-                      :initform nil
-                      :accessor ein:worksheet--show-slide-data-p)
-   (events :initarg :events :accessor ein:worksheet--events)))
-
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
 

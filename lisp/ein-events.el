@@ -29,15 +29,8 @@
 (require 'eieio)
 
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-log)
-
-
-;;; Events handling class
-
-(defclass ein:events ()
-  ((callbacks :initarg :callbacks :type hash-table
-              :initform (make-hash-table :test 'eq)))
-  "Event handler class.")
 
 (defun ein:events-new ()
   "Return a new event handler instance."

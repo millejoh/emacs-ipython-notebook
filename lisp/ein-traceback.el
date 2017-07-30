@@ -46,9 +46,11 @@
 (defvar ein:tb-buffer-name-template "*ein:tb %s/%s*")
 
 (defun ein:tb-new (buffer-name notebook)
-  (ein:traceback :buffer-name buffer-name :source-notebook notebook))
+  (make-instance 'ein:traceback
+                 :buffer-name buffer-name
+                 :source-notebook notebook))
 
-(cl-defmethod ein:tb-get-buffer ((traceback ein:traceback))
+(defmethod ein:tb-get-buffer ((traceback ein:traceback))
   (unless (and (slot-boundp traceback :buffer)
                (buffer-live-p (slot-value traceback 'buffer)))
     (let ((buf (get-buffer-create (slot-value traceback 'buffer-name))))
@@ -58,7 +60,7 @@
 (defun ein:tb-pp (ewoc-data)
   (insert (ansi-color-apply ewoc-data)))
 
-(cl-defmethod ein:tb-render ((traceback ein:traceback) tb-data)
+(defmethod ein:tb-render ((traceback ein:traceback) tb-data)
   (with-current-buffer (ein:tb-get-buffer traceback)
     (setq ein:%traceback% traceback)
     (setq buffer-read-only t)
@@ -70,7 +72,7 @@
       (mapc (lambda (data) (ewoc-enter-last ewoc data)) tb-data))
     (ein:traceback-mode)))
 
-(cl-defmethod ein:tb-popup ((traceback ein:traceback) tb-data)
+(defmethod ein:tb-popup ((traceback ein:traceback) tb-data)
   (ein:tb-render traceback tb-data)
   (pop-to-buffer (ein:tb-get-buffer traceback)))
 
@@ -90,14 +92,14 @@
         t)
     (error "No traceback is available.")))
 
-(cl-defmethod ein:tb-range-of-node-at-point ((traceback ein:traceback))
+(defmethod ein:tb-range-of-node-at-point ((traceback ein:traceback))
   (let* ((ewoc (slot-value traceback 'ewoc))
          (ewoc-node (ewoc-locate ewoc))
          (beg (ewoc-location ewoc-node))
          (end (ein:aand (ewoc-next ewoc ewoc-node) (ewoc-location it))))
     (list beg end)))
 
-(cl-defmethod ein:tb-file-path-at-point ((traceback ein:traceback))
+(defmethod ein:tb-file-path-at-point ((traceback ein:traceback))
   (destructuring-bind (beg end)
       (ein:tb-range-of-node-at-point traceback)
     (let* ((file-tail
@@ -111,7 +113,7 @@
           (concat (file-name-sans-extension file) ".py")
         file))))
 
-(cl-defmethod ein:tb-file-lineno-at-point ((traceback ein:traceback))
+(defmethod ein:tb-file-lineno-at-point ((traceback ein:traceback))
   (destructuring-bind (beg end)
       (ein:tb-range-of-node-at-point traceback)
     (when (save-excursion
@@ -119,7 +121,7 @@
             (search-forward-regexp "^[-]+> \\([0-9]+\\)" end t))
       (string-to-number (match-string 1)))))
 
-(cl-defmethod ein:tb-jump-to-source-at-point ((traceback ein:traceback)
+(defmethod ein:tb-jump-to-source-at-point ((traceback ein:traceback)
                                            &optional select)
   (let ((file (ein:tb-file-path-at-point traceback))
         (lineno (ein:tb-file-lineno-at-point traceback)))

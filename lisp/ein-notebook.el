@@ -38,6 +38,7 @@
 (eval-when-compile (require 'auto-complete nil t))
 
 (require 'ein-core)
+(require 'ein-classes)
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-contents-api)
@@ -58,6 +59,7 @@
 (require 'ein-pytools)
 (require 'ein-traceback)
 (require 'ein-inspector)
+
 
 ;;; Configuration
 
@@ -180,80 +182,6 @@ Current buffer for these functions is set to the notebook buffer.")
 
 (defvar ein:notebook-save-retry-max 1
   "Maximum retries for notebook saving.")
-
-(defstruct ein:$notebook
-  "Hold notebook variables.
-
-`ein:$notebook-url-or-port'
-  URL or port of IPython server.
-
-`ein:$notebook-notebook-id' : string
-  uuid string (as of ipython 2.0 this is the same is notebook-name).
-
-`ein:$notebook-notebook-path' : string
-  Path to notebook.
-
-`ein:$notebook-kernel' : `ein:$kernel'
-  `ein:$kernel' instance.
-
-`ein:$notebook-kernelspec' : `ein:$kernelspec'
-  Jupyter kernel specification for the notebook.
-
-`ein:$notebook-kernelinfo' : `ein:kernelinfo'
-  `ein:kernelinfo' instance.
-
-`ein:$notebook-pager'
-  Variable for `ein:pager-*' functions. See ein-pager.el.
-
-`ein:$notebook-dirty' : boolean
-  Set to `t' if notebook has unsaved changes.  Otherwise `nil'.
-
-`ein:$notebook-metadata' : plist
-  Notebook meta data (e.g., notebook name).
-
-`ein:$notebook-name' : string
-  Notebook name.
-
-`ein:$notebook-nbformat' : integer
-  Notebook file format version.
-
-`ein:$notebook-nbformat-minor' : integer
-  Notebook file format version.
-
-`ein:$notebook-events' : `ein:$events'
-  Event handler instance.
-
-`ein:$notebook-worksheets' : list of `ein:worksheet'
-  List of worksheets.
-
-`ein:$notebook-scratchsheets' : list of `ein:worksheet'
-  List of scratch worksheets.
-
-`ein:$notebook-api-version' : integer
-   Major version of the IPython notebook server we are talking to.
-
-`ein:$notebook-checkpoints'
-  Names auto-saved checkpoints for content. Stored as a list
-  of (<id> . <last_modified>) pairs.
-"
-  url-or-port
-  notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
-  notebook-path
-  kernel
-  kernelinfo
-  kernelspec
-  pager
-  dirty
-  metadata
-  notebook-name
-  nbformat
-  nbformat-minor
-  events
-  worksheets
-  scratchsheets
-  api-version
-  autosave-timer
-  checkpoints)
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
@@ -532,30 +460,6 @@ of minor mode."
 
 
 ;;; Kernel related things
-
-(defstruct ein:$kernelspec
-  "Kernel specification as return by the Jupyter notebook server.
-
-`ein:$kernelspec-name' : string
-  Name used to identify the kernel (like python2, or python3).
-
-`ein:$kernelspec-display-name' : string
-  Name used to display kernel to user.
-
-`ein:$kernelspec-language' : string
-  Programming language supported by kernel, like 'python'.
-
-`ein:$kernelspec-resources' : plist
-  Resources, if any, used by the kernel.
-
-`ein:$kernelspec-spec' : plist
-  How to start the kernel from the command line. Not used by ein (yet).
-"
-  name
-  display-name
-  resources
-  spec
-  language)
 
 (defvar ein:available-kernelspecs (make-hash-table :test #'equal))
 
