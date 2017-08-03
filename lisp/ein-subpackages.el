@@ -39,7 +39,7 @@ you restart Emacs. The available completion backends are::
 
  * ein:use-ac-backend : Use auto-complete with IPython's builtin completion engine.
  * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
- * ein:use-company-backend : Use company-mode with IPython's builtin completiong engine.
+ * ein:use-company-backend : Use company-mode with IPython's builtin completion engine.
  * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
 "
   :type '(radio
@@ -85,16 +85,12 @@ When this option is enabled, cached omni completion is available."
 
 (defun ein:subpackages-load ()
   "Load sub-packages depending on configurations."
-  (case ein:completion-backend
+  (cl-ecase ein:completion-backend
     ((ein:use-ac-backend ein:use-ac-jedi-backend)
      (require 'ein-ac)
      (ein:ac-config-once ein:use-auto-complete-superpack))
-    (t (if (boundp 'ein:use-auto-complete)
-           (progn
-             (warn "ein:use-auto-complete has been deprecated. Please see `ein:completion-backend' for configuring autocompletion in ein.")
-             (setq ein:completion-backend 'ein:use-ac-backend)
-             (require 'ein-ac)
-             (ein:ac-config-once ein:use-auto-complete-superpack)))))
+    ((ein:use-company-backend ein:use-company-jedi-backend)
+     (warn "EIN: company backend not implemented yet.")))
   (when ein:use-smartrep
     (require 'ein-smartrep)
     (ein:smartrep-config-once))
