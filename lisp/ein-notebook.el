@@ -1563,16 +1563,12 @@ This hook is run regardless the actual major mode used."
   (case ein:completion-backend
     (ein:use-ac-backend (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
                         (auto-complete-mode +1))
-    (ein:use-ac-jedi-backend (jedi:setup)
-                             (add-to-list 'ein:connect-mode-hook 'ein:jedi-setup)
+    (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
                              (auto-complete-mode +1))
-    (ein:use-company-backend (require 'ein-company)
-                             (add-to-list 'company-backends 'ein:company-backend)
-                             (company-mode +1))
+    (ein:use-company-backend (company-mode +1))
     (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
-                                  (require 'ein-company)
-                                  (add-to-list 'company-backends 'ein:company-backend)
                                   (company-mode +1))
+
     (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'.")))
   (ein:aif ein:helm-kernel-history-search-key
       (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))

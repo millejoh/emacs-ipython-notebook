@@ -100,15 +100,17 @@
   "0.2.1")
 
 (defun ein:ac-request-in-background ()
-  (ein:and-let* ((kernel (ein:get-kernel))
-                 ((ein:kernel-live-p kernel)))
-    (ein:completer-complete
-     kernel
-     :callbacks
-     (list :complete_reply
-           (cons (lambda (_ content __)
-                   (ein:ac-prepare-completion (plist-get content :matches)))
-                 nil)))))
+  (cl-ecase ein:completion-backend
+    (ein:use-ac-backend (ein:and-let* ((kernel (ein:get-kernel))
+                                       ((ein:kernel-live-p kernel)))
+                          (ein:completer-complete
+                           kernel
+                           :callbacks
+                           (list :complete_reply
+                                 (cons (lambda (_ content __)
+                                         (ein:ac-prepare-completion (plist-get content :matches)))
+                                       nil)))))
+    (ein:use-ac-jedi-backend (ein:jedi-complete))))
 
 
 ;;; Completer interface

@@ -85,11 +85,22 @@ When this option is enabled, cached omni completion is available."
 
 (defun ein:subpackages-load ()
   "Load sub-packages depending on configurations."
-  (case ein:completion-backend
-    ((ein:use-ac-backend ein:use-ac-jedi-backend)
+  (cl-ecase ein:completion-backend
+    (ein:use-ac-backend
      (require 'ein-ac)
      (ein:ac-config-once ein:use-auto-complete-superpack))
-    (t (if (boundp 'ein:use-auto-complete)
+    (ein:use-ac-jedi-backend
+     (require 'ein-jedi)
+     (jedi:setup)
+     (ein:jedi-setup)
+     (ein:ac-config-once ein:use-auto-complete-superpack))
+    (ein:use-company-backend (require 'ein-company)
+                             (add-to-list 'company-backends 'ein:company-backend))
+    (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
+                                  (require 'ein-company)
+                                  (add-to-list 'company-backends 'ein:company-backend))
+    (t (if (and (boundp 'ein:use-auto-complete)
+                (not (featurep 'company)))
            (progn
              (warn "ein:use-auto-complete has been deprecated. Please see `ein:completion-backend' for configuring autocompletion in ein.")
              (setq ein:completion-backend 'ein:use-ac-backend)

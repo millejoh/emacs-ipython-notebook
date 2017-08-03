@@ -60,14 +60,18 @@
         (ein:jedi--completer-complete))
       (deferred:nextc it
         (lambda (replies)
-          (destructuring-bind
-              (_  ; ignore `jedi:complete-request' what returns.
-               ((&key matched_text matches &allow-other-keys) ; :complete_reply
-                _))  ; ignore metadata
-              replies
-            (ein:ac-prepare-completion matches)
-            (let ((ac-expand-on-auto-complete expand))
-              (ac-start))))))))
+          (ein:jedi-complete--prepare-completion replies expand))))))
+
+(defun ein:jedi-complete--prepare-completion (replies expand)
+  (destructuring-bind
+      (_  ; ignore `jedi:complete-request' what returns.
+       ((&key matched_text matches &allow-other-keys) ; :complete_reply
+        _))  ; ignore metadata
+      replies
+    (ein:ac-prepare-completion matches)
+    (let ((ac-expand-on-auto-complete expand))
+      (ac-start))))
+
 ;; Why `ac-start'?  See: `jedi:complete'.
 
 ;;;###autoload
