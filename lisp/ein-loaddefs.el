@@ -32,6 +32,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "ein-classes" "ein-classes.el" (0 0 0 0))
+;;; Generated autoloads from ein-classes.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-classes" '("ein:")))
+
+;;;***
+
 ;;;### (autoloads nil "ein-company" "ein-company.el" (0 0 0 0))
 ;;; Generated autoloads from ein-company.el
 
@@ -157,7 +164,7 @@ Open a buffer with bug report template.
 ;;;### (autoloads nil "ein-events" "ein-events.el" (0 0 0 0))
 ;;; Generated autoloads from ein-events.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-events" '("ein:events")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-events" '("ein:events-")))
 
 ;;;***
 
@@ -297,6 +304,17 @@ and save it immediately.
 ;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (0 0 0 0))
 ;;; Generated autoloads from ein-jupyter.el
 
+(autoload 'ein:jupyter-server-login-and-open "ein-jupyter" "\
+Log in and open a notebooklist buffer for a running jupyter notebook server.
+
+Determine if there is a running jupyter server (started via a
+call to `ein:jupyter-server-start') and then try to guess if
+token authentication is enabled. If a token is found use it to generate a
+call to `ein:notebooklist-login' and once authenticated open the notebooklist buffer
+via a call to `ein:notebooklist-open'.
+
+\(fn)" t nil)
+
 (autoload 'ein:jupyter-server-start "ein-jupyter" "\
 Start the jupyter notebook server at the given path.
 
@@ -331,11 +349,11 @@ there is no running server then no action will be taken.
 ;;; Generated autoloads from ein-jupyterhub.el
 
 (autoload 'ein:jupyterhub-connect "ein-jupyterhub" "\
-
+Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater.
 
 \(fn URL USER PASSWORD)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyterhub" '(#("ein:" 0 4 (fontified t face font-lock-function-name-face)))))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyterhub" '("ein:j")))
 
 ;;;***
 
@@ -404,7 +422,7 @@ Notebook mode with multiple language fontification.
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '(#("ein:" 0 4 (fontified nil)))))
 
 ;;;***
 
@@ -659,7 +677,7 @@ shared output buffer.  You can open the buffer by the command
 ;;;;;;  0 0))
 ;;; Generated autoloads from ein-subpackages.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-subpackages" '("ein:")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-subpackages" '(#("ein:" 0 4 (face font-lock-function-name-face fontified t)))))
 
 ;;;***
 
@@ -685,7 +703,7 @@ Show full traceback in traceback viewer.
 ;;;### (autoloads nil "ein-websocket" "ein-websocket.el" (0 0 0 0))
 ;;; Generated autoloads from ein-websocket.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-websocket" '("ein:" "fix-request-netscape-cookie-parse")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-websocket" '("ein:websocket" "fix-request-netscape-cookie-parse")))
 
 ;;;***
 
