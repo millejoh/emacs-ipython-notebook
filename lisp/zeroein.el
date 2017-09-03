@@ -46,7 +46,7 @@
     (concat zeroein:root-dir p)))
 
 (defvar zeroein:dependencies
-  '("ein-mumamo" "nxhtml" "markdown-mode" "websocket" "request"
+  '("dash"  "markdown-mode" "websocket" "request" "request-deferred" "deferred" "skewer-mode"
     "auto-complete" "popup" "fuzzy" "pos-tip" "smartrep"))
 
 (defvar zeroein:subtrees
@@ -76,7 +76,7 @@
 ;;; `load-path' configurations
 
 (add-to-list 'load-path (zeroein:path "lisp"))
-(add-to-list 'load-path (zeroein:path "lib" "nxhtml" "util"))
+;;(add-to-list 'load-path (zeroein:path "lib" "nxhtml" "util"))
 (mapc (lambda (path) (add-to-list 'load-path (zeroein:path "lib" path)))
       zeroein:dependencies)
 

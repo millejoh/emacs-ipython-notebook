@@ -92,10 +92,11 @@ Requirements
 * EMACS 24.5, 25.2, or 26
 * IPython_ 2.0 or higher.
 * Tornado_ 4.0.2 or higher.
-* `websocket.el`_ 1.7
+* `websocket.el`_ >= 1.7
 * `request.el`_ >= 0.3
 * `request-deferred`_ >= 0.2
 * `dash`_ >= 2.13
+* `s`_ >= 1.11
 * `auto-complete.el`_ >= 1.4:
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
@@ -106,10 +107,6 @@ Requirements
   EIN supports logging in to Jupyterhub servers using PAM authentication,
   though this only works with v0.8, which currently is the development version
   of Jupyterhub.
-* (optional) mumamo_ developmental version:
-  It will be automatically loaded when it is on the path.
-  The official way to setup path is to load nXhtml_.
-  NOTE: MUMAMO is no longer actively developed and will not work on more recent versions of Emacs.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el. `python.el`_ is
@@ -123,7 +120,7 @@ Requirements
   Python auto-completion for emacs using `jedi`_. In your
   emacs initialization file add
 
-  ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
+  ``(setq ein:completion-backend 'ein:use-ac-jedi-backend)``
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.
@@ -135,13 +132,13 @@ EIEIO and json.el.
 .. _request-deferred.el: https://github.com/tkf/emacs-request/blob/master/request-deferred.el
 .. _dash: https://github.com/magnars/dash.el
 .. _skewer-mode: https://github.com/skeeto/skewer-mode
-.. _mumamo: http://www.emacswiki.org/emacs/MuMaMo
 .. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
 .. _jedi.el: https://github.com/tkf/emacs-jedi
 .. _jedi: https://github.com/davidhalter/jedi
+.. _s: https://github.com/magnars/s.el
 
 .. [#] See
    :ref:`Gotchas and caveats > python-mode.el <gotchas-python-mode.el>`.

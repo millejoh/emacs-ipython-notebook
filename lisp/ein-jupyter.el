@@ -32,7 +32,12 @@
   :group 'ein
   :type 'string)
 
-(defcustom ein:jupyter-default-server-command nil
+(defcustom ein:jupyter-server-run-timeout 10000
+  "Time, in milliseconds, to wait for the jupyter server to start before declaring timeout and cancelling the operation."
+  :group 'ein
+  :type 'integer)
+
+(defcustom ein:jupyter-default-server-command "jupyter"
   "If you are tired of always being queried for the location of
 the jupyter command, you can set it here for future calls to
 `ein:jupyter-server-start'"
@@ -117,7 +122,7 @@ via a call to `ein:notebooklist-open'."
 
 
 ;;;###autoload
- (defun ein:jupyter-server-start (server-cmd-path notebook-directory &optional no-login-after-start-p)
+(defun ein:jupyter-server-start (server-cmd-path notebook-directory &optional no-login-after-start-p)
   "Start the jupyter notebook server at the given path.
 
 This command opens an asynchronous process running the jupyter
@@ -147,29 +152,36 @@ the log of the running jupyter server."
   (message "Starting notebook server in directory: %s" notebook-directory)
   (lexical-let ((no-login-after-start-p no-login-after-start-p))
     (deferred:$
-      (deferred:next
-        (lambda ()
-          (let ((proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
-                                               *ein:last-jupyter-command*
-                                               *ein:last-jupyter-directory*)))
-            proc)))
-      (deferred:nextc it
-        (lambda (proc)
-          (with-current-buffer (process-buffer proc)
-            (goto-char (point-min))
-            (loop for x upfrom 0 by 1
-                  until (or (search-forward "Notebook is running at:" nil t)
-                            (search-forward "Use Control-C" nil t))
-                  do (progn (sit-for 0.1)
-                            (goto-char (point-min)))
-                  finally return no-login-after-start-p))))
+      (deferred:timeout
+        ein:jupyter-server-run-timeout 'ein:jupyter-timeout-sentinel
+        (deferred:$
+          (deferred:next
+            (lambda ()
+              (let ((proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
+                                                   *ein:last-jupyter-command*
+                                                   *ein:last-jupyter-directory*)))
+                proc)))
+          (deferred:nextc it
+            (lambda (proc)
+              (with-current-buffer (process-buffer proc)
+                (goto-char (point-min))
+                (loop for x upfrom 0 by 1
+                      until (or (search-forward "Notebook is running at:" nil t)
+                                (search-forward "Use Control-C" nil t))
+                      do (progn (sit-for 0.1)
+                                (goto-char (point-min)))
+                      finally return no-login-after-start-p))))))
       (deferred:nextc it
         (lambda (no-login-p)
-          (unless no-login-p
-            (ein:jupyter-server-login-and-open)))))))
+          (if (eql no-login-p 'ein:jupyter-timeout-sentinel)
+              (progn
+                (error "[EIN] Jupyter server failed to start, cancelling operation.")
+                (ein:jupyter-server-stop t))
+            (unless no-login-p
+              (ein:jupyter-server-login-and-open))))))))
 
 ;;;###autoload
-(defun ein:jupyter-server-stop ()
+(defun ein:jupyter-server-stop (&optional force)
   "Stop a running jupyter notebook server.
 
 Use this command to stop a running jupyter notebook server. If
@@ -177,7 +189,7 @@ there is no running server then no action will be taken.
 "
   (interactive)
   (when (and %ein:jupyter-server-session%
-             (y-or-n-p "Kill jupyter server and close all open notebooks?"))
+             (or force (y-or-n-p "Kill jupyter server and close all open notebooks?")))
     (let ((unsaved (ein:notebook-opened-notebooks #'ein:notebook-modified-p))
           (check-for-saved (make-hash-table :test #'equal)))
       (when unsaved
@@ -199,5 +211,21 @@ there is no running server then no action will be taken.
     (setq %ein:jupyter-server-session% nil)
     (message "Stopped Jupyter notebook server.")))
 
+
+(defun ein:jupyter-server-list--cmd (&optional args)
+  (append (list "notebook"
+                "list")
+          args))
+
+(defun ein:jupyter-query-running-notebooks ()
+  (with-temp-buffer
+    (let ((res (apply #'call-process (or *ein:last-jupyter-command*
+                                         ein:jupyter-default-server-command)
+                      nil
+                      t
+                      nil
+                      (ein:jupyter-server-list--cmd)))
+          (contents (rest (s-lines (buffer-string)))))
+      contents)))
 
 (provide 'ein-jupyter)

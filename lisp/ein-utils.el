@@ -28,6 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'cc-mode)
 (require 'json)
+(require 's)
 
 
 ;;; Macros and core functions/variables

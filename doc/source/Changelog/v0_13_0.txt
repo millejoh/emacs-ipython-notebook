@@ -6,6 +6,10 @@ v0.13.0
 
 * Update dependencies (see :ref:`requirements-label`)
 * EIN should once again run on all recent versions of EMACsen.
+* Support file types other than ipynb in the notebooklist view.
+* Keep long-running notebooks connected via the command ``ein:notebooklist-enable-keepalive``.
+* Add ``ein:notebook-save-to-command`` for saving copies of notebooks under a new name.
+* Add ``ein:notebooklist-change-url-port`` to change the server the notebook is running under.
 * EIN can login to Jupyterhub servers now, see ``ein:jupyterhub-connect``.
 * Added commands ``ein:jupyter-server-start``, ``ein:jupyter-server-stop``, and
   ``ein:jupyter-server-login-and-open``.
