@@ -5,12 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.13.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -79,20 +76,20 @@
 <li><a class="reference internal" href="#id13">Jedi.el</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id15">MuMaMo</a></li>
-<li><a class="reference internal" href="#id16">Misc</a></li>
+<li><a class="reference internal" href="#mumamo">MuMaMo</a></li>
+<li><a class="reference internal" href="#id15">Misc</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gotchas-and-caveats">Gotchas and caveats</a><ul>
 <li><a class="reference internal" href="#url-retrieve"><code class="docutils literal"><span class="pre">url-retrieve</span></code></a></li>
-<li><a class="reference internal" href="#id17">MuMaMo</a></li>
+<li><a class="reference internal" href="#id16">MuMaMo</a></li>
 <li><a class="reference internal" href="#python-mode-el">python-mode.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced">Advanced</a></li>
 <li><a class="reference internal" href="#reporting-issues">Reporting issues</a><ul>
 <li><a class="reference internal" href="#logging">Logging</a><ul>
-<li><a class="reference internal" href="#id19">websocket.el</a></li>
+<li><a class="reference internal" href="#id18">websocket.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#debugging">Debugging</a></li>
@@ -227,29 +224,42 @@ available after emacs starts, try adding the following to your emacs init file:<
 </div>
 </div>
 <div class="section" id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<span id="requirements-label"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul>
+<li><p class="first">EMACS 24.5, 25.2, or 26</p>
+</li>
 <li><p class="first"><a class="reference external" href="http://ipython.org/">IPython</a> 2.0 or higher.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.tornadoweb.org/en/stable/">Tornado</a> 4.0.2 or higher.</p>
 </li>
-<li><p class="first"><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a> 1.3</p>
+<li><p class="first"><a class="reference external" href="https://github.com/ahyatt/emacs-websocket">websocket.el</a> &gt;= 1.7</p>
 </li>
-<li><p class="first"><a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> &gt;= 0.2</p>
+<li><p class="first"><a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> &gt;= 0.3</p>
 </li>
-<li><p class="first">(optional) <a class="reference external" href="http://www.emacswiki.org/emacs/MuMaMo">mumamo</a> developmental version:
-It will be automatically loaded when it is on the path.
-The official way to setup path is to load <a class="reference external" href="http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html">nXhtml</a>.</p>
+<li><p class="first"><a href="#id24"><span class="problematic" id="id25">`request-deferred`_</span></a> &gt;= 0.2</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/magnars/dash.el">dash</a> &gt;= 2.13</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/magnars/s.el">s</a> &gt;= 1.11</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a> &gt;= 1.4:
+You need to configure subpackage <code class="docutils literal"><span class="pre">ein-ac</span></code> to enable
+this feature.</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/skeeto/skewer-mode">skewer-mode</a> &gt;= 1.6.2:
+Skewer mode gives EIN the ability to execute dynamic javascript in the
+note book.</p>
+</li>
+<li><p class="first">(optional) <a href="#id26"><span class="problematic" id="id27">Jupyterhub_</span></a> 0.8 or higher:
+EIN supports logging in to Jupyterhub servers using PAM authentication,
+though this only works with v0.8, which currently is the development version
+of Jupyterhub.</p>
 </li>
 <li><p class="first">(optional) markdown-mode</p>
 </li>
 <li><p class="first">(optional) python-mode:
 It should work with either python.el or python-mode.el. <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> is
 required to use <code class="docutils literal"><span class="pre">ein:console-open</span></code> command.</p>
-</li>
-<li><p class="first">(optional) <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>
-You need to configure subpackage <code class="docutils literal"><span class="pre">ein-ac</span></code> to enable
-this feature.</p>
 </li>
 <li><p class="first">(optional) <a class="reference external" href="https://github.com/myuhe/smartrep.el">smartrep.el</a>:
 This package enables you to omit typing prefix keys (e.g.,
@@ -260,7 +270,7 @@ this feature.</p>
 <li><p class="first">(optional) <a class="reference external" href="https://github.com/tkf/emacs-jedi">jedi.el</a>:
 Python auto-completion for emacs using <a class="reference external" href="https://github.com/davidhalter/jedi">jedi</a>. In your
 emacs initialization file add</p>
-<p><code class="docutils literal"><span class="pre">(add-hook</span> <span class="pre">'ein:connect-mode-hook</span> <span class="pre">'ein:jedi-setup)</span></code></p>
+<p><code class="docutils literal"><span class="pre">(setq</span> <span class="pre">ein:completion-backend</span> <span class="pre">'ein:use-ac-jedi-backend)</span></code></p>
 </li>
 </ul>
 <p>Also, EIN heavily relies on standard Emacs libraries including EWOC,
@@ -381,7 +391,7 @@ the log of the running jupyter server.</p>
 
 <dl class="function">
 <dt id="ein:jupyter-server-stop">
-<em class="property">function </em><code class="descname">ein:jupyter-server-stop</code><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-stop </code><em>&amp;optional</em> <em>force</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a running jupyter notebook server.</p>
 <p>Use this command to stop a running jupyter notebook server. If
 there is no running server then no action will be taken.</p>
@@ -1759,8 +1769,9 @@ configurable variables are listed below.</p>
 you restart Emacs. The available completion backends are:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span>* ein:use-ac-backend : Use auto-complete with IPython&#39;s builtin completion engine.
 * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
-* ein:use-company-backend : Use company-mode with IPython&#39;s builtin completiong engine.
+* ein:use-company-backend : Use company-mode with IPython&#39;s builtin completion engine.
 * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
+* ein:use-custom-backend: EIN will not enable any backend, leaving it to the user to configure their own custom solution.
 </pre></div>
 </div>
 </dd></dl>
@@ -2198,8 +2209,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 
 </div>
 </div>
-<div class="section" id="id15">
-<h3>MuMaMo<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="mumamo">
+<h3>MuMaMo<a class="headerlink" href="#mumamo" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:mumamo-codecell-mode">
 <em class="property">variable </em><code class="descname">ein:mumamo-codecell-mode</code><a class="headerlink" href="#ein:mumamo-codecell-mode" title="Permalink to this definition">¶</a></dt>
@@ -2241,8 +2252,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 <dd></dd></dl>
 
 </div>
-<div class="section" id="id16">
-<h3>Misc<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h3>Misc<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:filename-translations">
 <em class="property">variable </em><code class="descname">ein:filename-translations</code><a class="headerlink" href="#ein:filename-translations" title="Permalink to this definition">¶</a></dt>
@@ -2337,17 +2348,17 @@ fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> to
 make it even safer.</p>
 </div>
-<div class="section" id="id17">
-<h3>MuMaMo<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h3>MuMaMo<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <p>When using MuMaMo based notebook mode, you will notice that
 highlighting outside of the cell input is turned off while you are in
-the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id18">[6]</a>.</p>
+the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
 <a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id18">[6]</a></td><td>See the relevant bug report I posted:
+<tr><td class="label"><a class="fn-backref" href="#id17">[6]</a></td><td>See the relevant bug report I posted:
 <a class="reference external" href="https://bugs.launchpad.net/nxhtml/+bug/1013794">https://bugs.launchpad.net/nxhtml/+bug/1013794</a></td></tr>
 </tbody>
 </table>
@@ -2408,8 +2419,8 @@ a code block, like this:</p>
 <a class="reference external" href="https://gist.github.com/">gist</a>.</p>
 </li>
 </ol>
-<div class="section" id="id19">
-<h4>websocket.el<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id18">
+<h4>websocket.el<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
 <p>websocket.el has its own logging buffer.  Sometime it is useful to see this
 log.  To do this:</p>
 <ol class="arabic simple">
@@ -2441,12 +2452,23 @@ everything the log buffer.  You can reset the patch and log level with
 <div class="section" id="v0-13-0">
 <span id="changelog-0-13-0"></span><h2>v0.13.0<a class="headerlink" href="#v0-13-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Update dependencies (see <a class="reference internal" href="#requirements-label"><span class="std std-ref">Requirements</span></a>)</li>
+<li>EIN should once again run on all recent versions of EMACsen.</li>
+<li>Support file types other than ipynb in the notebooklist view.</li>
+<li>Keep long-running notebooks connected via the command <code class="docutils literal"><span class="pre">ein:notebooklist-enable-keepalive</span></code>.</li>
+<li>Add <code class="docutils literal"><span class="pre">ein:notebook-save-to-command</span></code> for saving copies of notebooks under a new name.</li>
+<li>Add <code class="docutils literal"><span class="pre">ein:notebooklist-change-url-port</span></code> to change the server the notebook is running under.</li>
+<li>EIN can login to Jupyterhub servers now, see <code class="docutils literal"><span class="pre">ein:jupyterhub-connect</span></code>.</li>
 <li>Added commands <code class="docutils literal"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal"><span class="pre">ein:jupyter-server-stop</span></code>, and
 <code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
 <li>New interface for configuring code completion. See the new customizable
 variable <cite>ein:completion-backend</cite>.</li>
 <li>Because of this <cite>ein:use-auto-complete</cite> is now deprecated, but EIN will still
 try to do the right thing if it sees this variable is still defined.</li>
+<li>Fix for saving images in notebooks</li>
+<li>Basic support, via skewer-mode for executing dynamic javascript in the
+notebook.</li>
+<li>Say hello to our new mascot.</li>
 </ul>
 </div>
 <div class="section" id="v0-12-3">
@@ -2748,7 +2770,7 @@ See COPYING for details.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, John Miller.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>
