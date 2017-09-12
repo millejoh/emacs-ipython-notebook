@@ -149,6 +149,8 @@ the log of the running jupyter server."
   (if (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
       (message "Notebook session is already running, check the contents of %s"
                ein:jupyter-server-buffer-name))
+  (add-hook 'kill-emacs-hook #'(lambda ()
+                                 (ein:jupyter-server-stop t)))
   (message "Starting notebook server in directory: %s" notebook-directory)
   (lexical-let ((no-login-after-start-p no-login-after-start-p))
     (deferred:$

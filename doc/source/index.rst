@@ -94,7 +94,7 @@ Requirements
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ >= 1.7
 * `request.el`_ >= 0.3
-* `request-deferred`_ >= 0.2
+* `request-deferred.el`_ >= 0.2
 * `dash`_ >= 2.13
 * `s`_ >= 1.11
 * `auto-complete.el`_ >= 1.4:
