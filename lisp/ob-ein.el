@@ -130,6 +130,20 @@ jupyter kernels.
                                                     (slot-value cell 'traceback))))
         (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params)))))
 
+
+(defun org-babel-edit-prep:ein (babel-info)
+  "Set up source code completion for editing and EIN source block."
+  (let ((session (assoc :session (third babel-info))))
+    (case ein:completion-backend
+      (ein:use-ac-backend (ein:complete-on-dot-install python-mode-map 'ein:notebook-complete-dot)
+                          (auto-complete-mode +1))
+      (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install python-mode-map)
+                               (auto-complete-mode +1))
+      (ein:use-company-backend (company-mode +1))
+      (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
+                                    (company-mode +1))
+      (t nil))))
+
 ;; This function should be used to assign any variables in params in
 ;; the context of the session environment.
 (defun org-babel-prep-session:ein (session params)

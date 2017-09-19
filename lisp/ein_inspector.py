@@ -32,9 +32,12 @@ def generate_inspector_data(obj_str, globals, locals):
     else:
         odata['doc'] = inspect.getdoc(obj)
         odata['type'], odata['repr'] = determine_object_type(obj)
-        odata['source_file'] = inspect.getsourcefile(obj)
-        odata['source_lines'] = inspect.getsourcelines(obj)
-
+        try:
+            odata['source_file'] = inspect.getsourcefile(obj)
+            odata['source_lines'] = inspect.getsourcelines(obj)
+        except:
+            odata['source_file'] = None
+            odata['source_lines'] = None
     print(json.dumps(odata))
     return odata
 
@@ -78,6 +81,6 @@ def determine_object_type(obj):
     elif inspect.ismemberdescriptor(obj):
         return 'Member Descriptor', obj.__str__()
     elif inspect.isbuiltin(obj):
-        return type(obj), obj.__str__()
+        return str(type(obj)), obj.__str__()
     else:
-        return type(obj), obj.__str__()
+        return str(type(obj)), obj.__str__()
