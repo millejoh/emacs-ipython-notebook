@@ -1,0 +1,10 @@
+.. _changelog_0_14_0:
+
+
+v0.14.0
+-------
+
+* Notebooklist entries are now orderd by file extension.
+* Org edit buffers for ein source blocks now try to connect to the notebook
+  specified in the session parameter. This is essentially like calling
+  `ein:connect-to-notebook` on the org source edit buffer.

@@ -139,20 +139,28 @@ The above command requires /bin/sh.  If the above command does not work
 Requirements
 ============
 
-* IPython_ 2.0 or higher or current versions of Jupyter_
+* EMACS 24.5, 25.2, or 26
+* IPython_ 2.0 or higher.
 * Tornado_ 4.0.2 or higher.
-* `websocket.el`_ 1.3
-* `request.el`_ >= 0.2
-* `deferred.el`_
-* `skewer-mode.el`_
-* `auto-complete.el`_
+* `websocket.el`_ >= 1.7
+* `request.el`_ >= 0.3
+* `request-deferred.el`_ >= 0.2
+* `dash`_ >= 2.13
+* `s`_ >= 1.11
+* `auto-complete.el`_ >= 1.4:
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
+* `skewer-mode`_ >= 1.6.2:
+  Skewer mode gives EIN the ability to execute dynamic javascript in the
+  note book.
+* (optional) Jupyterhub_ 0.8 or higher:
+  EIN supports logging in to Jupyterhub servers using PAM authentication,
+  though this only works with v0.8, which currently is the development version
+  of Jupyterhub.
 * (optional) markdown-mode
 * (optional) python-mode:
-  It should work with either python.el or python-mode.el.
-  Fabian Gallina's `python.el`_ is required to use
-  ``ein:console-open`` command.
+  It should work with either python.el or python-mode.el. `python.el`_ is
+  required to use ``ein:console-open`` command.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
@@ -162,24 +170,25 @@ Requirements
   Python auto-completion for emacs using `jedi`_. In your
   emacs initialization file add
 
-  ``(add-hook 'ein:connect-mode-hook 'ein:jedi-setup)``
+  ``(setq ein:completion-backend 'ein:use-ac-jedi-backend)``
 
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
-EIEIO and json.el.  EIN is currently known to work in Emacs 25.1 and development
-version (26.0.x).
+EIEIO and json.el.
 
 .. _IPython: http://ipython.org/
-.. _Jupyter: https://jupyter.readthedocs.io/en/latest/content-quickstart.html
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
-.. _deferred.el: https://github.com/kiwanami/emacs-deferred
-.. _skewer-mode.el: https://github.com/skeeto/skewer-mode
+.. _request-deferred.el: https://github.com/tkf/emacs-request/blob/master/request-deferred.el
+.. _dash: https://github.com/magnars/dash.el
+.. _skewer-mode: https://github.com/skeeto/skewer-mode
+.. _nXhtml: http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 .. _python.el: https://github.com/fgallina/python.el
 .. _auto-complete.el: http://cx4a.org/software/auto-complete/
 .. _smartrep.el: https://github.com/myuhe/smartrep.el
 .. _jedi.el: https://github.com/tkf/emacs-jedi
 .. _jedi: https://github.com/davidhalter/jedi
+.. _s: https://github.com/magnars/s.el
 
 Usage
 =====
@@ -188,6 +197,13 @@ Usage
    For manual install, put Emacs lisp ``ein*.el`` files and Python file
    ``ein.py`` in your load path. See `online documentation`_ for more
    information.
+
+2. Configure the variables ``ein:jupyter-default-server-command`` and
+   ``ein:jupyter-default-notebook-directory``, then call
+   ``ein:jupyter-server-start``. This should start the jupyter notebook server,
+   log in, then automatically open the notebook list.
+
+-OR-
 
 2. Start the `Jupyter notebook server`_.
 

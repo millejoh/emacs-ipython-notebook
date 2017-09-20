@@ -179,6 +179,7 @@ the log of the running jupyter server."
               (progn
                 (error "[EIN] Jupyter server failed to start, cancelling operation.")
                 (ein:jupyter-server-stop t))
+            (ein:force-ipython-version-check)
             (unless no-login-p
               (ein:jupyter-server-login-and-open))))))))
 

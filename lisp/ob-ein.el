@@ -131,23 +131,20 @@ jupyter kernels.
         (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params)))))
 
 
+(defun ein:org-find-or-open-session (session &optional kernelspec)
+  (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
+    (setf kernelspec (or kernelspec (ein:get-kernelspec url-or-port "default")))
+    (or (ein:notebook-get-opened-notebook url-or-port path)
+        (ein:notebook-open url-or-port path kernelspec
+                           (lexical-let ((session session)
+                                         (kernelspec kernelspec))
+                             (lambda ()
+                               (org-babel-ein-initiate-session session kernelspec)))))))
+
 (defun org-babel-edit-prep:ein (babel-info)
   "Set up source code completion for editing and EIN source block."
-  (let ((session (assoc :session (third babel-info))))
-    (condition-case err
-        (progn
-          (when (org-babel-ein-initiate-session (cdr session))
-            (case ein:completion-backend
-              (ein:use-ac-backend (ein:complete-on-dot-install python-mode-map 'ein:notebook-complete-dot)
-                                  (auto-complete-mode +1))
-              (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install python-mode-map)
-                                       (auto-complete-mode +1))
-              (ein:use-company-backend (company-mode +1))
-              (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
-                                            (company-mode +1))
-              (t nil))))
-      (error nil) ;(warn "Notebook unavailable, not enabling ein's completion backend.")
-          )))
+  (let ((nb (ein:org-find-or-open-session  gscdr (assoc :session (third babel-info))))))
+    (ein:connect-buffer-to-notebook nb (current-buffer) t)))
 
 ;; This function should be used to assign any variables in params in
 ;; the context of the session environment.
@@ -187,6 +184,8 @@ This is the name of the notebook used when no notebook path is
 given in the session parameter."
   :type '(string :tag "Format string")
   :group 'ein)
+
+
 
 (defun org-babel-ein-initiate-session (&optional session kernelspec)
   "If there is not a current inferior-process-buffer in SESSION then create.
