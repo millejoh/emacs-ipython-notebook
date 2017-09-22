@@ -143,7 +143,7 @@ jupyter kernels.
 
 (defun org-babel-edit-prep:ein (babel-info)
   "Set up source code completion for editing and EIN source block."
-  (let ((nb (ein:org-find-or-open-session  gscdr (assoc :session (third babel-info))))))
+  (let ((nb (ein:org-find-or-open-session (cdr (assoc :session (third babel-info))))))
     (ein:connect-buffer-to-notebook nb (current-buffer) t)))
 
 ;; This function should be used to assign any variables in params in

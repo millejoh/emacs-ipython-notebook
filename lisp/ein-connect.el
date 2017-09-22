@@ -393,7 +393,16 @@ notebook."
   :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
   :group 'ein
-  (ein:complete-on-dot-install ein:connect-mode-map))
+  (case ein:completion-backend
+    (ein:use-ac-backend (ein:complete-on-dot-install ein:connect-mode-map)
+                        (auto-complete-mode +1))
+    (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:connect-mode-map)
+                             (auto-complete-mode +1))
+    (ein:use-company-backend (company-mode +1))
+    (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
+                                  (company-mode +1))
+
+    (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'."))))
 
 (put 'ein:connect-mode 'permanent-local t)
 

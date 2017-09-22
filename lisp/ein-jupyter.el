@@ -152,38 +152,34 @@ the log of the running jupyter server."
   (add-hook 'kill-emacs-hook #'(lambda ()
                                  (ein:jupyter-server-stop t)))
   (message "Starting notebook server in directory: %s" notebook-directory)
-  (lexical-let ((no-login-after-start-p no-login-after-start-p))
+  (lexical-let ((no-login-after-start-p no-login-after-start-p)
+                (proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
+                                               *ein:last-jupyter-command*
+                                               *ein:last-jupyter-directory*)))
     (deferred:$
       (deferred:timeout
         ein:jupyter-server-run-timeout 'ein:jupyter-timeout-sentinel
         (deferred:$
           (deferred:next
-            (lambda ()
-              (let ((proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
-                                                   *ein:last-jupyter-command*
-                                                   *ein:last-jupyter-directory*)))
-                proc)))
-          (deferred:nextc it
-            (lambda (proc)
+            (deferred:lambda ()
               (with-current-buffer (process-buffer proc)
                 (goto-char (point-min))
-                (loop for x upfrom 0 by 1
-                      until (or (search-forward "Notebook is running at:" nil t)
-                                (search-forward "Use Control-C" nil t))
-                      do (progn (sit-for 0.1)
-                                (goto-char (point-min)))
-                      finally return no-login-after-start-p))))))
+                (if (or (search-forward "Notebook is running at:" nil t)
+                        (search-forward "Use Control-C" nil t))
+                    no-login-after-start-p
+                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 2)) self)))))))
       (deferred:nextc it
         (lambda (no-login-p)
           (if (eql no-login-p 'ein:jupyter-timeout-sentinel)
               (progn
-                (error "[EIN] Jupyter server failed to start, cancelling operation.")
+                (warn "[EIN] Jupyter server failed to start, cancelling operation.")
                 (ein:jupyter-server-stop t))
             (ein:force-ipython-version-check)
             (unless no-login-p
               (ein:jupyter-server-login-and-open))))))))
 
 ;;;###autoload
+
 (defun ein:jupyter-server-stop (&optional force)
   "Stop a running jupyter notebook server.
 
