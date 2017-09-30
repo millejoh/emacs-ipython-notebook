@@ -190,9 +190,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 (defun ein:testing-image-type (image)
   "Return the type of IMAGE.
 See the definition of `create-image' for how it works."
-  (assert (and (listp image) (cl-find 'image image :key #'car)) nil
+  (assert (and (listp image) (eq (car image) 'image)) nil
           "%S is not an image." image)
-  (plist-get (cdr (cl-find 'image image :key #'car)) :type))
+  (plist-get (cdr image) :type))
 
 (ert-deftest ein:notebook-execute-current-cell-pyout-image ()
   (ein:testing-start-server)
