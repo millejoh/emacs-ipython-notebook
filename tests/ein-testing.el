@@ -47,8 +47,8 @@
   "Location where to start the jupyter notebook server.")
 
 (defun ein:testing-save-buffer (buffer-or-name file-name)
-  (when (and buffer-or-name file-name)
-    (with-current-buffer (get-buffer buffer-or-name)
+  (when (and buffer-or-name (get-buffer buffer-or-name) file-name)
+    (with-current-buffer buffer-or-name
       (write-region (point-min) (point-max) file-name))))
 
 (defun ein:testing-dump-logs ()

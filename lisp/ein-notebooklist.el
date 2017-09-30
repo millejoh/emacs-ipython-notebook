@@ -35,6 +35,7 @@
 (require 'ein-contents-api)
 (require 'ein-subpackages)
 (require 'deferred)
+(require 'dash)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
@@ -400,12 +401,11 @@ You may find the new one in the notebook list." error)
     (ein:$notebooklist-api-version ein:%notebooklist%)
     path)
    :type "DELETE"
-   :success (apply-partially (lambda (buffer path &rest ignore)
+   :success (apply-partially (lambda (path notebook-list &rest ignore)
                                (ein:log 'info
                                  "Deleting notebook %s... Done." path)
-                               (with-current-buffer buffer
-                                 (ein:notebooklist-reload)))
-                             (current-buffer) path)))
+			       (ein:notebooklist-reload notebook-list))
+                             path ein:%notebooklist%)))
 
 ;; Because MinRK wants me to suffer (not really, I love MinRK)...
 (defun ein:get-actual-path (path)

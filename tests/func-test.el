@@ -48,7 +48,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                             #'(lambda (buf)
                                 (with-current-buffer buf
                                   (goto-char (point-min))
-                                  (search-forward "Copy/paste this URL into your browser" nil t)))
+                                  (search-forward "The Jupyter Notebook is running" nil t)))
                             (list (process-buffer %ein:jupyter-server-session%))
                             100)
     (ein:log 'debug "TESTING-START-SERVER logging in.")
@@ -70,6 +70,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     ;; (sit-for 1.0) ;; Because some computers are too fast???
     (ein:testing-wait-until "ein:notebooklist-open"
                             (lambda () (and content
+					    (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))
                                             (ein:$content-url-or-port content))))
     (with-current-buffer (ein:notebooklist-get-buffer (ein:$content-url-or-port content))
       (prog1
@@ -78,9 +79,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end")))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
-  (unless path (setq path ""))
   (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE start")
-  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb")))
+  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)))
     (if notebook
         (progn (ein:log 'debug
                  "TESTING-GET-UNTITLED0-OR-CREATE notebook already exists")
@@ -88,7 +88,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
       (let ((created nil)
-            (kernelspec (first (ein:list-available-kernels url-or-port))))
+            (kernelspec (ein:get-kernelspec url-or-port "python3")))
         (ein:notebooklist-new-notebook url-or-port kernelspec path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
@@ -190,9 +190,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 (defun ein:testing-image-type (image)
   "Return the type of IMAGE.
 See the definition of `create-image' for how it works."
-  (assert (and (listp image) (cl-find 'image image :key #'car)) nil
+  (assert (and (listp image) (eq (car image) 'image)) nil
           "%S is not an image." image)
-  (plist-get (cdr (cl-find 'image image :key #'car)) :type))
+  (plist-get (cdr image) :type))
 
 (ert-deftest ein:notebook-execute-current-cell-pyout-image ()
   (ein:testing-start-server)
@@ -293,3 +293,11 @@ See the definition of `create-image' for how it works."
          nil 50000)
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))
+
+(ert-deftest ein:testing-jupyter-stop-server ()
+  (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER start")
+  (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
+    (ein:jupyter-server-stop t))
+  (should-not (processp %ein:jupyter-server-session%))
+  (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER end"))
+
