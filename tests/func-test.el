@@ -70,6 +70,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     ;; (sit-for 1.0) ;; Because some computers are too fast???
     (ein:testing-wait-until "ein:notebooklist-open"
                             (lambda () (and content
+					    (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))
                                             (ein:$content-url-or-port content))))
     (with-current-buffer (ein:notebooklist-get-buffer (ein:$content-url-or-port content))
       (prog1
