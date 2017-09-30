@@ -31,7 +31,8 @@ def generate_inspector_data(obj_str, globals, locals):
         odata['error'] = 'Object {} not found.'.format(obj_str)
     else:
         odata['doc'] = inspect.getdoc(obj)
-        odata['type'], odata['repr'] = determine_object_type(obj)
+        odata['type'] = str(type(obj))
+        odata['repr'] = str(obj)
         try:
             odata['source_file'] = inspect.getsourcefile(obj)
             odata['source_lines'] = inspect.getsourcelines(obj)
@@ -41,46 +42,4 @@ def generate_inspector_data(obj_str, globals, locals):
     print(json.dumps(odata))
     return odata
 
-def determine_object_type(obj):
-    if inspect.ismodule(obj):
-        return 'Module', obj.__str__()
-    elif inspect.isclass(obj):
-        return 'Class', obj.__str__()
-    elif inspect.ismethod(obj):
-        return 'Method', obj.__str__()
-    elif inspect.isfunction(obj):
-        return 'Function', obj.__str__()
-    elif inspect.isgeneratorfunction(obj):
-        return 'Generator Function', obj.__str__()
-    elif inspect.isgenerator(obj):
-        return 'Generator', obj.__str__()
-    elif inspect.iscoroutinefunction(obj):
-        return 'Coroutine Function', obj.__str__()
-    elif inspect.iscoroutine(obj):
-        return 'Coroutine', obj.__str__()
-    elif inspect.isawaitable(obj):
-        return 'Awaitable', obj.__str__()
-    elif inspect.istraceback(obj):
-        return 'Traceback', obj.__str__()
-    elif inspect.isframe(obj):
-        return 'Frame', obj.__str__()
-    elif inspect.iscode(obj):
-        return 'Code', obj.__str__()
-    elif inspect.isbuiltin(obj):
-        return 'Builtin', obj.__str__()
-    elif inspect.isroutine(obj):
-        return 'Routine', obj.__str__()
-    elif inspect.isabstract(obj):
-        return 'Abstract Base Class', obj.__str__()
-    elif inspect.ismethoddescriptor(obj):
-        return 'Method Descriptor', obj.__str__()
-    elif inspect.isdatadescriptor(obj):
-        return 'Data Descriptor', obj.__str__()
-    elif inspect.isgetsetdescriptor(obj):
-        return 'Getset Descriptor', obj.__str__()
-    elif inspect.ismemberdescriptor(obj):
-        return 'Member Descriptor', obj.__str__()
-    elif inspect.isbuiltin(obj):
-        return str(type(obj)), obj.__str__()
-    else:
-        return str(type(obj)), obj.__str__()
+

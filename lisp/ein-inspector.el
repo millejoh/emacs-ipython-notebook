@@ -44,7 +44,25 @@
           (if (not (plist-get oinfo :type))
               (ein:log 'warn "[EIN:INSPECTOR]: %s" (plist-get oinfo :error))
             (ein:render-inspector oinfo)))
-      (ein:log 'warn "[EIN:INSPECTOR]: Could not find inspect data for object at point!"))))
+      (ein:log 'warn "[EIN:INSPECTOR]: Could not find inspect data for object %s." oname))))
+
+(defclass ein:iobject ()
+  ((name :accessor ein:iobject-name :documentation "String representation can be evaluated in python to generate the object being inspected.")
+   (type :accessor ein:iobject-type :documentation "Python type of object, as returned by `type()`.")
+   (repr :accessor ein:iobject-repr :documentation "Value of object, as returned by its `__str__` method.")
+   (source-file :accessor ein:iobject-sfile :documentation "If availabe, the filename where the source for this object is to be found.")
+   (source-lines :accessor ein:iobject-slines :documentation "If available, the line in the file where the source for this object is found.")
+   (doc :accessor ein:iobject-doc :documentation "If available, the documentation string for this object."))
+  :documentation "Class to hold information returned by Python `inspect` module for a Python object identified in the `name` slot.")
+
+(defun ein:new-inspector-object (object-info)
+  (make-instance 'ein:iobject
+                 :name (plist-get object-info :name)
+                 :type (plist-get object-info :type)
+                 :repr (plist-get object-info :repr)
+                 :source-file (plist-get object-info :source_file)
+                 :source-lines (plist-get object-info :source_lines)
+                 :doc (plist-get object-info :doc)))
 
 (defvar ein:inspector-visit-source-map (make-sparse-keymap))
 
@@ -68,24 +86,26 @@
     (let ((inhibit-read-only t))
       (erase-buffer))
     (remove-overlays)
-    (lexical-let* (
-                   (type (plist-get oinfo :type))
+    (lexical-let* ((type (plist-get oinfo :type))
                    (repr (plist-get oinfo :repr))
                    (sfile (plist-get oinfo :source_file))
-                   (slines (last (plist-get oinfo :source_lines))))
+                   (slines (last (plist-get oinfo :source_lines)))
+                   (info-str (format "%s = {%s} %s" name type repr)))
       (if sfile
           (widget-create 'link
                          :notify
                          (lambda (&rest ignore)
                            (ein:goto-file sfile (car slines)))
-                         repr)
-        (widget-insert (propertize repr 'face 'bold)))
+                         info-str)
+        (widget-insert (propertize info-str 'face 'bold)))
       (widget-insert (format "\n\n%s\n\n" (make-string 80 ?\u2501)))
       (widget-insert (format "%s\n\n%s\n\n" (plist-get oinfo :doc) (make-string 80 ?\u2501)))
       (widget-insert (propertize (format "%s: %s\n" type name)
                                  'face 'bold))))
   (ein:inspector-mode)
   (widget-setup))
+
+
 
 (defun ein:inspector-visit-source ()
   (message "Visit source!"))
