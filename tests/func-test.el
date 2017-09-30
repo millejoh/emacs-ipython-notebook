@@ -79,9 +79,8 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
         (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end")))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
-  (unless path (setq path ""))
   (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE start")
-  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb")))
+  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)))
     (if notebook
         (progn (ein:log 'debug
                  "TESTING-GET-UNTITLED0-OR-CREATE notebook already exists")
