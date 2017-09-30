@@ -294,3 +294,11 @@ See the definition of `create-image' for how it works."
          nil 50000)
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))
+
+(ert-deftest ein:testing-jupyter-stop-server ()
+  (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER start")
+  (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
+    (ein:jupyter-server-stop t))
+  (should-not (processp %ein:jupyter-server-session%))
+  (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER end"))
+
