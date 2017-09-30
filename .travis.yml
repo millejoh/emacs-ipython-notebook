@@ -26,5 +26,4 @@ env:
   - EVM_EMACS=emacs-git-snapshot-travis IPYCMD=jupyter JUPYTER=1.0.0
 script:
   - emacs --version
-  - python tools/testein.py --emacs emacs --ipython $IPYCMD
- 
+  - python tools/testein.py --emacs emacs --ipython $(which $IPYCMD)
