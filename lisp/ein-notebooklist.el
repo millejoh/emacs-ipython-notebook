@@ -35,6 +35,7 @@
 (require 'ein-contents-api)
 (require 'ein-subpackages)
 (require 'deferred)
+(require 'dash)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
