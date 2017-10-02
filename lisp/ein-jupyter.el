@@ -156,6 +156,7 @@ the log of the running jupyter server."
                 (proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
                                                *ein:last-jupyter-command*
                                                *ein:last-jupyter-directory*)))
+    (accept-process-output proc (/ ein:jupyter-server-run-timeout 2))
     (deferred:$
       (deferred:timeout
         ein:jupyter-server-run-timeout 'ein:jupyter-timeout-sentinel
