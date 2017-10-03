@@ -306,7 +306,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
   (assert (ein:connect-p ein:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
           (buffer-name))
-  (assert (ein:notebook-live-p (oref ein:%connect% :notebook)) nil
+  (assert (ein:notebook-live-p (slot-value ein:%connect% 'notebook)) nil
           "Connected notebook is not live (probably already closed)."))
 
 (defun ein:connect-execute-autoexec-cells ()
@@ -335,7 +335,7 @@ Use the `ein:worksheet-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
-  (let ((autoexec-p (not (oref ein:%connect% :autoexec))))
+  (let ((autoexec-p (not (slot-value ein:%connect% 'autoexec))))
     (setf (slot-value ein:%connect% 'autoexec) autoexec-p)
     (ein:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
@@ -381,7 +381,7 @@ notebook."
   map)
 
 (defun ein:connect-mode-get-lighter ()
-  (if (oref ein:%connect% :autoexec)
+  (if (slot-value ein:%connect% 'autoexec)
       (format " ein:c%s" (or ein:connect-aotoexec-lighter
                              ein:cell-autoexec-prompt))
     " ein:c"))
