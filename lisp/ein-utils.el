@@ -29,6 +29,7 @@
 (require 'cc-mode)
 (require 'json)
 (require 's)
+(require 'dash)
 
 
 ;;; Macros and core functions/variables

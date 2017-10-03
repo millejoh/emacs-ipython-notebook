@@ -32,7 +32,7 @@
   :group 'ein
   :type 'string)
 
-(defcustom ein:jupyter-server-run-timeout 10000
+(defcustom ein:jupyter-server-run-timeout 60000
   "Time, in milliseconds, to wait for the jupyter server to start before declaring timeout and cancelling the operation."
   :group 'ein
   :type 'integer)
@@ -168,7 +168,7 @@ the log of the running jupyter server."
                 (if (or (search-forward "Notebook is running at:" nil t)
                         (search-forward "Use Control-C" nil t))
                     no-login-after-start-p
-                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 2)) self)))))))
+                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 4)) self)))))))
       (deferred:nextc it
         (lambda (no-login-p)
           (if (eql no-login-p 'ein:jupyter-timeout-sentinel)

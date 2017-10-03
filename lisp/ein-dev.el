@@ -49,9 +49,11 @@
 (defun ein:load-files (&optional regex dir ignore-compiled)
   (let* ((dir (or dir ein:source-dir))
          (regex (or regex ".+"))
-         (files (and
-                 (file-accessible-directory-p dir)
-                 (directory-files dir 'full regex))))
+         (files (-remove #'(lambda (x)
+                             (string-match-p "ein-pkg\\.el" x))
+                         (and
+                          (file-accessible-directory-p dir)
+                          (directory-files dir 'full regex)))))
     (unless ignore-compiled
       (setq files (mapcar #'file-name-sans-extension files)))
     (mapc #'load files)))

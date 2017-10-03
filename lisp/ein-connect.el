@@ -212,7 +212,7 @@ notebooks."
       (ein:log 'info "Buffer is already connected to notebook."))))
 
 (defun ein:connect-get-notebook ()
-  (oref ein:%connect% :notebook))
+  (slot-value ein:%connect% 'notebook))
 
 (defun ein:connect-get-kernel ()
   (ein:$notebook-kernel (ein:connect-get-notebook)))
@@ -288,7 +288,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:get-notebook--connect ()
   (when (ein:connect-p ein:%connect%)
-    (oref ein:%connect% :notebook)))
+    (slot-value ein:%connect% 'notebook)))
 
 (defun ein:get-kernel--connect ()
   (ein:aand (ein:get-notebook--connect) (ein:$notebook-kernel it)))
@@ -312,7 +312,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
   (ein:connect-assert-connected)
-  (when (oref ein:%connect% :autoexec)
+  (when (slot-value ein:%connect% 'autoexec)
     (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook))))
 
 (defun ein:connect-toggle-autoexec ()
@@ -336,7 +336,7 @@ change the cells to run."
   (interactive)
   (ein:connect-assert-connected)
   (let ((autoexec-p (not (oref ein:%connect% :autoexec))))
-    (oset ein:%connect% :autoexec autoexec-p)
+    (setf (slot-value ein:%connect% 'autoexec) autoexec-p)
     (ein:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
 
