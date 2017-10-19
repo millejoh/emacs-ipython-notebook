@@ -1509,6 +1509,7 @@ This hook is run regardless the actual major mode used."
       ("Kernel"
        ,@(ein:generate-menu
           '(("Restart kernel" ein:notebook-restart-kernel-command)
+            ("Reconnect kernel" ein:notebook-reconnect-kernel)
             ("Switch kernel" ein:notebook-switch-kernel)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
