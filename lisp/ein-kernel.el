@@ -534,7 +534,7 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
   (assert (ein:kernel-live-p kernel) nil "complete_reply: Kernel is not active.")
   (let* ((content (list
-                   :text ""
+                   ;; :text ""
                    :line line
                    :cursor_pos cursor-pos))
          (msg (ein:kernel--get-msg kernel "complete_request" content))
