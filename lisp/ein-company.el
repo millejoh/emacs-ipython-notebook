@@ -71,7 +71,9 @@
          (delta (- (plist-get content :cursor_end)
                    (plist-get content :cursor_start)))
          (matched-text (buffer-substring beg (- beg delta)))
-         (matches (plist-get content :matches)))
+         (matches (-filter #'(lambda (s)
+                               (s-starts-with-p matched-text s))
+                           (plist-get content :matches))))
     (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: matches=%s" matches)
     (funcall (plist-get packed :callback) matches)))
 
