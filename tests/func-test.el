@@ -48,11 +48,12 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                             #'(lambda (buf)
                                 (with-current-buffer buf
                                   (goto-char (point-min))
-                                  (search-forward "The Jupyter Notebook is running" nil t)))
+                                  (re-search-forward "https?://.*\n" nil t)))
                             (list (process-buffer %ein:jupyter-server-session%))
                             100)
     (ein:log 'debug "TESTING-START-SERVER logging in.")
     (multiple-value-bind (url token) (ein:jupyter-server-conn-info)
+      (ein:log 'debug (format "TESTING-START-SERVER url: %s, token: %s" url token))
       (ein:notebooklist-login url token)
       (setq ein:testing-port url)
       (setq ein:testing-token token)
