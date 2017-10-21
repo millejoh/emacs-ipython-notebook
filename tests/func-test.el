@@ -54,9 +54,9 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (ein:log 'debug "TESTING-START-SERVER logging in.")
     (multiple-value-bind (url token) (ein:jupyter-server-conn-info)
       (ein:log 'debug (format "TESTING-START-SERVER url: %s, token: %s" url token))
-      (ein:notebooklist-login url token)
       (setq ein:testing-port url)
       (setq ein:testing-token token)
+      (ein:jupyter-server-login-and-open)
       (ein:log 'debug "TESTING-START-SERVER succesfully logged in.")
       url)))
 
