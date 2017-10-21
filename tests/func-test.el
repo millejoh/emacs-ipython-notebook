@@ -119,13 +119,13 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook)))
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK end"))
 
-(ert-deftest ein:testing-jupyter-start-server ()
+(ert-deftest 00-jupyter-start-server ()
   (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER start")
   (ein:testing-start-server)
   (should (processp %ein:jupyter-server-session%))
   (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER end"))
 
-(ert-deftest ein:testing-get-untitled0-or-create ()
+(ert-deftest 10-get-untitled0-or-create ()
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE start")
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
@@ -139,7 +139,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
                      "Untitled.ipynb"))))
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE end"))
 
-(ert-deftest ein:testing-delete-untitled0 ()
+(ert-deftest 20-delete-untitled0 ()
   (ein:log 'verbose "----------------------------------")
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 start")
   (ein:testing-start-server)
@@ -164,7 +164,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
     (should (= num-notebook 0)))
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 end"))
 
-(ert-deftest ein:notebook-execute-current-cell-simple ()
+(ert-deftest 11-notebook-execute-current-cell-simple ()
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -192,7 +192,7 @@ See the definition of `create-image' for how it works."
           "%S is not an image." image)
   (plist-get (cdr image) :type))
 
-(ert-deftest ein:notebook-execute-current-cell-pyout-image ()
+(ert-deftest 12-notebook-execute-current-cell-pyout-image ()
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -230,7 +230,7 @@ See the definition of `create-image' for how it works."
           (ein:log 'info
             "Skipping image check as SVG image type is not available."))))))
 
-(ert-deftest ein:notebook-execute-current-cell-stream ()
+(ert-deftest 13-notebook-execute-current-cell-stream ()
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -250,7 +250,7 @@ See the definition of `create-image' for how it works."
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
 
-(ert-deftest ein:notebook-execute-current-cell-question ()
+(ert-deftest 14-notebook-execute-current-cell-question ()
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -269,7 +269,7 @@ See the definition of `create-image' for how it works."
       (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
         (should (search-forward "Docstring:"))))))
 
-(ert-deftest ein:notebook-request-help ()
+(ert-deftest 15-notebook-request-help ()
   (ein:testing-start-server)
   (let ((notebook (ein:testing-get-untitled0-or-create ein:testing-port)))
     (ein:testing-wait-until
@@ -292,10 +292,9 @@ See the definition of `create-image' for how it works."
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))
 
-(ert-deftest ein:testing-jupyter-stop-server ()
+(ert-deftest 30-testing-jupyter-stop-server ()
   (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER start")
   (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
     (ein:jupyter-server-stop t))
   (should-not (processp %ein:jupyter-server-session%))
   (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER end"))
-
