@@ -62,9 +62,6 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 
 (defun ein:testing-get-notebook-by-name (url-or-port notebook-name &optional path)
   (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME start")
-  ;; Kill notebook list buffer here to make sure next
-  ;; `ein:testing-wait-until' works properly.
-  (kill-buffer (ein:notebooklist-get-buffer url-or-port))
   (when path
     (setq notebook-name (format "%s/%s" path notebook-name)))
   (let ((content (ein:notebooklist-open url-or-port path t)))
