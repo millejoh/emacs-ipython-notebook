@@ -1,8 +1,8 @@
 language: python
-matrix:
-  fast_finish: true
-  allow_failures:
-    - env: EVM_EMACS=emacs-git-snapshot
+addons:
+  apt:
+    packages:
+    - gnutls-bin
 python:
   - "2.7"
   - "3.4"
