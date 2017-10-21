@@ -234,7 +234,7 @@ automatically be called during calls to `ein:notebooklist-open`."
             (ein:notebooklist-render-ipy2)
           (ein:notebooklist-render))
         (goto-char orig-point)
-        (ein:log 'info "Opened notebook list at %s with path %s" url-or-port path)
+        (ein:log 'info "Opened notebook list at %s with path %s." url-or-port path)
         (unless already-opened-p
           (run-hooks 'ein:notebooklist-first-open-hook))
         (when ein:enable-keepalive
