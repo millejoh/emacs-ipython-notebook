@@ -825,7 +825,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
   "Login to IPython notebook server."
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (read-passwd "Password: ")))
-  (ein:log 'debug "NOTEBOOKLIST-LOGIN: %s" url-or-port)
+  (ein:log 'debug "NOTEBOOKLIST-LOGIN: %s:%s" url-or-port password)
   (ein:query-singleton-ajax
    (list 'notebooklist-login url-or-port)
    (ein:url url-or-port "login")
