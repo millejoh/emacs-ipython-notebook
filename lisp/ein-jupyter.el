@@ -156,7 +156,6 @@ the log of the running jupyter server."
                 (proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
                                                *ein:last-jupyter-command*
                                                *ein:last-jupyter-directory*)))
-    (accept-process-output proc (/ ein:jupyter-server-run-timeout 2))
     (deferred:$
       (deferred:timeout
         ein:jupyter-server-run-timeout 'ein:jupyter-timeout-sentinel
@@ -168,7 +167,7 @@ the log of the running jupyter server."
                 (if (or (search-forward "Notebook is running at:" nil t)
                         (search-forward "Use Control-C" nil t))
                     no-login-after-start-p
-                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 4)) self)))))))
+                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 40)) self)))))))
       (deferred:nextc it
         (lambda (no-login-p)
           (if (eql no-login-p 'ein:jupyter-timeout-sentinel)

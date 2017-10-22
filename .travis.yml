@@ -2,24 +2,18 @@ language: python
 addons:
   apt:
     packages:
-    - git
-matrix:
-  fast_finish: true
-  allow_failures:
-    - env: EVM_EMACS=emacs-git-snapshot
+    - gnutls-bin
 python:
   - "2.7"
   - "3.4"
   - "3.5"
 before_install:
-  - sudo apt-get -yq update
-  - sudo apt-get -yq install git
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
   - evm install $EVM_EMACS --use --skip
-  - cask install
   - evm list
+  - cask install
 install:
-  - pip install jupyter==$JUPYTER
+  - sudo pip install jupyter==$JUPYTER
 env:
   - EVM_EMACS=emacs-24.4-travis IPYCMD=jupyter JUPYTER=1.0.0
   - EVM_EMACS=emacs-25.1-travis IPYCMD=jupyter JUPYTER=1.0.0

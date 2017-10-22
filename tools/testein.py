@@ -479,11 +479,10 @@ def main():
                         action='store_true',
                         help="set debug-on-error to t and start "
                         "interactive session.")
-    parser.add_argument('--func-test-max-retries', default=4, type=int,
+    parser.add_argument('--func-test-max-retries', default=0, type=int,
                         help="""
                         Specify number of retries for functional test
-                        before failing with error.  This is workaround
-                        for the issue #74.
+                        before failing with error.
                         """)
     parser.add_argument('--no-skip', default=False, action='store_true',
                         help="""

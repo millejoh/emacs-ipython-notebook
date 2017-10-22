@@ -158,6 +158,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   (unless path (setq path ""))
   (if (and (stringp url-or-port) (not (string-match-p "^https?" url-or-port)))
       (setq url-or-port (format "http://%s" url-or-port)))
+  (ein:log 'debug "NOTEBOOKLIST-OPEN: %s/%s" url-or-port path)
   (ein:subpackages-load)
   (let ((success
          (if no-popup
@@ -233,7 +234,7 @@ automatically be called during calls to `ein:notebooklist-open`."
             (ein:notebooklist-render-ipy2)
           (ein:notebooklist-render))
         (goto-char orig-point)
-        (ein:log 'info "Opened notebook list at %s with path %s" url-or-port path)
+        (ein:log 'info "Opened notebook list at %s with path %s." url-or-port path)
         (unless already-opened-p
           (run-hooks 'ein:notebooklist-first-open-hook))
         (when ein:enable-keepalive
@@ -825,7 +826,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
   "Login to IPython notebook server."
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (read-passwd "Password: ")))
-  (ein:log 'debug "NOTEBOOKLIST-LOGIN: %s" url-or-port)
+  (ein:log 'debug "NOTEBOOKLIST-LOGIN: %s:%s" url-or-port password)
   (ein:query-singleton-ajax
    (list 'notebooklist-login url-or-port)
    (ein:url url-or-port "login")
