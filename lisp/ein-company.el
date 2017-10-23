@@ -63,7 +63,7 @@
 
 (defun ein:company-backend--punctuation-check (thing col)
   (let ((query (ein:trim-right thing "[\n]")))
-    (string-match "[]()\",[{}':]$" query (- col 2))))
+    (string-match "[]()\",[{}': ]$" query (- col 2))))
 
 (cl-defun ein:completer-finish-completing-company (packed content -metadata-not-used-)
   (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: content=%S" content)
