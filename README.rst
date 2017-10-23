@@ -31,6 +31,7 @@ Jupyter.
    :alt: MELPA stable version
 .. _2.x: http://ipython.org/ipython-doc/2/index.html
 .. _3.x: http://ipython.org/ipython-doc/3/index.html
+.. _Jupyter: http://jupyter.org
 
 
 Org-mode Integration

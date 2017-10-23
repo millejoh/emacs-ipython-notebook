@@ -121,7 +121,11 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 
 (ert-deftest 00-jupyter-start-server ()
   (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER start")
-  (ein:testing-start-server)
+  (condition-case err
+      (ein:testing-start-server)
+    (error (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER error when launching: %s" err)
+           (sit-for 10)
+           (ein:jupyter-server-login-and-open)))
   (should (processp %ein:jupyter-server-session%))
   (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER end"))
 
