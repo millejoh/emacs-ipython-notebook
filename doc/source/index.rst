@@ -89,7 +89,7 @@ available after emacs starts, try adding the following to your emacs init file:
 Requirements
 ------------
 
-* EMACS 24.5, 25.2, or 26
+* EMACS 24.5, 25.3, or 26
 * IPython_ 2.0 or higher.
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ >= 1.7
@@ -662,6 +662,7 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+.. include:: CHangelog/v0_13_1.txt
 
 .. include:: Changelog/v0_13_0.txt
 

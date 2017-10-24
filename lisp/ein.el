@@ -5,7 +5,7 @@
 ;; Author:  John Miller <millejoh at millejoh.com>, Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: http://millejoh.github.io/emacs-ipython-notebook/
 ;; Keywords: applications, tools
-;; Version: 0.13.0
+;; Version: 0.13.1
 
 ;; This file is NOT part of GNU Emacs.
 
