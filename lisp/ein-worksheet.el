@@ -538,7 +538,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((new-slide-type (ein:case-equal (oref cell :slidetype)
+  (let ((new-slide-type (ein:case-equal (slot-value cell 'slidetype)
                           (("-") "slide")
                           (("slide") "subslide")
                           (("subslide") "fragment")
@@ -547,7 +547,7 @@ directly."
                           (("notes") "-"))))
     (message "changing slide type %s" new-slide-type)
     (oset cell :slidetype new-slide-type))
-  (ewoc-invalidate (oref cell :ewoc) (ein:cell-element-get cell :prompt))
+  (ewoc-invalidate (slot-value cell 'ewoc) (ein:cell-element-get cell :prompt))
   (ein:worksheet-empty-undo-maybe)
   (when focus (ein:cell-goto cell)))
 
@@ -921,7 +921,7 @@ in the history."
 ;; work in edit-cell-mode
 (defun ein:get-kernel--worksheet-in-edit-cell ()
   "Get kernel when in edit-cell-mode."
-  (when (ein:worksheet-p ein:src--ws) (oref ein:src--ws :kernel)))
+  (when (ein:worksheet-p ein:src--ws) (slot-value ein:src--ws 'kernel)))
 
 (defun ein:get-cell-at-point--worksheet ()
   (ein:worksheet-get-current-cell :noerror t))
