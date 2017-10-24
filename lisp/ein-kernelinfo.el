@@ -66,7 +66,7 @@ in these buffer will be synced with the kernel's cwd.")
   "Update KERINFO slots by triggering all update functions."
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
   (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
-           (ein:kernel-live-p (oref kerinfo :kernel)))
+           (ein:kernel-live-p (slot-value kerinfo 'kernel)))
   (ein:kernelinfo-update-ccwd kerinfo)
   (ein:kernelinfo-update-hostname kerinfo))
 
@@ -74,7 +74,7 @@ in these buffer will be synced with the kernel's cwd.")
   "Update cached current working directory (CCWD) and change
 `default-directory' of kernel related buffers."
   (ein:kernel-request-stream
-   (oref kerinfo :kernel)
+   (slot-value kerinfo 'kernel)
    "__import__('sys').stdout.write(__import__('os').getcwd())"
    (lambda (cwd kerinfo)
      (with-slots (kernel get-buffers) kerinfo
