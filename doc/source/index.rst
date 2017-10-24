@@ -662,7 +662,7 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
-.. include:: CHangelog/v0_13_1.txt
+.. include:: Changelog/v0_13_1.txt
 
 .. include:: Changelog/v0_13_0.txt
 
