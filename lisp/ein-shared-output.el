@@ -61,8 +61,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (concat
-    (format "In [%s]" (or (ein:oref-safe cell :input-prompt-number)  " "))
-    (when (oref cell :autoexec) " %s" ein:cell-autoexec-prompt))
+    (format "In [%s]" (or (ein:oref-safe cell 'input-prompt-number)  " "))
+    (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
 (defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
@@ -90,7 +90,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (t
      (ein:log 'info "Got output '%s' in the shared buffer." msg-type)))
   ;; Open `ein:shared-output-buffer-name' if necessary
-  (when (oref cell :popup)
+  (when (slot-value cell 'popup)
     (pop-to-buffer (ein:shared-output-create-buffer)))
   ;; Finally do the normal drawing
   (call-next-method))
@@ -104,7 +104,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defun ein:shared-output-buffer ()
   "Get the buffer associated with `ein:%shared-output%'."
-  (ewoc-buffer (oref ein:%shared-output% :ewoc)))
+  (ewoc-buffer (slot-value ein:%shared-output% 'ewoc)))
 
 (defun ein:shared-output-buffer-p (&optional buffer)
   "Return non-`nil' when BUFFER (or current buffer) is shared-output buffer."
@@ -148,12 +148,12 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 (defun ein:shared-output-get-cell ()
   "Get the singleton shared output cell.
 Create a cell if the buffer has none."
-  (oref (ein:shared-output-get-or-create) :cell))
+  (slot-value (ein:shared-output-get-or-create) 'cell))
 
 (defun ein:shared-output-get-kernel ()
   (let ((cell (ein:shared-output-get-cell)))
     (when (slot-boundp cell :kernel)
-      (oref cell :kernel))))
+      (slot-value cell 'kernel))))
 
 ;;;###autoload
 (defun ein:shared-output-pop-to-buffer ()
@@ -172,10 +172,10 @@ where CELL locates."
     (with-current-buffer (ein:shared-output-create-buffer)
       (let ((inhibit-read-only t)
             (ein:cell-max-num-outputs nil))
-        (oset new :ewoc (oref ein:%shared-output% :ewoc))
-        (oset new :events (oref ein:%shared-output% :events))
+        (setf (slot-value new 'ewoc) (slot-value ein:%shared-output% 'ewoc))
+        (setf (slot-value new 'events) (slot-value ein:%shared-output% 'events))
         (erase-buffer)  ; because there are only one cell anyway
-        (oset ein:%shared-output% :cell new)
+        (setf (slot-value ein:%shared-output% 'cell) new)
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
@@ -231,12 +231,12 @@ shared output buffer.  You can open the buffer by the command
 (defun ein:get-kernel--shared-output ()
   (let ((cell (ein:get-cell-at-point--shared-output)))
     (when (and (object-p cell) (slot-boundp cell :kernel))
-      (oref cell :kernel))))
+      (slot-value cell 'kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
   (when (and (ein:shared-output-p ein:%shared-output%)
              (ein:shared-output-buffer-p))
-    (oref ein:%shared-output% :cell)))
+    (slot-value ein:%shared-output% 'cell)))
 
 (defun ein:get-traceback-data--shared-output ()
   (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))
