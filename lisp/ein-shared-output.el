@@ -69,8 +69,8 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                              &optional popup &rest args)
   (unless (plist-get args :silent)
     (setq args (plist-put args :silent nil)))
-  (oset cell :popup popup)
-  (oset cell :kernel kernel)
+  (setf (slot-value cell 'popup) popup)
+  (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)

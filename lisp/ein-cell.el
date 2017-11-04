@@ -211,18 +211,18 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
   (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell-from-json (data &rest args)
-  (setq data (ein:preprocess-nb4-cell data))
-  (setq cell (ein:cell-init (apply #'ein:cell-from-type
-					 (plist-get data :cell_type) args)
-				  data))
-  (when (plist-get data :metadata)
-    (ein:oset-if-empty cell :metadata (plist-get data :metadata))
-    (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
-        (let ((slide-type (nth 0 (cdr it))))
-          (setf (slot-value cell 'slidetype) slide-type)
-          (message "read slidetype %s" (slot-value cell 'slidetype))
-          (message "reconstructed slideshow %s" (ein:get-slide-show cell)))))
-  cell)
+  (let ((data (ein:preprocess-nb4-cell data))
+        (cell (ein:cell-init (apply #'ein:cell-from-type
+					                          (plist-get data :cell_type) args)
+				                     data)))
+    (when (plist-get data :metadata)
+      (ein:oset-if-empty cell 'metadata (plist-get data :metadata))
+      (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
+          (let ((slide-type (nth 0 (cdr it))))
+            (setf (slot-value cell 'slidetype) slide-type)
+            (message "read slidetype %s" (slot-value cell 'slidetype))
+            (message "reconstructed slideshow %s" (ein:get-slide-show cell)))))
+    cell))
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
   (ein:oset-if-empty cell 'outputs (plist-get data :outputs))
@@ -451,7 +451,7 @@ Return language name as a string or `nil' when not defined.
 
 (defun ein:maybe-show-slideshow-data (cell)
   (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
-    (format " - Slide [%s]:" (or (ein:oref-safe cell :slidetype)  " "))))
+    (format " - Slide [%s]:" (or (ein:oref-safe cell 'slidetype)  " "))))
 
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
@@ -687,7 +687,7 @@ PROP is a name of cell element.  Default is `:input'.
   (unless inputline (setq inputline 1))
   (unless prop (setq prop :input))
   (let ((goal-column nil))
-    (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell prop)))
+    (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop)))
   (let ((offset (case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
@@ -879,10 +879,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (if (and (plist-get json :javascript)
-           (oref cell :dynamic) ein:enable-dynamic-javascript)
+           (slot-value cell 'dynamic) ein:enable-dynamic-javascript)
       (ein:execute-javascript cell json)
     (progn
-      (ein:cell-append-mime-type json (oref cell :dynamic))
+      (ein:cell-append-mime-type json (slot-value cell 'dynamic))
       (ein:insert-read-only "\n"))))
 
 (defcustom ein:output-type-preference
@@ -993,7 +993,7 @@ prettified text thus be used instead of HTML type."
          (outputs (if discard-output []
                     (slot-value cell 'outputs)))
          (renamed-outputs '())
-         (execute-count (ein:aif (ein:oref-safe cell :input-prompt-number)
+         (execute-count (ein:aif (ein:oref-safe cell 'input-prompt-number)
                             (and (numberp it) it))))
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
@@ -1080,7 +1080,7 @@ prettified text thus be used instead of HTML type."
 (defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
   (let ((metadata (slot-value cell 'metadata))
         (ss-table (ein:get-slide-show cell))
-        (header (make-string (oref cell :level) ?#)))
+        (header (make-string (slot-value cell 'level) ?#)))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
     (setq metadata (plist-put metadata :slideshow ss-table))
     `((cell_type . "markdown")
@@ -1206,7 +1206,7 @@ prettified text thus be used instead of HTML type."
                          t ;;(plist-get content :stderr)
                          t ;;(plist-get content :other)
                          )
-  (ein:events-trigger (oref cell :events) 'maybe_reset_undo.Worksheet cell))
+  (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
 
 
 ;;; Misc.
