@@ -548,8 +548,8 @@ Notebook list data is passed via the buffer local variable
   ;; Create notebook list
   (widget-insert
    (if (< (ein:$notebooklist-api-version ein:%notebooklist%) 4)
-       (format "IPython v%s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%))
-     (format "Jupyter v%s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%))))
+       (format "IPython v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) (ein:$notebooklist-url-or-port ein:%notebooklist%))
+     (format "Jupyter v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) (ein:$notebooklist-url-or-port ein:%notebooklist%))))
   (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
     (dolist (p breadcrumbs)
       (lexical-let ((name (car p))
@@ -887,6 +887,23 @@ on all the notebooks opened from the current notebooklist."
   (interactive (list (ein:notebooklist-ask-url-or-port)))
   (unless (eql major-mode 'ein:notebooklist-mode)
     (error "This command needs to be called from within a notebooklist buffer."))
+  (let* ((current-nblist ein:%notebooklist%)
+         (old-url (ein:$notebooklist-url-or-port current-nblist))
+         (new-url-or-port new-url-or-port)
+         (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
+                                                     (equal (ein:$notebook-url-or-port nb)
+                                                            (ein:$notebooklist-url-or-port current-nblist))))))
+    (ein:notebooklist-open new-url-or-port "/" t)
+    (loop for x upfrom 0 by 1
+          until (or (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+                    (= x 100))
+          do (sit-for 0.1))
+    (dolist (nb open-nb)
+      (ein:notebook-update-url-or-port new-url-or-port nb))
+    (kill-buffer (ein:notebooklist-get-buffer old-url))
+    (ein:notebooklist-open new-url-or-port "/" nil)))
+
+(defun ein:notebooklist-change-url-port--deferred (new-url-or-port)
   (lexical-let* ((current-nblist ein:%notebooklist%)
                  (old-url (ein:$notebooklist-url-or-port current-nblist))
 		             (new-url-or-port new-url-or-port)
@@ -907,7 +924,6 @@ on all the notebooks opened from the current notebooklist."
         (lambda ()
           (kill-buffer (ein:notebooklist-get-buffer old-url))
           (ein:notebooklist-open new-url-or-port "/" nil))))))
-
 
 ;;; Generic getter
 
