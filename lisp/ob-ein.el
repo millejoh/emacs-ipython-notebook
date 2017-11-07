@@ -134,15 +134,18 @@ jupyter kernels.
 (defun ein:org-find-or-open-session (session &optional kernelspec)
   (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
     (setf kernelspec (or kernelspec (ein:get-kernelspec url-or-port "default")))
-    (or (ein:notebook-get-opened-notebook url-or-port path)
-        (ein:notebook-open url-or-port path kernelspec
-                           (lexical-let ((session session)
-                                         (kernelspec kernelspec))
-                             (lambda ()
-                               (org-babel-ein-initiate-session session kernelspec)))))))
+    (let ((nb (or (ein:notebook-get-opened-notebook url-or-port path)
+                  (ein:notebook-open url-or-port path kernelspec
+                                     (lambda (nb param packed)
+                                       (multiple-value-bind (session kernelspec) packed
+                                         (org-babel-ein-initiate-session session kernelspec)))
+                                     (list session kernelspec)))))
+      (loop do (sit-for 1.0)
+            until (ein:kernel-live-p (ein:$notebook-kernel nb)))
+      nb)))
 
 (defun org-babel-edit-prep:ein (babel-info)
-  "Set up source code completion for editing and EIN source block."
+  "Set up source code completion for editing an EIN source block."
   (let ((nb (ein:org-find-or-open-session (cdr (assoc :session (third babel-info))))))
     (ein:connect-buffer-to-notebook nb (current-buffer) t)))
 
@@ -202,12 +205,7 @@ given in the session parameter."
                   (new-session (format "%s/%s" url-or-port name)))
              (ein:notebooklist-new-notebook-with-name name kernelspec url-or-port)
              (org-babel-ein-initiate-session new-session kernelspec)))
-          (t (let ((nb (or (ein:notebook-get-opened-notebook url-or-port path)
-                           (ein:notebook-open url-or-port path kernelspec
-                                              (lexical-let ((session session)
-                                                            (kernelspec kernelspec))
-                                                (lambda ()
-                                                  (org-babel-ein-initiate-session session kernelspec)))))))
+          (t (let ((nb (ein:org-find-or-open-session session kernelspec)))
                (ein:$notebook-kernel nb))))))
 
 (provide 'ob-ein)
