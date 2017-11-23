@@ -38,9 +38,10 @@
   :type 'integer)
 
 (defcustom ein:jupyter-default-server-command "jupyter"
-  "If you are tired of always being queried for the location of
-the jupyter command, you can set it here for future calls to
-`ein:jupyter-server-start'"
+  "The default command to start a jupyter notebook server.
+
+It is used when the `ein:jupyter-server-start' command is
+interactively called."
   :group 'ein
   :type '(file))
 
@@ -130,17 +131,29 @@ notebook server and then tries to detect the url and token to
 generate automatic calls to `ein:notebooklist-login' and
 `ein:notebooklist-open'.
 
-On executing the command will prompt the user for the path to the
-jupyter executable and the path for the root directory containing
-the notebooks the user wants to access.
+With \\[universal-argument] prefix arg, it will prompt the user for the path to
+the jupyter executable first. Else, it will try to use the
+value of `*ein:last-jupyter-command*' or the value of the
+customizable variable `ein:jupyter-default-server-command'.
+
+Then it prompts the user for the path of the root directory
+containing the notebooks the user wants to access.
 
 The buffer named by `ein:jupyter-server-buffer-name' will contain
 the log of the running jupyter server."
-  (interactive (list
-                (read-file-name "Server Command: " default-directory nil nil (or *ein:last-jupyter-command*
-                                                                                 ein:jupyter-default-server-command))
-                (read-directory-name "Notebook Directory: " (or *ein:last-jupyter-directory*
-                                                                ein:jupyter-default-notebook-directory))))
+  (interactive
+   (let* ((default-command (or *ein:last-jupyter-command*
+                               ein:jupyter-default-server-command))
+          (server-cmd-path
+           (if current-prefix-arg
+               (read-file-name "Server Command: " default-directory nil nil
+                               default-command)
+             default-command))
+          (notebook-directory
+           (read-directory-name "Notebook Directory: "
+                                (or *ein:last-jupyter-directory*
+                                    ein:jupyter-default-notebook-directory))))
+     (list server-cmd-path notebook-directory)))
   (assert (and (file-exists-p server-cmd-path)
                (file-executable-p server-cmd-path))
           t "Command %s is not valid!" server-cmd-path)
