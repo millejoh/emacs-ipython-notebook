@@ -145,10 +145,10 @@ the log of the running jupyter server."
    (let* ((default-command (or *ein:last-jupyter-command*
                                ein:jupyter-default-server-command))
           (server-cmd-path
-           (if current-prefix-arg
-               (read-file-name "Server Command: " default-directory nil nil
-                               default-command)
-             default-command))
+           (executable-find (if current-prefix-arg
+                                 (read-file-name "Server Command: " default-directory nil nil
+                                                 default-command)
+                               default-command)))
           (notebook-directory
            (read-directory-name "Notebook Directory: "
                                 (or *ein:last-jupyter-directory*
