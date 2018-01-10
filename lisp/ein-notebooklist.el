@@ -166,6 +166,7 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
            (lambda (content)
              (pop-to-buffer
               (funcall #'ein:notebooklist-url-retrieve-callback content))))))
+    (ein:query-kernelspecs url-or-port)
     (ein:content-query-contents path url-or-port t success))
   ;(ein:notebooklist-get-buffer url-or-port)
   )
