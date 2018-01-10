@@ -35,7 +35,8 @@
 
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)
-   (notebook :initarg :source-notebook :type ein:$notebook)
+   (notebook :initarg :source-notebook ;; :type ein:$notebook
+             )
    (buffer-name :initarg :buffer-name :type string)
    (buffer :initarg :buffer :type buffer)
    (ewoc :initarg :ewoc :type ewoc)))
@@ -82,13 +83,14 @@
   (interactive)
   (unless
       (ein:and-let* ((tb-data (ein:get-traceback-data))
-                     (url-or-port (ein:get-url-or-port))
-                     (kernel (ein:get-kernel))
-                     (notebook (ein:get-notebook))
+                     (url-or-port (or (ein:get-url-or-port)
+                                      (ein:get-url-or-port--shared-output)))
+                     (kernel (or (ein:get-kernel)
+                                 (ein:get-kernel--shared-output)))
                      (kr-id (ein:kernel-id kernel))
                      (tb-name (format ein:tb-buffer-name-template
                                       url-or-port kr-id)))
-        (ein:tb-popup (ein:tb-new tb-name notebook) tb-data)
+        (ein:tb-popup (ein:tb-new tb-name (ein:get-notebook)) tb-data)
         t)
     (error "No traceback is available.")))
 
