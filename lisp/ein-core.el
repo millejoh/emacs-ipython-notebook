@@ -158,8 +158,12 @@ the source is in git repository."
               (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
               (setf (gethash url-or-port *running-ipython-version*) 2))
           (condition-case nil
-              (setf (gethash url-or-port *running-ipython-version*)
-                    (ein:get-ipython-major-version (plist-get (request-response-data resp) :version)))
+              (if (plist-get (request-response-data resp) :version)
+                  (setf (gethash url-or-port *running-ipython-version*)
+                        (ein:get-ipython-major-version (plist-get (request-response-data resp) :version)))
+                (progn
+                  (sit-for 0.1)
+                  (ein:query-ipython-version url-or-port t)))
             (error (ein:force-ipython-version-check))))))))
 
 (defun ein:force-ipython-version-check ()
@@ -292,9 +296,15 @@ but can operate in different contexts."
 
 ;;; Emacs utilities
 
+(defun ein:clean-compiled-files ()
+  (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.elc$")))
+    (mapc #'delete-file files)
+    (message "Removed %s byte-compiled files." (length files))))
+
 (defun ein:byte-compile-ein ()
   "Byte compile EIN files."
   (interactive)
+  (ein:clean-compiled-files)
   (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
          (errors (ein:filter
                   'identity
