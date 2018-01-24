@@ -855,8 +855,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (defmethod ein:cell-append-stream ((cell ein:codecell) json)
   "Insert stream type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (unless (plist-get json :stream)
-    (plist-put json :stream "stdout"))
+  ;; (unless (plist-get json :stream)
+  ;;   (plist-put json :stream "stdout"))
   (unless (eq cell ein:%cell-append-stream-last-cell%)
     ;; Avoid applying unclosed ANSI escape code in the cell.  Note
     ;; that I don't need to distinguish stdout/stderr because it looks
