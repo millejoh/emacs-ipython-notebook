@@ -37,8 +37,8 @@
 
 ;;; Configuration
 
-(define-obsolete-variable-alias
-  'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
+;; (define-obsolete-variable-alias
+;;   'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
 
 (defcustom ein:worksheet-show-slide-data nil
   "Controls whether to show slide metadata by default when
@@ -48,27 +48,19 @@
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:worksheet-enable-undo 'yes
+(defcustom ein:worksheet-enable-undo nil
   "Configure undo in notebook buffers.
 
-`no' : symbol
-    Do not use undo in notebook buffers.  It is the safest option.
-`yes' : symbol
-    Enable undo in notebook buffers.  You can't undo after
-    modification of cell (execution, add, remove, etc.).  This
-    is default.
-`full' : symbol
-    Enable full undo in notebook buffers.  It is powerful but
-    sometime (typically after the cell specific commands) undo
-    mess up notebook buffer.  Use it on your own risk.  When the
-    buffer is messed up, you can just redo and continue editing,
-    or save it once and reopen it if you want to be careful.
+`nil' : boolean. Do not use undo in notebook buffers. This is the
+        safest option.
+
+`t' : boolean Enable full undo in notebook buffers. It is
+      powerful but sometimes (typically after cell specific commands)
+      undo will corrupt the notebook buffer data. Use at your own risk!
 
 You need to reopen the notebook buffer to reflect the change of
 this value."
-  :type '(choice (const :tag "No" no)
-                 (const :tag "Yes" yes)
-                 (const :tag "Full" full))
+  :type 'boolean
   :group 'ein)
 
 
@@ -76,8 +68,8 @@ this value."
 
 (defun ein:worksheet-empty-undo-maybe ()
   "Empty `buffer-undo-list' if `ein:worksheet-enable-undo' is `yes'."
-  ;; (when (eq ein:worksheet-enable-undo 'yes)
-  ;;   (setq buffer-undo-list nil))
+  (when (eq ein:worksheet-enable-undo 'yes)
+    (setq buffer-undo-list nil))
   )
 
 
@@ -111,7 +103,8 @@ this value."
                  'maybe_reset_undo.Worksheet
                  (lambda (-ignore- cell)
                    (ein:with-live-buffer (ein:cell-buffer cell)
-                     (ein:worksheet-empty-undo-maybe))))
+                     (unless ein:worksheet-enable-undo
+                       (setq buffer-undo-list nil)))))
   (ein:events-on events 'set_next_input.Worksheet
                  #'ein:worksheet--set-next-input)
   (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
@@ -205,7 +198,7 @@ this value."
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
     ;;(setq buffer-undo-list nil)  ; clear undo history
-    (when (eq ein:worksheet-enable-undo 'no)
+    (unless ein:worksheet-enable-undo
       (setq buffer-undo-list t))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
@@ -474,8 +467,9 @@ after PIVOT and return the new cell."
       (ein:cell-insert-below pivot cell))
      (t (error
          "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
-                                        ;(ein:worksheet-empty-undo-maybe)
-    (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list)
+                                        ;(ein:lyworksheet-empty-undo-maybe)
+    (when ein:worksheet-enable-undo
+      (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list))
     (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
@@ -499,7 +493,8 @@ See also: `ein:worksheet-insert-cell-below'."
           (ein:cell-enter-first cell))))
      (t (error
          "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
-    (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list)
+    (when ein:worksheet-enable-undo
+      (push `(apply ein:worksheet-delete-cell ,ws ,cell) buffer-undo-list))
     (oset ws :dirty t)
     (when focus (ein:cell-goto cell))
     cell))
@@ -528,7 +523,6 @@ directly."
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
         (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
-      (ein:worksheet-empty-undo-maybe)
       (when focus (ein:cell-goto new relpos))))
   )
 
@@ -548,7 +542,6 @@ directly."
     (message "changing slide type %s" new-slide-type)
     (oset cell :slidetype new-slide-type))
   (ewoc-invalidate (slot-value cell 'ewoc) (ein:cell-element-get cell :prompt))
-  (ein:worksheet-empty-undo-maybe)
   (when focus (ein:cell-goto cell)))
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
@@ -582,7 +575,6 @@ an integer used only when the TYPE is \"heading\"."
       (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
     (when level
       (ein:cell-change-level new level))
-    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto new relpos))))
 
 (defun ein:worksheet-split-cell-at-point (ws cell &optional no-trim focus)
@@ -611,7 +603,6 @@ argument \(C-u)."
           (while (and (looking-at-p "\n") (< (point) end))
             (delete-char 1)))))
     (ein:cell-set-text new head)
-    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto cell))))
 
 (defun ein:worksheet-merge-cell (ws cell &optional next focus)
@@ -632,7 +623,6 @@ If prefix is given, merge current cell into next cell."
     (save-excursion
       (goto-char (ein:cell-input-pos-min next-cell))
       (insert head "\n"))
-    (ein:worksheet-empty-undo-maybe)
     (when focus (ein:cell-goto next-cell))))
 
 
@@ -729,7 +719,8 @@ It is set in `ein:notebook-multilang-mode'."
                   ws cell pivot-cell)
          (ein:cell-goto cell)
          (oset ws :dirty t))
-        (push `(apply ein:worksheet-move-cell ,ws ,cell ,(not up)) buffer-undo-list))
+        (when ein:worksheet-enable-undo
+          (push `(apply ein:worksheet-move-cell ,ws ,cell ,(not up)) buffer-undo-list)))
     (error "No %s cell" (if up "previous" "next"))))
 
 (defun ein:worksheet-move-cell-up (ws cell)
@@ -752,7 +743,6 @@ This does not alter the actual data stored in the cell."
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:cell-toggle-output cell)
-  (ein:worksheet-empty-undo-maybe)
   (setf (slot-value ws 'dirty) t))
 
 (defun ein:worksheet-set-output-visibility-all (ws &optional collapsed)
@@ -762,7 +752,6 @@ This does not alter the actual data stored in the cell."
   (mapc (lambda (c)
           (when (ein:codecell-p c) (ein:cell-set-collapsed c collapsed)))
         (ein:worksheet-get-cells ws))
-  (ein:worksheet-empty-undo-maybe)
   (setf (slot-value ws 'dirty) t))
 
 (defun ein:worksheet-clear-output (cell &optional preserve-input-prompt)
@@ -773,8 +762,7 @@ Do not clear input prompt when the prefix argument is given."
                      current-prefix-arg))
   (ein:cell-clear-output cell t t t)
   (unless preserve-input-prompt
-    (ein:cell-set-input-prompt cell))
-  (ein:worksheet-empty-undo-maybe))
+    (ein:cell-set-input-prompt cell)))
 
 (defun ein:worksheet-clear-all-output (ws &optional preserve-input-prompt)
   "Clear output from all cells.
@@ -800,7 +788,8 @@ Do not clear input prompts when the prefix argument is given."
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-if-ready (slot-value ws 'kernel)
-    (push `(apply ein:undo-execute-cell ,ws ,cell ,(ein:cell-copy cell)) buffer-undo-list)
+    (when ein:worksheet-enable-undo
+      (push `(apply ein:undo-execute-cell ,ws ,cell ,(ein:cell-copy cell)) buffer-undo-list))
     (ein:log 'debug "buffer-undo-list: %s" (length buffer-undo-list))
     (ein:with-undo-disabled
      (ein:cell-execute cell)
