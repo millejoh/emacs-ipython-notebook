@@ -375,7 +375,8 @@ See `ein:notebook-open' for more information."
     (ein:notebook-from-json notebook (ein:$content-raw-content content)) ; notebook buffer is created here
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-new (ein:$notebook-kernel notebook)
-                              (cons #'ein:notebook-buffer-list notebook)))
+                              (cons #'ein:notebook-buffer-list notebook)
+                              (ein:get-kernelspec-language (ein:$notebook-kernelspec notebook))))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
     (ein:notebook-enable-autosaves notebook)

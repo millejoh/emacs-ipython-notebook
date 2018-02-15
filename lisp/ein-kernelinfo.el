@@ -41,17 +41,23 @@ in these buffer will be synced with the kernel's cwd.")
    (hostname
     :initarg :hostname :type string
     :documentation "Host name of the machine where the kernel is running on.")
+   (language
+    :initarg :language :type string
+    :accessor ein:kernelinfo-language
+    :documentation "Language for the running kernel.")
    (ccwd
     :initarg :ccwd :type string
     :documentation "cached CWD (last time checked CWD)."))
   :documentation "Info related (but unimportant) to kernel")
 
-(defun ein:kernelinfo-new (kernel get-buffers)
+(defun ein:kernelinfo-new (kernel get-buffers kernel-language)
   "Make a new `ein:kernelinfo' instance based on KERNEL and GET-BUFFERS."
   (let ((kerinfo (make-instance 'ein:kernelinfo)))
-    (oset kerinfo :kernel kernel)
-    (oset kerinfo :get-buffers get-buffers)
-    (ein:kernelinfo-setup-hooks kerinfo)
+    (setf (slot-value kerinfo 'kernel) kernel)
+    (setf (slot-value kerinfo 'get-buffers) get-buffers)
+    (setf (slot-value kerinfo 'language) kernel-language)
+    (ein:case-equal kernel-language
+      ("python" (ein:kernelinfo-setup-hooks kerinfo)))
     kerinfo))
 
 (defun ein:kernelinfo-setup-hooks (kerinfo)
@@ -67,8 +73,9 @@ in these buffer will be synced with the kernel's cwd.")
   (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
   (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
            (ein:kernel-live-p (slot-value kerinfo 'kernel)))
-  (ein:kernelinfo-update-ccwd kerinfo)
-  (ein:kernelinfo-update-hostname kerinfo))
+  (when (string-equal (ein:kernelinfo-language kerinfo) "python")
+    (ein:kernelinfo-update-ccwd kerinfo)
+    (ein:kernelinfo-update-hostname kerinfo)))
 
 (defun ein:kernelinfo-update-ccwd (kerinfo)
   "Update cached current working directory (CCWD) and change
