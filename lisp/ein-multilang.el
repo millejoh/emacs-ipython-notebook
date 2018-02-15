@@ -106,6 +106,28 @@ This function may raise an error."
 
 ;;; Language setup functions
 
+(defun ein:narrow-to-cell ()
+  "Narrow to the current cell."
+  (ein:and-let* ((pos (point))
+                 (node (ein:worksheet-get-nearest-cell-ewoc-node pos))
+                 (cell (ein:ml-current-or-next-input-cell node))
+                 (start (ein:cell-input-pos-min cell))
+                 (end   (ein:cell-input-pos-max cell))
+                 ((< start end)))
+    (narrow-to-region start end)))
+
+(defun ein:python-indent-line-function ()
+  "Call `python-indent-line-function' on the current cell."
+  (save-restriction
+    (ein:narrow-to-cell)
+    (python-indent-line-function)))
+
+(defun ein:python-indent-region (start end)
+  "Call `python-indent-region' on the current cell."
+  (save-restriction
+    (ein:narrow-to-cell)
+    (python-indent-region start end)))
+
 (defun ein:ml-lang-setup-python ()
   (setq comment-start "# ")
   (setq comment-start-skip "#+\\s-*")
@@ -116,8 +138,8 @@ This function may raise an error."
     (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
   (cond
    ((featurep 'python)
-    (setq indent-line-function #'python-indent-line-function)
-    (setq indent-region-function #'python-indent-region))
+    (setq indent-line-function #'ein:python-indent-line-function)
+    (setq indent-region-function #'ein:python-indent-region))
    ((featurep 'python-mode)
     ;; FIXME: write keymap setup for python-mode.el
     )))
