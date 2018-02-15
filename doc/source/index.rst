@@ -36,6 +36,7 @@ Other notebook features:
 * Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
+* Integration with the emacs debugger
 
 Links:
 
