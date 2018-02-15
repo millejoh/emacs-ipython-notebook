@@ -80,7 +80,7 @@
                              (ein:$jh-user-server (ein:$jh-conn-user jh-conn))
                              securep))))
     (when (or cookies http-only-cookies hub-cookies user-cookies)
-      (ein:log 'debug "Storing cookies in prep for opening websocket (%s)" cookies)
+      (ein:log 'debug "EIN:WEBSOCKET--PREPARE-COOKIES Storing cookies in prep for opening websocket (%s)" cookies)
       (dolist (c (append cookies http-only-cookies hub-cookies user-cookies))
         (url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)) securep)))))
 

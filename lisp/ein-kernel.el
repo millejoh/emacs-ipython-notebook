@@ -644,6 +644,7 @@ Example::
    '(:kernel_info_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
 "
   (assert (ein:kernel-live-p kernel) nil "kernel_info_reply: Kernel is not active.")
+  (ein:log 'debug "EIN:KERNEL-KERNEL-INFO-REQUEST: Sending request.")
   (let* ((msg (ein:kernel--get-msg kernel "kernel_info_request" nil))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send-shell-channel kernel msg)
