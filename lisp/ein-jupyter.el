@@ -89,14 +89,14 @@ session, along with the login token."
   (assert (processp %ein:jupyter-server-session%) t "Jupyter server has not started!")
   (condition-case err
       (with-current-buffer (process-buffer %ein:jupyter-server-session%) ;;ein:jupyter-server-buffer-name
-        (goto-char (point-min))
-        (re-search-forward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil)
+        (goto-char (point-max))
+        (re-search-backward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil)
         (let ((url-or-port (match-string 1))
               (token (match-string 2)))
           (list url-or-port token)))
     (error (with-current-buffer (process-buffer %ein:jupyter-server-session%)
-             (goto-char (point-min))
-             (if (re-search-forward "\\(https?://.*:[0-9]+\\)" nil t)
+             (goto-char (point-max))
+             (if (re-search-backward "\\(https?://.*:[0-9]+\\)" nil t)
                  (list (match-string 1) nil)
                (list nil nil))))))
 
