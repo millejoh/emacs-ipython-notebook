@@ -25,6 +25,8 @@
 ;; along with ein-notebooklist.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+;; Support executing org-babel source blocks using EIN worksheets.
+;; Async support based on work by @khinsen on github in ob-ipython-async: https://github.com/khinsen/ob-ipython-async/blob/master/ob-ipython-async.el
 
 ;;; Code:
 (require 'ob)
@@ -35,14 +37,40 @@
 (require 'ein-utils)
 (require 'python)
 
+(defcustom ein:org-async-p t
+  "If non-nil run ein org-babel source blocks asyncronously."
+  :group 'ein
+  :type 'boolean)
+
+(defcustom ein:org-inline-image-directory "ein-images"
+  "Default directory where to save images generated from ein
+  org-babel source blocks."
+  :group 'ein
+  :type '(directory))
+
 ;; declare default header arguments for this language
 (defvar org-babel-default-header-args:ein '())
+
 ;; For managing sessions.
 (defvar *ein:org-babel-sessions* (make-hash-table))
 
+(defvar *ein:org-babel-async-queue* (make-hash-table :test 'equal)
+  "Queue of tasks to run for each session.")
+
+(defvar *ein:org-babel-async-running-task* (make-hash-table :test 'equal)
+  "The currently running task for each session, defined by
+(buffer body params name).")
+
 (add-to-list 'org-src-lang-modes '("ein" . python))
 
-;;
+;; Handling source block execution results
+(defun ein:temp-inline-image-info (value)
+  (let* ((f (md5 value))
+         (d ein:org-inline-image-directory)
+         (tf (concat d "/ob-ein-" f ".png")))
+    (unless (file-directory-p d)
+      (make-directory d))
+    tf))
 
 (defun ein:write-base64-image (img-string file)
   (with-temp-file file
@@ -65,15 +93,11 @@
    return
    (case key
      ((svg image/svg)
-      (progn
-        (when (null file)
-          (error "Please specify an :image header argument when generating images."))
+      (let ((file (or file (ein:temp-inline-image-info value))))
         (ein:write-base64-decoded-image value file)
         (format "[[file:%s]]" file)))
      ((png image/png jpeg image/jpeg)
-      (progn
-        (when (null file)
-          (error "Please specify an :image header argument when generating images."))
+      (let ((file (or file (ein:temp-inline-image-info value))))
         (ein:write-base64-image value file)
         (format "[[file:%s]]" file)))
      (t (plist-get json type)))))
@@ -83,6 +107,34 @@
     (ein:join-str "\n"
                   (loop for o in outputs
                         collecting (ein:return-mime-type o file)))))
+
+;; Asynchronous execution requires each source code block to
+;; be named. For blocks that have no name, an automatically
+;; generated name is added. This variable holds the function
+;; that generates the name.
+(defvar *ein:org-name-generator* 'ein:uuid-generator
+  "Function to generate a name for a src block.
+The default is `ein:uuid-generator'.")
+
+(defun ein:uuid-generator ()
+  (org-id-new 'none))
+
+(defun ein:org-get-name-create ()
+  "Get the name of a src block or add a uuid as the name."
+  (if-let (name (fifth (org-babel-get-src-block-info)))
+      name
+    (save-excursion
+      (let ((el (org-element-context))
+	          (id (funcall *ein:org-name-generator*)))
+	      (goto-char (org-element-property :begin el))
+	      (insert (format "#+NAME: %s\n" id))
+	      id))))
+
+(defcustom ein:org-execute-timeout 30
+  "Query timeout, in seconds, for executing ein source blocks in
+  org files."
+  :type 'number
+  :group 'ein)
 
 ;; This is the main function which is called to evaluate a code
 ;; block.
@@ -95,12 +147,6 @@
 ;; - value means that the value of the last statement in the
 ;;   source code block will be returned
 ;;
-
-(defcustom ein:org-execute-timeout 30
-  "Query timeout, in seconds, for executing ein source blocks in
-  org files."
-  :type 'number
-  :group 'ein)
 
 (defun org-babel-execute:ein (body params)
   "Execute a block of python code with org-babel by way of
