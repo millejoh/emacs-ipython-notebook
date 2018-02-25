@@ -157,6 +157,7 @@ previous value."
   (if (null kernelspec)
       'python ;; FIXME
     (cond ((string-match-p "python" (ein:get-kernelspec-language kernelspec)) 'python)
+          ((string-match-p "R" (ein:get-kernelspec-language kernelspec)) 'R)
           (t 'python))))
 
 (defun ein:edit-src-continue (e)
@@ -227,7 +228,8 @@ appropriate language major mode. Functionality is very similar to
     (if raw-cell-p
         (funcall ein:raw-cell-default-edit-mode)
       (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
-        (python (python-mode))))))
+        (python (python-mode))
+        (R (R-mode))))))
 
 (defun ein:create-edit-cell-buffer (name cell notebook worksheet)
   (let* ((contents (ein:cell-get-text cell))
