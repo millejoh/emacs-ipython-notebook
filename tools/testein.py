@@ -148,6 +148,7 @@ class TestRunner(BaseRunner):
             'ein:testing-dump-server-log': quote(self.logpath_server),
             'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
+            'ein:force-sync': "'t",
             'ein:log-message-level': self.ein_message_level,
             'ein:testing-jupyter-server-command': quote(self.ipython),
             'ein:testing-jupyter-server-directory': quote(os.path.normpath(self.notebook_dir))
