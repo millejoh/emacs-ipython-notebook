@@ -60,7 +60,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
       (let ((created nil)
-            (kernelspec (ein:get-kernelspec url-or-port "python3")))
+            (kernelspec (ein:get-kernelspec url-or-port "default")))
         (ein:notebooklist-new-notebook url-or-port kernelspec path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
@@ -116,12 +116,11 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
 
 
 (ert-deftest 00-query-kernelspecs ()
-  (ein:log 'verbose "ERT QUERY-KERNELSPECS")
-  (ein:log 'verbose (format "ERT QUERY-KERNELSPECS: Pre-query kernelspec count %s." (hash-table-count ein:available-kernelspecs)))
+  (ein:log 'info "ERT QUERY-KERNELSPECS")
+  (ein:log 'info (format "ERT QUERY-KERNELSPECS: Pre-query kernelspec count %s." (hash-table-count ein:available-kernelspecs)))
   (ein:query-kernelspecs *ein:testing-port*)
   (should (>= (hash-table-count ein:available-kernelspecs) 1))
-  (ein:log 'verbose (format "ERT QUERY-KERNELSPECS: Post-query kernelspec count %s." (hash-table-count ein:available-kernelspecs)))
-  )
+  (ein:log 'info (format "ERT QUERY-KERNELSPECS: Post-query kernelspec %S." (ein:list-available-kernels *ein:testing-port*))))
 
 (ert-deftest 10-get-untitled0-or-create ()
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE start")
