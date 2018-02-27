@@ -119,6 +119,7 @@
                            ,@(if kernelspec
                                  `(("kernel" .
                                     (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
+         :sync ein:force-sync
          :parser #'ein:json-read
          :success (apply-partially #'ein:kernel--kernel-started kernel)
          :error (apply-partially #'ein:kernel--start-failed kernel notebook))))))

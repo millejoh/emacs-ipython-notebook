@@ -1,0 +1,3 @@
+-l test/test-load.el
+-L ./lisp
+-L ./test
