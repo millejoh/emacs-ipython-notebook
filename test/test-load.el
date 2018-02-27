@@ -28,6 +28,8 @@
 (setq message-log-max t)
 (setq ein:force-sync t)
 (setq ein:jupyter-server-run-timeout 120000)
+(setq ein:content-query-timeout nil)
+(setq ein:query-timeout nil)
 
 (ein:log 'info "Staring local jupyter notebook server.")
 
