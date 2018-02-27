@@ -5,8 +5,8 @@ addons:
     - gnutls-bin
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
+  - "3.6"
 before_install:
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
   - evm install $EVM_EMACS --use --skip
@@ -15,9 +15,11 @@ before_install:
 install:
   - sudo pip install jupyter==$JUPYTER
 env:
-  - EVM_EMACS=emacs-24.4-travis IPYCMD=jupyter JUPYTER=1.0.0
-  - EVM_EMACS=emacs-25.1-travis IPYCMD=jupyter JUPYTER=1.0.0
-  - EVM_EMACS=emacs-git-snapshot-travis IPYCMD=jupyter JUPYTER=1.0.0
+  - EVM_EMACS=emacs-24.4-travis JUPYTER=1.0.0
+  - EVM_EMACS=emacs-25.1-travis JUPYTER=1.0.0
+  - EVM_EMACS=emacs-git-snapshot-travis JUPYTER=1.0.0
 script:
   - emacs --version
+  - jupyter notebook --version
+  - cask exec ert-runner
   - cask exec ert-runner

@@ -27,6 +27,7 @@
 (ein:setq-if-not ein:testing-dump-file-messages "test-batch-messages.log")
 (setq message-log-max t)
 (setq ein:force-sync t)
+(setq ein:jupyter-server-run-timeout 120000)
 
 (ein:log 'info "Staring local jupyter notebook server.")
 
