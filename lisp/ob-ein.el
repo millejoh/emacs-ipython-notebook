@@ -27,6 +27,7 @@
 ;;; Commentary:
 ;; Support executing org-babel source blocks using EIN worksheets.
 ;; Async support based on work by @khinsen on github in ob-ipython-async: https://github.com/khinsen/ob-ipython-async/blob/master/ob-ipython-async.el
+;; which was in turn inspired by the scimax starter kit by @jkitchin: https://github.com/jkitchin/scimax
 
 ;;; Code:
 (require 'ob)
