@@ -36,7 +36,7 @@
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)
    (notebook :initarg :source-notebook ;; :type ein:$notebook
-             )
+             :accessor ein:traceback-notebook)
    (buffer-name :initarg :buffer-name :type string)
    (buffer :initarg :buffer :type buffer)
    (ewoc :initarg :ewoc :type ewoc)))
@@ -139,17 +139,30 @@
               (progn
                 (pop-to-buffer (ein:notebook-buffer nb))
                 (ein:cell-goto-line it lineno))))
-      (progn
-        (assert (file-exists-p file) nil "File %s does not exist." file)
-        (let ((buf (find-file-noselect file))
-              (scroll (lambda ()
-                        (goto-char (point-min))
-                        (forward-line (1- lineno)))))
-          (if select
-              (progn (pop-to-buffer buf)
-                     (funcall scroll))
-            (with-selected-window (display-buffer buf)
-              (funcall scroll))))))))
+      (let ((url-or-port (ein:$notebook-url-or-port (ein:traceback-notebook traceback))))
+        (cond
+         ((numberp url-or-port) (ein:tb-jtsap--local file lineno select))
+         ((string-match "localhost" url-or-port) (ein:tb-jtsap--local file lineno select))
+         ((string-match "127.0.0.1" url-or-port) (ein:tb-jtsap--local file lineno select))
+         (t (ein:tb-jtsap--remote url-or-port file lineno select)))))))
+
+(defun ein:tb-jtsap--local (file lineno select)
+  (assert (file-exists-p file) nil "File %s does not exist." file)
+  (let ((buf (find-file-noselect file))
+        (scroll (lambda ()
+                  (goto-char (point-min))
+                  (forward-line (1- lineno)))))
+    (if select
+        (progn (pop-to-buffer buf)
+               (funcall scroll))
+      (with-selected-window (display-buffer buf)
+        (funcall scroll)))))
+
+(defun ein:tb-jtsap--remote (uri path lineno select)
+  (let* ((uri (url-generic-parse-url uri))
+         (host-path (concat "/" (url-host uri)
+                            ":" path)))
+    (ein:tb-jtsap--local host-path lineno select)))
 
 (defun ein:tb-jump-to-source-at-point-command (&optional select)
   (interactive "P")
