@@ -3,7 +3,7 @@ addons:
   apt:
     packages:
     - gnutls-bin
-    - libssl1.0.0
+    - libssl-dev
 python:
   - "2.7"
   - "3.5"
@@ -14,7 +14,8 @@ before_install:
   - evm list
   - cask install
 install:
-  - sudo pip install jupyter==$JUPYTER
+  - pip install tornado
+  - pip install jupyter==$JUPYTER
 env:
   - EVM_EMACS=emacs-25.2-travis JUPYTER=1.0.0
   - EVM_EMACS=emacs-26-pretest-travis JUPYTER=1.0.0
