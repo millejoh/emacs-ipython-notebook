@@ -769,7 +769,7 @@ See also:
         for url-or-port = (ein:$notebooklist-url-or-port nblist)
         for ipython-version = (ein:$notebooklist-api-version nblist)
         do
-        (if (= ipython-version 3)
+        (if (>= ipython-version 3)
             (loop for note in (ein:make-content-hierarchy "" url-or-port)
                   when (equal (ein:$content-name note) name)
                   do (return-from outer

@@ -95,7 +95,7 @@ global setting.  For global setting and more information, see
            :type "GET"
            :timeout ein:content-query-timeout
            :parser #'ein:json-read
-           :sync ein:force-sync
+           :sync (or force-sync ein:force-sync)
            :success (apply-partially #'ein:new-content new-content callback)
            :error (apply-partially #'ein:content-query-contents-error url retry-p
                                    (list path url-or-port force-sync callback t))))
@@ -162,8 +162,8 @@ global setting.  For global setting and more information, see
         (ein:$content-writable content) (plist-get data :writable)
         (ein:$content-mimetype content) (plist-get data :mimetype)
         (ein:$content-raw-content content) (plist-get data :content))
-  (ein:aif (ein:get-response-redirect response)
-      (setf (ein:$content-url-or-port content) it))
+  (ein:aif response
+      (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
   ;; (if (length (request-response-history response))
   ;;     (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
   ;;       (setf (ein:$content-url-or-port content) (format "%s://%s:%s"
@@ -213,7 +213,7 @@ global setting.  For global setting and more information, see
 
 ;;; Managing/listing the content hierarchy
 
-(defvar *ein:content-hierarchy* (make-hash-table))
+(defvar *ein:content-hierarchy* (make-hash-table :test #'equal))
 
 (defun ein:get-content-hierarchy (url-or-port)
   (or (gethash url-or-port *ein:content-hierarchy*)
