@@ -198,6 +198,7 @@ global setting.  For global setting and more information, see
 
 
 (defun* ein:content-query-contents-error (url retry-p packed &key symbol-status response &allow-other-keys)
+  (ein:gc-complete-operation)
   (if (and (eql symbol-status 'parse-error)
            (not retry-p))
       (progn

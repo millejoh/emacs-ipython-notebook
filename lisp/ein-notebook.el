@@ -334,6 +334,7 @@ CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
 argument `t' indicates that the notebook is newly opened.
 See `ein:notebook-open' for more information."
   (let ((notebook (ein:notebook-new url-or-port path kernelspec)))
+    (ein:gc-prepare-operation)
     (ein:log 'debug "Opening notebook at %s" path)
     (ein:content-query-contents path url-or-port nil
                                 (apply-partially #'ein:notebook-request-open-callback-with-callback
@@ -380,6 +381,7 @@ See `ein:notebook-open' for more information."
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
     (ein:notebook-enable-autosaves notebook)
+    (ein:gc-complete-operation)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
 

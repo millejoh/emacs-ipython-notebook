@@ -521,7 +521,6 @@ NOTE: This function creates new list."
       (discard-input))
     answer))
 
-
 (defun ein:truncate-lines-on ()
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
@@ -581,6 +580,16 @@ Use `ein:log' for debugging and logging."
             (destructuring-bind (name callback &rest args) name-callback
               `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
           list-name-callback))
+
+(lexical-let ((current-gc-cons-threshold gc-cons-threshold))
+  (defun ein:gc-prepare-operation ()
+    (setq current-gc-cons-threshold gc-cons-threshold)
+    (ein:log 'debug "[EIN:GC-PREPARE-OPERATION] Setting cons threshold to %s." (* current-gc-cons-threshold 10000) )
+    (setq gc-cons-threshold (* current-gc-cons-threshold 10000)))
+
+  (defun ein:gc-complete-operation ()
+    (ein:log 'debug "[EIN:GC-COMPLETE-OPERATION] Reverting cons threshold to %s." current-gc-cons-threshold)
+    (setq gc-cons-threshold current-gc-cons-threshold)))
 
 
 ;;; Git utilities
