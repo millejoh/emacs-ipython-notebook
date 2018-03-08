@@ -252,10 +252,23 @@ See: http://api.jquery.com/jQuery.ajax/"
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 
 (defun ein:insert-read-only (string &rest properties)
-  (insert (apply #'ein:propertize-read-only string properties)))
+  (insert (apply #'ein:propertize-read-only
+                 (ein:maybe-truncate-string-lines string ein:truncate-long-cell-output)
+                 properties)))
 
 
 ;;; String manipulation
+
+(defun ein:maybe-truncate-string-lines (string nlines)
+  "Truncate multi-line `string' to the number of lines specified by `nlines'. If actual
+number of lines is less than `nlines' then just return the string."
+  (if nlines
+    (let ((lines (split-string string "[\n]")))
+      (if (> (length lines) nlines) 
+          (ein:join-str "\n" (append (butlast lines (- (length lines) nlines))
+                                     (list "...")))
+        string))
+    string))
 
 (defun ein:trim (string &optional regexp)
   (ein:trim-left (ein:trim-right string regexp) regexp))

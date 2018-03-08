@@ -149,6 +149,11 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:truncate-long-cell-output nil
+  "When nil do not truncate cells with long outputs. When set to
+a number will limit the number of lines in a cell output."
+  :group 'ein)
+
 
 
 ;;; EIEIO related utils
