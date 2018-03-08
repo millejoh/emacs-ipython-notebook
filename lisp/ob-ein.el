@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 ;;; ob-ein.el --- org-babel functions for template evaluation
 
 ;; Copyright (C) John M. Miller
@@ -51,16 +52,6 @@
 
 ;; declare default header arguments for this language
 (defvar org-babel-default-header-args:ein '())
-
-;; For managing sessions.
-(defvar *ein:org-babel-sessions* (make-hash-table))
-
-(defvar *ein:org-babel-async-queue* (make-hash-table :test 'equal)
-  "Queue of tasks to run for each session.")
-
-(defvar *ein:org-babel-async-running-task* (make-hash-table :test 'equal)
-  "The currently running task for each session, defined by
-(buffer body params name).")
 
 (add-to-list 'org-src-lang-modes '("ein" . python))
 
@@ -122,7 +113,7 @@ The default is `ein:uuid-generator'.")
 
 (defun ein:org-get-name-create ()
   "Get the name of a src block or add a uuid as the name."
-  (if-let (name (fifth (org-babel-get-src-block-info)))
+  (if-let* (name (fifth (org-babel-get-src-block-info)))
       name
     (save-excursion
       (let ((el (org-element-context))
@@ -164,18 +155,67 @@ jupyter kernels.
          (result-type (cdr (assoc :result-type processed-params)))
          ;; expand the body with `org-babel-expand-body:template'
          (full-body (org-babel-expand-body:generic (encode-coding-string body 'utf-8)
-                                                   params (org-babel-variable-assignments:python params))))
-    (ein:shared-output-eval-string full-body nil nil session-kernel)
-    (let ((cell (ein:shared-output-get-cell)))
-      (ein:wait-until #'(lambda ()
-                          (null (slot-value cell 'running)))
-                      nil ein:org-execute-timeout)
-      (if (and (slot-boundp cell 'traceback)
-               (slot-value cell 'traceback))
-          (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
-                                                        (format "%s\n" s))
-                                                    (slot-value cell 'traceback))))
-        (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params)))))
+                                                   params
+                                                   (org-babel-variable-assignments:python params))))
+    (if ein:org-async-p
+        (ein:ob-ein--execute-async full-body session-kernel processed-params (ein:org-get-name-create))
+      (ein:ob-ein--execute full-body session-kernel processed-params))))
+
+(defun ein:ob-ein--execute-async (body kernel params name)
+  (lexical-let ((buffer (current-buffer))
+                (name name)
+                (body body)
+                (kernel kernel)
+                (params params))
+    (deferred:$
+      (deferred:next
+        (lambda ()
+          (message "Starting deferred ein execution: %s" name)
+          (ein:shared-output-eval-string body nil nil kernel)))
+      (deferred:nextc it
+        (deferred:lambda ()
+          (let ((cell (ein:shared-output-get-cell)))
+            (if (not (null (slot-value cell 'running)))
+                (deferred:nextc (deferred:wait 50) self)))))
+      (deferred:nextc it
+        (lambda ()
+          (let ((cell (ein:shared-output-get-cell)))
+            (if (and (slot-boundp cell 'traceback)
+                     (slot-value cell 'traceback))
+                (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
+                                                              (format "%s\n" s))
+                                                          (slot-value cell 'traceback))))
+              (org-babel-ein-process-outputs (slot-value cell 'outputs) params)))))
+      (deferred:nextc it
+        (lambda (formatted-result)
+          (message "Finished deferred ein execution: %s" name)
+          (with-current-buffer buffer
+            (save-excursion
+              (org-babel-goto-named-result name)
+              (search-forward (format "[[ob-ein-async-running: %s]]" name))
+              (replace-match formatted-result)
+              (org-redisplay-inline-images)
+              ;; (when (member "drawer" (cdr (assoc :result-params params)))
+              ;;   ;; open the results drawer
+              ;;   (org-babel-goto-named-result name)
+              ;;   (forward-line)
+              ;; (org-flag-drawer nil))
+              )))))
+    (format "[[ob-ein-async-running: %s]]" name)))
+
+
+(defun ein:ob-ein--execute (full-body session-kernel processed-params)
+  (ein:shared-output-eval-string full-body nil nil session-kernel)
+  (let ((cell (ein:shared-output-get-cell)))
+    (ein:wait-until #'(lambda ()
+                        (null (slot-value cell 'running)))
+                    nil ein:org-execute-timeout)
+    (if (and (slot-boundp cell 'traceback)
+             (slot-value cell 'traceback))
+        (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
+                                                      (format "%s\n" s))
+                                                  (slot-value cell 'traceback))))
+      (org-babel-ein-process-outputs (slot-value cell 'outputs) processed-params))))
 
 
 (defun ein:org-find-or-open-session (session &optional kernelspec)
@@ -234,7 +274,6 @@ This is the name of the notebook used when no notebook path is
 given in the session parameter."
   :type '(string :tag "Format string")
   :group 'ein)
-
 
 
 (defun org-babel-ein-initiate-session (&optional session kernelspec)
