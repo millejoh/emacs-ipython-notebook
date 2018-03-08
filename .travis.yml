@@ -3,6 +3,7 @@ addons:
   apt:
     packages:
     - gnutls-bin
+    - libssl1.0.0
 python:
   - "2.7"
   - "3.5"
