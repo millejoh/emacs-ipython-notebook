@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 ;;; ein-shared-output.el --- Output buffer for ein-connect.el
 
 ;; Copyright (C) 2012- Takafumi Arakaki
@@ -216,9 +217,19 @@ shared output buffer.  You can open the buffer by the command
      (list code nil t kernel)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
-    (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args))
-  (when verbose
-    (ein:log 'info "Code \"%s\" is sent to the kernel." code)))
+    ;; If cell is already running, wait until it is finished
+    ;; before executing more code.
+    (deferred:$
+      (deferred:next
+        (deferred:lambda ()
+          (if (not (null (slot-value cell 'running)))
+              (deferred:nextc (deferred:wait 50) self))))
+      (deferred:nextc it
+        (lambda ()
+          (deferred:wait 100) ;; Give everyone a few milliseconds to breath.
+          (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args)
+          (when verbose
+            (ein:log 'info "Code \"%s\" is sent to the kernel." code)))))))
 
 
 ;;; Generic getter

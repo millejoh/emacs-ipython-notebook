@@ -188,21 +188,23 @@ jupyter kernels.
               (org-babel-ein-process-outputs (slot-value cell 'outputs) params)))))
       (deferred:nextc it
         (lambda (formatted-result)
-          (message "Finished deferred ein execution: %s" name)
-          (with-current-buffer buffer
-            (save-excursion
-              (org-babel-goto-named-result name)
-              (search-forward (format "[[ob-ein-async-running: %s]]" name))
-              (replace-match formatted-result)
-              (org-redisplay-inline-images)
-              ;; (when (member "drawer" (cdr (assoc :result-params params)))
-              ;;   ;; open the results drawer
-              ;;   (org-babel-goto-named-result name)
-              ;;   (forward-line)
-              ;; (org-flag-drawer nil))
-              )))))
+          (ein:ob-ein--execute-async-update formatted-result buffer name))))
     (format "[[ob-ein-async-running: %s]]" name)))
 
+(defun ein:ob-ein--execute-async-update (formatted-result buffer name)
+  (message "Finished deferred ein execution: %s" name)
+  (with-current-buffer buffer
+    (save-excursion
+      (org-babel-goto-named-result name)
+      (search-forward (format "[[ob-ein-async-running: %s]]" name))
+      (replace-match formatted-result)
+      (org-redisplay-inline-images)
+      ;; (when (member "drawer" (cdr (assoc :result-params params)))
+      ;;   ;; open the results drawer
+      ;;   (org-babel-goto-named-result name)
+      ;;   (forward-line)
+      ;; (org-flag-drawer nil))
+      )))
 
 (defun ein:ob-ein--execute (full-body session-kernel processed-params)
   (ein:shared-output-eval-string full-body nil nil session-kernel)
