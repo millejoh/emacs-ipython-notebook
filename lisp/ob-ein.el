@@ -113,7 +113,7 @@ The default is `ein:uuid-generator'.")
 
 (defun ein:org-get-name-create ()
   "Get the name of a src block or add a uuid as the name."
-  (if-let* (name (fifth (org-babel-get-src-block-info)))
+  (if-let* ((name (fifth (org-babel-get-src-block-info))))
       name
     (save-excursion
       (let ((el (org-element-context))
@@ -162,11 +162,11 @@ jupyter kernels.
       (ein:ob-ein--execute full-body session-kernel processed-params))))
 
 (defun ein:ob-ein--execute-async (body kernel params name)
-  (lexical-let ((buffer (current-buffer))
-                (name name)
-                (body body)
-                (kernel kernel)
-                (params params))
+  (let ((buffer (current-buffer))
+        (name name)
+        (body body)
+        (kernel kernel)
+        (params params))
     (deferred:$
       (deferred:next
         (lambda ()

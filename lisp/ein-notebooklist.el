@@ -31,6 +31,7 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
+(require 'ein-connect)
 (require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
