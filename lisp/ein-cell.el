@@ -1,8 +1,10 @@
 ;;; ein-cell.el --- Cell module
 
-;; (C) 2012- Takafumi Arakaki
+;; (C) 2012 - Takafumi Arakaki
+;; (C) 2017 - John M. Miller
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
+;; Author: John Miller <millejoh at mac.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -41,6 +43,7 @@
 (require 'ein-kernel)
 (require 'ein-output-area)
 (require 'ein-skewer)
+(require 'ein-hy)
 
 
 ;;; Faces
@@ -186,6 +189,7 @@ a number will limit the number of lines in a cell output."
 (defun ein:cell-class-from-type (type)
   (ein:case-equal type
     (("code") 'ein:codecell)
+    (("hy-code") 'ein:hy-codecell)
     (("text") 'ein:textcell)
     (("html") 'ein:htmlcell)
     (("markdown") 'ein:markdowncell)
@@ -258,17 +262,17 @@ a number will limit the number of lines in a cell output."
 (defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
-    (loop for k in '(:read-only :ewoc)
-          do (setf (slot-value new k) (slot-value cell k)))
+    (loop for k in '(read-only ewoc events)
+          do (set-slot-value new k (slot-value cell k)))
     ;; copy input
-    (setf (slot-value new 'input) (if (ein:cell-active-p cell)
-                                      (ein:cell-get-text cell)
-                                    (slot-value cell 'input)))
+    (set-slot-value new 'input (if (ein:cell-active-p cell)
+                                   (ein:cell-get-text cell)
+                                 (slot-value cell 'input)))
     ;; copy slidetype
-    (setf (slot-value new 'slidetype) (slot-value cell 'slidetype))
+    (set-slot-value new 'slidetype (slot-value cell 'slidetype))
     ;; copy output when the new cell has it
     (when (memq :output (slot-value new 'element-names))
-      (setf (slot-value new 'outputs) (mapcar 'identity (slot-value cell 'outputs))))
+      (set-slot-value new 'outputs (mapcar 'identity (slot-value cell 'outputs))))
     new))
 
 (defmethod ein:cell-convert ((cell ein:codecell) type)
@@ -341,8 +345,8 @@ a number will limit the number of lines in a cell output."
 
 (defmethod ein:cell-element-get ((cell ein:basecell) prop &rest args)
   "Return ewoc node named PROP in CELL.
-If PROP is `:output' a list of ewoc nodes is returned.
-A specific node can be specified using optional ARGS."
+  If PROP is `:output' a list of ewoc nodes is returned.
+  A specific node can be specified using optional ARGS."
   (if (memq prop (slot-value cell 'element-names))
       (plist-get (slot-value cell 'element) prop)
     (error "PROP %s is not supported." prop)))
@@ -385,9 +389,9 @@ A specific node can be specified using optional ARGS."
 
 (defmethod ein:cell-language ((cell ein:basecell))
   "Programming language used for CELL.
-Return language name as a string or `nil' when not defined.
+  Return language name as a string or `nil' when not defined.
 
-\(fn cell)")
+  \(fn cell)")
 
 (defmethod ein:cell-language ((cell ein:codecell)) nil "python")
 (defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
@@ -460,7 +464,7 @@ Return language name as a string or `nil' when not defined.
 
 (defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
-Called from ewoc pretty printer via `ein:cell-pp'."
+  Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (concat
@@ -485,7 +489,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
-Called from ewoc pretty printer via `ein:cell-pp'."
+  Called from ewoc pretty printer via `ein:cell-pp'."
   (let ((start (1+ (point))))
     ;; Newlines must allow insertion before/after its position.
     (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
@@ -506,7 +510,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
-Called from ewoc pretty printer via `ein:cell-pp'."
+  Called from ewoc pretty printer via `ein:cell-pp'."
   (if (or (slot-value cell 'collapsed)
           (and ein:cell-max-num-outputs
                (>= index ein:cell-max-num-outputs)))
@@ -545,7 +549,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
-Called from ewoc pretty printer via `ein:cell-pp'."
+  Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
 
 (defmethod ein:cell-insert-footer :before ((cell ein:codecell))
@@ -574,14 +578,14 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 
 (defmethod ein:cell-input-pos-min ((cell ein:basecell))
   "Return editable minimum point in the input area of the CELL.
-If the input area of the CELL does not exist, return `nil'"
+  If the input area of the CELL does not exist, return `nil'"
   (let* ((input-node (ein:cell-element-get cell :input)))
     ;; 1+ for skipping newline
     (when input-node (1+ (ewoc-location input-node)))))
 
 (defmethod ein:cell-input-pos-max ((cell ein:basecell))
   "Return editable maximum point in the input area of the CELL.
-If the input area of the CELL does not exist, return `nil'"
+  If the input area of the CELL does not exist, return `nil'"
   (let* ((ewoc (slot-value cell 'ewoc))
          (input-node (ein:cell-element-get cell :input)))
     ;; 1- for skipping newline
@@ -651,13 +655,13 @@ If the input area of the CELL does not exist, return `nil'"
 
 (defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
   "Set auto-execution flag of CELL to BOOL and invalidate the
-prompt EWOC node."
+  prompt EWOC node."
   (setf (slot-value cell 'autoexec) bool)
   (ein:cell-invalidate-prompt cell))
 
 (defmethod ein:cell-autoexec-p ((cell ein:basecell))
   "Auto-execution flag set to CELL.
-Return `nil' always for non-code cells."
+  Return `nil' always for non-code cells."
   nil)
 
 (defmethod ein:cell-autoexec-p ((cell ein:codecell))
@@ -665,15 +669,15 @@ Return `nil' always for non-code cells."
 
 (defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
   "Toggle auto-execution flag of CELL to BOOL and invalidate the
-prompt EWOC node."
+  prompt EWOC node."
   (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
 (defmethod ein:cell-goto ((cell ein:basecell) &optional relpos prop)
   "Go to the input area of the given CELL.
-RELPOS is the position relative to the input area.  Default is 0.
-PROP is a name of cell element.  Default is `:input'.
+  RELPOS is the position relative to the input area.  Default is 0.
+  PROP is a name of cell element.  Default is `:input'.
 
-\(fn cell relpos prop)"
+  \(fn cell relpos prop)"
   (unless relpos (setq relpos 0))
   (unless prop (setq prop :input))
   (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop))

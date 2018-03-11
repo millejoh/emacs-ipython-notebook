@@ -99,3 +99,14 @@ def print_object_info_for(obj):
         print(json.dumps(inspector.info(obj)))
     except NameError:
         print(json.dumps(inspector.noinfo()))
+
+def eval_hy_string(obj):
+    try:
+        import hy
+    except ImportError:
+        print("Hy not supported in this kernel. Execute `pip install hy` if you want this support.")
+
+    expr = hy.read_str(obj)
+    ret = hy.eval(expr)
+
+    return ret

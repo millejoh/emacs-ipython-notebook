@@ -272,14 +272,14 @@
 ;;; Cells
 
 (defclass ein:basecell ()
-  ((cell-type :initarg :cell-type :type string)
+  ((cell-type :initarg :cell-type :type string :accessor ein:cell-type)
    (read-only :initarg :read-only :initform nil :type boolean)
    (ewoc :initarg :ewoc :type ewoc :accessor ein:basecell--ewoc)
    (element :initarg :element :initform nil :type list
-    :documentation "ewoc nodes")
+            :documentation "ewoc nodes")
    (element-names :initarg :element-names)
    (input :initarg :input :type string
-    :documentation "Place to hold data until it is rendered via `ewoc'.")
+          :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
    (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
@@ -291,7 +291,7 @@
 (defclass ein:codecell (ein:basecell)
   ((traceback :initform nil :initarg :traceback :type list)
    (cell-type :initarg :cell-type :initform "code")
-   (kernel :initarg :kernel :type ein:$kernel)
+   (kernel :initarg :kernel :type ein:$kernel :accessor ein:cell-kernel)
    (element-names :initform (:prompt :input :output :footer :slidetype))
    (input-prompt-number :initarg :input-prompt-number
                         :documentation "\
@@ -319,6 +319,10 @@ This cell is executed when the connected buffer is saved,
 provided that (1) this flag is `t' and (2) corresponding
 auto-execution mode flag in the connected buffer is `t'.")))
 
+;; Use this cell to execute hy code in notebook running a Python kernel.
+(defclass ein:hy-codecell (ein:codecell)
+  ((cell-type :initarg :cell-type :initform "hy-code"))
+  "Codecell that supports executing hy code from within a Python kernel.")
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")

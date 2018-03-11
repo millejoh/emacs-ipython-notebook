@@ -521,10 +521,9 @@ directly."
                      (("raw") "code"))))))
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
-      (when (ein:codecell-p new)
+      (when (cl-typep new 'ein:codecell)
         (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
-      (when focus (ein:cell-goto new relpos))))
-  )
+      (when focus (ein:cell-goto new relpos)))))
 
 (defun ein:worksheet-toggle-slide-type (ws cell &optional focus)
   "Toggle the slide metadata of the cell at point. Available slide settings are:
@@ -557,11 +556,12 @@ an integer used only when the TYPE is \"heading\"."
           (choices (case (slot-value ws 'nbformat)
                      (2 "cm")
                      (3 "cmr123456")
-                     (4 "cmr123456")))
+                     (4 "chmr123456")))
           (key (ein:ask-choice-char
                 (format "Cell type [%s]: " choices) choices))
           (type (case key
                   (?c "code")
+                  (?h "hy-code")
                   (?m "markdown")
                   (?r "raw")
                   (t "heading")))
@@ -802,7 +802,7 @@ Do not clear input prompts when the prefix argument is given."
 next cell, or insert if none."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)))
-  (when (ein:codecell-p cell)
+  (when (cl-typep cell 'ein:codecell)
     (ein:worksheet-execute-cell ws cell))
   (ein:aif (and (not insert) (ein:cell-next cell))
       (ein:cell-goto it)
