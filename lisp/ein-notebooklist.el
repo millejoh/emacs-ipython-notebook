@@ -24,7 +24,7 @@
 
 ;;  The rendering is split into a function for python2 and one for
 ;;  python3, ein:notebooklist-render-ipy2 and
-;;  ein:notebooklist-render-ipy2.
+;;  ein:notebooklist-render.
 
 ;;; Code:
 
@@ -541,7 +541,7 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
- (defun ein:notebooklist--order-data (nblist-data)
+(defun ein:notebooklist--order-data (nblist-data)
   "Try to sanely sort the notebooklist data for the current path."
   (let* ((groups (-group-by #'(lambda (x) (plist-get x :type))
                             nblist-data))
@@ -635,7 +635,8 @@ Notebook list data is passed via the buffer local variable
 
   (defun render-directory ()
     "Render directory (for ipython>=3."
-    (widget-insert "\n------------------------------------------\n\n")    (let ((sessions (make-hash-table :test 'equal)))
+    (widget-insert "\n------------------------------------------\n\n")
+    (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
     (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
@@ -732,10 +733,10 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
-;;; ### autoload
+;;;###autoload
 (defun ein:notebooklist-list-notebooks ()
-  "Return a list of notebook path (NBPATH).
-Each element NBPATH is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
+  "Return a list of notebook path (NBPATH).  Each element NBPATH
+is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
   (apply #'append
          (loop for nblist in (ein:notebooklist-list)
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
