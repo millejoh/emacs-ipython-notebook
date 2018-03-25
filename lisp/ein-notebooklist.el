@@ -22,7 +22,9 @@
 
 ;;; Commentary:
 
-;;
+;;  The rendering is split into a function for python2 and one for
+;;  python3, ein:notebooklist-render-ipy2 and
+;;  ein:notebooklist-render-ipy2.
 
 ;;; Code:
 
@@ -528,7 +530,7 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
-(defun ein:notebooklist--order-data (nblist-data)
+ (defun ein:notebooklist--order-data (nblist-data)
   "Try to sanely sort the notebooklist data for the current path."
   (let* ((groups (-group-by #'(lambda (x) (plist-get x :type))
                             nblist-data))
@@ -539,19 +541,14 @@ Notebook list data is passed via the buffer local variable
                                            (cdr (assoc "file" groups)))))))
     (-concat dirs nbs files)))
 
-(defun ein:notebooklist-render ()
-  "Render notebook list widget.
-Notebook list data is passed via the buffer local variable
-`ein:notebooklist-data'."
-  (kill-all-local-variables)
-  (let ((inhibit-read-only t))
-    (erase-buffer))
-  (remove-overlays)
+  (defun render-header ()
+    "Render the header (for ipython>=3)."
   ;; Create notebook list
   (widget-insert
    (if (< (ein:$notebooklist-api-version ein:%notebooklist%) 4)
        (format "IPython v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) (ein:$notebooklist-url-or-port ein:%notebooklist%))
      (format "Jupyter v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) (ein:$notebooklist-url-or-port ein:%notebooklist%))))
+
   (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
     (dolist (p breadcrumbs)
       (lexical-let ((name (car p))
@@ -597,7 +594,37 @@ Notebook list data is passed via the buffer local variable
         (widget-radio-add-item radio-widget (list 'item :value (car k)
                                                   :format (format "%s\n" (cdr k)))))))
   (widget-insert "\n")
-  (let ((sessions (make-hash-table :test 'equal)))
+
+  )
+
+  (defun render-opened-notebooks ()
+  "Render the opened notebooks section (for ipython>=3)."
+    ;; Opened Notebooks Section
+    (widget-insert "\n---------- All Opened Notebooks ----------\n\n")
+    (loop for buffer in (ein:notebook-opened-buffers)
+          do (progn (widget-create
+                     'link
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
+                                 (switch-to-buffer buffer)))
+                     "Open")
+                    (widget-create
+                     'link
+                     :notify (lexical-let ((buffer buffer))
+                               (lambda (&rest ignore)
+                                 (kill-buffer buffer)
+                                 (run-at-time 1 nil
+                                              #'ein:notebooklist-reload
+                                              ein:%notebooklist%)))
+                     "Close")
+                    (widget-insert " : " (buffer-name buffer))
+                    (widget-insert "\n")))
+  )
+
+
+  (defun render-directory ()
+    "Render directory (for ipython>=3."
+    (widget-insert "\n------------------------------------------\n\n")    (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
     (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
@@ -674,32 +701,30 @@ Notebook list data is passed via the buffer local variable
                      "Delete")
                     (widget-insert " : " name)
                     (widget-insert "\n")))
-    (widget-insert "\n---------- All Opened Notebooks ----------\n\n")
-    (loop for buffer in (ein:notebook-opened-buffers)
-          do (progn (widget-create
-                     'link
-                     :notify (lexical-let ((buffer buffer))
-                               (lambda (&rest ignore)
-                                 (switch-to-buffer buffer)))
-                     "Open")
-                    (widget-create
-                     'link
-                     :notify (lexical-let ((buffer buffer))
-                               (lambda (&rest ignore)
-                                 (kill-buffer buffer)
-                                 (run-at-time 1 nil
-                                              #'ein:notebooklist-reload
-                                              ein:%notebooklist%)))
-                     "Close")
-                    (widget-insert " : " (buffer-name buffer))
-                    (widget-insert "\n"))))
+
+    )
+  )
+
+ (defun ein:notebooklist-render ()
+  "Render notebook list widget.
+Notebook list data is passed via the buffer local variable
+`ein:notebooklist-data'."
+  (kill-all-local-variables)
+  (let ((inhibit-read-only t))
+    (erase-buffer))
+  (remove-overlays)
+
+  (render-header)
+  (render-opened-notebooks)
+  (render-directory)
+
   (ein:notebooklist-mode)
   (widget-setup))
 
-;;;###autoload
+;;; ### autoload
 (defun ein:notebooklist-list-notebooks ()
-  "Return a list of notebook path (NBPATH).  Each element NBPATH
-is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
+  "Return a list of notebook path (NBPATH).
+Each element NBPATH is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\"."
   (apply #'append
          (loop for nblist in (ein:notebooklist-list)
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
