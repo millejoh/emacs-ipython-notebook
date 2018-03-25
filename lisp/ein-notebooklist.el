@@ -40,6 +40,17 @@
 (require 'deferred)
 (require 'dash)
 
+
+(defcustom ein:notebook-list-render-order
+  '(render-header
+    render-opened-notebooks
+    render-directory)
+  "Order of notebook list sections.
+Must contain render-header, render-opened-notebooks, and render-directory."
+  :group 'ein
+  :type 'list
+)
+
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
 
@@ -714,9 +725,9 @@ Notebook list data is passed via the buffer local variable
     (erase-buffer))
   (remove-overlays)
 
-  (render-header)
-  (render-opened-notebooks)
-  (render-directory)
+  (mapc (lambda (fn) (apply fn '()))
+     ein:notebook-list-render-order
+    )
 
   (ein:notebooklist-mode)
   (widget-setup))
