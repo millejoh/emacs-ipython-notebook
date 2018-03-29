@@ -166,6 +166,7 @@ the log of the running jupyter server."
                                  (ein:jupyter-server-stop t)))
   (message "Starting notebook server in directory: %s" notebook-directory)
   (lexical-let ((no-login-after-start-p no-login-after-start-p)
+                (no-popup no-popup)
                 (proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
                                                *ein:last-jupyter-command*
                                                *ein:last-jupyter-directory*)))
