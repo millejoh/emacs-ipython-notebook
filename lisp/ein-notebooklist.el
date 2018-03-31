@@ -22,8 +22,8 @@
 
 ;;; Commentary:
 
-;;  The rendering is split into a function for python2 and one for
-;;  python3, ein:notebooklist-render-ipy2 and
+;;  The rendering is split into a function for ipython2 and one for
+;;  ipython3, ein:notebooklist-render-ipy2 and
 ;;  ein:notebooklist-render.
 
 ;;; Code:
@@ -44,9 +44,9 @@
 (defcustom ein:notebook-list-render-order
   '(render-header
     render-opened-notebooks
-    render-directory)
+    render-directory-ipy3)
   "Order of notebook list sections.
-Must contain render-header, render-opened-notebooks, and render-directory."
+Must contain render-header, render-opened-notebooks, and render-directory-ipy3."
   :group 'ein
   :type 'list
 )
@@ -588,13 +588,29 @@ Notebook list data is passed via the buffer local variable
   )
 
 
-  (defun render-directory ()
-    "Render directory (for ipython>=3."
-    (widget-insert "\n------------------------------------------\n\n")
-    (let ((sessions (make-hash-table :test 'equal)))
+(defun render-directory-ipy3 ()
+  "Call render-direcory with ipy-at-least-3 true."
+  (render-directory t)
+  )
 
-    (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
-    (sit-for 0.2) ;; FIXME: What is the optimum number here?
+(defun render-directory-ipy2 ()
+  "Call render-direcory with ipy-at-least-3 false."
+  (render-directory nil)
+  )
+
+(defun render-directory (ipy-at-least-3)
+  "Render directory.
+IPY-AT-LEAST-3 used to keep track of version."
+    (widget-insert "\n------------------------------------------\n\n")
+    (unless ipy-at-least-3
+      (let (api-version (ein:$notebooklist-api-version ein:%notebooklist%))
+	)
+      )
+    (let
+      ((sessions (make-hash-table :test 'equal)))
+      (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
+      (sit-for 0.2) ;; FIXME: What is the optimum number here?
+
     (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
           for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
           for name = (plist-get note :name)
@@ -618,7 +634,7 @@ Notebook list data is passed via the buffer local variable
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
-          if (string= type "file")
+          if (and (string= type "file") ipy-at-least-3)
           do (progn (widget-create
                      'link
                      :notify (lexical-let ((urlport urlport)
@@ -673,69 +689,6 @@ Notebook list data is passed via the buffer local variable
     )
   )
 
- (defun render-directory-ipy2 ()
-  (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-        (sessions (make-hash-table :test 'equal)))
-
-    (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
-    (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
-	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
-	  for name = (plist-get note :name)
-	  for path = (plist-get note :path)
-	  ;; (cond ((= 2 api-version)
-	  ;;        (plist-get note :path))
-	  ;;       ((= 3 api-version)
-	  ;;        (ein:get-actual-path (plist-get note :path))))
-	  for type = (plist-get note :type)
-	  for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
-	  do (widget-insert " ")
-	  if (string= type "directory")
-	  do (progn (widget-create
-               'link
-               :notify (lexical-let ((urlport urlport)
-                                     (path name))
-                         (lambda (&rest ignore)
-                           (ein:notebooklist-open urlport
-                                                  (ein:url (ein:$notebooklist-path ein:%notebooklist%)
-                                                           path))))
-               "Dir")
-              (widget-insert " : " name)
-              (widget-insert "\n"))
-	  if (string= type "notebook")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((name name)
-					   (path path))
-			       (lambda (&rest ignore)
-				 (run-at-time 3 nil
-					      #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
-				 (ein:notebooklist-open-notebook
-				  ein:%notebooklist% path)))
-		     "Open")
-		    (widget-insert " ")
-		    (when (gethash path sessions)
-		      (widget-create
-		       'link
-		       :notify (lexical-let ((session (car (gethash path sessions)))
-					     (nblist ein:%notebooklist%))
-				 (lambda (&rest ignore)
-				   (run-at-time 1 nil
-						#'ein:notebooklist-reload
-						ein:%notebooklist%)
-				   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-								      :session-id session))))
-		       "Stop")
-		      (widget-insert " "))
-		    (widget-create
-		     'link
-		     :notify (lexical-let ((path path))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-delete-notebook-ask
-				  path)))
-		     "Delete")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))))
- )
 
  (defun ein:notebooklist-render ()
   "Render notebook list widget.
