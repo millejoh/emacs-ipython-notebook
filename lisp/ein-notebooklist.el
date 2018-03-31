@@ -594,8 +594,9 @@ Only difference is the if type file section is added for ipy3, and
 the api-version line is present for ipy2."
     (widget-insert "\n------------------------------------------\n\n")
     (let (
-	  ;; This next line only if ipy < 3
-          (api-version (ein:$notebooklist-api-version ein:%notebooklist%))
+	  (when (< ipy-version 3)
+            (api-version (ein:$notebooklist-api-version ein:%notebooklist%))
+	  )
 	  (sessions (make-hash-table :test 'equal))
 	  )
 
@@ -625,25 +626,29 @@ the api-version line is present for ipy2."
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
-	  ;; This section only if ipy >= 3 (the file part)
-          if (string= type "file")
-          do (progn (widget-create
-                     'link
-                     :notify (lexical-let ((urlport urlport)
-                                           (path path))
-                               (lambda (&rest ignore)
-                                 (ein:notebooklist-open-file urlport path)))
-                     "Open")
-                    (widget-insert " ")
-                    (widget-create
-                     'link
-                     :notify (lexical-let ((path path))
-                               (lambda (&rest ignore)
-                                 (message "[EIN]: NBlist delete file command. Implement me!")))
-                     "Delete")
-                    (widget-insert " : " name)
-                    (widget-insert "\n"))
-	  ;; Below this ipy2 and ipy3 are identical
+
+	  (when (>= ipy-version 3)
+	    (
+	      ;; This section only if ipy >= 3 (the file part)
+              if (string= type "file")
+              do (progn (widget-create
+                         'link
+                         :notify (lexical-let ((urlport urlport)
+                                               (path path))
+                                   (lambda (&rest ignore)
+                                     (ein:notebooklist-open-file urlport path)))
+                         "Open")
+                        (widget-insert " ")
+                        (widget-create
+                         'link
+                         :notify (lexical-let ((path path))
+                                   (lambda (&rest ignore)
+                                     (message "[EIN]: NBlist delete file command. Implement me!")))
+                         "Delete")
+                        (widget-insert " : " name)
+                        (widget-insert "\n"))
+	  ))
+
           if (string= type "notebook")
           do (progn (widget-create
                      'link
