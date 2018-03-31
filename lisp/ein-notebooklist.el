@@ -589,20 +589,25 @@ Notebook list data is passed via the buffer local variable
 
 
   (defun render-directory ()
-    "Render directory (for ipython>=3."
+    "Render directory (for ipython>=3.
+Only difference is the if type file section is added for ipy3, and
+the api-version line is present for ipy2."
     (widget-insert "\n------------------------------------------\n\n")
-    (let ((sessions (make-hash-table :test 'equal)))
+    (let (
+	  (sessions (make-hash-table :test 'equal))
+	  )
 
-    (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
+    (ein:content-query-sessions sessions
+        (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
+
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
-    (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
+    (loop for note in
+          (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
+
           for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
           for name = (plist-get note :name)
           for path = (plist-get note :path)
-          ;; (cond ((= 2 api-version)
-          ;;        (plist-get note :path))
-          ;;       ((= 3 api-version)
-          ;;        (ein:get-actual-path (plist-get note :path))))
+
           for type = (plist-get note :type)
           for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
           do (widget-insert " ")
@@ -635,6 +640,7 @@ Notebook list data is passed via the buffer local variable
                      "Delete")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
+	  ;; Below this ipy2 and ipy3 are identical
           if (string= type "notebook")
           do (progn (widget-create
                      'link
@@ -674,18 +680,26 @@ Notebook list data is passed via the buffer local variable
   )
 
  (defun render-directory-ipy2 ()
-  (let ((api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-        (sessions (make-hash-table :test 'equal)))
+   "Render directory for ipython2.
+Only difference is the if type file section is added for ipy3, and
+the api-version line is present for ipy2."
+"
+  (let (
+	(api-version (ein:$notebooklist-api-version ein:%notebooklist%))
+        (sessions (make-hash-table :test 'equal))
+	)
 
-    (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
-    (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
+    (ein:content-query-sessions sessions
+        (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
+
+    (sit-for 0.2) ;; FIXME: What is the optimum number here?
+    (loop for note in
+	  (ein:$notebooklist-data ein:%notebooklist%)
+
 	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
 	  for name = (plist-get note :name)
 	  for path = (plist-get note :path)
-	  ;; (cond ((= 2 api-version)
-	  ;;        (plist-get note :path))
-	  ;;       ((= 3 api-version)
-	  ;;        (ein:get-actual-path (plist-get note :path))))
+
 	  for type = (plist-get note :type)
 	  for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
 	  do (widget-insert " ")
@@ -701,6 +715,7 @@ Notebook list data is passed via the buffer local variable
                "Dir")
               (widget-insert " : " name)
               (widget-insert "\n"))
+	  ;; Below this ipy2 and ipy3 are identical
 	  if (string= type "notebook")
 	  do (progn (widget-create
 		     'link
