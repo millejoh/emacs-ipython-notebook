@@ -448,7 +448,7 @@ Notebook list data is passed via the buffer local variable
   (remove-overlays)
 
   (render-header-ipy2)
-  (render-directory-ipy2)
+  (render-directory)
 
   (ein:notebooklist-mode)
   (widget-setup)
@@ -594,6 +594,8 @@ Only difference is the if type file section is added for ipy3, and
 the api-version line is present for ipy2."
     (widget-insert "\n------------------------------------------\n\n")
     (let (
+	  ;; This next line only if ipy < 3
+          (api-version (ein:$notebooklist-api-version ein:%notebooklist%))
 	  (sessions (make-hash-table :test 'equal))
 	  )
 
@@ -623,6 +625,7 @@ the api-version line is present for ipy2."
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
+	  ;; This section only if ipy >= 3 (the file part)
           if (string= type "file")
           do (progn (widget-create
                      'link
@@ -678,79 +681,6 @@ the api-version line is present for ipy2."
 
     )
   )
-
- (defun render-directory-ipy2 ()
-   "Render directory for ipython2.
-Only difference is the if type file section is added for ipy3, and
-the api-version line is present for ipy2."
-"
-  (let (
-	(api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-        (sessions (make-hash-table :test 'equal))
-	)
-
-    (ein:content-query-sessions sessions
-        (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
-
-    (sit-for 0.2) ;; FIXME: What is the optimum number here?
-    (loop for note in
-	  (ein:$notebooklist-data ein:%notebooklist%)
-
-	  for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
-	  for name = (plist-get note :name)
-	  for path = (plist-get note :path)
-
-	  for type = (plist-get note :type)
-	  for opened-notebook-maybe = (ein:notebook-get-opened-notebook urlport path)
-	  do (widget-insert " ")
-	  if (string= type "directory")
-	  do (progn (widget-create
-               'link
-               :notify (lexical-let ((urlport urlport)
-                                     (path name))
-                         (lambda (&rest ignore)
-                           (ein:notebooklist-open urlport
-                                                  (ein:url (ein:$notebooklist-path ein:%notebooklist%)
-                                                           path))))
-               "Dir")
-              (widget-insert " : " name)
-              (widget-insert "\n"))
-	  ;; Below this ipy2 and ipy3 are identical
-	  if (string= type "notebook")
-	  do (progn (widget-create
-		     'link
-		     :notify (lexical-let ((name name)
-					   (path path))
-			       (lambda (&rest ignore)
-				 (run-at-time 3 nil
-					      #'ein:notebooklist-reload ein:%notebooklist%) ;; TODO using deferred better?
-				 (ein:notebooklist-open-notebook
-				  ein:%notebooklist% path)))
-		     "Open")
-		    (widget-insert " ")
-		    (when (gethash path sessions)
-		      (widget-create
-		       'link
-		       :notify (lexical-let ((session (car (gethash path sessions)))
-					     (nblist ein:%notebooklist%))
-				 (lambda (&rest ignore)
-				   (run-at-time 1 nil
-						#'ein:notebooklist-reload
-						ein:%notebooklist%)
-				   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-								      :session-id session))))
-		       "Stop")
-		      (widget-insert " "))
-		    (widget-create
-		     'link
-		     :notify (lexical-let ((path path))
-			       (lambda (&rest ignore)
-				 (ein:notebooklist-delete-notebook-ask
-				  path)))
-		     "Delete")
-		    (widget-insert " : " name)
-		    (widget-insert "\n"))))
- )
 
  (defun ein:notebooklist-render ()
   "Render notebook list widget.
