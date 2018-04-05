@@ -221,8 +221,13 @@ notebooks."
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (ein:shared-output-eval-string (buffer-string) nil nil nil :silent t)
-  (ein:connect-execute-autoexec-cells)
+  (deferred:$
+    (deferred:next
+      (lambda ()
+        (ein:shared-output-eval-string (buffer-string) nil nil nil :silent t)))
+    (deferred:nextc it
+      (lambda ()
+        (ein:connect-execute-autoexec-cells))))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
