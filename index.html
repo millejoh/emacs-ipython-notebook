@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.13.0 documentation</title>
+    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.13.1 documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.13.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -28,15 +20,14 @@
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
     <![endif]-->
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.1 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -81,7 +72,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#gotchas-and-caveats">Gotchas and caveats</a><ul>
-<li><a class="reference internal" href="#url-retrieve"><code class="docutils literal"><span class="pre">url-retrieve</span></code></a></li>
+<li><a class="reference internal" href="#url-retrieve"><code class="docutils literal notranslate"><span class="pre">url-retrieve</span></code></a></li>
 <li><a class="reference internal" href="#id16">MuMaMo</a></li>
 <li><a class="reference internal" href="#python-mode-el">python-mode.el</a></li>
 </ul>
@@ -98,6 +89,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a><ul>
+<li><a class="reference internal" href="#v0-13-1">v0.13.1</a></li>
 <li><a class="reference internal" href="#v0-13-0">v0.13.0</a></li>
 <li><a class="reference internal" href="#v0-12-3">v0.12.3</a></li>
 <li><a class="reference internal" href="#v0-12-2">v0.12.2</a></li>
@@ -136,12 +128,14 @@
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -170,7 +164,7 @@ even possible to connect a console over ssh <a class="footnote-reference" href="
 <li>IPython kernel can be “connected” to a buffer.  This enables you to evaluate
 buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
 help, help browser and code completion are available in these buffers. <a class="footnote-reference" href="#id4" id="id2">[2]</a></li>
-<li>Jump to definition (go to the definition by hitting <code class="docutils literal"><span class="pre">M-.</span></code> over an
+<li>Jump to definition (go to the definition by hitting <code class="docutils literal notranslate"><span class="pre">M-.</span></code> over an
 object).</li>
 <li>Execute code from an org-mode source block in a running kernel.</li>
 </ul>
@@ -180,8 +174,9 @@ object).</li>
 <li>Auto/manual-completion</li>
 <li>Popup (tooltip) help</li>
 <li>Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)</li>
-<li>Help browser (opens when executing <code class="docutils literal"><span class="pre">function?</span></code>)</li>
+<li>Help browser (opens when executing <code class="docutils literal notranslate"><span class="pre">function?</span></code>)</li>
 <li>Traceback viewer</li>
+<li>Integration with the emacs debugger</li>
 </ul>
 <p>Links:</p>
 <ul class="simple">
@@ -198,13 +193,13 @@ object).</li>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>You need to setup <a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-args</span></code></a> properly</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>You need to setup <a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-args</span></code></a> properly</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Use the command <a class="reference internal" href="#ein:connect-to-notebook-command" title="ein:connect-to-notebook-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-notebook-command</span></code></a>.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Use the command <a class="reference internal" href="#ein:connect-to-notebook-command" title="ein:connect-to-notebook-command"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-to-notebook-command</span></code></a>.</td></tr>
 </tbody>
 </table>
 <div class="section" id="quick-try">
@@ -215,7 +210,7 @@ layer. Using <a class="reference external" href="http://tkf.github.io/emacs-ipyt
 work.</p>
 <p>If you are installing from <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> and have issues with some functions not being
 available after emacs starts, try adding the following to your emacs init file:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">package-initialize</span><span class="p">)</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">package-initialize</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
@@ -226,7 +221,7 @@ available after emacs starts, try adding the following to your emacs init file:<
 <div class="section" id="requirements">
 <span id="requirements-label"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">EMACS 24.5, 25.2, or 26</p>
+<li><p class="first">EMACS 24.5, 25.3, or 26</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://ipython.org/">IPython</a> 2.0 or higher.</p>
 </li>
@@ -236,21 +231,21 @@ available after emacs starts, try adding the following to your emacs init file:<
 </li>
 <li><p class="first"><a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a> &gt;= 0.3</p>
 </li>
-<li><p class="first"><a href="#id24"><span class="problematic" id="id25">`request-deferred`_</span></a> &gt;= 0.2</p>
+<li><p class="first"><a class="reference external" href="https://github.com/tkf/emacs-request/blob/master/request-deferred.el">request-deferred.el</a> &gt;= 0.2</p>
 </li>
 <li><p class="first"><a class="reference external" href="https://github.com/magnars/dash.el">dash</a> &gt;= 2.13</p>
 </li>
 <li><p class="first"><a class="reference external" href="https://github.com/magnars/s.el">s</a> &gt;= 1.11</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a> &gt;= 1.4:
-You need to configure subpackage <code class="docutils literal"><span class="pre">ein-ac</span></code> to enable
+You need to configure subpackage <code class="docutils literal notranslate"><span class="pre">ein-ac</span></code> to enable
 this feature.</p>
 </li>
 <li><p class="first"><a class="reference external" href="https://github.com/skeeto/skewer-mode">skewer-mode</a> &gt;= 1.6.2:
 Skewer mode gives EIN the ability to execute dynamic javascript in the
 note book.</p>
 </li>
-<li><p class="first">(optional) <a href="#id26"><span class="problematic" id="id27">Jupyterhub_</span></a> 0.8 or higher:
+<li><p class="first">(optional) <a href="#id24"><span class="problematic" id="id25">Jupyterhub_</span></a> 0.8 or higher:
 EIN supports logging in to Jupyterhub servers using PAM authentication,
 though this only works with v0.8, which currently is the development version
 of Jupyterhub.</p>
@@ -259,18 +254,18 @@ of Jupyterhub.</p>
 </li>
 <li><p class="first">(optional) python-mode:
 It should work with either python.el or python-mode.el. <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> is
-required to use <code class="docutils literal"><span class="pre">ein:console-open</span></code> command.</p>
+required to use <code class="docutils literal notranslate"><span class="pre">ein:console-open</span></code> command.</p>
 </li>
 <li><p class="first">(optional) <a class="reference external" href="https://github.com/myuhe/smartrep.el">smartrep.el</a>:
 This package enables you to omit typing prefix keys (e.g.,
-<code class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">...</span></code> instead of <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">...</span></code>).
-You need to configure subpackage <code class="docutils literal"><span class="pre">ein-smartrep</span></code> to enable
+<code class="docutils literal notranslate"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">C-n</span> <span class="pre">...</span></code> instead of <code class="docutils literal notranslate"><span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">C-c</span> <span class="pre">C-n</span> <span class="pre">...</span></code>).
+You need to configure subpackage <code class="docutils literal notranslate"><span class="pre">ein-smartrep</span></code> to enable
 this feature.</p>
 </li>
 <li><p class="first">(optional) <a class="reference external" href="https://github.com/tkf/emacs-jedi">jedi.el</a>:
 Python auto-completion for emacs using <a class="reference external" href="https://github.com/davidhalter/jedi">jedi</a>. In your
 emacs initialization file add</p>
-<p><code class="docutils literal"><span class="pre">(setq</span> <span class="pre">ein:completion-backend</span> <span class="pre">'ein:use-ac-jedi-backend)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">(setq</span> <span class="pre">ein:completion-backend</span> <span class="pre">'ein:use-ac-jedi-backend)</span></code></p>
 </li>
 </ul>
 <p>Also, EIN heavily relies on standard Emacs libraries including EWOC,
@@ -294,7 +289,7 @@ MELPA is highly recommended.</p>
 <div class="section" id="using-el-get">
 <h3>Using el-get<a class="headerlink" href="#using-el-get" title="Permalink to this headline">¶</a></h3>
 <p>If you use developmental version of <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a> installation is simple.  Emacs
-IPython Notebook is registered as package <code class="docutils literal"><span class="pre">ein</span></code>.  See the <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a> website
+IPython Notebook is registered as package <code class="docutils literal notranslate"><span class="pre">ein</span></code>.  See the <a class="reference external" href="https://github.com/dimitri/el-get">el-get</a> website
 for more information.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -318,14 +313,14 @@ is added to its setting. See <a class="reference external" href="https://github.
 </div>
 <div class="section" id="manual-install">
 <h3>Manual install<a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
-<p>Put Emacs lisp <code class="docutils literal"><span class="pre">ein*.el</span></code> files and Python file <code class="docutils literal"><span class="pre">ein.py</span></code> in
-a directory defined in your <code class="xref el el-symbol docutils literal"><span class="pre">load-path</span></code>.</p>
+<p>Put Emacs lisp <code class="docutils literal notranslate"><span class="pre">ein*.el</span></code> files and Python file <code class="docutils literal notranslate"><span class="pre">ein.py</span></code> in
+a directory defined in your <code class="xref el el-symbol docutils literal notranslate"><span class="pre">load-path</span></code>.</p>
 <p>You should byte compile EIN, especially when using MuMaMo, otherwise
 editing large notebook will be very slow.  You can use the following
 command to compile EIN.  If you don’t specify all the optional
 packages, there will be compiler warning but that is OK as long as you
 don’t use that optional package.</p>
-<div class="highlight-sh"><div class="highlight"><pre><span></span>emacs -Q -batch -L .          <span class="se">\ </span> <span class="c1"># don&#39;t forget the dot!</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>emacs -Q -batch -L .          <span class="se">\ </span> <span class="c1"># don&#39;t forget the dot!</span>
     -L PATH/TO/websocket/     <span class="se">\</span>
     -L PATH/TO/requests/      <span class="se">\</span>
     -L PATH/TO/nxhtml/util/   <span class="se">\ </span> <span class="c1"># optional (for MuMaMo)</span>
@@ -341,7 +336,7 @@ don’t use that optional package.</p>
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
 <p>Here is the minimal configuration.  See <a class="reference internal" href="#customization">customization</a> for more details.</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
@@ -352,16 +347,16 @@ don’t use that optional package.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Start the <a class="reference external" href="https://jupyter.readthedocs.io/en/latest/running.html">Jupyter notebook server</a> from the terminal or call <code class="docutils literal"><span class="pre">M-x</span>
+<li>Start the <a class="reference external" href="https://jupyter.readthedocs.io/en/latest/running.html">Jupyter notebook server</a> from the terminal or call <code class="docutils literal notranslate"><span class="pre">M-x</span>
 <span class="pre">ein:jupyter-server-start</span></code> from emacs. Note starting the notebook server from
-emacs will automatically call <code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>, making
+emacs will automatically call <code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-login-and-open</span></code>, making
 steps 2 and 3 below unnecessary!</li>
 <li>If you have token or password authentication enabled then you will need to
-call <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code> and enter the appropriate password.</li>
-<li>Hit <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> to open notebook list. This will open
+call <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code> and enter the appropriate password.</li>
+<li>Hit <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> to open notebook list. This will open
 <a class="reference internal" href="#notebook-list-commands"><span class="std std-ref">notebook list</span></a> buffer.</li>
 <li>In the notebook list buffer, you can open notebooks by selecting the
-<code class="docutils literal"><span class="pre">[Open]</span></code> buttons.  See the <a class="reference internal" href="#notebook-commands"><span class="std std-ref">notebook</span></a> section for
+<code class="docutils literal notranslate"><span class="pre">[Open]</span></code> buttons.  See the <a class="reference internal" href="#notebook-commands"><span class="std std-ref">notebook</span></a> section for
 operations and commands available in the notebook buffer.</li>
 </ol>
 </div>
@@ -370,21 +365,24 @@ operations and commands available in the notebook buffer.</li>
 <div class="section" id="running-a-jupyter-notebook-server-from-emacs">
 <span id="notebook-list-commands"></span><h3>Running a Jupyter Notebook Server from Emacs<a class="headerlink" href="#running-a-jupyter-notebook-server-from-emacs" title="Permalink to this headline">¶</a></h3>
 <p>Using the commands below you start a jupyter notebook session from within emacs
-(i.e. no need to drop to the terminal shell and call <code class="docutils literal"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>). If
+(i.e. no need to drop to the terminal shell and call <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>). If
 you are particularly lucky ein will also determine the access url and token
 authentication for the running server and automatically log you in.</p>
 <p>Note that the below work best with current (&gt; v4.3.1) versions of jupyter.</p>
 <dl class="function">
 <dt id="ein:jupyter-server-start">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-after-start-p</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-after-start-p</em> <em>no-popup</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the jupyter notebook server at the given path.</p>
 <p>This command opens an asynchronous process running the jupyter
 notebook server and then tries to detect the url and token to
 generate automatic calls to ‘ein:notebooklist-login’ and
 ‘ein:notebooklist-open’.</p>
-<p>On executing the command will prompt the user for the path to the
-jupyter executable and the path for the root directory containing
-the notebooks the user wants to access.</p>
+<p>With C-u prefix arg, it will prompt the user for the path to
+the jupyter executable first. Else, it will try to use the
+value of ‘<em>ein:last-jupyter-command</em>’ or the value of the
+customizable variable ‘ein:jupyter-default-server-command’.</p>
+<p>Then it prompts the user for the path of the root directory
+containing the notebooks the user wants to access.</p>
 <p>The buffer named by ‘ein:jupyter-server-buffer-name’ will contain
 the log of the running jupyter server.</p>
 </dd></dl>
@@ -399,7 +397,7 @@ there is no running server then no action will be taken.</p>
 
 <dl class="function">
 <dt id="ein:jupyter-server-login-and-open">
-<em class="property">function </em><code class="descname">ein:jupyter-server-login-and-open</code><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-login-and-open </code><em>&amp;optional</em> <em>no-popup</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log in and open a notebooklist buffer for a running jupyter notebook server.</p>
 <p>Determine if there is a running jupyter server (started via a
 call to ‘ein:jupyter-server-start’) and then try to guess if
@@ -411,7 +409,7 @@ via a call to ‘ein:notebooklist-open’.</p>
 </div>
 <div class="section" id="notebook-list">
 <h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
-<p>You can start notebook by <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> and enter the
+<p>You can start notebook by <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> and enter the
 port or URL of the IPython notebook server.</p>
 <dl class="function">
 <dt id="ein:notebooklist-open">
@@ -1189,6 +1187,7 @@ This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
 ‘ein:shared-output-pop-to-buffer’.</p>
+<p>(fn CODE &amp;optional POPUP VERBOSE KERNEL &amp;rest ARGS)</p>
 </dd></dd>
 </dl>
 
@@ -1223,7 +1222,7 @@ This command has no key binding because there is no way to undo
 deletion.  Use kill to play on the safe side.</p>
 <p>If you really want use this command, you can do something like this
 (but be careful when using it!):</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(define-key ein:notebook-mode-map &quot;\C-c\C-d&quot;
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>(define-key ein:notebook-mode-map &quot;\C-c\C-d&quot;
             ’ein:worksheet-delete-cell)
 </pre></div>
 </div>
@@ -1280,7 +1279,7 @@ be prompted on which one to use.</p>
 <div class="section" id="advanced-editing">
 <h3>Advanced Editing<a class="headerlink" href="#advanced-editing" title="Permalink to this headline">¶</a></h3>
 <p>Worksheet cells can be edited in a manner similar to <a class="reference external" href="http://orgmode.org/manual/Editing-source-code.html#Editing-source-code">source blocks</a> in Org
-buffers. Use <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">'</span></code> to edit the contents of the current cell. You can execute
+buffers. Use <code class="docutils literal notranslate"><span class="pre">C-c</span> <span class="pre">'</span></code> to edit the contents of the current cell. You can execute
 the contents of the buffer and the results will be sent to the output of the
 cell being edited.</p>
 <dl class="keybind">
@@ -1371,7 +1370,7 @@ and place results (if any) in output of original notebook cell.</p>
 <p>You can connect any buffer (though typically a buffer that contains a Python
 file) to an opened notebook and use the kernel of that notebook to execute code,
 inspect objects, auto-complete code, jump to the other source, etc.  Once the
-buffer is connected to the notebook, minor mode <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-mode</span></code> is
+buffer is connected to the notebook, minor mode <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-mode</span></code> is
 enabled and the following keybinds are available.</p>
 <dl class="keybind">
 <dt>
@@ -1516,6 +1515,7 @@ This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
 ‘ein:shared-output-pop-to-buffer’.</p>
+<p>(fn CODE &amp;optional POPUP VERBOSE KERNEL &amp;rest ARGS)</p>
 </dd></dd>
 </dl>
 
@@ -1608,7 +1608,7 @@ selecting it.</p>
 <div class="section" id="traceback-viewer">
 <h3>Traceback viewer<a class="headerlink" href="#traceback-viewer" title="Permalink to this headline">¶</a></h3>
 <p>Tracebacks from the notebook buffer can be difficult to understand.  You can
-open a Traceback viewer by calling <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></code>.</p>
+open a Traceback viewer by calling <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-view-traceback</span></code>.</p>
 <p>In the Traceback viewer, following keybinds are available.</p>
 <p>Keymap for ein:traceback-mode.</p>
 <dl class="keybind">
@@ -1713,8 +1713,8 @@ to install it if you are using newer Emacs.</p>
 <p>You can execute org source blocks in EIN by adding <cite>ein</cite> to
 <cite>org:babel-load-languages</cite>. You need to specify a notebook via the :session
 argument. The format for the session argument is
-<cite>{url-or-port}/{path-to-notbooke}</cite>. For example:</p>
-<div class="code python highlight-cl"><div class="highlight"><pre><span></span><span class="o">#+</span><span class="nv">BEGIN_SRC</span> <span class="nv">ein</span> <span class="ss">:session</span> <span class="nv">8888/Untitled.ipynb</span>
+<cite>{url-or-port}/{path-to-notebook}</cite>. For example:</p>
+<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="o">#+</span><span class="nv">BEGIN_SRC</span> <span class="nv">ein</span> <span class="ss">:session</span> <span class="nv">8888/Untitled.ipynb</span>
 <span class="nb">import</span> <span class="nv">sys</span>
 
 <span class="nv">a</span> <span class="nb">=</span> <span class="mi">14500</span>
@@ -1726,7 +1726,7 @@ argument. The format for the session argument is
 <p>If your code block generates an image, like from an matplotlib plot, then
 specify the file to save the image to using the <cite>:image</cite> argument as in the
 example below:</p>
-<div class="code python highlight-cl"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
+<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -1739,13 +1739,13 @@ plt.plot(x,y)
 </div>
 <p>You can also link to an IPython notebook from <a class="reference external" href="http://orgmode.org/">org-mode</a> files.</p>
 <ol class="arabic simple">
-<li>Call org-mode function <code class="xref el el-symbol docutils literal"><span class="pre">org-store-link</span></code>
+<li>Call org-mode function <code class="xref el el-symbol docutils literal notranslate"><span class="pre">org-store-link</span></code>
 <a class="footnote-reference" href="#org-store-link" id="id10">[5]</a> in notebook buffer.  You can select a region to
 specify a position in the notebook.</li>
-<li>Go to org-mode file and type <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-l</span></code>
-(<code class="xref el el-symbol docutils literal"><span class="pre">org-insert-link</span></code>).  This will insert a link to the
+<li>Go to org-mode file and type <code class="docutils literal notranslate"><span class="pre">C-c</span> <span class="pre">C-l</span></code>
+(<code class="xref el el-symbol docutils literal notranslate"><span class="pre">org-insert-link</span></code>).  This will insert a link to the
 notebook.</li>
-<li>Type <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-o</span></code> (<code class="xref el el-symbol docutils literal"><span class="pre">org-open-at-point</span></code>) to open
+<li>Type <code class="docutils literal notranslate"><span class="pre">C-c</span> <span class="pre">C-o</span></code> (<code class="xref el el-symbol docutils literal notranslate"><span class="pre">org-open-at-point</span></code>) to open
 the link at the point of cursor.</li>
 </ol>
 <table class="docutils footnote" frame="void" id="org-store-link" rules="none">
@@ -1757,7 +1757,7 @@ the link at the point of cursor.</li>
 </div>
 <div class="section" id="customization">
 <h2>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
-<p>You can customize EIN by typing <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></code>.  All the
+<p>You can customize EIN by typing <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></code>.  All the
 configurable variables are listed below.</p>
 <div class="section" id="subpackages">
 <h3>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
@@ -1767,7 +1767,7 @@ configurable variables are listed below.</p>
 <dd><p>Determines which completion backend to use in opened EIN notebooks.</p>
 <p>After changing the value of this variable it is recommended that
 you restart Emacs. The available completion backends are:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>* ein:use-ac-backend : Use auto-complete with IPython&#39;s builtin completion engine.
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>* ein:use-ac-backend : Use auto-complete with IPython&#39;s builtin completion engine.
 * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
 * ein:use-company-backend : Use company-mode with IPython&#39;s builtin completion engine.
 * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
@@ -1779,7 +1779,7 @@ you restart Emacs. The available completion backends are:</p>
 <dl class="variable">
 <dt id="ein:use-auto-complete-superpack">
 <em class="property">variable </em><code class="descname">ein:use-auto-complete-superpack</code><a class="headerlink" href="#ein:use-auto-complete-superpack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to use preset a little bit hacky auto-complete configuration.
+<dd><p>Set to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> to use preset a little bit hacky auto-complete configuration.
 When this option is enabled, cached omni completion is available.</p>
 </dd></dl>
 
@@ -1791,13 +1791,13 @@ When this option is enabled, cached omni completion is available.</p>
 <dl class="variable">
 <dt id="ein:use-smartrep">
 <em class="property">variable </em><code class="descname">ein:use-smartrep</code><a class="headerlink" href="#ein:use-smartrep" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to use preset smartrep configuration.</p>
+<dd><p>Set to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> to use preset smartrep configuration.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">When used with MuMaMo (see <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-modes</span></code></a>),
+<p class="last">When used with MuMaMo (see <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-modes</span></code></a>),
 keyboard macro which manipulates cell (add, remove, move,
 etc.) may start infinite loop (you need to stop it with
-<code class="docutils literal"><span class="pre">C-g</span></code>).  Please be careful using this option if you are a
+<code class="docutils literal notranslate"><span class="pre">C-g</span></code>).  Please be careful using this option if you are a
 heavy keyboard macro user.  Using keyboard macro for other
 commands is fine.</p>
 </div>
@@ -1834,11 +1834,11 @@ Notebook server.</p>
 <dd><p>Load notebook list but do not pop-up the notebook list buffer.</p>
 <p>For example, if you want to load notebook list when Emacs starts,
 add this in the Emacs initialization file:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(add-to-hook ’after-init-hook ’ein:notebooklist-load)
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>(add-to-hook ’after-init-hook ’ein:notebooklist-load)
 </pre></div>
 </div>
 <p>or even this (if you want fast Emacs start-up):</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>;; load notebook list if Emacs is idle for 3 sec after start-up
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>;; load notebook list if Emacs is idle for 3 sec after start-up
 (run-with-idle-timer 3 nil #’ein:notebooklist-load)
 </pre></div>
 </div>
@@ -1856,18 +1856,11 @@ in order to make this code work.</p>
 <em class="property">variable </em><code class="descname">ein:worksheet-enable-undo</code><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure undo in notebook buffers.</p>
 <dl class="docutils">
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">no</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
-<dd>Do not use undo in notebook buffers.  It is the safest option.</dd>
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">yes</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
-<dd>Enable undo in notebook buffers.  You can’t undo after
-modification of cell (execution, add, remove, etc.).  This
-is default.</dd>
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">full</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">symbol</span></dt>
-<dd>Enable full undo in notebook buffers.  It is powerful but
-sometime (typically after the cell specific commands) undo
-mess up notebook buffer.  Use it on your own risk.  When the
-buffer is messed up, you can just redo and continue editing,
-or save it once and reopen it if you want to be careful.</dd>
+<dt><code class="xref el el-symbol docutils literal notranslate"><span class="pre">nil</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">boolean. Do not use undo in notebook buffers. This is the</span></dt>
+<dd>safest option.</dd>
+<dt><code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">boolean Enable full undo in notebook buffers. It is</span></dt>
+<dd>powerful but sometimes (typically after cell specific commands)
+undo will corrupt the notebook buffer data. Use at your own risk!</dd>
 </dl>
 <p>You need to reopen the notebook buffer to reflect the change of
 this value.</p>
@@ -1881,23 +1874,23 @@ this value.</p>
 and the first usable mode is used.</p>
 <p>Available modes:</p>
 <ul class="simple">
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-multilang-mode</span></code></li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mumamo-mode</span></code></li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-python-mode</span></code></li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-plain-mode</span></code></li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-multilang-mode</span></code></li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-mumamo-mode</span></code></li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-python-mode</span></code></li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-plain-mode</span></code></li>
 </ul>
 <p>Examples:</p>
 <p>Use MuMaMo if it is installed.  Otherwise, use plain mode.
 This is the old default setting:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Avoid using MuMaMo even when it is installed:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-plain-mode</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Use simple <code class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></code> based notebook mode when MuMaMo is not installed:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-python-mode</span><span class="p">))</span>
+<p>Use simple <code class="xref el el-symbol docutils literal notranslate"><span class="pre">python-mode</span></code> based notebook mode when MuMaMo is not installed:</p>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:notebook-modes</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">ein:notebook-mumamo-mode</span> <span class="nv">ein:notebook-python-mode</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1917,9 +1910,9 @@ This is the old default setting:</p>
 <dt id="ein:notebook-querty-timeout-save">
 <em class="property">variable </em><code class="descname">ein:notebook-querty-timeout-save</code><a class="headerlink" href="#ein:notebook-querty-timeout-save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query timeout for saving notebook.
-Similar to <a class="reference internal" href="#ein:notebook-querty-timeout-open" title="ein:notebook-querty-timeout-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-querty-timeout-open</span></code></a>, but for saving
+Similar to <a class="reference internal" href="#ein:notebook-querty-timeout-open" title="ein:notebook-querty-timeout-open"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-querty-timeout-open</span></code></a>, but for saving
 notebook.  For global setting and more information, see
-<a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><code class="xref el el-symbol docutils literal"><span class="pre">ein:query-timeout</span></code></a>.</p>
+<a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:query-timeout</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -1927,23 +1920,23 @@ notebook.  For global setting and more information, see
 <em class="property">variable </em><code class="descname">ein:cell-traceback-level</code><a class="headerlink" href="#ein:cell-traceback-level" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of traceback stack to show.
 Hidden tracebacks are not discarded.  You can always view them
-using the command <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-view-traceback</span></code>.</p>
+using the command <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-view-traceback</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:cell-autoexec-prompt">
 <em class="property">variable </em><code class="descname">ein:cell-autoexec-prompt</code><a class="headerlink" href="#ein:cell-autoexec-prompt" title="Permalink to this definition">¶</a></dt>
 <dd><p>String shown in the cell prompt when the auto-execution flag
-is on.  See also <a class="reference internal" href="#ein:connect-aotoexec-lighter" title="ein:connect-aotoexec-lighter"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-aotoexec-lighter</span></code></a>.</p>
+is on.  See also <a class="reference internal" href="#ein:connect-aotoexec-lighter" title="ein:connect-aotoexec-lighter"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-aotoexec-lighter</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:junk-notebook-name-template">
 <em class="property">variable </em><code class="descname">ein:junk-notebook-name-template</code><a class="headerlink" href="#ein:junk-notebook-name-template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Junk notebook name template.
-This value is used from <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-new-scratch-notebook</span></code>
-and <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></code>.  This must be a
-format string which can be passed to <code class="xref el el-symbol docutils literal"><span class="pre">format-time-string</span></code>.</p>
+This value is used from <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebooklist-new-scratch-notebook</span></code>
+and <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-rename-to-scratch-command</span></code>.  This must be a
+format string which can be passed to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">format-time-string</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -1956,44 +1949,44 @@ format string which can be passed to <code class="xref el el-symbol docutils lit
 <dt id="ein:complete-on-dot">
 <em class="property">variable </em><code class="descname">ein:complete-on-dot</code><a class="headerlink" href="#ein:complete-on-dot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start completion when inserting a dot.  Note that
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete</span></code> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-auto-complete-superpack</span></code></a>)
-must be <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to enable this option.  This variable has effect on
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-auto-complete</span></code> (or <a class="reference internal" href="#ein:use-auto-complete-superpack" title="ein:use-auto-complete-superpack"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-auto-complete-superpack</span></code></a>)
+must be <code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> to enable this option.  This variable has effect on
 notebook buffers and connected buffers.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:helm-kernel-history-search-key">
 <em class="property">variable </em><code class="descname">ein:helm-kernel-history-search-key</code><a class="headerlink" href="#ein:helm-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bind <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></code></a> to this key in notebook mode.</p>
+<dd><p>Bind <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">helm-ein-kernel-history</span></code></a> to this key in notebook mode.</p>
 <p>Example:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:helm-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:helm-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This key will be installed in the <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></code>.</p>
+<p>This key will be installed in the <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-mode-map</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:anything-kernel-history-search-key">
 <em class="property">variable </em><code class="descname">ein:anything-kernel-history-search-key</code><a class="headerlink" href="#ein:anything-kernel-history-search-key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bind <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></code></a> to this key in notebook mode.</p>
+<dd><p>Bind <a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">anything-ein-kernel-history</span></code></a> to this key in notebook mode.</p>
 <p>Example:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:anything-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:anything-kernel-history-search-key</span> <span class="s">&quot;\M-r&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This key will be installed in the <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-mode-map</span></code>.</p>
+<p>This key will be installed in the <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-mode-map</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:helm-kernel-history-search-auto-pattern">
 <em class="property">variable </em><code class="descname">ein:helm-kernel-history-search-auto-pattern</code><a class="headerlink" href="#ein:helm-kernel-history-search-auto-pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Automatically construct search pattern when non-<code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code>.</p>
+<dd><p>Automatically construct search pattern when non-<code class="xref el el-symbol docutils literal notranslate"><span class="pre">nil</span></code>.</p>
 <ol class="arabic simple">
 <li>Single space is converted to “*”.</li>
 <li>A backslash followed by a space is converted to a single space.</li>
 <li>A “*” is added at the beginning and end of the pattern.</li>
 </ol>
-<p>This variable applies to both <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></code></a> and
-<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></code></a>.</p>
+<p>This variable applies to both <a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">helm-ein-kernel-history</span></code></a> and
+<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">anything-ein-kernel-history</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -2003,26 +1996,26 @@ notebook buffers and connected buffers.</p>
 First output-type found in this list will be used.
 This variable can be a list or a function returning a list given
 DATA plist.
-See also <code class="xref el el-symbol docutils literal"><span class="pre">ein:output-type-prefer-pretty-text-over-html</span></code>.</p>
+See also <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:output-type-prefer-pretty-text-over-html</span></code>.</p>
 <p><strong>Example</strong>:
 If you prefer HTML type over text type, you can set it as:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:output-type-preference</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:output-type-preference</span>
       <span class="o">&#39;</span><span class="p">(</span><span class="nv">emacs-lisp</span> <span class="nv">svg</span> <span class="nv">png</span> <span class="nv">jpeg</span> <span class="nv">html</span> <span class="nv">text</span> <span class="nv">latex</span> <span class="nv">javascript</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Note that <code class="docutils literal"><span class="pre">html</span></code> comes before <code class="docutils literal"><span class="pre">text</span></code>.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">html</span></code> comes before <code class="docutils literal notranslate"><span class="pre">text</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:shr-env">
 <em class="property">variable </em><code class="descname">ein:shr-env</code><a class="headerlink" href="#ein:shr-env" title="Permalink to this definition">¶</a></dt>
-<dd><p>Variables let-bound while calling <code class="xref el el-symbol docutils literal"><span class="pre">shr-insert-document</span></code>.</p>
+<dd><p>Variables let-bound while calling <code class="xref el el-symbol docutils literal notranslate"><span class="pre">shr-insert-document</span></code>.</p>
 <p>To use default shr setting:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:shr-env</span> <span class="no">nil</span><span class="p">)</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:shr-env</span> <span class="no">nil</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Draw boundaries for table (default):</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(setq ein:shr-env
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>(setq ein:shr-env
       &#39;((shr-table-horizontal-line ?-)
         (shr-table-vertical-line ?|)
         (shr-table-corner ?+)))
@@ -2047,11 +2040,11 @@ C-cS.</dd>
 <dd><p>Sets the frequency (in seconds) at which the notebook is
 automatically saved.</p>
 <p>Autosaves are automatically enabled when a notebook is opened,
-but can be controlled manually via <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-enable-autosave</span></code>
-and <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-disable-autosave</span></code>.</p>
+but can be controlled manually via <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-enable-autosave</span></code>
+and <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-disable-autosave</span></code>.</p>
 <p>If this parameter is changed than you must call
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-disable-autosave</span></code> and then
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-enable-autosave</span></code> on all open notebooks for the
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-disable-autosave</span></code> and then
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-enable-autosave</span></code> on all open notebooks for the
 changes to take effect.</p>
 </dd></dl>
 
@@ -2060,7 +2053,7 @@ changes to take effect.</p>
 <em class="property">variable </em><code class="descname">ein:notebook-create-checkpoint-on-save</code><a class="headerlink" href="#ein:notebook-create-checkpoint-on-save" title="Permalink to this definition">¶</a></dt>
 <dd><p>If non-nil a checkpoint will be created every time the
 notebook is saved. Otherwise checkpoints must be created manually
-via <a class="reference internal" href="#ein:notebook-create-checkpoint" title="ein:notebook-create-checkpoint"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-create-checkpoint</span></code></a>.</p>
+via <a class="reference internal" href="#ein:notebook-create-checkpoint" title="ein:notebook-create-checkpoint"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-create-checkpoint</span></code></a>.</p>
 </dd></dl>
 
 </div>
@@ -2078,7 +2071,7 @@ Handy when you have only one IPython server.</dd>
 <dt>alist</dt>
 <dd>An alist whose element is “(URL-OR-PORT . DIR)”.
 Key (URL-OR-PORT) can be string (URL), integer (port), or
-<code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> (symbol).  The value of <code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> is used when
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">default</span></code> (symbol).  The value of <code class="xref el el-symbol docutils literal notranslate"><span class="pre">default</span></code> is used when
 other key does not much.  Normally you should have this
 entry.</dd>
 <dt>function</dt>
@@ -2091,8 +2084,8 @@ You can have complex setting using this.</dd>
 <dt id="ein:console-executable">
 <em class="property">variable </em><code class="descname">ein:console-executable</code><a class="headerlink" href="#ein:console-executable" title="Permalink to this definition">¶</a></dt>
 <dd><p>IPython executable used for console.</p>
-<p>Example: <code class="docutils literal"><span class="pre">&quot;/user/bin/ipython&quot;</span></code>.
-Types same as <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a> are valid.</p>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">&quot;/user/bin/ipython&quot;</span></code>.
+Types same as <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-security-dir</span></code></a> are valid.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -2105,28 +2098,28 @@ Types same as <a class="reference internal" href="#ein:console-security-dir" tit
 of string as value now.</p>
 </div>
 <p>Setting to use IPython profile named “YOUR-IPYTHON-PROFILE”:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--profile&quot;</span> <span class="s">&quot;YOUR-IPYTHON-PROFILE&quot;</span><span class="p">))</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--profile&quot;</span> <span class="s">&quot;YOUR-IPYTHON-PROFILE&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Together with <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a>, you can open IPython
+<p>Together with <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-security-dir</span></code></a>, you can open IPython
 console connecting to a remote kernel.:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--ssh&quot;</span> <span class="s">&quot;HOSTNAME&quot;</span><span class="p">))</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--ssh&quot;</span> <span class="s">&quot;HOSTNAME&quot;</span><span class="p">))</span>
 <span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-security-dir</span> <span class="s">&quot;PATH/TO/SECURITY/DIR&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You can setup <a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-args</span></code></a> per server basis using alist form:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span>
+<p>You can setup <a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-args</span></code></a> per server basis using alist form:</p>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span>
       <span class="o">&#39;</span><span class="p">((</span><span class="mi">8888</span> <span class="o">.</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--profile&quot;</span> <span class="s">&quot;PROFILE&quot;</span><span class="p">))</span>
         <span class="p">(</span><span class="mi">8889</span> <span class="o">.</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--ssh&quot;</span> <span class="s">&quot;HOSTNAME&quot;</span><span class="p">))</span>
         <span class="p">(</span><span class="nv">default</span> <span class="o">.</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--profile&quot;</span> <span class="s">&quot;default&quot;</span><span class="p">))))</span>
 </pre></div>
 </div>
 <p>If you want to use more complex setting, you can set a function to it:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:console-args</span>
       <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">url-or-port</span><span class="p">)</span> <span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;--ssh&quot;</span> <span class="s">&quot;HOSTNAME&quot;</span><span class="p">)))</span>
 </pre></div>
 </div>
-<p>See also: <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a>.</p>
+<p>See also: <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-security-dir</span></code></a>.</p>
 </dd></dl>
 
 </div>
@@ -2135,52 +2128,52 @@ console connecting to a remote kernel.:</p>
 <dl class="variable">
 <dt id="ein:connect-run-command">
 <em class="property">variable </em><code class="descname">ein:connect-run-command</code><a class="headerlink" href="#ein:connect-run-command" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal"><span class="pre">%run</span></code> magic command used for <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a>.
-Types same as <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a> are valid.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">%run</span></code> magic command used for <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-run-buffer</span></code></a>.
+Types same as <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-security-dir</span></code></a> are valid.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:connect-reload-command">
 <em class="property">variable </em><code class="descname">ein:connect-reload-command</code><a class="headerlink" href="#ein:connect-reload-command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setting for <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-reload-buffer</span></code>.
-Same as <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-command</span></code></a>.</p>
+<dd><p>Setting for <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-reload-buffer</span></code>.
+Same as <a class="reference internal" href="#ein:connect-run-command" title="ein:connect-run-command"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-run-command</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:connect-save-before-run">
 <em class="property">variable </em><code class="descname">ein:connect-save-before-run</code><a class="headerlink" href="#ein:connect-save-before-run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the buffer should be saved before <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a>.</p>
+<dd><p>Whether the buffer should be saved before <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-run-buffer</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:propagate-connect">
 <em class="property">variable </em><code class="descname">ein:propagate-connect</code><a class="headerlink" href="#ein:propagate-connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set to <code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> to connect to the notebook after jumping to a buffer.</p>
+<dd><p>Set to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> to connect to the notebook after jumping to a buffer.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:connect-aotoexec-lighter">
 <em class="property">variable </em><code class="descname">ein:connect-aotoexec-lighter</code><a class="headerlink" href="#ein:connect-aotoexec-lighter" title="Permalink to this definition">¶</a></dt>
-<dd><p>String appended to the lighter of <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-mode</span></code> (<code class="xref el el-symbol docutils literal"><span class="pre">ein:c</span></code>)
-when auto-execution mode is on.  When <code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code>, use the same string
-as <a class="reference internal" href="#ein:cell-autoexec-prompt" title="ein:cell-autoexec-prompt"><code class="xref el el-symbol docutils literal"><span class="pre">ein:cell-autoexec-prompt</span></code></a>.</p>
+<dd><p>String appended to the lighter of <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-mode</span></code> (<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:c</span></code>)
+when auto-execution mode is on.  When <code class="xref el el-symbol docutils literal notranslate"><span class="pre">nil</span></code>, use the same string
+as <a class="reference internal" href="#ein:cell-autoexec-prompt" title="ein:cell-autoexec-prompt"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:cell-autoexec-prompt</span></code></a>.</p>
 </dd></dl>
 
 <dl class="variable">
 <dt id="ein:connect-default-notebook">
 <em class="property">variable </em><code class="descname">ein:connect-default-notebook</code><a class="headerlink" href="#ein:connect-default-notebook" title="Permalink to this definition">¶</a></dt>
-<dd><p>Notebook to be connect when <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a> is called.</p>
+<dd><p>Notebook to be connect when <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-to-default-notebook</span></code></a> is called.</p>
 <p>Example setting to connect to “My_Notebook” in the server at
-port 8888 when opening any buffer in <code class="xref el el-symbol docutils literal"><span class="pre">python-mode</span></code>:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:connect-default-notebook</span> <span class="s">&quot;8888/My_Notebook&quot;</span><span class="p">)</span>
+port 8888 when opening any buffer in <code class="xref el el-symbol docutils literal notranslate"><span class="pre">python-mode</span></code>:</p>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">ein:connect-default-notebook</span> <span class="s">&quot;8888/My_Notebook&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="nv">add-hook</span> <span class="ss">&#39;python-mode-hook</span> <span class="ss">&#39;ein:connect-to-default-notebook</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></code></a> can also be a function without any
+<p><a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-default-notebook</span></code></a> can also be a function without any
 argument.  This function must return a string (notebook path of
 the form “URL-OR-PORT/NOTEBOOK-NAME”).</p>
-<p>As <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a> requires notebook list to be
-loaded, consider using <a class="reference internal" href="#ein:notebooklist-load" title="ein:notebooklist-load"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-load</span></code></a> to load notebook
+<p>As <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-to-default-notebook</span></code></a> requires notebook list to be
+loaded, consider using <a class="reference internal" href="#ein:notebooklist-load" title="ein:notebooklist-load"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebooklist-load</span></code></a> to load notebook
 list if you want to connect to notebook without manually opening
 notebook list.</p>
 </dd></dl>
@@ -2202,7 +2195,7 @@ notebook.</p>
 <dd><p>Setup auto-completion using EIN and <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> together.</p>
 <p><a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a> is a Python auto-completion library for Emacs.
 To use EIN and Jedi together, add the following in your Emacs setup before loading EIN.:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(setq ein:completion-backend ’ein:use-ac-jedi-backend)
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>(setq ein:completion-backend ’ein:use-ac-jedi-backend)
 </pre></div>
 </div>
 </dd></dl>
@@ -2263,8 +2256,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 <dt>alist</dt>
 <dd>Its key specifies URL-OR-PORT and value must be a list of two
 functions: (TO-PYTHON FROM-PYTHON).  Key (URL-OR-PORT) can be
-string (URL), integer (port), or <code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> (symbol).  The
-value of <code class="xref el el-symbol docutils literal"><span class="pre">default</span></code> is used when other key does not much.</dd>
+string (URL), integer (port), or <code class="xref el el-symbol docutils literal notranslate"><span class="pre">default</span></code> (symbol).  The
+value of <code class="xref el el-symbol docutils literal notranslate"><span class="pre">default</span></code> is used when other key does not much.</dd>
 <dt>function</dt>
 <dd>Called with an argument URL-OR-PORT (integer or string).
 This function must return a list of two functions:
@@ -2274,12 +2267,12 @@ This function must return a list of two functions:
 <dl class="docutils">
 <dt>TO-PYTHON</dt>
 <dd>A function which converts a file name (returned by
-<code class="xref el el-symbol docutils literal"><span class="pre">buffer-file-name</span></code>) to the one Python understands.</dd>
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">buffer-file-name</span></code>) to the one Python understands.</dd>
 <dt>FROM-PYTHON</dt>
 <dd>A function which converts a file path returned by
 Python process to the one Emacs understands.</dd>
 </dl>
-<p>Use <a class="reference internal" href="#ein:tramp-create-filename-translator" title="ein:tramp-create-filename-translator"><code class="xref el el-symbol docutils literal"><span class="pre">ein:tramp-create-filename-translator</span></code></a> to easily generate the
+<p>Use <a class="reference internal" href="#ein:tramp-create-filename-translator" title="ein:tramp-create-filename-translator"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:tramp-create-filename-translator</span></code></a> to easily generate the
 pair of TO-PYTHON and FROM-PYTHON.</p>
 </dd></dl>
 
@@ -2289,7 +2282,7 @@ pair of TO-PYTHON and FROM-PYTHON.</p>
 <dd><p>Generate a pair of TO-PYTHON and FROM-PYTHON for
 ‘ein:filename-translations’.</p>
 <p>Usage:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span>(setq ein:filename-translations
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span>(setq ein:filename-translations
       ‘((8888
          . ,(ein:tramp-create-filename-translator &quot;MY-HOSTNAME&quot;))))
 ;; Equivalently:
@@ -2309,20 +2302,20 @@ the host named MY-HOSTNAME.</p>
 <dt id="ein:query-timeout">
 <em class="property">variable </em><code class="descname">ein:query-timeout</code><a class="headerlink" href="#ein:query-timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default query timeout for HTTP access in millisecond.</p>
-<p>Setting this to <code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code> means no timeout.
-If you have <code class="docutils literal"><span class="pre">curl</span></code> command line program, it is automatically set to
-<code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code> as <code class="docutils literal"><span class="pre">curl</span></code> is reliable than <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> therefore no need for
+<p>Setting this to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">nil</span></code> means no timeout.
+If you have <code class="docutils literal notranslate"><span class="pre">curl</span></code> command line program, it is automatically set to
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">nil</span></code> as <code class="docutils literal notranslate"><span class="pre">curl</span></code> is reliable than <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code> therefore no need for
 a workaround (see below).</p>
 <p>If you do the same operation before the timeout, old operation
-will be canceled (see also <code class="xref el el-symbol docutils literal"><span class="pre">ein:query-singleton-ajax</span></code>).</p>
+will be canceled (see also <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:query-singleton-ajax</span></code>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>This value exists because it looks like <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code>
+<p>This value exists because it looks like <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code>
 occasionally fails to finish (start?) querying.  Timeout is
 used to let user notice that their operation is not finished.
 It also prevent opening a lot of useless process buffers.
 You will see them when closing Emacs if there is no timeout.</p>
-<p class="last">If you know how to fix the problem with <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code>, please
+<p class="last">If you know how to fix the problem with <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code>, please
 let me know or send pull request at github!
 (Related bug report in Emacs bug tracker:
 <a class="reference external" href="http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469">http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469</a>)</p>
@@ -2339,13 +2332,13 @@ bugs so there is little I can do in EIN (but I’m not sure – it’s
 possible that I am misusing the libraries!).</p>
 <p>If you know how to fix/workaround them, patches are very welcome.</p>
 <div class="section" id="url-retrieve">
-<h3><code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
+<h3><code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
 <p>While using EIN, probably most of the error messages are about server
-connections.  It looks like the problem is in <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code>.
+connections.  It looks like the problem is in <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code>.
 But in those cases you don’t lose any notebook data and your IPython
 kernel is fine.  You can just type the command again and it will go
 fine most of the time.  For saving notebook, I implemented code to
-retry when there is an error comes from <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> to
+retry when there is an error comes from <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code> to
 make it even safer.</p>
 </div>
 <div class="section" id="id16">
@@ -2354,7 +2347,7 @@ make it even safer.</p>
 highlighting outside of the cell input is turned off while you are in
 the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
-<a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
+<a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -2367,8 +2360,8 @@ the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference"
 <span id="gotchas-python-mode-el"></span><h3>python-mode.el<a class="headerlink" href="#python-mode-el" title="Permalink to this headline">¶</a></h3>
 <p>In my environment, using <a class="reference internal" href="#python-mode-el">python-mode.el</a> without byte-compiling it
 in MuMaMo based notebook mode produces segfault.</p>
-<p>Also, <code class="docutils literal"><span class="pre">mumamo-idle-set-major-mode</span></code> messages error
-<code class="docutils literal"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></code>
+<p>Also, <code class="docutils literal notranslate"><span class="pre">mumamo-idle-set-major-mode</span></code> messages error
+<code class="docutils literal notranslate"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></code>
 time to time, making minibuffer bit noisy while editing notebook.
 See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
 </div>
@@ -2378,7 +2371,7 @@ See <a class="reference external" href="https://github.com/millejoh/emacs-ipytho
 <p>By telling IPython a little bit about Emacs Lisp, you can execute
 Emacs Lisp from IPython, just like you can execute Javascript in the
 web client.  See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/blob/master/tools/emacslisp.py">emacslisp.py</a> for more details.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
 <span class="o">%</span><span class="n">run</span> <span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">emacslisp</span><span class="o">.</span><span class="n">py</span>
 
 <span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
@@ -2390,24 +2383,24 @@ web client.  See <a class="reference external" href="https://github.com/millejoh
 </div>
 <div class="section" id="reporting-issues">
 <h2>Reporting issues<a class="headerlink" href="#reporting-issues" title="Permalink to this headline">¶</a></h2>
-<p>Please use <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">ein:dev-bug-report-template</span></code> to write a bug report.
+<p>Please use <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:dev-bug-report-template</span></code> to write a bug report.
 It pops up a buffer containing some system information and instruction
 for bug report.</p>
 <div class="section" id="logging">
 <h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
-<p>Sometime more information than provided in the <code class="docutils literal"><span class="pre">*Message*</span></code> is
+<p>Sometime more information than provided in the <code class="docutils literal notranslate"><span class="pre">*Message*</span></code> is
 needed to debug.</p>
 <ol class="arabic">
-<li><p class="first">Execute <code class="docutils literal"><span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span></code>
-(e.g., <code class="docutils literal"><span class="pre">M-:</span> <span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span> <span class="pre">RET</span></code>).</p>
+<li><p class="first">Execute <code class="docutils literal notranslate"><span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span></code>
+(e.g., <code class="docutils literal notranslate"><span class="pre">M-:</span> <span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span> <span class="pre">RET</span></code>).</p>
 </li>
 <li><p class="first">Then do some operation which cause the problem.</p>
 </li>
-<li><p class="first">Go to the log buffer <code class="docutils literal"><span class="pre">_*ein:log-all*</span></code> (it starts with a space)
+<li><p class="first">Go to the log buffer <code class="docutils literal notranslate"><span class="pre">_*ein:log-all*</span></code> (it starts with a space)
 and paste the whole buffer to the issue tracker.</p>
 <p>Please enclose the log with three backquotes to make the snippet as
 a code block, like this:</p>
-<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="o">```</span>
+<div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="o">```</span>
 <span class="nv">[verbose]</span> <span class="nv">Start</span> <span class="nv">logging.</span> <span class="nv">@#&lt;buffer</span> <span class="nv">*ein:</span> <span class="nv">8888/NAME*&gt;</span>
 <span class="nv">[info]</span> <span class="nv">Notebook</span> <span class="nv">NAME</span> <span class="nv">is</span> <span class="nv">ready</span> <span class="nv">@#&lt;buffer</span> <span class="nv">*ein:</span> <span class="nv">8888/NAME*&gt;</span>
 <span class="nv">[info]</span> <span class="nv">Kernel</span> <span class="nv">started:</span> <span class="nv">5e4f74d1-ce91-4e7e-9575-9646adea5172</span> <span class="nv">@#&lt;buffer</span> <span class="vg">*scratch*</span><span class="nb">&gt;</span>
@@ -2424,12 +2417,12 @@ a code block, like this:</p>
 <p>websocket.el has its own logging buffer.  Sometime it is useful to see this
 log.  To do this:</p>
 <ol class="arabic simple">
-<li><code class="docutils literal"><span class="pre">(require</span> <span class="pre">'ein-dev)</span></code></li>
-<li><code class="docutils literal"><span class="pre">(setq</span> <span class="pre">websocket-debug</span> <span class="pre">t)</span></code> or call <code class="xref el el-symbol docutils literal"><span class="pre">ein:dev-start-debug</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">(require</span> <span class="pre">'ein-dev)</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">(setq</span> <span class="pre">websocket-debug</span> <span class="pre">t)</span></code> or call <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:dev-start-debug</span></code>.</li>
 <li>Then do the operation which causes the problem.</li>
 <li>Go to log buffer using
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:dev-pop-to-debug-shell</span></code> and
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:dev-pop-to-debug-iopub</span></code>.
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:dev-pop-to-debug-shell</span></code> and
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:dev-pop-to-debug-iopub</span></code>.
 These command must be called in the notebook buffer.</li>
 </ol>
 </div>
@@ -2437,30 +2430,42 @@ These command must be called in the notebook buffer.</li>
 <div class="section" id="debugging">
 <h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
 <p>If you are interested in debugging EIN, you should start by calling the command
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:dev-start-debug</span></code>.  If the bug is websocket related, you may need
-to run it with a prefix key like this: <code class="docutils literal"><span class="pre">C-u</span> <span class="pre">M-x</span> <span class="pre">ein:dev-start-debug</span> <span class="pre">RET</span></code> to
-get a backtrace.  This command sets <code class="xref el el-symbol docutils literal"><span class="pre">debug-on-error</span></code> to <code class="docutils literal"><span class="pre">t</span></code> and
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:dev-start-debug</span></code>.  If the bug is websocket related, you may need
+to run it with a prefix key like this: <code class="docutils literal notranslate"><span class="pre">C-u</span> <span class="pre">M-x</span> <span class="pre">ein:dev-start-debug</span> <span class="pre">RET</span></code> to
+get a backtrace.  This command sets <code class="xref el el-symbol docutils literal notranslate"><span class="pre">debug-on-error</span></code> to <code class="docutils literal notranslate"><span class="pre">t</span></code> and
 does some patching to the debugger.  This patching is required because printing
 EWOC objects freezes Emacs otherwise.  It also changes log level to report
 everything the log buffer.  You can reset the patch and log level with
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:dev-stop-debug</span></code>.</p>
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:dev-stop-debug</span></code>.</p>
 </div>
 </div>
 </div>
 <div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-13-1">
+<span id="changelog-0-13-1"></span><h2>v0.13.1<a class="headerlink" href="#v0-13-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Notebooklist entries are now orderd by file extension.</li>
+<li>Org edit buffers for ein source blocks now try to connect to the notebook
+specified in the session parameter. This is essentially like calling
+<code class="docutils literal notranslate"><span class="pre">ein:connect-to-notebook</span></code> on the org source edit buffer.</li>
+<li>Fixes and improved stability for completion using company backend.</li>
+<li>More attempts to get ein to pass tests on Travis.</li>
+<li>A more stable <code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-start</span></code>.</li>
+</ul>
+</div>
 <div class="section" id="v0-13-0">
 <span id="changelog-0-13-0"></span><h2>v0.13.0<a class="headerlink" href="#v0-13-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Update dependencies (see <a class="reference internal" href="#requirements-label"><span class="std std-ref">Requirements</span></a>)</li>
 <li>EIN should once again run on all recent versions of EMACsen.</li>
 <li>Support file types other than ipynb in the notebooklist view.</li>
-<li>Keep long-running notebooks connected via the command <code class="docutils literal"><span class="pre">ein:notebooklist-enable-keepalive</span></code>.</li>
-<li>Add <code class="docutils literal"><span class="pre">ein:notebook-save-to-command</span></code> for saving copies of notebooks under a new name.</li>
-<li>Add <code class="docutils literal"><span class="pre">ein:notebooklist-change-url-port</span></code> to change the server the notebook is running under.</li>
-<li>EIN can login to Jupyterhub servers now, see <code class="docutils literal"><span class="pre">ein:jupyterhub-connect</span></code>.</li>
-<li>Added commands <code class="docutils literal"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal"><span class="pre">ein:jupyter-server-stop</span></code>, and
-<code class="docutils literal"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
+<li>Keep long-running notebooks connected via the command <code class="docutils literal notranslate"><span class="pre">ein:notebooklist-enable-keepalive</span></code>.</li>
+<li>Add <code class="docutils literal notranslate"><span class="pre">ein:notebook-save-to-command</span></code> for saving copies of notebooks under a new name.</li>
+<li>Add <code class="docutils literal notranslate"><span class="pre">ein:notebooklist-change-url-port</span></code> to change the server the notebook is running under.</li>
+<li>EIN can login to Jupyterhub servers now, see <code class="docutils literal notranslate"><span class="pre">ein:jupyterhub-connect</span></code>.</li>
+<li>Added commands <code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-start</span></code>, <code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-stop</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-login-and-open</span></code>.</li>
 <li>New interface for configuring code completion. See the new customizable
 variable <cite>ein:completion-backend</cite>.</li>
 <li>Because of this <cite>ein:use-auto-complete</cite> is now deprecated, but EIN will still
@@ -2595,7 +2600,7 @@ ein-contents-api.el.</li>
 <li>ein-mumamo.el has been moved into its own package, ein-mumamo. This should get rid
 of compilation errors for anyone who does not happen to have nxhtml installed.</li>
 <li>Restore support for heading level cells with nbformat v4 notebooks.</li>
-<li>New (buggy) pytools function <a class="reference internal" href="#ein:pytools-export-buffer" title="ein:pytools-export-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-export-buffer</span></code></a> for using nbconvert on a notebook
+<li>New (buggy) pytools function <a class="reference internal" href="#ein:pytools-export-buffer" title="ein:pytools-export-buffer"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:pytools-export-buffer</span></code></a> for using nbconvert on a notebook
 buffer.</li>
 </ul>
 </div>
@@ -2612,13 +2617,13 @@ buffer.</li>
 <h2>v0.2.1<a class="headerlink" href="#v0-2-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Cached auto-complete is removed.
-<code class="xref el el-symbol docutils literal"><span class="pre">ac-source-ein-cached</span></code> and <code class="xref el el-symbol docutils literal"><span class="pre">ac-complete-ein-cached</span></code>
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ac-source-ein-cached</span></code> and <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ac-complete-ein-cached</span></code>
 are obsolete.
-<a class="reference internal" href="#ein:ac-max-cache" title="ein:ac-max-cache"><code class="xref el el-symbol docutils literal"><span class="pre">ein:ac-max-cache</span></code></a> has no effect now.</li>
-<li><a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><code class="xref el el-symbol docutils literal"><span class="pre">ein:query-timeout</span></code></a> is <cite>nil</cite> if <cite>curl</cite> backend is used
+<a class="reference internal" href="#ein:ac-max-cache" title="ein:ac-max-cache"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:ac-max-cache</span></code></a> has no effect now.</li>
+<li><a class="reference internal" href="#ein:query-timeout" title="ein:query-timeout"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:query-timeout</span></code></a> is <cite>nil</cite> if <cite>curl</cite> backend is used
 by <a class="reference external" href="https://github.com/tkf/emacs-request">request.el</a>.</li>
-<li>History search interface (<a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></code></a> and
-<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></code></a>) discards duplications.
+<li>History search interface (<a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">helm-ein-kernel-history</span></code></a> and
+<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">anything-ein-kernel-history</span></code></a>) discards duplications.
 This functionality requires at least version 4.0 of IPython kernel.
 It is introduced by the pull request
 <a class="reference external" href="https://github.com/ipython/ipython/pull/2792">ipython/ipython#2792</a>.
@@ -2635,68 +2640,68 @@ This protocol is not used in EIN anywhere yet.</li>
 <div class="section" id="v0-2">
 <h2>v0.2<a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Preliminary login support.  See <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a>.</li>
+<li>Preliminary login support.  See <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebooklist-login</span></code></a>.</li>
 <li>Code completion in notebook happens <em>really</em> automatically.
 You don’t need to hit a key to start completion.</li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-open</span></code> works without <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a>.</li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-open</span></code> works without <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a>.</li>
 <li>Expand code cell output on execution.
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/88">#88</a>).</li>
-<li>Improve <code class="xref el el-symbol docutils literal"><span class="pre">ein:completer-dot-complete</span></code> and
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:jedi-dot-complete</span></code>.  Do not expand common part when
+<li>Improve <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:completer-dot-complete</span></code> and
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:jedi-dot-complete</span></code>.  Do not expand common part when
 inserting dot, to make typing code containing dots less surprising.</li>
-<li>Add support for <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a>.  See <a class="reference internal" href="#ein:jedi-setup" title="ein:jedi-setup"><code class="xref el el-symbol docutils literal"><span class="pre">ein:jedi-setup</span></code></a>.</li>
+<li>Add support for <a class="reference external" href="https://github.com/tkf/emacs-jedi">Jedi.el</a>.  See <a class="reference internal" href="#ein:jedi-setup" title="ein:jedi-setup"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:jedi-setup</span></code></a>.</li>
 <li>Add a simple org-mode link support.</li>
 <li>Add built-in multiple language fontification for notebook:
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-multilang-mode</span></code>.
-This is the new default for <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-modes</span></code></a>.</li>
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-multilang-mode</span></code>.
+This is the new default for <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-modes</span></code></a>.</li>
 <li>Add helm/anything interface to search kernel history:
-<a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-kernel-history</span></code></a> and
-<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-kernel-history</span></code></a>.
+<a class="reference internal" href="#helm-ein-kernel-history" title="helm-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">helm-ein-kernel-history</span></code></a> and
+<a class="reference internal" href="#anything-ein-kernel-history" title="anything-ein-kernel-history"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">anything-ein-kernel-history</span></code></a>.
 See also the configurable options to use these commands:
-<a class="reference internal" href="#ein:helm-kernel-history-search-key" title="ein:helm-kernel-history-search-key"><code class="xref el el-symbol docutils literal"><span class="pre">ein:helm-kernel-history-search-key</span></code></a> and
-<a class="reference internal" href="#ein:anything-kernel-history-search-key" title="ein:anything-kernel-history-search-key"><code class="xref el el-symbol docutils literal"><span class="pre">ein:anything-kernel-history-search-key</span></code></a>.</li>
+<a class="reference internal" href="#ein:helm-kernel-history-search-key" title="ein:helm-kernel-history-search-key"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:helm-kernel-history-search-key</span></code></a> and
+<a class="reference internal" href="#ein:anything-kernel-history-search-key" title="ein:anything-kernel-history-search-key"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:anything-kernel-history-search-key</span></code></a>.</li>
 <li>Preliminary support for multiple worksheets.</li>
 <li>Rename notion of “scratch notebook” to “junk notebook”.
 This is to avoid confusion with newly added “scratch sheet”.
-Old commands are renamed to <a class="reference internal" href="#ein:junk-new" title="ein:junk-new"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-new</span></code></a> and
-<a class="reference internal" href="#ein:junk-rename" title="ein:junk-rename"><code class="xref el el-symbol docutils literal"><span class="pre">ein:junk-rename</span></code></a>.</li>
+Old commands are renamed to <a class="reference internal" href="#ein:junk-new" title="ein:junk-new"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:junk-new</span></code></a> and
+<a class="reference internal" href="#ein:junk-rename" title="ein:junk-rename"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:junk-rename</span></code></a>.</li>
 <li>Preferred MIME types to be used can be configured using the variable
-<a class="reference internal" href="#ein:output-type-preference" title="ein:output-type-preference"><code class="xref el el-symbol docutils literal"><span class="pre">ein:output-type-preference</span></code></a>.</li>
+<a class="reference internal" href="#ein:output-type-preference" title="ein:output-type-preference"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:output-type-preference</span></code></a>.</li>
 <li>HTML content is rendered SHR (Simple HTML Renderer) by default.
-Use <a class="reference internal" href="#ein:shr-env" title="ein:shr-env"><code class="xref el el-symbol docutils literal"><span class="pre">ein:shr-env</span></code></a> to tweak how HTML rendered.</li>
-<li><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-discard-output-on-save</span></code> is obsolete now.</li>
+Use <a class="reference internal" href="#ein:shr-env" title="ein:shr-env"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:shr-env</span></code></a> to tweak how HTML rendered.</li>
+<li><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-discard-output-on-save</span></code> is obsolete now.</li>
 <li>Support execution history.  Commands
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-previous-input-history</span></code> and
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-next-input-history</span></code> can be used
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:worksheet-previous-input-history</span></code> and
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:worksheet-next-input-history</span></code> can be used
 to insert previously executed code into the current cell.</li>
-<li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:pseudo-console-mode</span></code>.</li>
+<li>Add <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:pseudo-console-mode</span></code>.</li>
 <li>Add “scratch sheet”.  This acts almost as same as worksheet, but you
 don’t need to save it.  You can use try any code without saving
 junks in your notebook.  Use the command
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-scratchsheet-open</span></code> to open scratch sheet.</li>
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-scratchsheet-open</span></code> to open scratch sheet.</li>
 <li>Menu support in notebook mode and notebook list mode.</li>
 <li>Auto-connection support.
-The new function <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-default-notebook</span></code></a> can be
-added to <code class="xref el el-symbol docutils literal"><span class="pre">python-mode-hook</span></code> to automatically connect
+The new function <a class="reference internal" href="#ein:connect-to-default-notebook" title="ein:connect-to-default-notebook"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-to-default-notebook</span></code></a> can be
+added to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">python-mode-hook</span></code> to automatically connect
 python-mode buffers to default notebook specified by
-<a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-default-notebook</span></code></a>.  See also
-<a class="reference internal" href="#ein:notebooklist-load" title="ein:notebooklist-load"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-load</span></code></a>.</li>
-<li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:worksheet-execute-cell-and-insert-below</span></code>.</li>
+<a class="reference internal" href="#ein:connect-default-notebook" title="ein:connect-default-notebook"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-default-notebook</span></code></a>.  See also
+<a class="reference internal" href="#ein:notebooklist-load" title="ein:notebooklist-load"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebooklist-load</span></code></a>.</li>
+<li>Add <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:worksheet-execute-cell-and-insert-below</span></code>.</li>
 <li>Change the timing to trigger auto-execution in connected buffer.
 It was triggered on save before.  Now it is on run, eval or reload.
-See <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-toggle-autoexec</span></code>.</li>
+See <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-toggle-autoexec</span></code>.</li>
 </ul>
 </div>
 <div class="section" id="v0-1-2">
 <h2>v0.1.2<a class="headerlink" href="#v0-1-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Mostly refactoring for worksheet support in v0.2.</li>
-<li>Rename command <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-console-open</span></code> to
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:console-open</span></code>.  It is available from non-notebook
+<li>Rename command <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-console-open</span></code> to
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:console-open</span></code>.  It is available from non-notebook
 buffer such as connected buffer now.</li>
-<li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-reload-buffer</span></code>.
-Old default <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a> behavior is
-replaced by this function.  <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-run-buffer</span></code></a>
+<li>Add <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-reload-buffer</span></code>.
+Old default <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-run-buffer</span></code></a> behavior is
+replaced by this function.  <a class="reference internal" href="#ein:connect-run-buffer" title="ein:connect-run-buffer"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-run-buffer</span></code></a>
 now actually runs buffer instead of loading it.</li>
 </ul>
 </div>
@@ -2704,33 +2709,33 @@ now actually runs buffer instead of loading it.</li>
 <h2>v0.1.1<a class="headerlink" href="#v0-1-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Support <a class="reference external" href="http://cx4a.org/software/auto-complete/">auto-complete.el</a>’s popup/quick help.</li>
-<li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-first-open-hook</span></code>.</li>
+<li>Add <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebooklist-first-open-hook</span></code>.</li>
 <li>Handle carriage return
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/13">#13</a>).</li>
-<li><a class="reference internal" href="#ein:connect-to-notebook-command" title="ein:connect-to-notebook-command"><code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-to-notebook-command</span></code></a> is improved;
+<li><a class="reference internal" href="#ein:connect-to-notebook-command" title="ein:connect-to-notebook-command"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-to-notebook-command</span></code></a> is improved;
 it can connect to the notebook which is not opened yet.</li>
 <li>Plain text type output is favored over LaTeX type output
 (previous setting was opposite).</li>
 <li>Workaround indentation problem when using MuMaMo
 (<a class="reference external" href="https://github.com/tkf/emacs-ipython-notebook/issues/20">#20</a>).
-See <a class="reference internal" href="#ein:use-mumamo-indent-line-function-workaround" title="ein:use-mumamo-indent-line-function-workaround"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-mumamo-indent-line-function-workaround</span></code></a>.</li>
-<li>Add <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-rename-to-scratch-command</span></code>.</li>
-<li>Add <a class="reference internal" href="#ein:pytools-pandas-to-ses" title="ein:pytools-pandas-to-ses"><code class="xref el el-symbol docutils literal"><span class="pre">ein:pytools-pandas-to-ses</span></code></a>.</li>
+See <a class="reference internal" href="#ein:use-mumamo-indent-line-function-workaround" title="ein:use-mumamo-indent-line-function-workaround"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-mumamo-indent-line-function-workaround</span></code></a>.</li>
+<li>Add <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-rename-to-scratch-command</span></code>.</li>
+<li>Add <a class="reference internal" href="#ein:pytools-pandas-to-ses" title="ein:pytools-pandas-to-ses"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:pytools-pandas-to-ses</span></code></a>.</li>
 <li>Add Imenu support.</li>
 <li>Better heading cell faces.</li>
-<li>Add <a class="reference internal" href="#ein:iexec-mode" title="ein:iexec-mode"><code class="xref el el-symbol docutils literal"><span class="pre">ein:iexec-mode</span></code></a></li>
+<li>Add <a class="reference internal" href="#ein:iexec-mode" title="ein:iexec-mode"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:iexec-mode</span></code></a></li>
 <li>Add auto-execution mode
-(see <code class="xref el el-symbol docutils literal"><span class="pre">ein:connect-toggle-autoexec</span></code> and
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-turn-on-autoexec</span></code>).</li>
+(see <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:connect-toggle-autoexec</span></code> and
+<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-turn-on-autoexec</span></code>).</li>
 <li>Start completion when “.” is inserted.
-Use <a class="reference internal" href="#ein:complete-on-dot" title="ein:complete-on-dot"><code class="xref el el-symbol docutils literal"><span class="pre">ein:complete-on-dot</span></code></a> to disable this feature.</li>
-<li>Support tramp.  See <a class="reference internal" href="#ein:filename-translations" title="ein:filename-translations"><code class="xref el el-symbol docutils literal"><span class="pre">ein:filename-translations</span></code></a>.</li>
-<li>Change callback API in <code class="xref el el-symbol docutils literal"><span class="pre">ein:kernel-execute</span></code>
+Use <a class="reference internal" href="#ein:complete-on-dot" title="ein:complete-on-dot"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:complete-on-dot</span></code></a> to disable this feature.</li>
+<li>Support tramp.  See <a class="reference internal" href="#ein:filename-translations" title="ein:filename-translations"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:filename-translations</span></code></a>.</li>
+<li>Change callback API in <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:kernel-execute</span></code>
 to adapt messaging protocol change in
 <a class="reference external" href="https://github.com/ipython/ipython/pull/2051">IPython (#2051)</a>.</li>
 <li>Add helm/anything support.
-Use <a class="reference internal" href="#helm-ein-notebook-buffers" title="helm-ein-notebook-buffers"><code class="xref el el-symbol docutils literal"><span class="pre">helm-ein-notebook-buffers</span></code></a> or
-<a class="reference internal" href="#anything-ein-notebook-buffers" title="anything-ein-notebook-buffers"><code class="xref el el-symbol docutils literal"><span class="pre">anything-ein-notebook-buffers</span></code></a>.</li>
+Use <a class="reference internal" href="#helm-ein-notebook-buffers" title="helm-ein-notebook-buffers"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">helm-ein-notebook-buffers</span></code></a> or
+<a class="reference internal" href="#anything-ein-notebook-buffers" title="anything-ein-notebook-buffers"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">anything-ein-notebook-buffers</span></code></a>.</li>
 </ul>
 </div>
 <div class="section" id="v0-1">
@@ -2765,12 +2770,12 @@ See COPYING for details.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, John Miller.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+        &#169; Copyright 2018, John Miller.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
     </div>
   </body>
 </html>
