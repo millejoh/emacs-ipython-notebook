@@ -394,7 +394,7 @@ Org-mode integration
 You can execute org source blocks in EIN by adding `ein` to
 `org:babel-load-languages`. You need to specify a notebook via the :session
 argument. The format for the session argument is
-`{url-or-port}/{path-to-notbooke}`. For example:
+`{url-or-port}/{path-to-notebook}`. For example:
 
 .. code:: python
 
