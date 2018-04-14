@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.13.1 documentation</title>
+    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.14.0 documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.14.0 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -57,30 +57,34 @@
 <li><a class="reference internal" href="#misc">Misc</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#org-mode-integration">Org-mode integration</a></li>
-<li><a class="reference internal" href="#customization">Customization</a><ul>
+<li><a class="reference internal" href="#org-mode-integration">Org-mode integration</a><ul>
+<li><a class="reference internal" href="#customization">Customization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#support-for-the-hy-language-experimental">Support for The Hy Language (EXPERIMENTAL)</a></li>
+<li><a class="reference internal" href="#id11">Customization</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
-<li><a class="reference internal" href="#id11">Notebook list</a></li>
-<li><a class="reference internal" href="#id12">Notebook</a></li>
+<li><a class="reference internal" href="#id12">Notebook list</a></li>
+<li><a class="reference internal" href="#id13">Notebook</a></li>
 <li><a class="reference internal" href="#console">Console</a></li>
 <li><a class="reference internal" href="#connect">Connect</a><ul>
-<li><a class="reference internal" href="#id13">Jedi.el</a></li>
+<li><a class="reference internal" href="#id14">Jedi.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mumamo">MuMaMo</a></li>
-<li><a class="reference internal" href="#id15">Misc</a></li>
+<li><a class="reference internal" href="#id16">Misc</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gotchas-and-caveats">Gotchas and caveats</a><ul>
 <li><a class="reference internal" href="#url-retrieve"><code class="docutils literal notranslate"><span class="pre">url-retrieve</span></code></a></li>
-<li><a class="reference internal" href="#id16">MuMaMo</a></li>
+<li><a class="reference internal" href="#id17">MuMaMo</a></li>
 <li><a class="reference internal" href="#python-mode-el">python-mode.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced">Advanced</a></li>
 <li><a class="reference internal" href="#reporting-issues">Reporting issues</a><ul>
 <li><a class="reference internal" href="#logging">Logging</a><ul>
-<li><a class="reference internal" href="#id18">websocket.el</a></li>
+<li><a class="reference internal" href="#id19">websocket.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#debugging">Debugging</a></li>
@@ -89,6 +93,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a><ul>
+<li><a class="reference internal" href="#v0-14-0">v0.14.0</a></li>
 <li><a class="reference internal" href="#v0-13-1">v0.13.1</a></li>
 <li><a class="reference internal" href="#v0-13-0">v0.13.0</a></li>
 <li><a class="reference internal" href="#v0-12-3">v0.12.3</a></li>
@@ -245,7 +250,7 @@ this feature.</p>
 Skewer mode gives EIN the ability to execute dynamic javascript in the
 note book.</p>
 </li>
-<li><p class="first">(optional) <a href="#id24"><span class="problematic" id="id25">Jupyterhub_</span></a> 0.8 or higher:
+<li><p class="first">(optional) <a href="#id25"><span class="problematic" id="id26">Jupyterhub_</span></a> 0.8 or higher:
 EIN supports logging in to Jupyterhub servers using PAM authentication,
 though this only works with v0.8, which currently is the development version
 of Jupyterhub.</p>
@@ -335,7 +340,7 @@ don’t use that optional package.</p>
 </div>
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
-<p>Here is the minimal configuration.  See <a class="reference internal" href="#customization">customization</a> for more details.</p>
+<p>Here is the minimal configuration.  See <a href="#id27"><span class="problematic" id="id28">customization_</span></a> for more details.</p>
 <div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
@@ -820,7 +825,7 @@ directly.</p>
 <dd><dd class="first last"><p>Change the cell type of the current cell.
 Prompt will appear in the minibuffer.</p>
 <p>When used in as a Lisp function, TYPE (string) should be chose
-from “code”, “markdown”, “raw” and “heading”.  LEVEL is
+from “code”, “hy-code”, “markdown”, “raw” and “heading”.  LEVEL is
 an integer used only when the TYPE is “heading”.</p>
 </dd></dd>
 </dl>
@@ -1723,9 +1728,12 @@ argument. The format for the session argument is
 <span class="o">#+</span><span class="nv">END_SRC</span>
 </pre></div>
 </div>
-<p>If your code block generates an image, like from an matplotlib plot, then
-specify the file to save the image to using the <cite>:image</cite> argument as in the
-example below:</p>
+<p>By default EIN will execute asynchronously so you can continue to work in Emacs, but you may control this behavior via the <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein-org-async-p</span></code>.</p>
+<p>If your code block generates an image, like from an matplotlib plot, ein will
+automatically save to a file in the directory specified by
+<a class="reference internal" href="#ein:org-inline-image-directory" title="ein:org-inline-image-directory"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:org-inline-image-directory</span></code></a> and generate an appropriate inline
+link. You can also specify the file to save the image to using by the <cite>:image</cite>
+argument as in the example below:</p>
 <div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1754,9 +1762,37 @@ the link at the point of cursor.</li>
 <tr><td class="label"><a class="fn-backref" href="#id10">[5]</a></td><td>See <a class="reference external" href="http://orgmode.org/manual/Activation.html">1.3 Activation</a> in org-mode manual.</td></tr>
 </tbody>
 </table>
-</div>
 <div class="section" id="customization">
-<h2>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
+<h3>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h3>
+<dl class="variable">
+<dt id="ein:org-async-p">
+<em class="property">variable </em><code class="descname">ein:org-async-p</code><a class="headerlink" href="#ein:org-async-p" title="Permalink to this definition">¶</a></dt>
+<dd><p>If non-nil run ein org-babel source blocks asyncronously.</p>
+</dd></dl>
+
+<dl class="variable">
+<dt id="ein:org-inline-image-directory">
+<em class="property">variable </em><code class="descname">ein:org-inline-image-directory</code><a class="headerlink" href="#ein:org-inline-image-directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default directory where to save images generated from ein org-babel source blocks.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="support-for-the-hy-language-experimental">
+<h2>Support for The Hy Language (EXPERIMENTAL)<a class="headerlink" href="#support-for-the-hy-language-experimental" title="Permalink to this headline">¶</a></h2>
+<p>New in v0.14, ein has limited support for executing <a class="reference external" href="http://docs.hylang.org/en/stable/">hy</a> code in a notebook
+running an ipython kernel. Before trying this feature you will need to install hy
+per the <a class="reference external" href="http://docs.hylang.org/en/stable/quickstart.html">quickstart</a> instructions.</p>
+<p>Once you have set up <a class="reference external" href="http://docs.hylang.org/en/stable/">hy</a> in your ipython kernel, open or create a notebook
+running this kernel and create or go to an empty cell. You will need to change
+the cell type to hy using <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:worksheet-change-cell-type</span></code>. Once that
+is done you can enter hy expressions and they will be correctly evaluated by the
+kernel!</p>
+<p>If you are running a <a class="reference external" href="https://github.com/Calysto/calysto_hy">hy kernel</a> you can, of course, write hy expressions in
+code cells and have the expected results.</p>
+</div>
+<div class="section" id="id11">
+<h2>Customization<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
 <p>You can customize EIN by typing <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></code>.  All the
 configurable variables are listed below.</p>
 <div class="section" id="subpackages">
@@ -1810,8 +1846,8 @@ commands is fine.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id11">
-<h3>Notebook list<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Notebook list<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:url-or-port">
 <em class="property">variable </em><code class="descname">ein:url-or-port</code><a class="headerlink" href="#ein:url-or-port" title="Permalink to this definition">¶</a></dt>
@@ -1849,8 +1885,8 @@ in order to make this code work.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id12">
-<h3>Notebook<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id13">
+<h3>Notebook<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:worksheet-enable-undo">
 <em class="property">variable </em><code class="descname">ein:worksheet-enable-undo</code><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
@@ -2187,8 +2223,8 @@ to automatically connect any python-mode buffer to the
 notebook.</p>
 </dd></dl>
 
-<div class="section" id="id13">
-<h4>Jedi.el<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id14">
+<h4>Jedi.el<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
 <dl class="function">
 <dt id="ein:jedi-setup">
 <em class="property">function </em><code class="descname">ein:jedi-setup</code><a class="headerlink" href="#ein:jedi-setup" title="Permalink to this definition">¶</a></dt>
@@ -2245,8 +2281,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 <dd></dd></dl>
 
 </div>
-<div class="section" id="id15">
-<h3>Misc<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h3>Misc<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:filename-translations">
 <em class="property">variable </em><code class="descname">ein:filename-translations</code><a class="headerlink" href="#ein:filename-translations" title="Permalink to this definition">¶</a></dt>
@@ -2341,17 +2377,17 @@ fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code> to
 make it even safer.</p>
 </div>
-<div class="section" id="id16">
-<h3>MuMaMo<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id17">
+<h3>MuMaMo<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
 <p>When using MuMaMo based notebook mode, you will notice that
 highlighting outside of the cell input is turned off while you are in
-the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
+the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id18">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
 <a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id17">[6]</a></td><td>See the relevant bug report I posted:
+<tr><td class="label"><a class="fn-backref" href="#id18">[6]</a></td><td>See the relevant bug report I posted:
 <a class="reference external" href="https://bugs.launchpad.net/nxhtml/+bug/1013794">https://bugs.launchpad.net/nxhtml/+bug/1013794</a></td></tr>
 </tbody>
 </table>
@@ -2412,8 +2448,8 @@ a code block, like this:</p>
 <a class="reference external" href="https://gist.github.com/">gist</a>.</p>
 </li>
 </ol>
-<div class="section" id="id18">
-<h4>websocket.el<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id19">
+<h4>websocket.el<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
 <p>websocket.el has its own logging buffer.  Sometime it is useful to see this
 log.  To do this:</p>
 <ol class="arabic simple">
@@ -2442,6 +2478,24 @@ everything the log buffer.  You can reset the patch and log level with
 </div>
 <div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-14-0">
+<span id="changelog-0-14-0"></span><h2>v0.14.0<a class="headerlink" href="#v0-14-0" title="Permalink to this headline">¶</a></h2>
+<p>Surprise! There was never an actual 0.13.1 release, but that’s not to say that
+things haven’t been going down around here. Apart from the usual spate of bug fixes, here are the notable changes:</p>
+<ul class="simple">
+<li>Preliminary support for executing hy code from a properly configured notebook.</li>
+<li>ob-ein now supports asynchronous execution of code blocks (see
+<a class="reference internal" href="#ein:org-async-p" title="ein:org-async-p"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:org-async-p</span></code></a>)</li>
+<li>ob-ein will now write image files to a temporary directory and automatically
+generate inline links (see the customizable variable
+<a class="reference internal" href="#ein:org-inline-image-directory" title="ein:org-inline-image-directory"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:org-inline-image-directory</span></code></a>).</li>
+<li>Travis-CI is now working again (mostly!). Only a few basic tests are
+implemented, but now we have some basic testing for those of you submitting
+pull requests. Rejoice!</li>
+</ul>
+<p>Also thanks go to &#64;sams, &#64;galeo, &#64;patrickeganfoley, and &#64;ebanner for their much
+appreciated contributions.</p>
+</div>
 <div class="section" id="v0-13-1">
 <span id="changelog-0-13-1"></span><h2>v0.13.1<a class="headerlink" href="#v0-13-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -2770,7 +2824,7 @@ See COPYING for details.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.13.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.14.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

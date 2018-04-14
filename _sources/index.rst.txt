@@ -406,9 +406,13 @@ argument. The format for the session argument is
    sys.version
    #+END_SRC
 
-If your code block generates an image, like from an matplotlib plot, then
-specify the file to save the image to using the `:image` argument as in the
-example below:
+By default EIN will execute asynchronously so you can continue to work in Emacs, but you may control this behavior via the :el:symbol:`ein-org-async-p`.
+
+If your code block generates an image, like from an matplotlib plot, ein will
+automatically save to a file in the directory specified by
+:el:symbol:`ein:org-inline-image-directory` and generate an appropriate inline
+link. You can also specify the file to save the image to using by the `:image`
+argument as in the example below:
 
 .. code:: python
 
@@ -439,6 +443,32 @@ You can also link to an IPython notebook from org-mode_ files.
 
 .. [#org-store-link] See `1.3 Activation
    <http://orgmode.org/manual/Activation.html>`_ in org-mode manual.
+
+Customization
+^^^^^^^^^^^^^
+
+.. el:variable:: ein:org-async-p
+.. el:variable:: ein:org-inline-image-directory
+
+Support for The Hy Language (EXPERIMENTAL)
+------------------------------------------
+
+New in v0.14, ein has limited support for executing hy_ code in a notebook
+running an ipython kernel. Before trying this feature you will need to install hy
+per the quickstart_ instructions.
+
+Once you have set up hy_ in your ipython kernel, open or create a notebook
+running this kernel and create or go to an empty cell. You will need to change
+the cell type to hy using :el:symbol:`ein:worksheet-change-cell-type`. Once that
+is done you can enter hy expressions and they will be correctly evaluated by the
+kernel!
+
+If you are running a `hy kernel`_ you can, of course, write hy expressions in
+code cells and have the expected results.
+
+.. _hy: http://docs.hylang.org/en/stable/
+.. _quickstart: http://docs.hylang.org/en/stable/quickstart.html
+.. _`hy kernel`: https://github.com/Calysto/calysto_hy
 
 
 Customization
@@ -663,6 +693,8 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+.. include:: Changelog/v0_14_0.txt
+   
 .. include:: Changelog/v0_13_1.txt
 
 .. include:: Changelog/v0_13_0.txt
