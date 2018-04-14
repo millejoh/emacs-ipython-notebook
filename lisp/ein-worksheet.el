@@ -444,7 +444,7 @@ Prefixes are act same as the normal `yank' command."
                 (ein:worksheet-cell-from-type ws type-or-cell))))
     ;; When newly created or copied, kernel is not attached or not the
     ;; kernel of this worksheet.  So reset it here.
-    (when (ein:codecell-p cell)
+    (when (cl-typep cell 'ein:codecell)
       (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
     (setf (slot-value cell 'events) (slot-value ws 'events))
     cell))
@@ -776,7 +776,9 @@ Do not clear input prompts when the prefix argument is given."
 
 (defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
-        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+        (ein:filter #'(lambda (x)
+                        (cl-typep x 'ein:codecell))
+                    (ein:worksheet-get-cells ws))))
 
 (defun ein:undo-execute-cell (ws cell old-cell)
   (ein:worksheet-insert-cell-below ws old-cell cell)

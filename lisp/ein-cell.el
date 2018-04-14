@@ -219,10 +219,18 @@ a number will limit the number of lines in a cell output."
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) "Cell" args))
 
+(defun ein:cell--determine-cell-type (json-data)
+  (let ((base-type (plist-get json-data :cell_type)))
+    (if (and (string-equal base-type "code")
+             (plist-get json-data :metadata)
+             (not (eql (plist-get (plist-get json-data :metadata) :ein.hycell) :json-false)))
+        "hy-code"
+      base-type)))
+
 (defun ein:cell-from-json (data &rest args)
   (let ((data (ein:preprocess-nb4-cell data))
         (cell (ein:cell-init (apply #'ein:cell-from-type
-					                          (plist-get data :cell_type) args)
+					                          (ein:cell--determine-cell-type data) args)
 				                     data)))
     (when (plist-get data :metadata)
       (ein:oset-if-empty cell 'metadata (plist-get data :metadata))
@@ -988,6 +996,7 @@ prettified text thus be used instead of HTML type."
     (language . "python")
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
 
+
 (defvar ein:output-type-map
   '((:svg . :image/svg) (:png . :image/png) (:jpeg . :image/jpeg)
     (:text . :text/plain)
@@ -1007,6 +1016,9 @@ prettified text thus be used instead of HTML type."
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
+    (setq metadata (plist-put metadata :ein.hycell (if (ein:hy-codecell-p cell)
+                                                       t
+                                                     json-false)))
     (setq metadata (plist-put metadata :slideshow ss-table))
     (unless discard-output
       (dolist (output outputs)

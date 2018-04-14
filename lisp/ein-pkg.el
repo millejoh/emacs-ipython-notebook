@@ -1,5 +1,5 @@
 (define-package "ein"
-  "0.13.1"
+  "0.14.0"
   "Emacs IPython Notebook"
   '((websocket "1.7")
     (auto-complete "1.4.0")

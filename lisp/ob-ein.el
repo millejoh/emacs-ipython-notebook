@@ -45,8 +45,7 @@
   :type 'boolean)
 
 (defcustom ein:org-inline-image-directory "ein-images"
-  "Default directory where to save images generated from ein
-  org-babel source blocks."
+  "Default directory where to save images generated from ein org-babel source blocks."
   :group 'ein
   :type '(directory))
 
