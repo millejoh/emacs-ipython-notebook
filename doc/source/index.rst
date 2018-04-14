@@ -457,10 +457,11 @@ New in v0.14, ein has limited support for executing hy_ code in a notebook
 running an ipython kernel. Before trying this feature you will need to install hy
 per the quickstart_ instructions.
 
-Once you have set up hy_ in your ipython kernel, open a notebook running this
-kernel and create or go to an empty cell. You will need to change the cell type
-to hy using :el:symbol:`ein:worksheet-change-cell-type`. Once that is done you
-can enter hy expressions and they will be correctly evaluated by the kernel!
+Once you have set up hy_ in your ipython kernel, open or create a notebook
+running this kernel and create or go to an empty cell. You will need to change
+the cell type to hy using :el:symbol:`ein:worksheet-change-cell-type`. Once that
+is done you can enter hy expressions and they will be correctly evaluated by the
+kernel!
 
 If you are running a `hy kernel`_ you can, of course, write hy expressions in
 code cells and have the expected results.
@@ -692,7 +693,7 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
-.. include:: ChangeLog/v0_14_0.txt
+.. include:: Changelog/v0_14_0.txt
    
 .. include:: Changelog/v0_13_1.txt
 

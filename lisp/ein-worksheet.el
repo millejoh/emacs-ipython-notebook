@@ -3,6 +3,7 @@
 ;; Copyright (C) 2012 Takafumi Arakaki
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
+;; Author: John M. Miller <millejoh at mac.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -548,7 +549,7 @@ directly."
 Prompt will appear in the minibuffer.
 
 When used in as a Lisp function, TYPE (string) should be chose
-from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
+from \"code\", \"hy-code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
 an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
