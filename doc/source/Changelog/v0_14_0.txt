@@ -1,0 +1,21 @@
+.. _changelog_0_14_0:
+
+
+v0.14.0
+-------
+
+Surprise! There was never an actual 0.13.1 release, but that's not to say that
+things haven't been going down around here. Apart from the usual spate of bug fixes, here are the notable changes:
+
+* Preliminary support for executing hy code from a properly configured notebook.
+* ob-ein now supports asynchronous execution of code blocks (see
+  :el:symbol:`ein:org-async-p`)
+* ob-ein will now write image files to a temporary directory and automatically
+  generate inline links (see the customizable variable
+  :el:symbol:`ein:org-inline-image-directory`).
+* Travis-CI is now working again (mostly!). Only a few basic tests are
+  implemented, but now we have some basic testing for those of you submitting
+  pull requests. Rejoice!
+
+Also thanks go to @sam-s, @galeo, @patrickeganfoley, and @ebanner for their much
+appreciated contributions.

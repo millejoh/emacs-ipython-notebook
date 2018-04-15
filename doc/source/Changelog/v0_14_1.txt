@@ -1,0 +1,9 @@
+.. _changelog_0_14_0:
+
+
+v0.14.0
+-------
+
+A quick fix to correct a problem that was causing all the cells of a notebook to
+load as hy-codecells. So quick, in fact, that I forgot to update all the version
+references in the code so watch for a 0.14.2 version to come real soon now!
