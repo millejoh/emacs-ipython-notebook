@@ -220,10 +220,11 @@ a number will limit the number of lines in a cell output."
   (apply (ein:cell-class-from-type type) "Cell" args))
 
 (defun ein:cell--determine-cell-type (json-data)
-  (let ((base-type (plist-get json-data :cell_type)))
+  (let ((base-type (plist-get json-data :cell_type))
+        (metadata (plist-get json-data :metadata)))
     (if (and (string-equal base-type "code")
-             (plist-get json-data :metadata)
-             (not (eql (plist-get (plist-get json-data :metadata) :ein.hycell) :json-false)))
+             (plist-get :metadata :ein.hycell)
+             (not (eql (plist-get metadata :ein.hycell) :json-false)))
         "hy-code"
       base-type)))
 
