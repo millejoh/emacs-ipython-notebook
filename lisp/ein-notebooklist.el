@@ -85,6 +85,10 @@ is opened at first time.::
 
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
+
+(ein:deflocal ein:%item-sort-param% :name)
+(ein:deflocal ein:%item-sort-order% :descending)
+
 (define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
@@ -453,20 +457,30 @@ Notebook list data is passed via the buffer local variable
   (ein:notebooklist-mode)
   (widget-setup))
 
-(defun* ein:nblist--sort-group (group &key (by-param :name))
+(defun* ein:nblist--sort-group (group by-param order)
   (sort group #'(lambda (x y)
-                  (string-lessp (plist-get x by-param)
-                                (plist-get y by-param)))))
+                  (cond ((eql order :descending)
+                         (string-lessp (plist-get x by-param)
+                                       (plist-get y by-param)))
+                        ((eql order :ascending)
+                         (string-greaterp (plist-get x by-param)
+                                          (plist-get y by-param)))))))
 
-(defun ein:notebooklist--order-data (nblist-data)
+(defun ein:notebooklist--order-data (nblist-data sort-param sort-order)
   "Try to sanely sort the notebooklist data for the current path."
   (let* ((groups (-group-by #'(lambda (x) (plist-get x :type))
                             nblist-data))
-         (dirs (ein:nblist--sort-group (cdr (assoc "directory" groups))))
-         (nbs (ein:nblist--sort-group (cdr (assoc "notebook" groups))))
+         (dirs (ein:nblist--sort-group (cdr (assoc "directory" groups))
+                                       sort-param
+                                       sort-order))
+         (nbs (ein:nblist--sort-group (cdr (assoc "notebook" groups))
+                                      sort-param
+                                      sort-order))
          (files (ein:nblist--sort-group (-flatten-n 1 (-map #'cdr (-group-by
                                              #'(lambda (x) (car (last (s-split "\\." (plist-get x :name)))))
-                                             (cdr (assoc "file" groups))))))))
+                                             (cdr (assoc "file" groups)))))
+                                        sort-param
+                                        sort-order)))
     (-concat dirs nbs files)))
 
 (defun render-header-ipy2 ()
@@ -595,23 +609,47 @@ Notebook list data is passed via the buffer local variable
   "Call render-direcory with ipy-at-least-3 false."
   (render-directory nil))
 
+(defun ein:format-nbitem-data (name last-modified)
+  (let ((dt (date-to-time last-modified)))
+    (format "%-40s%+20s" name (format-time-string "%x" dt))))
+
 (defun render-directory (ipy-at-least-3)
   "Render directory.
 IPY-AT-LEAST-3 used to keep track of version."
   (widget-insert "\n------------------------------------------\n\n")
   (unless ipy-at-least-3
-    (let (api-version (ein:$notebooklist-api-version ein:%notebooklist%))
-	    )
-    )
-  (let
-      ((sessions (make-hash-table :test 'equal)))
+    (let (api-version (ein:$notebooklist-api-version ein:%notebooklist%))))
+  (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
-
-    (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%))
+    (widget-create 'menu-choice
+                   :tag "Sort by"
+                   :value (symbol-name ein:%item-sort-param%) ; "name"
+                   :notify (lambda (widget &rest ignore)
+                             (run-at-time 1 nil
+                                          #'ein:notebooklist-reload
+                                          ein:%notebooklist%)
+                             (setq ein:%item-sort-param% (intern (widget-value widget))))
+                   '(item :tag "Name" :value ":name")
+                   '(item :tag "Last Modified" :value ":last_modified"))
+    (widget-create 'menu-choice
+                   :tag "In Order"
+                   :value (symbol-name ein:%item-sort-order%) ; "descending"
+                   :notify (lambda (widget &rest ignore)
+                             (run-at-time 1 nil
+                                          #'ein:notebooklist-reload
+                                          ein:%notebooklist%)
+                             (setq ein:%item-sort-order% (intern (widget-value widget))))
+                   '(item :tag "Descending" :value ":descending")
+                   '(item :tag "Ascending" :value ":ascending"))
+    (widget-insert "\n")
+    (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%)
+                                                    ein:%item-sort-param%
+                                                    ein:%item-sort-order%)
           for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
           for name = (plist-get note :name)
           for path = (plist-get note :path)
+          for last-modified = (plist-get note :last_modified)
           ;; (cond ((= 2 api-version)
           ;;        (plist-get note :path))
           ;;       ((= 3 api-version)
@@ -639,14 +677,14 @@ IPY-AT-LEAST-3 used to keep track of version."
                                (lambda (&rest ignore)
                                  (ein:notebooklist-open-file urlport path)))
                      "Open")
-                    (widget-insert " ")
+                    (widget-insert " ------ ")
                     (widget-create
                      'link
                      :notify (lexical-let ((path path))
                                (lambda (&rest ignore)
                                  (message "[EIN]: NBlist delete file command. Implement me!")))
                      "Delete")
-                    (widget-insert " : " name)
+                    (widget-insert " : " (ein:format-nbitem-data name last-modified))
                     (widget-insert "\n"))
           if (string= type "notebook")
           do (progn (widget-create
@@ -660,19 +698,20 @@ IPY-AT-LEAST-3 used to keep track of version."
                                   ein:%notebooklist% path)))
                      "Open")
                     (widget-insert " ")
-                    (when (gethash path sessions)
-                      (widget-create
-                       'link
-                       :notify (lexical-let ((session (car (gethash path sessions)))
-                                             (nblist ein:%notebooklist%))
-                                 (lambda (&rest ignore)
-                                   (run-at-time 1 nil
-                                                #'ein:notebooklist-reload
-                                                ein:%notebooklist%)
-                                   (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-                                                                      :session-id session))))
-                       "Stop")
-                      (widget-insert " "))
+                    (if (gethash path sessions)
+                        (widget-create
+                         'link
+                         :notify (lexical-let ((session (car (gethash path sessions)))
+                                               (nblist ein:%notebooklist%))
+                                   (lambda (&rest ignore)
+                                     (run-at-time 1 nil
+                                                  #'ein:notebooklist-reload
+                                                  ein:%notebooklist%)
+                                     (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
+                                                                        :session-id session))))
+                         "Stop")
+                      (widget-insert "------"))
+                    (widget-insert " ")
                     (widget-create
                      'link
                      :notify (lexical-let ((path path))
@@ -680,7 +719,7 @@ IPY-AT-LEAST-3 used to keep track of version."
                                  (ein:notebooklist-delete-notebook-ask
                                   path)))
                      "Delete")
-                    (widget-insert " : " name)
+                    (widget-insert " : " (ein:format-nbitem-data name last-modified))
                     (widget-insert "\n")))))
 
 
