@@ -203,6 +203,13 @@ refresh the notebook connection."
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:notebooklist-date-format "%x"
+  "The format spec for date in notebooklist mode.
+Should be either a string (passed to `format-time-string')
+or a function (called on the date)."
+  :type '(or string function)
+  :group 'ein)
+
 (defvar ein:notebooklist--keepalive-timer nil)
 
 ;;;###autoload
@@ -611,7 +618,10 @@ Notebook list data is passed via the buffer local variable
 
 (defun ein:format-nbitem-data (name last-modified)
   (let ((dt (date-to-time last-modified)))
-    (format "%-40s%+20s" name (format-time-string "%x" dt))))
+    (format "%-40s%+20s" name
+            (cl-etypecase ein:notebooklist-date-format
+              (string (format-time-string ein:notebooklist-date-format dt))
+              (function (funcall ein:notebooklist-date-format dt))))))
 
 (defun render-directory (ipy-at-least-3)
   "Render directory.
