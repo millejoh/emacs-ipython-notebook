@@ -86,8 +86,35 @@ is opened at first time.::
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
 
-(ein:deflocal ein:%item-sort-param% :name)
-(ein:deflocal ein:%item-sort-order% :descending)
+(defcustom ein:notebooklist-sort-field :name
+  "The notebook list sort field."
+  :type '(choice (const :tag "Name" :name)
+          (const :tag "Last modified" :last_modified))
+  :group 'ein)
+(make-variable-buffer-local 'ein:notebooklist-sort-field)
+(put 'ein:notebooklist-sort-field 'permanent-local t)
+(defcustom ein:notebooklist-sort-order :ascending
+  "The notebook list sort order."
+  :type '(choice (const :tag "Ascending" :ascending)
+          (const :tag "Descending" :descending))
+  :group 'ein)
+(make-variable-buffer-local 'ein:notebooklist-sort-order)
+(put 'ein:notebooklist-sort-order 'permanent-local t)
+
+(defmacro ein:make-sorting-widget (tag custom-var)
+  "Create the sorting widget."
+  ;; assume that custom-var has type `choice' of `const's.
+  `(widget-create
+    'menu-choice :tag ,tag
+    :value ,custom-var
+    :notify (lambda (widget &rest ignore)
+              (run-at-time 1 nil
+                           #'ein:notebooklist-reload
+                           ein:%notebooklist%)
+              (setq ,custom-var (widget-value widget)))
+    ,@(mapcar (lambda (const)
+                `'(item :tag ,(third const) :value ,(fourth const)))
+              (rest (custom-variable-type custom-var)))))
 
 (define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 
@@ -466,10 +493,10 @@ Notebook list data is passed via the buffer local variable
 
 (defun* ein:nblist--sort-group (group by-param order)
   (sort group #'(lambda (x y)
-                  (cond ((eql order :descending)
+                  (cond ((eql order :ascending)
                          (string-lessp (plist-get x by-param)
                                        (plist-get y by-param)))
-                        ((eql order :ascending)
+                        ((eql order :descending)
                          (string-greaterp (plist-get x by-param)
                                           (plist-get y by-param)))))))
 
@@ -632,30 +659,12 @@ IPY-AT-LEAST-3 used to keep track of version."
   (let ((sessions (make-hash-table :test 'equal)))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
     (sit-for 0.2) ;; FIXME: What is the optimum number here?
-    (widget-create 'menu-choice
-                   :tag "Sort by"
-                   :value (symbol-name ein:%item-sort-param%) ; "name"
-                   :notify (lambda (widget &rest ignore)
-                             (run-at-time 1 nil
-                                          #'ein:notebooklist-reload
-                                          ein:%notebooklist%)
-                             (setq ein:%item-sort-param% (intern (widget-value widget))))
-                   '(item :tag "Name" :value ":name")
-                   '(item :tag "Last Modified" :value ":last_modified"))
-    (widget-create 'menu-choice
-                   :tag "In Order"
-                   :value (symbol-name ein:%item-sort-order%) ; "descending"
-                   :notify (lambda (widget &rest ignore)
-                             (run-at-time 1 nil
-                                          #'ein:notebooklist-reload
-                                          ein:%notebooklist%)
-                             (setq ein:%item-sort-order% (intern (widget-value widget))))
-                   '(item :tag "Descending" :value ":descending")
-                   '(item :tag "Ascending" :value ":ascending"))
+    (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
+    (ein:make-sorting-widget "In Order" ein:notebooklist-sort-order)
     (widget-insert "\n")
     (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%)
-                                                    ein:%item-sort-param%
-                                                    ein:%item-sort-order%)
+                                                    ein:notebooklist-sort-field
+                                                    ein:notebooklist-sort-order)
           for urlport = (ein:$notebooklist-url-or-port ein:%notebooklist%)
           for name = (plist-get note :name)
           for path = (plist-get note :path)
