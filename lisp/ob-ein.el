@@ -196,7 +196,7 @@ jupyter kernels.
     (save-excursion
       (org-babel-goto-named-result name)
       (search-forward (format "[[ob-ein-async-running: %s]]" name))
-      (replace-match formatted-result nil t)
+      (replace-match formatted-result t t)
       (org-redisplay-inline-images)
       ;; (when (member "drawer" (cdr (assoc :result-params params)))
       ;;   ;; open the results drawer
