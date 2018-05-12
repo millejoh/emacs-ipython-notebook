@@ -281,7 +281,7 @@
    (input :initarg :input :type string
           :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
-   (metadata :initarg :metadata :initform nil :type list) ;; For nbformat >= 4
+   (metadata :initarg :metadata :initform nil :type list :accessor ein:cell-metadata) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
    (slidetype :initarg :slidetype :initform "-" :type string)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string

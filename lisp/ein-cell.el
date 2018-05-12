@@ -167,6 +167,13 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 a number will limit the number of lines in a cell output."
   :group 'ein)
 
+(defcustom ein:on-execute-reply-functions nil
+  "List of functions to call after receiving an \"execute_reply\"
+  message on the shell channel, just before updating the
+  worksheet. Each function should have the same call signature as
+  `ein:cell--handle-execute-reply'."
+  :type 'list
+  :group 'ein)
 
 
 ;;; EIEIO related utils
@@ -1171,9 +1178,9 @@ prettified text thus be used instead of HTML type."
 
 (defmethod ein:cell-execute-internal ((cell ein:codecell)
                                       kernel code &rest args)
+  (ein:cell-running-set cell t)
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
-  (ein:cell-running-set cell t)
   (setf (slot-value cell 'dynamic) t)
   (apply #'ein:kernel-execute kernel code (ein:cell-make-callbacks cell) args))
 
@@ -1185,11 +1192,12 @@ prettified text thus be used instead of HTML type."
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
 (defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content
-                                           -metadata-not-used-)
+                                           metadata)
+  (run-hook-with-args 'ein:on-execute-reply-functions cell content metadata)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
   (if (equal (plist-get content :status) "error")
-      (ein:cell--handle-output cell "error" content -metadata-not-used-)
+      (ein:cell--handle-output cell "error" content metadata)
     (let ((events (slot-value cell 'events)))
       (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
       (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))

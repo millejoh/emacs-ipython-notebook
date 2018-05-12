@@ -47,6 +47,18 @@
 ;;;###autoload
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
+(defcustom ein:pre-kernel-execute-functions nil
+  "List of functions to call before sending a message to the kernel for execution. Each function is called with the message (see `ein:kernel--get-msg') about to be sent."
+  :type 'list
+  :group 'ein)
+
+(defcustom ein:on-shell-reply-functions nil
+  "List of functions to call when the kernel responds on the shell channel.
+  Each function should have the call signature: msg-id header content metadata"
+  :type 'list
+  :group 'ein)
+
+
 
 ;;; Initialization and connection.
 
@@ -504,6 +516,7 @@ Sample implementations
                      :allow_stdin allow-stdin))
            (msg (ein:kernel--get-msg kernel "execute_request" content))
            (msg-id (plist-get (plist-get msg :header) :msg_id)))
+      (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
       (ein:websocket-send-shell-channel kernel msg)
       (unless (plist-get callbacks :execute_reply)
         (ein:log 'debug "code: %s" code))
@@ -734,6 +747,7 @@ Example::
            (msg-id (plist-get parent_header :msg_id))
            (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
            (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
+      (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
       (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type = %s" msg-type)
       (if cb
           (ein:funcall-packed cb content metadata)
