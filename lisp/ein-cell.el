@@ -61,6 +61,16 @@
   "Face for cell input area"
   :group 'ein)
 
+(defface ein:cell-output-area
+  '()
+  "Face for cell output area"
+  :group 'ein)
+
+(defface ein:cell-output-area-error
+  '()
+  "Face for cell output area errors"
+  :group 'ein)
+
 (defface ein:cell-heading-1
   '((t :height 1.1 :inherit ein:cell-heading-2))
   "Face for level 1 heading."
@@ -174,14 +184,16 @@ a number will limit the number of lines in a cell output."
 (defvar ein:mime-type-map
   '((image/svg . svg) (image/png . png) (image/jpeg . jpeg)))
 
-;; # TODO: Check if we support image type before inserting it!
 (defun ein:insert-image (&rest args)
-  (let* ((img (apply #'create-image args)))
-    (if ein:slice-image
-        (destructuring-bind (&optional rows cols)
-            (when (listp ein:slice-image) ein:slice-image)
-          (insert-sliced-image img "." nil (or rows 20) cols))
-      (insert-image img "."))))
+  ;; Try to insert the image, otherwise emit a warning message and proceed.
+  (condition-case-unless-debug err
+      (let* ((img (apply #'create-image args)))
+        (if ein:slice-image
+            (destructuring-bind (&optional rows cols)
+                                (when (listp ein:slice-image) ein:slice-image)
+                                (insert-sliced-image img "." nil (or rows 20) cols))
+          (insert-image img ".")))
+    (error (ein:log 'warn "Could not insert image: %s" err) nil)))
 
 
 ;;; Cell factory
@@ -517,6 +529,16 @@ a number will limit the number of lines in a cell output."
 (defmethod ein:cell-get-input-area-face ((cell ein:headingcell))
   (intern (format "ein:cell-heading-%d" (slot-value cell 'level))))
 
+(defmethod ein:cell-get-output-area-face-for-output-type (output-type)
+  "Return the face (symbol) for output area."
+  (ein:case-equal output-type
+    (("pyout")          'ein:cell-output-area)
+    (("pyerr")          'ein:cell-output-area-error)
+    (("error")          'ein:cell-output-area-error)
+    (("display_data")   'ein:cell-output-area)
+    (("execute_result") 'ein:cell-output-area)
+    (("stream")         'ein:cell-output-area)))
+
 (defun ein:cell-insert-output (index cell)
   "Insert INDEX-th output of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
@@ -548,13 +570,18 @@ a number will limit the number of lines in a cell output."
                               (plist-get last-out :stream)))
             (ein:cell-append-stream-text-fontified "\n" last-out))))
       ;; Finally insert real data
-      (ein:case-equal (plist-get out :output_type)
-        (("pyout")          (ein:cell-append-pyout        cell out))
-        (("pyerr")          (ein:cell-append-pyerr        cell out))
-        (("error")          (ein:cell-append-pyerr        cell out))
-        (("display_data")   (ein:cell-append-display-data cell out))
-        (("execute_result") (ein:cell-append-pyout cell out))
-        (("stream")         (ein:cell-append-stream       cell out))))))
+      (let ((start (point))
+	    (output-type (plist-get out :output_type)))
+	(ein:case-equal output-type
+	  (("pyout")          (ein:cell-append-pyout        cell out))
+	  (("pyerr")          (ein:cell-append-pyerr        cell out))
+	  (("error")          (ein:cell-append-pyerr        cell out))
+	  (("display_data")   (ein:cell-append-display-data cell out))
+	  (("execute_result") (ein:cell-append-pyout        cell out))
+	  (("stream")         (ein:cell-append-stream       cell out)))
+	(let ((ol (make-overlay start (point))))
+	  (overlay-put ol 'face (ein:cell-get-output-area-face-for-output-type output-type))
+	  (overlay-put ol 'evaporate t))))))
 
 (defmethod ein:cell-insert-footer ((cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
