@@ -174,14 +174,16 @@ a number will limit the number of lines in a cell output."
 (defvar ein:mime-type-map
   '((image/svg . svg) (image/png . png) (image/jpeg . jpeg)))
 
-;; # TODO: Check if we support image type before inserting it!
 (defun ein:insert-image (&rest args)
-  (let* ((img (apply #'create-image args)))
-    (if ein:slice-image
-        (destructuring-bind (&optional rows cols)
-            (when (listp ein:slice-image) ein:slice-image)
-          (insert-sliced-image img "." nil (or rows 20) cols))
-      (insert-image img "."))))
+  ;; Try to insert the image, otherwise emit a warning message and proceed.
+  (condition-case-unless-debug err
+      (let* ((img (apply #'create-image args)))
+        (if ein:slice-image
+            (destructuring-bind (&optional rows cols)
+                                (when (listp ein:slice-image) ein:slice-image)
+                                (insert-sliced-image img "." nil (or rows 20) cols))
+          (insert-image img ".")))
+    (error (ein:log 'warn "Could not insert image: %s" err) nil)))
 
 
 ;;; Cell factory
