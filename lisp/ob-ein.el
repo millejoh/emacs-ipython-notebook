@@ -112,7 +112,7 @@ The default is `ein:uuid-generator'.")
 
 (defun ein:org-get-name-create ()
   "Get the name of a src block or add a uuid as the name."
-  (if-let* ((name (fifth (org-babel-get-src-block-info))))
+  (if-let ((name (fifth (org-babel-get-src-block-info))))
       name
     (save-excursion
       (let ((el (org-element-context))
