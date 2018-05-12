@@ -32,7 +32,7 @@
   (when (string-equal msg-type "execute_reply")
     (let ((start-time (plist-get metadata :started))
           (end-time (plist-get header :date)))
-      (plist-put metadata :execute-time (cons start-time end-time)))))
+      (plist-put metadata :execute-time (list start-time end-time)))))
 
 (defun ein:timestamp--execute-reply-hook (cell content metadata)
   (if-let ((etime (plist-get metadata :execute-time)))
@@ -48,8 +48,8 @@
   (if (slot-value cell 'running)
       (ein:insert-read-only "Execution pending\n\n")
     (if-let ((etime (plist-get (ein:cell-metadata cell) :execute-time)))
-        (let ((start-time (date-to-time (car etime)))
-              (end-time (date-to-time (cdr etime))))
+        (let ((start-time (date-to-time (first etime)))
+              (end-time (date-to-time (second etime))))
           (ein:insert-read-only (format "Last executed %s in %ss\n\n"
                                         (current-time-string start-time)
                                         (float-time (time-subtract end-time start-time))))))))
