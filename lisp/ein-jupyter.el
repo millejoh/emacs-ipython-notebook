@@ -90,7 +90,7 @@ session, along with the login token."
   (condition-case err
       (with-current-buffer (process-buffer %ein:jupyter-server-session%) ;;ein:jupyter-server-buffer-name
         (goto-char (point-max))
-        (re-search-backward "\\(https?://.*:[0-9]+\\)/\\?token=\\(.*\\)" nil)
+        (re-search-backward "\\(https?://.*:[0-9]+\\)/\\?token=\\([[:alnum:]]*\\)" nil)
         (let ((url-or-port (match-string 1))
               (token (match-string 2)))
           (list url-or-port token)))
