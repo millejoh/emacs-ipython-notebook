@@ -206,8 +206,9 @@ jupyter kernels.
       )))
 
 (defun ein:ob-ein--execute (full-body session-kernel processed-params)
-  (ein:shared-output-eval-string full-body nil nil session-kernel)
-  (let ((cell (ein:shared-output-get-cell)))
+  (let* ((d (ein:shared-output-eval-string full-body nil nil session-kernel))
+         (cell (ein:shared-output-get-cell)))
+    (deferred:sync! d)
     (ein:wait-until #'(lambda ()
                         (null (slot-value cell 'running)))
                     nil ein:org-execute-timeout)
