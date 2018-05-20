@@ -490,11 +490,11 @@ of minor mode."
               collecting (cons (ein:$kernelspec-name spec)
                                (ein:$kernelspec-display-name spec))))))
 
-(defun ein:query-kernelspecs (url-or-port)
+(defun ein:query-kernelspecs (url-or-port &optional force-refresh)
   "Query jupyter server for the list of available
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
-  (unless (gethash url-or-port ein:available-kernelspecs)
+  (unless (and (not force-refresh) (gethash url-or-port ein:available-kernelspecs))
     (ein:query-singleton-ajax
      (list 'ein:qeury-kernelspecs url-or-port)
      (ein:url url-or-port "api/kernelspecs")

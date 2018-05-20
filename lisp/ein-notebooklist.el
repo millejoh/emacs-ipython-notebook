@@ -216,6 +216,18 @@ To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
   ;(ein:notebooklist-get-buffer url-or-port)
   )
 
+;;;###autoload
+ (defun ein:notebooklist-refresh-kernelspecs (&optional url-or-port)
+  (interactive (list (or (and ein:%notebooklist% (ein:$notebooklist-url-or-port ein:%notebooklist%))
+                         (ein:notebooklist-ask-url-or-port))))
+  (unless url-or-port
+    (if ein:%notebooklist%
+        (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%))
+      (setq url-or-port (ein:default-url-or-port))))
+  (ein:query-kernelspecs url-or-port t)
+  (when ein:%notebooklist%
+    (ein:notebooklist-reload ein:%notebooklist%)))
+
 (defcustom ein:notebooklist-keepalive-refresh-time 1
   "When the notebook keepalive is enabled, the frequency, IN
 HOURS, with which to make calls to the jupyter content API to
@@ -589,6 +601,11 @@ Notebook list data is passed via the buffer local variable
      'link
      :notify (lambda (&rest ignore) (ein:notebooklist-reload))
      "Reload List")
+    (widget-insert " ")
+    (widget-create
+     'link
+     :notify (lambda (&rest ignore) (ein:notebooklist-refresh-kernelspecs))
+     "Query Kernelspecs")
     (widget-insert " ")
     (widget-create
      'link
