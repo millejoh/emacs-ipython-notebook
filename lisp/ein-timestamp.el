@@ -28,6 +28,12 @@
 (require 'ein-kernel)
 (require 'ein-cell)
 
+(defcustom ein:timestamp-format "%FT%T"
+  "The format spec for timestamps.
+See `ein:format-time-string'."
+  :type '(or string function)
+  :group 'ein)
+
 (defun ein:timestamp--shell-reply-hook (msg-type header content metadata)
   (when (string-equal msg-type "execute_reply")
     (let ((start-time (plist-get metadata :started))
@@ -50,12 +56,12 @@
     (if-let ((etime (plist-get (ein:cell-metadata cell) :execute-time)))
         (let ((start-time (date-to-time (first etime)))
               (end-time (date-to-time (second etime))))
-          (ein:insert-read-only (format "Last executed %s in %ss\n\n"
-                                        (current-time-string start-time)
-                                        (float-time (time-subtract end-time start-time))))))))
+          (ein:insert-read-only
+           (format "Last executed %s in %ss\n\n"
+                   (ein:format-time-string ein:timestamp-format start-time)
+                   (float-time (time-subtract end-time start-time))))))))
 
 (add-hook 'ein:on-shell-reply-functions 'ein:timestamp--shell-reply-hook)
 (add-hook 'ein:on-execute-reply-functions 'ein:timestamp--execute-reply-hook)
 
 (provide 'ein-timestamp)
-
