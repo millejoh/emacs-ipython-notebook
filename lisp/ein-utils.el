@@ -264,7 +264,7 @@ See: http://api.jquery.com/jQuery.ajax/"
 number of lines is less than `nlines' then just return the string."
   (if nlines
     (let ((lines (split-string string "[\n]")))
-      (if (> (length lines) nlines) 
+      (if (> (length lines) nlines)
           (ein:join-str "\n" (append (butlast lines (- (length lines) nlines))
                                      (list "...")))
         string))
@@ -552,6 +552,14 @@ Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
                 do (sleep-for 0.05))
     (warn "Timeout"))
   (ein:log 'debug "WAIT-UNTIL end"))
+
+(defun ein:format-time-string (format time)
+  "Apply format to time.
+If `format' is a string, call `format-time-string',
+otherwise it should be a function, which is called on `time'."
+  (cl-etypecase format
+    (string (format-time-string format time))
+    (function (funcall format time))))
 
 
 ;;; Emacs utilities
