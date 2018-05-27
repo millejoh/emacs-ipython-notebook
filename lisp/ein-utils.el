@@ -295,7 +295,7 @@ number of lines is less than `nlines' then just return the string."
                        for stripped = (ein:trim-left line)
                        unless (equal stripped "")
                        collect (- (length line) (length stripped)))))
-            (if lens (apply #'ein:min lens) 0)))
+            (if lens (apply #'min lens) 0)))
          (trimmed
           (loop for line in lines
                 if (> (length line) indent)
@@ -502,13 +502,6 @@ NOTE: This function creates new list."
         for i from 0
         when (not (memq i indices))
         collect l))
-
-(defun ein:min (x &rest xs)
-  (loop for y in xs if (< y x) do (setq x y))
-  x)
-
-(defun ein:do-nothing (&rest -ignore-)
-  "A function which can take any number of variables and do nothing.")
 
 (defun ein:ask-choice-char (prompt choices)
   "Show PROMPT and read one of acceptable key specified as CHOICES."
