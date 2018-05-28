@@ -148,7 +148,7 @@ the notebook list buffer, the notebook is searched in the
 notebook list of the current buffer.
 
 When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'.
-To suppress popup, you can pass a function `ein:do-nothing' as CALLBACK."
+To suppress popup, you can pass `ignore' as CALLBACK."
   (loop with nblist = (if url-or-port
                           (ein:notebooklist-list-get url-or-port)
                         ein:%notebooklist%)
