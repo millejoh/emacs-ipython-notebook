@@ -463,7 +463,7 @@ Elements are compared using the function TEST (default: `eq')."
   "Get value from obj if it is a variable or function."
   (cond
    ((not (symbolp obj)) obj)
-   ((boundp obj) (eval obj))
+   ((boundp obj) (symbol-value obj))
    ((fboundp obj) (funcall obj))))
 
 (defun ein:choose-setting (symbol value &optional single-p)
@@ -472,7 +472,7 @@ The value of SYMBOL can be string, alist or function.
 SINGLE-P is a function which takes one argument.  It must
 return t when the value of SYMBOL can be used as a setting.
 SINGLE-P is `stringp' by default."
-  (let ((setting (eval symbol)))
+  (let ((setting (symbol-value symbol)))
     (cond
      ((funcall (or single-p 'stringp) setting) setting)
      ((functionp setting) (funcall setting value))
@@ -493,7 +493,7 @@ FUNC is called as (apply FUNC ARG ARGS)."
   (apply (car func-arg) (cdr func-arg) args))
 
 (defun ein:eval-if-bound (symbol)
-  (if (boundp symbol) (eval symbol)))
+  (and (boundp symbol) (symbol-value symbol)))
 
 (defun ein:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
