@@ -165,6 +165,8 @@ See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
 (defcustom ein:truncate-long-cell-output nil
   "When nil do not truncate cells with long outputs. When set to
 a number will limit the number of lines in a cell output."
+  :type '(choice (integer :tag "Number of lines to show in a cell" 5)
+                 (const :tag "Do not truncate cells with long outputs" nil))
   :group 'ein)
 
 (defcustom ein:on-execute-reply-functions nil
@@ -955,6 +957,7 @@ If you prefer HTML type over text type, you can set it as::
           '(emacs-lisp svg png jpeg html text latex javascript))
 
 Note that ``html`` comes before ``text``."
+  :type '(choice function (repeat symbol))
   :group 'ein)
 
 (defun ein:output-type-prefer-pretty-text-over-html (data)
