@@ -75,7 +75,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (apply #'ein:cell-execute-internal cell kernel code args))
 
 (defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
-                                    msg-type content -metadata-not-used-)
+                                    msg-type content _metadata-not-used-)
   ;; Show short message
   (ein:case-equal msg-type
     (("pyout")
@@ -128,14 +128,13 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                                     (ein:propertize-read-only "\n")
                                     nil t))
              (events (ein:events-new))
-             (cell (ein:shared-output-cell "SharedOutputCell"
-                                           :ewoc ewoc
+             (cell (ein:shared-output-cell :ewoc ewoc
                                            :events events)))
         (erase-buffer)
         (ein:shared-output-bind-events events)
         (setq ein:%shared-output%
-              (ein:shared-output "SharedOutput" :ewoc ewoc :cell cell
-                                  :events events))
+              (ein:shared-output :ewoc ewoc :cell cell
+                                 :events events))
         (ein:cell-enter-last cell))
       (setq buffer-read-only t)
       (ein:shared-output-mode)

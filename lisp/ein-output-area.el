@@ -95,6 +95,7 @@ Draw boundaries for table (default)::
             (shr-table-vertical-line ?|)
             (shr-table-corner ?+)))
 "
+  :type '(sexp)
   :group 'ein)
 
 (defun ein:shr-insert-document (dom)

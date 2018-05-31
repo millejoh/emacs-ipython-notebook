@@ -128,7 +128,7 @@ It should be possible to support python-mode.el.  Patches are welcome!
 ;;;### (autoloads nil "ein-core" "ein-core.el" (0 0 0 0))
 ;;; Generated autoloads from ein-core.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-core" '("ein:" "*running-ipython-version*")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-core" '("*running-ipython-version*" "ein:")))
 
 ;;;***
 
@@ -199,6 +199,13 @@ Choose opened notebook using helm interface.
 \(fn)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-helm" '("ein:helm-")))
+
+;;;***
+
+;;;### (autoloads nil "ein-hy" "ein-hy.el" (0 0 0 0))
+;;; Generated autoloads from ein-hy.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-hy" '("ein:cell-")))
 
 ;;;***
 
@@ -313,7 +320,7 @@ token authentication is enabled. If a token is found use it to generate a
 call to `ein:notebooklist-login' and once authenticated open the notebooklist buffer
 via a call to `ein:notebooklist-open'.
 
-\(fn)" t nil)
+\(fn &optional NO-POPUP)" t nil)
 
 (autoload 'ein:jupyter-server-start "ein-jupyter" "\
 Start the jupyter notebook server at the given path.
@@ -323,14 +330,18 @@ notebook server and then tries to detect the url and token to
 generate automatic calls to `ein:notebooklist-login' and
 `ein:notebooklist-open'.
 
-On executing the command will prompt the user for the path to the
-jupyter executable and the path for the root directory containing
-the notebooks the user wants to access.
+With \\[universal-argument] prefix arg, it will prompt the user for the path to
+the jupyter executable first. Else, it will try to use the
+value of `*ein:last-jupyter-command*' or the value of the
+customizable variable `ein:jupyter-default-server-command'.
+
+Then it prompts the user for the path of the root directory
+containing the notebooks the user wants to access.
 
 The buffer named by `ein:jupyter-server-buffer-name' will contain
 the log of the running jupyter server.
 
-\(fn SERVER-CMD-PATH NOTEBOOK-DIRECTORY &optional NO-LOGIN-AFTER-START-P)" t nil)
+\(fn SERVER-CMD-PATH NOTEBOOK-DIRECTORY &optional NO-LOGIN-AFTER-START-P NO-POPUP)" t nil)
 
 (autoload 'ein:jupyter-server-stop "ein-jupyter" "\
 Stop a running jupyter notebook server.
@@ -338,9 +349,9 @@ Stop a running jupyter notebook server.
 Use this command to stop a running jupyter notebook server. If
 there is no running server then no action will be taken.
 
-\(fn)" t nil)
+\(fn &optional FORCE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyter" '("ein:jupyter-" "*ein:" "%ein:jupyter-server-session%")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-jupyter" '("%ein:jupyter-server-session%" "*ein:" "ein:jupyter-")))
 
 ;;;***
 
@@ -364,7 +375,7 @@ Log on to a jupyterhub server using PAM authentication. Requires jupyterhub vers
 
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-kernel" '("ein:" "max-kernel-restart-try-count" "kernel-restart-try-count")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-kernel" '("ein:" "kernel-restart-try-count" "max-kernel-restart-try-count")))
 
 ;;;***
 
@@ -422,7 +433,7 @@ Notebook mode with multiple language fontification.
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '(#("ein:" 0 4 (fontified nil)))))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebook" '("ein:")))
 
 ;;;***
 
@@ -434,6 +445,11 @@ Notebook mode with multiple language fontification.
 Open notebook list buffer.
 
 \(fn &optional URL-OR-PORT PATH NO-POPUP)" t nil)
+
+(autoload 'ein:notebooklist-refresh-kernelspecs "ein-notebooklist" "\
+
+
+\(fn &optional URL-OR-PORT)" t nil)
 
 (autoload 'ein:notebooklist-enable-keepalive "ein-notebooklist" "\
 Enable periodic calls to the notebook server to keep long running sessions from expiring.
@@ -521,7 +537,7 @@ on all the notebooks opened from the current notebooklist.
 
 \(fn NEW-URL-OR-PORT)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '(#("ein:" 0 4 (fontified nil face font-lock-function-name-face)) #("generate-breadcrumbs" 0 18 (fontified nil face font-lock-function-name-face) 18 20 (fontified nil face font-lock-function-name-face)))))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-notebooklist" '("ein:" "generate-breadcrumbs" "render-")))
 
 ;;;***
 
@@ -681,6 +697,13 @@ shared output buffer.  You can open the buffer by the command
 
 ;;;***
 
+;;;### (autoloads nil "ein-timestamp" "ein-timestamp.el" (0 0 0 0))
+;;; Generated autoloads from ein-timestamp.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ein-timestamp" '("ein:")))
+
+;;;***
+
 ;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (0 0 0 0))
 ;;; Generated autoloads from ein-traceback.el
 
@@ -717,7 +740,7 @@ Show full traceback in traceback viewer.
 ;;;### (autoloads nil "ob-ein" "ob-ein.el" (0 0 0 0))
 ;;; Generated autoloads from ob-ein.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ob-ein" '("org-babel-" "ein:" "*ein:org-babel-sessions*")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ob-ein" '("*ein:org-name-generator*" "ein:" "org-babel-")))
 
 ;;;***
 

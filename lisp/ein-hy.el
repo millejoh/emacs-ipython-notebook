@@ -45,7 +45,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (setf (slot-value cell 'dynamic) t)
   (apply #'ein:kernel-execute kernel (ein:pytools-wrap-hy-code code) (ein:cell-make-callbacks cell) args))
 
-(defmethod ein:cell-to-nb4-json :before ((cell ein:hy-codecell) _ &optional _)
+(defmethod ein:cell-to-nb4-json :before ((cell ein:hy-codecell) _ &optional _ignore)
   (let ((metadata (slot-value cell 'metadata)))
     (setf metadata (plist-put metadata :ein.hy_cell t))))
 
