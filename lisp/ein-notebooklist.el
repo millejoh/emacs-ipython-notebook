@@ -86,21 +86,6 @@ is opened at first time.::
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
 
-(defcustom ein:notebooklist-sort-field :name
-  "The notebook list sort field."
-  :type '(choice (const :tag "Name" :name)
-          (const :tag "Last modified" :last_modified))
-  :group 'ein)
-(make-variable-buffer-local 'ein:notebooklist-sort-field)
-(put 'ein:notebooklist-sort-field 'permanent-local t)
-(defcustom ein:notebooklist-sort-order :ascending
-  "The notebook list sort order."
-  :type '(choice (const :tag "Ascending" :ascending)
-          (const :tag "Descending" :descending))
-  :group 'ein)
-(make-variable-buffer-local 'ein:notebooklist-sort-order)
-(put 'ein:notebooklist-sort-order 'permanent-local t)
-
 (defmacro ein:make-sorting-widget (tag custom-var)
   "Create the sorting widget."
   ;; assume that custom-var has type `choice' of `const's.
