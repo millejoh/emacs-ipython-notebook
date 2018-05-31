@@ -39,9 +39,9 @@
     ("C-p" . ein:worksheet-goto-prev-input)
     ("C-m" . ein:worksheet-merge-cell)
     ("<up>" . ein:worksheet-move-cell-up)
-    ("<down>" . ein:worksheet-move-cell-down)
-    )
+    ("<down>" . ein:worksheet-move-cell-down))
   "alist passed to `smartrep-define-key'."
+  :type '(repeat (cons string function))
   :group 'ein)
 
 (defun ein:smartrep-config ()
