@@ -18,7 +18,7 @@ install:
   - pip install jupyter==$JUPYTER
 env:
   - EVM_EMACS=emacs-25.2-travis JUPYTER=1.0.0
-  - EVM_EMACS=emacs-26-pretest-travis JUPYTER=1.0.0
+  - EVM_EMACS=emacs-26.1-travis JUPYTER=1.0.0
 script:
   - emacs --version
   - jupyter notebook --version
