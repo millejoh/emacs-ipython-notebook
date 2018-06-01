@@ -35,8 +35,7 @@
 (require 'ein-kernel)
 
 (defun ein:completer-choose ()
-  (when (require 'auto-complete nil t)
-    (require 'ein-ac))
+  (require 'ein-ac)
   (cond
    ((and (or (eql ein:completion-backend 'ein:use-ac-backend)
              (eql ein:completion-backend 'ein:use-ac-jedi-backend))

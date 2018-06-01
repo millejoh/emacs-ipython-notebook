@@ -35,7 +35,7 @@
 
 (eval-when-compile (require 'cl))
 (require 'ewoc)
-(eval-when-compile (require 'auto-complete nil t))
+(eval-when-compile (require 'auto-complete))
 
 (require 'ein-core)
 (require 'ein-classes)

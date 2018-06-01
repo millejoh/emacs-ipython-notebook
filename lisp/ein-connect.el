@@ -31,7 +31,7 @@
 ;;; Code:
 
 (require 'eieio)
-(eval-when-compile (require 'auto-complete nil t))
+(eval-when-compile (require 'auto-complete))
 
 (require 'ein-notebook)
 
