@@ -125,11 +125,11 @@ before previous opening parenthesis."
                 "\\s-\\|\n\\|\\.")
     (save-excursion
       (with-syntax-table ein:dotty-syntax-table
-        (ein:aif (thing-at-point 'word)
+        (ein:aif (thing-at-point 'symbol)
             it
           (unless (looking-at "(")
             (search-backward "(" (point-at-bol) t))
-          (thing-at-point 'word))))))
+          (thing-at-point 'symbol))))))
 
 (defun ein:object-at-point-or-error ()
   (or (ein:object-at-point) (error "No object found at the point")))
