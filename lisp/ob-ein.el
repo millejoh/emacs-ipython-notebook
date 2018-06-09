@@ -53,6 +53,7 @@
 (defvar org-babel-default-header-args:ein '())
 
 (add-to-list 'org-src-lang-modes '("ein" . python))
+(add-to-list 'org-src-lang-modes '("ein-hy" . hy))
 
 ;; Handling source block execution results
 (defun ein:temp-inline-image-info (value)
@@ -159,6 +160,9 @@ jupyter kernels.
     (if ein:org-async-p
         (ein:ob-ein--execute-async full-body session-kernel processed-params (ein:org-get-name-create))
       (ein:ob-ein--execute full-body session-kernel processed-params))))
+
+(defun org-babel-execute:ein-hy (body params)
+  (org-babel-execute:ein (ein:pytools-wrap-hy-code body) params))
 
 (defun ein:ob-ein--execute-async (body kernel params name)
   (let ((buffer (current-buffer))
