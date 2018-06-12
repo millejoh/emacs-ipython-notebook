@@ -518,7 +518,9 @@ of minor mode."
       ks)))
 
 (defun ein:get-kernelspec-language (kernelspec)
-  (plist-get (ein:$kernelspec-spec kernelspec) :language))
+  (if kernelspec
+      (plist-get (ein:$kernelspec-spec kernelspec) :language)
+    "none"))
 
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))

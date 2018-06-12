@@ -240,7 +240,7 @@ Variable `ein:connect-run-command' sets the default command."
              (command (if ask-command
                           (read-from-minibuffer "Command: " default-command)
                         default-command))
-             (cmd (format "%s %s" command it)))
+             (cmd (format "%s \"%s\"" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
               (ein:shared-output-eval-string cmd nil nil nil :silent t)
