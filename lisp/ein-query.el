@@ -128,7 +128,8 @@ _xsrf argument."
          (cookies (request-cookie-alist (url-host parsed-url)
                                        "/" securep)))
     (ein:aif (assoc-string "_xsrf" cookies)
-        (setq settings (plist-put settings :headers (list (cons "X-XSRFTOKEN" (cdr it))))))
+        (setq settings (plist-put settings :headers (append (plist-get settings :headers)
+                                                            (list (cons "X-XSRFTOKEN" (cdr it)))))))
     (ein:aif (ein:jupyterhub-url-p (format "http://%s:%s" (url-host parsed-url) (url-port parsed-url)))
         (progn
           (unless (string-equal (ein:$jh-conn-url it)
