@@ -219,7 +219,7 @@ Usage
 
 .. _MELPA: http://melpa.org/#/
 
-.. _authentication: http://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/
+.. _authentication: https://blog.jupyter.org/security-release-jupyter-notebook-4-3-1-808e1f3bb5e2
 
 Subpackages
 -----------
