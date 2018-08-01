@@ -553,7 +553,7 @@ of minor mode."
 kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
   (ein:query-singleton-ajax
-   (list 'ein:qeury-kernelspecs url-or-port)
+   (list 'ein:query-kernelspecs url-or-port)
    (ein:url url-or-port "api/kernelspecs")
    :type "GET"
    :timeout ein:content-query-timeout
