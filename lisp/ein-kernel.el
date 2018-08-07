@@ -90,7 +90,7 @@
             :msg_id (ein:utils-uuid)
             :username (ein:$kernel-username kernel)
             :session (ein:$kernel-session-id kernel)
-            ;; version?
+            :version "5.0"
             :date (format-time-string "%Y-%m-%dT%T" (current-time)) ; ISO 8601 timestamp
             :msg_type msg-type)
    :metadata (make-hash-table)
@@ -444,9 +444,10 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
 (defun* ein:kernel-execute (kernel code &optional callbacks
                                    &key
                                    (silent t)
-                                   (user-variables [])
+                                   (store-history t)
                                    (user-expressions (make-hash-table))
-                                   (allow-stdin t))
+                                   (allow-stdin t)
+                                   (stop-on-error nil))
   "Execute CODE on KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -511,9 +512,10 @@ Sample implementations
     (let* ((content (list
                      :code code
                      :silent (or silent json-false)
-                     :user_variables user-variables
+                     :store_history (or store-history json-false)
                      :user_expressions user-expressions
-                     :allow_stdin allow-stdin))
+                     :allow_stdin allow-stdin
+                     :stop_on_error (or stop-on-error json-false)))
            (msg (ein:kernel--get-msg kernel "execute_request" content))
            (msg-id (plist-get (plist-get msg :header) :msg_id)))
       (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
