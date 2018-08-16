@@ -549,10 +549,14 @@ CONTENT and METADATA are given by `complete_reply' message.
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
   (assert (ein:kernel-live-p kernel) nil "complete_reply: Kernel is not active.")
-  (let* ((content (list
-                   ;; :text ""
-                   :line line
-                   :cursor_pos cursor-pos))
+  (let* ((content (if (< (ein:$kernel-api-version kernel) 5)
+                      (list
+                       ;; :text ""
+                       :line line
+                       :cursor_pos cursor-pos)
+                    (list
+                     :code line
+                     :cursor_pos cursor-pos)))
          (msg (ein:kernel--get-msg kernel "complete_request" content))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:websocket-send-shell-channel kernel msg)
