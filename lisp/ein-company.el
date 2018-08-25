@@ -33,6 +33,8 @@
 (require 'deferred)
 (require 'ein-core)
 
+;; Duplicates ein:jedi--completer-complete in ein-jedi.
+;; Let's refactor and enhance our calm!
 (defun ein:company--deferred-complete ()
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
@@ -47,7 +49,7 @@
       (deferred:callback-post d (list nil nil)))
     d))
 
-(defun ein:company--complete (fetcher-callback &optional use-jedi)
+(defun ein:company--complete (fetcher-callback)
   (deferred:$
     (deferred:next
       (lambda ()
@@ -55,6 +57,22 @@
     (deferred:nextc it
       (lambda (replies)
         (ein:completions--prepare-matches fetcher-callback replies)))))
+
+(defun ein:company--complete-jedi (fetcher-callback)
+  (deferred:$
+    (deferred:parallel
+     (jedi:complete-request)
+     (ein:company--deferred-complete))
+    (deferred:nextc it
+      (lambda (replies)
+        (ein:completions--prepare-matches-jedi fetcher-callback replies)))))
+
+(defun ein:completions--prepare-matches-jedi (cb replies)
+  (destructuring-bind
+      (_ ((&key matches &allow-other-keys) ; :complete_reply
+          _))
+      replies
+    (funcall cb matches)))
 
 (defun ein:completions--prepare-matches (cb replies)
   (destructuring-bind
@@ -102,14 +120,13 @@
                (funcall callback pdef))
            (error (funcall callback ""))))))))
 
-
-
 ;;;###autoload
 (defun ein:company-backend (command &optional arg &rest _)
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend) )
-    (prefix (and (--filter (and (boundp it) (symbol-value it) (eql it 'ein:notebook-minor-mode))
+    (prefix (and (--filter (and (boundp it) (symbol-value it) (or (eql it 'ein:notebook-minor-mode)
+                                                                  (eql it 'ein:connect-mode)))
                            minor-mode-list)
                  (ein:object-at-point)))
     (annotation (if ein:allow-company-annotations
@@ -129,9 +146,13 @@
     (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
                                  (col (current-column)))
                      (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
-                       (cons :async
-                             (lambda (cb)
-                               (ein:company--complete cb))))))))
+                       (case ein:completion-backend
+                         (ein:use-company-jedi-backend
+                          (cons :async (lambda (cb)
+                                         (ein:company--complete-jedi cb))))
+                         (t (cons :async
+                                  (lambda (cb)
+                                    (ein:company--complete cb))))))))))
 
 ;; (ein:kernel-complete kernel
 ;;                      (thing-at-point 'line)

@@ -403,9 +403,10 @@ notebook."
                         (auto-complete-mode +1))
     (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:connect-mode-map)
                              (auto-complete-mode +1))
-    (ein:use-company-backend (company-mode +1))
-    (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
-                                  (company-mode +1))
+    (ein:use-company-backend (company-mode +1)
+                             (add-to-list 'company-backends 'ein:company-backend))
+    (ein:use-company-jedi-backend (company-mode +1)
+                                  (add-to-list 'company-backends 'ein:company-backend))
 
     (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'."))))
 
