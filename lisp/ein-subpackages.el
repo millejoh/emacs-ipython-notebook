@@ -43,12 +43,17 @@ you restart Emacs. The available completion backends are::
  * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
  * ein:use-custom-backend: EIN will not enable any backend, leaving it to the user to configure their own custom solution.
 "
-  :type '(radio
-          (const :tag "Auto-Complete" 'ein:use-ac-backend)
-          (const :tag "Auto-Complete + Jedi" 'ein:use-ac-jedi-backend)
-          (const :tag "Company Mode" 'ein:use-company-backend)
-          (const :tag "Company Mode + Jedi" 'ein:use-company-jedi-backend)
-          (const :tag "User defined auto-completion" 'ein:use-custom-backed))
+  :type '(choice
+          (const ein:use-ac-backend)
+          (const ein:use-ac-jedi-backend)
+          (const ein:use-company-backend)
+          (const ein:use-company-jedi-backend)
+          (const ein:use-custom-backed))
+  :group 'ein-completion)
+
+(defcustom ein:allow-company-annotations nil
+  "Allow annotations to be shown when using the company completion backend in EIN. You can disable this if you are seeing poor performance completing symbols."
+  :type 'boolean
   :group 'ein-completion)
 
 ;; (defcustom ein:use-auto-complete nil
