@@ -110,6 +110,34 @@ Execute BODY if BUFFER is not live anyway."
     table)
   "Adapted from `python-dotty-syntax-table'.")
 
+(defun ein:beginning-of-object (&optional code-syntax-table)
+  "Move to the beginning of the dotty.word.at.point. User may
+specify a custom syntax table. If one is not supplied `ein:dotty-syntax-table' will
+be assumed."
+  (with-syntax-table (or code-syntax-table ein:dotty-syntax-table)
+    (while (re-search-backward "\\(\\sw\\|\\s_\\|\\s\\.\\|\\s\\\\|[%@|]\\)\\="
+                               (when (> (point) 2000) (- (point) 2000))
+                               t))
+    (re-search-forward "\\=#[-+.<|]" nil t)
+    (when (and (looking-at "@"))
+      (forward-char))))
+
+(defun ein:end-of-object (&optional code-syntax-table)
+  "Move to the end of the dotty.word.at.point. User may specify a
+custom syntax table. If one is not supplied
+`ein:dotty-syntax-table' will be assumed."
+  (with-syntax-table (or code-syntax-table ein:dotty-syntax-table)
+    (re-search-forward "\\=\\(\\sw\\|\\s_\\|\\s\\.\\|#:\\|[%|]\\)*")))
+
+(defun ein:object-start-pos ()
+  "Return the starting position of the symbol under point.
+The result is unspecified if there isn't a symbol under the point."
+  (save-excursion (ein:beginning-of-object) (point)))
+
+(defun ein:object-end-pos ()
+  (save-excursion (ein:end-of-object) (point)))
+
+
 (defun ein:object-at-point ()
   "Return dotty.words.at.point.
 When region is active, text in region is returned after trimmed
