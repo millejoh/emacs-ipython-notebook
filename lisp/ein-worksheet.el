@@ -203,6 +203,7 @@ this value."
       (setq buffer-undo-list t))
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
+    (ein:gc-complete-operation)
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
 
 (defun ein:worksheet-pp (ewoc-data)
