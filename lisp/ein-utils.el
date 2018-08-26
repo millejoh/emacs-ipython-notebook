@@ -625,7 +625,6 @@ Use `ein:log' for debugging and logging."
 
 (lexical-let ((current-gc-cons-threshold gc-cons-threshold))
   (defun ein:gc-prepare-operation ()
-    (setq current-gc-cons-threshold gc-cons-threshold)
     (ein:log 'debug "[GC-PREPARE-OPERATION] Setting cons threshold to %s." (* current-gc-cons-threshold 10000) )
     (setq gc-cons-threshold (* current-gc-cons-threshold 10000)))
 
