@@ -84,6 +84,7 @@
   "IPython notebook pager mode.
 Commands:
 \\{ein:pager-mode-map}"
+  (setq-local view-no-disable-on-exit t)
   (font-lock-mode))
 
 
