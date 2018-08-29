@@ -196,6 +196,8 @@ To suppress popup, you can pass `ignore' as CALLBACK."
                            default)))
     (if (string-match "^[0-9]+$" url-or-port)
         (string-to-number url-or-port)
+      (unless (string-match "^https?:" url-or-port)
+        (error "EIN doesn't want to assume what protocol you are using (http or https), so could you please specify the full URL (e.g http://my.jupyter.url:8888?"))
       url-or-port)))
 
 ;;;###autoload
