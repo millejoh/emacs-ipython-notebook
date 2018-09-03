@@ -71,6 +71,7 @@
       (_ ((&key matches &allow-other-keys) ; :complete_reply
           _))
       replies
+    (ein:completions--build-oinfo-cache matches)
     (funcall cb matches)))
 
 (defun ein:completions--prepare-matches (cb replies)
@@ -78,8 +79,8 @@
       ((&key matched_text matches &allow-other-keys) ; :complete_reply
        _)
       replies
+    (ein:completions--build-oinfo-cache matches)
     (funcall cb matches)))
-
 
 ;;;###autoload
 (defun ein:company-backend (command &optional arg &rest _)
@@ -91,11 +92,9 @@
                            minor-mode-list)
                  (ein:object-at-point)))
     (annotation (if ein:allow-company-annotations
-                    (ein:aif (gethash arg *ein:pdef-cache*)
-                        it
-                      (cons :async
-                            (lambda (cb)
-                              (ein:completions--get-pdef cb arg))))))
+                    (ein:aif (gethash arg *ein:oinfo-cache*)
+                        (plist-get it :definition)
+                      "")))
     (doc-buffer (lexical-let ((arg arg))
                   (cons :async
                         (lambda (cb)

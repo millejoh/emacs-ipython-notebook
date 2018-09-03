@@ -127,6 +127,7 @@ notebook buffers and connected buffers."
 
 
 ;;; Retrieving Python Object Info
+(defvar *ein:oinfo-cache* (make-hash-table :test #'equal))
 
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
@@ -137,48 +138,31 @@ notebook buffers and connected buffers."
          (format "__import__('ein').print_object_info_for(%s)" obj)
          (list
           :output (cons (lambda (d &rest args) (deferred:callback-post d args))
-                         d)))
+                        d)))
       (deferred:callback-post d (list nil nil)))
     d))
-
-(defcustom ein:function-annotation-timeout 500
-  ""
-  :type 'integer
-  :group 'ein-completion)
-
-(defvar *ein:pdef-cache* (make-hash-table :test #'equal))
 
 (defun ein:clear-pdef-cache ()
   (clrhash *ein:pdef-cache*))
 
-(defun ein:completions--get-pdef (callback obj)
-  (deferred:$
-    (deferred:earlier
-      (deferred:$
-        (deferred:next
-          (lambda ()
-            (ein:completions--get-oinfo obj))))
-      (deferred:$
-        (deferred:wait ein:function-annotation-timeout)
-        (deferred:nextc it
-          (lambda (_) nil))))
-    (deferred:nextc it
-      (lambda (output)
-        (ein:completions--prepare-pdef callback output obj)))))
+(defun ein:completions--build-oinfo-cache (objs)
+  (dolist (o objs)
+    (deferred:$
+      (deferred:next
+        (lambda ()
+          (ein:completions--get-oinfo o)))
+      (deferred:nextc it
+        (lambda (output)
+          (ein:completions--prepare-oinfo output o))))))
 
-(defun ein:completions--prepare-pdef (callback output obj)
-  (if output
+(defun ein:completions--prepare-oinfo (output obj)
+  (condition-case _
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data")
-           (condition-case _
-               (let* ((oinfo (ein:json-read-from-string (plist-get content :text)))
-                      (pdef (plist-get oinfo :definition)))
-                 (setf (gethash obj *ein:pdef-cache*) pdef)
-                 (funcall callback pdef))
-             (error (funcall callback ""))))))
-    (setf (gethash obj *ein:pdef-cache*) "")
-    (funcall callback "")))
+           (let* ((oinfo (ein:json-read-from-string (plist-get content :text))))
+             (setf (gethash obj *ein:oinfo-cache*) oinfo)))))
+    (error (setf (gethash obj *ein:oinfo-cache*) ""))))
 
 ;;; Support for Eldoc
 
