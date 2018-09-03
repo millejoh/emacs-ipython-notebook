@@ -1,8 +1,9 @@
+;;; -*- mode: emacs-list; lexical-binding: t -*-
 ;;; ein-completer.el --- Completion module
 
-;; Copyright (C) 2012- Takafumi Arakaki
+;; Copyright (C) 2018- Takafumi Arakaki / John Miller
 
-;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
+;; Author: Takafumi Arakaki <aka.tkf at gmail.com> / John Miller <millejoh at mac.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -123,6 +124,66 @@ notebook buffers and connected buffers."
                (eql ein:completion-backend 'ein:use-ac-jedi-backend)))
       (define-key map "." (or func #'ein:completer-dot-complete))
     (define-key map "." nil)))
+
+
+;;; Retrieving Python Object Info
+
+(defun ein:completions--get-oinfo (obj)
+  (let ((d (deferred:new #'identity))
+        (kernel (ein:get-kernel)))
+    (if (ein:kernel-live-p kernel)
+        (ein:kernel-execute
+         kernel
+         (format "__import__('ein').print_object_info_for(%s)" obj)
+         (list
+          :output (cons (lambda (d &rest args) (deferred:callback-post d args))
+                         d)))
+      (deferred:callback-post d (list nil nil)))
+    d))
+
+(defcustom ein:function-annotation-timeout 500
+  ""
+  :type 'integer
+  :group 'ein-completion)
+
+(defvar *ein:pdef-cache* (make-hash-table :test #'equal))
+
+(defun ein:clear-pdef-cache ()
+  (clrhash *ein:pdef-cache*))
+
+(defun ein:completions--get-pdef (callback obj)
+  (deferred:$
+    (deferred:earlier
+      (deferred:$
+        (deferred:next
+          (lambda ()
+            (ein:completions--get-oinfo obj))))
+      (deferred:$
+        (deferred:wait ein:function-annotation-timeout)
+        (deferred:nextc it
+          (lambda (_) nil))))
+    (deferred:nextc it
+      (lambda (output)
+        (ein:completions--prepare-pdef callback output obj)))))
+
+(defun ein:completions--prepare-pdef (callback output obj)
+  (if output
+      (destructuring-bind (msg-type content _) output
+        (ein:case-equal msg-type
+          (("stream" "display_data")
+           (condition-case _
+               (let* ((oinfo (ein:json-read-from-string (plist-get content :text)))
+                      (pdef (plist-get oinfo :definition)))
+                 (setf (gethash obj *ein:pdef-cache*) pdef)
+                 (funcall callback pdef))
+             (error (funcall callback ""))))))
+    (setf (gethash obj *ein:pdef-cache*) "")
+    (funcall callback "")))
+
+;;; Support for Eldoc
+
+(defun ein:completer--get-eldoc-signature ()
+  )
 
 (provide 'ein-completer)
 

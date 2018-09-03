@@ -28,10 +28,9 @@
 
 (eval-when-compile (require 'cl))
 (require 'company nil t)
-(require 'dash)
 (require 'jedi-core nil t)
 (require 'deferred)
-(require 'ein-core)
+(require 'ein-completer)
 
 ;; Duplicates ein:jedi--completer-complete in ein-jedi.
 ;; Let's refactor and enhance our calm!
@@ -81,44 +80,6 @@
       replies
     (funcall cb matches)))
 
-(defun ein:completions--get-oinfo (obj)
-  (let ((d (deferred:new #'identity))
-        (kernel (ein:get-kernel)))
-    (if (ein:kernel-live-p kernel)
-        (ein:kernel-execute
-         kernel
-         (format "__import__('ein').print_object_info_for(%s)" obj)
-         (list
-          :output (cons (lambda (d &rest args) (deferred:callback-post d args))
-                         d)))
-      (deferred:callback-post d (list nil nil)))
-    d))
-
-(let ((pdef-cache (make-hash-table :test #'equal)))
-  (defun ein:clear-pdf-cache ()
-    (clrhash pdef-cache))
-
-  (defun ein:completions--get-pdef (callback obj)
-    (ein:aif (gethash obj pdef-cache nil)
-        (funcall callback it)
-      (deferred:$
-        (deferred:next
-          (lambda ()
-            (ein:completions--get-oinfo obj)))
-        (deferred:nextc it
-          (lambda (output)
-            (ein:completions--prepare-pdef callback output obj))))))
-
-  (defun ein:completions--prepare-pdef (callback output obj)
-    (destructuring-bind (msg-type content _) output
-      (ein:case-equal msg-type
-        (("stream" "display_data")
-         (condition-case _
-             (let* ((oinfo (ein:json-read-from-string (plist-get content :text)))
-                    (pdef (plist-get oinfo :definition)))
-               (setf (gethash obj pdef-cache) pdef)
-               (funcall callback pdef))
-           (error (funcall callback ""))))))))
 
 ;;;###autoload
 (defun ein:company-backend (command &optional arg &rest _)
@@ -130,9 +91,11 @@
                            minor-mode-list)
                  (ein:object-at-point)))
     (annotation (if ein:allow-company-annotations
-                    (cons :async
-                          (lambda (cb)
-                            (ein:completions--get-pdef cb arg)))))
+                    (ein:aif (gethash arg *ein:pdef-cache*)
+                        it
+                      (cons :async
+                            (lambda (cb)
+                              (ein:completions--get-pdef cb arg))))))
     (doc-buffer (lexical-let ((arg arg))
                   (cons :async
                         (lambda (cb)
