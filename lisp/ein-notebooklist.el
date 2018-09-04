@@ -771,8 +771,7 @@ Notebook list data is passed via the buffer local variable
     (erase-buffer))
   (remove-overlays)
 
-  (mapc (lambda (fn) (apply fn '()))
-     ein:notebook-list-render-order)
+  (mapc #'funcall ein:notebook-list-render-order)
 
   (ein:notebooklist-mode)
   (widget-setup))
