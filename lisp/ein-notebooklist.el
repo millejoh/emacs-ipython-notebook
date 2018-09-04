@@ -1048,7 +1048,7 @@ on all the notebooks opened from the current notebooklist."
 (define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
   "IPython notebook list mode.
 Commands:
-\\{ein:notebooklist-mode-map}}"
+\\{ein:notebooklist-mode-map}"
   (set (make-local-variable 'revert-buffer-function)
        'ein:notebooklist-revert-wrapper))
 
