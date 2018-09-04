@@ -1,4 +1,4 @@
-;;; -*- mode: emacs-list; lexical-binding: t -*-
+;;; -*- mode: emacs-lisp; lexical-binding: t -*-
 ;;; ein-completer.el --- Completion module
 
 ;; Copyright (C) 2018- Takafumi Arakaki / John Miller
@@ -50,7 +50,7 @@
   (save-excursion
     (re-search-backward (concat matched-text "\\="))))
 
-(defun ein:completer-finish-completing (args content -metadata-not-used-)
+(defun ein:completer-finish-completing (args content _metadata)
   (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
   (let* ((beg (point))
          (delta (- (plist-get content :cursor_end)
@@ -62,7 +62,7 @@
     (apply completer matched-text matches args)))
 
 (defun ein:completer-finish-completing-default (matched-text matches
-                                                             &rest -ignore-)
+                                                &rest _ignore)
   (let* ((end (point))
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
@@ -142,8 +142,8 @@ notebook buffers and connected buffers."
       (deferred:callback-post d (list nil nil)))
     d))
 
-(defun ein:clear-pdef-cache ()
-  (clrhash *ein:pdef-cache*))
+(defun ein:clear-oinfo-cache ()
+  (clrhash *ein:oinfo-cache*))
 
 (defun ein:completions--build-oinfo-cache (objs)
   (dolist (o objs)
