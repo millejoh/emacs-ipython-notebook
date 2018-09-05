@@ -222,7 +222,7 @@ To suppress popup, you can pass `ignore' as CALLBACK."
   )
 
 ;;;###autoload
- (defun ein:notebooklist-refresh-kernelspecs (&optional url-or-port)
+(defun ein:notebooklist-refresh-kernelspecs (&optional url-or-port)
   (interactive (list (or (and ein:%notebooklist% (ein:$notebooklist-url-or-port ein:%notebooklist%))
                          (ein:notebooklist-ask-url-or-port))))
   (unless url-or-port
@@ -474,7 +474,7 @@ You may find the new one in the notebook list." error)
    :success (apply-partially (lambda (path notebook-list &rest ignore)
                                (ein:log 'info
                                  "Deleting notebook %s... Done." path)
-			       (ein:notebooklist-reload notebook-list))
+                               (ein:notebooklist-reload notebook-list))
                              path ein:%notebooklist%)))
 
 ;; Because MinRK wants me to suffer (not really, I love MinRK)...
@@ -585,9 +585,10 @@ Notebook list data is passed via the buffer local variable
         (widget-insert " | ")
         (widget-create
          'link
-         :notify (lambda (&rest ignore) (ein:notebooklist-open
-					                               (ein:$notebooklist-url-or-port ein:%notebooklist%)
-					                               path))
+         :notify (lambda (&rest ignore)
+                   (ein:notebooklist-open
+                    (ein:$notebooklist-url-or-port ein:%notebooklist%)
+                    path))
          name)))
     (widget-insert " |\n\n"))
 
@@ -761,7 +762,7 @@ IPY-AT-LEAST-3 used to keep track of version."
                     (widget-insert "\n")))))
 
 
- (defun ein:notebooklist-render ()
+(defun ein:notebooklist-render ()
   "Render notebook list widget.
 Notebook list data is passed via the buffer local variable
 `ein:notebooklist-data'."
@@ -770,8 +771,7 @@ Notebook list data is passed via the buffer local variable
     (erase-buffer))
   (remove-overlays)
 
-  (mapc (lambda (fn) (apply fn '()))
-     ein:notebook-list-render-order)
+  (mapc #'funcall ein:notebook-list-render-order)
 
   (ein:notebooklist-mode)
   (widget-setup))
@@ -988,24 +988,25 @@ on all the notebooks opened from the current notebooklist."
 (defun ein:notebooklist-change-url-port--deferred (new-url-or-port)
   (lexical-let* ((current-nblist ein:%notebooklist%)
                  (old-url (ein:$notebooklist-url-or-port current-nblist))
-		             (new-url-or-port new-url-or-port)
-		             (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
-							                                               (equal (ein:$notebook-url-or-port nb)
-								                                                    (ein:$notebooklist-url-or-port current-nblist))))))
+                 (new-url-or-port new-url-or-port)
+                 (open-nb (ein:notebook-opened-notebooks
+                           (lambda (nb)
+                             (equal (ein:$notebook-url-or-port nb)
+                                    (ein:$notebooklist-url-or-port current-nblist))))))
     (deferred:$
       (deferred:next
-	      (lambda ()
-	        (ein:notebooklist-open new-url-or-port "/" t)
-	        (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
-		            do (sit-for 0.1))))
+          (lambda ()
+            (ein:notebooklist-open new-url-or-port "/" t)
+            (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+              do (sit-for 0.1))))
       (deferred:nextc it
-	      (lambda ()
-	        (dolist (nb open-nb)
-	          (ein:notebook-update-url-or-port new-url-or-port nb))))
+          (lambda ()
+            (dolist (nb open-nb)
+              (ein:notebook-update-url-or-port new-url-or-port nb))))
       (deferred:nextc it
-        (lambda ()
-          (kill-buffer (ein:notebooklist-get-buffer old-url))
-          (ein:notebooklist-open new-url-or-port "/" nil))))))
+          (lambda ()
+            (kill-buffer (ein:notebooklist-get-buffer old-url))
+            (ein:notebooklist-open new-url-or-port "/" nil))))))
 
 ;;; Generic getter
 
@@ -1046,7 +1047,7 @@ on all the notebooks opened from the current notebooklist."
 (define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
   "IPython notebook list mode.
 Commands:
-\\{ein:notebooklist-mode-map}}"
+\\{ein:notebooklist-mode-map}"
   (set (make-local-variable 'revert-buffer-function)
        'ein:notebooklist-revert-wrapper))
 
