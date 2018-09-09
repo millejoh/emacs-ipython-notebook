@@ -776,6 +776,20 @@ Do not clear input prompts when the prefix argument is given."
 
 ;;; Kernel related things
 
+(defun ein:worksheet-kernel-status (ws)
+  "Report kernel status."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (let ((kernel (slot-value ws 'kernel)))
+    (message "%s" (mapcan (lambda (slot)
+                            (let ((channel (funcall slot kernel)))
+                              (and channel
+                                   (list (cons slot
+                                               (websocket-ready-state
+                                                (ein:$websocket-ws channel)))))))
+                          '(ein:$kernel-channels
+                            ein:$kernel-shell-channel
+                            ein:$kernel-iopub-channel)))))
+
 (defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
         (ein:filter #'(lambda (x)
