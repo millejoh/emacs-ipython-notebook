@@ -425,9 +425,16 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
   (when objname
     (if (= (ein:$kernel-api-version kernel) 2)
         (ein:legacy-kernel-object-info-request kernel objname callbacks))
-    (let* ((content (list :oname (format "%s" objname)
-                          :cursor_pos (or cursor-pos 0)
-                          :detail_level (or detail-level 0)))
+    (let* ((content (if (< (ein:$kernel-api-version kernel) 5)
+                        (list
+                         ;; :text ""
+                         :oname (format "%s" objname)
+                         :cursor_pos (or cursor-pos 0)
+                         :detail_level (or detail-level 0))
+                      (list
+                       :code (format "%s" objname)
+                       :cursor_pos (or cursor-pos 0)
+                       :detail_level (or detail-level 0))))
            (msg (ein:kernel--get-msg kernel "inspect_request"
                                      (append content (list :detail_level 1))))
            (msg-id (plist-get (plist-get msg :header) :msg_id)))
