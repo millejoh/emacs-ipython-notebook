@@ -1,7 +1,7 @@
-.. _changelog_0_14_0:
+.. _changelog_0_14_1:
 
 
-v0.14.0
+v0.14.1
 -------
 
 A quick fix to correct a problem that was causing all the cells of a notebook to
