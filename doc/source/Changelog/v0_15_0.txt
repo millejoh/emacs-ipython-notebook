@@ -1,0 +1,17 @@
+
+.. _changelog_0_15_0:
+
+
+v0.15.0
+-------
+
+The usual slew of fixes: see PR's 294, 296, 299, 301, 302, 303, 308, 309, 312,
+314, 318, 319, among others.
+
+Also some quality of life improvements for the completion backend. The code
+should be more robust, sort of supports jedi, and works when in a connected
+buffer. And, if you set `ein:use-company-annotations' to `t' you will get
+annotation in the matches list, though there may be an initial performance hit as
+ein builds a cache of of function definitions.
+
+Add basic support for eldoc.
