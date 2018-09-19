@@ -76,7 +76,7 @@
 
 (defun ein:completions--prepare-matches (cb replies)
   (destructuring-bind
-      ((&key matched_text matches &allow-other-keys) ; :complete_reply
+      ((&key _matched_text matches &allow-other-keys) ; :complete_reply
        _)
       replies
     (ein:completions--build-oinfo-cache matches)
@@ -112,34 +112,18 @@
                          (ein:use-company-jedi-backend
                           (cons :async (lambda (cb)
                                          (ein:company--complete-jedi cb))))
-                         (t (cons :async
+                         (t
+                          (cons :async
                                   (lambda (cb)
                                     (ein:company--complete cb))))))))))
 
-;; (ein:kernel-complete kernel
-;;                      (thing-at-point 'line)
-;;                      col
-;;                      (list :complete_reply
-;;                            (cons #'ein:completer-finish-completing-company
-;;                                  (list :callback cb))))
 
 (defun ein:company-backend--punctuation-check (thing col)
   (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
     (string-match "[]()\",[{}'=: ]$" query (- col 2))))
 
-;; (cl-defun ein:completer-finish-completing-company (packed content -metadata-not-used-)
-;;   (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: content=%S" content)
-;;   (let* ((beg (point))
-;;          (delta (- (plist-get content :cursor_end)
-;;                    (plist-get content :cursor_start)))
-;;          (matched-text (buffer-substring beg (- beg delta)))
-;;          (matches (-filter #'(lambda (s)
-;;                                (s-starts-with-p matched-text s))
-;;                            (plist-get content :matches))))
-;;     (ein:log 'debug "EIN:COMPANY-FINISH-COMPLETING: matches=%s" matches)
-;;     (funcall (plist-get packed :callback) matches)))
 
-(defun ein:company-handle-doc-buffer-finish (packed content -metadata-not-used-)
+(defun ein:company-handle-doc-buffer-finish (packed content _metadata-not-used_)
   (when (plist-get content :found)
     (funcall (plist-get packed :callback) (company-doc-buffer
                                            (ansi-color-apply (cadr (plist-get content :data)))))))
@@ -151,9 +135,6 @@
                                         (cons #'ein:company-handle-doc-buffer-finish
                                               (list :object object
                                                     :callback cb)))))
-
-(defun ein:company-handle-meta (object cb)
-  )
 
 (setq ein:complete-on-dot nil)
 
