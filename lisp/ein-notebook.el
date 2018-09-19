@@ -684,6 +684,7 @@ This is equivalent to do ``C-c`` in the console program."
     ;; Now that major-mode is set, set buffer local variables:
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
+    (ein:notebook--enable-eldoc)
     (setq ein:%notebook% notebook)))
 
 (defun ein:notebook--notification-setup (notebook)

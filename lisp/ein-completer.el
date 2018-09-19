@@ -167,7 +167,15 @@ notebook buffers and connected buffers."
 ;;; Support for Eldoc
 
 (defun ein:completer--get-eldoc-signature ()
-  )
+  (let* ((func (ein:function-at-point))
+         (oinfo (gethash func *ein:oinfo-cache* nil)))
+    (if (not oinfo)
+        (ein:completions--build-oinfo-cache (list func))
+      (plist-get oinfo :definition))))
+
+(defun ein:notebook--enable-eldoc ()
+  (set (make-local-variable 'eldoc-documentation-function)
+       #'ein:completer--get-eldoc-signature))
 
 (provide 'ein-completer)
 

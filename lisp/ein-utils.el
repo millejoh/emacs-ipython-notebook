@@ -159,6 +159,14 @@ before previous opening parenthesis."
             (search-backward "(" (point-at-bol) t))
           (thing-at-point 'symbol))))))
 
+(defun ein:function-at-point ()
+  "Similar to `ein:object-at-point', but instead will looking for the function
+at point, i.e. any word before then \"(\", if it is present."
+  (save-excursion
+    (unless (looking-at "(")
+      (search-backward "(" (point-at-bol) t))
+    (ein:object-at-point)))
+
 (defun ein:object-at-point-or-error ()
   (or (ein:object-at-point) (error "No object found at the point")))
 
