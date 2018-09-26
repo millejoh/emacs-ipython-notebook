@@ -1,25 +1,48 @@
+sudo: false
 language: python
+
 addons:
   apt:
     packages:
     - gnutls-bin
-    - libssl-dev
+    - python-tornado
+    - python3-tornado
+    - python-zmq
+    - python3-zmq
+    - python-jinja2
+    - python3-jinja2
+    - python-jsonschema
+    - python3-jsonschema
+
+cache:
+  directories:
+  - $HOME/local
+
 python:
   - "2.7"
   - "3.5"
   - "3.6"
-before_install:
-  - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
-  - evm install $EVM_EMACS --use --skip
-  - evm list
-  - cask install
-install:
-  - pip install tornado
-  - pip install jupyter==$JUPYTER
+
 env:
-  - EVM_EMACS=emacs-25.2-travis JUPYTER=1.0.0
-  - EVM_EMACS=emacs-26.1-travis JUPYTER=1.0.0
-script:
+  global:
+    - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$PATH
+  matrix:
+    - EVM_EMACS=emacs-25.2-travis IPY_VERSION=5.8.0 EL_REQUEST_BACKEND=curl
+    - EVM_EMACS=emacs-26.1-travis IPY_VERSION=6.2.1 EL_REQUEST_BACKEND=curl
+
+matrix:
+  allow_failures:
+    - env: EVM_EMACS=emacs-snapshot
+
+install:
+  - pip install jupyter
+
+before_script:
+  - sh tools/install-evm.sh
+  - evm install $EVM_EMACS --use --skip
   - emacs --version
-  - jupyter notebook --version
-  - cask exec ert-runner
+  - sh tools/install-cask.sh
+  - cask install
+
+script:
+  - make test IPY_VERSION=$IPY_VERSION

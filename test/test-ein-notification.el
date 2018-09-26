@@ -13,8 +13,7 @@
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
          (kernel (oref ein:%notification% :kernel)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
-    (should (equal (ein:header-line)
-                   "IP[y]: /1\\ /2\\ /3\\ [+]"))))
+    (should (string-prefix-p "IP[y]: /1\\ /2\\ /3\\ [+]" (ein:header-line)))))
 
 (ert-deftest ein:header-line-kernel-status-busy ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -22,8 +21,8 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set kernel
                                  'status_busy.Kernel)
-    (should (equal (ein:header-line)
-                   "IP[y]: Kernel is busy... | /1\\ /2\\ /3\\ [+]"))))
+    (should (string-prefix-p "IP[y]: Kernel is busy... | /1\\ /2\\ /3\\ [+]"
+                             (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-status-busy ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -31,8 +30,8 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set notebook
                                  'notebook_saved.Notebook)
-    (should (equal (ein:header-line)
-                   "IP[y]: Notebook is saved | /1\\ /2\\ /3\\ [+]"))))
+    (should (string-prefix-p "IP[y]: Notebook is saved | /1\\ /2\\ /3\\ [+]"
+                             (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-complex ()
   (let* ((ein:%notification% (ein:notification "NotificationTest"))
@@ -43,11 +42,10 @@
                                  'status_dead.Kernel)
     (ein:notification-status-set notebook
                                  'notebook_saving.Notebook)
-    (should (equal
-             (ein:header-line)
+    (should (string-prefix-p
              (concat "IP[y]: Saving Notebook... | "
                      "Kernel is dead. Need restart. | "
-                     "/1\\ /2\\ /3\\ [+]")))))
+                     "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()
   (let* ((notification (ein:notification "NotificationTest"))
@@ -58,6 +56,8 @@
           '(notebook_saved.Notebook
             notebook_saving.Notebook
             notebook_save_failed.Notebook
+            notebook_create_checkpoint.Notebook
+            notebook_checkpoint_created.Notebook
             execution_count.Kernel
             status_restarting.Kernel
             status_idle.Kernel

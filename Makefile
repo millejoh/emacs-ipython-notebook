@@ -1,68 +1,28 @@
-EMACS ?= emacs
+EMACS ?= $(shell which emacs)
 IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
-IPY_VERSION = 4.0.0
-TESTEIN = tools/testein.py
-TESTEIN_OPTS =
-PKG_INFO = \
-grep '^Version' \
-env/ipy.$(IPY_VERSION)/lib/python*/site-packages/*.egg-info/PKG-INFO \
-| sed -r 's%.*/site-packages/(.*)-py.*\.egg-info/.*:Version: (.*)$$%\1\t\2%'
+IPY_VERSION = 5.8.0
+SRC=$(shell cask files)
+ELCFILES = $(SRC:.el=.elc)
 
-testein: test-requirements
-	${MAKE} testein-1
-
-interactive-testein: test-requirements
-	${MAKE} TESTEIN_OPTS="--no-batch" testein-1
-
-clean: ert-clean
-	rm -f lisp/*.elc
-	rm -f tests/notebook/*.ipynb
-
-purge: clean
-	rm -rf env log
-
-pkg-info:
-	@echo "**************************************************"
-	@echo "Installed Python Packages"
-	$(PKG_INFO)
-
-submodule:
-	git submodule update --init
-
-ERT_DIR = lib/ert/lisp/emacs-lisp
-ert-compile: submodule ert-clean log
-	$(EMACS) -Q -batch -L $(ERT_DIR) \
-		-f batch-byte-compile $(ERT_DIR)/*.el 2> log/ert-compile.log
-
-ert-clean:
-	rm -f lib/ert/lisp/emacs-lisp/*.elc
+.PHONY: clean
+clean:
+	cask clean-elc
+	-rm -f log/testein*
+	-rm -f log/testfunc*
 
 env-ipy.%:
 	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
 
-log:
-	mkdir log
+.PHONY: test
+test: test-unit test-int
 
-test-requirements: ert-compile env-ipy.$(IPY_VERSION)
-	${MAKE} pkg-info
+.PHONY: test-int
+test-int:
+	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
 
-travis-ci-testein: test-requirements
-	${MAKE} testein-2
-
-testein-2: testein-2-url-retrieve testein-2-curl
-
-testein-2-curl:
-	EL_REQUEST_BACKEND=curl ${MAKE} testein-1
-
-testein-2-url-retrieve:
-	EL_REQUEST_BACKEND=url-retrieve ${MAKE} testein-1
-
-testein-1:
-	$(EMACS) --version
-	python --version
-	env/ipy.$(IPY_VERSION)/bin/ipython --version
-	$(TESTEIN) --clean-elc -e $(EMACS) \
-		--ipython $(IPYTHON) ${TESTEIN_OPTS}
+.PHONY: test-unit
+test-unit:
+	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
 
 travis-ci-zeroein:
 	$(EMACS) --version

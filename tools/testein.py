@@ -19,7 +19,7 @@ def cask_load_path():
     except WindowsError:
         path = check_output(['C:/Users/mille/.cask/bin/cask.bat', 'load-path'])
 
-    return path.decode()
+    return path.decode().rstrip()
 
 def has_library(emacs, library):
     """
@@ -42,7 +42,7 @@ def einlispdir(*path):
 
 
 def eintestdir(*path):
-    return eindir('tests', *path)
+    return eindir('test', *path)
 
 
 def einlibdir(*path):
@@ -142,16 +142,14 @@ class TestRunner(BaseRunner):
         self.logpath_log = self.logpath('log')
         self.logpath_messages = self.logpath('messages')
         self.logpath_server = self.logpath('server')
-        self.notebook_dir = os.path.join(EIN_ROOT, "tests")
+        self.notebook_dir = os.path.join(EIN_ROOT, "test")
         self.lispvars = {
             'ein:testing-dump-file-log': quote(self.logpath_log),
             'ein:testing-dump-server-log': quote(self.logpath_server),
             'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
-            'ein:force-sync': "'t",
-            'ein:log-message-level': self.ein_message_level,
-            'ein:testing-jupyter-server-command': quote(self.ipython),
-            'ein:testing-jupyter-server-directory': quote(os.path.normpath(self.notebook_dir))
+            'ein:force-sync': "t",
+            'ein:log-message-level': self.ein_message_level
         }
         if self.ein_debug:
             self.lispvars['ein:debug'] = "'t"
@@ -319,7 +317,7 @@ def remove_elc():
 class ServerRunner(BaseRunner):
 
     port = None
-    notebook_dir = os.path.join(EIN_ROOT, "tests", "notebook")
+    notebook_dir = os.path.join(EIN_ROOT, "test", "notebook")
 
     def __enter__(self):
         self.run()
@@ -363,6 +361,8 @@ class ServerRunner(BaseRunner):
         self.proc.stdin.write(b'y\n')
 
     def stop(self):
+        if self.dry_run:
+            return
         print("Stopping server", self.port)
         returncode = self.proc.poll()
         if returncode is not None:
@@ -373,11 +373,10 @@ class ServerRunner(BaseRunner):
             print(open(logpath).read())
             print()
             return
-        if not self.dry_run:
-            try:
-                kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
-            finally:
-                self.proc.terminate()
+        try:
+            kill_subprocesses(self.proc.pid, lambda x: 'ipython' in x)
+        finally:
+            self.proc.terminate()
 
     @property
     def command(self):
@@ -429,21 +428,21 @@ def run_ein_test(unit_test, func_test, func_test_max_retries,
     if clean_elc and not kwds['dry_run']:
         remove_elc()
     if unit_test:
-        unit_test_runner = TestRunner(testfile='test-load.el', **kwds)
+        unit_test_runner = TestRunner(testfile='testein.el', **kwds)
         if unit_test_runner.run() != 0:
             return 1
     if func_test:
         for i in range(func_test_max_retries + 1):
-            func_test_runner = TestRunner(testfile='func-test.el', **kwds)
-            # with ServerRunner(testfile='func-test.el', **kwds) as port:
-            #     func_test_runner.setq('ein:testing-port', port)
-            if func_test_runner.run() == 0:
-                print("Functional test succeeded after {0} retries." \
-                      .format(i))
-                return 0
-            if not no_skip and func_test_runner.is_known_failure():
-                print("All failures are known.  Ending functional test.")
-                return 0
+            func_test_runner = TestRunner(testfile='test-func.el', **kwds)
+            with ServerRunner(testfile='test-func.el', **kwds) as port:
+                func_test_runner.setq('ein:testing-port', port)
+                if func_test_runner.run() == 0:
+                    print("Functional test succeeded after {0} retries."\
+                          .format(i))
+                    return 0
+                if not no_skip and func_test_runner.is_known_failure():
+                    print("All failures are known.  Ending functional test.")
+                    return 0
         print("Functional test failed after {0} retries.".format(i))
         return 1
     return 0
@@ -500,7 +499,7 @@ def main():
     parser.add_argument('--clean-elc', '-c', default=False,
                         action='store_true',
                         help="remove *.elc files in ein/lisp and "
-                        "ein/tests directories.")
+                        "ein/test directories.")
     parser.add_argument('--dry-run', default=False,
                         action='store_true',
                         help="Print commands to be executed.")

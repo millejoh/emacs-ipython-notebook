@@ -292,7 +292,7 @@ a number will limit the number of lines in a cell output."
 (defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
-    (loop for k in '(read-only ewoc events)
+    (loop for k in '(read-only ewoc)
           do (set-slot-value new k (slot-value cell k)))
     ;; copy input
     (set-slot-value new 'input (if (ein:cell-active-p cell)
@@ -498,7 +498,7 @@ a number will limit the number of lines in a cell output."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (concat
-    (format "In [%s]" (or (ein:oref-safe cell 'input-prompt-number)  " "))
+    (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
     (ein:maybe-show-slideshow-data cell)
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))

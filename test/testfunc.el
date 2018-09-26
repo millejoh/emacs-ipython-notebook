@@ -1,9 +1,3 @@
-;; Load all test-ein-*.el files for interactive/batch use.
-
-;; Usage:
-;;   emacs -Q -batch -L ... -l tests/test-load.el -f ert-run-tests-batch
-;; You will need to set load paths using `-L' switch.
-
 (prefer-coding-system 'utf-8)
 
 (require 'ein-dev)
@@ -23,8 +17,9 @@
 (defvar *ein:testing-port* nil)
 (defvar *ein:testing-token* nil)
 
-(ein:setq-if-not ein:testing-dump-file-log "test-batch-log.log")
-(ein:setq-if-not ein:testing-dump-file-messages "test-batch-messages.log")
+(ein:setq-if-not ein:testing-dump-file-log "./log/testfunc.log")
+(ein:setq-if-not ein:testing-dump-file-messages "./log/testfunc.messages")
+(ein:setq-if-not ein:testing-dump-server-log  "./log/testfunc.server")
 (setq message-log-max t)
 (setq ein:force-sync t)
 (setq ein:jupyter-server-run-timeout 120000)
@@ -41,7 +36,3 @@
   (setq *ein:testing-port* url)
   (setq *ein:testing-token* token)
   (ein:log 'info "testing-start-server succesfully logged in."))
-
-(ein:load-files "^test-ein-.*\\.el$"
-                "./" ;(file-name-directory load-file-name)
-                t)                      ; ignore-compiled
