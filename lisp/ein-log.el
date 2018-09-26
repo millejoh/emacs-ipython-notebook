@@ -44,8 +44,8 @@
 (defvar ein:log-level 30)
 (defvar ein:log-message-level 20)
 
-(defvar ein:log-print-level 1 "`print-level' for `ein:log'")
 (defvar ein:log-print-length 10 "`print-length' for `ein:log'")
+(defvar ein:log-print-level 1 "`print-level' for `ein:log'")
 (defvar ein:log-max-string 1000)
 
 

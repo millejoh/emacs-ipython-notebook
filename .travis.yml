@@ -5,14 +5,6 @@ addons:
   apt:
     packages:
     - gnutls-bin
-    - python-tornado
-    - python3-tornado
-    - python-zmq
-    - python3-zmq
-    - python-jinja2
-    - python3-jinja2
-    - python-jsonschema
-    - python3-jsonschema
 
 cache:
   directories:
@@ -36,6 +28,7 @@ matrix:
 
 install:
   - pip install jupyter ipython\<=6.4.0
+  - jupyter kernelspec list
 
 before_script:
   - sh tools/install-evm.sh
@@ -45,4 +38,4 @@ before_script:
   - cask install
 
 script:
-  - make test
+  - make test || cat log/*.server
