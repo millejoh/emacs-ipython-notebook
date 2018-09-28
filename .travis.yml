@@ -27,15 +27,15 @@ env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$PATH
   matrix:
-    - EVM_EMACS=emacs-25.2-travis IPY_VERSION=5.8.0 EL_REQUEST_BACKEND=curl
-    - EVM_EMACS=emacs-26.1-travis IPY_VERSION=6.2.1 EL_REQUEST_BACKEND=curl
+    - EVM_EMACS=emacs-25.2-travis EL_REQUEST_BACKEND=curl
+    - EVM_EMACS=emacs-26.1-travis EL_REQUEST_BACKEND=curl
 
 matrix:
   allow_failures:
     - env: EVM_EMACS=emacs-snapshot
 
 install:
-  - pip install jupyter
+  - pip install jupyter ipython\<=6.4.0
 
 before_script:
   - sh tools/install-evm.sh
@@ -45,4 +45,4 @@ before_script:
   - cask install
 
 script:
-  - make test IPY_VERSION=$IPY_VERSION
+  - make test
