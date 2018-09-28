@@ -129,7 +129,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it)))
-     nil 50000)
+     nil)
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:%notebook%)
                      "Untitled.ipynb"))))
@@ -171,8 +171,7 @@ Make MAX-COUNT larger \(default 50) to wait longer before timeout."
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until "ein:worksheet-execute-cell"
                                 (lambda () (not (slot-value cell 'running)))
-                                nil
-                                50000))
+                                nil))
       ;; (message "%s" (buffer-string))
       (save-excursion
         (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
@@ -235,8 +234,7 @@ See the definition of `create-image' for how it works."
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
         (ein:testing-wait-until "ein:worksheet-execute-cell"
                                 (lambda () (not (oref cell :running)))
-                                nil
-                                50000))
+                                nil))
       (save-excursion
         (should-not (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
         (should (search-forward-regexp "^Hello$" nil t))))))
@@ -265,7 +263,7 @@ See the definition of `create-image' for how it works."
      "ein:testing-get-untitled0-or-create"
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it)))
-     nil 50000)
+     nil)
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (let ((pager-name (ein:$notebook-pager ein:%notebook%)))
@@ -277,13 +275,22 @@ See the definition of `create-image' for how it works."
         (ein:testing-wait-until
          "ein:pythools-request-help"
          (lambda () (get-buffer pager-name))
-         nil 50000)
+         nil)
         (with-current-buffer (get-buffer pager-name)
           (should (search-forward "Docstring:")))))))
 
 (ert-deftest 30-testing-jupyter-stop-server ()
   (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER start")
-  (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
-    (ein:jupyter-server-stop t))
-  (should-not (processp %ein:jupyter-server-session%))
+
+  (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))
+    (ein:testing-wait-until
+     "ein:testing-get-untitled0-or-create"
+     (lambda () (ein:aand (ein:$notebook-kernel notebook)
+                          (ein:kernel-live-p it)))
+     nil)
+    (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
+      (ein:jupyter-server-stop t ein:testing-dump-server-log))
+    (should-not (processp %ein:jupyter-server-session%))
+    (should-not (seq-filter (lambda (pid)
+                              (search (ein:$kernel-kernel-id (ein:$notebook-kernel notebook)) (alist-get 'args (process-attributes pid)))) (list-system-processes))))
   (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER end"))

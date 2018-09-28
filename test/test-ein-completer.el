@@ -10,14 +10,17 @@
 
 
 (ert-deftest ein:completer-finish-completing ()
-  (let* ((matched-text 'dummy-matched-text-value) ; value can be anything
-         (matches 'dummy-matches-value)
-         (content (list :matched_text matched-text
-                        :matches matches))
-         (args '(:extend t)))
-    (mocker-let
-        ((ein:completer-choose () ((:output 'completer)))
-         (completer
-          (matched-text matches &rest args)
-          ((:input (list matched-text matches args)))))
-      (ein:completer-finish-completing args content '-not-used-))))
+  (let ((matched-text "dummy-matched-text-value")
+        (matches "dummy-matches-value"))
+    (with-temp-buffer
+      (insert matched-text)
+      (let ((content (list :matches matches
+                           :cursor_end (point-at-eol)
+                           :cursor_start (point-at-bol)))
+            (args '((:extend t))))     ; should this be :expand
+        (mocker-let
+         ((ein:completer-choose () ((:output 'completer)))
+          (completer
+           (matched-text matches &rest args)
+           ((:input (list matched-text matches (car args))))))
+         (ein:completer-finish-completing args content '-not-used-))))))

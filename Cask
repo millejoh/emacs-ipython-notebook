@@ -3,7 +3,7 @@
 
 (package "ein" "0.14.2" "Emacs IPython Notebook.")
 (package-file "lisp/ein.el")
-(files ("lisp/*.el" "lisp/*.py" :exclude ("lisp/zeroein.el")))
+(files "lisp/*.el" (:exclude "lisp/zeroein.el"))
 
 (development
  (depends-on "websocket")

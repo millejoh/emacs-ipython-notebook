@@ -414,7 +414,7 @@ See `ein:notebook-open' for more information."
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-new (ein:$notebook-kernel notebook)
                               (cons #'ein:notebook-buffer-list notebook)
-                              (ein:get-kernelspec-language (ein:$notebook-kernelspec notebook))))
+                              (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
     (ein:notebook-enable-autosaves notebook)
@@ -517,11 +517,6 @@ of minor mode."
         (ein:get-kernelspec url-or-port ks)
       ks)))
 
-(defun ein:get-kernelspec-language (kernelspec)
-  (if kernelspec
-      (plist-get (ein:$kernelspec-spec kernelspec) :language)
-    "none"))
-
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
@@ -535,7 +530,7 @@ kernels. Results are stored in ein:available-kernelspec, hashed
 on server url/port."
   (unless (and (not force-refresh) (gethash url-or-port ein:available-kernelspecs))
     (ein:query-singleton-ajax
-     (list 'ein:qeury-kernelspecs url-or-port)
+     (list 'ein:query-kernelspecs url-or-port)
      (ein:url url-or-port "api/kernelspecs")
      :type "GET"
      :timeout ein:content-query-timeout
@@ -593,7 +588,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
-    (when (and kernelspec (string-equal (ein:$kernelspec-language kernelspec) "python"))
+    (when (eq (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)) 'python)
       (ein:pytools-setup-hooks kernel notebook))
     (ein:kernel-start kernel notebook)))
 
@@ -873,7 +868,7 @@ This is equivalent to do ``C-c`` in the console program."
           "Status code (=%s) is not 200 and retry exceeds limit (=%s)."
           response-status ein:notebook-save-retry-max)))))
 
-(defun ein:notebook-save-notebook-success (notebook callback cbargs)
+(defun ein:notebook-save-notebook-success (notebook &optional callback cbargs)
   (ein:log 'verbose "Notebook is saved.")
   (setf (ein:$notebook-dirty notebook) nil)
   (mapc (lambda (ws)

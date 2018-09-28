@@ -41,7 +41,8 @@ can be handled by the xml module."
   (with-temp-buffer
     (erase-buffer)
     (insert html-string)
-    (libxml-parse-html-region (point-min) (point-max))))
+    (if (fboundp 'libxml-parse-html-region)
+        (libxml-parse-html-region (point-min) (point-max)))))
 
 (defalias 'ein:xml-node-p 'listp)
 

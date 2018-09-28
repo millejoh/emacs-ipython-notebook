@@ -156,9 +156,9 @@ previous value."
 (defun ein:get-mode-for-kernel (kernelspec)
   (if (null kernelspec)
       'python ;; FIXME
-    (cond ((string-match-p "python" (ein:get-kernelspec-language kernelspec)) 'python)
-          ((string-match-p "R" (ein:get-kernelspec-language kernelspec)) 'R)
-          (t 'python))))
+    (ein:case-equal (ein:$kernelspec-language kernelspec)
+      (("python" "R") (intern (ein:$kernelspec-language kernelspec)))
+      (t 'python))))
 
 (defun ein:edit-src-continue (e)
   (interactive "e")

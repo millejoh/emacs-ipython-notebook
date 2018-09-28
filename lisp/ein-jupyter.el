@@ -81,6 +81,7 @@ the notebook directory, you can set it here for future calls to
     (setq %ein:jupyter-server-session% proc)
     (if (>= ein:log-level 40)
         (switch-to-buffer ein:jupyter-server-buffer-name))
+    (set-process-query-on-exit-flag proc nil)
     proc))
 
 (defun ein:jupyter-server-conn-info ()
@@ -196,7 +197,7 @@ the log of the running jupyter server."
 
 ;;;###autoload
 
-(defun ein:jupyter-server-stop (&optional force)
+(defun ein:jupyter-server-stop (&optional force log)
   "Stop a running jupyter notebook server.
 
 Use this command to stop a running jupyter notebook server. If
@@ -221,7 +222,18 @@ there is no running server then no action will be taken.
                       (> x 1000000))
             do (sit-for 0.1)))
     (mapc #'ein:notebook-close (ein:notebook-opened-notebooks))
-    (delete-process %ein:jupyter-server-session%)
+    
+    ; Both of these unceremoniously killed the notebook server, leaking child kernels
+    ; (quit-process %ein:jupyter-server-session%)
+    ; (delete-process %ein:jupyter-server-session%)
+
+    ; G-d have mercy if you're not POSIX...
+    (with-current-buffer ein:jupyter-server-buffer-name
+      (signal-process (process-id (get-buffer-process (buffer-name))) 15))
+    (sit-for 2) ; this seems necessary (try it without in the integration test)
+    (when log
+      (with-current-buffer ein:jupyter-server-buffer-name
+        (write-region (point-min) (point-max) log)))
     (kill-buffer ein:jupyter-server-buffer-name)
     (setq %ein:jupyter-server-session% nil)
     (message "Stopped Jupyter notebook server.")))
