@@ -1611,8 +1611,10 @@ This hook is run regardless the actual major mode used."
                         (auto-complete-mode +1))
     (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
                              (auto-complete-mode +1))
-    (ein:use-company-backend (company-mode +1))
+    (ein:use-company-backend (add-to-list 'company-backends 'ein:company-backend)
+                             (company-mode +1))
     (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
+                                  (add-to-list 'company-backends 'ein:company-backend)
                                   (company-mode +1))
 
     (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'.")))
