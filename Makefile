@@ -4,11 +4,13 @@ IPY_VERSION = 5.8.0
 SRC=$(shell cask files)
 ELCFILES = $(SRC:.el=.elc)
 
+.PHONY: loaddefs
+loaddefs:
+	sh tools/update-autoloads.sh
+
 .PHONY: clean
 clean:
 	cask clean-elc
-	-rm -f log/testein*
-	-rm -f log/testfunc*
 
 env-ipy.%:
 	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt

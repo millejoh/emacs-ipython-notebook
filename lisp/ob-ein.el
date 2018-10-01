@@ -298,10 +298,13 @@ given in the session parameter."
   (when (and (stringp session) (string= session "none"))
     (error "You must specify a notebook or kernelspec as the session variable for ein code blocks."))
   (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
-    (if (null (gethash url-or-port ein:available-kernelspecs))
-        (ein:query-kernelspecs url-or-port))
-    (if (null kernelspec)
-        (setq kernelspec (ein:get-kernelspec url-or-port "default")))
+    (when (null kernelspec)
+      ;; Now is not the time to be getting kernelspecs.
+      ;; If I must do so, need to inject a deferred callback chain like
+      ;; in ein:notebooklist
+      ;; (if (null (gethash url-or-port ein:available-kernelspecs))
+      ;;     (ein:query-kernelspecs url-or-port))
+      (setq kernelspec (ein:get-kernelspec url-or-port "default")))
     (cond ((null path)
            (let* ((name ein:org-babel-default-session-name)
                   (new-session (format "%s/%s" url-or-port name)))

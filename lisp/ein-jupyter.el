@@ -174,11 +174,11 @@ the log of the running jupyter server."
   (setf *ein:last-jupyter-command* server-cmd-path
         *ein:last-jupyter-directory* notebook-directory)
   (if (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
-      (message "Notebook session is already running, check the contents of %s"
+      (ein:log 'info "Notebook session is already running, check the contents of %s"
                ein:jupyter-server-buffer-name))
   (add-hook 'kill-emacs-hook #'(lambda ()
                                  (ein:jupyter-server-stop t)))
-  (message "Starting notebook server in directory: %s" notebook-directory)
+  (ein:log 'info "Starting notebook server in directory: %s" notebook-directory)
   (lexical-let ((no-login-after-start-p no-login-after-start-p)
                 (no-popup no-popup)
                 (proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
@@ -204,7 +204,6 @@ the log of the running jupyter server."
               (progn
                 (warn "[EIN] Jupyter server failed to start, cancelling operation.")
                 (ein:jupyter-server-stop t))
-            (ein:force-ipython-version-check)
             (unless no-login-p
               (ein:jupyter-server-login-and-open no-popup))))))))
 
@@ -245,8 +244,8 @@ there is no running server then no action will be taken.
       (let ((process (get-buffer-process (current-buffer))))
         (when process
           (let ((pid (process-id process)))
-            (ein:log 'info "Signaled %s with pid %s" process pid)
-            (message "Stopped Jupyter notebook server.")
+            (ein:log 'verbose "Signaled %s with pid %s" process pid)
+            (ein:log 'info "Stopped Jupyter notebook server.")
             (signal-process (process-id process) 15)))))
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name

@@ -145,7 +145,7 @@ class TestRunner(BaseRunner):
         self.notebook_dir = os.path.join(EIN_ROOT, "test")
         self.lispvars = {
             'ein:testing-dump-file-log': quote(self.logpath_log),
-            'ein:testing-dump-server-log': quote(self.logpath_server),
+            'ein:testing-dump-file-server': quote(self.logpath_server),
             'ein:testing-dump-file-messages': quote(self.logpath_messages),
             'ein:log-level': self.ein_log_level,
             'ein:force-sync': "t",

@@ -180,7 +180,7 @@ notebooks."
      (ein:notebooklist-list-notebooks))))
   (ein:notebooklist-open-notebook-global
    nbpath
-   (lambda (notebook -ignore- buffer no-reconnection)
+   (lambda (notebook created buffer no-reconnection)
      (ein:connect-buffer-to-notebook notebook buffer no-reconnection))
    (list (or buffer (current-buffer)) no-reconnection)))
 
@@ -189,9 +189,10 @@ notebooks."
   "Connect any buffer to opened notebook and its kernel."
   (interactive (list (completing-read "Notebook buffer to connect: "
                                       (ein:notebook-opened-buffer-names))))
-  (let ((notebook
-         (buffer-local-value 'ein:%notebook% (get-buffer buffer-or-name))))
-    (ein:connect-buffer-to-notebook notebook)))
+  (ein:aif (get-buffer-buffer-or-name)
+      (let ((notebook (buffer-local-value 'ein:%notebook% it)))
+        (ein:connect-buffer-to-notebook notebook))
+    (error "No buffer %s" buffer-or-name)))
 
 ;;;###autoload
 (defun ein:connect-buffer-to-notebook (notebook &optional buffer

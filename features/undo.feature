@@ -1,3 +1,4 @@
+@default
 Scenario: Undo by default turned off
   Given new default notebook
   When I type "import math"
@@ -5,6 +6,7 @@ Scenario: Undo by default turned off
   And I undo demoting errors
   Then I should see message "demoted: (user-error No undo information in this buffer)"
 
+@yank
 Scenario: Kill yank doesn't break undo
   Given I enable undo
   Given new default notebook

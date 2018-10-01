@@ -38,4 +38,4 @@ before_script:
   - cask install
 
 script:
-  - make test || cat log/*.server
+  - make test || ( for file in log/{testfunc,ecukes}.* ; do echo $file ;  cat $file ; done )

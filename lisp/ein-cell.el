@@ -258,9 +258,7 @@ a number will limit the number of lines in a cell output."
       (ein:oset-if-empty cell 'metadata (plist-get data :metadata))
       (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
           (let ((slide-type (nth 0 (cdr it))))
-            (setf (slot-value cell 'slidetype) slide-type)
-            (message "read slidetype %s" (slot-value cell 'slidetype))
-            (message "reconstructed slideshow %s" (ein:get-slide-show cell)))))
+            (setf (slot-value cell 'slidetype) slide-type))))
     cell))
 
 (defmethod ein:cell-init ((cell ein:codecell) data)
