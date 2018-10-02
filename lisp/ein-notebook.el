@@ -520,9 +520,10 @@ of minor mode."
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (gethash url-or-port ein:available-kernelspecs)))
     (if kernelspecs
-        (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-              collecting (cons (ein:$kernelspec-name spec)
-                               (ein:$kernelspec-display-name spec))))))
+        (sort (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+                    collecting (cons (ein:$kernelspec-name spec)
+                                     (ein:$kernelspec-display-name spec)))
+              (lambda (c1 c2) (string< (cdr c1) (cdr c2)))))))
 
 (defun ein:query-kernelspecs (url-or-port &optional force-refresh)
   "Query jupyter server for the list of available
@@ -955,17 +956,17 @@ NAME is any non-empty string that does not contain '/' or '\\'.
     ;; Let `ein:notebook-kill-buffer-callback' do its job.
     (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
 
-(defun ein:notebook-kill-kernel-then-close-command ()
+(defun ein:notebook-kill-kernel-then-close-command (notebook &optional force)
   "Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual."
-  (interactive)
-  (when (ein:notebook-ask-before-kill-buffer)
-    (let ((kernel (ein:$notebook-kernel ein:%notebook%)))
+  (interactive (list ein:%notebook%))
+  (when (or force (ein:notebook-ask-before-kill-buffer))
+    (let ((kernel (ein:$notebook-kernel notebook)))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-kill kernel #'ein:notebook-close (list ein:%notebook%))
-        (ein:notebook-close ein:%notebook%)))))
+          (ein:kernel-kill kernel #'ein:notebook-close (list notebook))
+        (ein:notebook-close notebook)))))
 
 (defun ein:fast-content-from-notebook (notebook)
   "Quickly generate a basic content structure from notebook. This
@@ -1622,6 +1623,7 @@ This hook is run regardless the actual major mode used."
   (run-hooks 'ein:notebook-mode-hook))
 
 (add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
+(add-hook 'ein:notebook-mode-hook 'ein:worksheet-reinstall-which-cell-hook)
 
 (define-minor-mode ein:notebook-minor-mode
   "Minor mode to install `ein:notebook-mode-map' for `ein:notebook-mode'."

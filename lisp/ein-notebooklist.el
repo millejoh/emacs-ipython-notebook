@@ -88,6 +88,9 @@ is opened at first time.::
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
 
+(ein:deflocal ein:%notebooklist-new-kernel% nil
+  "Buffer local variable to store kernel type for newly created notebooks.")
+
 (defcustom ein:notebooklist-sort-field :name
   "The notebook list sort field."
   :type '(choice (const :tag "Name" :name)
@@ -366,7 +369,6 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                    (ein:notebooklist-list-get url-or-port)))))
         (version (ein:$notebooklist-api-version (or ein:%notebooklist%
                                                     (ein:notebooklist-list-get url-or-port)))))
-    (ein:log 'info "Creating a new notebook at %s..." path)
     (unless url-or-port
       (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
     (assert url-or-port nil
@@ -398,7 +400,6 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 &allow-other-keys
                                                 &aux
                                                 (no-popup t))
-  (ein:log 'info "Creating a new notebook (%s)... Done." path)
   (if data
       (let ((name (plist-get data :name))
             (path (plist-get data :path)))
@@ -592,14 +593,15 @@ Notebook list data is passed via the buffer local variable
          name)))
     (widget-insert " |\n\n"))
 
-  (lexical-let* ((kernels (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-                 (default-kernel (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (first kernels))))
-
+  (lexical-let* ((url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%))
+         (kernels (ein:list-available-kernels url-or-port)))
+    (if (null ein:%notebooklist-new-kernel%)
+        (setq ein:%notebooklist-new-kernel% (ein:get-kernelspec url-or-port (caar kernels))))
     (widget-create
      'link
      :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
-                                     (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                     default-kernel))
+                                     url-or-port
+                                     ein:%notebooklist-new-kernel%))
      "New Notebook")
     (widget-insert " ")
     (widget-create
@@ -616,18 +618,17 @@ Notebook list data is passed via the buffer local variable
      'link
      :notify (lambda (&rest ignore)
                (browse-url
-                (ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
+                (ein:url url-or-port)))
      "Open In Browser")
 
     (widget-insert "\n\nCreate New Notebooks Using Kernel: \n")
     (let* ((radio-widget (widget-create 'radio-button-choice
-                                        ;; :value (car (first kernels))
-                                        ;; :format (format  "%s\n" (cdr (first kernels)))
+                                        :value (and ein:%notebooklist-new-kernel% (ein:$kernelspec-name ein:%notebooklist-new-kernel%))
                                         :notify (lambda (widget &rest ignore)
-                                                  (setq default-kernel
-                                                        (ein:get-kernelspec (ein:$notebooklist-url-or-port ein:%notebooklist%) (widget-value widget)))
+                                                  (setq ein:%notebooklist-new-kernel%
+                                                        (ein:get-kernelspec url-or-port (widget-value widget)))
                                                   (message "New notebooks will be started using the %s kernel."
-                                                           (widget-value widget))))))
+                                                           (ein:$kernelspec-display-name ein:%notebooklist-new-kernel%))))))
       (dolist (k kernels)
         (widget-radio-add-item radio-widget (list 'item :value (car k)
                                                   :format (format "%s\n" (cdr k)))))))
@@ -676,9 +677,12 @@ IPY-AT-LEAST-3 used to keep track of version."
   (widget-insert "\n------------------------------------------\n\n")
   (unless ipy-at-least-3
     (let (api-version (ein:$notebooklist-api-version ein:%notebooklist%))))
-  (let ((sessions (make-hash-table :test 'equal)))
+  (let ((sessions #s(hash-table test equal data (:pending t))))
     (ein:content-query-sessions sessions (ein:$notebooklist-url-or-port ein:%notebooklist%) t)
-    (sit-for 0.2) ;; FIXME: What is the optimum number here?
+    (loop repeat 4
+          when (null (gethash :pending sessions))
+          return t
+          do (sleep-for 0 50))
     (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
     (ein:make-sorting-widget "In Order" ein:notebooklist-sort-order)
     (widget-insert "\n")

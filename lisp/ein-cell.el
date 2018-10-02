@@ -401,7 +401,7 @@ a number will limit the number of lines in a cell output."
            (plist-get element :input)))
         (t (call-next-method))))))
 
-(defmethod ein:cell-element-get ((cell ein:textcell) prop)
+(defmethod ein:cell-element-get ((cell ein:textcell) prop &rest args)
   (let ((element (slot-value cell 'element)))
     (case prop
       (:after-input (plist-get element :footer))
@@ -827,7 +827,8 @@ If END is non-`nil', return the location of next element."
     ;; Footer may have extra (possibly colored) newline due to the
     ;; last output type.  So invalidate it here.
     ;; See `ein:cell-insert-footer' (for codecell).
-    (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
+    (let ((buffer-undo-list t))   ; disable undo recording
+      (ewoc-invalidate ewoc (ein:cell-element-get cell :footer)))))
 
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
@@ -1209,7 +1210,8 @@ prettified text thus be used instead of HTML type."
   (let ((events (slot-value cell 'events)))
     (ein:events-trigger events 'set_next_input.Worksheet
                         (list :cell cell :text text))
-    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
+    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)
+    ))
 
 
 
@@ -1240,7 +1242,8 @@ prettified text thus be used instead of HTML type."
        (plist-put json :traceback (plist-get content :traceback))))
     (ein:cell-append-output cell json t)
     ;; (setf (slot-value cell 'dirty) t)
-    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))
+    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)
+    ))
 
 
 (defun ein:output-area-convert-mime-types (json data)
@@ -1264,7 +1267,7 @@ prettified text thus be used instead of HTML type."
   (ein:cell-clear-output cell
                          t ;;(plist-get content :stdout)
                          t ;;(plist-get content :stderr)
-                         t ;;(plist-get content :other)
+                         t ;;(plist-get content :other))
                          )
   (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
 

@@ -342,7 +342,7 @@ global setting.  For global setting and more information, see
      :type "GET"
      :parser #'ein:json-read
      :success (apply-partially #'ein:content-query-sessions-success session-hash url-or-port)
-     :error #'ein:content-query-sessions-error
+     :error (apply-partially #'ein:content-query-sessions-error session-hash)
      :sync force-sync))
 
 (defun* ein:content-query-sessions-success (session-hash url-or-port &key data &allow-other-keys)
@@ -352,12 +352,14 @@ global setting.  For global setting and more information, see
                                (plist-get nb-json :name)
                              (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))
                          (plist-get nb-json :path))))
+    (clrhash session-hash)
     (dolist (s data)
       (setf (gethash (read-name (plist-get s :notebook)) session-hash)
             (cons (plist-get s :id) (plist-get s :kernel))))
     session-hash))
 
-(defun* ein:content-query-sessions-error (&key symbol-status response &allow-other-keys)
+(defun* ein:content-query-sessions-error (session-hash &key symbol-status response &allow-other-keys)
+  (clrhash session-hash)
   (ein:log 'error "Session query failed with status %s (%s)." symbol-status response))
 
 

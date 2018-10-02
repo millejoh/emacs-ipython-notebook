@@ -19,6 +19,7 @@ test: test-unit test-int
 .PHONY: test-int
 test-int:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
+	cask exec ecukes
 
 .PHONY: test-unit
 test-unit:
