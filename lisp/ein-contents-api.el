@@ -193,32 +193,38 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-query-hierarchy* (url-or-port path callback sessions content)
   "Returns list (tree) of content objects"
-  (lexical-let ((url-or-port url-or-port)
-                (path path)
-                (callback callback)
-                (items (ein:$content-raw-content content)))
+  (lexical-let* ((url-or-port url-or-port)
+                 (path path)
+                 (callback callback)
+                 (items (ein:$content-raw-content content))
+                 (directories (loop for item in items
+                                    if (string= "directory" (plist-get item :type))
+                                      collect (ein:new-content url-or-port path item)
+                                    end))
+                 (others (loop for item in items
+                               with c0
+                               if (not (string= "directory" (plist-get item :type)))
+                                 do (setf c0 (ein:new-content url-or-port path item))
+                                    (setf (ein:$content-session-p c0)
+                                          (gethash (ein:$content-path c0) sessions))
+                                 and collect c0
+                               end)))
     (deferred:$
       (apply #'deferred:parallel
-             (loop for item in items
-                   for c0 = (ein:new-content url-or-port path item)
+             (loop for c0 in directories
                    collect
-                   (lexical-let ((sessions sessions) (c0 c0))
-                     (cond ((string= (ein:$content-type c0) "directory")
-                            (lexical-let ((d0 (deferred:new #'identity)))
-                              (ein:content-query-contents 
-                               url-or-port 
-                               (ein:$content-path c0)
-                               (apply-partially #'ein:content-query-hierarchy* url-or-port (ein:$content-path c0) (lambda (tree) (deferred:callback-post d0 (cons c0 tree))) sessions))
-                              d0))
-                           (t (lambda ()
-                                (setf (ein:$content-session-p c0)
-                                      (gethash (ein:$content-path c0) sessions))
-                                c0))))))
+                   (lexical-let ((c0 c0) (d0 (deferred:new #'identity)))
+                     (ein:content-query-contents 
+                      url-or-port 
+                      (ein:$content-path c0)
+                      (apply-partially #'ein:content-query-hierarchy* url-or-port (ein:$content-path c0) (lambda (tree) (deferred:callback-post d0 (cons c0 tree))) sessions))
+                     d0)))
       (deferred:nextc it
         (lambda (tree)
-          (if (string= path "")
-              (setf (gethash url-or-port *ein:content-hierarchy*) (ein:flatten tree)))
-          (funcall callback tree))))))
+          (let ((result (append others tree)))
+            (if (string= path "")
+                (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
+            (funcall callback result)))))))
 
 (defun ein:content-query-hierarchy (url-or-port callback)
   "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"
