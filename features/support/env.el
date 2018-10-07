@@ -32,7 +32,6 @@
 (Setup
  (setq ein:force-sync t)
  (ein:dev-start-debug)
- (setq ein:notebook-autosave-frequency 10000)
  (setq ein:testing-dump-file-log "./log/ecukes.log")
  (setq ein:testing-dump-file-messages "./log/ecukes.messages")
  (setq ein:testing-dump-server-log  "./log/ecukes.server")

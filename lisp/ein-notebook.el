@@ -69,13 +69,9 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
-(defcustom ein:notebook-autosave-frequency 60
+(defcustom ein:notebook-autosave-frequency 0
   "Sets the frequency (in seconds) at which the notebook is
-automatically saved.
-
-Autosaves are automatically enabled when a notebook is opened,
-but can be controlled manually via `ein:notebook-enable-autosave'
-and `ein:notebook-disable-autosave'.
+automatically saved according as implemented in IPEP 15.  The default value of zero disables this feature.
 
 If this parameter is changed than you must call
 `ein:notebook-disable-autosave' and then
@@ -417,7 +413,8 @@ See `ein:notebook-open' for more information."
                               (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
-    (ein:notebook-enable-autosaves notebook)
+    (if (> ein:notebook-autosave-frequency 0)
+        (ein:notebook-enable-autosaves notebook))
     (ein:gc-complete-operation)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
@@ -477,8 +474,8 @@ of minor mode."
                          "Select notebook [URL-OR-PORT/NAME]: "
                          (ein:notebook-opened-buffer-names)))))
      (list notebook)))
-  (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
   (when (ein:$notebook-autosave-timer notebook)
+    (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
     (cancel-timer (ein:$notebook-autosave-timer notebook))))
 
 (defun ein:notebook-bind-events (notebook events)
@@ -829,7 +826,7 @@ This is equivalent to do ``C-c`` in the console program."
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
-    (error (ein:log 'warn "Error running save hooks: '%s'. I will still try to save the notebook." (error-message-string err))))
+    (error (ein:log 'warn "ein:notebook-save-notebook before-save-hook '%s'.  Proceeding with save anyway." (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
