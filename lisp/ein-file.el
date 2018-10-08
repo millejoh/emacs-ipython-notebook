@@ -35,8 +35,7 @@
           path))
 
 (defun ein:file-open (url-or-port path)
-  (ein:content-query-contents path url-or-port nil
-                              #'ein:file-open-finish))
+  (ein:content-query-contents url-or-port path #'ein:file-open-finish))
 
 (defun ein:file-open-finish (content)
   (with-current-buffer (get-buffer-create (ein:file-buffer-name (ein:$content-url-or-port content)

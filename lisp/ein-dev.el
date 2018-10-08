@@ -119,6 +119,11 @@ When the prefix argument is given, debugging support for websocket
 callback (`websocket-callback-debug-on-error') is enabled."
   (interactive "P")
   (setq debug-on-error t)
+;; only use these with deferred:sync!  they cause strange failures otherwise!
+;;  (setq deferred:debug-on-signal t)
+;;  (setq deferred:debug t)
+  (setq request-log-level (quote debug))
+  (setq request-message-level (quote verbose))
   (setq websocket-debug t)
   (when ws-callback
     (setq websocket-callback-debug-on-error t))
@@ -130,10 +135,14 @@ callback (`websocket-callback-debug-on-error') is enabled."
 
 ;;;###autoload
 (defun ein:dev-stop-debug ()
-  "Disable debugging support enabled by `ein:dev-start-debug'."
+  "Inverse of `ein:dev-start-debug'.  Hard to maintain because it needs to match start"
   (interactive)
   (setq debug-on-error nil)
   (setq websocket-debug nil)
+  (setq deferred:debug-on-signal nil)
+  (setq deferred:debug nil)
+  (setq request-log-level -1)
+  (setq request-message-level 'warn)
   (setq websocket-callback-debug-on-error nil)
   (setq ein:debug nil)
   (ein:log-set-level 'verbose)

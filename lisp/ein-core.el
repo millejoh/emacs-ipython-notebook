@@ -127,50 +127,105 @@ the source is in git repository."
       (concat ein:version "." it)
     ein:version))
 
-(defvar *running-ipython-version* (make-hash-table :test #'equal))
+
+;;; Server attribute getters.  Not sure if these should be here.
 
-(defun ein:get-ipython-major-version (vstr)
+(defvar *ein:ipython-version* (make-hash-table :test #'equal)
+  "url-or-port to major ipython version")
+
+(defvar *ein:kernelspecs* (make-hash-table :test #'equal)
+  "url-or-port to kernelspecs")
+
+(defun ein:need-kernelspecs (url-or-port)
+  "Callers assume ein:query-kernelspecs succeeded.  If not, nil."
+  (ein:aif (gethash url-or-port *ein:kernelspecs*) it
+    (ein:log 'warn "No recorded kernelspecs for %s" url-or-port)
+    nil))
+
+(defun ein:query-kernelspecs (url-or-port callback)
+  "Send for kernelspecs of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  (ein:query-singleton-ajax
+   (list 'ein:query-kernelspecs url-or-port)
+   (ein:url url-or-port "api/kernelspecs")
+   :type "GET"
+   :timeout ein:content-query-timeout
+   :parser 'ein:json-read
+   :sync ein:force-sync
+   :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port callback)
+   :success (apply-partially #'ein:query-kernelspecs--success url-or-port)
+   :error (apply-partially #'ein:query-kernelspecs--error url-or-port)))
+
+(defun* ein:query-kernelspecs--success (url-or-port
+                                       &key data symbol-status response
+                                       &allow-other-keys)
+  (let ((ks (list :default (plist-get data :default)))
+        (specs (ein:plist-iter (plist-get data :kernelspecs))))
+    (setf (gethash url-or-port *ein:kernelspecs*)
+          (ein:flatten (dolist (spec specs ks)
+                         (let ((name (car spec))
+                               (info (cdr spec)))
+                           (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+                                                                  :display-name (plist-get (plist-get info :spec)
+                                                                                           :display_name)
+                                                                  :resources (plist-get info :resources)
+                                                                  :language (plist-get (plist-get info :spec)
+                                                                                       :language)
+                                                                  :spec (plist-get info :spec)))
+                                 ks)))))))
+
+(defun* ein:query-kernelspecs--error (url-or-port &key error-thrown &allow-other-keys)
+  (ein:log 'error
+    "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown)))
+
+(defun* ein:query-kernelspecs--complete (url-or-port callback &key data response
+                                                     &allow-other-keys 
+                                                     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string)
+  (when callback (funcall callback)))
+
+(defsubst ein:get-ipython-major-version (vstr)
   (if vstr
       (string-to-number (car (split-string vstr "\\.")))
     (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
         (throw 'error "Null value passed to ein:get-ipython-major-version.")
       (ein:log 'warn "Null value passed to ein:get-ipython-major-version."))))
 
+(defun ein:need-ipython-version (url-or-port)
+  "Callers assume ein:query-ipython-version succeeded.  If not, we hardcode a guess."
+  (ein:aif (gethash url-or-port *ein:ipython-version*) it
+    (ein:log 'warn "No recorded ipython version for %s" url-or-port)
+    5))
+
 ;; TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
-(defun ein:query-ipython-version (&optional url-or-port force)
-  (ein:aif (and (not force) (gethash (or url-or-port (ein:default-url-or-port)) *running-ipython-version*))
-      it
-    (let ((resp (request
-                 (ein:jupyterhub-correct-query-url-maybe (ein:url (or url-or-port
-                                                                      (ein:default-url-or-port))
-                                                                  "api"))
-                 :parser #'(lambda ()
-                             (ignore-errors
-                               (ein:json-read)))
-                 :timeout 5.0
-                 :sync t)))
-      (if (eql 408 (request-response-status-code resp))
-          (progn
-            (ein:log 'blather "Version request timed out, could be the server is still warming up. Assuming we are working Jupyter 4.x, and will recheck later.")
-            4)
-        (if (eql 404 (request-response-status-code resp))
-            (progn
-              (ein:log 'blather "Version api not implemented, assuming we are working with IPython 2.x")
-              (setf (gethash url-or-port *running-ipython-version*) 2))
-          (condition-case nil
-              (if (plist-get (request-response-data resp) :version)
-                  (setf (gethash url-or-port *running-ipython-version*)
-                        (ein:get-ipython-major-version (plist-get (request-response-data resp) :version)))
-                (progn
-                  (sit-for 0.1)
-                  (ein:query-ipython-version url-or-port t)))
-            (error (ein:force-ipython-version-check))))))))
+(defun ein:query-ipython-version (url-or-port callback)
+  "Send for ipython version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  (ein:query-singleton-ajax
+   (list 'query-ipython-version url-or-port)
+   (ein:jupyterhub-correct-query-url-maybe 
+    (ein:url url-or-port "api"))
+   :parser #'ein:json-read
+   :sync ein:force-sync
+   :complete (apply-partially #'ein:query-ipython-version--complete url-or-port callback)))
+
+(defun* ein:query-ipython-version--complete (url-or-port callback
+                                             &key data response
+                                             &allow-other-keys
+                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:query-ipython-version--complete %s" resp-string)
+  (ein:aif (plist-get data :version)
+      (setf (gethash url-or-port *ein:ipython-version*)
+            (ein:get-ipython-major-version it))
+    (case (request-response-status-code response)
+      (404 (ein:log 'warn "ipython version api not implemented")
+           (setf (gethash url-or-port *ein:ipython-version*) 2))
+      (t (ein:log 'warn "ipython version currently unknowable"))))
+  (when callback (funcall callback)))
 
 (defun ein:force-ipython-version-check ()
   (interactive)
   (maphash #'(lambda (url-or-port --ignore--)
-               (ein:query-ipython-version url-or-port t))
-           *running-ipython-version*))
+               (ein:query-ipython-version url-or-port nil))
+           *ein:ipython-version*))
 
 
 ;;; File name translation (tramp support)

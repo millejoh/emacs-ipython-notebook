@@ -70,7 +70,7 @@
     (let* ((levname (ein:log-level-int-to-name level))
            (print-level ein:log-print-level)
            (print-length ein:log-print-length)
-           (msg (format "[%s] %s"  levname (funcall func)))
+           (msg (format "%s: [%s] %s" (format-time-string "%H:%M:%S:%3N") levname (funcall func)))
            (orig-buffer (current-buffer)))
       (if (and ein:log-max-string
                (> (length msg) ein:log-max-string))

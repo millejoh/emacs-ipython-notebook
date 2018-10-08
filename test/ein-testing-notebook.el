@@ -45,17 +45,17 @@
     ;; "bindings are lexical... all references to the named functions
     ;; must appear physically within the body of the cl-flet"
     (flet ((pop-to-buffer (buf) buf)
-           (ein:query-ipython-version (&optional url-or-port force) 3)
+           (ein:need-ipython-version (url-or-port) 3)
            (ein:notebook-start-kernel (notebook))
            (ein:notebook-enable-autosaves (notebook)))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
-              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:query-ipython-version)))
+              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:need-ipython-version (ein:$notebook-url-or-port notebook))))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
         ; matryoshka: new-content makes a ein:$content using CONTENT as template 
         ; populating its raw_content field with DATA's content field
-        (ein:notebook-request-open-callback notebook (ein:new-content content nil :data data))
+        (ein:notebook-request-open-callback notebook (ein:new-content (ein:$notebook-url-or-port notebook) (ein:$notebook-notebook-path notebook) data))
         (ein:notebook-buffer notebook)))))
 
 (defun ein:testing-notebook-make-data (name path cells)
