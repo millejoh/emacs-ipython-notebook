@@ -5,6 +5,7 @@ addons:
   apt:
     packages:
     - gnutls-bin
+    - sharutils
 
 cache:
   directories:
@@ -12,7 +13,6 @@ cache:
 
 python:
   - "2.7"
-  - "3.5"
   - "3.6"
 
 env:
@@ -35,7 +35,6 @@ before_script:
   - evm install $EVM_EMACS --use --skip
   - emacs --version
   - sh tools/install-cask.sh
-  - cask install
 
 script:
-  - make test || ( for file in log/{testfunc,ecukes}.* ; do echo $file ;  cat $file ; done )
+  - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && false )

@@ -54,16 +54,25 @@
   (ein:testing-save-buffer ein:log-all-buffer-name ein:testing-dump-file-log)
   (ein:testing-save-buffer request-log-buffer-name ein:testing-dump-file-request))
 
-(defun ein:testing-wait-until (predicate &optional predargs ms interval)
+(defun ein:testing-flush-queries (&optional ms interval continue)
+  "Forget all the deferred:flush-queue! and deferred:sync! and all the semaphore
+callbacks.  This is what I need."
+  (ein:testing-wait-until (lambda ()
+                            (ein:query-gc-running-process-table)
+                            (zerop (hash-table-count ein:query-running-process-table)))
+                          nil ms interval continue))
+
+(defun ein:testing-wait-until (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.
   PREDARGS is argument list for the PREDICATE function.
   MS is milliseconds to wait.  INTERVAL is polling interval in milliseconds."
-  (let* ((interval (or interval 300))
-         (count (max 1 (if ms (truncate (/ ms interval)) 25))))
-    (unless (loop repeat count
-                  when (apply predicate predargs)
-                  return t
-                  do (sleep-for 0 interval))
+  (let* ((int (ein:aif interval it (ein:aif ms (max 300 (/ ms 10)) 300)))
+         (count (max 1 (if ms (truncate (/ ms int)) 25))))
+    (unless (or (loop repeat count
+                       when (apply predicate predargs)
+                       return t
+                       do (sleep-for 0 int)) 
+                continue)
       (error "Timeout: %s" predicate))))
 
 (defadvice ert-run-tests-batch (after ein:testing-dump-logs-hook activate)

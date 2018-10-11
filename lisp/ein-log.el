@@ -64,6 +64,9 @@
 (defun ein:log-level-name-to-int (name)
   (cdr (assq name ein:log-level-def)))
 
+(defsubst ein:log-strip-timestamp (msg)
+  (replace-regexp-in-string "^[0-9: ]+" "" msg))
+
 (defun ein:log-wrapper (level func)
   (setq level (ein:log-level-name-to-int level))
   (when (<= level ein:log-level)
@@ -79,7 +82,7 @@
         (goto-char (point-max))
         (insert msg (format " @%S" orig-buffer) "\n"))
       (when (<= level ein:log-message-level)
-        (message "ein: %s" msg)))))
+        (message "ein: %s" (ein:log-strip-timestamp msg))))))
 
 (defmacro ein:log (level string &rest args)
   (declare (indent 1))

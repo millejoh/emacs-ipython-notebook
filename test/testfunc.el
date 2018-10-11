@@ -31,10 +31,11 @@
 
 (ein:dev-start-debug)
 (deferred:sync! (ein:jupyter-server-start *ein:testing-jupyter-server-command* *ein:testing-jupyter-server-directory*))
-;; (ein:testing-wait-until (lambda () (not (null (ein:notebooklist-list))))
-;;                         nil 120000 5000)
+(ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 15000 1000)
 (multiple-value-bind (url token) (ein:jupyter-server-conn-info)
   (ein:log 'info (format "testing-start-server url: %s, token: %s" url token))
   (setq *ein:testing-port* url)
   (setq *ein:testing-token* token)
   (ein:log 'info "testing-start-server succesfully logged in."))
+(fset 'y-or-n-p (lambda (prompt) nil))
+      

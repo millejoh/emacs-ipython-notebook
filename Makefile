@@ -15,8 +15,13 @@ clean:
 env-ipy.%:
 	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
 
+.PHONY: test-compile
+test-compile: clean
+	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep "not known|Error|free variable" )
+	-cask clean-elc
+
 .PHONY: test
-test: test-unit test-int
+test: test-compile test-unit test-int
 
 .PHONY: test-int
 test-int:

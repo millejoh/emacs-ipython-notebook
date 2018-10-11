@@ -31,9 +31,10 @@
 ;;; Code:
 
 (require 'eieio)
+(require 'company)
+(require 'ein-notebook)
 (eval-when-compile (require 'auto-complete))
 
-(require 'ein-notebook)
 
 (declare-function ein:notebooklist-list-notebooks "ein-notebooklist")
 (declare-function ein:notebooklist-open-notebook-global "ein-notebooklist")

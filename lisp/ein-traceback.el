@@ -32,6 +32,7 @@
 (require 'ansi-color)
 
 (require 'ein-core)
+(require 'ein-shared-output)
 
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)

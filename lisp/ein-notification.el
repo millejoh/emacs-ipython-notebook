@@ -28,6 +28,7 @@
 (eval-when-compile (require 'cl))
 (require 'eieio)
 
+(require 'ein-notebook)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-events)

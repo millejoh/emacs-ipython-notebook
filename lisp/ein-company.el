@@ -27,7 +27,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'company nil t)
+(require 'company)
 (require 'jedi-core nil t)
 (require 'deferred)
 (require 'ein-completer)
@@ -60,7 +60,7 @@
 (defun ein:company--complete-jedi (fetcher-callback)
   (deferred:$
     (deferred:parallel
-     (jedi:complete-request)
+      ;;     (jedi:complete-request) ;; we need tkf-emacs submodule
      (ein:company--deferred-complete))
     (deferred:nextc it
       (lambda (replies)

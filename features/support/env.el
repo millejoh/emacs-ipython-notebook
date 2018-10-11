@@ -1,5 +1,5 @@
+(eval-when-compile (require 'cl))
 (require 'f)
-(require 'cl)
 (require 'espuds)
 (require 'ert)
 
@@ -8,7 +8,6 @@
   (add-to-list 'load-path (concat root-path "/lisp"))
   (add-to-list 'load-path (concat root-path "/test")))
 
-(require 'ein-loaddefs)
 (require 'ein-notebooklist)
 (require 'ein-jupyter)
 (require 'ein-dev)
@@ -18,21 +17,16 @@
 (ein:deflocal ein:%testing-port% nil)
 
 (defun ein:testing-after-scenario ()
- (with-current-buffer (ein:notebooklist-get-buffer ein:%testing-url%)
-   (loop for buffer in (ein:notebook-opened-buffers)
-         do (let ((kill-buffer-query-functions nil))
-              (with-current-buffer buffer (not-modified))
-              (kill-buffer buffer)))
-   (let ((urlport (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-     (loop for note in (ein:$notebooklist-data ein:%notebooklist%)
-           for path = (plist-get note :path)
-           for notebook = (ein:notebook-get-opened-notebook urlport path)
-           if (not (null notebook))
-             do (ein:notebook-kill-kernel-then-close-command notebook t)
-                (if (search "Untitled" path)
-                    (ein:notebooklist-delete-notebook path))
-           end)))
-)
+  (ein:testing-flush-queries)
+  (with-current-buffer (ein:notebooklist-get-buffer ein:%testing-url%)
+    (let ((urlport (ein:$notebooklist-url-or-port ein:%notebooklist%)))
+      (loop for notebook in (ein:notebook-opened-notebooks)
+            for path = (ein:$notebook-notebook-path notebook)
+            do (ein:notebook-kill-kernel-then-close-command notebook t)
+               (if (search "Untitled" path )
+                   (ein:notebooklist-delete-notebook path)))))
+  (ein:testing-flush-queries))
+
 (Setup
  (ein:dev-start-debug)
  (setq ein:notebook-autosave-frequency 0)
@@ -44,6 +38,7 @@
  (setq ein:jupyter-server-args '("--no-browser" "--debug"))
  (setq ein:%testing-url% nil)
  (deferred:sync! (ein:jupyter-server-start (executable-find "jupyter") ein:testing-jupyter-server-root))
+ (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000)
  (assert (processp %ein:jupyter-server-session%) t "notebook server defunct")
  (setq ein:%testing-url% (car (ein:jupyter-server-conn-info))))
 
@@ -51,7 +46,7 @@
  (ein:testing-after-scenario))
 
 (Teardown
- (cl-letf (((symbol-function 'y-or-n-p) (lambda (prompt) t)))
+ (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
    (ein:jupyter-server-stop t))
 ; (ein:testing-dump-logs) ; taken care of by ein-testing.el kill-emacs-hook?
  (assert (not (processp %ein:jupyter-server-session%)) t "notebook server orphaned"))

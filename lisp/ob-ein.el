@@ -36,6 +36,8 @@
 (require 'cl)
 (require 'ein-notebook)
 (require 'ein-shared-output)
+(require 'org-src)
+(require 'org-element)
 (require 'ein-utils)
 (require 'python)
 
@@ -86,7 +88,7 @@
    (case key
      ((svg image/svg)
       (let ((file (or file (ein:temp-inline-image-info value))))
-        (ein:write-base64-decoded-image value file)
+        (ein:write-base64-image value file)
         (format "[[file:%s]]" file)))
      ((png image/png jpeg image/jpeg)
       (let ((file (or file (ein:temp-inline-image-info value))))

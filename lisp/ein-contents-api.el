@@ -36,10 +36,8 @@
 (require 'ein-utils)
 (require 'ein-log)
 (require 'ein-query)
-
-
-(provide 'ein-contents-api) ; must provide before requiring ein-notebook:
-(require 'ein-notebook)     ; circular: depends on this file!
+(provide 'ein-notebook) ; see manual "Named Features" regarding recursive requires
+(require 'ein-notebook)
 
 (defcustom ein:content-query-timeout (* 60 1000) ;1 min
   "Query timeout for getting content from Jupyter/IPython notebook.
@@ -484,3 +482,5 @@ and content format (one of json, text, or base64)."
 
 (cl-defun ein:content-upload-error (path &key symbol-status response &allow-other-keys)
   (ein:display-warning (format "Could not upload %s. Failed with status %s" path symbol-status)))
+
+(provide 'ein-contents-api)
