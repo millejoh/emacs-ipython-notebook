@@ -23,9 +23,6 @@
 
 ;;; Code:
 
-(require 'ein-core)
-(require 'ein-notebooklist)
-
 (defcustom ein:jupyter-server-buffer-name "*ein:jupyter-server*"
   "The name of the buffer to run a jupyter notebook server
   session in."
