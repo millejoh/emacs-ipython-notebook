@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'jedi nil t)
+(require 'jedi-core nil t)
 
 (require 'ein-ac)
 (require 'ein-completer)
@@ -56,7 +57,7 @@
   (lexical-let ((expand expand))
     (deferred:$
       (deferred:parallel              ; or `deferred:earlier' is better?
-        (jedi:complete-request)
+        ;; (jedi:complete-request) ;; need tkf/emacs-jedi submodule
         (ein:jedi--completer-complete))
       (deferred:nextc it
         (lambda (replies)

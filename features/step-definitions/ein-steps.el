@@ -28,16 +28,37 @@
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)) notebook)
             (ein:notebooklist-new-notebook url-or-port ks nil
-                (lambda (nb created &rest -ignore-)
+                (lambda (nb created &rest ignore)
                   (setq notebook nb)))
-            (ein:testing-wait-until (lambda () (and (not (null notebook))
+            (ein:testing-wait-until (lambda () (and notebook
                                                     (ein:aand (ein:$notebook-kernel notebook)
-                                                              (ein:kernel-live-p it)))))
+                                                              (ein:kernel-live-p it)))) 
+                                    nil 10000 2000)
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-name notebook))))
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
+(When "^I login if necessary"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (when token
+            (When "I call \"ein:notebooklist-login\"")
+            (And "I wait for the smoke to clear")))))
+
+(When "^I wait for the smoke to clear"
+      (lambda ()
+        (ein:testing-flush-queries)))
+
+(When "^I enter the prevailing port"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (let ((parsed-url (url-generic-parse-url url-or-port)))
+            (When "I type \"%d\"") (url-port parsed-url)))))
+
+(When "^I wait for the smoke to clear"
+      (lambda ()
+        (ein:testing-flush-queries)))
 
 (When "^I click on \"\\(.+\\)\"$"
       (lambda (word)
@@ -48,7 +69,8 @@
           (cl-assert search nil message word (buffer-string))
           (backward-char)
           (When "I press \"RET\"")
-          (sit-for 0.8))))
+          (sit-for 0.8)
+          (When "I wait for the smoke to clear"))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
@@ -56,7 +78,7 @@
         (re-search-backward "Dir" nil t)
         (When "I press \"RET\"")
         (sit-for 0.8)
-))
+        (When "I wait for the smoke to clear")))
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
@@ -74,6 +96,9 @@
                                       (ein:$notebook-notebook-name notebook))))
                 (switch-to-buffer buf-name)
                 (Then "I should be in buffer \"%s\"" buf-name)))))))
+
+(When "^I dump buffer"
+      (lambda () (message "%s" (buffer-string))))
 
 (When "^I wait for cell to execute$"
       (lambda ()

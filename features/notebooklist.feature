@@ -33,3 +33,14 @@ Scenario: Global notebooks
   And I wait 0.9 seconds
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "Opened notebook"
+
+@foo
+Scenario: notebooklist-open works interactively (should be same notebooklist as server-start)
+  Given I am in buffer "*scratch*"
+  When I clear log expr "ein:log-all-buffer-name"
+  And I login if necessary
+  And I call "ein:notebooklist-open"
+  And I wait for the smoke to clear
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "[warn]"
+  And I should not see "[error]"

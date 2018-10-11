@@ -32,6 +32,7 @@
 (declare-function ses-command-hook "ses")
 
 (require 'ein-kernel)
+(require 'ein-notebook)
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.

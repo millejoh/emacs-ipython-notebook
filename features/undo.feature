@@ -68,6 +68,7 @@ Scenario: Test the conflagrative commands
   Then the cursor should be at point "43"
   And I undo again
   And I undo again
+  And I dump buffer
   Then the cursor should be at point "83"
   And I press "C-c C-v"
   And I press "C-/"
@@ -118,28 +119,29 @@ Scenario: Moving cells doesn't break undo
   And I press "C-<down>"
   And I press "C-c <up>"
   And I press "C-/"
-  Then the cursor should be at point "55"
+  Then the cursor should be at point "54"
   And I press "C-<up>"
   And I press "C-<up>"
   And I wait for cell to execute
   And I press "C-c <down>"
   And I press "C-/"
-  Then the cursor should be at point "69"
+  Then the cursor should be at point "67"
 
+@forlorn
 Scenario: Split and merge don't break undo
   Given I enable undo
   Given new default notebook
   When I type "print("hello")"
   And I press "C-c C-b"
-  And I type "abba"
+  And I type "1111"
   And I press "RET"
   And I press "RET"
   And I press "RET"
-  And I type "abab"
+  And I type "2222"
   And I press "RET"
-  And I type "baba"
+  And I type "3333"
   And I press "C-c C-b"
-  And I type "bbaa"
+  And I type "4444"
   And I press "C-<up>"
   And I press "C-n"
   And I press "C-c C-s"
@@ -150,23 +152,23 @@ Scenario: Split and merge don't break undo
   And I wait for cell to execute
   And I press "C-/"
   And I press "C-<up>"
-  And I type "aabb"
+  And I type "5555"
   And I press "RET"
-  And I type "aabb"
+  And I type "6666"
   And I wait for cell to execute
   And I press "C-/"
   And I undo again
   And I undo again
   And I undo again
   And I undo again
-  Then the cursor should be at point "223"
+  Then the cursor should be at point "70"
   And I press "C-c C-m"
   And I press "C-c C-m"
   And I press "C-/"
   And I undo again
   And I undo again
   And I undo again
-  Then the cursor should be at point "201"
+  Then the cursor should be at point "50"
 
 @reopened
 Scenario: Undo needs to at least work for reopened notebooks

@@ -23,9 +23,6 @@
 
 ;;; Code:
 
-(require 'ein-core)
-(require 'ein-notebooklist)
-
 (defcustom ein:jupyter-server-buffer-name "*ein:jupyter-server*"
   "The name of the buffer to run a jupyter notebook server
   session in."
@@ -91,15 +88,11 @@ session, along with the login token."
   (with-current-buffer (process-buffer %ein:jupyter-server-session%)
     (save-excursion
       (goto-char (point-max))
-      (re-search-backward "otebook [iI]s [rR]unning")
-      (condition-case err
-          (progn (re-search-forward "\\(https?://.*:[0-9]+\\)/\\?token=\\([[:alnum:]]*\\)")
-                 (let ((url-or-port (match-string 1))
-                       (token (match-string 2)))
-                   (list url-or-port token)))
-        (error (progn (if (re-search-forward "\\(https?://.*:[0-9]+\\)" nil t)
-                          (list (match-string 1) nil)
-                        (list nil nil))))))))
+      (re-search-backward "otebook [iI]s [rR]unning" nil t)
+      (re-search-forward "\\(https?://[^:]+:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t)
+      (let ((raw-url (match-string 1))
+            (token (match-string 2)))
+        (list (ein:url raw-url) token)))))
 
 ;;;###autoload
 (defun ein:jupyter-server-login-and-open (&optional no-popup)
@@ -112,15 +105,9 @@ call to `ein:notebooklist-login' and once authenticated open the notebooklist bu
 via a call to `ein:notebooklist-open'."
   (interactive)
   (when (buffer-live-p (get-buffer ein:jupyter-server-buffer-name))
-    (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (if (and url-or-port token)
-          (progn
-            (ein:notebooklist-login url-or-port token)
-            (sit-for 1.0) ;; FIXME: Do better!
-            (ein:notebooklist-open url-or-port nil no-popup))
-        (if url-or-port
-            (ein:notebooklist-open url-or-port)
-          (ein:log 'info "Could not determine port nor login info for jupyter server."))))))
+    (multiple-value-bind (url-or-port password) (ein:jupyter-server-conn-info)
+      (ein:notebooklist-login url-or-port password
+                              (apply-partially #'ein:notebooklist-open url-or-port nil no-popup nil)))))
 
 (defsubst ein:jupyter-server--block-on-process ()
   "Return nil if process orphaned."
@@ -141,7 +128,7 @@ via a call to `ein:notebooklist-open'."
   "Start the jupyter notebook server at the given path.
 
 This command opens an asynchronous process running the jupyter
-notebook server and then tries to detect the url and token to
+notebook server and then tries to detect the url and password to
 generate automatic calls to `ein:notebooklist-login' and
 `ein:notebooklist-open'.
 
@@ -189,20 +176,18 @@ the log of the running jupyter server."
     (deferred:$
       (deferred:timeout
         ein:jupyter-server-run-timeout 'ein:jupyter-timeout-sentinel
-        (deferred:$
-          (deferred:next
-            (deferred:lambda ()
-              (with-current-buffer (process-buffer proc)
-                (goto-char (point-min))
-                (if (or (search-forward "Notebook is running at:" nil t)
-                        (search-forward "Use Control-C" nil t))
-                    no-login-after-start-p
-                  (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 5)) self)))))))
+        (deferred:lambda ()
+          (with-current-buffer (process-buffer proc)
+            (goto-char (point-min))
+            (if (or (search-forward "Notebook is running at:" nil t)
+                    (search-forward "Use Control-C" nil t))
+                no-login-after-start-p
+              (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 5)) self)))))
       (deferred:nextc it
         (lambda (no-login-p)
           (if (eql no-login-p 'ein:jupyter-timeout-sentinel)
               (progn
-                (warn "[EIN] Jupyter server failed to start, cancelling operation.")
+                (ein:log 'warn "Jupyter server failed to start, cancelling operation.")
                 (ein:jupyter-server-stop t))
             (unless no-login-p
               (ein:jupyter-server-login-and-open no-popup))))))))

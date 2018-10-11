@@ -34,8 +34,10 @@
 
 
 (eval-when-compile (require 'cl))
-(require 'ewoc)
 (eval-when-compile (require 'auto-complete))
+
+(require 'ewoc)
+(require 'company)
 
 (require 'ein-core)
 (require 'ein-classes)
@@ -50,6 +52,7 @@
 (require 'ein-cell-output)
 (require 'ein-worksheet)
 (require 'ein-iexec)
+(require 'ein-jedi)
 (require 'ein-scratchsheet)
 (require 'ein-notification)
 (require 'ein-completer)
@@ -335,29 +338,29 @@ will be updated with kernel's cwd."
 ;;; TODO - I think notebook-path is unnecessary (JMM).
 
 (defun ein:notebook-open (url-or-port path &optional kernelspec callback cbargs)
-  "Open notebook at PATH in the server URL-OR-PORT.
-Opened notebook instance is returned.  Note that notebook might not be
-ready at the time when this function is executed.
+  "Returns notebook at URL-OR-PORT/PATH.
+Note that notebook sends for its contents and won't have them right away.
 
 After the notebook is opened, CALLBACK is called as::
 
   \(apply CALLBACK notebook CREATED CBARGS)
 
 where the second argument CREATED indicates whether the notebook
-is newly created or not.  When CALLBACK is specified, buffer is
-**not** brought up by `pop-to-buffer'.  It is caller's
-responsibility to do so.  The current buffer is set to the
-notebook buffer when CALLBACK is called."
+is newly created or not.
+
+TODO - This function should not be used to switch to an existing 
+notebook buffer.  Let's warn for now to see who is doing this.
+"
   (unless callback (setq callback #'ein:notebook-pop-to-current-buffer))
-  (let ((buffer (ein:notebook-get-opened-buffer url-or-port path)))
-    (if (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (ein:log 'info "Notebook %s is already opened."
-                   (ein:$notebook-notebook-name ein:%notebook%))
-          (when callback
-            (apply callback ein:%notebook% nil cbargs))
-          ein:%notebook%)
-      (ein:notebook-request-open url-or-port path kernelspec callback cbargs))))
+  (ein:aif (ein:notebook-get-opened-notebook url-or-port path)
+      (progn
+        (switch-to-buffer (ein:notebook-buffer it))
+        (ein:log 'warn "Notebook %s is already opened"
+                 (ein:$notebook-notebook-name it))
+        (when callback
+          (apply callback it nil cbargs))
+        it)
+    (ein:notebook-request-open url-or-port path kernelspec callback cbargs)))
 
 (defun ein:notebook-request-open (url-or-port path &optional kernelspec callback cbargs)
   "Request notebook at PATH from the server at URL-OR-PORT.
@@ -1256,6 +1259,7 @@ worksheet to save result."
   "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook instance.")
 
 (defun ein:notebook-get-opened-notebook (url-or-port path)
+  (ein:notebook-opened-notebooks) ;; garbage collects dead notebooks -- TODO refactor
   (gethash (list url-or-port path) ein:notebook--opened-map))
 
 (defun ein:notebook-get-opened-buffer (url-or-port path)

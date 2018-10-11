@@ -5,8 +5,12 @@
 (require 'ein-utils)
 
 (ert-deftest ein-url-simple ()
+  (should (null (ein:url nil)))
   (should (equal (ein:url 8888) "http://127.0.0.1:8888"))
-  (should (equal (ein:url "http://localhost") "http://localhost")))
+  (should (equal (ein:url "http://localhost") "http://127.0.0.1"))
+  (should (equal (ein:url "https://localhost:8888") "https://127.0.0.1:8888"))
+  (loop for url in '("http://127.0.0.1:8888" "http://localhost:8888" "http://127.0.0.1:8888/" "http://localhost:8888/" "8888" 8888)
+        do (should (equal (ein:url "http://localhost:8888") (ein:url url)))))
 
 (ert-deftest ein-url-slashes ()
   (loop for a in '("a" "a/" "/a")
@@ -14,7 +18,7 @@
                  do (should (equal (ein:url 8888 a b)
                                    "http://127.0.0.1:8888/a/b")))
         do (should (equal (ein:url 8888 a "b/")
-                          "http://127.0.0.1:8888/a/b/"))))
+                          "http://127.0.0.1:8888/a/b"))))
 
 (ert-deftest ein-trim-simple ()
   (should (equal (ein:trim "a") "a"))

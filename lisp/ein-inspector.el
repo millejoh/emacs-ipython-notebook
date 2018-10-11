@@ -25,6 +25,8 @@
 
 ;;; Code:
 
+(require 'ein-pytools)
+
 ;;;###autoload
 (defun ein:inspect-object (kernel object)
   (interactive (list (ein:get-kernel-or-error)

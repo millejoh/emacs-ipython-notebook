@@ -3,8 +3,8 @@
 ;;; Code:
 
 
-;;;### (autoloads nil "ein-company" "ein-company.el" (23475 34241
-;;;;;;  887134 78000))
+;;;### (autoloads nil "ein-company" "ein-company.el" (23488 62124
+;;;;;;  891872 243000))
 ;;; Generated autoloads from ein-company.el
 
 (autoload 'ein:company-backend "ein-company" "\
@@ -14,8 +14,8 @@
 
 ;;;***
 
-;;;### (autoloads nil "ein-connect" "ein-connect.el" (23468 61365
-;;;;;;  135112 242000))
+;;;### (autoloads nil "ein-connect" "ein-connect.el" (23488 62124
+;;;;;;  891872 243000))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -71,8 +71,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 ;;;***
 
-;;;### (autoloads nil "ein-dev" "ein-dev.el" (23477 31845 251244
-;;;;;;  240000))
+;;;### (autoloads nil "ein-dev" "ein-dev.el" (23482 53531 657872
+;;;;;;  977000))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -88,7 +88,7 @@ callback (`websocket-callback-debug-on-error') is enabled.
 \(fn &optional WS-CALLBACK)" t nil)
 
 (autoload 'ein:dev-stop-debug "ein-dev" "\
-Inverse of `ein:dev-start-debug'.  Hard to maintain.  Not really used.
+Inverse of `ein:dev-start-debug'.  Hard to maintain because it needs to match start
 
 \(fn)" t nil)
 
@@ -138,8 +138,8 @@ change in its input area.
 
 ;;;***
 
-;;;### (autoloads nil "ein-inspector" "ein-inspector.el" (23475 34241
-;;;;;;  887134 78000))
+;;;### (autoloads nil "ein-inspector" "ein-inspector.el" (23488 62124
+;;;;;;  895872 269000))
 ;;; Generated autoloads from ein-inspector.el
 
 (autoload 'ein:inspect-object "ein-inspector" "\
@@ -149,8 +149,8 @@ change in its input area.
 
 ;;;***
 
-;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (23064
-;;;;;;  59027 194301 980000))
+;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (23488
+;;;;;;  54486 992928 732000))
 ;;; Generated autoloads from ein-ipynb-mode.el
 
 (autoload 'ein:ipynb-mode "ein-ipynb-mode" "\
@@ -162,8 +162,8 @@ A simple mode for ipynb file.
 
 ;;;***
 
-;;;### (autoloads nil "ein-jedi" "ein-jedi.el" (23468 61365 139112
-;;;;;;  317000))
+;;;### (autoloads nil "ein-jedi" "ein-jedi.el" (23488 62124 895872
+;;;;;;  269000))
 ;;; Generated autoloads from ein-jedi.el
 
 (autoload 'ein:jedi-complete "ein-jedi" "\
@@ -190,8 +190,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 
 ;;;***
 
-;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23478 35725
-;;;;;;  832413 900000))
+;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23488 63573
+;;;;;;  892535 71000))
 ;;; Generated autoloads from ein-jupyter.el
 
 (autoload 'ein:jupyter-server-login-and-open "ein-jupyter" "\
@@ -209,7 +209,7 @@ via a call to `ein:notebooklist-open'.
 Start the jupyter notebook server at the given path.
 
 This command opens an asynchronous process running the jupyter
-notebook server and then tries to detect the url and token to
+notebook server and then tries to detect the url and password to
 generate automatic calls to `ein:notebooklist-login' and
 `ein:notebooklist-open'.
 
@@ -247,8 +247,8 @@ Log on to a jupyterhub server using PAM authentication. Requires jupyterhub vers
 
 ;;;***
 
-;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (23475 34241 891134
-;;;;;;  103000))
+;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (23486 37515 450267
+;;;;;;  378000))
 ;;; Generated autoloads from ein-kernel.el
 
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
@@ -257,8 +257,8 @@ Log on to a jupyterhub server using PAM authentication. Requires jupyterhub vers
 
 ;;;***
 
-;;;### (autoloads nil "ein-multilang" "ein-multilang.el" (23468 61365
-;;;;;;  139112 317000))
+;;;### (autoloads nil "ein-multilang" "ein-multilang.el" (23488 62124
+;;;;;;  895872 269000))
 ;;; Generated autoloads from ein-multilang.el
 
 (autoload 'ein:notebook-multilang-mode "ein-multilang" "\
@@ -268,8 +268,8 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23478 25882
-;;;;;;  960574 643000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23488 62124
+;;;;;;  895872 269000))
 ;;; Generated autoloads from ein-notebook.el
 
 (autoload 'ein:junk-new "ein-notebook" "\
@@ -291,8 +291,8 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23478
-;;;;;;  30232 414267 512000))
+;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23488
+;;;;;;  63799 595665 935000))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-open "ein-notebooklist" "\
@@ -328,6 +328,8 @@ Reload current Notebook list.
 
 (autoload 'ein:notebooklist-new-notebook "ein-notebooklist" "\
 Ask server to create a new notebook and open it in a new buffer.
+
+TODO - New and open should be separate, and we should flag an exception if we try to new an existing.
 
 \(fn &optional URL-OR-PORT KERNELSPEC PATH CALLBACK CBARGS)" t nil)
 
@@ -373,9 +375,9 @@ See also:
 \(fn &optional URL-OR-PORT)" nil nil)
 
 (autoload 'ein:notebooklist-login "ein-notebooklist" "\
-Login to IPython notebook server.
+Login to URL-OR-PORT with PASSWORD with notebooklist-open CALLBACK of arity 0.
 
-\(fn URL-OR-PORT PASSWORD &optional RETRY-P)" t nil)
+\(fn URL-OR-PORT PASSWORD CALLBACK &optional RETRY-P)" t nil)
 
 (autoload 'ein:notebooklist-change-url-port "ein-notebooklist" "\
 Update the ipython/jupyter notebook server URL for all the
@@ -465,8 +467,8 @@ shared output buffer.  You can open the buffer by the command
 
 ;;;***
 
-;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (23468 61365
-;;;;;;  139112 317000))
+;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (23488 62124
+;;;;;;  899872 295000))
 ;;; Generated autoloads from ein-traceback.el
 
 (autoload 'ein:tb-show "ein-traceback" "\
@@ -485,8 +487,8 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
 ;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-skewer.el" "ein-smartrep.el"
 ;;;;;;  "ein-subpackages.el" "ein-timestamp.el" "ein-utils.el" "ein-websocket.el"
-;;;;;;  "ein-worksheet.el" "ein.el" "ob-ein.el" "zeroein.el") (23475
-;;;;;;  34241 891134 103000))
+;;;;;;  "ein-worksheet.el" "ein.el" "ob-ein.el" "zeroein.el") (23488
+;;;;;;  62124 899872 295000))
 
 ;;;***
 

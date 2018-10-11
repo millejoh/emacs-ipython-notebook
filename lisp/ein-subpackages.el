@@ -96,7 +96,7 @@ When this option is enabled, cached omni completion is available."
     (ein:use-ac-backend  (require 'ein-ac)
                          (ein:ac-config-once ein:use-auto-complete-superpack))
     (ein:use-ac-jedi-backend  (require 'ein-jedi)
-                              (jedi:setup)
+                              ;; (jedi:setup) ;; need tkf/emacs-jedi submodule
                               (ein:jedi-setup)
                               (ein:ac-config-once ein:use-auto-complete-superpack))
     (ein:use-company-backend  (require 'ein-company)

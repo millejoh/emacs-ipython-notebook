@@ -30,6 +30,7 @@
 (require 'json)
 (require 's)
 (require 'dash)
+(require 'url)
 
 
 ;;; Macros and core functions/variables
@@ -182,23 +183,23 @@ at point, i.e. any word before then \"(\", if it is present."
                               (push subtree list)))))
       (traverse tree))
     (nreverse list)))
-
-
 
 ;;; URL utils
 
 (defvar ein:url-localhost "127.0.0.1")
-(defvar ein:url-localhost-template "http://127.0.0.1:%s")
-
 (defun ein:url (url-or-port &rest paths)
-  (loop with url = (if (integerp url-or-port)
-                       (format ein:url-localhost-template url-or-port)
-                     url-or-port)
-        for p in paths
-        do (setq url (concat (ein:trim-right url "/")
-                             "/"
-                             (ein:trim-left p "/")))
-        finally return url))
+  (if (null url-or-port) 
+      nil
+    (if (or (integerp url-or-port) 
+            (and (stringp url-or-port) (string-match "^[0-9]+$" url-or-port)))
+        (setq url-or-port (format "http://localhost:%s" url-or-port)))
+    (let ((parsed-url (url-generic-parse-url url-or-port)))
+      (if (or (null (url-host parsed-url)) (string= (url-host parsed-url) "localhost"))
+          (setf (url-host parsed-url) ein:url-localhost))
+      (loop with url = (url-recreate-url parsed-url)
+            for p in paths
+            do (setq url (concat (file-name-as-directory url) (ein:trim-left (directory-file-name p) "/")))
+            finally return (directory-file-name url)))))
 
 (defun ein:url-no-cache (url)
   "Imitate `cache=false' of `jQuery.ajax'.
