@@ -200,6 +200,11 @@ To suppress popup, you can pass `ignore' as CALLBACK."
         (error "EIN doesn't want to assume what protocol you are using (http or https), so could you please specify the full URL (e.g http://my.jupyter.url:8888?"))
       url-or-port)))
 
+(defcustom ein:populate-hierarchy-on-notebooklist-open nil
+  ""
+  :group 'ein
+  :type 'boolean)
+
 ;;;###autoload
 (defun ein:notebooklist-open (url-or-port &optional path no-popup resync)
   "Open notebook list buffer."
@@ -226,10 +231,11 @@ To suppress popup, you can pass `ignore' as CALLBACK."
               (ein:query-kernelspecs url-or-port (lambda ()
                                                    (deferred:callback-post d)))
               d)
-            (lexical-let ((d (deferred:new #'identity)))
-              (ein:content-query-hierarchy url-or-port (lambda (tree)
-                                                         (deferred:callback-post d)))
-              d))
+            (when ein:populate-hierarchy-on-notebooklist-open
+              (lexical-let ((d (deferred:new #'identity)))
+                (ein:content-query-hierarchy url-or-port (lambda (tree)
+                                                           (deferred:callback-post d)))
+                d)))
           (deferred:nextc it
             (lambda (&rest ignore)
               (ein:content-query-contents url-or-port path success))))
@@ -746,8 +752,8 @@ Notebook list data is passed via the buffer local variable
                                 (apply-partially #'ein:notebooklist-render--finish ipy-version url-or-port))))
 
 (defun ein:notebooklist-render--finish (ipy-version url-or-port sessions)
-  (cl-letf (((symbol-function 'render-header) (if (< ipy-version 3) 
-                                                  #'render-header-ipy2 
+  (cl-letf (((symbol-function 'render-header) (if (< ipy-version 3)
+                                                  #'render-header-ipy2
                                                 #'render-header*)))
     (mapc (lambda (x) (funcall (symbol-function x) url-or-port sessions))
           ein:notebooklist-render-order))
@@ -792,13 +798,13 @@ Notebook is specified by a string NBPATH whose format is
 When used in lisp, CALLBACK and CBARGS are passed to `ein:notebook-open'."
   (interactive
    (list (if noninteractive
-             (car (ein:notebooklist-list-notebooks)) 
+             (car (ein:notebooklist-list-notebooks))
            (completing-read
             "Open notebook [URL-OR-PORT/NAME]: "
             (ein:notebooklist-list-notebooks)))))
   (let* ((parsed (url-generic-parse-url nbpath))
          (path (url-filename parsed)))
-    (ein:notebook-open (substring nbpath 0 (- (length nbpath) (length path))) 
+    (ein:notebook-open (substring nbpath 0 (- (length nbpath) (length path)))
                        (substring path 1) nil callback cbargs)))
 
 ;;;###autoload
