@@ -145,6 +145,15 @@ _xsrf argument."
                                                                                     (ein:$jh-conn-token it))))))))))
     settings))
 
+(defcustom ein:max-simultaneous-queries 10
+  "Limit number of simultaneous queries to Jupyter server.
+
+If too many calls to `request' are made at once Emacs may
+complaint and raise a 'Too Many Files' exception. By setting this
+variable to a reasonable value you can avoid this situation."
+  :group 'ein
+  :type 'integer)
+
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
                                       (timeout ein:query-timeout)
@@ -156,6 +165,10 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
     (ein:query-gc-running-process-table)
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
+    (when (> (hash-table-count ein:query-running-process-table)
+             ein:max-simultaneous-queries)
+      (loop (until (< (hash-table-count ein:query-running-process-table) ein:max-simultaneous-queries))
+            (doing (sleep-for 0.1))))
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           ;; This seems to result in clobbered cookie jars
