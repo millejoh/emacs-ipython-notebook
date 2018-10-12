@@ -48,6 +48,7 @@ Scenario: Collapse doesn't break undo
   And I undo again
   Then the cursor should be at point "55"
 
+@prob
 Scenario: Test the conflagrative commands
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -61,22 +62,20 @@ Scenario: Test the conflagrative commands
   And I press "C-<up>"
   And I press "C-<up>"
   And I press "C-n"
-  And I type "print("math imported")"
+  And I type "print("m")"
   And I wait for cell to execute
   And I press "C-u C-c C-v"
   And I press "C-/"
-  Then the cursor should be at point "43"
-  And I undo again
+  Then the cursor should be at point "22"
   And I undo again
   And I dump buffer
   Then the cursor should be at point "83"
   And I press "C-c C-v"
   And I press "C-/"
   And I undo again
-  Then the cursor should be at point "43"
+  Then the cursor should be at point "22"
   And I press "C-c C-S-l"
   And I press "C-/"
-  And I undo again
   And I undo again
   And I undo again
   Then the cursor should be at point "22"
