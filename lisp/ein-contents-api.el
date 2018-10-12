@@ -37,6 +37,7 @@
 (require 'ein-log)
 (require 'ein-query)
 
+
 (provide 'ein-contents-api) ; must provide before requiring ein-notebook:
 (require 'ein-notebook)     ; circular: depends on this file!
 
@@ -96,7 +97,7 @@ global setting.  For global setting and more information, see
 ;; Will need to pass the response object and check either request-response-history
 ;; or request-response-url.
 (defun* ein:content-query-contents--success (url-or-port path callback
-                                                         &key data symbol-status response 
+                                                         &key data symbol-status response
                                                          &allow-other-keys)
   (let (content)
     (if (<= (ein:need-ipython-version url-or-port) 2)
@@ -213,11 +214,17 @@ global setting.  For global setting and more information, see
       (apply #'deferred:parallel
              (loop for c0 in directories
                    collect
-                   (lexical-let ((c0 c0) (d0 (deferred:new #'identity)))
-                     (ein:content-query-contents 
-                      url-or-port 
+                   (lexical-let ((c0 c0)
+                                 (d0 (deferred:new #'identity)))
+                     (ein:content-query-contents
+                      url-or-port
                       (ein:$content-path c0)
-                      (apply-partially #'ein:content-query-hierarchy* url-or-port (ein:$content-path c0) (lambda (tree) (deferred:callback-post d0 (cons c0 tree))) sessions))
+                      (apply-partially #'ein:content-query-hierarchy*
+                                       url-or-port
+                                       (ein:$content-path c0)
+                                       (lambda (tree)
+                                         (deferred:callback-post d0 (cons c0 tree)))
+                                       sessions))
                      d0)))
       (deferred:nextc it
         (lambda (tree)
@@ -230,10 +237,15 @@ global setting.  For global setting and more information, see
   "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"
   (lexical-let ((url-or-port url-or-port)
                 (callback callback))
-    (ein:content-query-sessions 
+    (ein:content-query-sessions
      url-or-port
      (lambda (sessions)
-       (ein:content-query-contents url-or-port "" (apply-partially #'ein:content-query-hierarchy* url-or-port "" callback sessions))))))
+       (ein:content-query-contents url-or-port
+                                   ""
+                                   (apply-partially #'ein:content-query-hierarchy*
+                                                    url-or-port
+                                                    ""
+                                                    callback sessions))))))
 
 
 ;;; Save Content
@@ -357,9 +369,9 @@ global setting.  For global setting and more information, see
 (defun* ein:content-query-sessions--error (url-or-port &key error-thrown &allow-other-keys)
   (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown)))
 
-(defun* ein:content-query-sessions--complete (url-or-port callback 
-                                                          &key data response 
-                                                          &allow-other-keys 
+(defun* ein:content-query-sessions--complete (url-or-port callback
+                                                          &key data response
+                                                          &allow-other-keys
                                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-sessions--complete %s" resp-string))
 
