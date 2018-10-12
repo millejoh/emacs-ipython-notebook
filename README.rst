@@ -12,10 +12,10 @@ Jupyter.
           no guarantees for the safety for your notebook data.  Please make sure
           that you back-up and back-up often!
 
-.. note:: The code for testing EIN is horribly broken, but I regularly hand
-          check the code running against IPython's suite of sample
-          notebooks. It's a worse-is-better solution to problem requiring a
-          time-consuming solution.
+.. note:: Thanks to some truly impressive work by @dickmao, ein testing is
+          working once again using the excellent ert and ecukes tools. We hope
+          this will make contributing tests much easier, so please feel free to
+          jump in and contribute!
 
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master

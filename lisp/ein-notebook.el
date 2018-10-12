@@ -69,18 +69,16 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
-(defcustom ein:notebook-autosave-frequency 60
+(defcustom ein:notebook-autosave-frequency 300
   "Sets the frequency (in seconds) at which the notebook is
-automatically saved.
+automatically saved, per IPEP15. Set to 0 to disable this feature.
 
 Autosaves are automatically enabled when a notebook is opened,
 but can be controlled manually via `ein:notebook-enable-autosave'
 and `ein:notebook-disable-autosave'.
 
-If this parameter is changed than you must call
-`ein:notebook-disable-autosave' and then
-`ein:notebook-enable-autosave' on all open notebooks for the
-changes to take effect.
+If you wish to change the autosave frequency for the current
+notebook call `ein:notebook-update-autosave-freqency'.
 
 "
   :type 'number
@@ -416,7 +414,8 @@ See `ein:notebook-open' for more information."
                               (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
-    (ein:notebook-enable-autosaves notebook)
+    (if (> ein:notebook-autosave-frequency 0)
+        (ein:notebook-enable-autosaves notebook))
     (ein:gc-complete-operation)
     (ein:log 'info "Notebook %s is ready"
              (ein:$notebook-notebook-name notebook))))
@@ -476,9 +475,24 @@ of minor mode."
                          "Select notebook [URL-OR-PORT/NAME]: "
                          (ein:notebook-opened-buffer-names)))))
      (list notebook)))
-  (ein:log 'verbose "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
   (when (ein:$notebook-autosave-timer notebook)
+    (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
     (cancel-timer (ein:$notebook-autosave-timer notebook))))
+
+(defun ein:notebook-update-autosave-frequency (new-frequency notebook)
+  "Change the autosaves frequency for the current notebook, or
+for a notebook selected by the user if not currently inside a
+notebook buffer."
+  (interactive)
+  (let* ((new-frequency (read-number "New autosaves frequency (0 to disable): "))
+         (notebook (or (ein:get-notebook)
+                       (completing-read
+                        "Select notebook [URL-OR-PORT/NAME]: "
+                        (ein:notebook-opened-buffer-names)))))
+    (when notebook
+      (setq ein:notebook-autosave-frequency new-frequency)
+      (ein:notebook-disable-autosaves notebook)
+      (ein:notebook-enable-autosaves notebook))))
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
@@ -788,7 +802,7 @@ This is equivalent to do ``C-c`` in the console program."
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
-    (error (ein:log 'warn "Error running save hooks: '%s'. I will still try to save the notebook." (error-message-string err))))
+    (error (ein:log 'warn "ein:notebook-save-notebook: Error running save hooks: '%s'. Regardless, proceeding with save. Wish me luck." (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
