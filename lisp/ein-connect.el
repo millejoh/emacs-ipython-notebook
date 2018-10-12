@@ -189,7 +189,7 @@ notebooks."
   "Connect any buffer to opened notebook and its kernel."
   (interactive (list (completing-read "Notebook buffer to connect: "
                                       (ein:notebook-opened-buffer-names))))
-  (ein:aif (get-buffer-buffer-or-name)
+  (ein:aif (get-buffer buffer-or-name)
       (let ((notebook (buffer-local-value 'ein:%notebook% it)))
         (ein:connect-buffer-to-notebook notebook))
     (error "No buffer %s" buffer-or-name)))
