@@ -20,7 +20,6 @@ env:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$PATH
   matrix:
     - EVM_EMACS=emacs-25.2-travis EL_REQUEST_BACKEND=curl
-    - EVM_EMACS=emacs-26.1-travis EL_REQUEST_BACKEND=curl
 
 matrix:
   allow_failures:
