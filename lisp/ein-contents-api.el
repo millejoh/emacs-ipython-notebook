@@ -150,10 +150,15 @@ global setting.  For global setting and more information, see
   "Content tree keyed by URL-OR-PORT.")
 
 (defun ein:content-need-hierarchy (url-or-port)
-  "Callers assume ein:content-query-hierarchy succeeded.  If not, nil."
+  "As an exceptional case, this server inquiry is synchronous and waits at most 10 seconds for a response."
   (ein:aif (gethash url-or-port *ein:content-hierarchy*) it
-    (ein:log 'warn "No recorded content hierarchy for %s" url-or-port)
-    nil))
+    (ein:content-query-hierarchy url-or-port nil)
+    (loop repeat 10
+          until (gethash url-or-port *ein:content-hierarchy*)
+          do (sleep-for 1))
+    (ein:aif (gethash url-or-port *ein:content-hierarchy*) it
+      (ein:log 'warn "No recorded content hierarchy for %s" url-or-port)
+      nil)))
 
 (defun ein:new-content-legacy (url-or-port path data)
   "Content API in 2.x a bit inconsistent."
@@ -223,8 +228,9 @@ global setting.  For global setting and more information, see
         (lambda (tree)
           (let ((result (append others tree)))
             (if (string= path "")
-                (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
-            (funcall callback result)))))))
+              (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
+            (when callback
+              (funcall callback result))))))))
 
 (defun ein:content-query-hierarchy (url-or-port callback)
   "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"

@@ -225,10 +225,6 @@ To suppress popup, you can pass `ignore' as CALLBACK."
             (lexical-let ((d (deferred:new #'identity)))
               (ein:query-kernelspecs url-or-port (lambda ()
                                                    (deferred:callback-post d)))
-              d)
-            (lexical-let ((d (deferred:new #'identity)))
-              (ein:content-query-hierarchy url-or-port (lambda (tree)
-                                                         (deferred:callback-post d)))
               d))
           (deferred:nextc it
             (lambda (&rest ignore)
