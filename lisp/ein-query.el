@@ -165,14 +165,18 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
     (ein:query-gc-running-process-table)
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (when (> (hash-table-count ein:query-running-process-table)
+    (when (>= (hash-table-count ein:query-running-process-table)
              ein:max-simultaneous-queries)
-      (loop until (< (hash-table-count ein:query-running-process-table) ein:max-simultaneous-queries)
-            do (progn
-                 (ein:query-gc-running-process-table)
-                 (ein:log 'debug "Stuck waiting for %s processes to complete."
-                          (hash-table-count ein:query-running-process-table))
-                 (sleep-for 5))))
+      (let ((loopcnt 0))
+        (loop until (or (< (hash-table-count ein:query-running-process-table) ein:max-simultaneous-queries)
+                        (> loopcnt 10))
+              do (progn
+                   (incf loopcnt)
+                   (ein:query-gc-running-process-table)
+                   (ein:log 'debug "Stuck waiting for %s processes to complete."
+                            (hash-table-count ein:query-running-process-table))
+                   (sleep-for 3)))))
+    (ein:log 'debug "Currently at %s simultaneous request calls." (hash-table-count ein:query-running-process-table))
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           ;; This seems to result in clobbered cookie jars
