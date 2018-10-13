@@ -201,7 +201,14 @@ To suppress popup, you can pass `ignore' as CALLBACK."
       url-or-port)))
 
 (defcustom ein:populate-hierarchy-on-notebooklist-open nil
-  ""
+  "Prepopulate the content hierarchy cache after calling `ein:notebooklist-open'.
+
+If T, will recursively walk through the notebook hierarchy and
+generate a cache of all the entries. Only a couple of
+infrequently (`ein:notebooklist-open-notebook-global' being the
+only one that comes to mind, actually) used commands depend on
+this cache, so for most users this setting can be left at its
+default value."
   :group 'ein
   :type 'boolean)
 
