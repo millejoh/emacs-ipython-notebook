@@ -36,6 +36,7 @@
 (Setup
  (ein:dev-start-debug)
  (setq ein:notebook-autosave-frequency 0)
+ (setq ein:populate-hierarchy-on-notebooklist-open t)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
  (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))

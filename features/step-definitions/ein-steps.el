@@ -84,9 +84,9 @@
       (lambda ()
         (undo-more 1)))
 
-(When "^I enable undo$"
-      (lambda ()
-        (setq ein:worksheet-enable-undo t)))
+(When "^I enable \"\\(.+\\)\"$"
+      (lambda (flag-name)
+        (set (intern flag-name) t)))
 
 (When "^I undo demoting errors$"
       (lambda ()
