@@ -363,7 +363,7 @@ Currently EIN/IPython supports exporting to the following formats:
           (json-pretty-print (point-min) (point-max)))
       (ein:kernel-request-stream
        (ein:get-kernel)
-       (format "__import__('ein').export_nb('%s', '%s')"
+       (format "__import__('ein').export_nb(r'%s', '%s')"
                json
                format)
        (lambda (export buffer)
