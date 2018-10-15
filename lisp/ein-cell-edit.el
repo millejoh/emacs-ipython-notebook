@@ -26,8 +26,8 @@
 ;;; Code:
 (require 'ein-cell)
 (require 'org-src)
-(require 'ess-r-mode)
-(require 'markdown-mode)
+(require 'ess-r-mode nil t)
+(require 'markdown-mode nil t)
 
 (defvar ein:src--cell nil)
 (defvar ein:src--ws nil)
