@@ -14,11 +14,10 @@
 (require 'ein-testing)
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
-(ein:deflocal ein:%testing-port% nil)
 
 (defun ein:testing-after-scenario ()
   (ein:testing-flush-queries)
-  (with-current-buffer (ein:notebooklist-get-buffer ein:%testing-url%)
+  (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
     (let ((urlport (ein:$notebooklist-url-or-port ein:%notebooklist%)))
       (loop for notebook in (ein:notebook-opened-notebooks)
             for path = (ein:$notebook-notebook-path notebook)
@@ -35,20 +34,15 @@
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
  (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))
  (setq ein:testing-dump-file-request  (concat default-directory "log/ecukes.request"))
- (setq ein:jupyter-server-args '("--no-browser" "--debug"))
- (setq ein:%testing-url% nil)
- (deferred:sync! (ein:jupyter-server-start (executable-find "jupyter") ein:testing-jupyter-server-root))
- (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000)
- (assert (processp %ein:jupyter-server-session%) t "notebook server defunct")
- (setq ein:%testing-url% (car (ein:jupyter-server-conn-info))))
+ (Given "I start and login to the server configured \"\\n\"")
+)
 
 (After
  (ein:testing-after-scenario))
 
 (Teardown
  (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
-   (ein:jupyter-server-stop t))
- (assert (not (processp %ein:jupyter-server-session%)) t "notebook server orphaned"))
+   (ein:jupyter-server-stop t)))
 
 (Fail
  (if noninteractive

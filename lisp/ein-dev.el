@@ -32,6 +32,11 @@
 (require 'ein-notebook)
 (require 'ein-subpackages)
 
+(defcustom ein:dev-prefer-deferred nil
+  "Deferred chains have unpredictable and often delayed timings.  For some user interactions, it may be preferable to act synchronously."
+  :group 'ein
+  :type 'boolean)
+
 ;;;###autoload
 (defun ein:dev-insert-mode-map (map-string)
   "Insert mode-map into rst document.  For README.rst."

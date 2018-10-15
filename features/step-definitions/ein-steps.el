@@ -1,8 +1,10 @@
 (When "^I clear log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
-        (with-current-buffer (symbol-value (intern log-expr))
-          (let ((inhibit-read-only t))
-            (erase-buffer)))))
+        (let ((buffer (get-buffer (symbol-value (intern log-expr)))))
+          (when (buffer-live-p buffer)
+            (with-current-buffer buffer
+              (let ((inhibit-read-only t))
+                (erase-buffer)))))))
 
 (When "^I switch to log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
@@ -15,7 +17,7 @@
           (sit-for 0.8)
           )))
 
-(When "^I wait \\([.0-9]+\\) seconds$"
+(When "^I wait \\([.0-9]+\\) seconds?$"
       (lambda (seconds)
         (sit-for (string-to-number seconds))))
 
@@ -23,32 +25,68 @@
       (lambda ()
         (switch-to-buffer ein:log-all-buffer-name)))
 
+(defun ein:testing-new-notebook (url-or-port ks)
+  (lexical-let (notebook)
+    (condition-case err
+        (progn
+          (ein:notebooklist-new-notebook url-or-port ks nil
+                                         (lambda (nb created &rest ignore)
+                                           (setq notebook nb)))
+          (ein:testing-wait-until (lambda () 
+                                    (and notebook
+                                         (ein:aand (ein:$notebook-kernel notebook)
+                                                   (ein:kernel-live-p it))))
+                                  nil 10000 2000)
+          notebook)
+      (error (message "ein:testing-new-notebook: %s" (error-message-string err))
+             (when notebook
+               (ein:notebook-close notebook))
+             nil))))
+
 (When "^new \\(.+\\) notebook$"
       (lambda (kernel)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)) notebook)
-            (ein:notebooklist-new-notebook url-or-port ks nil
-                (lambda (nb created &rest ignore)
-                  (setq notebook nb)))
-            (ein:testing-wait-until (lambda () (and notebook
-                                                    (ein:aand (ein:$notebook-kernel notebook)
-                                                              (ein:kernel-live-p it))))
-                                    nil 10000 2000)
-            (let ((buf-name (format ein:notebook-buffer-name-template
-                                    (ein:$notebook-url-or-port notebook)
-                                    (ein:$notebook-notebook-name notebook))))
-              (switch-to-buffer buf-name)
-              (Then "I should be in buffer \"%s\"" buf-name))))))
+          (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+            (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)) notebook)
+              (loop repeat 2
+                    until notebook
+                    do (setq notebook (ein:testing-new-notebook url-or-port ks)))
+              (let ((buf-name (format ein:notebook-buffer-name-template
+                                      (ein:$notebook-url-or-port notebook)
+                                      (ein:$notebook-notebook-name notebook))))
+                (switch-to-buffer buf-name)
+                (Then "I should be in buffer \"%s\"" buf-name)))))))
 
-(When "^I open notebooklist"
-      (lambda ()
-        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                     (lambda (&rest args) url-or-port)))
-            (When "I call \"ein:notebooklist-open\"")
+(When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
+      (lambda (login config)
+        (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
+          (ein:jupyter-server-stop t))
+        (loop repeat 10
+              with buffer = (get-buffer ein:jupyter-server-buffer-name)
+              until (null (get-buffer-process buffer))
+              do (sleep-for 1) 
+              finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
+        (When "I clear log expr \"ein:log-all-buffer-name\"")
+        (When "I clear log expr \"ein:jupyter-server-buffer-name\"")
+        (clrhash ein:notebooklist-map)
+        (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
+        (setq ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py"))
+        (ein:jupyter-server-start (executable-find "jupyter") 
+                                  ein:testing-jupyter-server-root (not login))
+        (if login
+            (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
+
+(When "^I login to \\([.0-9]+\\)$"
+      (lambda (port)
+        (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                   (lambda (&rest args) (ein:url port)))
+                  ((symbol-function 'read-passwd)
+                   (lambda (&rest args) "foo")))
+          (with-demoted-errors "demoted: %s"
+            (When "I call \"ein:notebooklist-login\"")
             (And "I wait for the smoke to clear")))))
 
-(When "^I login if necessary"
+(When "^I login if necessary$"
       (lambda ()
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (when token
@@ -59,15 +97,15 @@
               (When "I call \"ein:notebooklist-login\"")
               (And "I wait for the smoke to clear"))))))
 
-(When "^I wait for the smoke to clear"
-      (lambda ()
-        (ein:testing-flush-queries)))
-
-(When "^I enter the prevailing port"
-      (lambda ()
+(When "^I login with password \"\\(.+\\)\"$"
+      (lambda (password)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (let ((parsed-url (url-generic-parse-url url-or-port)))
-            (When "I type \"%d\"") (url-port parsed-url)))))
+          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                     (lambda (&rest args) url-or-port))
+                    ((symbol-function 'read-passwd)
+                     (lambda (&rest args) password)))
+            (When "I call \"ein:notebooklist-login\"")
+            (And "I wait for the smoke to clear")))))
 
 (When "^I wait for the smoke to clear"
       (lambda ()

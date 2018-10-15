@@ -5,7 +5,7 @@
   "Make empty notebook list buffer."
   (flet ((ein:need-kernelspecs (url-or-port))
          (ein:content-query-sessions (session-hash url-or-port)))
-    (ein:notebooklist-open--finish
+    (ein:notebooklist-open--finish nil
      (make-ein:$content :url-or-port (or url-or-port ein:testing-notebook-dummy-url)
                         :ipython-version 3
                         :path ""))))

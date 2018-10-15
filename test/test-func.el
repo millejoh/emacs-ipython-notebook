@@ -20,7 +20,7 @@
   (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME start")
   (when path
     (setq notebook-name (format "%s/%s" path notebook-name)))
-  (ein:notebooklist-open url-or-port path)
+  (ein:notebooklist-open* url-or-port path)
   (ein:testing-wait-until (lambda () (and (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))
                                           (ein:notebooklist-get-buffer url-or-port))))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
@@ -38,8 +38,8 @@
                notebook)
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
-      (let ((created nil)
-            (kernelspec (ein:get-kernelspec url-or-port "default")))
+      (lexical-let (created
+                    (kernelspec (ein:get-kernelspec url-or-port "default")))
         (ein:notebooklist-new-notebook url-or-port kernelspec path
                                        (lambda (&rest -ignore-)
                                          (setq created t)))
@@ -57,7 +57,7 @@
 
 (defun ein:testing-delete-notebook (url-or-port notebook &optional path)
   (ein:log 'debug "TESTING-DELETE-NOTEBOOK start")
-  (ein:notebooklist-open url-or-port (ein:$notebook-notebook-path notebook))
+  (ein:notebooklist-open* url-or-port (ein:$notebook-notebook-path notebook))
   (ein:testing-wait-until (lambda ()
                             (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
@@ -79,7 +79,7 @@
 
 (ert-deftest 01-open-notebooklist ()
   (ein:log 'verbose "ERT OPEN-NOTEBOOKLIST start")
-  (ein:notebooklist-open *ein:testing-port* "/" t)
+  (ein:notebooklist-open* *ein:testing-port*)
   (ein:testing-wait-until
    (lambda ()
      (ein:notebooklist-get-buffer *ein:testing-port*)))
@@ -236,12 +236,11 @@ See the definition of `create-image' for how it works."
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
     (ein:jupyter-server-stop t ein:testing-dump-file-server)
-    (should-not (processp %ein:jupyter-server-session%))
     (cl-flet ((orphans-find (pid) (search (ein:$kernel-kernel-id (ein:$notebook-kernel notebook)) (alist-get 'args (process-attributes pid)))))
       (should-not (loop repeat 10
                         with orphans = (seq-filter #'orphans-find
                                                    (list-system-processes))
-                        until (null orphans)
+                        until (and (null orphans) (ein:jupyter-server-process))
                         do (sleep-for 0 1000) 
                            (setq orphans (seq-filter #'orphans-find (list-system-processes)))
                         finally return orphans))))

@@ -152,7 +152,7 @@
         (when (ein:$jh-user-p user)
           (setf (ein:$jh-conn-user conn) user)
           (ein:log 'info "Jupyterhub: Opening notebook at %s: " (ein:$jh-conn-url conn))
-          (ein:notebooklist-open (ein:$jh-conn-url conn)))))))
+          (ein:notebooklist-open* (ein:$jh-conn-url conn) nil nil #'pop-to-buffer))))))
 
 ;;;###autoload
 (defun ein:jupyterhub-connect (url user password)
