@@ -280,11 +280,11 @@ jupyter kernels.
       (values (format "http://localhost:%s" session) nil)
     (let ((session-uri (url-generic-parse-url session)))
       (cond ((url-fullness session-uri)
-             (values (format "%s://%s:%s" (url-type session-uri) (url-host session-uri) (url-port session-uri))
+             (values (ein:url (format "%s://%s:%s" (url-type session-uri) (url-host session-uri) (url-port session-uri)))
                      (url-filename session-uri)))
             (t (let* ((url-or-port (ein:org-babel-clean-url (car (split-string session "/"))))
                       (path (ein:join-str "/" (rest (split-string session "/")))))
-                 (values (format "http://localhost:%s" url-or-port) path)))))))
+                 (values (ein:url (format "http://localhost:%s" url-or-port)) path)))))))
 
 (defcustom ein:org-babel-default-session-name "ein_babel_session.ipynb"
   "Default name for org babel sessions running ein environments.
