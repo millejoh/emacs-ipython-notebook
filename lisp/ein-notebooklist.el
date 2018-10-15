@@ -32,11 +32,6 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
-
-;; needs to be after ein-notebook else deferred in server-start breaks down
-;; has something to do with provide/require in contents-api
-(require 'ein-jupyter)
-
 (require 'ein-connect)
 (require 'ein-file)
 (require 'ein-contents-api)
@@ -195,15 +190,10 @@ To suppress popup, you can pass `ignore' as CALLBACK."
                                      (ein:$notebooklist-url-or-port it)
                                    (ein:default-url-or-port)))))
          (url-or-port
-          (if noninteractive
-              ;; noninteractive for testing only
-              (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-                (let ((parsed-url (url-generic-parse-url url-or-port)))
-                  (format "%d" (url-port parsed-url))))
-            (completing-read (format "URL or port number (default %s): " default)
-                             url-or-port-list
-                             nil nil nil nil
-                             default))))
+          (completing-read (format "URL or port number (default %s): " default)
+                           url-or-port-list
+                           nil nil nil nil
+                           default)))
     (ein:url url-or-port)))
 
 (defcustom ein:populate-hierarchy-on-notebooklist-open nil
@@ -911,11 +901,7 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
 (defun ein:notebooklist-login (url-or-port password callback &optional retry-p)
   "Login to URL-OR-PORT with PASSWORD with notebooklist-open CALLBACK of arity 0."
   (interactive (list (ein:notebooklist-ask-url-or-port)
-                     (if noninteractive
-                         ;; noninteractive for testing only
-                         (multiple-value-bind (url-or-port token)
-                             (ein:jupyter-server-conn-info) token)
-                         (read-passwd "Password: "))
+                     (read-passwd "Password: ")
                      nil))
   (if password
       (ein:query-singleton-ajax
@@ -944,11 +930,11 @@ Now you can open notebook list by `ein:notebooklist-open" url-or-port)
   (ein:log 'info "Failed to login to %s" url-or-port))
 
 (defun* ein:notebooklist-login--complete (url-or-port &key data response
-                                                      &allow-other-keys
+                                                      &allow-other-keys 
                                                       &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-login--complete %s" resp-string))
 
-(defun* ein:notebooklist-login--success (url-or-port callback
+(defun* ein:notebooklist-login--success (url-or-port callback 
                                                      &key data
                                                      &allow-other-keys)
   (if (plist-get data :bad-page)
