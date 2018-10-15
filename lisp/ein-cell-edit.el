@@ -25,9 +25,14 @@
 
 ;;; Code:
 (require 'ein-cell)
-(require 'org-src)
 (require 'ess-r-mode nil t)
+(require 'org-src nil t)
 (require 'markdown-mode nil t)
+
+(autoload 'markdown-mode "markdown-mode")
+(autoload 'R-mode "ess-r-mode")
+(autoload 'org-src--remove-overlay "org-src")
+(autoload 'org-src-switch-to-buffer "org-src")
 
 (defvar ein:src--cell nil)
 (defvar ein:src--ws nil)
@@ -80,7 +85,7 @@ or abort with \\[ein:edit-cell-abort]"))
   )
 
 (defun ein:cell-configure-edit-buffer ()
-  (when (bound-and-true-p org-src--from-org-mode)
+  (when (and (bound-and-true-p org-src--from-org-mode) (boundp 'org-src--beg-marker))
     (add-hook 'kill-buffer-hook #'org-src--remove-overlay nil 'local)
     (if (bound-and-true-p org-src--allow-write-back)
         (progn

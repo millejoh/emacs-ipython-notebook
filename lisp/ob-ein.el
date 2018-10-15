@@ -36,8 +36,8 @@
 (require 'cl)
 (require 'ein-notebook)
 (require 'ein-shared-output)
-(require 'org-src)
-(require 'org-element)
+(require 'org-src nil t)
+(require 'org-element nil t)
 (require 'ein-utils)
 (require 'python)
 
@@ -247,12 +247,13 @@ jupyter kernels.
 
 (defun org-babel-edit:ein-execute ()
   (interactive)
-  (let* ((beg org-src--beg-marker)
-         (buf (marker-buffer beg)))
-    (with-current-buffer buf
-      (save-excursion
-        (goto-char beg)
-        (org-ctrl-c-ctrl-c)))))
+  (when (boundp 'org-src--beg-marker)
+    (let* ((beg org-src--beg-marker)
+           (buf (marker-buffer beg)))
+      (with-current-buffer buf
+        (save-excursion
+          (goto-char beg)
+          (org-ctrl-c-ctrl-c))))))
 
 ;; This function should be used to assign any variables in params in
 ;; the context of the session environment.

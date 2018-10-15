@@ -31,10 +31,11 @@
 ;;; Code:
 
 (require 'eieio)
-(require 'company)
+(require 'company nil t)
 (require 'ein-notebook)
 (eval-when-compile (require 'auto-complete))
 
+(autoload 'company-mode "company")
 
 (declare-function ein:notebooklist-list-notebooks "ein-notebooklist")
 (declare-function ein:notebooklist-open-notebook-global "ein-notebooklist")
@@ -406,9 +407,11 @@ notebook."
     (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:connect-mode-map)
                              (auto-complete-mode +1))
     (ein:use-company-backend (company-mode +1)
-                             (add-to-list 'company-backends 'ein:company-backend))
+                             (when (boundp 'company-backends)
+                               (add-to-list 'company-backends 'ein:company-backend)))
     (ein:use-company-jedi-backend (company-mode +1)
-                                  (add-to-list 'company-backends 'ein:company-backend))
+                                  (when (boundp 'company-backends)
+                                    (add-to-list 'company-backends 'ein:company-backend)))
 
     (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'."))))
 

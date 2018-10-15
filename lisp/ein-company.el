@@ -27,10 +27,13 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'company)
 (require 'jedi-core nil t)
 (require 'deferred)
 (require 'ein-completer)
+(require 'company nil t)
+
+(autoload 'company-begin-backend "company")
+(autoload 'company-doc-buffer "company")
 
 ;; Duplicates ein:jedi--completer-complete in ein-jedi.
 ;; Let's refactor and enhance our calm!

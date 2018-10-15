@@ -28,6 +28,8 @@
 (require 'smartrep nil t)
 (require 'ein-notebook)
 
+(autoload 'smartrep-define-key "smartrep")
+
 (defcustom ein:smartrep-notebook-mode-alist
   '(("C-t" . ein:worksheet-toggle-cell-type)
     ("C-l" . ein:worksheet-clear-output)
