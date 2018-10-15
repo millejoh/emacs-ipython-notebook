@@ -935,8 +935,10 @@ FIMXE: document how to use `ein:notebooklist-find-file-callback'
   (list :bad-page (re-search-forward "<input type=.?password" nil t)))
 
 (defun ein:notebooklist-login--success-1 (url-or-port callback)
-  (ein:log 'info "Login to %s complete." url-or-port)
-  (funcall callback))
+  (ein:log 'info "Login to %s complete. \
+Now you can open notebook list by `ein:notebooklist-open" url-or-port)
+  (when callback
+    (funcall callback)))
 
 (defun ein:notebooklist-login--error-1 (url-or-port)
   (ein:log 'info "Failed to login to %s" url-or-port))
