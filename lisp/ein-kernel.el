@@ -883,7 +883,7 @@ as a string and the rest of the argument is the optional ARGS."
                          (let ((func (car packed))
                                (args (cdr packed)))
                            (when (equal msg-type "stream")
-                             (ein:aif (plist-get content :data)
+                             (ein:aif (plist-get content :text)
                                  (apply func it args)))))
                        (cons func args)))))
 
