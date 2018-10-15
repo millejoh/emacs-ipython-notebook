@@ -8,7 +8,7 @@ Scenario: Undo by default turned off
 
 @yank
 Scenario: Kill yank doesn't break undo
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "import math"
   And I press "M-RET"
@@ -25,7 +25,7 @@ Scenario: Kill yank doesn't break undo
   Then the cursor should be at point "74"
 
 Scenario: Collapse doesn't break undo
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "from time import sleep"
   And I press "RET"
@@ -50,7 +50,7 @@ Scenario: Collapse doesn't break undo
 
 @prob
 Scenario: Test the conflagrative commands
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "import math"
   And I press "RET"
@@ -81,7 +81,7 @@ Scenario: Test the conflagrative commands
   Then the cursor should be at point "22"
 
 Scenario: Clear output doesn't break undo
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "from time import sleep"
   And I press "RET"
@@ -105,7 +105,7 @@ Scenario: Clear output doesn't break undo
   Then the cursor should be at point "55"
 
 Scenario: Moving cells doesn't break undo
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "100"
   And I press "C-c C-b"
@@ -128,7 +128,7 @@ Scenario: Moving cells doesn't break undo
 
 @forlorn
 Scenario: Split and merge don't break undo
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "print("hello")"
   And I press "C-c C-b"
@@ -171,7 +171,7 @@ Scenario: Split and merge don't break undo
 
 @reopened
 Scenario: Undo needs to at least work for reopened notebooks
-  Given I enable undo
+  Given I enable "ein:worksheet-enable-undo"
   Given old notebook "undo.ipynb"
   When I press "C-<down>"
   And I type "howdy"

@@ -164,7 +164,7 @@ the log of the running jupyter server."
       (ein:log 'info "Notebook session is already running, check the contents of %s"
                ein:jupyter-server-buffer-name))
   (add-hook 'kill-emacs-hook #'(lambda ()
-                                 (ein:jupyter-server-stop t)))
+                                 (ignore-errors (ein:jupyter-server-stop t))))
   (ein:log 'info "Starting notebook server in directory: %s" notebook-directory)
   (lexical-let ((no-login-after-start-p no-login-after-start-p)
                 (no-popup no-popup)

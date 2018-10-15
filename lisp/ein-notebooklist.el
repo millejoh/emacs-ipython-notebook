@@ -242,11 +242,14 @@ default value."
             (lexical-let ((d (deferred:new #'identity)))
               (ein:query-kernelspecs url-or-port (lambda ()
                                                    (deferred:callback-post d)))
-              d)
-            (when ein:populate-hierarchy-on-notebooklist-open
+              d))
+          (deferred:nextc it
+            (lambda (&rest ignore)
               (lexical-let ((d (deferred:new #'identity)))
-                (ein:content-query-hierarchy url-or-port (lambda (tree)
-                                                           (deferred:callback-post d)))
+                (if ein:populate-hierarchy-on-notebooklist-open
+                    (ein:content-query-hierarchy url-or-port (lambda (tree)
+                                                               (deferred:callback-post d)))
+                  (deferred:callback-post d))
                 d)))
           (deferred:nextc it
             (lambda (&rest ignore)

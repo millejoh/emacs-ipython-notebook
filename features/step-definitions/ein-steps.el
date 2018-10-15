@@ -32,7 +32,7 @@
                   (setq notebook nb)))
             (ein:testing-wait-until (lambda () (and notebook
                                                     (ein:aand (ein:$notebook-kernel notebook)
-                                                              (ein:kernel-live-p it)))) 
+                                                              (ein:kernel-live-p it))))
                                     nil 10000 2000)
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
@@ -45,6 +45,39 @@
           (when token
             (When "I call \"ein:notebooklist-login\"")
             (And "I wait for the smoke to clear")))))
+
+(When "^I wait for the smoke to clear"
+      (lambda ()
+        (ein:testing-flush-queries)))
+
+(When "^I enter the prevailing port"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (let ((parsed-url (url-generic-parse-url url-or-port)))
+            (When "I type \"%d\"") (url-port parsed-url)))))
+
+(When "^I wait for the smoke to clear"
+      (lambda ()
+        (ein:testing-flush-queries)))
+
+(When "^I open notebooklist"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                     (lambda (&rest args) url-or-port)))
+            (When "I call \"ein:notebooklist-open\"")
+            (And "I wait for the smoke to clear")))))
+
+(When "^I login if necessary"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (when token
+            (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                       (lambda (&rest args) url-or-port))
+                      ((symbol-function 'read-passwd)
+                       (lambda (&rest args) token)))
+              (When "I call \"ein:notebooklist-login\"")
+              (And "I wait for the smoke to clear"))))))
 
 (When "^I wait for the smoke to clear"
       (lambda ()
@@ -109,9 +142,9 @@
       (lambda ()
         (undo-more 1)))
 
-(When "^I enable undo$"
-      (lambda ()
-        (setq ein:worksheet-enable-undo t)))
+(When "^I enable \"\\(.+\\)\"$"
+      (lambda (flag-name)
+        (set (intern flag-name) t)))
 
 (When "^I undo demoting errors$"
       (lambda ()
