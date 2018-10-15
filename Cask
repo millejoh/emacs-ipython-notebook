@@ -13,7 +13,6 @@
  (depends-on "dash")
  (depends-on "cl-generic")
  (depends-on "company")
- (depends-on "ess")
  (depends-on "org-plus-contrib") ;; see https://github.com/cask/cask/issues/119
  (depends-on "markdown-mode")
  (depends-on "smartrep")
