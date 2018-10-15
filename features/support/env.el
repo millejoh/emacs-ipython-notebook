@@ -48,7 +48,6 @@
 (Teardown
  (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
    (ein:jupyter-server-stop t))
-; (ein:testing-dump-logs) ; taken care of by ein-testing.el kill-emacs-hook?
  (assert (not (processp %ein:jupyter-server-session%)) t "notebook server orphaned"))
 
 (Fail

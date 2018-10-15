@@ -39,12 +39,25 @@
                                     (ein:$notebook-notebook-name notebook))))
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
+
+(When "^I open notebooklist"
+      (lambda ()
+        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                     (lambda (&rest args) url-or-port)))
+            (When "I call \"ein:notebooklist-open\"")
+            (And "I wait for the smoke to clear")))))
+
 (When "^I login if necessary"
       (lambda ()
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (when token
-            (When "I call \"ein:notebooklist-login\"")
-            (And "I wait for the smoke to clear")))))
+            (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                       (lambda (&rest args) url-or-port))
+                      ((symbol-function 'read-passwd)
+                       (lambda (&rest args) token)))
+              (When "I call \"ein:notebooklist-login\"")
+              (And "I wait for the smoke to clear"))))))
 
 (When "^I wait for the smoke to clear"
       (lambda ()

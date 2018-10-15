@@ -39,7 +39,7 @@ Scenario: notebooklist-open works interactively (should be same notebooklist as 
   Given I am in buffer "*scratch*"
   When I clear log expr "ein:log-all-buffer-name"
   And I login if necessary
-  And I call "ein:notebooklist-open"
+  And I open notebooklist
   And I wait for the smoke to clear
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
