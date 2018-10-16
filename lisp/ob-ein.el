@@ -230,10 +230,11 @@ jupyter kernels.
   (multiple-value-bind (url-or-port path) (ein:org-babel-parse-session session)
     (setf kernelspec (or kernelspec (ein:get-kernelspec url-or-port "default")))
     (let ((nb (or (ein:notebook-get-opened-notebook url-or-port path)
-                  (ein:notebook-open url-or-port path kernelspec
-                                     (lambda (_nb _param packed)
-                                       (multiple-value-bind (session kernelspec) packed
-                                         (org-babel-ein-initiate-session session kernelspec)))
+                  (ein:notebook-open url-or-port
+                                     path
+                                     kernelspec
+                                     (lambda (_nb _param session kernelspec)
+                                       (org-babel-ein-initiate-session session kernelspec))
                                      (list session kernelspec)))))
       (loop do (sit-for 1.0)
             until (ein:kernel-live-p (ein:$notebook-kernel nb)))
