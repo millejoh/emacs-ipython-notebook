@@ -71,8 +71,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 ;;;***
 
-;;;### (autoloads nil "ein-dev" "ein-dev.el" (23495 30384 720586
-;;;;;;  181000))
+;;;### (autoloads nil "ein-dev" "ein-dev.el" (23495 42536 291042
+;;;;;;  635000))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -150,7 +150,7 @@ change in its input area.
 ;;;***
 
 ;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (23495
-;;;;;;  30384 720586 181000))
+;;;;;;  42536 291042 635000))
 ;;; Generated autoloads from ein-ipynb-mode.el
 
 (autoload 'ein:ipynb-mode "ein-ipynb-mode" "\
@@ -190,8 +190,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 
 ;;;***
 
-;;;### (autoloads nil "ein-junk" "ein-junk.el" (23495 30384 720586
-;;;;;;  181000))
+;;;### (autoloads nil "ein-junk" "ein-junk.el" (23495 42536 291042
+;;;;;;  635000))
 ;;; Generated autoloads from ein-junk.el
 
 (autoload 'ein:junk-new "ein-junk" "\
@@ -211,8 +211,8 @@ and save it immediately.
 
 ;;;***
 
-;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23495 30384
-;;;;;;  724586 204000))
+;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23495 42536
+;;;;;;  291042 635000))
 ;;; Generated autoloads from ein-jupyter.el
 
 (autoload 'ein:jupyter-server-login-and-open "ein-jupyter" "\
@@ -258,7 +258,7 @@ there is no running server then no action will be taken.
 ;;;***
 
 ;;;### (autoloads nil "ein-jupyterhub" "ein-jupyterhub.el" (23495
-;;;;;;  30384 724586 204000))
+;;;;;;  42536 291042 635000))
 ;;; Generated autoloads from ein-jupyterhub.el
 
 (autoload 'ein:jupyterhub-connect "ein-jupyterhub" "\
@@ -289,8 +289,8 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23495 30384
-;;;;;;  724586 204000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23495 42536
+;;;;;;  295042 659000))
 ;;; Generated autoloads from ein-notebook.el
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
@@ -298,7 +298,7 @@ Notebook mode with multiple language fontification.
 ;;;***
 
 ;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23495
-;;;;;;  39319 328691 982000))
+;;;;;;  43065 882151 894000))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-enable-keepalive "ein-notebooklist" "\
@@ -374,6 +374,11 @@ See also:
 `ein:connect-to-default-notebook', `ein:connect-default-notebook'.
 
 \(fn &optional URL-OR-PORT)" nil nil)
+
+(autoload 'ein:notebooklist-open "ein-notebooklist" "\
+This is now an alias for ein:notebooklist-login
+
+\(fn URL-OR-PORT CALLBACK)" t nil)
 
 (defalias 'ein:login 'ein:notebooklist-login)
 
@@ -494,7 +499,7 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-python.el" "ein-pytools.el" "ein-query.el" "ein-scratchsheet.el"
 ;;;;;;  "ein-skewer.el" "ein-smartrep.el" "ein-subpackages.el" "ein-timestamp.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
-;;;;;;  "ob-ein.el" "zeroein.el") (23495 30384 724586 204000))
+;;;;;;  "ob-ein.el" "zeroein.el") (23495 42536 295042 659000))
 
 ;;;***
 

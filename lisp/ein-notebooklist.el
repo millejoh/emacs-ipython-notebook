@@ -874,7 +874,13 @@ See also:
    :error (apply-partially #'ein:notebooklist-login--error url-or-port nil callback errback)
    :success (apply-partially #'ein:notebooklist-login--success url-or-port callback errback)))
 
-(define-obsolete-function-alias 'ein:notebooklist-open 'ein:notebooklist-login)
+;;;###autoload
+(defun ein:notebooklist-open (url-or-port callback)
+  "This is now an alias for ein:notebooklist-login"
+  (interactive `(,(ein:notebooklist-ask-url-or-port) ,#'pop-to-buffer))
+  (ein:notebooklist-login url-or-port callback))
+
+(make-obsolete 'ein:notebooklist-open 'ein:notebooklist-login "0.14.2")
 
 ;;;###autoload
 (defalias 'ein:login 'ein:notebooklist-login)
