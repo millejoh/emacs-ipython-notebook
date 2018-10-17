@@ -197,11 +197,10 @@ To suppress popup, you can pass `ignore' as CALLBACK."
       it (list nil nil)))
 
 (defun ein:notebooklist-token-or-password (url-or-port)
-  "Return token or password (I believe jupyter requires one or the other but not both) for URL-OR-PORT.  If all authentication disabled, return nil."
+  "Return token or password (I believe jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."
   (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
     (cond ((eql password-p t) (read-passwd "Password: "))
-          ((and (stringp token) (eql password-p :json-false)) (if (string= token "") nil token))
-          ((ein:need-password-required url-or-port) (read-passwd "Password: "))
+          ((and (stringp token) (eql password-p :json-false)) token)
           (t nil))))
 
 (defun ein:notebooklist-ask-url-or-port ()
@@ -861,23 +860,25 @@ See also:
 
 ;;; Login
 
-(defun ein:notebooklist-login-workaround (url-or-port callback errback token response-status)
-  "At some point need to trace jupyter's returning 403 (or 405?) the first time around"
-  (ein:log 'debug "Login workaround %s in response to %s" url-or-port response-status)
-  (loop repeat 3
-        until (lambda ()
-                   (ein:query-gc-running-process-table)
-                   (zerop (hash-table-count ein:query-running-process-table)))
-        do (sleep-for 1))
+(defun ein:notebooklist-login--iteration (url-or-port callback errback token iteration response-status)
+  "Called from `ein:notebooklist-login'."
+  (ein:log 'debug "Login attempt #%d in response to %s from "
+           iteration response-status url-or-port)
   (ein:query-singleton-ajax
-   (list 'notebooklist-login url-or-port)
+   (list 'notebooklist-login--iteration url-or-port)
    (ein:url url-or-port "login")
-   :type "POST"
-   :data (concat "password=" (url-hexify-string token))
+;; This was the culprit that necessitated the 405 workaround
+;; :type "POST"
+;; From the curl manpage:
+;; The method string you set with -X will be used for all requests,
+;;               which if you for example use -L, --location may cause unintended
+;;               side-effects  when  curl doesn't change request method according
+;;               to the HTTP 30x response codes - and similar.
+   :data (if token (concat "password=" (url-hexify-string token)))
    :parser #'ein:notebooklist-login--parser
    :complete (apply-partially #'ein:notebooklist-login--complete url-or-port)
-   :error (apply-partially #'ein:notebooklist-login--error url-or-port nil callback errback)
-   :success (apply-partially #'ein:notebooklist-login--success url-or-port callback errback)))
+   :error (apply-partially #'ein:notebooklist-login--error url-or-port token callback errback iteration)
+   :success (apply-partially #'ein:notebooklist-login--success url-or-port callback errback token iteration)))
 
 ;;;###autoload
 (defun ein:notebooklist-open (url-or-port callback)
@@ -906,18 +907,12 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                  (token (ein:notebooklist-token-or-password url-or-port)))
     (add-function :before callback done-callback)
     (ein:message-whir "Establishing session" (lambda () done-p))
-    (if token
-        (ein:query-singleton-ajax
-         (list 'notebooklist-login url-or-port)
-         (ein:url url-or-port "login")
-         :type "POST"
-         :data (concat "password=" (url-hexify-string token))
-         :parser #'ein:notebooklist-login--parser
-         :complete (apply-partially #'ein:notebooklist-login--complete url-or-port)
-         :error (apply-partially #'ein:notebooklist-login--error url-or-port token callback errback)
-         :success (apply-partially #'ein:notebooklist-login--success url-or-port callback errback))
-      (ein:log 'verbose "Skipping login %s" url-or-port)
-      (ein:notebooklist-open* url-or-port nil nil callback))))
+    (cond ((null token) ;; don't know
+           (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
+          ((string= token "") ;; all authentication disabled
+           (ein:log 'verbose "Skipping login %s" url-or-port)
+           (ein:notebooklist-open* url-or-port nil nil callback))
+          (t (ein:notebooklist-login--iteration url-or-port callback errback token 0 nil)))))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
@@ -936,32 +931,34 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                                                       &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-login--complete %s" resp-string))
 
-(defun* ein:notebooklist-login--success (url-or-port callback errback
-                                                     &key data
-                                                     &allow-other-keys)
+(defun* ein:notebooklist-login--success (url-or-port callback errback token iteration
+                                                     &key data response
+                                                     &allow-other-keys
+                                                     &aux
+                                                     (response-status (request-response-status-code response)))
   (if (plist-get data :bad-page)
-      (ein:notebooklist-login--error-1 url-or-port errback)
+      (if (>= iteration 0)
+          (ein:notebooklist-login--error-1 url-or-port errback)
+        (setq token (read-passwd "Password: "))
+        (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
     (ein:notebooklist-login--success-1 url-or-port callback)))
 
 (defun* ein:notebooklist-login--error
-    (url-or-port token callback errback &key
+    (url-or-port token callback errback iteration &key
                  data
                  symbol-status
                  response
                  &allow-other-keys
                  &aux
                  (response-status (request-response-status-code response)))
-  (cond ((and (or (eq response-status 403) (eq response-status 405)) token)
-         (ein:notebooklist-login-workaround url-or-port callback errback token response-status))
-        ((or
-           ;; workaround for url-retrieve backend
-           (and (eq symbol-status 'timeout)
-                (eq response-status 302)
-                (request-response-header response "set-cookie"))
-           ;; workaround for curl backend
-           (and (eq response-status 405)
-                (ein:aand (car (request-response-history response))
-                          (request-response-header it "set-cookie"))))
+  (cond ((< iteration 0) 
+         (setq token (read-passwd "Password: "))
+         (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
+        ((and (eq response-status 403) (< iteration 1))
+         (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
+        ((and (eq symbol-status 'timeout) ;; workaround for url-retrieve backend
+              (eq response-status 302)
+              (request-response-header response "set-cookie"))
          (ein:notebooklist-login--success-1 url-or-port callback))
         (t (ein:notebooklist-login--error-1 url-or-port errback))))
 

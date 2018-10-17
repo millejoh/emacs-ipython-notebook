@@ -97,15 +97,22 @@
               (When "I call \"ein:notebooklist-login\"")
               (And "I wait for the smoke to clear"))))))
 
-(When "^I login with password \"\\(.+\\)\"$"
-      (lambda (password)
+(When "^I login \\(disabling token cribbing \\)?with password \"\\(.+\\)\"$"
+      (lambda (no-crib password)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                     (lambda (&rest args) url-or-port))
-                    ((symbol-function 'read-passwd)
-                     (lambda (&rest args) password)))
-            (When "I call \"ein:notebooklist-login\"")
-            (And "I wait for the smoke to clear")))))
+          (let ((bindings '(((symbol-function 'ein:notebooklist-ask-url-or-port)
+                             (lambda (&rest args) url-or-port)) 
+                            ((symbol-function 'read-passwd)
+                             (lambda (&rest args) password)))))
+            (if no-crib 
+                (setq bindings (append bindings
+                                       (list '((symbol-function 'ein:notebooklist-token-or-password) (lambda (&rest args) nil))))))
+            (message "%s" (macroexpand `(cl-letf ,bindings
+                                            (When "I call \"ein:notebooklist-login\"")
+                                            (And "I wait for the smoke to clear"))))
+            (eval `(cl-letf ,bindings
+                     (When "I call \"ein:notebooklist-login\"")
+                     (And "I wait for the smoke to clear")))))))
 
 (When "^I wait for the smoke to clear"
       (lambda ()
