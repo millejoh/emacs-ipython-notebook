@@ -298,7 +298,7 @@ Notebook mode with multiple language fontification.
 ;;;***
 
 ;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23495
-;;;;;;  43065 882151 894000))
+;;;;;;  44252 8469 326000))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-enable-keepalive "ein-notebooklist" "\
@@ -385,7 +385,7 @@ This is now an alias for ein:notebooklist-login
 (defalias 'ein-login 'ein:notebooklist-login)
 
 (autoload 'ein:notebooklist-login "ein-notebooklist" "\
-Deal with security before main entry of ein:notebooklist-open.
+Deal with security before main entry of ein:notebooklist-open*.
 
 CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success.
 

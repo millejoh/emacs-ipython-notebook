@@ -864,6 +864,11 @@ See also:
 (defun ein:notebooklist-login-workaround (url-or-port callback errback token response-status)
   "At some point need to trace jupyter's returning 403 (or 405?) the first time around"
   (ein:log 'debug "Login workaround %s in response to %s" url-or-port response-status)
+  (loop repeat 3
+        until (lambda ()
+                   (ein:query-gc-running-process-table)
+                   (zerop (hash-table-count ein:query-running-process-table)))
+        do (sleep-for 1))
   (ein:query-singleton-ajax
    (list 'notebooklist-login url-or-port)
    (ein:url url-or-port "login")
@@ -890,7 +895,7 @@ See also:
 
 ;;;###autoload
 (defun ein:notebooklist-login (url-or-port callback)
-  "Deal with security before main entry of ein:notebooklist-open.
+  "Deal with security before main entry of ein:notebooklist-open*.
 
 CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success."
   (interactive `(,(ein:notebooklist-ask-url-or-port) ,#'pop-to-buffer))
