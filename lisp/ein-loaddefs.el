@@ -298,7 +298,7 @@ Notebook mode with multiple language fontification.
 ;;;***
 
 ;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23496
-;;;;;;  60311 648031 952000))
+;;;;;;  64779 642002 162000))
 ;;; Generated autoloads from ein-notebooklist.el
 
 (autoload 'ein:notebooklist-enable-keepalive "ein-notebooklist" "\
@@ -499,7 +499,7 @@ Show full traceback in traceback viewer.
 ;;;;;;  "ein-python.el" "ein-pytools.el" "ein-query.el" "ein-scratchsheet.el"
 ;;;;;;  "ein-skewer.el" "ein-smartrep.el" "ein-subpackages.el" "ein-timestamp.el"
 ;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
-;;;;;;  "ob-ein.el" "zeroein.el") (23496 60232 871565 973000))
+;;;;;;  "ob-ein.el" "zeroein.el") (23497 4403 467284 110000))
 
 ;;;***
 

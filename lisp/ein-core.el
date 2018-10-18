@@ -150,8 +150,10 @@ the source is in git repository."
     (ein:log 'warn "No recorded kernelspecs for %s" url-or-port)
     nil))
 
-(defun ein:query-kernelspecs (url-or-port callback)
+(defun ein:query-kernelspecs (url-or-port callback &optional iteration)
   "Send for kernelspecs of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  (unless iteration
+    (setq iteration 0))
   (ein:query-singleton-ajax
    (list 'ein:query-kernelspecs url-or-port)
    (ein:url url-or-port "api/kernelspecs")
@@ -161,7 +163,7 @@ the source is in git repository."
    :sync ein:force-sync
    :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port callback)
    :success (apply-partially #'ein:query-kernelspecs--success url-or-port)
-   :error (apply-partially #'ein:query-kernelspecs--error url-or-port)))
+   :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
 
 (defun* ein:query-kernelspecs--success (url-or-port
                                        &key data symbol-status response
@@ -181,9 +183,15 @@ the source is in git repository."
                                                                   :spec (plist-get info :spec)))
                                  ks)))))))
 
-(defun* ein:query-kernelspecs--error (url-or-port &key error-thrown &allow-other-keys)
-  (ein:log 'error
-    "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown)))
+(defun* ein:query-kernelspecs--error (url-or-port callback iteration 
+                                                  &key response error-thrown
+                                                  &allow-other-keys)
+  (if (and (eq (request-response-status-code response) 403) (< iteration 3))
+      (progn
+        (ein:log 'info "Retry kernelspecs #%s" iteration)
+        (ein:query-kernelspecs url-or-port callback (1+ iteration)))
+    (ein:log 'error
+             "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
 
 (defun* ein:query-kernelspecs--complete (url-or-port callback &key data response
                                                      &allow-other-keys 

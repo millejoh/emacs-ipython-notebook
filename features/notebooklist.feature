@@ -57,7 +57,7 @@ Scenario: With password server
   Then I should not see "[warn]"
   And I should not see "[error]"
 
-@pass
+@login
 Scenario: To the cloud with password
   Given I start the server configured "c.NotebookApp.password=u'sha1:712118ed6c09:bc02227d84b76b720cc320b855e1006d0b120f98'\n"
   And I login disabling token cribbing with password "foo"
