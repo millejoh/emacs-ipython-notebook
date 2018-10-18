@@ -122,7 +122,7 @@
                              (ein:$websocket-onclose-args websocket)))))
               :on-error
               (lambda (ws action err)
-                (ein:log 'error "Error %s on websocket %s action %s." err ws action)))))
+                (ein:log 'error "Error %s on websocket action %s (ws:%s)." err action (websocket-url ws))))))
     (setf (websocket-client-data ws) websocket)
     (setf (ein:$websocket-ws websocket) ws)
     websocket))
