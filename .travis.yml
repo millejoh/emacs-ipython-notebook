@@ -11,24 +11,34 @@ cache:
   directories:
   - $HOME/local
 
-python:
-  - "2.7"
-  - "3.6"
-
 env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$PATH
-  matrix:
-    - EVM_EMACS=emacs-25.2-travis EL_REQUEST_BACKEND=curl
-    - EVM_EMACS=emacs-26.1-travis EL_REQUEST_BACKEND=curl
 
 matrix:
+  include:
+    - os: linux
+      python: 2.7
+      env: EVM_EMACS=emacs-25.2-travis IPYTHON=5.8.0
+    - os: linux
+      python: 3.5
+      env: EVM_EMACS=emacs-26.1-travis IPYTHON=6.2.1
+    - os: linux
+      python: 3.6
+      env: EVM_EMACS=emacs-26.1-travis IPYTHON=7.0.1
+    - os: osx
+      language: generic
+      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 TOXENV=py27
+
   allow_failures:
     - env: EVM_EMACS=emacs-snapshot
 
 install:
-  - pip install jupyter ipython\<=6.4.0
+  - sh tools/install-virtualenv.sh
+  - if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then eval "$(pyenv init -)" ; pyenv activate $TOXENV ; fi
+  - pip install jupyter ipython\<=$IPYTHON
   - jupyter kernelspec list
+  - ipython --version
 
 before_script:
   - sh tools/install-evm.sh

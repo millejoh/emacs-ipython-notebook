@@ -337,7 +337,7 @@ notebook buffer.  Let's warn for now to see who is doing this.
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
   (let ((notebook-path (ein:$notebook-notebook-path notebook)))
     (ein:gc-prepare-operation)
-    (setf (ein:$notebook-api-version notebook) (ein:$content-ipython-version content)
+    (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
@@ -891,7 +891,7 @@ notebook worksheets."
                      :path (ein:$notebook-notebook-path notebook)
                      :url-or-port (ein:$notebook-url-or-port notebook)
                      :type "notebook"
-                     :ipython-version (ein:$notebook-api-version notebook)))
+                     :notebook-version (ein:$notebook-api-version notebook)))
 
 (defun ein:notebook-create-checkpoint (notebook)
   "Create checkpoint for current notebook based on most recent save."

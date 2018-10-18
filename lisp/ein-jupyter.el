@@ -92,7 +92,7 @@ the notebook directory, you can set it here for future calls to
             (if (and (re-search-forward "otebook [iI]s [rR]unning" nil t)
                      (re-search-forward "\\(https?://[^:]+:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t))
                 (let ((raw-url (match-string 1))
-                      (token (match-string 2)))
+                      (token (or (match-string 2) "")))
                   (setq result (list (ein:url raw-url) token)))))))
     result))
 
@@ -220,14 +220,16 @@ there is no running server then no action will be taken.
 
     ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
     (ein:aif (ein:jupyter-server-process)
-        (let ((pid (process-id it)))
-          (ein:log 'verbose "Signaled %s with pid %s" it pid)
-          (ein:log 'info "Stopped Jupyter notebook server.")
-          (signal-process (process-id it) 15)))
+        (progn
+          (if (eql system-type 'windows-nt)
+              (delete-process it)
+            (let ((pid (process-id it)))
+              (ein:log 'verbose "Signaled %s with pid %s" it pid)
+              (signal-process pid 15)))
+          (ein:log 'info "Stopped Jupyter notebook server.")))
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name
         (write-region (point-min) (point-max) log)))))
-
 
 (defun ein:jupyter-server-list--cmd (&optional args)
   (append (list "notebook"

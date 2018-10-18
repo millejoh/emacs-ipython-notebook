@@ -6,7 +6,7 @@ ELCFILES = $(SRC:.el=.elc)
 
 .PHONY: autoloads
 autoloads:
-	sh tools/update-autoloads.sh
+	-sh tools/update-autoloads.sh
 
 .PHONY: clean
 clean:
@@ -18,7 +18,7 @@ env-ipy.%:
 .PHONY: test-compile
 test-compile: clean autoloads
 	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep "not known|Error|free variable" )
-	-cask clean-elc
+	cask clean-elc
 
 .PHONY: quick
 quick: test-compile test-unit

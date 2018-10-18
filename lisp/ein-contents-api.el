@@ -58,7 +58,7 @@ global setting.  For global setting and more information, see
   (apply #'ein:content-url* (ein:$content-url-or-port content) (ein:$content-path content) params))
 
 (defun ein:content-url* (url-or-port path &rest params)
-  (let* ((which (if (<= (ein:need-ipython-version url-or-port) 2)
+  (let* ((which (if (<= (ein:need-notebook-version url-or-port) 2)
                     "notebooks" "contents"))
          (api-path (concat "api/" which)))
     (url-encode-url (apply #'ein:url
@@ -67,8 +67,10 @@ global setting.  For global setting and more information, see
                            path
                            params))))
 
-(defun ein:content-query-contents (url-or-port path callback)
+(defun ein:content-query-contents (url-or-port path callback &optional iteration)
   "Register CALLBACK of arity 1 for the contents at PATH from the Jupyter URL-OR-PORT."
+  (unless iteration
+    (setq iteration 0))
   (ein:query-singleton-ajax
    (list 'content-query-contents url-or-port path)
    (ein:content-url* url-or-port path)
@@ -78,7 +80,7 @@ global setting.  For global setting and more information, see
    :sync ein:force-sync
    :complete (apply-partially #'ein:content-query-contents--complete url-or-port path)
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
-   :error (apply-partially #'ein:content-query-contents--error url-or-port path)
+   :error (apply-partially #'ein:content-query-contents--error url-or-port path callback iteration)
    ))
 
 (defun* ein:content-query-contents--complete (url-or-port path
@@ -87,8 +89,12 @@ global setting.  For global setting and more information, see
                                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
-(defun* ein:content-query-contents--error (url-or-port path &key symbol-status response error-thrown &allow-other-keys)
-  (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s" (concat (file-name-as-directory url-or-port) path) symbol-status (cdr error-thrown)))
+(defun* ein:content-query-contents--error (url-or-port path callback iteration &key symbol-status response error-thrown &allow-other-keys)
+  (if (and (eq (request-response-status-code response) 403) (< iteration 3))
+      (progn
+        (ein:log 'info "Retry content-query-contents #%s" iteration)
+        (ein:content-query-contents url-or-port path callback (1+ iteration)))
+    (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s" (concat (file-name-as-directory url-or-port) path) symbol-status (cdr error-thrown))))
 
 
 ;; TODO: This is one place to check for redirects - update the url slot if so.
@@ -98,7 +104,7 @@ global setting.  For global setting and more information, see
                                                          &key data symbol-status response
                                                          &allow-other-keys)
   (let (content)
-    (if (<= (ein:need-ipython-version url-or-port) 2)
+    (if (<= (ein:need-notebook-version url-or-port) 2)
         (setq content (ein:new-content-legacy url-or-port path data))
       (setq content (ein:new-content url-or-port path data)))
     (ein:aif response
@@ -121,7 +127,7 @@ global setting.  For global setting and more information, see
       (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
 
 (defun ein:content-to-json (content)
-  (let ((path (if (>= (ein:$content-ipython-version content) 3)
+  (let ((path (if (>= (ein:$content-notebook-version content) 3)
                   (ein:$content-path content)
                 (substring (ein:$content-path content)
                            0
@@ -139,7 +145,7 @@ global setting.  For global setting and more information, see
                        :path (ein:$notebook-notebook-path nb)
                        :url-or-port (ein:$notebook-url-or-port nb)
                        :type "notebook"
-                       :ipython-version (ein:$notebook-api-version nb)
+                       :notebook-version (ein:$notebook-api-version nb)
                        :raw-content nb-content)))
 
 
@@ -160,7 +166,7 @@ global setting.  For global setting and more information, see
       (ein:new-content url-or-port path data)
     (let ((content (make-ein:$content
                     :url-or-port url-or-port
-                    :ipython-version (ein:need-ipython-version url-or-port)
+                    :notebook-version (ein:need-notebook-version url-or-port)
                     :path path)))
       (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
             (ein:$content-path content) path
@@ -177,7 +183,7 @@ global setting.  For global setting and more information, see
   ;; data is like (:size 72 :content nil :writable t :path Untitled7.ipynb :name Untitled7.ipynb :type notebook)
   (let ((content (make-ein:$content
                   :url-or-port url-or-port
-                  :ipython-version (ein:need-ipython-version url-or-port)
+                  :notebook-version (ein:need-notebook-version url-or-port)
                   :path path)))
     (setf (ein:$content-name content) (plist-get data :name)
           (ein:$content-path content) (plist-get data :path)
@@ -260,7 +266,7 @@ global setting.  For global setting and more information, see
    :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs)))
 
 (defun ein:content-save (content &optional callback cbargs errcb errcbargs)
-  (if (>= (ein:$content-ipython-version content) 3)
+  (if (>= (ein:$content-notebook-version content) 3)
       (ein:query-singleton-ajax
        (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
        (ein:content-url content)
@@ -311,7 +317,7 @@ global setting.  For global setting and more information, see
     (apply callback cbargs)))
 
 (defun ein:content-rename (content new-path &optional callback cbargs)
-  (if (>= (ein:$content-ipython-version content) 3)
+  (if (>= (ein:$content-notebook-version content) 3)
       (ein:query-singleton-ajax
        (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
        (ein:content-url content)
@@ -354,7 +360,7 @@ global setting.  For global setting and more information, see
 
 (defun* ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
-                       (if (= (ein:need-ipython-version url-or-port) 2)
+                       (if (= (ein:need-notebook-version url-or-port) 2)
                            (if (string= (plist-get nb-json :path) "")
                                (plist-get nb-json :name)
                              (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))

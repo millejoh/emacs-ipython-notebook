@@ -73,6 +73,45 @@
       (match-string 2 args)
     ein:url-localhost))
 
+(defcustom ein:process-jupyter-regexp "\\(jupyter\\|ipython\\)\\(-\\|\\s-+\\)note"
+  "Regexp by which we recognize notebook servers."
+  :type 'string
+  :group 'ein)
+
+
+(defcustom ein:process-lsof "lsof"
+  "Executable for lsof command."
+  :type 'string
+  :group 'ein)
+
+(defun ein:process-divine-dir (pid args &optional error-buffer)
+  (if (string-match "\\bnotebook-dir\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
+      (directory-file-name (match-string 2 args))
+    (if (executable-find ein:process-lsof)
+        (ein:trim-right 
+         (with-output-to-string 
+           (shell-command (format "%s -p %d -a -d cwd -Fn | grep ^n | tail -c +2"
+                                  ein:process-lsof pid) 
+                          standard-output error-buffer))))))
+
+(defun ein:process-divine-port (pid args &optional error-buffer)
+  "Returns port on which PID is listening or 0 if none.  Supply ERROR-BUFFER to capture stderr"
+  (if (string-match "\\bport\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
+      (string-to-number (match-string 2 args))
+    (if (executable-find ein:process-lsof)
+        (string-to-number
+         (ein:trim-right 
+          (with-output-to-string
+            (shell-command (format "%s -p %d -a -iTCP -sTCP:LISTEN -Fn | grep ^n | sed \"s/[^0-9]//g\""
+                                   ein:process-lsof pid) 
+                           standard-output error-buffer)))))))
+
+(defun ein:process-divine-ip (pid args)
+  "Returns notebook-ip of PID"
+  (if (string-match "\\bip\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
+      (match-string 2 args)
+    "localhost"))
+
 (defstruct ein:$process
   "Hold process variables.
 

@@ -199,9 +199,11 @@ To suppress popup, you can pass `ignore' as CALLBACK."
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password (I believe jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."
   (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
-    (cond ((eql password-p t) (read-passwd "Password: "))
-          ((and (stringp token) (eql password-p :json-false)) token)
-          (t nil))))
+    (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
+        (cond ((eql password-p t) (read-passwd "Password: "))
+              ((and (stringp token) (eql password-p :json-false)) token)
+              ((equal url-or-port my-url-or-port) my-token)
+              (t nil)))))
 
 (defun ein:notebooklist-ask-url-or-port ()
   (let* ((url-or-port-list (mapcar (lambda (x) (format "%s" x))
@@ -246,7 +248,7 @@ PATH is specifying directory from file navigation.  PATH is empty on login.  RES
         (deferred:$
           (deferred:parallel
             (lexical-let ((d (deferred:new #'identity)))
-              (ein:query-ipython-version url-or-port (lambda ()
+              (ein:query-notebook-version url-or-port (lambda ()
                                                        (deferred:callback-post d)))
               d)
             (lexical-let ((d (deferred:new #'identity)))
@@ -333,7 +335,7 @@ automatically be called during calls to `ein:notebooklist-open`."
   "Called via `ein:notebooklist-open'."
   (let ((url-or-port (ein:$content-url-or-port content))
         (path (ein:$content-path content))
-        (ipy-version (ein:$content-ipython-version content))
+        (ipy-version (ein:$content-notebook-version content))
         (data (ein:$content-raw-content content)))
     (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
       (let ((already-opened-p (ein:notebooklist-list-get url-or-port))
@@ -440,7 +442,7 @@ TODO - New and open should be separate, and we should flag an exception if we tr
                                                 &allow-other-keys)
   (let ((nbname (plist-get data :name))
         (nbpath (plist-get data :path)))
-    (when (= (ein:need-ipython-version url-or-port) 2)
+    (when (= (ein:need-notebook-version url-or-port) 2)
       (if (string= nbpath "")
           (setq nbpath nbname)
         (setq nbpath (format "%s/%s" nbpath nbname))))
@@ -714,7 +716,7 @@ You may find the new one in the notebook list." error)
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
-          if (and (string= type "file") (> (ein:need-ipython-version url-or-port) 2))
+          if (and (string= type "file") (> (ein:need-notebook-version url-or-port) 2))
           do (progn (widget-create
                      'link
                      :notify (lexical-let ((url-or-port url-or-port)

@@ -199,14 +199,13 @@ See the definition of `create-image' for how it works."
   (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))
     (ein:testing-wait-until
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
-                          (ein:kernel-live-p it)))
-     )
+                          (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (call-interactively #'ein:worksheet-insert-cell-below)
       (insert "range?")
       (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        (ein:testing-wait-until
-         (lambda () (not (oref cell :running)))))
+        (ein:testing-wait-until (lambda () (and (not (oref cell :running))
+                                                (ein:$notebook-pager notebook)))))
       (with-current-buffer (get-buffer (ein:$notebook-pager notebook))
         (should (search-forward "Docstring:"))))))
 

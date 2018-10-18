@@ -11,7 +11,6 @@ fi
 # To omit slashes in the second FILE argument, need to go to the
 # directory.
 cd lisp || exit $?
-rm ./ein-loaddefs.el
 $EMACS -Q -batch --eval \
     "(setq generated-autoload-file \"$(pwd)/ein-loaddefs.el\")" \
     -f batch-update-autoloads .
@@ -19,3 +18,4 @@ $EMACS -Q -batch --eval \
 if [ "$1" = "--commit" ]; then
     git commit --message "Update ein-loaddefs.el" ein-loaddefs.el
 fi
+
