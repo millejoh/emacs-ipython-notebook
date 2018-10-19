@@ -248,6 +248,7 @@ jupyter kernels.
 
 (defun org-babel-edit:ein-execute ()
   (interactive)
+  (org-edit-src-save)
   (when (boundp 'org-src--beg-marker)
     (let* ((beg org-src--beg-marker)
            (buf (marker-buffer beg)))
