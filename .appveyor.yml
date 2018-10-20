@@ -1,0 +1,236 @@
+version: 1.0.{build}
+
+# you can use {branch} name in version format too
+# version: 1.0.{build}-{branch}
+
+# Do not build on tags (GitHub and BitBucket)
+skip_tags: true
+
+# Skipping commits with particular message or from specific user
+skip_commits:
+  message: /\[skip appveyor\]/      # Regex for matching commit message
+
+# Do not build feature branch with open Pull Requests
+# skip_branch_with_pr: true
+
+# Maximum number of concurrent jobs for the project
+max_jobs: 1
+
+# Build worker image (VM template)
+image: Visual Studio 2015
+
+# scripts that are called at very beginning, before repo cloning
+init:
+  - git config --global core.autocrlf input
+
+# clone directory
+clone_folder: c:\projects\myproject
+
+# fetch repository as zip archive
+shallow_clone: true                 # default is "false"
+
+# set clone depth
+clone_depth: 5                      # clone entire repository history if not defined
+
+# setting up etc\hosts file
+hosts:
+  queue-server: 127.0.0.1
+  db.server.com: 127.0.0.2
+
+# environment variables
+environment:
+  # this is how to set encrypted variable. Go to "Settings" -> "Encrypt YAML" page in account menu to encrypt data.
+  my_secure_var1:
+    secure: FW3tJ3fMncxvs58/ifSP7w==
+
+# environment:
+#  global:
+#    connection_string: server=12;password=13;
+#    service_url: https://127.0.0.1:8090
+#
+#  matrix:
+#  - db: mysql
+#    provider: mysql
+#
+#  - db: mssql
+#    provider: mssql
+#    password:
+#      secure: $#(JFDA)jQ@#$
+
+# this is how to allow failing jobs in the matrix
+matrix:
+  fast_finish: true     # set this flag to immediately finish build once one of the jobs fails.
+  allow_failures:
+    - platform: x86
+      configuration: Debug
+    - platform: x64
+      configuration: Release
+
+# exclude configuration from the matrix. Works similarly to 'allow_failures' but build not even being started for excluded combination.
+  exclude:
+    - platform: x86
+      configuration: Debug
+
+# build cache to preserve files/folders between builds
+cache:
+#  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+  - C:\python27\
+  - C:\ProgramData\chocolatey\lib
+  - C:\ProgramData\chocolatey\bin
+#  - '%LocalAppData%'
+#  - node_modules                    # local npm modules
+  - '%LocalAppData%\NuGet\Cache'    # NuGet < v3
+  - '%LocalAppData%\NuGet\v3-cache' # NuGet v3
+
+# enable service required for build/tests
+#services:
+#  - mssql2014           # start SQL Server 2014 Express
+#  - mssql2014rs         # start SQL Server 2014 Express and Reporting Services
+#  - mssql2012sp1        # start SQL Server 2012 SP1 Express
+#  - mssql2012sp1rs      # start SQL Server 2012 SP1 Express and Reporting Services
+#  - mssql2008r2sp2      # start SQL Server 2008 R2 SP2 Express
+#  - mssql2008r2sp2rs    # start SQL Server 2008 R2 SP2 Express and Reporting Services
+#  - mysql               # start MySQL 5.6 service
+#  - postgresql          # start PostgreSQL 9.5 service
+#  - iis                 # start IIS
+#  - msmq                # start Queuing services
+#  - mongodb             # start MongoDB
+
+# scripts that run after cloning repository
+install:
+  # to run script as a PowerShell command prepend it with ps:
+  - python -m pip install jupyter
+  - jupyter kernelspec list
+  - ipython --version
+  - choco install emacs64
+  - emacs --version
+  - if not exist %userprofile%\local mkdir %userprofile%\local
+  - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
+  - cd c:\projects\myproject
+  - set PATH=%PATH%;%userprofile%\local\cask\bin;\msys64\usr\bin
+  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
+  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
+  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
+  - choco install gnuwin32-make.portable
+
+# enable patching of AssemblyInfo.* files
+# assembly_info:
+#   patch: true
+#   file: AssemblyInfo.*
+#   assembly_version: "2.2.{build}"
+#   assembly_file_version: "{version}"
+#   assembly_informational_version: "{version}"
+
+
+# Automatically register private account and/or project AppVeyor NuGet feeds.
+#nuget:
+#  account_feed: true
+#  project_feed: true
+#  disable_publish_on_pr: true     # disable publishing of .nupkg artifacts to
+#                                  # account/project feeds for pull request builds
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
+# build platform, i.e. x86, x64, Any CPU. This setting is optional.
+#platform: Any CPU
+
+# to add several platforms to build matrix:
+#platform:
+#  - x86
+#  - Any CPU
+
+# build Configuration, i.e. Debug, Release, etc.
+# configuration: Release
+
+# to add several configurations to build matrix:
+#configuration:
+#  - Debug
+#  - Release
+
+# Build settings, not to be confused with "before_build" and "after_build".
+# "project" is relative to the original build directory and not influenced by directory changes in "before_build".
+#build:
+#  parallel: true                  # enable MSBuild parallel builds
+#  project: MyTestAzureCS.sln      # path to Visual Studio solution or project
+#  publish_wap: true               # package Web Application Projects (WAP) for Web Deploy
+#  publish_wap_xcopy: true         # package Web Application Projects (WAP) for XCopy deployment
+#  publish_azure: true             # package Azure Cloud Service projects and push to artifacts
+#  publish_nuget: true             # package projects with .nuspec files and push to artifacts
+#  publish_nuget_symbols: true     # generate and publish NuGet symbol packages
+#  include_nuget_references: true  # add -IncludeReferencedProjects option while packaging NuGet artifacts
+
+  # MSBuild verbosity level
+#  verbosity: quiet|minimal|normal|detailed
+
+
+# to disable automatic builds
+build: off
+
+#---------------------------------#
+#       tests configuration       #
+#---------------------------------#
+
+# to run tests against only selected assemblies and/or categories
+#test:
+#  assemblies:
+#    only:
+#      - asm1.dll
+#      - asm2.dll
+#
+#  categories:
+#    only:
+#      - UI
+#      - E2E
+
+# to run tests against all except selected assemblies and/or categories
+#test:
+#  assemblies:
+#    except:
+#      - asm1.dll
+#      - asm2.dll
+#
+#  categories:
+#    except:
+#      - UI
+#      - E2E
+
+# to run tests from different categories as separate jobs in parallel
+#test:
+#  categories:
+#    - A            # A category common for all jobs
+#    - [UI]         # 1st job
+#    - [DAL, BL]    # 2nd job
+
+# scripts to run before tests (working directory and environment changes are persisted from the previous steps such as "before_build")
+before_test:
+
+# to run your custom scripts instead of automatic tests
+test_script:
+  - cd c:\projects\myproject
+#  - make quick
+
+# scripts to run after tests
+after_test:
+
+# to disable automatic tests
+test: off
+
+# to disable deployment
+deploy: off
+
+#---------------------------------#
+#        global handlers          #
+#---------------------------------#
+
+# on successful build
+#on_success:
+
+# on build failure
+#on_failure:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+# after build failure or success
+on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

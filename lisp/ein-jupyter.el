@@ -87,7 +87,7 @@ the notebook directory, you can set it here for future calls to
         (with-current-buffer buffer
           (save-excursion
             (goto-char (point-max))
-            (re-search-backward (format "%s finished" *ein:jupyter-server-process-name*)
+            (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
                                 nil "") ;; important if we start-stop-start
             (if (and (re-search-forward "otebook [iI]s [rR]unning" nil t)
                      (re-search-forward "\\(https?://[^:]+:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t))

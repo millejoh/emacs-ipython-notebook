@@ -1,11 +1,13 @@
 (require 'ein-console)
 
 (ert-deftest ein:console-security-dir-string ()
+  :expected-result (if (eq system-type 'windows-nt) :failed :passed)
   (let ((ein:console-security-dir "/some/dir/"))
     (should (equal (ein:console-security-dir-get "DUMMY-URL-OR-PORT")
                    ein:console-security-dir))))
 
 (ert-deftest ein:console-security-dir-list ()
+  :expected-result (if (eq system-type 'windows-nt) :failed :passed)
   (let ((ein:console-security-dir
          '((8888 . "/dir/8888/")
            ("htttp://dummy.org" . "/dir/http/")
@@ -19,6 +21,7 @@
     (should (equal (ein:console-security-dir-get 9999) "/dir/default/"))))
 
 (ert-deftest ein:console-security-dir-func ()
+  :expected-result (if (eq system-type 'windows-nt) :failed :passed)
   (let ((ein:console-security-dir
          '(lambda (x) (should (equal x "DUMMY-URL-OR-PORT")) "/dir/")))
     (should (equal (ein:console-security-dir-get "DUMMY-URL-OR-PORT")
