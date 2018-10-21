@@ -204,15 +204,15 @@ build: off
 #    - [DAL, BL]    # 2nd job
 
 # scripts to run before tests (working directory and environment changes are persisted from the previous steps such as "before_build")
-before_test:
+#before_test:
 
 # to run your custom scripts instead of automatic tests
-test_script:
-  - cd c:\projects\myproject
+#test_script:
+#  - cd c:\projects\myproject
 #  - make quick
 
 # scripts to run after tests
-after_test:
+#after_test:
 
 # to disable automatic tests
 test: off
@@ -233,4 +233,4 @@ deploy: off
 
 # after build failure or success
 on_finish:
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

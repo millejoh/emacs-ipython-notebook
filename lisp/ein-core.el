@@ -186,9 +186,9 @@ the source is in git repository."
 (defun* ein:query-kernelspecs--error (url-or-port callback iteration 
                                                   &key response error-thrown
                                                   &allow-other-keys)
-  (if (and (eq (request-response-status-code response) 403) (< iteration 3))
+  (if (< iteration 3)
       (progn
-        (ein:log 'info "Retry kernelspecs #%s" iteration)
+        (ein:log 'info "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
         (ein:query-kernelspecs url-or-port callback (1+ iteration)))
     (ein:log 'error
              "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))

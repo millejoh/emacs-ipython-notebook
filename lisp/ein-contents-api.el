@@ -90,9 +90,9 @@ global setting.  For global setting and more information, see
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
 (defun* ein:content-query-contents--error (url-or-port path callback iteration &key symbol-status response error-thrown &allow-other-keys)
-  (if (and (eq (request-response-status-code response) 403) (< iteration 3))
+  (if (< iteration 3)
       (progn
-        (ein:log 'info "Retry content-query-contents #%s" iteration)
+        (ein:log 'info "Retry content-query-contents #%s in response to %s" iteration (request-response-status-code response))
         (ein:content-query-contents url-or-port path callback (1+ iteration)))
     (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s" (concat (file-name-as-directory url-or-port) path) symbol-status (cdr error-thrown))))
 
@@ -346,8 +346,10 @@ global setting.  For global setting and more information, see
 ;;; Sessions
 
 
-(defun ein:content-query-sessions (url-or-port callback)
+(defun ein:content-query-sessions (url-or-port callback &optional iteration)
   "Register CALLBACK of arity 1 to retrieve the sessions"
+  (unless iteration
+    (setq iteration 0))
   (ein:query-singleton-ajax
    (list 'content-query-sessions url-or-port)
    (ein:url url-or-port "api/sessions")
@@ -355,7 +357,7 @@ global setting.  For global setting and more information, see
    :parser #'ein:json-read
    :complete (apply-partially #'ein:content-query-sessions--complete url-or-port callback)
    :success (apply-partially #'ein:content-query-sessions--success url-or-port callback)
-   :error (apply-partially #'ein:content-query-sessions--error url-or-port)
+   :error (apply-partially #'ein:content-query-sessions--error url-or-port callback iteration)
    :sync ein:force-sync))
 
 (defun* ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
@@ -370,8 +372,14 @@ global setting.  For global setting and more information, see
         (setf (gethash (read-name (plist-get s :notebook)) session-hash)
               (cons (plist-get s :id) (plist-get s :kernel)))))))
 
-(defun* ein:content-query-sessions--error (url-or-port &key error-thrown &allow-other-keys)
-  (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown)))
+(defun* ein:content-query-sessions--error (url-or-port callback iteration
+                                                       &key response error-thrown
+                                                       &allow-other-keys)
+  (if (< iteration 3)
+      (progn
+        (ein:log 'info "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
+        (ein:content-query-sessions url-or-port callback (1+ iteration)))
+    (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
 
 (defun* ein:content-query-sessions--complete (url-or-port callback
                                                           &key data response
