@@ -34,12 +34,11 @@
 (require 'ob)
 (require 'ob-python)
 (require 'cl)
-(require 'ein-notebook)
 (require 'ein-shared-output)
-(require 'org-src nil t)
-(require 'org-element nil t)
 (require 'ein-utils)
 (require 'python)
+
+(autoload 'org-element-property "org-element")
 
 (defcustom ein:org-async-p t
   "If non-nil run ein org-babel source blocks asyncronously."
@@ -236,8 +235,9 @@ jupyter kernels.
                                      (lambda (_nb _param session kernelspec)
                                        (org-babel-ein-initiate-session session kernelspec))
                                      (list session kernelspec)))))
-      (loop do (sit-for 1.0)
-            until (ein:kernel-live-p (ein:$notebook-kernel nb)))
+      (loop repeat 4
+            until (ein:kernel-live-p (ein:$notebook-kernel nb))
+            do (sit-for 1.0))
       nb)))
 
 (defun org-babel-edit-prep:ein (babel-info)
