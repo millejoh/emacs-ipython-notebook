@@ -68,7 +68,7 @@
   of (<id> . <last_modified>) pairs.
 "
   url-or-port
-  ipython-version
+  notebook-version
   name
   path
   type

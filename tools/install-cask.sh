@@ -16,26 +16,16 @@ cask_upgrade_cask_or_reset() {
 }
 
 cask_install_or_reset() {
-    if [ $(cask eval "(princ emacs-major-version)") -gt "25" ]; then
-        echo "!!!! ALERT WORKAROUND !!!!"
-        set -x
-        grep -v "org-plus-contrib" ./Cask > ./Cask.tmp
-        mv ./Cask.tmp ./Cask
-        set +x
-    fi
     cask install || { rm -rf .cask && false; }
 }
 
 # Bootstrap the cask tool and its dependencies
-if [ -d $CASKDIR ]
-then
-    travis_retry cask_upgrade_cask_or_reset
-else
+if [ ! -d $CASKDIR ] ; then
     git clone https://github.com/cask/cask.git $CASKDIR
-    travis_retry cask_upgrade_cask_or_reset
 fi
 
 # Install dependencies for cider as descriped in ./Cask
 # Effect is identical to "make elpa", but here we can retry
 # in the event of network failures.
+travis_retry cask_upgrade_cask_or_reset
 travis_retry cask_install_or_reset && touch elpa-emacs

@@ -181,7 +181,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
         (unless (request-response-done-p it)
           ;; This seems to result in clobbered cookie jars
           ;;(request-abort it) ; This will run callbacks
-          (ein:log 'info "Race! %s %s" key (request-response-data it))))
+          (ein:log 'debug "Race! %s %s" key (request-response-data it))))
     (let ((response (apply #'request (url-encode-url (ein:jupyterhub-correct-query-url-maybe url))
                            (ein:query-prepare-header url settings))))
       (puthash key response ein:query-running-process-table)

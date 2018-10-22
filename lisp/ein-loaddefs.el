@@ -3,8 +3,8 @@
 ;;; Code:
 
 
-;;;### (autoloads nil "ein-company" "ein-company.el" (23488 62124
-;;;;;;  891872 243000))
+;;;### (autoloads nil "ein-company" "ein-company.el" (23498 20366
+;;;;;;  916508 25000))
 ;;; Generated autoloads from ein-company.el
 
 (autoload 'ein:company-backend "ein-company" "\
@@ -14,8 +14,8 @@
 
 ;;;***
 
-;;;### (autoloads nil "ein-connect" "ein-connect.el" (23488 62124
-;;;;;;  891872 243000))
+;;;### (autoloads nil "ein-connect" "ein-connect.el" (23499 16469
+;;;;;;  728162 481000))
 ;;; Generated autoloads from ein-connect.el
 
 (autoload 'ein:connect-to-notebook-command "ein-connect" "\
@@ -71,8 +71,8 @@ It should be possible to support python-mode.el.  Patches are welcome!
 
 ;;;***
 
-;;;### (autoloads nil "ein-dev" "ein-dev.el" (23482 53531 657872
-;;;;;;  977000))
+;;;### (autoloads nil "ein-dev" "ein-dev.el" (23498 20366 920508
+;;;;;;  56000))
 ;;; Generated autoloads from ein-dev.el
 
 (autoload 'ein:dev-insert-mode-map "ein-dev" "\
@@ -138,8 +138,8 @@ change in its input area.
 
 ;;;***
 
-;;;### (autoloads nil "ein-inspector" "ein-inspector.el" (23488 62124
-;;;;;;  895872 269000))
+;;;### (autoloads nil "ein-inspector" "ein-inspector.el" (23493 60533
+;;;;;;  802254 466000))
 ;;; Generated autoloads from ein-inspector.el
 
 (autoload 'ein:inspect-object "ein-inspector" "\
@@ -149,8 +149,8 @@ change in its input area.
 
 ;;;***
 
-;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (23488
-;;;;;;  54486 992928 732000))
+;;;### (autoloads nil "ein-ipynb-mode" "ein-ipynb-mode.el" (23499
+;;;;;;  16469 728162 481000))
 ;;; Generated autoloads from ein-ipynb-mode.el
 
 (autoload 'ein:ipynb-mode "ein-ipynb-mode" "\
@@ -162,8 +162,8 @@ A simple mode for ipynb file.
 
 ;;;***
 
-;;;### (autoloads nil "ein-jedi" "ein-jedi.el" (23488 62124 895872
-;;;;;;  269000))
+;;;### (autoloads nil "ein-jedi" "ein-jedi.el" (23493 60533 802254
+;;;;;;  466000))
 ;;; Generated autoloads from ein-jedi.el
 
 (autoload 'ein:jedi-complete "ein-jedi" "\
@@ -190,8 +190,29 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 
 ;;;***
 
-;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23488 63573
-;;;;;;  892535 71000))
+;;;### (autoloads nil "ein-junk" "ein-junk.el" (23498 20366 920508
+;;;;;;  56000))
+;;; Generated autoloads from ein-junk.el
+
+(autoload 'ein:junk-new "ein-junk" "\
+Open a notebook to try random thing.
+Notebook name is determined based on
+`ein:junk-notebook-name-template'.
+
+When prefix argument is given, it asks URL or port to use.
+
+\(fn NAME KERNELSPEC URL-OR-PORT)" t nil)
+
+(autoload 'ein:junk-rename "ein-junk" "\
+Rename the current notebook based on `ein:junk-notebook-name-template'
+and save it immediately.
+
+\(fn NAME)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "ein-jupyter" "ein-jupyter.el" (23499 50600
+;;;;;;  8727 966000))
 ;;; Generated autoloads from ein-jupyter.el
 
 (autoload 'ein:jupyter-server-login-and-open "ein-jupyter" "\
@@ -203,10 +224,10 @@ token authentication is enabled. If a token is found use it to generate a
 call to `ein:notebooklist-login' and once authenticated open the notebooklist buffer
 via a call to `ein:notebooklist-open'.
 
-\(fn &optional NO-POPUP)" t nil)
+\(fn &optional CALLBACK)" t nil)
 
 (autoload 'ein:jupyter-server-start "ein-jupyter" "\
-Start the jupyter notebook server at the given path.
+Start SERVER-CMD_PATH with `--notebook-dir' NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK taking single argument, the buffer created by ein:notebooklist-open--finish.
 
 This command opens an asynchronous process running the jupyter
 notebook server and then tries to detect the url and password to
@@ -224,7 +245,7 @@ containing the notebooks the user wants to access.
 The buffer named by `ein:jupyter-server-buffer-name' will contain
 the log of the running jupyter server.
 
-\(fn SERVER-CMD-PATH NOTEBOOK-DIRECTORY &optional NO-LOGIN-AFTER-START-P NO-POPUP)" t nil)
+\(fn SERVER-CMD-PATH NOTEBOOK-DIRECTORY &optional NO-LOGIN-P LOGIN-CALLBACK)" t nil)
 
 (autoload 'ein:jupyter-server-stop "ein-jupyter" "\
 Stop a running jupyter notebook server.
@@ -236,8 +257,8 @@ there is no running server then no action will be taken.
 
 ;;;***
 
-;;;### (autoloads nil "ein-jupyterhub" "ein-jupyterhub.el" (23468
-;;;;;;  61365 139112 317000))
+;;;### (autoloads nil "ein-jupyterhub" "ein-jupyterhub.el" (23498
+;;;;;;  20366 920508 56000))
 ;;; Generated autoloads from ein-jupyterhub.el
 
 (autoload 'ein:jupyterhub-connect "ein-jupyterhub" "\
@@ -247,8 +268,8 @@ Log on to a jupyterhub server using PAM authentication. Requires jupyterhub vers
 
 ;;;***
 
-;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (23486 37515 450267
-;;;;;;  378000))
+;;;### (autoloads nil "ein-kernel" "ein-kernel.el" (23498 20366 920508
+;;;;;;  56000))
 ;;; Generated autoloads from ein-kernel.el
 
 (defalias 'ein:kernel-url-or-port 'ein:$kernel-url-or-port)
@@ -257,8 +278,8 @@ Log on to a jupyterhub server using PAM authentication. Requires jupyterhub vers
 
 ;;;***
 
-;;;### (autoloads nil "ein-multilang" "ein-multilang.el" (23488 62124
-;;;;;;  895872 269000))
+;;;### (autoloads nil "ein-multilang" "ein-multilang.el" (23493 60533
+;;;;;;  802254 466000))
 ;;; Generated autoloads from ein-multilang.el
 
 (autoload 'ein:notebook-multilang-mode "ein-multilang" "\
@@ -268,37 +289,17 @@ Notebook mode with multiple language fontification.
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23488 62124
-;;;;;;  895872 269000))
+;;;### (autoloads nil "ein-notebook" "ein-notebook.el" (23499 16469
+;;;;;;  728162 481000))
 ;;; Generated autoloads from ein-notebook.el
-
-(autoload 'ein:junk-new "ein-notebook" "\
-Open a notebook to try random thing.
-Notebook name is determined based on
-`ein:junk-notebook-name-template'.
-
-When prefix argument is given, it asks URL or port to use.
-
-\(fn NAME KERNELSPEC URL-OR-PORT)" t nil)
-
-(autoload 'ein:junk-rename "ein-notebook" "\
-Rename the current notebook based on `ein:junk-notebook-name-template'
-and save it immediately.
-
-\(fn NAME)" t nil)
 
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
 
 ;;;***
 
-;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23488
-;;;;;;  63799 595665 935000))
+;;;### (autoloads nil "ein-notebooklist" "ein-notebooklist.el" (23499
+;;;;;;  16469 728162 481000))
 ;;; Generated autoloads from ein-notebooklist.el
-
-(autoload 'ein:notebooklist-open "ein-notebooklist" "\
-Open notebook list buffer.
-
-\(fn URL-OR-PORT &optional PATH NO-POPUP RESYNC)" t nil)
 
 (autoload 'ein:notebooklist-enable-keepalive "ein-notebooklist" "\
 Enable periodic calls to the notebook server to keep long running sessions from expiring.
@@ -340,7 +341,7 @@ Open new notebook and rename the notebook.
 
 (autoload 'ein:notebooklist-list-notebooks "ein-notebooklist" "\
 Return a list of notebook path (NBPATH).  Each element NBPATH
-is a string of the format \"URL-OR-PORT/NOTEBOOK-NAME\".
+is a string of the format \"URL-OR-PORT/PATH\".
 
 \(fn)" nil nil)
 
@@ -374,10 +375,21 @@ See also:
 
 \(fn &optional URL-OR-PORT)" nil nil)
 
-(autoload 'ein:notebooklist-login "ein-notebooklist" "\
-Login to URL-OR-PORT with PASSWORD with notebooklist-open CALLBACK of arity 0.
+(autoload 'ein:notebooklist-open "ein-notebooklist" "\
+This is now an alias for ein:notebooklist-login
 
-\(fn URL-OR-PORT PASSWORD CALLBACK &optional RETRY-P)" t nil)
+\(fn URL-OR-PORT CALLBACK)" t nil)
+
+(defalias 'ein:login 'ein:notebooklist-login)
+
+(defalias 'ein-login 'ein:notebooklist-login)
+
+(autoload 'ein:notebooklist-login "ein-notebooklist" "\
+Deal with security before main entry of ein:notebooklist-open*.
+
+CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success.
+
+\(fn URL-OR-PORT CALLBACK)" t nil)
 
 (autoload 'ein:notebooklist-change-url-port "ein-notebooklist" "\
 Update the ipython/jupyter notebook server URL for all the
@@ -390,8 +402,8 @@ on all the notebooks opened from the current notebooklist.
 
 ;;;***
 
-;;;### (autoloads nil "ein-org" "ein-org.el" (23468 61365 139112
-;;;;;;  317000))
+;;;### (autoloads nil "ein-org" "ein-org.el" (23492 45645 196314
+;;;;;;  883000))
 ;;; Generated autoloads from ein-org.el
 
 (autoload 'ein:org-open "ein-org" "\
@@ -467,8 +479,8 @@ shared output buffer.  You can open the buffer by the command
 
 ;;;***
 
-;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (23488 62124
-;;;;;;  899872 295000))
+;;;### (autoloads nil "ein-traceback" "ein-traceback.el" (23493 60533
+;;;;;;  806254 487000))
 ;;; Generated autoloads from ein-traceback.el
 
 (autoload 'ein:tb-show "ein-traceback" "\
@@ -481,14 +493,13 @@ Show full traceback in traceback viewer.
 ;;;### (autoloads nil nil ("debug-ein.el" "ein-ac.el" "ein-cell-edit.el"
 ;;;;;;  "ein-cell-output.el" "ein-cell.el" "ein-classes.el" "ein-completer.el"
 ;;;;;;  "ein-contents-api.el" "ein-core.el" "ein-events.el" "ein-file.el"
-;;;;;;  "ein-hy.el" "ein-ipdb.el" "ein-junk.el" "ein-kernelinfo.el"
-;;;;;;  "ein-kill-ring.el" "ein-log.el" "ein-multilang-fontify.el"
-;;;;;;  "ein-node.el" "ein-notification.el" "ein-output-area.el"
-;;;;;;  "ein-pager.el" "ein-pkg.el" "ein-python.el" "ein-pytools.el"
-;;;;;;  "ein-query.el" "ein-scratchsheet.el" "ein-skewer.el" "ein-smartrep.el"
-;;;;;;  "ein-subpackages.el" "ein-timestamp.el" "ein-utils.el" "ein-websocket.el"
-;;;;;;  "ein-worksheet.el" "ein.el" "ob-ein.el" "zeroein.el") (23488
-;;;;;;  62124 899872 295000))
+;;;;;;  "ein-hy.el" "ein-ipdb.el" "ein-kernelinfo.el" "ein-kill-ring.el"
+;;;;;;  "ein-log.el" "ein-multilang-fontify.el" "ein-node.el" "ein-notification.el"
+;;;;;;  "ein-output-area.el" "ein-pager.el" "ein-pkg.el" "ein-process.el"
+;;;;;;  "ein-python.el" "ein-pytools.el" "ein-query.el" "ein-scratchsheet.el"
+;;;;;;  "ein-skewer.el" "ein-smartrep.el" "ein-subpackages.el" "ein-timestamp.el"
+;;;;;;  "ein-utils.el" "ein-websocket.el" "ein-worksheet.el" "ein.el"
+;;;;;;  "ob-ein.el" "zeroein.el") (23499 54796 72693 801000))
 
 ;;;***
 

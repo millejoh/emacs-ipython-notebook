@@ -39,23 +39,23 @@
          (path (plist-get data :path))
          (kernelspec (make-ein:$kernelspec :name "python3" :language "python"))
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
-                                     :ipython-version 3
+                                     :notebook-version 3
                                      :path path)))
     ;; using dynamically scoped flet instead of cl-flet, where
     ;; "bindings are lexical... all references to the named functions
     ;; must appear physically within the body of the cl-flet"
     (flet ((pop-to-buffer (buf) buf)
-           (ein:need-ipython-version (url-or-port) 3)
+           (ein:need-notebook-version (url-or-port) 3)
            (ein:notebook-start-kernel (notebook))
            (ein:notebook-enable-autosaves (notebook)))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
-              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:need-ipython-version (ein:$notebook-url-or-port notebook))))
+              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
         ; matryoshka: new-content makes a ein:$content using CONTENT as template 
         ; populating its raw_content field with DATA's content field
-        (ein:notebook-request-open-callback notebook (ein:new-content (ein:$notebook-url-or-port notebook) (ein:$notebook-notebook-path notebook) data))
+        (ein:notebook-open--callback notebook nil (ein:new-content (ein:$notebook-url-or-port notebook) (ein:$notebook-notebook-path notebook) data))
         (ein:notebook-buffer notebook)))))
 
 (defun ein:testing-notebook-make-data (name path cells)

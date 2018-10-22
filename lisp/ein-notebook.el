@@ -66,7 +66,8 @@
 (require 'ein-traceback)
 (require 'ein-inspector)
 (require 'ein-shared-output)
-
+(require 'ein-notebooklist)
+(require 'ein-junk)
 
 ;;; Configuration
 
@@ -230,39 +231,6 @@ call notebook destructor `ein:notebook-del'."
       (ein:notebook-del notebook))))
 
 
-;;; Support for junk notebooks
-(require 'ein-junk)
-
-;;;###autoload
-(defun ein:junk-new (name kernelspec url-or-port)
-  "Open a notebook to try random thing.
-Notebook name is determined based on
-`ein:junk-notebook-name-template'.
-
-When prefix argument is given, it asks URL or port to use."
-  (interactive (let* ((name (ein:junk-notebook-name))
-                      (url-or-port (or (ein:get-url-or-port)
-                                       (ein:default-url-or-port)))
-                      (kernelspec (completing-read
-                                   "Select kernel [default]: "
-                                   (ein:list-available-kernels url-or-port) nil t nil nil "default" nil)))
-                 (setq name (read-string "Open notebook as: " name))
-                 (when current-prefix-arg
-                   (setq url-or-port (ein:notebooklist-ask-url-or-port)))
-                 (list name url-or-port)
-                 (ein:notebooklist-new-notebook-with-name name kernelspec url-or-port))))
-
-;;;###autoload
-(defun ein:junk-rename (name)
-  "Rename the current notebook based on `ein:junk-notebook-name-template'
-and save it immediately."
-  (interactive
-   (list (read-string "Rename notebook: "
-                      (ein:junk-notebook-name))))
-  (ein:notebook-rename-command name))
-
-
-
 ;;; Notebook utility functions
 
 (defun ein:notebook-update-url-or-port (new-url-or-port notebook)
@@ -331,10 +299,6 @@ will be updated with kernel's cwd."
         ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
-(defun ein:notebook-pop-to-current-buffer (&rest -ignore-)
-  "Default callback for `ein:notebook-open'."
-  (pop-to-buffer (current-buffer)))
-
 ;;; TODO - I think notebook-path is unnecessary (JMM).
 
 (defun ein:notebook-open (url-or-port path &optional kernelspec callback cbargs)
@@ -351,61 +315,29 @@ is newly created or not.
 TODO - This function should not be used to switch to an existing 
 notebook buffer.  Let's warn for now to see who is doing this.
 "
-  (unless callback (setq callback #'ein:notebook-pop-to-current-buffer))
-  (ein:aif (ein:notebook-get-opened-notebook url-or-port path)
-      (progn
-        (switch-to-buffer (ein:notebook-buffer it))
-        (ein:log 'warn "Notebook %s is already opened"
-                 (ein:$notebook-notebook-name it))
-        (when callback
-          (apply callback it nil cbargs))
-        it)
-    (ein:notebook-request-open url-or-port path kernelspec callback cbargs)))
-
-(defun ein:notebook-request-open (url-or-port path &optional kernelspec callback cbargs)
-  "Request notebook at PATH from the server at URL-OR-PORT.
-Return an `ein:$notebook' instance.  Notebook kernel may not be ready to
-receive messages after this call is executed.
-
-CALLBACK is called as \(apply CALLBACK notebook t CBARGS).  The second
-argument `t' indicates that the notebook is newly opened.
-See `ein:notebook-open' for more information."
-  (let ((notebook (ein:notebook-new url-or-port path kernelspec)))
-    (ein:gc-prepare-operation)
-    (ein:content-query-contents url-or-port path
-         (apply-partially #'ein:notebook-request-open-callback-with-callback
-                          notebook callback cbargs))
-    ;; (ein:query-singleton-ajax
-    ;;  (list 'notebook-open url-or-port api-version path)
-    ;;  url
-    ;;  :timeout ein:notebook-querty-timeout-open
-    ;;  :parser #'ein:json-read
-    ;;  :success (apply-partially
-    ;;            #'ein:notebook-request-open-callback-with-callback
-    ;;            notebook callback cbargs))
+  (let* ((existing (ein:notebook-get-opened-notebook url-or-port path))
+         (notebook (ein:aif existing it
+                    (ein:notebook-new url-or-port path kernelspec)))
+         (callback0 (apply-partially (lambda (notebook* created callback* cbargs*)
+                                      (pop-to-buffer (ein:notebook-buffer notebook*))
+                                      (when callback*
+                                        (apply callback* notebook* created cbargs*)))
+                                     notebook (if existing nil t) callback cbargs)))
+    (if existing
+        (progn
+          (ein:log 'warn "Notebook %s is already opened"
+                   (ein:$notebook-notebook-name notebook))
+          (funcall callback0))
+      (ein:content-query-contents url-or-port path
+                                  (apply-partially #'ein:notebook-open--callback
+                                                   notebook callback0)))
     notebook))
 
-
-(defun ein:notebook-request-open-callback-with-callback (notebook
-                                                         callback
-                                                         cbargs
-                                                         content)
+(defun ein:notebook-open--callback (notebook callback0 content)
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
-  (funcall #'ein:notebook-request-open-callback notebook content)
-  (when callback
-    (with-current-buffer (ein:notebook-buffer notebook)
-      (apply callback notebook t cbargs))))
-
-(defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
-  (ein:aif (plist-get content-metadata :kernelspec)
-      (let ((kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
-                                            (plist-get it :name))))
-        (setf (ein:$notebook-kernelspec notebook) kernelspec))))
-
-
-(defun ein:notebook-request-open-callback (notebook content)
   (let ((notebook-path (ein:$notebook-notebook-path notebook)))
-    (setf (ein:$notebook-api-version notebook) (ein:$content-ipython-version content)
+    (ein:gc-prepare-operation)
+    (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
@@ -420,8 +352,15 @@ See `ein:notebook-open' for more information."
     (if (> ein:notebook-autosave-frequency 0)
         (ein:notebook-enable-autosaves notebook))
     (ein:gc-complete-operation)
-    (ein:log 'info "Notebook %s is ready"
-             (ein:$notebook-notebook-name notebook))))
+    (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-name notebook)))
+  (when callback0
+    (funcall callback0)))
+
+(defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
+  (ein:aif (plist-get content-metadata :kernelspec)
+      (let ((kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
+                                            (plist-get it :name))))
+        (setf (ein:$notebook-kernelspec notebook) kernelspec))))
 
 
 (defun ein:notebook--different-number (n1 n2)
@@ -952,7 +891,7 @@ notebook worksheets."
                      :path (ein:$notebook-notebook-path notebook)
                      :url-or-port (ein:$notebook-url-or-port notebook)
                      :type "notebook"
-                     :ipython-version (ein:$notebook-api-version notebook)))
+                     :notebook-version (ein:$notebook-api-version notebook)))
 
 (defun ein:notebook-create-checkpoint (notebook)
   "Create checkpoint for current notebook based on most recent save."

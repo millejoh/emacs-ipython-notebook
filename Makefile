@@ -4,9 +4,11 @@ IPY_VERSION = 5.8.0
 SRC=$(shell cask files)
 ELCFILES = $(SRC:.el=.elc)
 
-.PHONY: loaddefs
-loaddefs:
-	sh tools/update-autoloads.sh
+.PHONY: autoloads
+autoloads:
+	-rm -f lisp/ein-loaddefs.el
+	$(EMACS) -Q --batch \
+		--eval "(let ((generated-autoload-file (expand-file-name \"lisp/ein-loaddefs.el\"))) (update-directory-autoloads (expand-file-name \"lisp\")))"
 
 .PHONY: clean
 clean:
@@ -16,15 +18,21 @@ env-ipy.%:
 	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
 
 .PHONY: test-compile
-test-compile: clean
+test-compile: clean autoloads
 	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep "not known|Error|free variable" )
-	-cask clean-elc
+	cask clean-elc
+
+.PHONY: quick
+quick: test-compile test-unit
 
 .PHONY: test-no-build
-test-no-build: test-unit test-int
+test-no-build: test-unit test-int autoloads
+
+.PHONY: quick
+quick: test-compile test-unit
 
 .PHONY: test
-test: test-compile test-unit test-int
+test: quick test-int
 
 .PHONY: test-int
 test-int:

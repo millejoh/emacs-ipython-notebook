@@ -31,6 +31,7 @@
 (require 's)
 (require 'dash)
 (require 'url)
+(require 'deferred)
 
 
 ;;; Macros and core functions/variables
@@ -593,6 +594,26 @@ otherwise it should be a function, which is called on `time'."
 
 
 ;;; Emacs utilities
+
+(defun ein:message-whir (mesg doneback)
+  "Display MESG with a modest animation until done-p returns t.  
+
+DONEBACK returns t or 'error when calling process is done, and nil if not done."
+  (lexical-let* (error-p
+                 (mesg mesg)
+                 (doneback doneback)
+                 (count -1))
+    (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))    
+    (deferred:$
+      (deferred:timeout
+        10000 'timeout
+        (deferred:lambda ()
+          (ein:aif (or (funcall doneback) error-p) it
+            (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
+            (deferred:nextc (deferred:wait 425) self))))
+      (deferred:nextc it
+        (lambda (status)
+          (message "%s... %s" mesg (if (eq status 'error) "failed" "done")))))))
 
 (defun ein:display-warning (message &optional level)
   "Simple wrapper around `display-warning'.

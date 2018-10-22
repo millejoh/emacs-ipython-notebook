@@ -54,13 +54,13 @@
   (ein:testing-save-buffer ein:log-all-buffer-name ein:testing-dump-file-log)
   (ein:testing-save-buffer request-log-buffer-name ein:testing-dump-file-request))
 
-(defun ein:testing-flush-queries (&optional ms interval continue)
+(defun ein:testing-flush-queries (&optional ms interval)
   "Forget all the deferred:flush-queue! and deferred:sync! and all the semaphore
 callbacks.  This is what I need."
   (ein:testing-wait-until (lambda ()
                             (ein:query-gc-running-process-table)
                             (zerop (hash-table-count ein:query-running-process-table)))
-                          nil ms interval continue))
+                          nil ms interval t))
 
 (defun ein:testing-wait-until (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.

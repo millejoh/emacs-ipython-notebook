@@ -52,7 +52,7 @@
 (defcustom ein:worksheet-enable-undo nil
   "When non-`nil', allow undo of cell inputs only (as opposed to
   whole-cell operations such as killing, moving, executing cells).
- 
+
   Changes to this variable only take effect for newly opened worksheets."
   :type 'boolean
   :group 'ein)
@@ -88,12 +88,12 @@
                              (ein:worksheet--unique-enough-cell-id it) nil)))
             (let ((ein:log-print-level 5))
               (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (subseq buffer-undo-list 0 fill) fill))
-            (setq ein:%which-cell% 
+            (setq ein:%which-cell%
                   (nconc (make-list fill cell-id) ein:%which-cell%))))))))
 
 (defun ein:worksheet--next-cell-start (cell)
   (let ((cell1 (ein:cell-next cell)))
-    (if cell1 
+    (if cell1
         (ein:worksheet--element-start cell1 :prompt)
       (ein:with-live-buffer (ein:cell-buffer cell) (point-max)))))
 
@@ -101,11 +101,11 @@
   (if cached
       (plist-get (nth 4 (plist-get ein:%cell-lengths% (oref cell :cell-id))) key)
     (let ((node (ein:cell-element-get cell key (if (eq key :output) 0))))
-      (if node 
+      (if node
           (marker-position (ewoc-location node))
         (if (eq key :output)
             (ein:worksheet--element-start cell :footer))))))
-  
+
 (defsubst ein:worksheet--saved-input-length (cell)
   (or (fourth (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0))
 
@@ -130,7 +130,7 @@
        (ein:worksheet--element-start cell :prompt))))
 
 (defun ein:worksheet--update-cell-lengths (cell &optional saved-input-length)
-  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (oref cell :cell-id) 
+  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (oref cell :cell-id)
                                       (list (ein:worksheet--prompt-length cell)
                                             (ein:worksheet--output-length cell)
                                             (ein:worksheet--total-length cell)
@@ -140,7 +140,7 @@
 (defmacro hof-add (distance)
 "Return function that adds signed DISTANCE those undo elements.  'hof' refers to higher-order function,"
   `(lambda (u)
-     (cond ((numberp u) 
+     (cond ((numberp u)
             (+ u ,distance))
            ((and (consp u) (numberp (car u)) (numberp (cdr u)))
             (cons (+ ,distance (car u))
@@ -153,19 +153,19 @@
               (if (not (null mp))
                   (let* ((m (set-marker (make-marker) (+ ,distance mp) (marker-buffer (car u)))))
                     (cons m (cdr u))) u)))
-           ((and (consp u) (null (car u)) 
+           ((and (consp u) (null (car u))
                  (numberp (car (last u))) (numberp (cdr (last u))))
             (append (subseq u 0 3)
                     (cons (+ ,distance (car (last u)))
                           (+ ,distance (cdr (last u))))))
-           ((and (consp u) (eq (car u) 'apply) 
+           ((and (consp u) (eq (car u) 'apply)
                  (numberp (nth 2 u)) (numberp (nth 3 u)))
-            (append (subseq u 0 2) 
+            (append (subseq u 0 2)
                     (list (+ ,distance (nth 2 u)))
-                    (list (+ ,distance (nth 3 u))) 
+                    (list (+ ,distance (nth 3 u)))
                     (nthcdr 4 u)))
            (t u))))
-    
+
 (defun ein:worksheet--get-ids-after (cell)
   (let ((cell0 cell) result)
     (while (ein:cell-next cell0)
@@ -178,7 +178,7 @@
       (ein:log 'debug "jig %s to %s: %S %S" (length ein:%which-cell%) (length buffer-undo-list) buffer-undo-list ein:%which-cell%))
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
-        (error "show stopper %s %s | %s" buffer-undo-list ein:%which-cell%)
+        (error "show stopper %s %s | %s" buffer-undo-list ein:%which-cell% fill)
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
         (if (> fill 0)
@@ -640,8 +640,8 @@ Prefixes are act same as the normal `yank' command."
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
     (loop for k in (oref cell :element-names)
-          do (setq result 
-                   (plist-put result k 
+          do (setq result
+                   (plist-put result k
                               (let* ((en-or-list (ein:cell-element-get cell k))
                                      (en (if (listp en-or-list) (nth 0 en-or-list) en-or-list)))
                                 (if en (marker-position (ewoc-location en)))))))
@@ -963,7 +963,7 @@ This does not alter the actual data stored in the cell."
   (interactive (list (ein:worksheet--get-ws-or-error) current-prefix-arg))
   (when collapsed (setq collapsed t))   ; force it to be a boolean
   (mapc (lambda (c)
-          (when (ein:codecell-p c) 
+          (when (ein:codecell-p c)
             (let ((buffer-undo-list t))
               (ein:cell-set-collapsed c collapsed))
             (ein:worksheet--unshift-undo-list c)))
