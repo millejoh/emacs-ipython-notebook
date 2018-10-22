@@ -174,7 +174,7 @@ To suppress popup, you can pass `ignore' as CALLBACK."
   ;; (add-function :before (process-sentinel %ein:jupyter-server-session%")
   ;;               (apply-partially #'ein:notebooklist-proc--sentinel url-or-port))
   (when (not (string= "open" (substring event 0 4)))
-    (ein:log 'info "Event %s Process %s url-or-port %s" 
+    (ein:log 'info "Event %s Process %s url-or-port %s"
              event (car (process-command process)) url-or-port)
     (ein:notebooklist-list-remove url-or-port)))
 
@@ -182,19 +182,28 @@ To suppress popup, you can pass `ignore' as CALLBACK."
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
-(defun ein:crib-token (url-or-port)
-  (ein:aif (loop for line in (process-lines ein:jupyter-default-server-command
-                                            "notebook" "list" "--json")
-                 with token0
-                 with password0
-                 when (destructuring-bind 
+(defun ein:crib-token--all-local-tokens ()
+  "Generate a hash table of authorization tokens (when they exist) for allow local jupyter instances, keyed by they url and port the instance is running on."
+  (let ((lines (process-lines ein:jupyter-default-server-command "notebook" "list" "--json"))
+        (token-pairs (make-hash-table :test #'equal)))
+    (cond ((null lines) (warn "ein-notebooklist-open: No servers running here!"))
+          (t (loop for line in lines
+                   do (destructuring-bind
                           (&key password url token &allow-other-keys)
                           (ein:json-read-from-string line)
-                        (prog1 (equal (ein:url url) url-or-port)
-                          (setq password0 password) ;; t or :json-false
-                          (setq token0 token)))
-                 return (list password0 token0))
-      it (list nil nil)))
+                        (let ((tp (gethash url token-pairs nil)))
+                          (if tp
+                              (setf (gethash url token-pairs) (append tp (list password token)))
+                            (setf (gethash url token-pairs) (list password token))))))
+             token-pairs))))
+
+(defun ein:crib-token (url-or-port)
+  (ein:aif (gethash url-or-port (ein:crib-token--all-local-tokens))
+      (if (listp (car it))
+          (let ((token (read-passwd "There are multiple jupyter servers registered on the same url! Please check which is the right one and enter the token here:")))
+            (list :json-false token))
+        it)
+    (list nil nil)))
 
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password (I believe jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."
@@ -353,7 +362,7 @@ automatically be called during calls to `ein:notebooklist-open`."
           (run-hooks 'ein:notebooklist-first-open-hook))
         (when ein:enable-keepalive
           (ein:notebooklist-enable-keepalive (ein:$content-url-or-port content)))
-        (when callback 
+        (when callback
           (funcall callback (current-buffer)))
         (current-buffer)))))
 
@@ -661,7 +670,7 @@ You may find the new one in the notebook list." error)
                      'link
                      :notify (lexical-let ((buffer buffer))
                                (lambda (&rest ignore)
-                                 (condition-case err 
+                                 (condition-case err
                                      (switch-to-buffer buffer)
                                    (error
                                     (message "%S" err)
@@ -929,7 +938,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
   (funcall errback))
 
 (defun* ein:notebooklist-login--complete (url-or-port &key data response
-                                                      &allow-other-keys 
+                                                      &allow-other-keys
                                                       &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-login--complete %s" resp-string))
 
@@ -953,7 +962,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                  &allow-other-keys
                  &aux
                  (response-status (request-response-status-code response)))
-  (cond ((< iteration 0) 
+  (cond ((< iteration 0)
          (setq token (read-passwd "Password: "))
          (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
         ((and (eq response-status 403) (< iteration 1))
