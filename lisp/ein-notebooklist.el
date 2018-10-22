@@ -183,7 +183,9 @@ To suppress popup, you can pass `ignore' as CALLBACK."
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
 (defun ein:crib-token--all-local-tokens ()
-  "Generate a hash table of authorization tokens (when they exist) for allow local jupyter instances, keyed by they url and port the instance is running on."
+  "Generate a hash table of authorization tokens (when they
+exist) for allow local jupyter instances, keyed by they url and
+port the instance is running on."
   (let ((lines (process-lines ein:jupyter-default-server-command "notebook" "list" "--json"))
         (token-pairs (make-hash-table :test #'equal)))
     (cond ((null lines) (warn "ein-notebooklist-open: No servers running here!"))
@@ -873,7 +875,7 @@ See also:
 
 (defun ein:notebooklist-login--iteration (url-or-port callback errback token iteration response-status)
   "Called from `ein:notebooklist-login'."
-  (ein:log 'debug "Login attempt #%d in response to %s from "
+  (ein:log 'debug "Login attempt #%d in response to %s from %s."
            iteration response-status url-or-port)
   (ein:query-singleton-ajax
    (list 'notebooklist-login--iteration url-or-port)
