@@ -606,7 +606,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
     (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))    
     (deferred:$
       (deferred:timeout
-        10000 'timeout
+        10000 'error
         (deferred:lambda ()
           (ein:aif (or (funcall doneback) error-p) it
             (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))

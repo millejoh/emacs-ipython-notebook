@@ -57,6 +57,7 @@
 (defun ein:testing-flush-queries (&optional ms interval)
   "Forget all the deferred:flush-queue! and deferred:sync! and all the semaphore
 callbacks.  This is what I need."
+  (deferred:flush-queue!)
   (ein:testing-wait-until (lambda ()
                             (ein:query-gc-running-process-table)
                             (zerop (hash-table-count ein:query-running-process-table)))

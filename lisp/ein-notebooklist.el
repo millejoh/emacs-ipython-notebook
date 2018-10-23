@@ -188,16 +188,16 @@ exist) for allow local jupyter instances, keyed by they url and
 port the instance is running on."
   (let ((lines (process-lines ein:jupyter-default-server-command "notebook" "list" "--json"))
         (token-pairs (make-hash-table :test #'equal)))
-    (cond ((null lines) (warn "ein-notebooklist-open: No servers running here!"))
-          (t (loop for line in lines
-                   do (destructuring-bind
-                          (&key password url token &allow-other-keys)
-                          (ein:json-read-from-string line)
-                        (let ((tp (gethash url token-pairs nil)))
-                          (if tp
-                              (setf (gethash url token-pairs) (append tp (list password token)))
-                            (setf (gethash url token-pairs) (list password token))))))
-             token-pairs))))
+    (loop for line in lines
+          do (destructuring-bind
+                 (&key password url token &allow-other-keys)
+                 (ein:json-read-from-string line)
+               (let* ((url (ein:url url))
+                      (tp (gethash url token-pairs nil)))
+                 (if tp
+                     (setf (gethash url token-pairs) (append tp (list password token)))
+                   (setf (gethash url token-pairs) (list password token))))))
+    token-pairs))
 
 (defun ein:crib-token (url-or-port)
   (ein:aif (gethash url-or-port (ein:crib-token--all-local-tokens))
@@ -210,8 +210,9 @@ port the instance is running on."
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password (I believe jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."
   (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
+    (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
     (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
-        (cond ((eql password-p t) (read-passwd "Password: "))
+        (cond ((eq password-p t) (read-passwd "Password: "))
               ((and (stringp token) (eql password-p :json-false)) token)
               ((equal url-or-port my-url-or-port) my-token)
               (t nil)))))
@@ -919,7 +920,8 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                  (errback (lambda (&rest ignore) (setf done-p 'error)))
                  (token (ein:notebooklist-token-or-password url-or-port)))
     (add-function :before callback done-callback)
-    (ein:message-whir "Establishing session" (lambda () done-p))
+    (if token
+        (ein:message-whir "Establishing session" (lambda () done-p)))
     (cond ((null token) ;; don't know
            (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
           ((string= token "") ;; all authentication disabled
