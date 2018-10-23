@@ -201,8 +201,8 @@ port the instance is running on."
 
 (defun ein:crib-token (url-or-port)
   (ein:aif (gethash url-or-port (ein:crib-token--all-local-tokens))
-      (if (listp (car it))
-          (let ((token (read-passwd "There are multiple jupyter servers registered on the same url! Please check which is the right one and enter the token here:")))
+      (if (> (length it) 2)
+          (let ((token (read-passwd "I see multiple jupyter servers registered on the same url! Please enter the token for one that is actually running: ")))
             (list :json-false token))
         it)
     (list nil nil)))
