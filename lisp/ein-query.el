@@ -26,7 +26,6 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'request)
 (require 'request-deferred)
 (require 'url)
 
@@ -53,7 +52,8 @@ If you have ``curl`` command line program, it is automatically set to
 a workaround (see below).
 
 If you do the same operation before the timeout, old operation
-will be canceled \(see also `ein:query-singleton-ajax').
+will NO LONGER be canceled (as it the cookie jar gets clobbered when curl
+aborts).  Instead you will see Race! in debug messages.
 
 .. note:: This value exists because it looks like `url-retrieve'
    occasionally fails to finish \(start?) querying.  Timeout is

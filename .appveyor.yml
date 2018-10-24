@@ -110,7 +110,7 @@ install:
   - set PATH=%PATH%;%userprofile%\local\cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
+#  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
   - choco install gnuwin32-make.portable
 
 # enable patching of AssemblyInfo.* files
@@ -232,5 +232,5 @@ deploy: off
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # after build failure or success
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

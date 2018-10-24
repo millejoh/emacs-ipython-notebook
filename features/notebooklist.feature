@@ -25,15 +25,6 @@ Scenario: Resync
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "kernelspecs--complete"
 
-@foo
-Scenario: Global notebooks
-  Given I am in notebooklist buffer
-  When I clear log expr "ein:log-all-buffer-name"
-  And I call "ein:notebooklist-open-notebook-global"
-  And I wait 0.9 seconds
-  And I switch to log expr "ein:log-all-buffer-name"
-  Then I should see "Opened notebook"
-
 @login
 Scenario: No token server
   Given I start the server configured "c.NotebookApp.token = u''\n"
@@ -75,5 +66,19 @@ Scenario: To the cloud with password
 
 @login
 Scenario: Logging into nowhere
-  Given I login to 0
+  Given I login erroneously to 0
   Then I should see message "ein: [error] Login to http://127.0.0.1:0 failed"
+
+@login
+Scenario: Logging into nowhere
+  Given I login erroneously to adfljdsf.org:8432
+  Then I should see message "ein: [error] Login to https://adfljdsf.org:8432 failed"
+
+@content
+Scenario: Read a massive directory
+  Given I create a directory "/var/tmp/fg7Cv8" with depth 5 and width 10
+  And I get into notebook mode "/var/tmp/fg7Cv8" "8/4/3/bar.ipynb"
+  And I open notebook "bar.ipynb"
+  And I open file "foo.txt"
+  And notebooklist-list-paths does not contain "5/5/5/foo.txt"
+  And notebooklist-list-paths contains "foo.txt"

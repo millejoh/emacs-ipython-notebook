@@ -139,7 +139,7 @@ the source is in git repository."
 ;;; Server attribute getters.  Not sure if these should be here.
 
 (defvar *ein:notebook-version* (make-hash-table :test #'equal)
-  "url-or-port to major ipython version")
+  "url-or-port to major notebook version")
 
 (defvar *ein:kernelspecs* (make-hash-table :test #'equal)
   "url-or-port to kernelspecs")
@@ -188,7 +188,7 @@ the source is in git repository."
                                                   &allow-other-keys)
   (if (< iteration 3)
       (progn
-        (ein:log 'info "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
+        (ein:log 'verbose "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
         (ein:query-kernelspecs url-or-port callback (1+ iteration)))
     (ein:log 'error
              "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
@@ -209,12 +209,12 @@ the source is in git repository."
 (defun ein:need-notebook-version (url-or-port)
   "Callers assume ein:query-notebook-version succeeded.  If not, we hardcode a guess."
   (ein:aif (gethash url-or-port *ein:notebook-version*) it
-    (ein:log 'warn "No recorded ipython version for %s" url-or-port)
+    (ein:log 'warn "No recorded notebook version for %s" url-or-port)
     5))
 
-;; TODO: Use symbols instead of numbers for ipython version ('jupyter and 'legacy)?
+;; TODO: Use symbols instead of numbers for notebook version ('jupyter and 'legacy)?
 (defun ein:query-notebook-version (url-or-port callback)
-  "Send for ipython version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
   (ein:query-singleton-ajax
    (list 'query-notebook-version url-or-port)
    (ein:jupyterhub-correct-query-url-maybe 
@@ -232,9 +232,9 @@ the source is in git repository."
       (setf (gethash url-or-port *ein:notebook-version*)
             (ein:get-ipython-major-version it))
     (case (request-response-status-code response)
-      (404 (ein:log 'warn "ipython version api not implemented")
+      (404 (ein:log 'warn "notebook version api not implemented")
            (setf (gethash url-or-port *ein:notebook-version*) 2))
-      (t (ein:log 'warn "ipython version currently unknowable"))))
+      (t (ein:log 'warn "notebook version currently unknowable"))))
   (when callback (funcall callback)))
 
 ;;; File name translation (tramp support)

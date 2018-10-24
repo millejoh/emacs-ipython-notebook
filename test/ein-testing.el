@@ -55,13 +55,29 @@
   (ein:testing-save-buffer request-log-buffer-name ein:testing-dump-file-request))
 
 (defun ein:testing-flush-queries (&optional ms interval)
-  "Forget all the deferred:flush-queue! and deferred:sync! and all the semaphore
-callbacks.  This is what I need."
+  "I need the smoke to clear, but just waiting for zero running processes doesn't work
+if I call this between links in a deferred chain.  Adding a flush-queue."
   (deferred:flush-queue!)
   (ein:testing-wait-until (lambda ()
                             (ein:query-gc-running-process-table)
                             (zerop (hash-table-count ein:query-running-process-table)))
                           nil ms interval t))
+
+(defun ein:testing-make-directory-level (parent current-depth width depth)
+  (f-touch (concat (file-name-as-directory parent) "foo.txt"))
+  (f-touch (concat (file-name-as-directory parent) "bar.ipynb"))
+  (f-write-text "{
+ \"cells\": [],
+ \"metadata\": {},
+ \"nbformat\": 4,
+ \"nbformat_minor\": 2
+}
+" 'utf-8 (concat (file-name-as-directory parent) "bar.ipynb"))
+  (if (< current-depth depth)
+      (loop for w from 1 to width
+            for dir = (concat (file-name-as-directory parent) (number-to-string w))
+            do (f-mkdir dir)
+               (ein:testing-make-directory-level dir (1+ current-depth) width depth))))
 
 (defun ein:testing-wait-until (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.
@@ -72,9 +88,27 @@ callbacks.  This is what I need."
     (unless (or (loop repeat count
                        when (apply predicate predargs)
                        return t
-                       do (sleep-for 0 int)) 
+                       do (sleep-for 0 int))
                 continue)
       (error "Timeout: %s" predicate))))
+
+(defun ein:testing-new-notebook (url-or-port ks)
+  (lexical-let (notebook)
+    (condition-case err
+        (progn
+          (ein:notebooklist-new-notebook url-or-port ks nil
+                                         (lambda (nb created &rest ignore)
+                                           (setq notebook nb)))
+          (ein:testing-wait-until (lambda () 
+                                    (and notebook
+                                         (ein:aand (ein:$notebook-kernel notebook)
+                                                   (ein:kernel-live-p it))))
+                                  nil 10000 2000)
+          notebook)
+      (error (message "ein:testing-new-notebook: %s" (error-message-string err))
+             (when notebook
+               (ein:notebook-close notebook))
+             nil))))
 
 (defadvice ert-run-tests-batch (after ein:testing-dump-logs-hook activate)
   "Hook `ein:testing-dump-logs-hook' because `kill-emacs-hook'

@@ -17,7 +17,7 @@ lisp/ein-autoloads.el
 *.pyc
 *.ipynb~
 Makefile~
-.ipynb_checkpoints/*
+*.ipynb_checkpoints*
 *.png
 tests/notebook
 *.log
@@ -27,3 +27,4 @@ _static
 .travis.yml.swp
 *.zip
 .gitattributes
+.ecukes-temp*

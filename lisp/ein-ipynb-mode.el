@@ -38,19 +38,16 @@ Note that this variable must be set *before* compiling EIN.")
 (define-derived-mode ein:ipynb-mode ein:ipynb-parent-mode "ein:ipynb"
   "A simple mode for ipynb file.")
 
-;; TODO replace ignore with ein:process-find-file-callback in the
-;; eagerly awaited "without-notebooklist" branch
 (let ((map ein:ipynb-mode-map))
-  (define-key map "\C-c\C-z" 'ignore)
-  (define-key map "\C-c\C-o" 'ignore)
+  (define-key map "\C-c\C-z" 'ein:process-find-file-callback)
+  (define-key map "\C-c\C-o" 'ein:process-find-file-callback)
   (easy-menu-define ein:ipynb-menu map "EIN IPyNB Mode Menu"
     `("EIN IPyNB File"
       ,@(ein:generate-menu
-         '(("Open notebook" ignore))))))
+         '(("Open notebook" ein:process-find-file-callback))))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '(".*\\.ipynb\\'" . ein:ipynb-mode))
-
 
 (provide 'ein-ipynb-mode)
 

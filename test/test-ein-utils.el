@@ -9,6 +9,13 @@
   (should (equal (ein:url 8888) "http://127.0.0.1:8888"))
   (should (equal (ein:url "http://localhost") "http://127.0.0.1"))
   (should (equal (ein:url "https://localhost:8888") "https://127.0.0.1:8888"))
+  (should (equal (ein:url "http://localhost:8000" "" "" "" "Untitled.ipynb") "http://127.0.0.1:8000/Untitled.ipynb"))
+  (should (equal (ein:url "http://localhost:8000" "") "http://127.0.0.1:8000"))
+  (should (equal (ein:url "http://localhost:8000") "http://127.0.0.1:8000"))
+  (should (equal (ein:url "datasci-1:8888") "https://datasci-1:8888"))
+  (should (equal (ein:url "datasci-1" "foo" "bar") "https://datasci-1/foo/bar"))
+  (should (equal (ein:glom-paths "" nil "Untitled1.ipynb") "Untitled1.ipynb"))
+  (should (equal (ein:glom-paths) ""))
   (loop for url in '("http://127.0.0.1:8888" "http://localhost:8888" "http://127.0.0.1:8888/" "http://localhost:8888/" "8888" 8888)
         do (should (equal (ein:url "http://localhost:8888") (ein:url url)))))
 

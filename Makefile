@@ -1,14 +1,18 @@
 EMACS ?= $(shell which emacs)
-IPYTHON = env/ipy.$(IPY_VERSION)/bin/ipython
-IPY_VERSION = 5.8.0
 SRC=$(shell cask files)
 ELCFILES = $(SRC:.el=.elc)
 
+.DEFAULT_GOAL := test-compile
+
+.PHONY: install
+install:
+	rm -rf dist/
+	cask package
+	emacs -Q --batch --eval "(package-initialize)" --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"
+
 .PHONY: autoloads
 autoloads:
-	-rm -f lisp/ein-loaddefs.el
-	$(EMACS) -Q --batch \
-		--eval "(let ((generated-autoload-file (expand-file-name \"lisp/ein-loaddefs.el\"))) (update-directory-autoloads (expand-file-name \"lisp\")))"
+	emacs -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
 
 .PHONY: clean
 clean:
@@ -19,14 +23,8 @@ env-ipy.%:
 
 .PHONY: test-compile
 test-compile: clean autoloads
-	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep "not known|Error|free variable" )
+	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep "not known|Error|free variable|error for|Use of gv-ref" )
 	cask clean-elc
-
-.PHONY: quick
-quick: test-compile test-unit
-
-.PHONY: test-no-build
-test-no-build: test-unit test-int autoloads
 
 .PHONY: quick
 quick: test-compile test-unit
@@ -42,9 +40,3 @@ test-int:
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
-
-travis-ci-zeroein:
-	$(EMACS) --version
-	EMACS=$(EMACS) lisp/zeroein.el -batch
-	rm -rf lib/*
-	EMACS=$(EMACS) lisp/zeroein.el -batch

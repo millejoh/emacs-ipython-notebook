@@ -118,17 +118,13 @@
 `ein:$process-pid' : integer
   PID.
 
-`ein:$process-port': integer
-  Arg of --port or .
-
-`ein:$process-ip' : string
-  Arg of --notebook-ip or 'localhost'.
+`ein:$process-url': string
+  URL
 
 `ein:$process-dir' : string
   Arg of --notebook-dir or 'readlink -e /proc/<pid>/cwd'."
   pid
-  port
-  ip
+  url
   dir
 )
 
@@ -154,20 +150,32 @@
           finally return suitable)))
 
 (defun ein:process-refresh-processes ()
+  "Use `jupyter notebook list --json` to populate ein:%processes%"
+  (clrhash ein:%processes%)
+  (loop for line in (process-lines ein:jupyter-default-server-command
+                                   "notebook" "list" "--json")
+        do (destructuring-bind 
+               (&key pid url notebook_dir &allow-other-keys)
+               (ein:json-read-from-string line)
+             (puthash (directory-file-name notebook_dir) 
+                      (make-ein:$process :pid pid 
+                                         :url (ein:url url) 
+                                         :dir (directory-file-name notebook_dir))
+                      ein:%processes%))))
+
+(defun ein:process-ps-refresh-processes ()
+  "Can delete this.  It pokes around unix ps when it's far better to use `jupyter notebook list'"
   (loop for pid in (list-system-processes)
         for attrs = (process-attributes pid)
         for args = (alist-get 'args attrs)
         with seen = (mapcar #'ein:$process-pid (ein:hash-vals ein:%processes%))
         if (and (null (member pid seen))
                 (string-match ein:process-jupyter-regexp (alist-get 'comm attrs)))
-          ;; bummer should use output of jupyter notebook list --json
           do (ein:and-let* ((dir (ein:process-divine-dir pid args))
                             (port (ein:process-divine-port pid args))
                             (ip (ein:process-divine-ip pid args)))
                (puthash dir (make-ein:$process :pid pid
-                                               :port port
-                                               :ip ip
-                                               :dir dir)
+                                               :url (ein:url (format "http://%s:%s" ip port))                                               :dir dir)
                         ein:%processes%))
         end))
 
@@ -179,20 +187,16 @@
 
 (defsubst ein:process-url-or-port (proc)
   "Naively construct url-or-port from ein:process PROC's port and ip fields"
-  (ein:url (format "http://%s:%s" (ein:$process-ip proc) (ein:$process-port proc))))
+  (ein:$process-url proc))
 
 (defsubst ein:process-path (proc filename)
   "Construct path by eliding PROC's dir from filename"
   (subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
 (defun ein:process-open-notebook* (filename callback)
-  "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into ein:notebook-open--callback)."
+  "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
   (ein:process-refresh-processes)
   (let* ((proc (ein:process-dir-match filename)))
-    (when (and proc (not (ein:process-alive-p proc)))
-      (ein:log 'warn "Server pid=%s dir=%s no longer running" (ein:$process-pid proc) (ein:$process-dir proc))
-      (remhash (ein:$process-dir proc) ein:%processes%)
-      (setq proc nil))
     (if proc
         (let* ((url-or-port (ein:process-url-or-port proc))
                (path (ein:process-path proc filename))
@@ -207,12 +211,12 @@
                                          (ein:process-suitable-notebook-dir filename)))
              (path (subseq filename (length (file-name-as-directory nbdir))))
              (callback1 (apply-partially (lambda (path* callback* buffer)
+                                           (pop-to-buffer buffer)
                                            (ein:notebook-open
                                             (car (ein:jupyter-server-conn-info))
                                             path* nil callback*))
                                          path callback)))
-        (apply #'ein:jupyter-server-start
-               (list ein:jupyter-default-server-command nbdir nil callback1))))))
+        (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) nbdir nil callback1)))))
 
 (defun ein:process-open-notebook (&optional filename buffer-callback)
   "When FILENAME is unspecified the variable `buffer-file-name'

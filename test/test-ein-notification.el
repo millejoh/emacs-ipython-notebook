@@ -10,13 +10,13 @@
                  :get-name #'ignore))
 
 (ert-deftest ein:header-line-normal ()
-  (let* ((ein:%notification% (ein:notification "NotificationTest"))
+  (let* ((ein:%notification% (ein:notification))
          (kernel (oref ein:%notification% :kernel)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (should (string-prefix-p "IP[y]: /1\\ /2\\ /3\\ [+]" (ein:header-line)))))
 
 (ert-deftest ein:header-line-kernel-status-busy ()
-  (let* ((ein:%notification% (ein:notification "NotificationTest"))
+  (let* ((ein:%notification% (ein:notification))
          (kernel (oref ein:%notification% :kernel)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set kernel
@@ -25,7 +25,7 @@
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-status-busy ()
-  (let* ((ein:%notification% (ein:notification "NotificationTest"))
+  (let* ((ein:%notification% (ein:notification))
          (notebook (oref ein:%notification% :notebook)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set notebook
@@ -34,7 +34,7 @@
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-complex ()
-  (let* ((ein:%notification% (ein:notification "NotificationTest"))
+  (let* ((ein:%notification% (ein:notification))
          (kernel (oref ein:%notification% :kernel))
          (notebook (oref ein:%notification% :notebook)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
@@ -48,7 +48,7 @@
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()
-  (let* ((notification (ein:notification "NotificationTest"))
+  (let* ((notification (ein:notification))
          (kernel (oref notification :kernel))
          (notebook (oref notification :notebook))
          (events (ein:events-new))

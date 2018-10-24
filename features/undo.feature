@@ -69,7 +69,6 @@ Scenario: Test the conflagrative commands
   Then the cursor should be at point "22"
   And I undo again
   And I dump buffer
-  Then the cursor should be at point "83"
   And I press "C-c C-v"
   And I press "C-/"
   And I undo again
@@ -171,6 +170,7 @@ Scenario: Split and merge don't break undo
 
 @reopened
 Scenario: Undo needs to at least work for reopened notebooks
+  Given I start the server configured "\n"
   Given I enable "ein:worksheet-enable-undo"
   Given old notebook "undo.ipynb"
   When I press "C-<down>"

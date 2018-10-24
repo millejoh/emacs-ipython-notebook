@@ -275,7 +275,8 @@ Keybindings - Notebook
    C-c C-l         ein:worksheet-clear-output
    C-c RET         ein:worksheet-merge-cell
    C-c C-n         ein:worksheet-goto-next-input
-   C-c C-o         ein:console-open
+   C-c C-o         ein:notebook-open
+   C-c C-f         ein:file-open
    C-c C-p         ein:worksheet-goto-prev-input
    C-c C-q         ein:notebook-kill-kernel-then-close-command
    C-c C-r         ein:notebook-restart-kernel-command

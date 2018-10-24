@@ -78,10 +78,6 @@
 
 ;;; Code:
 
-;; For backward compatibility + providing easy way to load EIN for
-;; users who prefer manual installation.
-;(require 'ein-loaddefs)
-
 (provide 'ein)
 
 ;;; Old commentary:

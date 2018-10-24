@@ -12,36 +12,15 @@
 
 (When "^I am in notebooklist buffer$"
       (lambda ()
-        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (switch-to-buffer (ein:notebooklist-get-buffer url-or-port))
-          (sit-for 0.8)
-          )))
+        (switch-to-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info))))))
 
 (When "^I wait \\([.0-9]+\\) seconds?$"
       (lambda (seconds)
-        (sit-for (string-to-number seconds))))
+        (sleep-for (string-to-number seconds))))
 
 (When "^I am in log buffer$"
       (lambda ()
         (switch-to-buffer ein:log-all-buffer-name)))
-
-(defun ein:testing-new-notebook (url-or-port ks)
-  (lexical-let (notebook)
-    (condition-case err
-        (progn
-          (ein:notebooklist-new-notebook url-or-port ks nil
-                                         (lambda (nb created &rest ignore)
-                                           (setq notebook nb)))
-          (ein:testing-wait-until (lambda () 
-                                    (and notebook
-                                         (ein:aand (ein:$notebook-kernel notebook)
-                                                   (ein:kernel-live-p it))))
-                                  nil 10000 2000)
-          notebook)
-      (error (message "ein:testing-new-notebook: %s" (error-message-string err))
-             (when notebook
-               (ein:notebook-close notebook))
-             nil))))
 
 (When "^new \\(.+\\) notebook$"
       (lambda (kernel)
@@ -57,8 +36,8 @@
                 (switch-to-buffer buf-name)
                 (Then "I should be in buffer \"%s\"" buf-name)))))))
 
-(When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
-      (lambda (login config)
+(When "^I stop the server$"
+      (lambda ()
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
         (loop repeat 10
@@ -67,16 +46,19 @@
               do (sleep-for 1) 
               finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
         (When "I clear log expr \"ein:log-all-buffer-name\"")
-        (When "I clear log expr \"ein:jupyter-server-buffer-name\"")
-        (clrhash ein:notebooklist-map)
+        (When "I clear log expr \"ein:jupyter-server-buffer-name\"")))
+
+(When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
+      (lambda (login config)
+        (When "I stop the server")
         (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
-        (setq ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py"))
-        (ein:jupyter-server-start (executable-find "jupyter") 
-                                  ein:testing-jupyter-server-root (not login))
+        (let ((ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py")))
+          (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) 
+                                    ein:testing-jupyter-server-root (not login)))
         (if login
             (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
 
-(When "^I login to \\([.0-9]+\\)$"
+(When "^I login erroneously to \\(.*\\)$"
       (lambda (port)
         (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
                    (lambda (&rest args) (ein:url port)))
@@ -147,15 +129,14 @@
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
-        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+        (let ((url-or-port (car (ein:jupyter-server-conn-info))))
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
             (lexical-let (notebook)
-              (ein:notebooklist-open-notebook ein:%notebooklist% path
-                                              (lambda (nb created &rest -ignore-)
-                                                (setq notebook nb)))
+              (ein:notebook-open url-or-port path nil
+                                 (lambda (nb created) (setq notebook nb)))
               (ein:testing-wait-until (lambda () (and (not (null notebook))
-                                                 (ein:aand (ein:$notebook-kernel notebook)
-                                                           (ein:kernel-live-p it)))))
+                                                      (ein:aand (ein:$notebook-kernel notebook)
+                                                                (ein:kernel-live-p it)))))
               (let ((buf-name (format ein:notebook-buffer-name-template
                                       (ein:$notebook-url-or-port notebook)
                                       (ein:$notebook-notebook-name notebook))))
@@ -182,3 +163,57 @@
       (lambda ()
         (with-demoted-errors "demoted: %s"
           (undo))))
+
+(When "^I create a directory \"\\(.+\\)\" with depth \\([0-9]+\\) and width \\([0-9]+\\)$"
+      (lambda (dir depth width)
+        (when (f-exists? dir)
+          (f-delete dir t))
+        (f-mkdir dir)
+        (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
+
+(When "^I set \"\\(.+\\)\" to \\(.+\\)$"
+      (lambda (variable value)
+        (set (intern variable) value)))
+
+(When "^I custom set \"\\(.+\\)\" to \\(.+\\)$"
+      (lambda (custom-variable value)
+        (customize-set-value (intern custom-variable) value)))
+
+(When "^I get into notebook mode \"\\(.+\\)\" \"\\(.+\\)\"$"
+      (lambda (notebook-dir file-path)
+        (When "I stop the server")
+        (When (format "I find file \"%s\"" (concat (file-name-as-directory notebook-dir) file-path)))
+        (When "I press \"C-c C-z\"")
+        (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000)
+        ))
+
+(When "^I find file \"\\(.+\\)\"$"
+      (lambda (file-name)
+        (find-file file-name)
+        (when (string= (file-name-extension file-name) "ipynb")
+          (ein:ipynb-mode))
+))
+
+(When "notebooklist-list-paths does not contain \"\\(.+\\)\"$"
+      (lambda (file-name)
+        (Given "I am in notebooklist buffer")
+        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+          (assert (not (member nbpath (ein:notebooklist-list-paths)))))))
+
+(When "notebooklist-list-paths contains \"\\(.+\\)\"$"
+      (lambda (file-name)
+        (Given "I am in notebooklist buffer")
+        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+          (assert (member nbpath (ein:notebooklist-list-paths))))))
+
+(When "I open \\(notebook\\|file\\) \"\\(.+\\)\"$"
+      (lambda (content-type file-name)
+        (Given "I am in notebooklist buffer")
+        (And "I clear log expr \"ein:log-all-buffer-name\"")
+        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+          (cl-letf (((symbol-function 'ein:notebooklist-ask-path)
+                     (lambda (&rest args) nbpath)))
+            (When (format "I press \"C-c C-%s\"" (if (string= content-type "file") "f" "o")))
+            (ein:testing-flush-queries)
+            (Given "I switch to log expr \"ein:log-all-buffer-name\"")
+            (Then (format "I should see \"Opened %s %s\"" content-type file-name))))))

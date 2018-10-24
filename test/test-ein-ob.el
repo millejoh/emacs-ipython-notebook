@@ -23,4 +23,6 @@ sys.version
         (org-mode)
         (insert eintest:ob-src-block)
         (search-backward "SRC")
-        (should (call-interactively #'org-edit-special))))))
+        (cl-letf (((symbol-function 'ein:org-find-or-open-session) (lambda (&rest args) (make-ein:$notebook))))
+          (setq python-indent-guess-indent-offset-verbose nil)
+          (should (call-interactively #'org-edit-special)))))))

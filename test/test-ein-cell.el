@@ -225,7 +225,7 @@
 ;;; ein:cell-element-get
 
 (ert-deftest ein:cell-element-get-basecell ()
-  (let ((cell (ein:basecell "Cell")))
+  (let ((cell (ein:basecell)))
     ;; it's not supported
     (should-error (ein:cell-element-get :prompt))))
 

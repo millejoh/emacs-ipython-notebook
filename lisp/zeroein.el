@@ -82,7 +82,6 @@
 
 
 ;;; Configurations
-(require 'ein-loaddefs)
 (eval-when-compile (require 'ein-notebooklist))
 (require 'ein)
 

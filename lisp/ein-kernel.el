@@ -308,7 +308,7 @@ See: https://github.com/ipython/ipython/pull/3307"
          (onclose-arg (list :ws-url ws-url
                             :already-called-onclose nil
                             :early t)))
-    (ein:log 'info "Starting channels WS: %S" channels-url)
+    (ein:log 'verbose "Starting channels WS: %S" channels-url)
     (setf (ein:$kernel-channels kernel) (ein:websocket channels-url))
     (let ((c (ein:$kernel-channels kernel)))
       (setf (ein:$websocket-onclose-args c) (list kernel onclose-arg))

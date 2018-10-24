@@ -1,7 +1,6 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
-(require 'ein-loaddefs)
 (require 'ein-notebooklist)
 (require 'ein-jupyter)
 (require 'wid-edit)
@@ -13,40 +12,42 @@
     (setq request-backend (intern backend))
     (message "Using request-backend = %S" request-backend)))
 
+(defvar *ein:testing-notebook-name* nil
+  "This is the name of the notebook the server creates for this test.  It could be Untitled.ipynb or if that was already there, Untitled1.ipynb, etc.")
 
 (setq message-log-max t)
 
-(defun ein:testing-get-notebook-by-name (url-or-port notebook-name &optional path)
-  (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME start")
-  (when path
-    (setq notebook-name (format "%s/%s" path notebook-name)))
-  (ein:notebooklist-open* url-or-port path)
+(defun ein:testing-get-notebook (url-or-port &rest paths)
+  (ein:log 'debug "TESTING-GET-NOTEBOOK start")
+  (ein:notebooklist-open* url-or-port)
   (ein:testing-wait-until (lambda () (and (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))
                                           (ein:notebooklist-get-buffer url-or-port))))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-    (prog1
-        (ignore-errors
-          (ein:notebooklist-open-notebook-by-name notebook-name url-or-port))
-      (ein:log 'debug "TESTING-GET-NOTEBOOK-BY-NAME end"))))
+    (prog1 (ein:notebook-get-opened-notebook url-or-port (apply #'ein:glom-paths paths))
+      (ein:log 'debug "TESTING-GET-NOTEBOOK end"))))
 
 (defun ein:testing-get-untitled0-or-create (url-or-port &optional path)
   (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE start")
-  (let ((notebook (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)))
+  (let ((notebook (ein:testing-get-notebook url-or-port path *ein:testing-notebook-name*)))
     (if notebook
         (progn (ein:log 'debug
                  "TESTING-GET-UNTITLED0-OR-CREATE notebook already exists")
                notebook)
       (ein:log 'debug
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
-      (lexical-let (created
+      (lexical-let (done-p
                     (kernelspec (ein:get-kernelspec url-or-port "default")))
         (ein:notebooklist-new-notebook url-or-port kernelspec path
-                                       (lambda (&rest -ignore-)
-                                         (setq created t)))
-        (ein:testing-wait-until (lambda () created)))
-      (prog1
-          (ein:testing-get-notebook-by-name url-or-port "Untitled.ipynb" path)
-        (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end")))))
+                                       (lambda (notebook created)
+                                         (setq *ein:testing-notebook-name*
+                                               (ein:$notebook-notebook-name notebook))
+                                         (setq done-p t)))
+        (ein:testing-wait-until (lambda () done-p))
+        (prog1
+            (ein:testing-get-notebook url-or-port path *ein:testing-notebook-name*)
+          (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+            (deferred:sync! (ein:notebooklist-reload nil t)))
+          (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end"))))))
 
 (defvar ein:notebooklist-after-open-hook nil)
 
@@ -54,18 +55,6 @@
   (after ein:testing-notebooklist-open--finish activate)
   "Advice to add `ein:notebooklist-after-open-hook'."
   (run-hooks 'ein:notebooklist-after-open-hook))
-
-(defun ein:testing-delete-notebook (url-or-port notebook &optional path)
-  (ein:log 'debug "TESTING-DELETE-NOTEBOOK start")
-  (ein:notebooklist-open* url-or-port (ein:$notebook-notebook-path notebook))
-  (ein:testing-wait-until (lambda ()
-                            (bufferp (get-buffer (format ein:notebooklist-buffer-name-template url-or-port)))))
-  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-    (ein:testing-wait-until (lambda () (eql major-mode 'ein:notebooklist-mode)))
-    (ein:log 'debug "TESTING-DELETE-NOTEBOOK deleting notebook")
-    (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook)))
-  (ein:log 'debug "TESTING-DELETE-NOTEBOOK end"))
-
 
 ;; (ert-deftest 00-jupyter-start-server ()
 ;;   (ein:log 'verbose "ERT TESTING-JUPYTER-START-SERVER start")
@@ -101,28 +90,20 @@
                           (ein:kernel-live-p it))))
     (with-current-buffer (ein:notebook-buffer notebook)
       (should (equal (ein:$notebook-notebook-name ein:%notebook%)
-                     "Untitled.ipynb"))))
+                     *ein:testing-notebook-name*))))
   (ein:log 'verbose "ERT TESTING-GET-UNTITLED0-OR-CREATE end"))
 
 (ert-deftest 20-delete-untitled0 ()
   (ein:log 'verbose "----------------------------------")
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 start")
-  (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 creating notebook")
-  (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))
-    (ein:testing-wait-until
-     (lambda ()
-       (ein:aand notebook
-                 (ein:$notebook-kernel it)
-                 (ein:kernel-live-p it))))
-    (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 deleting notebook")
-    (ein:testing-delete-notebook *ein:testing-port* notebook))
-  (ein:log 'verbose
-    "ERT TESTING-DELETE-UNTITLED0 check that the notebook is deleted")
-  (let ((num-notebook
-         (length (ein:testing-get-notebook-by-name *ein:testing-port*
-                                                   "Untitled.ipynb"
-                                                   ""))))
-    (should (= num-notebook 0)))
+  (with-current-buffer (ein:notebooklist-get-buffer *ein:testing-port*)
+    (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))
+      (should (member (ein:url *ein:testing-port* (ein:$notebook-notebook-path notebook))
+                      (ein:notebooklist-list-paths "notebook")))
+      (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 deleting notebook")
+      (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook))
+      (deferred:sync! (ein:notebooklist-reload ein:%notebooklist% t))
+      (should-not (member (ein:url *ein:testing-port* (ein:$notebook-notebook-path notebook)) (ein:notebooklist-list-paths "notebook")))))
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 end"))
 
 (ert-deftest 11-notebook-execute-current-cell-simple ()

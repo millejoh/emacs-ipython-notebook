@@ -232,9 +232,11 @@ jupyter kernels.
                   (ein:notebook-open url-or-port
                                      path
                                      kernelspec
-                                     (lambda (_nb _param session kernelspec)
-                                       (org-babel-ein-initiate-session session kernelspec))
-                                     (list session kernelspec)))))
+                                     (apply-partially 
+                                      (lambda (session* kernelspec* notebook created)
+                                        (org-babel-ein-initiate-session session* kernelspec*))
+                                      session kernelspec)))))
+
       (loop repeat 4
             until (ein:kernel-live-p (ein:$notebook-kernel nb))
             do (sit-for 1.0))
@@ -280,7 +282,7 @@ jupyter kernels.
 
 (defun ein:org-babel-parse-session (session)
   (if (numberp session)
-      (values (format "http://localhost:%s" session) nil)
+      (values (ein:url (format "http://localhost:%s" session)) nil)
     (let ((session-uri (url-generic-parse-url session)))
       (cond ((url-fullness session-uri)
              (values (ein:url (format "%s://%s:%s" (url-type session-uri) (url-host session-uri) (url-port session-uri)))

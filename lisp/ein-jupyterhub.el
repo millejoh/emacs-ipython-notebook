@@ -29,11 +29,8 @@
 ;;
 
 ;;; Code:
-(require 'request-deferred)
-(require 'deferred)
 (require 'ein-query)
 (require 'ein-contents-api)
-
 
 (defun ein:jupyterhub-api-url (url-or-port command &rest args)
   (if args

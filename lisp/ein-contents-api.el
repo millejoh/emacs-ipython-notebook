@@ -39,6 +39,16 @@
 (provide 'ein-notebook) ; see manual "Named Features" regarding recursive requires
 (require 'ein-notebook)
 
+(defcustom ein:content-query-max-depth 2
+  "Don't recurse the directory tree deeper than this."
+  :type 'integer
+  :group 'ein)
+
+(defcustom ein:content-query-max-branch 6
+  "Don't descend into more than this number of directories per depth.  The total number of parallel queries should therefore be O({max_branch}^{max_depth})"
+  :type 'integer
+  :group 'ein)
+
 (defcustom ein:content-query-timeout (* 60 1000) ;1 min
   "Query timeout for getting content from Jupyter/IPython notebook.
 If you cannot open large notebooks because of a timeout error try
@@ -68,7 +78,7 @@ global setting.  For global setting and more information, see
                            params))))
 
 (defun ein:content-query-contents (url-or-port path callback &optional iteration)
-  "Register CALLBACK of arity 1 for the contents at PATH from the Jupyter URL-OR-PORT."
+  "Register CALLBACK of arity 1 for the contents at PATH from the URL-OR-PORT."
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
@@ -92,7 +102,8 @@ global setting.  For global setting and more information, see
 (defun* ein:content-query-contents--error (url-or-port path callback iteration &key symbol-status response error-thrown &allow-other-keys)
   (if (< iteration 3)
       (progn
-        (ein:log 'info "Retry content-query-contents #%s in response to %s" iteration (request-response-status-code response))
+        (ein:log 'verbose "Retry content-query-contents #%s in response to %s" iteration (request-response-status-code response))
+        (sleep-for 0 (* (1+ iteration) 200))
         (ein:content-query-contents url-or-port path callback (1+ iteration)))
     (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s" (concat (file-name-as-directory url-or-port) path) symbol-status (cdr error-thrown))))
 
@@ -109,13 +120,8 @@ global setting.  For global setting and more information, see
       (setq content (ein:new-content url-or-port path data)))
     (ein:aif response
         (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
-    ;; (if (length (request-response-history response))
-    ;;     (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
-    ;;       (setf (ein:$content-url-or-port content) (format "%s://%s:%s"
-    ;;                                                        (url-type url)
-    ;;                                                        (url-host url)
-    ;;                                                        (url-port url)))))
-    (when callback (funcall callback content))))
+    (when callback 
+      (funcall callback content))))
 
 (defun ein:fix-legacy-content-data (data)
   (if (listp (car data))
@@ -196,23 +202,28 @@ global setting.  For global setting and more information, see
           (ein:$content-raw-content content) (plist-get data :content))
     content))
 
-(defun ein:content-query-hierarchy* (url-or-port path callback sessions content)
+(defun ein:content-query-hierarchy* (url-or-port path callback sessions depth content)
   "Returns list (tree) of content objects"
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
                  (callback callback)
                  (items (ein:$content-raw-content content))
-                 (directories (loop for item in items
-                                    if (string= "directory" (plist-get item :type))
-                                      collect (ein:new-content url-or-port path item)
-                                    end))
+                 (directories (if (< depth ein:content-query-max-depth)
+                                  (loop for item in items
+                                        with result
+                                        until (>= (length result) ein:content-query-max-branch)
+                                        if (string= "directory" (plist-get item :type))
+                                          collect (ein:new-content url-or-port path item) 
+                                            into result
+                                        end
+                                        finally return result)))
                  (others (loop for item in items
                                with c0
                                if (not (string= "directory" (plist-get item :type)))
-                                 do (setf c0 (ein:new-content url-or-port path item))
-                                    (setf (ein:$content-session-p c0)
-                                          (gethash (ein:$content-path c0) sessions))
-                                 and collect c0
+                               do (setf c0 (ein:new-content url-or-port path item))
+                               (setf (ein:$content-session-p c0)
+                                     (gethash (ein:$content-path c0) sessions))
+                               and collect c0
                                end)))
     (deferred:$
       (apply #'deferred:parallel
@@ -228,7 +239,7 @@ global setting.  For global setting and more information, see
                                        (ein:$content-path c0)
                                        (lambda (tree)
                                          (deferred:callback-post d0 (cons c0 tree)))
-                                       sessions))
+                                       sessions (1+ depth)))
                      d0)))
       (deferred:nextc it
         (lambda (tree)
@@ -249,7 +260,7 @@ global setting.  For global setting and more information, see
                                    (apply-partially #'ein:content-query-hierarchy*
                                                     url-or-port
                                                     ""
-                                                    callback sessions))))))
+                                                    callback sessions 0))))))
 
 
 ;;; Save Content
@@ -377,7 +388,7 @@ global setting.  For global setting and more information, see
                                                        &allow-other-keys)
   (if (< iteration 3)
       (progn
-        (ein:log 'info "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
+        (ein:log 'verbose "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
         (ein:content-query-sessions url-or-port callback (1+ iteration)))
     (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
 

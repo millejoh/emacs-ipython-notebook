@@ -36,6 +36,8 @@
           path))
 
 (defun ein:file-open (url-or-port path)
+  (interactive
+   (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "file")))
   (ein:content-query-contents url-or-port path #'ein:file-open-finish))
 
 (defun ein:file-open-finish (content)
@@ -50,6 +52,7 @@
     (set-auto-mode)
     (add-hook 'write-contents-functions 'ein:content-file-save) ;; FIXME Brittle, will not work
                                                                 ;; if user changes major mode.
+    (ein:log 'verbose "Opened file %s" (ein:$content-name content))
     (set-buffer-modified-p nil)
     (goto-char (point-min))
     (pop-to-buffer (buffer-name))))

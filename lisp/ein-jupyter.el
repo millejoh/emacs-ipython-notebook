@@ -38,7 +38,7 @@
   :group 'ein
   :type 'integer)
 
-(defcustom ein:jupyter-server-args nil
+(defcustom ein:jupyter-server-args '("--no-browser" "--debug")
   "Add any additional command line options you wish to include
 with the call to the jupyter notebook."
   :group 'ein
@@ -110,6 +110,15 @@ via a call to `ein:notebooklist-open'."
     (multiple-value-bind (url-or-port password) (ein:jupyter-server-conn-info)
       (ein:notebooklist-login url-or-port callback))))
 
+(defsubst ein:set-process-sentinel (proc url-or-port)
+  "Adjust notebooklist corresponding to URL-OR-PORT when the PROC gets signalled.  Would use `add-function' if it didn't produce gv-ref warnings."
+  (set-process-sentinel 
+   proc
+   (apply-partially (lambda (url-or-port* sentinel process event)
+                      (ein:aif sentinel (funcall it process event))
+                      (funcall #'ein:notebooklist-proc--sentinel url-or-port* process event))
+                    url-or-port (process-sentinel proc))))
+
 ;;;###autoload
 (defun ein:jupyter-server-start (server-cmd-path notebook-directory &optional no-login-p login-callback)
   "Start SERVER-CMD_PATH with `--notebook-dir' NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK taking single argument, the buffer created by ein:notebooklist-open--finish.
@@ -165,8 +174,8 @@ the log of the running jupyter server."
           (deferred:timeout
             ein:jupyter-server-run-timeout 'timeout
             (deferred:lambda ()
-              (if (car (ein:jupyter-server-conn-info))
-                  no-login-p
+              (ein:aif (car (ein:jupyter-server-conn-info))
+                  (progn (ein:set-process-sentinel proc it) no-login-p)
                 (deferred:nextc (deferred:wait (/ ein:jupyter-server-run-timeout 5)) self))))
           (deferred:nextc it
             (lambda (no-login-p)
@@ -182,13 +191,13 @@ the log of the running jupyter server."
             until (car (ein:jupyter-server-conn-info buf))
             do (sleep-for 0 500)
             finally do 
-            (if (car (ein:jupyter-server-conn-info buf))
-                (setf done-p t)
-              (setf done-p "error")
-              (ein:log 'warn "Jupyter server failed to start, cancelling operation")
-              (ein:jupyter-server-stop t)))
-      (unless no-login-p
-        (ein:jupyter-server-login-and-open login-callback)))))
+              (ein:aif (car (ein:jupyter-server-conn-info buf))
+                  (progn (ein:set-process-sentinel proc it) (setf done-p t))
+                (setf done-p "error")
+                (ein:log 'warn "Jupyter server failed to start, cancelling operation")
+                (ein:jupyter-server-stop t)))
+      (if (and (not no-login-p) (ein:jupyter-server-process))
+          (ein:jupyter-server-login-and-open login-callback)))))
 
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
@@ -207,7 +216,7 @@ there is no running server then no action will be taken.
               when (y-or-n-p (format "Save notebook %s before stopping the server?" (ein:$notebook-notebook-name nb)))
               do (progn
                    (setf (gethash (ein:$notebook-notebook-name nb) check-for-saved) t)
-                   (ein:notebook-save-notebook nb 0
+                   (ein:notebook-save-notebook nb
                                                #'(lambda (name check-hash)
                                                    (remhash name check-hash))
                                                (list (ein:$notebook-notebook-name nb) check-for-saved)))))

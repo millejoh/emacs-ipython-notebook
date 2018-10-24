@@ -186,9 +186,6 @@ Current buffer for these functions is set to the notebook buffer.")
 (defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
-(defvar ein:notebook-save-retry-max 1
-  "Maximum retries for notebook saving.")
-
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
@@ -299,30 +296,41 @@ will be updated with kernel's cwd."
         ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
-;;; TODO - I think notebook-path is unnecessary (JMM).
+(defun ein:notebook-open--decorate-callback (notebook existing callback)
+  "In addition to CALLBACK, also pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
+  (apply-partially (lambda (notebook* created callback*)
+                     (pop-to-buffer (ein:notebook-buffer notebook*))
+                     (ein:aif (ein:$notebook-kernelspec notebook*)
+                         (progn
+                           (setf (ein:$notebook-metadata notebook*) 
+                                 (plist-put (ein:$notebook-metadata notebook*)
+                                            :kernelspec (ein:kernelspec-for-nb-metadata it)))
+                           (ein:notebook-save-notebook notebook*)))
+                     (when callback*
+                       (funcall callback* notebook* created)))
+                   notebook (not existing) callback))
 
-(defun ein:notebook-open (url-or-port path &optional kernelspec callback cbargs)
+;;;###autoload
+
+(defun ein:notebook-open (url-or-port path &optional kernelspec callback)
   "Returns notebook at URL-OR-PORT/PATH.
 Note that notebook sends for its contents and won't have them right away.
 
 After the notebook is opened, CALLBACK is called as::
 
-  \(apply CALLBACK notebook CREATED CBARGS)
+  \(funcall CALLBACK notebook created)
 
-where the second argument CREATED indicates whether the notebook
-is newly created or not.
+where `created' indicates a new notebook or an existing one.
 
 TODO - This function should not be used to switch to an existing 
 notebook buffer.  Let's warn for now to see who is doing this.
 "
+  (interactive
+   (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
   (let* ((existing (ein:notebook-get-opened-notebook url-or-port path))
          (notebook (ein:aif existing it
-                    (ein:notebook-new url-or-port path kernelspec)))
-         (callback0 (apply-partially (lambda (notebook* created callback* cbargs*)
-                                      (pop-to-buffer (ein:notebook-buffer notebook*))
-                                      (when callback*
-                                        (apply callback* notebook* created cbargs*)))
-                                     notebook (if existing nil t) callback cbargs)))
+                     (ein:notebook-new url-or-port path kernelspec)))
+         (callback0 (ein:notebook-open--decorate-callback notebook existing callback)))
     (if existing
         (progn
           (ein:log 'warn "Notebook %s is already opened"
@@ -716,31 +724,27 @@ This is equivalent to do ``C-c`` in the console program."
       )))
 
 (defun ein:write-nbformat4-worksheets (notebook)
-  (ein:log 'verbose "Writing notebook %s as nbformat 4." (ein:$notebook-notebook-name notebook))
   (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
+    ;; should be in notebook constructor, not here
     (ein:aif (ein:$notebook-kernelspec notebook)
-        (if (ein:$notebook-metadata notebook)
-            (plist-put (ein:$notebook-metadata notebook)
-                       :kernelspec (ein:kernelspec-for-nb-metadata it))
-          (setf (ein:$notebook-metadata notebook)
-                (list :kernelspec (ein:kernelspec-for-nb-metadata it)))))
+        (setf (ein:$notebook-metadata notebook) 
+              (plist-put (ein:$notebook-metadata notebook)
+                         :kernelspec (ein:kernelspec-for-nb-metadata it))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
-      (cells . ,(apply #'vector all-cells)))
+      (cells . ,(apply #'vector all-cells)))))
 
-    ))
-
-(defun ein:notebook-maybe-save-notebook (notebook retry &optional callback cbargs)
+(defun ein:notebook-maybe-save-notebook (notebook &optional callback cbargs)
   (if (cl-some #'(lambda (ws)
                    (buffer-modified-p
                     (ein:worksheet-buffer ws)))
                (ein:$notebook-worksheets notebook))
-      (ein:notebook-save-notebook notebook retry callback cbargs)))
+      (ein:notebook-save-notebook notebook callback cbargs)))
 
-(defun ein:notebook-save-notebook (notebook retry &optional callback cbargs)
+(defun ein:notebook-save-notebook (notebook &optional callback cbargs)
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
@@ -757,32 +761,7 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
   (interactive)
-  (ein:notebook-save-notebook ein:%notebook% 0))
-
-(defun* ein:notebook-save-notebook-workaround
-    (notebook retry callback cbarg
-              &key
-              status
-              response
-              &allow-other-keys
-              &aux
-              (response-status (request-response-status-code response)))
-  ;; IPython server returns 204 only when the notebook URL is
-  ;; accessed via PUT or DELETE.  As it seems Emacs failed to
-  ;; choose PUT method every two times, let's check the response
-  ;; here and fail when 204 is not returned.
-  ;; UPDATE 12Sep2014 (JMM) - IPython server now returns 200 on successful save.
-  (unless (eq response-status 200)
-    (with-current-buffer (ein:notebook-buffer notebook)
-      (if (< retry ein:notebook-save-retry-max)
-          (progn
-            (ein:log 'info "Retry saving... Next count: %s" (1+ retry))
-            (ein:notebook-save-notebook notebook (1+ retry)
-                                        callback cbarg))
-        (ein:notebook-save-notebook-error notebook :status status)
-        (ein:log 'info
-          "Status code (=%s) is not 200 and retry exceeds limit (=%s)."
-          response-status ein:notebook-save-retry-max)))))
+  (ein:notebook-save-notebook ein:%notebook%))
 
 (defun ein:notebook-save-notebook-success (notebook &optional callback cbargs)
   (ein:log 'verbose "Notebook is saved.")
@@ -1319,6 +1298,7 @@ This hook is run regardless the actual major mode used."
   (when (require 'mumamo nil t)
     (require 'ein-mumamo))
   ;; Return first matched mode
+  (autoload 'ein:notebook-multilang-mode "ein-multilang")
   (loop for mode in ein:notebook-modes
         if (functionp mode)
         return mode))
@@ -1358,7 +1338,7 @@ This hook is run regardless the actual major mode used."
   (define-key map (kbd "C-c <down>") 'ein:worksheet-move-cell-down)
   (define-key map (kbd "M-<up>") 'ein:worksheet-move-cell-up)
   (define-key map (kbd "M-<down>") 'ein:worksheet-move-cell-down)
-  (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
+  (define-key map "\C-c\C-h" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map "\C-c\C-x" 'ein:tb-show)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
@@ -1366,7 +1346,8 @@ This hook is run regardless the actual major mode used."
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
   (define-key map (kbd "C-c C-#") 'ein:notebook-close)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (define-key map "\C-c\C-o" 'ein:console-open)
+  (define-key map "\C-c\C-f" 'ein:file-open)
+  (define-key map "\C-c\C-o" 'ein:notebook-open)
   (define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
   (define-key map "\C-x\C-w" 'ein:notebook-rename-command)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)

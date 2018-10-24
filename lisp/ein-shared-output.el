@@ -124,9 +124,10 @@ Called from ewoc pretty printer via `ein:cell-pp'."
       (let* ((inhibit-read-only t)
              ;; Enable nonsep for ewoc object (the last argument is non-nil).
              ;; This is for putting read-only text properties to the newlines.
-             (ewoc (ein:ewoc-create 'ein:worksheet-pp
-                                    (ein:propertize-read-only "\n")
-                                    nil t))
+             (ewoc (let ((buffer-undo-list t))
+                     (ein:ewoc-create 'ein:worksheet-pp
+                                      (ein:propertize-read-only "\n")
+                                      nil t)))
              (events (ein:events-new))
              (cell (ein:shared-output-cell :ewoc ewoc
                                            :events events)))
