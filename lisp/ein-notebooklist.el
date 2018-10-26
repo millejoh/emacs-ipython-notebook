@@ -724,7 +724,7 @@ You may find the new one in the notebook list." error)
                                (lambda (&rest ignore)
                                  ;; each directory creates a whole new notebooklist
                                  (ein:notebooklist-open* url-or-port
-                                                        (concat (directory-file-name (ein:$notebooklist-path ein:%notebooklist%)) name) nil #'pop-to-buffer)))
+                                                        (concat (file-name-as-directory (ein:$notebooklist-path ein:%notebooklist%)) name) nil #'pop-to-buffer)))
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
