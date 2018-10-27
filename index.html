@@ -75,29 +75,29 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#support-for-the-hy-language-experimental">Support for The Hy Language (EXPERIMENTAL)</a></li>
-<li><a class="reference internal" href="#id11">Customization</a><ul>
+<li><a class="reference internal" href="#id10">Customization</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
-<li><a class="reference internal" href="#id12">Notebook list</a></li>
-<li><a class="reference internal" href="#id13">Notebook</a></li>
+<li><a class="reference internal" href="#id11">Notebook list</a></li>
+<li><a class="reference internal" href="#id12">Notebook</a></li>
 <li><a class="reference internal" href="#console">Console</a></li>
 <li><a class="reference internal" href="#connect">Connect</a><ul>
-<li><a class="reference internal" href="#id14">Jedi.el</a></li>
+<li><a class="reference internal" href="#id13">Jedi.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mumamo">MuMaMo</a></li>
-<li><a class="reference internal" href="#id16">Misc</a></li>
+<li><a class="reference internal" href="#id15">Misc</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gotchas-and-caveats">Gotchas and caveats</a><ul>
 <li><a class="reference internal" href="#url-retrieve"><code class="docutils literal"><span class="pre">url-retrieve</span></code></a></li>
-<li><a class="reference internal" href="#id17">MuMaMo</a></li>
+<li><a class="reference internal" href="#id16">MuMaMo</a></li>
 <li><a class="reference internal" href="#python-mode-el">python-mode.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced">Advanced</a></li>
 <li><a class="reference internal" href="#reporting-issues">Reporting issues</a><ul>
 <li><a class="reference internal" href="#logging">Logging</a><ul>
-<li><a class="reference internal" href="#id19">websocket.el</a></li>
+<li><a class="reference internal" href="#id18">websocket.el</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#debugging">Debugging</a></li>
@@ -230,7 +230,6 @@ work.</p>
 available after emacs starts, try adding the following to your emacs init file:</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">package-initialize</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
-<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
 </pre></div>
@@ -263,7 +262,7 @@ this feature.</p>
 Skewer mode gives EIN the ability to execute dynamic javascript in the
 note book.</p>
 </li>
-<li><p class="first">(optional) <a href="#id29"><span class="problematic" id="id30">Jupyterhub_</span></a> 0.8 or higher:
+<li><p class="first">(optional) <a href="#id28"><span class="problematic" id="id29">Jupyterhub_</span></a> 0.8 or higher:
 EIN supports logging in to Jupyterhub servers using PAM authentication,
 though this only works with v0.8, which currently is the development version
 of Jupyterhub.</p>
@@ -291,7 +290,7 @@ EIEIO and json.el.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id7">[3]</a></td><td>See
+<tr><td class="label"><a class="fn-backref" href="#id6">[3]</a></td><td>See
 <a class="reference internal" href="#gotchas-python-mode-el"><span class="std std-ref">Gotchas and caveats &gt; python-mode.el</span></a>.</td></tr>
 </tbody>
 </table>
@@ -353,9 +352,8 @@ don&#8217;t use that optional package.</p>
 </div>
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
-<p>Here is the minimal configuration.  See <a href="#id31"><span class="problematic" id="id32">customization_</span></a> for more details.</p>
+<p>Here is the minimal configuration.  See <a href="#id30"><span class="problematic" id="id31">customization_</span></a> for more details.</p>
 <div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
-<span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-loaddefs</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
 </pre></div>
@@ -389,10 +387,10 @@ authentication for the running server and automatically log you in.</p>
 <p>Note that the below work best with current (&gt; v4.3.1) versions of jupyter.</p>
 <dl class="function">
 <dt id="ein:jupyter-server-start">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-after-start-p</em> <em>no-popup</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Start the jupyter notebook server at the given path.</p>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-p</em> <em>login-callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start SERVER-CMD_PATH with <code class="xref el el-symbol docutils literal"><span class="pre">--notebook-dir</span></code> NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK taking single argument, the buffer created by ein:notebooklist-open&#8211;finish.</p>
 <p>This command opens an asynchronous process running the jupyter
-notebook server and then tries to detect the url and token to
+notebook server and then tries to detect the url and password to
 generate automatic calls to <a class="reference internal" href="#ein:notebooklist-login" title="ein:notebooklist-login"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-login</span></code></a> and
 <a class="reference internal" href="#ein:notebooklist-open" title="ein:notebooklist-open"><code class="xref el el-symbol docutils literal"><span class="pre">ein:notebooklist-open</span></code></a>.</p>
 <p>With C-u prefix arg, it will prompt the user for the path to
@@ -407,7 +405,7 @@ the log of the running jupyter server.</p>
 
 <dl class="function">
 <dt id="ein:jupyter-server-stop">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-stop </code><em>&amp;optional</em> <em>force</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-stop </code><em>&amp;optional</em> <em>force</em> <em>log</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a running jupyter notebook server.</p>
 <p>Use this command to stop a running jupyter notebook server. If
 there is no running server then no action will be taken.</p>
@@ -415,7 +413,7 @@ there is no running server then no action will be taken.</p>
 
 <dl class="function">
 <dt id="ein:jupyter-server-login-and-open">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-login-and-open </code><em>&amp;optional</em> <em>no-popup</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-login-and-open </code><em>&amp;optional</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-login-and-open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log in and open a notebooklist buffer for a running jupyter notebook server.</p>
 <p>Determine if there is a running jupyter server (started via a
 call to <a class="reference internal" href="#ein:jupyter-server-start" title="ein:jupyter-server-start"><code class="xref el el-symbol docutils literal"><span class="pre">ein:jupyter-server-start</span></code></a>) and then try to guess if
@@ -431,29 +429,27 @@ via a call to <a class="reference internal" href="#ein:notebooklist-open" title=
 port or URL of the IPython notebook server.</p>
 <dl class="function">
 <dt id="ein:notebooklist-open">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-open </code><em>&amp;optional</em> <em>url-or-port</em> <em>path</em> <em>no-popup</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open notebook list buffer.</p>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-open </code><em>url-or-port</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-open" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is now an alias for ein:notebooklist-login</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="ein:notebooklist-new-notebook">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-new-notebook </code><em>&amp;optional</em> <em>url-or-port</em> <em>kernelspec</em> <em>path</em> <em>callback</em> <em>cbargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-new-notebook" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-new-notebook </code><em>&amp;optional</em> <em>url-or-port</em> <em>kernelspec</em> <em>path</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-new-notebook" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask server to create a new notebook and open it in a new buffer.</p>
+<p>TODO - New and open should be separate, and we should flag an exception if we try to new an existing.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="ein:notebooklist-open-notebook-global">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-open-notebook-global </code><em>nbpath</em> <em>&amp;optional</em> <em>callback</em> <em>cbargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
-<dd><p>Choose notebook from all opened notebook list and open it.
-Notebook is specified by a string NBPATH whose format is
-&#8220;URL-OR-PORT/NOTEBOOK-NAME&#8221;.</p>
-<p>When used in lisp, CALLBACK and CBARGS are passed to <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-open</span></code>.</p>
-</dd></dl>
+<em class="property">function </em><code class="descname">ein:notebooklist-open-notebook-global</code><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="ein:notebooklist-login">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-login </code><em>url-or-port</em> <em>password</em> <em>&amp;optional</em> <em>retry-p</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-login" title="Permalink to this definition">¶</a></dt>
-<dd><p>Login to IPython notebook server.</p>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-login </code><em>url-or-port</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-login" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deal with security before main entry of ein:notebooklist-open*.</p>
+<p>CALLBACK takes one argument, the buffer created by ein:notebooklist-open&#8211;success.</p>
 </dd></dl>
 
 <dl class="function">
@@ -614,6 +610,27 @@ automatically be called during calls to <cite>ein:notebooklist-open</cite>.</p>
 <code class="descname">C-c C-r</code><code class="descclassname"> ein:notebooklist-reload</code></dt>
 </dt>
 <dd><dd class="first last"><p>Reload current Notebook list.</p>
+</dd></dd>
+</dl>
+
+<dl class="keybind">
+<dt>
+<code class="descname">C-c C-f</code><code class="descclassname"> ein:file-open</code></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<code class="descname">C-c C-o</code><code class="descclassname"> ein:notebook-open</code></dt>
+</dt>
+<dd><dd class="first last"><p>Returns notebook at URL-OR-PORT/PATH.
+Note that notebook sends for its contents and won&#8217;t have them right away.</p>
+<p>After the notebook is opened, CALLBACK is called as:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">funcall</span> <span class="nv">CALLBACK</span> <span class="nv">notebook</span> <span class="nv">created</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="xref el el-symbol docutils literal"><span class="pre">created</span></code> indicates a new notebook or an existing one.</p>
+<p>TODO - This function should not be used to switch to an existing
+notebook buffer.  Let&#8217;s warn for now to see who is doing this.</p>
 </dd></dd>
 </dl>
 
@@ -887,7 +904,7 @@ If prefix is given, merge current cell into next cell.</p>
 
 <dl class="keybind">
 <dt>
-<code class="descname">C-c C-f</code><code class="descclassname"> ein:pytools-request-tooltip-or-help</code></dt>
+<code class="descname">C-c C-h</code><code class="descclassname"> ein:pytools-request-tooltip-or-help</code></dt>
 </dt>
 <dd><dd class="first last"><p>Show the help for the object at point using tooltip.
 When the prefix argument <code class="docutils literal"><span class="pre">C-u</span></code> is given, open the help in the
@@ -949,16 +966,22 @@ as usual.</p>
 
 <dl class="keybind">
 <dt>
-<code class="descname">C-c C-o</code><code class="descclassname"> ein:console-open</code></dt>
+<code class="descname">C-c C-f</code><code class="descclassname"> ein:file-open</code></dt>
+</dl>
+
+<dl class="keybind">
+<dt>
+<code class="descname">C-c C-o</code><code class="descclassname"> ein:notebook-open</code></dt>
 </dt>
-<dd><dd class="first last"><p>Open IPython console.
-To use this function, <a class="reference internal" href="#ein:console-security-dir" title="ein:console-security-dir"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-security-dir</span></code></a> and
-<a class="reference internal" href="#ein:console-args" title="ein:console-args"><code class="xref el el-symbol docutils literal"><span class="pre">ein:console-args</span></code></a> must be set properly.
-This function works best with the new <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> which is shipped
-with Emacs 24.2 or later.  If you don&#8217;t have it, this function
-opens a &#8220;plain&#8221; command line interpreter (comint) buffer where
-you cannot use fancy stuff such as TAB completion.
-It should be possible to support python-mode.el.  Patches are welcome!</p>
+<dd><dd class="first last"><p>Returns notebook at URL-OR-PORT/PATH.
+Note that notebook sends for its contents and won&#8217;t have them right away.</p>
+<p>After the notebook is opened, CALLBACK is called as:</p>
+<div class="highlight-cl"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">funcall</span> <span class="nv">CALLBACK</span> <span class="nv">notebook</span> <span class="nv">created</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="xref el el-symbol docutils literal"><span class="pre">created</span></code> indicates a new notebook or an existing one.</p>
+<p>TODO - This function should not be used to switch to an existing
+notebook buffer.  Let&#8217;s warn for now to see who is doing this.</p>
 </dd></dd>
 </dl>
 
@@ -1452,9 +1475,9 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 </dt>
 <dd><dd class="first last"><p>Toggle auto-execution mode of the current connected buffer.</p>
 <p>When auto-execution mode is on, cells in connected notebook will
-be automatically executed whenever run, eval or reload command <a class="footnote-reference" href="#id5" id="id7">[3]</a>
+be automatically executed whenever run, eval or reload command <a class="footnote-reference" href="#id5" id="id6">[3]</a>
 is called in this buffer.</p>
-<table class="docutils footnote" frame="void" id="id8" rules="none">
+<table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label">[4]</td><td><p class="first">Namely, one of</p>
@@ -1768,7 +1791,7 @@ plt.plot(x,y)
 <p>You can also link to an IPython notebook from <a class="reference external" href="http://orgmode.org/">org-mode</a> files.</p>
 <ol class="arabic simple">
 <li>Call org-mode function <code class="xref el el-symbol docutils literal"><span class="pre">org-store-link</span></code>
-<a class="footnote-reference" href="#org-store-link" id="id10">[5]</a> in notebook buffer.  You can select a region to
+<a class="footnote-reference" href="#org-store-link" id="id9">[5]</a> in notebook buffer.  You can select a region to
 specify a position in the notebook.</li>
 <li>Go to org-mode file and type <code class="docutils literal"><span class="pre">C-c</span> <span class="pre">C-l</span></code>
 (<code class="xref el el-symbol docutils literal"><span class="pre">org-insert-link</span></code>).  This will insert a link to the
@@ -1779,7 +1802,7 @@ the link at the point of cursor.</li>
 <table class="docutils footnote" frame="void" id="org-store-link" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id10">[5]</a></td><td>See <a class="reference external" href="http://orgmode.org/manual/Activation.html">1.3 Activation</a> in org-mode manual.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id9">[5]</a></td><td>See <a class="reference external" href="http://orgmode.org/manual/Activation.html">1.3 Activation</a> in org-mode manual.</td></tr>
 </tbody>
 </table>
 <div class="section" id="customization">
@@ -1811,8 +1834,8 @@ kernel!</p>
 <p>If you are running a <a class="reference external" href="https://github.com/Calysto/calysto_hy">hy kernel</a> you can, of course, write hy expressions in
 code cells and have the expected results.</p>
 </div>
-<div class="section" id="id11">
-<h2>Customization<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h2>Customization<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
 <p>You can customize EIN by typing <code class="docutils literal"><span class="pre">M-x</span> <span class="pre">customize-group</span> <span class="pre">RET</span> <span class="pre">ein</span> <span class="pre">RET</span></code>.  All the
 configurable variables are listed below.</p>
 <div class="section" id="subpackages">
@@ -1866,8 +1889,8 @@ commands is fine.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id12">
-<h3>Notebook list<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Notebook list<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:url-or-port">
 <em class="property">variable </em><code class="descname">ein:url-or-port</code><a class="headerlink" href="#ein:url-or-port" title="Permalink to this definition">¶</a></dt>
@@ -1905,21 +1928,17 @@ in order to make this code work.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id13">
-<h3>Notebook<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Notebook<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:worksheet-enable-undo">
 <em class="property">variable </em><code class="descname">ein:worksheet-enable-undo</code><a class="headerlink" href="#ein:worksheet-enable-undo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configure undo in notebook buffers.</p>
-<dl class="docutils">
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">boolean. Do not use undo in notebook buffers. This is the</span></dt>
-<dd>safest option.</dd>
-<dt><code class="xref el el-symbol docutils literal"><span class="pre">t</span></code> <span class="classifier-delimiter">:</span> <span class="classifier">boolean Enable full undo in notebook buffers. It is</span></dt>
-<dd>powerful but sometimes (typically after cell specific commands)
-undo will corrupt the notebook buffer data. Use at your own risk!</dd>
+<dd><dl class="docutils">
+<dt>When non-<code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code>, allow undo of cell inputs only (as opposed to</dt>
+<dd><p class="first">whole-cell operations such as killing, moving, executing cells).</p>
+<p class="last">Changes to this variable only take effect for newly opened worksheets.</p>
+</dd>
 </dl>
-<p>You need to reopen the notebook buffer to reflect the change of
-this value.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -2094,14 +2113,12 @@ C-cS.</dd>
 <dt id="ein:notebook-autosave-frequency">
 <em class="property">variable </em><code class="descname">ein:notebook-autosave-frequency</code><a class="headerlink" href="#ein:notebook-autosave-frequency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the frequency (in seconds) at which the notebook is
-automatically saved.</p>
+automatically saved, per IPEP15. Set to 0 to disable this feature.</p>
 <p>Autosaves are automatically enabled when a notebook is opened,
 but can be controlled manually via <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-enable-autosave</span></code>
 and <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-disable-autosave</span></code>.</p>
-<p>If this parameter is changed than you must call
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-disable-autosave</span></code> and then
-<code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-enable-autosave</span></code> on all open notebooks for the
-changes to take effect.</p>
+<p>If you wish to change the autosave frequency for the current
+notebook call <code class="xref el el-symbol docutils literal"><span class="pre">ein:notebook-update-autosave-freqency</span></code>.</p>
 </dd></dl>
 
 <dl class="variable">
@@ -2243,8 +2260,8 @@ to automatically connect any python-mode buffer to the
 notebook.</p>
 </dd></dl>
 
-<div class="section" id="id14">
-<h4>Jedi.el<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id13">
+<h4>Jedi.el<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h4>
 <dl class="function">
 <dt id="ein:jedi-setup">
 <em class="property">function </em><code class="descname">ein:jedi-setup</code><a class="headerlink" href="#ein:jedi-setup" title="Permalink to this definition">¶</a></dt>
@@ -2301,8 +2318,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 <dd></dd></dl>
 
 </div>
-<div class="section" id="id16">
-<h3>Misc<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h3>Misc<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <dl class="variable">
 <dt id="ein:filename-translations">
 <em class="property">variable </em><code class="descname">ein:filename-translations</code><a class="headerlink" href="#ein:filename-translations" title="Permalink to this definition">¶</a></dt>
@@ -2363,7 +2380,8 @@ If you have <code class="docutils literal"><span class="pre">curl</span></code> 
 <code class="xref el el-symbol docutils literal"><span class="pre">nil</span></code> as <code class="docutils literal"><span class="pre">curl</span></code> is reliable than <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> therefore no need for
 a workaround (see below).</p>
 <p>If you do the same operation before the timeout, old operation
-will be canceled (see also <code class="xref el el-symbol docutils literal"><span class="pre">ein:query-singleton-ajax</span></code>).</p>
+will NO LONGER be canceled (as it the cookie jar gets clobbered when curl
+aborts).  Instead you will see Race! in debug messages.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>This value exists because it looks like <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code>
@@ -2397,17 +2415,17 @@ fine most of the time.  For saving notebook, I implemented code to
 retry when there is an error comes from <code class="xref el el-symbol docutils literal"><span class="pre">url-retrieve</span></code> to
 make it even safer.</p>
 </div>
-<div class="section" id="id17">
-<h3>MuMaMo<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h3>MuMaMo<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <p>When using MuMaMo based notebook mode, you will notice that
 highlighting outside of the cell input is turned off while you are in
-the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id18">[6]</a>.</p>
+the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
 <a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id18">[6]</a></td><td>See the relevant bug report I posted:
+<tr><td class="label"><a class="fn-backref" href="#id17">[6]</a></td><td>See the relevant bug report I posted:
 <a class="reference external" href="https://bugs.launchpad.net/nxhtml/+bug/1013794">https://bugs.launchpad.net/nxhtml/+bug/1013794</a></td></tr>
 </tbody>
 </table>
@@ -2468,8 +2486,8 @@ a code block, like this:</p>
 <a class="reference external" href="https://gist.github.com/">gist</a>.</p>
 </li>
 </ol>
-<div class="section" id="id19">
-<h4>websocket.el<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id18">
+<h4>websocket.el<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
 <p>websocket.el has its own logging buffer.  Sometime it is useful to see this
 log.  To do this:</p>
 <ol class="arabic simple">
@@ -2504,7 +2522,7 @@ everything the log buffer.  You can reset the patch and log level with
 314, 318, 319, among others.</p>
 <p>Also some quality of life improvements for the completion backend. The code
 should be more robust, sort of supports jedi, and works when in a connected
-buffer. And, if you set <a href="#id20"><span class="problematic" id="id21">`</span></a>ein:use-company-annotations&#8217; to <a href="#id22"><span class="problematic" id="id23">`</span></a>t&#8217; you will get
+buffer. And, if you set <a href="#id19"><span class="problematic" id="id20">`</span></a>ein:use-company-annotations&#8217; to <a href="#id21"><span class="problematic" id="id22">`</span></a>t&#8217; you will get
 annotation in the matches list, though there may be an initial performance hit as
 ein builds a cache of of function definitions.</p>
 <p>Add basic support for eldoc.</p>
