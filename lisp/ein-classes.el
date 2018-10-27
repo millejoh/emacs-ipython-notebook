@@ -348,7 +348,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
   ((status :initarg :status :initform nil)
    (message :initarg :message :initform nil)
    (s2m :initarg :s2m))
-  "Hold status and it's string representation (message).")
+  "Hold status and its string representation (message).")
 
 (defclass ein:notification-tab ()
   ((get-list :initarg :get-list :type function)

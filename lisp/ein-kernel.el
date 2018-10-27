@@ -464,7 +464,7 @@ When calling this method pass a CALLBACKS structure of the form:
    :clear_output   CLEAR-OUTPUT-CALLBACK
    :set_next_input SET-NEXT-INPUT)
 
-Objects end with -CALLBACK above must pack a FUNCTION and its
+Right hand sides ending -CALLBACK above must pack a FUNCTION and its
 first ARGUMENT in a `cons'::
 
   (FUNCTION . ARGUMENT)
@@ -515,27 +515,23 @@ Sample implementations
   ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
 
   (assert (ein:kernel-live-p kernel) nil "execute_reply: Kernel is not active.")
-  (if (not (ein:$kernel-stdin-activep kernel))
-    (let* ((content (list
-                     :code code
-                     :silent (or silent json-false)
-                     :store_history (or store-history json-false)
-                     :user_expressions user-expressions
-                     :allow_stdin allow-stdin
-                     :stop_on_error (or stop-on-error json-false)))
-           (msg (ein:kernel--get-msg kernel "execute_request" content))
-           (msg-id (plist-get (plist-get msg :header) :msg_id)))
-      (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
-      (ein:websocket-send-shell-channel kernel msg)
-      (unless (plist-get callbacks :execute_reply)
-        (ein:log 'debug "code: %s" code))
-      (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-      (unless silent
-        (mapc #'ein:funcall-packed
-              (ein:$kernel-after-execute-hook kernel)))
-      msg-id)
-    (message "[ein]: stdin active, cannot communicate with kernel.")))
-
+  (let* ((content (list
+                   :code code
+                   :silent (or silent json-false)
+                   :store_history (or store-history json-false)
+                   :user_expressions user-expressions
+                   :allow_stdin allow-stdin
+                   :stop_on_error (or stop-on-error json-false)))
+         (msg (ein:kernel--get-msg kernel "execute_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:log 'debug "KERNEL-EXECUTE: code=%s msg_id=%s" code msg-id)
+    (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
+    (ein:websocket-send-shell-channel kernel msg)
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    (unless silent
+      (mapc #'ein:funcall-packed
+            (ein:$kernel-after-execute-hook kernel)))
+    msg-id))
 
 (defun ein:kernel-complete (kernel line cursor-pos callbacks)
   "Complete code at CURSOR-POS in a string LINE on KERNEL.
@@ -736,6 +732,8 @@ Example::
     (let ((msg-type (plist-get header :msg_type))
           (msg-id (plist-get header :msg_id))
           (password (plist-get content :password)))
+      (ein:log 'debug "KERNEL--HANDLE-STDIN-REPLY: msg_type=%s msg_id=%s"
+               msg-type msg-id)
       (cond ((string-equal msg-type "input_request")
              (if (not (eql password :json-false))
                  (let* ((passwd (read-passwd (plist-get content :prompt)))
@@ -760,12 +758,10 @@ Example::
            (msg-id (plist-get parent_header :msg_id))
            (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
            (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
+      (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type=%s msg_id=%s"
+               msg-type msg-id)
       (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
-      (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type = %s" msg-type)
-      (if cb
-          (ein:funcall-packed cb content metadata)
-        (ein:log 'debug "no callback for: msg_type=%s msg_id=%s"
-                 msg-type msg-id))
+      (ein:aif cb (ein:funcall-packed it content metadata))
       (ein:aif (plist-get content :payload)
           (ein:kernel--handle-payload kernel callbacks it))
       (let ((events (ein:$kernel-events kernel)))
@@ -806,10 +802,11 @@ Example::
         (&key content metadata parent_header header &allow-other-keys)
         (ein:json-read-from-string packet)
       (let* ((msg-type (plist-get header :msg_type))
-             (callbacks (ein:kernel-get-callbacks-for-msg
-                         kernel (plist-get parent_header :msg_id)))
+             (msg-id (plist-get parent_header :msg_id))
+             (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
              (events (ein:$kernel-events kernel)))
-        (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type = %s" msg-type)
+        (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type=%s msg_id=%s"
+                 msg-type msg-id)  
         (if (and (not (equal msg-type "status")) (null callbacks))
             (ein:log 'verbose "Got message not from this notebook.")
           (ein:case-equal msg-type
@@ -829,8 +826,8 @@ Example::
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
             (("clear_output")
              (ein:aif (plist-get callbacks :clear_output)
-                 (ein:funcall-packed it content metadata))))))))
-  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
+                 (ein:funcall-packed it content metadata)))))))))
+(ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished")
 
 
 ;;; Utility functions

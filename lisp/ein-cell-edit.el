@@ -25,9 +25,6 @@
 
 ;;; Code:
 (require 'ein-cell)
-(require 'ess-r-mode nil t)
-(require 'org-src nil t)
-(require 'markdown-mode nil t)
 
 (autoload 'markdown-mode "markdown-mode")
 (autoload 'R-mode "ess-r-mode")
