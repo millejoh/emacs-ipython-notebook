@@ -219,7 +219,7 @@ port the instance is running on."
                                       (ein:crib-token--all-local-tokens))))))
          (url-or-port (let ((ido-report-no-match nil)
                             (ido-use-faces nil))
-                        (ido-completing-read (format "URL or port [%s]: " default)
+                        (ido-completing-read "URL or port: "
                                              url-or-port-list
                                              nil nil nil nil
                                              default))))
@@ -743,7 +743,7 @@ Notebook list data is passed via the buffer local variable
   (remove-overlays)
 
   (let ((url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-    (ein:content-query-sessions url-or-port
+    (ein:content-query-sessions url-or-port nil
                                 (apply-partially #'ein:notebooklist-render--finish nb-version url-or-port))))
 
 (defun ein:notebooklist-render--finish (nb-version url-or-port sessions)

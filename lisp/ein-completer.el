@@ -131,8 +131,8 @@ notebook buffers and connected buffers."
 (defvar *ein:oinfo-cache* (make-hash-table :test #'equal))
 
 (defun ein:completions--get-oinfo (obj)
-  (lexical-let ((d (deferred:new #'identity))
-                (kernel (ein:get-kernel)))
+  (let ((d (deferred:new #'identity))
+        (kernel (ein:get-kernel)))
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel

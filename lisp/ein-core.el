@@ -136,7 +136,7 @@ the source is in git repository."
     ein:version))
 
 
-;;; Server attribute getters.  Not sure if these should be here.
+;;; Server attribute getters.  These should be moved to ein-open.el
 
 (defvar *ein:notebook-version* (make-hash-table :test #'equal)
   "url-or-port to major notebook version")
@@ -191,7 +191,7 @@ the source is in git repository."
         (ein:log 'verbose "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
         (ein:query-kernelspecs url-or-port callback (1+ iteration)))
     (ein:log 'error
-             "ein:query-kernelspecs-error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
+             "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
 
 (defun* ein:query-kernelspecs--complete (url-or-port callback &key data response
                                                      &allow-other-keys 

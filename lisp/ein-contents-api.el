@@ -250,18 +250,16 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-query-hierarchy (url-or-port callback)
   "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"
-  (lexical-let ((url-or-port url-or-port)
-                (callback callback))
-    (ein:content-query-sessions
-     url-or-port
-     (lambda (sessions)
-       (ein:content-query-contents url-or-port
-                                   ""
-                                   (apply-partially #'ein:content-query-hierarchy*
-                                                    url-or-port
-                                                    ""
-                                                    callback sessions 0))))))
-
+  (ein:content-query-sessions
+   url-or-port
+   callback
+   (apply-partially (lambda (url-or-port* callback* sessions)
+                      (ein:content-query-contents url-or-port* ""
+                       (apply-partially #'ein:content-query-hierarchy*
+                                        url-or-port*
+                                        ""
+                                        callback* sessions 0)))
+                    url-or-port callback)))
 
 ;;; Save Content
 
@@ -352,13 +350,11 @@ global setting.  For global setting and more information, see
   (ein:log 'error
     "Renaming content %s failed with status %s." path symbol-status))
 
-
 
 ;;; Sessions
 
-
-(defun ein:content-query-sessions (url-or-port callback &optional iteration)
-  "Register CALLBACK of arity 1 to retrieve the sessions"
+(defun ein:content-query-sessions (url-or-port errback callback &optional iteration)
+  "Register CALLBACK of arity 1 to retrieve the sessions.  Call ERRBACK of arity 1 (contents) upon failure."
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
@@ -368,7 +364,7 @@ global setting.  For global setting and more information, see
    :parser #'ein:json-read
    :complete (apply-partially #'ein:content-query-sessions--complete url-or-port callback)
    :success (apply-partially #'ein:content-query-sessions--success url-or-port callback)
-   :error (apply-partially #'ein:content-query-sessions--error url-or-port callback iteration)
+   :error (apply-partially #'ein:content-query-sessions--error url-or-port errback callback iteration)
    :sync ein:force-sync))
 
 (defun* ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
@@ -383,14 +379,15 @@ global setting.  For global setting and more information, see
         (setf (gethash (read-name (plist-get s :notebook)) session-hash)
               (cons (plist-get s :id) (plist-get s :kernel)))))))
 
-(defun* ein:content-query-sessions--error (url-or-port callback iteration
+(defun* ein:content-query-sessions--error (url-or-port errback callback iteration
                                                        &key response error-thrown
                                                        &allow-other-keys)
   (if (< iteration 3)
       (progn
         (ein:log 'verbose "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
-        (ein:content-query-sessions url-or-port callback (1+ iteration)))
-    (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
+        (ein:content-query-sessions url-or-port errback callback (1+ iteration)))
+    (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
+    (when errback (funcall errback nil))))
 
 (defun* ein:content-query-sessions--complete (url-or-port callback
                                                           &key data response

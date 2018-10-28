@@ -19,13 +19,6 @@
 (setq ein:testing-dump-file-messages (concat default-directory "log/testfunc.messages"))
 (setq ein:testing-dump-file-server  (concat default-directory  "log/testfunc.server"))
 (setq ein:testing-dump-file-request  (concat default-directory "log/testfunc.request"))
-(setq message-log-max t)
-(setq ein:force-sync t)
-(setq ein:jupyter-server-run-timeout 120000)
-(setq ein:content-query-timeout nil)
-(setq ein:query-timeout nil)
-(setq ein:jupyter-server-args '("--no-browser" "--debug"))
-
 (ein:dev-start-debug)
 (ein:jupyter-server-start *ein:testing-jupyter-server-command* *ein:testing-jupyter-server-directory*)
 (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 15000 1000)
