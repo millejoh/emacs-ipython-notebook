@@ -341,7 +341,8 @@ notebook buffer.  Let's warn for now to see who is doing this.
           (funcall callback0))
       (ein:content-query-contents url-or-port path
                                   (apply-partially #'ein:notebook-open--callback
-                                                   notebook callback0)))
+                                                   notebook callback0) 
+                                  nil))
     notebook))
 
 (defun ein:notebook-open--callback (notebook callback0 content)

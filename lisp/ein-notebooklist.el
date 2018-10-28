@@ -225,18 +225,18 @@ port the instance is running on."
                                              default))))
     (ein:url url-or-port)))
 
-(defun ein:notebooklist-open* (url-or-port &optional path resync callback)
+(defun ein:notebooklist-open* (url-or-port &optional path resync callback errback)
   "The main entry to server at URL-OR-PORT.  Users should not directly call this, but instead `ein:notebooklist-login'.
 
-PATH is specifying directory from file navigation.  PATH is empty on login.  RESYNC is requery server attributes such as ipython version and kernelspecs.  CALLBACK takes one argument the resulting buffer.
+PATH is specifying directory from file navigation.  PATH is empty on login.  RESYNC is requery server attributes such as ipython version and kernelspecs.  CALLBACK takes one argument, the resulting buffer.  ERRBACK takes one argument, the resulting buffer.
 "
   (unless path (setq path ""))
   (setq url-or-port (ein:url url-or-port)) ;; should work towards not needing this
   (ein:subpackages-load)
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
-                 (callback callback)
-                 (success (apply-partially #'ein:notebooklist-open--finish callback)))
+                 (success (apply-partially #'ein:notebooklist-open--finish callback))
+                 (failure errback))
     (if (or resync (not (ein:notebooklist-list-get url-or-port)))
         (deferred:$
           (deferred:parallel
@@ -256,8 +256,8 @@ PATH is specifying directory from file navigation.  PATH is empty on login.  RES
                 d)))
           (deferred:nextc it
             (lambda (&rest ignore)
-              (ein:content-query-contents url-or-port path success))))
-      (ein:content-query-contents url-or-port path success))))
+              (ein:content-query-contents url-or-port path success failure))))
+      (ein:content-query-contents url-or-port path success failure))))
 
 (defcustom ein:notebooklist-keepalive-refresh-time 1
   "When the notebook keepalive is enabled, the frequency, IN
@@ -298,7 +298,7 @@ automatically be called during calls to `ein:notebooklist-open`."
              (ein:log 'info "Refreshing notebooklist connection.")))
           (refresh-time (* ein:notebooklist-keepalive-refresh-time 60 60)))
       (setq ein:notebooklist--keepalive-timer
-            (run-at-time 0.1 refresh-time #'ein:content-query-contents url-or-port "" success)))))
+            (run-at-time 0.1 refresh-time #'ein:content-query-contents url-or-port "" success nil)))))
 
 ;;;###autoload
 (defun ein:notebooklist-disable-keepalive ()
@@ -743,8 +743,9 @@ Notebook list data is passed via the buffer local variable
   (remove-overlays)
 
   (let ((url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-    (ein:content-query-sessions url-or-port nil
-                                (apply-partially #'ein:notebooklist-render--finish nb-version url-or-port))))
+    (ein:content-query-sessions url-or-port
+                                (apply-partially #'ein:notebooklist-render--finish nb-version url-or-port)
+                                nil)))
 
 (defun ein:notebooklist-render--finish (nb-version url-or-port sessions)
   (cl-letf (((symbol-function 'render-header) (if (< nb-version 3)
@@ -864,16 +865,16 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
            (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
           ((string= token "") ;; all authentication disabled
            (ein:log 'verbose "Skipping login %s" url-or-port)
-           (ein:notebooklist-open* url-or-port nil nil callback))
+           (ein:notebooklist-open* url-or-port nil nil callback errback))
           (t (ein:notebooklist-login--iteration url-or-port callback errback token 0 nil)))))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
   (list :bad-page (re-search-forward "<input type=.?password" nil t)))
 
-(defun ein:notebooklist-login--success-1 (url-or-port callback)
+(defun ein:notebooklist-login--success-1 (url-or-port callback errback)
   (ein:log 'info "Login to %s complete." url-or-port)
-  (ein:notebooklist-open* url-or-port nil nil callback))
+  (ein:notebooklist-open* url-or-port nil nil callback errback))
 
 (defun ein:notebooklist-login--error-1 (url-or-port errback)
   (ein:log 'error "Login to %s failed" url-or-port)
@@ -894,7 +895,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
           (ein:notebooklist-login--error-1 url-or-port errback)
         (setq token (read-passwd (format "Password for %s: " url-or-port)))
         (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
-    (ein:notebooklist-login--success-1 url-or-port callback)))
+    (ein:notebooklist-login--success-1 url-or-port callback errback)))
 
 (defun* ein:notebooklist-login--error
     (url-or-port token callback errback iteration &key
@@ -912,7 +913,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
         ((and (eq symbol-status 'timeout) ;; workaround for url-retrieve backend
               (eq response-status 302)
               (request-response-header response "set-cookie"))
-         (ein:notebooklist-login--success-1 url-or-port callback))
+         (ein:notebooklist-login--success-1 url-or-port callback errback))
         (t (ein:notebooklist-login--error-1 url-or-port errback))))
 
 ;;;###autoload
