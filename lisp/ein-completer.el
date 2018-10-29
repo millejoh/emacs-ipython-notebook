@@ -34,6 +34,7 @@
 (require 'ein-log)
 (require 'ein-subpackages)
 (require 'ein-kernel)
+(require 'dash)
 
 (defun ein:completer-choose ()
   (require 'ein-ac)
@@ -137,16 +138,12 @@ notebook buffers and connected buffers."
          kernel
          (format "__import__('ein').print_object_info_for(%s)" obj)
          (list
-          :output (cons (lambda (d &rest args) (deferred:callback-post d args))
-                        d)))
+          :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
       (deferred:callback-post d (list nil nil)))
     d))
 
-(defun ein:clear-oinfo-cache ()
-  (clrhash *ein:oinfo-cache*))
-
 (defun ein:completions--build-oinfo-cache (objs)
-  (dolist (o objs)
+  (dolist (o (-non-nil objs))
     (deferred:$
       (deferred:next
         (lambda ()
@@ -156,26 +153,23 @@ notebook buffers and connected buffers."
           (ein:completions--prepare-oinfo output o))))))
 
 (defun ein:completions--prepare-oinfo (output obj)
-  (condition-case _
+  (condition-case err
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
-          (("stream" "display_data")
-           (let* ((oinfo (ein:json-read-from-string (plist-get content :text))))
-             (setf (gethash obj *ein:oinfo-cache*) oinfo)))))
-    (error (setf (gethash obj *ein:oinfo-cache*) ""))))
+          (("stream" "display_data" "pyout" "execute_result")
+           (setf (gethash obj *ein:oinfo-cache*) (plist-get content :text)))
+          (("error" "pyerr")
+           (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
+    (error (ein:log 'error "ein:completions--prepare-oinfo: [%s] %s" err obj)
+           (setf (gethash obj *ein:oinfo-cache*) :json-false))))
 
 ;;; Support for Eldoc
 
 (defun ein:completer--get-eldoc-signature ()
-  (let* ((func (ein:function-at-point))
-         (oinfo (gethash func *ein:oinfo-cache* nil)))
-    (if (not oinfo)
-        (ein:completions--build-oinfo-cache (list func))
-      (plist-get oinfo :definition))))
-
-(defun ein:notebook--enable-eldoc ()
-  (set (make-local-variable 'eldoc-documentation-function)
-       #'ein:completer--get-eldoc-signature))
+  (let ((func (ein:function-at-point)))
+    (ein:aif (gethash func *ein:oinfo-cache*)
+        (ein:kernel-construct-defstring it)
+      (ein:completions--build-oinfo-cache (list func)))))
 
 (provide 'ein-completer)
 

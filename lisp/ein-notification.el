@@ -57,7 +57,8 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
 (defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (slot-value ns 's2m)))))
     (setf (slot-value ns 'status) status)
-    (setf (slot-value ns 'message) message)))
+    (setf (slot-value ns 'message) message)
+    (force-mode-line-update)))
 
 (defmethod ein:notification-bind-events ((notification ein:notification)
                                          events)

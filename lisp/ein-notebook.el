@@ -188,6 +188,7 @@ Current buffer for these functions is set to the notebook buffer.")
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
+
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
 
@@ -299,6 +300,8 @@ will be updated with kernel's cwd."
 (defun ein:notebook-open--decorate-callback (notebook existing callback)
   "In addition to CALLBACK, also pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
   (apply-partially (lambda (notebook* created callback*)
+                     (with-current-buffer (ein:notebook-buffer notebook*)
+                       (ein:worksheet-focus-cell))
                      (pop-to-buffer (ein:notebook-buffer notebook*))
                      (ein:aif (ein:$notebook-kernelspec notebook*)
                          (progn
@@ -338,7 +341,8 @@ notebook buffer.  Let's warn for now to see who is doing this.
           (funcall callback0))
       (ein:content-query-contents url-or-port path
                                   (apply-partially #'ein:notebook-open--callback
-                                                   notebook callback0)))
+                                                   notebook callback0) 
+                                  nil))
     notebook))
 
 (defun ein:notebook-open--callback (notebook callback0 content)
@@ -604,7 +608,6 @@ This is equivalent to do ``C-c`` in the console program."
     ;; Now that major-mode is set, set buffer local variables:
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
-    (ein:notebook--enable-eldoc)
     (setq ein:%notebook% notebook)))
 
 (defun ein:notebook--notification-setup (notebook)
@@ -1286,10 +1289,11 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
 
-(defcustom ein:notebook-mode-hook nil
+(defcustom ein:notebook-mode-hook
+  '(ein:worksheet-imenu-setup ein:worksheet-reinstall-which-cell-hook)
   "Hook for `ein:notebook-mode'.
 This hook is run regardless the actual major mode used."
-  :type 'hook
+  :type '(repeat function)
   :group 'ein)
 
 (defun ein:notebook-choose-mode ()
@@ -1497,6 +1501,20 @@ This hook is run regardless the actual major mode used."
       ))
   map)
 
+(defun ein:notebook-configure-eldoc ()
+  "eldoc comments say: Major modes for other languages may use ElDoc by defining an
+appropriate function as the buffer-local value of `eldoc-documentation-function'."
+  ;; TODO
+  (when nil
+    (require 'eldoc nil t)
+    (if (boundp 'eldoc-documentation-function)
+        (setq-local eldoc-documentation-function 
+                    (apply-partially (lambda (oldfun &rest args)
+                                       (or (apply #'ein:completer--get-eldoc-signature args)
+                                           (apply oldfun args)))
+                                     eldoc-documentation-function))
+      (setq-local eldoc-documentation-function #'ein:completer--get-eldoc-signature))))
+
 (defun ein:notebook-mode ()
   (funcall (ein:notebook-choose-mode))
   (case ein:completion-backend
@@ -1519,10 +1537,8 @@ This hook is run regardless the actual major mode used."
       (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
   (ein:notebook-minor-mode +1)
   (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
+  (ein:notebook-configure-eldoc)
   (run-hooks 'ein:notebook-mode-hook))
-
-(add-hook 'ein:notebook-mode-hook 'ein:worksheet-imenu-setup)
-(add-hook 'ein:notebook-mode-hook 'ein:worksheet-reinstall-which-cell-hook)
 
 (define-minor-mode ein:notebook-minor-mode
   "Minor mode to install `ein:notebook-mode-map' for `ein:notebook-mode'."

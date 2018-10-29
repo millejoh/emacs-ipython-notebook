@@ -111,7 +111,7 @@ install:
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
-  - choco install gnuwin32-make.portable
+#  - choco install gnuwin32-make.portable
 
 # enable patching of AssemblyInfo.* files
 # assembly_info:

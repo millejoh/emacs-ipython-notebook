@@ -38,7 +38,7 @@
 (defun ein:file-open (url-or-port path)
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "file")))
-  (ein:content-query-contents url-or-port path #'ein:file-open-finish))
+  (ein:content-query-contents url-or-port path #'ein:file-open-finish nil))
 
 (defun ein:file-open-finish (content)
   (with-current-buffer (get-buffer-create (ein:file-buffer-name (ein:$content-url-or-port content)

@@ -3,8 +3,8 @@
 
 (defun eintest:notebooklist-make-empty (&optional url-or-port)
   "Make empty notebook list buffer."
-  (flet ((ein:need-kernelspecs (url-or-port))
-         (ein:content-query-sessions (session-hash url-or-port)))
+  (cl-letf (((symbol-function 'ein:need-kernelspecs) #'ignore)
+            ((symbol-function 'ein:content-query-sessions) #'ignore))
     (ein:notebooklist-open--finish nil
      (make-ein:$content :url-or-port (or url-or-port ein:testing-notebook-dummy-url)
                         :notebook-version 3

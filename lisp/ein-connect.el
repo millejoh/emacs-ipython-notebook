@@ -368,7 +368,7 @@ notebook."
   (define-key map "\C-c\C-l" 'ein:connect-reload-buffer)
   (define-key map "\C-c\C-r" 'ein:connect-eval-region)
   (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
+  (define-key map "\C-c\C-h" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
   (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
