@@ -39,6 +39,7 @@
 (require 'deferred)
 (require 'dash)
 (require 'ido)
+(require 'f)
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
@@ -847,13 +848,29 @@ See also:
 ;;;###autoload
 (defalias 'ein-login 'ein:notebooklist-login)
 
+(defun ein:notebooklist-ask-one-cookie ()
+  "If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
+  (plist-put nil (intern (read-no-blanks-input "Cookie name: "))
+             (read-no-blanks-input "Cookie content: ")))
+
 ;;;###autoload
-(defun ein:notebooklist-login (url-or-port callback)
+(defun ein:notebooklist-login (url-or-port callback &optional cookie-plist)
   "Deal with security before main entry of ein:notebooklist-open*.
 
 CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success."
-  (interactive `(,(ein:notebooklist-ask-url-or-port) ,#'pop-to-buffer))
+  (interactive `(,(ein:notebooklist-ask-url-or-port) 
+                 ,#'pop-to-buffer
+                 ,(if current-prefix-arg (ein:notebooklist-ask-one-cookie))))
   (unless callback (setq callback (lambda (buffer))))
+
+  (when cookie-plist
+    (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
+           (domain (url-host parsed-url))
+           (securep (string-match "^wss://" url-or-port)))
+      (loop for (name content) on cookie-plist by (function cddr)
+            for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
+            do (f-append-text line 'utf-8 (request--curl-cookie-jar)))))
+
   (lexical-let* (done-p
                  (done-callback (lambda (&rest ignore) (setf done-p t)))
                  (errback (lambda (&rest ignore) (setf done-p 'error)))
