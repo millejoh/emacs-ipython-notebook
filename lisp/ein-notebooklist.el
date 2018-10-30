@@ -567,9 +567,7 @@ You may find the new one in the notebook list." error)
   "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
-     (if (< (ein:$notebooklist-api-version ein:%notebooklist%) 4)
-         (format "IPython v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port)
-       (format "Jupyter v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port)))
+     (format "Notebook v%s (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port))
 
     (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
