@@ -1,9 +1,3 @@
-Scenario: No warnings
-Given I switch to log expr "ein:log-all-buffer-name"
-Then I should see "[info]"
-And I should not see "[warn]"
-And I should not see "[error]"
-
 Scenario: Breadcrumbs
   Given I am in notebooklist buffer
   When I click on dir "step-definitions"

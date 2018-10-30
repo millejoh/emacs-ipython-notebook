@@ -73,6 +73,9 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
+(defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
+  "A map: (URL-OR-PORT . PATH) => t/nil")
+
 (defcustom ein:notebook-autosave-frequency 300
   "Sets the frequency (in seconds) at which the notebook is
 automatically saved, per IPEP15. Set to 0 to disable this feature.
@@ -297,9 +300,10 @@ will be updated with kernel's cwd."
         ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
-(defun ein:notebook-open--decorate-callback (notebook existing callback)
-  "In addition to CALLBACK, also pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
-  (apply-partially (lambda (notebook* created callback*)
+(defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback)
+  "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
+  (apply-partially (lambda (notebook* created callback* pending-clear*)
+                     (funcall pending-clear*)
                      (with-current-buffer (ein:notebook-buffer notebook*)
                        (ein:worksheet-focus-cell))
                      (pop-to-buffer (ein:notebook-buffer notebook*))
@@ -313,7 +317,7 @@ will be updated with kernel's cwd."
                              (ein:notebook-save-notebook notebook*))))
                      (when callback*
                        (funcall callback* notebook* created)))
-                   notebook (not existing) callback))
+                   notebook (not existing) callback pending-clear))
 
 ;;;###autoload
 
@@ -332,19 +336,29 @@ notebook buffer.  Let's warn for now to see who is doing this.
 "
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
-  (let* ((existing (ein:notebook-get-opened-notebook url-or-port path))
+  (let* ((pending-key (cons url-or-port path))
+         (pending-p (gethash pending-key *ein:notebook--pending-query*))
+         (pending-clear (apply-partially (lambda (pending-key*) 
+                                           (remhash pending-key*
+                                                    *ein:notebook--pending-query*))
+                                         pending-key))
+         (existing (ein:notebook-get-opened-notebook url-or-port path))
          (notebook (ein:aif existing it
                      (ein:notebook-new url-or-port path kernelspec)))
-         (callback0 (ein:notebook-open--decorate-callback notebook existing callback)))
-    (if existing
-        (progn
-          (ein:log 'warn "Notebook %s is already opened"
-                   (ein:$notebook-notebook-name notebook))
-          (funcall callback0))
-      (ein:content-query-contents url-or-port path
-                                  (apply-partially #'ein:notebook-open--callback
-                                                   notebook callback0) 
-                                  nil))
+         (callback0 (ein:notebook-open--decorate-callback notebook existing pending-clear
+                                                          callback)))
+    (if pending-p
+        (ein:log 'warn "Notebook %s is pending open!" pending-key)
+      (if existing
+          (progn
+            (ein:log 'warn "Notebook %s is already open" 
+                     (ein:$notebook-notebook-name notebook))
+            (funcall callback0))
+        (setf (gethash pending-key *ein:notebook--pending-query*) t)
+        (ein:content-query-contents url-or-port path
+                                    (apply-partially #'ein:notebook-open--callback
+                                                     notebook callback0) 
+                                    pending-clear)))
     notebook))
 
 (defun ein:notebook-open--callback (notebook callback0 content)
@@ -538,16 +552,13 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-restart-kernel-command ()
   "Send request to the server to restart kernel."
   (interactive)
-  (if ein:%notebook%
-      (when (y-or-n-p "Really restart kernel? ")
-        (ein:notebook-restart-kernel ein:%notebook%))
+  (ein:aif ein:%notebook%
+      (when (or (not (ein:kernel-live-p (ein:$notebook-kernel it)))
+                (y-or-n-p "Restart kernel? "))
+        (ein:notebook-restart-kernel it))
     (ein:log 'error "Not in notebook buffer!")))
 
-(defun ein:notebook-reconnect-kernel ()
-  "Reconnect to the websocket connection for the running kernel."
-  (interactive)
-  (if ein:%notebook%
-      (ein:kernel-reconnect (ein:$notebook-kernel ein:%notebook%) ein:%notebook%)))
+(define-obsolete-function-alias 'ein:notebook-reconnect-kernel 'ein:notebook-restart-kernel-command "0.14.2")
 
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
@@ -568,10 +579,10 @@ This is equivalent to do ``C-c`` in the console program."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:%notebook%)))
 
-(defun ein:notebook-kernel-kill-command ()
+(defun ein:notebook-kernel-delete-command ()
   (interactive)
-  (when (y-or-n-p "Really kill kernel?")
-    (ein:kernel-kill (ein:$notebook-kernel ein:%notebook%))))
+  (when (y-or-n-p "Delete kernel?")
+    (ein:kernel-delete (ein:$notebook-kernel ein:%notebook%))))
 
 ;; autoexec
 
@@ -873,7 +884,7 @@ as usual."
     (let ((kernel (ein:$notebook-kernel notebook)))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-kill kernel #'ein:notebook-close (list notebook))
+          (ein:kernel-delete kernel (apply-partially #'ein:notebook-close notebook))
         (ein:notebook-close notebook)))))
 
 (defun ein:fast-content-from-notebook (notebook)
@@ -1004,9 +1015,9 @@ See also `ein:notebook-worksheet-open-next-or-first' and
 ADJ is a adjective to describe worksheet to be rendered."
   (if (ein:worksheet-has-buffer-p ws)
       (ein:log 'verbose "The worksheet already has a buffer.")
-    (ein:log 'info "Rendering %s worksheet..." adj)
+    (ein:log 'verbose "Rendering %s worksheet..." adj)
     (ein:notebook--worksheet-render notebook ws)
-    (ein:log 'info "Rendering %s worksheet... Done." adj)))
+    (ein:log 'verbose "Rendering %s worksheet... Done." adj)))
 
 (defun* ein:notebook-worksheet--open-new
     (notebook new &optional (adj "next") show)

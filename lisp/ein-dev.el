@@ -160,7 +160,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (interactive)
   (pop-to-buffer
    (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-channels
+    (ein:$websocket-ws (ein:$kernel-websocket
                         (ein:$notebook-kernel ein:%notebook%))))))
 
 (defun ein:dev-pop-to-debug-shell ()

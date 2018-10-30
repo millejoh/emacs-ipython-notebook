@@ -89,27 +89,12 @@
   "A wrapper object of `websocket'.
 
 `ein:$websocket-ws'               : an instance returned by `websocket-open'
-
-`ein:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
-`ein:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
-`ein:$websocket-onopen'           : function called with (&rest ARGS)'
-
-`ein:$websocket-onmessage-args'   : optional arguments for onmessage callback'
-`ein:$websocket-onclose-args'     : optional arguments for onclose callback'
-`ein:$websocket-onopen-args'      : optional arguments for onopen callback'
-
+`ein:$websocket-kernel'           : kernel at the time of instantiation
 `ein:$websocket-closed-by-client' : t/nil'
 "
   ws
-  onmessage
-  onmessage-args
-  onclose
-  onclose-args
-  onopen
-  onopen-args
+  kernel
   closed-by-client)
-
-
 
 
 ;;; Notebook
@@ -255,12 +240,11 @@
   kernel-id
   shell-channel
   iopub-channel
-  channels                              ; For IPython 3.x+
+  websocket                             ; For IPython 3.x+
   base-url                              ; /api/kernels/
   kernel-url                            ; /api/kernels/<KERNEL-ID>
   ws-url                                ; ws://<URL>[:<PORT>]
   stdin-activep
-  running
   username
   msg-callbacks
   ;; FIXME: Use event instead of hook.
@@ -392,7 +376,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
      :s2m
      '((status_idle.Kernel . nil)
        (status_busy.Kernel . "Kernel is busy...")
-       (status_dead.Kernel . "Kernel is dead. Need restart.")))
+       (status_dead.Kernel . "Kernel requires restart C-c C-r")))
     :type ein:notification-status))
   "Notification widget for Notebook.")
 

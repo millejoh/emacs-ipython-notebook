@@ -236,7 +236,7 @@ PATH is specifying directory from file navigation.  PATH is empty on login.  RES
   (ein:subpackages-load)
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
-                 (success (apply-partially #'ein:notebooklist-open--finish callback))
+                 (success (apply-partially #'ein:notebooklist-open--finish url-or-port callback))
                  (failure errback))
     (if (or resync (not (ein:notebooklist-list-get url-or-port)))
         (deferred:$
@@ -309,10 +309,9 @@ automatically be called during calls to `ein:notebooklist-open`."
   (cancel-timer ein:notebooklist--keepalive-timer)
   (setq ein:notebooklist--keepalive-timer nil))
 
-(defun ein:notebooklist-open--finish (callback content)
+(defun ein:notebooklist-open--finish (url-or-port callback content)
   "Called via `ein:notebooklist-open'."
-  (let ((url-or-port (ein:$content-url-or-port content))
-        (path (ein:$content-path content))
+  (let ((path (ein:$content-path content))
         (nb-version (ein:$content-notebook-version content))
         (data (ein:$content-raw-content content)))
     (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
@@ -330,7 +329,7 @@ automatically be called during calls to `ein:notebooklist-open`."
         (unless already-opened-p
           (run-hooks 'ein:notebooklist-first-open-hook))
         (when ein:enable-keepalive
-          (ein:notebooklist-enable-keepalive (ein:$content-url-or-port content)))
+          (ein:notebooklist-enable-keepalive url-or-port))
         (when callback
           (funcall callback (current-buffer)))
         (current-buffer)))))
@@ -567,9 +566,7 @@ You may find the new one in the notebook list." error)
   "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
-     (if (< (ein:$notebooklist-api-version ein:%notebooklist%) 4)
-         (format "IPython v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port)
-       (format "Jupyter v%s Notebook list (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port)))
+     (format "Notebook v%s (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port))
 
     (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
@@ -719,7 +716,7 @@ You may find the new one in the notebook list." error)
                                                (nblist ein:%notebooklist%))
                                    (lambda (&rest ignore)
                                      (run-at-time 1 nil #'ein:notebooklist-reload)
-                                     (ein:kernel-kill (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
+                                     (ein:kernel-delete (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
                                                                         :session-id session))))
                          "Stop")
                       (widget-insert "------"))
@@ -876,8 +873,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                  (errback (lambda (&rest ignore) (setf done-p 'error)))
                  (token (ein:notebooklist-token-or-password url-or-port)))
     (add-function :before callback done-callback)
-    (if token
-        (ein:message-whir "Establishing session" (lambda () done-p)))
+    (ein:message-whir "Establishing session" (lambda () done-p))
     (cond ((null token) ;; don't know
            (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
           ((string= token "") ;; all authentication disabled

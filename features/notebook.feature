@@ -1,6 +1,21 @@
 @autosave
-Scenario: opened notebook
-  Given old notebook "undo.ipynb"
+Scenario: try autosaving
+  Given new default notebook
   And I call "ein:notebook-enable-autosaves"
-  And I switch to log expr "ein:log-all-buffer-name"
   Then I should see message "ein:notebook-autosave-frequency is 0"
+
+@reconnect
+Scenario: kernel restart succeeds
+  Given new default notebook
+  When I type "import math"
+  And I wait for cell to execute
+  And I kill processes like "websocket"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "WS closed unexpectedly"
+  And I switch to buffer like "Untitled"
+  And header says "Kernel requires restart C-c C-r"
+  And I press "C-c C-r"
+  And I wait for the smoke to clear
+  And header does not say "Kernel requires restart C-c C-r"
+  
+  

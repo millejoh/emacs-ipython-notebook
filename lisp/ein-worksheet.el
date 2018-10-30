@@ -1001,7 +1001,7 @@ Do not clear input prompts when the prefix argument is given."
                                    (list (cons slot
                                                (websocket-ready-state
                                                 (ein:$websocket-ws channel)))))))
-                          '(ein:$kernel-channels
+                          '(ein:$kernel-websocket
                             ein:$kernel-shell-channel
                             ein:$kernel-iopub-channel)))))
 

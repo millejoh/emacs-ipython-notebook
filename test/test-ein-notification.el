@@ -44,7 +44,7 @@
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
              (concat "IP[y]: Saving Notebook... | "
-                     "Kernel is dead. Need restart. | "
+                     "Kernel requires restart C-c C-r | "
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()

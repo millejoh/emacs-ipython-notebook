@@ -5,7 +5,7 @@
   "Make empty notebook list buffer."
   (cl-letf (((symbol-function 'ein:need-kernelspecs) #'ignore)
             ((symbol-function 'ein:content-query-sessions) #'ignore))
-    (ein:notebooklist-open--finish nil
+    (ein:notebooklist-open--finish (or url-or-port ein:testing-notebook-dummy-url) nil 
      (make-ein:$content :url-or-port (or url-or-port ein:testing-notebook-dummy-url)
                         :notebook-version 3
                         :path ""))))

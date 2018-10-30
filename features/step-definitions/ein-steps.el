@@ -3,6 +3,16 @@
         (cl-letf (((symbol-function 'ein:notebook-opened-buffer-names) #'ignore))
           (When (format "I call \"%s\"" func)))))
 
+(When "header \\(does not \\)?says? \"\\(.+\\)\"$"
+      (lambda (negate says)
+        (let ((equal-p (string= says (slot-value (slot-value ein:%notification% 'kernel) 'message))))
+          (cl-assert (if negate (not equal-p) equal-p)))))
+
+(When "I kill processes like \"\\(.+\\)\"$"
+      (lambda (substr)
+        (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p))) 
+              (process-list))))
+
 (When "^I clear log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
         (let ((buffer (get-buffer (symbol-value (intern log-expr)))))
@@ -14,6 +24,10 @@
 (When "^I switch to log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
         (switch-to-buffer (symbol-value (intern log-expr)))))
+
+(When "^I switch to buffer like \"\\(.+\\)\"$"
+      (lambda (substr)
+        (switch-to-buffer (car (-non-nil (mapcar (lambda (b) (if (search substr (buffer-name b)) b)) (buffer-list)))))))
 
 (When "^I am in notebooklist buffer$"
       (lambda ()
@@ -30,16 +44,17 @@
 (When "^new \\(.+\\) notebook$"
       (lambda (kernel)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)) notebook)
-              (loop repeat 2
-                    until notebook
-                    do (setq notebook (ein:testing-new-notebook url-or-port ks)))
-              (let ((buf-name (format ein:notebook-buffer-name-template
-                                      (ein:$notebook-url-or-port notebook)
-                                      (ein:$notebook-notebook-name notebook))))
-                (switch-to-buffer buf-name)
-                (Then "I should be in buffer \"%s\"" buf-name)))))))
+          (lexical-let (notebook)
+            (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+              (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)))
+                (loop repeat 2
+                      until notebook
+                      do (setq notebook (ein:testing-new-notebook url-or-port ks)))))
+            (let ((buf-name (format ein:notebook-buffer-name-template
+                                    (ein:$notebook-url-or-port notebook)
+                                    (ein:$notebook-notebook-name notebook))))
+              (switch-to-buffer buf-name)
+              (Then "I should be in buffer \"%s\"" buf-name))))))
 
 (When "^I stop the server$"
       (lambda ()
@@ -218,6 +233,6 @@
           (cl-letf (((symbol-function 'ein:notebooklist-ask-path)
                      (lambda (&rest args) nbpath)))
             (When (format "I press \"C-c C-%s\"" (if (string= content-type "file") "f" "o")))
-            (ein:testing-flush-queries)
+            (And "I wait for the smoke to clear")
             (Given "I switch to log expr \"ein:log-all-buffer-name\"")
             (Then (format "I should see \"Opened %s %s\"" content-type file-name))))))

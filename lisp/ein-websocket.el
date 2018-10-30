@@ -86,45 +86,17 @@
       (dolist (c (append cookies http-only-cookies hub-cookies user-cookies))
         (url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)) securep)))))
 
-
-;; Issues opening websockets in IPython 2.0, think it is related to
-;; http://stackoverflow.com/questions/22202182/error-on-websocket-when-try-to-use-ipython-notebook-in-emacs
-(defun ein:websocket (url &optional onmessage onclose onopen
-                          onmessage-args onclose-args onopen-args)
+(defun ein:websocket (url kernel on-message on-close on-open)
   (ein:websocket--prepare-cookies url)
-  (let* ((websocket (make-ein:$websocket
-                     :onmessage onmessage
-                     :onclose onclose
-                     :onopen onopen
-                     :onmessage-args onmessage-args
-                     :onclose-args onclose-args
-                     :onopen-args onopen-args))
-         (ws (websocket-open
-              url
-              :on-open
-              (lambda (ws)
-                (let ((websocket (websocket-client-data ws)))
-                  (ein:aif (ein:$websocket-onopen websocket)
-                      (apply it (ein:$websocket-onopen-args websocket)))))
-              :on-message
-              (lambda (ws frame)
-                (let ((websocket (websocket-client-data ws))
-                      (packet (websocket-frame-payload frame)))
-                  (ein:aif (ein:$websocket-onmessage websocket)
-                      (when packet
-                        (apply it packet
-                               (ein:$websocket-onmessage-args websocket))))))
-              :on-close
-              (lambda (ws)
-                (let ((websocket (websocket-client-data ws)))
-                  (ein:aif (ein:$websocket-onclose websocket)
-                      (apply it websocket
-                             (ein:$websocket-onclose-args websocket)))))
-              :on-error
-              (lambda (ws action err)
-                (ein:log 'error "Error %s on websocket action %s (ws:%s)." err action (websocket-url ws))))))
+  (let* ((ws (websocket-open url
+                             :on-open on-open
+                             :on-message on-message
+                             :on-close on-close
+                             :on-error (lambda (ws action err)
+                                         (ein:log 'error "WS action [%s] %s (%s)" 
+                                                  err action (websocket-url ws)))))
+         (websocket (make-ein:$websocket :ws ws :kernel kernel :closed-by-client nil)))
     (setf (websocket-client-data ws) websocket)
-    (setf (ein:$websocket-ws websocket) ws)
     websocket))
 
 
@@ -151,7 +123,7 @@
           (json-encode msg)))
         ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
-          (ein:$kernel-channels kernel)
+          (ein:$kernel-websocket kernel)
           (json-encode (plist-put msg :channel "shell"))))))
 
 (defun ein:websocket-send-stdin-channel (kernel msg)
@@ -159,7 +131,7 @@
          (ein:log 'warn "Stdin messages only supported with IPython 3."))
         ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
-          (ein:$kernel-channels kernel)
+          (ein:$kernel-websocket kernel)
           (json-encode (plist-put msg :channel "stdin"))))))
 
 (provide 'ein-websocket)

@@ -968,9 +968,9 @@ defined."
           ((ein:kernel-live-p
             (kernel)
             ((:input (list kernel) :output t)))
-           (ein:kernel-kill
-            (kernel &optional callback cbargs)
-            ((:input (list kernel #'ein:notebook-close (list notebook))))))
+           (ein:kernel-delete
+            (kernel &optional callback)
+            ((:input (list kernel (apply-partially #'ein:notebook-close notebook))))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))
       (should (buffer-live-p buffer))
       ;; Pretend that `ein:notebook-close' is called.
