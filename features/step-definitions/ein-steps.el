@@ -1,3 +1,8 @@
+(When "with no opened notebooks call \"\\(.+\\)\"$"
+      (lambda (func)
+        (cl-letf (((symbol-function 'ein:notebook-opened-buffer-names) #'ignore))
+          (When (format "I call \"%s\"" func)))))
+
 (When "^I clear log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
         (let ((buffer (get-buffer (symbol-value (intern log-expr)))))
@@ -129,19 +134,18 @@
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
-        (let ((url-or-port (car (ein:jupyter-server-conn-info))))
+        (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (lexical-let (notebook)
-              (ein:notebook-open url-or-port path nil
-                                 (lambda (nb created) (setq notebook nb)))
-              (ein:testing-wait-until (lambda () (and (not (null notebook))
-                                                      (ein:aand (ein:$notebook-kernel notebook)
-                                                                (ein:kernel-live-p it)))))
-              (let ((buf-name (format ein:notebook-buffer-name-template
-                                      (ein:$notebook-url-or-port notebook)
-                                      (ein:$notebook-notebook-name notebook))))
-                (switch-to-buffer buf-name)
-                (Then "I should be in buffer \"%s\"" buf-name)))))))
+            (ein:notebook-open url-or-port path nil
+                               (lambda (nb created) (setq notebook nb)))
+            (ein:testing-wait-until (lambda () (and (not (null notebook))
+                                                    (ein:aand (ein:$notebook-kernel notebook)
+                                                              (ein:kernel-live-p it))))))
+          (let ((buf-name (format ein:notebook-buffer-name-template
+                                  (ein:$notebook-url-or-port notebook)
+                                  (ein:$notebook-notebook-name notebook))))
+            (switch-to-buffer buf-name)
+            (Then "I should be in buffer \"%s\"" buf-name)))))
 
 (When "^I dump buffer"
       (lambda () (message "%s" (buffer-string))))

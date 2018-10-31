@@ -303,12 +303,14 @@ will be updated with kernel's cwd."
                      (with-current-buffer (ein:notebook-buffer notebook*)
                        (ein:worksheet-focus-cell))
                      (pop-to-buffer (ein:notebook-buffer notebook*))
-                     (ein:aif (ein:$notebook-kernelspec notebook*)
-                         (progn
-                           (setf (ein:$notebook-metadata notebook*) 
-                                 (plist-put (ein:$notebook-metadata notebook*)
-                                            :kernelspec (ein:kernelspec-for-nb-metadata it)))
-                           (ein:notebook-save-notebook notebook*)))
+                     (when (null (plist-member (ein:$notebook-metadata notebook*)
+                                               :kernelspec))
+                       (ein:aif (ein:$notebook-kernelspec notebook*)
+                           (progn
+                             (setf (ein:$notebook-metadata notebook*) 
+                                   (plist-put (ein:$notebook-metadata notebook*)
+                                              :kernelspec (ein:kernelspec-for-nb-metadata it)))
+                             (ein:notebook-save-notebook notebook*))))
                      (when callback*
                        (funcall callback* notebook* created)))
                    notebook (not existing) callback))
@@ -408,45 +410,54 @@ of minor mode."
 (defun ein:notebook-enable-autosaves (notebook)
   "Enable automatic, periodic saving for notebook."
   (interactive
-   (let* ((notebook (or (ein:get-notebook)
-                        (completing-read
-                         "Select notebook [URL-OR-PORT/NAME]: "
-                         (ein:notebook-opened-buffer-names)))))
-     (list notebook)))
-  (if (stringp notebook)
-      (error "Fix me!")) ;; FIXME
-  (setf (ein:$notebook-autosave-timer notebook)
-        (run-at-time 0 ein:notebook-autosave-frequency #'ein:notebook-maybe-save-notebook notebook 0))
-  (ein:log 'verbose "Enabling autosaves for %s with frequency %s seconds."
-           (ein:$notebook-notebook-name notebook)
-           ein:notebook-autosave-frequency))
+   (list (or (ein:get-notebook)
+             (ein:aand (ein:notebook-opened-buffer-names)
+                       (with-current-buffer (ido-completing-read 
+                                             "Notebook: " it nil t)
+                         (ein:get-notebook))))))
+  (if (> ein:notebook-autosave-frequency 0)
+      (if notebook
+          (progn (setf (ein:$notebook-autosave-timer notebook)
+                       (run-at-time ein:notebook-autosave-frequency
+                                    ein:notebook-autosave-frequency
+                                    #'ein:notebook-maybe-save-notebook
+                                    notebook))
+                 (ein:log 'verbose "Enabling autosaves for %s with frequency %s seconds."
+                          (ein:$notebook-notebook-name notebook)
+                          ein:notebook-autosave-frequency))
+        (message "Open notebook first"))
+    (message "ein:notebook-autosave-frequency is %d" ein:notebook-autosave-frequency)))
 
 (defun ein:notebook-disable-autosaves (notebook)
   "Disable automatic, periodic saving for current notebook."
   (interactive
-   (let* ((notebook (or (ein:get-notebook)
-                        (completing-read
-                         "Select notebook [URL-OR-PORT/NAME]: "
-                         (ein:notebook-opened-buffer-names)))))
-     (list notebook)))
-  (when (ein:$notebook-autosave-timer notebook)
-    (ein:log 'info "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
-    (cancel-timer (ein:$notebook-autosave-timer notebook))))
+   (list (or (ein:get-notebook)
+             (ein:aand (ein:notebook-opened-buffer-names)
+                       (with-current-buffer (ido-completing-read 
+                                             "Notebook: " it nil t)
+                         (ein:get-notebook))))))
+  (if (and notebook (ein:$notebook-autosave-timer notebook))
+      (progn
+        (ein:log 'verbose "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
+        (cancel-timer (ein:$notebook-autosave-timer notebook)))))
 
 (defun ein:notebook-update-autosave-frequency (new-frequency notebook)
   "Change the autosaves frequency for the current notebook, or
 for a notebook selected by the user if not currently inside a
 notebook buffer."
-  (interactive)
-  (let* ((new-frequency (read-number "New autosaves frequency (0 to disable): "))
-         (notebook (or (ein:get-notebook)
-                       (completing-read
-                        "Select notebook [URL-OR-PORT/NAME]: "
-                        (ein:notebook-opened-buffer-names)))))
-    (when notebook
-      (setq ein:notebook-autosave-frequency new-frequency)
-      (ein:notebook-disable-autosaves notebook)
-      (ein:notebook-enable-autosaves notebook))))
+  (interactive
+   (list (read-number "New autosaves frequency (0 to disable): ")
+         (or (ein:get-notebook)
+             (ein:aand (ein:notebook-opened-buffer-names)
+                       (with-current-buffer (ido-completing-read 
+                                             "Notebook: " it nil t)
+                         (ein:get-notebook))))))
+  (if notebook
+      (progn
+        (setq ein:notebook-autosave-frequency new-frequency)
+        (ein:notebook-disable-autosaves notebook)
+        (ein:notebook-enable-autosaves notebook))
+    (message "Open notebook first")))
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
