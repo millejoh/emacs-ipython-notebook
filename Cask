@@ -19,4 +19,5 @@
  (depends-on "skewer-mode")
  (depends-on "deferred")
  (depends-on "auto-complete")
+ (depends-on "f")
  (depends-on "s"))

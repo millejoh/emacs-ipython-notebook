@@ -148,6 +148,7 @@ Requirements
 * `request-deferred.el`_ >= 0.2
 * `dash`_ >= 2.13
 * `s`_ >= 1.11
+* `f`_
 * `auto-complete.el`_ >= 1.4:
   You need to configure subpackage ``ein-ac`` to enable
   this feature.
@@ -190,6 +191,7 @@ EIEIO and json.el.
 .. _jedi.el: https://github.com/tkf/emacs-jedi
 .. _jedi: https://github.com/davidhalter/jedi
 .. _s: https://github.com/magnars/s.el
+.. _f: https://github.com/rejeep/f.el
 
 Usage
 =====
