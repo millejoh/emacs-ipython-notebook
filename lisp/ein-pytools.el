@@ -87,23 +87,29 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 
 ;;; Tooltip and help
 
+;; We can probably be more sophisticated than this, but
+;; as a hack it will do.
+(defun ein:pytools-magic-func-p (fstr)
+  (string-prefix-p "%" fstr))
+
 (defun ein:pytools-request-tooltip (kernel func)
   (interactive (list (ein:get-kernel-or-error)
                      (ein:object-at-point-or-error)))
-  (if (>= (ein:$kernel-api-version kernel) 3)
-      (ein:kernel-execute
-       kernel
-       (format "__import__('ein').print_object_info_for(%s)" func)
-       (list
-        :output (cons
-                 (lambda (name msg-type content -metadata-not-used-)
-                   (ein:case-equal msg-type
-                     (("stream" "display_data")
-                      (ein:pytools-finish-tooltip name (ein:json-read-from-string (plist-get content :text)) nil))))
-                 func)))
-    (ein:kernel-object-info-request
-     kernel func (list :object_info_reply
-                       (cons #'ein:pytools-finish-tooltip nil)))))
+  (unless (ein:pytools-magic-func-p func)
+    (if (>= (ein:$kernel-api-version kernel) 3)
+        (ein:kernel-execute
+         kernel
+         (format "__import__('ein').print_object_info_for(%s)" func)
+         (list
+          :output (cons
+                   (lambda (name msg-type content -metadata-not-used-)
+                     (ein:case-equal msg-type
+                       (("stream" "display_data")
+                        (ein:pytools-finish-tooltip name (ein:json-read-from-string (plist-get content :text)) nil))))
+                   func)))
+      (ein:kernel-object-info-request
+       kernel func (list :object_info_reply
+                         (cons #'ein:pytools-finish-tooltip nil))))))
 
 (declare-function pos-tip-show "pos-tip")
 (declare-function popup-tip "popup")
