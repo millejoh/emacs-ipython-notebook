@@ -311,7 +311,7 @@ will be updated with kernel's cwd."
                                                :kernelspec))
                        (ein:aif (ein:$notebook-kernelspec notebook*)
                            (progn
-                             (setf (ein:$notebook-metadata notebook*) 
+                             (setf (ein:$notebook-metadata notebook*)
                                    (plist-put (ein:$notebook-metadata notebook*)
                                               :kernelspec (ein:kernelspec-for-nb-metadata it)))
                              (ein:notebook-save-notebook notebook*))))
@@ -331,14 +331,14 @@ After the notebook is opened, CALLBACK is called as::
 
 where `created' indicates a new notebook or an existing one.
 
-TODO - This function should not be used to switch to an existing 
+TODO - This function should not be used to switch to an existing
 notebook buffer.  Let's warn for now to see who is doing this.
 "
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
   (let* ((pending-key (cons url-or-port path))
          (pending-p (gethash pending-key *ein:notebook--pending-query*))
-         (pending-clear (apply-partially (lambda (pending-key*) 
+         (pending-clear (apply-partially (lambda (pending-key*)
                                            (remhash pending-key*
                                                     *ein:notebook--pending-query*))
                                          pending-key))
@@ -351,13 +351,13 @@ notebook buffer.  Let's warn for now to see who is doing this.
         (ein:log 'warn "Notebook %s is pending open!" pending-key)
       (if existing
           (progn
-            (ein:log 'warn "Notebook %s is already open" 
+            (ein:log 'warn "Notebook %s is already open"
                      (ein:$notebook-notebook-name notebook))
             (funcall callback0))
         (setf (gethash pending-key *ein:notebook--pending-query*) t)
         (ein:content-query-contents url-or-port path
                                     (apply-partially #'ein:notebook-open--callback
-                                                     notebook callback0) 
+                                                     notebook callback0)
                                     pending-clear)))
     notebook))
 
@@ -426,7 +426,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read 
+                       (with-current-buffer (ido-completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if (> ein:notebook-autosave-frequency 0)
@@ -447,7 +447,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read 
+                       (with-current-buffer (ido-completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if (and notebook (ein:$notebook-autosave-timer notebook))
@@ -463,7 +463,7 @@ notebook buffer."
    (list (read-number "New autosaves frequency (0 to disable): ")
          (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read 
+                       (with-current-buffer (ido-completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if notebook
@@ -754,7 +754,7 @@ This is equivalent to do ``C-c`` in the console program."
                          append (ein:worksheet-to-nb4-json ws i))))
     ;; should be in notebook constructor, not here
     (ein:aif (ein:$notebook-kernelspec notebook)
-        (setf (ein:$notebook-metadata notebook) 
+        (setf (ein:$notebook-metadata notebook)
               (plist-put (ein:$notebook-metadata notebook)
                          :kernelspec (ein:kernelspec-for-nb-metadata it))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
@@ -1523,14 +1523,22 @@ This hook is run regardless the actual major mode used."
       ))
   map)
 
+(defcustom ein:enable-eldoc-support nil
+  "Enable experimental support for eldoc in notebook buffers.
+
+Disabled by default, but if you want to help debug this feature set it to T and
+watch the fireworks!"
+  :type 'boolean
+  :group 'ein)
+
 (defun ein:notebook-configure-eldoc ()
   "eldoc comments say: Major modes for other languages may use ElDoc by defining an
 appropriate function as the buffer-local value of `eldoc-documentation-function'."
   ;; TODO
-  (when nil
+  (when ein:enable-eldoc-support
     (require 'eldoc nil t)
     (if (boundp 'eldoc-documentation-function)
-        (setq-local eldoc-documentation-function 
+        (setq-local eldoc-documentation-function
                     (apply-partially (lambda (oldfun &rest args)
                                        (or (apply #'ein:completer--get-eldoc-signature args)
                                            (apply oldfun args)))
@@ -1544,7 +1552,7 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
                         (auto-complete-mode +1))
     (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
                              (auto-complete-mode +1))
-    (ein:use-company-backend 
+    (ein:use-company-backend
      (when (boundp 'company-backends) (add-to-list 'company-backends 'ein:company-backend))
      (company-mode +1))
     (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
