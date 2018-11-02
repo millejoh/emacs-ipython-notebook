@@ -21,7 +21,7 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-def export_nb(nb_json, format):
+def __ein_export_nb(nb_json, format):
     import IPython.nbconvert as nbconvert
     import IPython.nbformat as nbformat
     nb = nbformat.reads(nb_json, nbformat.NO_CONVERT)
@@ -29,19 +29,19 @@ def export_nb(nb_json, format):
     print(output[0])
 
 
-def _find_edit_target_012(*args, **kwds):
+def __ein_find_edit_target_012(*args, **kwds):
     from IPython.core.interactiveshell import InteractiveShell
     inst = InteractiveShell.instance()
     return inst._find_edit_target(*args, **kwds)
 
 
-def _find_edit_target_013(*args, **kwds):
+def __ein_find_edit_target_013(*args, **kwds):
     from IPython.core.interactiveshell import InteractiveShell
     inst = InteractiveShell.instance()
     return CodeMagics._find_edit_target(inst, *args, **kwds)
 
 
-def _find_edit_target_python(name):
+def __ein_find_edit_target_python(name):
     from inspect import getsourcefile, getsourcelines
     try:
         obj = eval(name)
@@ -57,21 +57,21 @@ def _find_edit_target_python(name):
 
 try:
     from IPython.core.magics import CodeMagics
-    _find_edit_target = _find_edit_target_013
+    __ein_find_edit_target = __ein_find_edit_target_013
 except ImportError:
-    _find_edit_target = _find_edit_target_012
+    __ein_find_edit_target = __ein_find_edit_target_012
 
-def set_figure_size(*dim):
+def __ein_set_figure_size(*dim):
     try:
         from matplotlib.pyplot import rcParams
         rcParams['figure.figsize'] = dim
     except:
         raise RuntimeError("Matplotlib not installed in this instance of python!")
 
-def find_source(name):
+def __ein_find_source(name):
     """Given an object as string, `name`, print its place in source code."""
     # FIXME: use JSON display object instead of stdout
-    ret =  _find_edit_target_python(name) or _find_edit_target(name, {}, [])
+    ret =  __ein_find_edit_target_python(name) or __ein_find_edit_target(name, {}, [])
     if ret:
         (filename, lineno, use_temp) = ret
         if not use_temp:
@@ -81,7 +81,7 @@ def find_source(name):
     raise RuntimeError("Source code for {0} cannot be found".format(name))
 
 
-def run_docstring_examples(obj, verbose=True):
+def __ein_run_docstring_examples(obj, verbose=True):
     from IPython.core.interactiveshell import InteractiveShell
     import doctest
     inst = InteractiveShell.instance()
@@ -89,13 +89,13 @@ def run_docstring_examples(obj, verbose=True):
     return doctest.run_docstring_examples(obj, globs, verbose=verbose)
 
 
-def maybe_undefined_object(obj, locals=None):
+def __ein_maybe_undefined_object(obj, locals=None):
     try:
         return eval(obj, None, locals)
     except Exception:
         return None
 
-def print_object_info_for(obj):
+def __ein_print_object_info_for(obj):
     import IPython.core.oinspect
     import json
 
@@ -106,7 +106,7 @@ def print_object_info_for(obj):
     except Exception:
         print(json.dumps(inspector.info(None)))
 
-def eval_hy_string(obj):
+def __ein_eval_hy_string(obj):
     try:
         import hy
     except ImportError:

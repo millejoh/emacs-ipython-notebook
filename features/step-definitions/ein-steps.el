@@ -13,6 +13,12 @@
         (ein:notebook-reconnect-kernel)
         (And "I wait for the smoke to clear")))
 
+(When "I call eldoc-documentation-function$"
+      (lambda ()
+        (funcall (symbol-value 'eldoc-documentation-function))
+        (And "I wait for the smoke to clear")
+        ))
+
 (When "I kill processes like \"\\(.+\\)\"$"
       (lambda (substr)
         (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p))) 
@@ -130,7 +136,8 @@
 
 (When "^I wait for the smoke to clear"
       (lambda ()
-        (ein:testing-flush-queries)))
+        (ein:testing-flush-queries)
+        (And "I wait 1 second"))) ;; eldoc-documentation-function not flushing
 
 (When "^I click on \"\\(.+\\)\"$"
       (lambda (word)
@@ -195,11 +202,15 @@
         (f-mkdir dir)
         (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
 
-(When "^I set \"\\(.+\\)\" to \\(.+\\)$"
+(When "^I set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (set (intern variable) value)))
 
-(When "^I custom set \"\\(.+\\)\" to \\(.+\\)$"
+(When "^I fset \"\\(.+\\)\" to \"\\(.+\\)\"$"
+      (lambda (variable value)
+        (fset (intern variable) (function value))))
+
+(When "^I custom set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (custom-variable value)
         (customize-set-value (intern custom-variable) value)))
 

@@ -130,13 +130,16 @@ notebook buffers and connected buffers."
 ;;; Retrieving Python Object Info
 (defvar *ein:oinfo-cache* (make-hash-table :test #'equal))
 
+(defun ein:completions--reset-oinfo-cache ()
+  (setf *ein:oinfo-cache* (make-hash-table :test #'equal)))
+
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel
-         (format "__import__('ein').print_object_info_for(%s)" obj)
+         (format "__ein_print_object_info_for(__ein_maybe_undefined_object(\"%s\", locals()))" obj)
          (list
           :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
       (deferred:callback-post d (list nil nil)))
@@ -147,7 +150,7 @@ notebook buffers and connected buffers."
     (deferred:$
       (deferred:next
         (lambda ()
-          (ein:completions--get-oinfo o)))
+          (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
       (deferred:nextc it
         (lambda (output)
           (ein:completions--prepare-oinfo output o))))))
@@ -157,10 +160,16 @@ notebook buffers and connected buffers."
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
-           (setf (gethash obj *ein:oinfo-cache*) (plist-get content :text)))
+           (ein:aif (plist-get content :text)
+               (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string it))))
           (("error" "pyerr")
            (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
-    (error (ein:log 'error "ein:completions--prepare-oinfo: [%s] %s" err obj)
+    ;; It's okay, bad things happen. Not everything in python is going to have a
+    ;; pdef, which might cause the call to the json parser to fail. No need to
+    ;; log an error as that will unnecessarily fill the log buffer, but we do
+    ;; register a debug message in case someone really needs to know what is
+    ;; happening.
+    (error (ein:log 'debug "ein:completions--prepare-oinfo: [%s] %s" err obj)
            (setf (gethash obj *ein:oinfo-cache*) :json-false))))
 
 ;;; Support for Eldoc
