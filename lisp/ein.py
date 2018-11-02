@@ -102,12 +102,9 @@ def print_object_info_for(obj):
     inspector = IPython.core.oinspect.Inspector()
 
     try:
-        if obj:
-            print(json.dumps(inspector.info(obj)))
-        else:
-            print(json.dumps(inspector.noinfo()))
+        print(json.dumps(inspector.info(obj)))
     except Exception:
-        print(json.dumps(inspector.noinfo()))
+        print(json.dumps(inspector.info(None)))
 
 def eval_hy_string(obj):
     try:

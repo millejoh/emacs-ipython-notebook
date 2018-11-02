@@ -160,10 +160,16 @@ notebook buffers and connected buffers."
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
-           (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string (plist-get content :text))))
+           (ein:aif (plist-get content :text)
+               (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string it))))
           (("error" "pyerr")
            (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
-    (error (ein:log 'error "ein:completions--prepare-oinfo: [%s] %s" err obj)
+    ;; It's okay, bad things happen. Not everything in python is going to have a
+    ;; pdef, which might cause the call to the json parser to fail. No need to
+    ;; log an error as that will unnecessarily fill the log buffer, but we do
+    ;; register a debug message in case someone really needs to know what is
+    ;; happening.
+    (error (ein:log 'debug "ein:completions--prepare-oinfo: [%s] %s" err obj)
            (setf (gethash obj *ein:oinfo-cache*) :json-false))))
 
 ;;; Support for Eldoc
