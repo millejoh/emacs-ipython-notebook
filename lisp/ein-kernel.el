@@ -102,30 +102,32 @@ CALLBACK of arity 0 (e.g., print a message kernel started)"
   (assert (and (ein:$notebook-p notebook) (ein:$kernel-p kernel)))
   (unless iteration
     (setq iteration 0))
-  (unless (ein:kernel-live-p kernel)
-    (if (<= (ein:$kernel-api-version kernel) 2)
-        (error "Api version %s unsupported" (ein:$kernel-api-version kernel))
-      (let ((kernelspec (ein:$notebook-kernelspec notebook)))
-        (ein:query-singleton-ajax
-         (list 'kernel-start (ein:$kernel-kernel-id kernel))
-         (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
-         :type "POST"
-         :data (json-encode
-                (cond ((<= (ein:$kernel-api-version kernel) 4)
-                       `(("notebook" .
-                          (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+  (if (<= (ein:$kernel-api-version kernel) 2)
+      (error "Api version %s unsupported" (ein:$kernel-api-version kernel))
+    (if (ein:kernel-live-p kernel)
+        (ein:log 'warn "Orphaning live kernel %s" (ein:$kernel-kernel-id kernel)))
+    (let ((kernelspec (ein:$notebook-kernelspec notebook)))
+      (ein:query-singleton-ajax
+       (list 'kernel-start (ein:$kernel-kernel-id kernel))
+       (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
+       :type "POST"
+       :data (json-encode
+              (cond ((<= (ein:$kernel-api-version kernel) 4)
+                     `(("notebook" .
+                        (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+                       ,@(if kernelspec
+                             `(("kernel" .
+                                (("name" . ,(ein:$kernelspec-name kernelspec))))))))
+                    (t `(("path" . ,(ein:$notebook-notebook-path notebook))
+                         ("type" . "notebook")
                          ,@(if kernelspec
                                `(("kernel" .
-                                  (("name" . ,(ein:$kernelspec-name kernelspec))))))))
-                      (t `(("path" . ,(ein:$notebook-notebook-path notebook))
-                           ("type" . "notebook")
-                           ,@(if kernelspec
-                                 `(("kernel" .
-                                    (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
-         :sync ein:force-sync
-         :parser #'ein:json-read
-         :success (apply-partially #'ein:kernel-start--success kernel callback)
-         :error (apply-partially #'ein:kernel-start--error kernel notebook iteration callback))))))
+                                  (("name" . ,(ein:$kernelspec-name kernelspec))))))))))
+       :sync ein:force-sync
+       :parser #'ein:json-read
+       :complete (apply-partially #'ein:kernel-start--complete kernel callback)
+       :success (apply-partially #'ein:kernel-start--success kernel callback)
+       :error (apply-partially #'ein:kernel-start--error kernel notebook iteration callback)))))
 
 (defun ein:kernel-restart (kernel)
   "Will not restart kernel if kernel doesn't have a session-id.  
@@ -134,12 +136,26 @@ Kernel can be dead (as in the websocket died unexpectedly) but must be fully-for
   (ein:kernel-delete kernel
                      (apply-partially
                       (lambda (kernel* notebook) 
-                        (ein:events-trigger (ein:$kernel-events kernel*) 
-                                            'status_restarting.Kernel)
-                        (ein:kernel-start kernel* notebook 0 (lambda () (message "Kernel restarted"))))
+                        (if (ein:kernel-live-p kernel*)
+                            (ein:log 'error "Kernel %s still live!" (ein:$kernel-kernel-id kernel*))
+                          (ein:events-trigger (ein:$kernel-events kernel*) 
+                                              'status_restarting.Kernel)
+                          (ein:kernel-start kernel* notebook 0 
+                                            (apply-partially 
+                                             (lambda (nb)
+                                               (with-current-buffer (ein:notebook-buffer nb)
+                                                 (ein:notification-status-set 
+                                                  (slot-value ein:%notification% 'kernel) 
+                                                  'status_restarted.Kernel)))
+                                             notebook))))
                       kernel (ein:get-notebook-or-error))))
 
-(cl-defun ein:kernel-start--error (kernel notebook iteration callback &key error-thrown sybmol-status &allow-other-keys)
+(defun* ein:kernel-start--complete (kernel callback &key data response
+                                           &allow-other-keys 
+                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:kernel-start--complete %s" resp-string))
+
+(defun* ein:kernel-start--error (kernel notebook iteration callback &key error-thrown sybmol-status &allow-other-keys)
   (let* ((max-tries 3)
          (tries-left (1- (- max-tries iteration))))
     (ein:log 'verbose "ein:kernel-start--error [%s], %s tries left"
@@ -152,9 +168,8 @@ Kernel can be dead (as in the websocket died unexpectedly) but must be fully-for
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))
     (destructuring-bind (&key id &allow-other-keys) data
-      (unless id
-        (error "ein:kernel-start--success: No :id property in %S." data))
-      (ein:log 'verbose "Kernel started: %s" id)
+      (ein:log 'verbose "ein:kernel-start--success: kernel-id=%s session-id=%s" 
+               id session-id)
       (setf (ein:$kernel-kernel-id kernel) id)
       (setf (ein:$kernel-session-id kernel) session-id)
       (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url (ein:$kernel-url-or-port kernel)))
@@ -549,14 +564,14 @@ Example::
                 (ein:log 'info "Sent interruption command.")))))
 
 (defun ein:kernel-delete (kernel &optional callback)
-  "CALLBACK of arity 0 (e.g., kernel restart)"
+  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK of arity 0 (e.g., kernel restart)"
   (ein:and-let* ((kernel kernel)
                  (session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
      (list 'kernel-delete session-id)
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "DELETE"
-     :complete (apply-partially #'ein:kernel-delete--complete session-id callback)
+     :complete (apply-partially #'ein:kernel-delete--complete kernel session-id callback)
      :error (apply-partially #'ein:kernel-delete--error session-id callback)
      :success (apply-partially #'ein:kernel-delete--success session-id callback))))
 
@@ -568,13 +583,14 @@ Example::
 
 (defun* ein:kernel-delete--success (session-id callback &key data symbol-status response
                                                &allow-other-keys)
-  (ein:log 'verbose "ein:kernel-delete--success: %s deleted" session-id)
-  (when callback (funcall callback)))
+  (ein:log 'verbose "ein:kernel-delete--success: %s deleted" session-id))
 
-(defun* ein:kernel-delete--complete (session-id callback &key data response
-                                                &allow-other-keys 
-                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
-  (ein:log 'debug "ein:kernel-delete--complete %s" resp-string))
+(defun* ein:kernel-delete--complete (kernel session-id callback &key data response
+                                            &allow-other-keys 
+                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:kernel-delete--complete %s" resp-string)
+  (ein:kernel-disconnect kernel)
+  (when callback (funcall callback)))
 
 
 ;; Reply handlers.
@@ -669,7 +685,7 @@ Example::
         (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type=%s msg_id=%s"
                  msg-type msg-id)  
         (if (and (not (equal msg-type "status")) (null callbacks))
-            (ein:log 'verbose "Got message not from this notebook.")
+            (ein:log 'verbose "Not processing msg_type=%s msg_id=%s" msg-type msg-id)
           (ein:case-equal msg-type
             (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
              (ein:aif (plist-get callbacks :output)
@@ -686,8 +702,8 @@ Example::
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
             (("clear_output")
              (ein:aif (plist-get callbacks :clear_output)
-                 (ein:funcall-packed it content metadata)))))))))
-(ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished")
+                 (ein:funcall-packed it content metadata))))))))
+  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
 
 ;;; Utility functions

@@ -93,7 +93,7 @@
                              :on-message on-message
                              :on-close on-close
                              :on-error (lambda (ws action err)
-                                         (ein:log 'error "WS action [%s] %s (%s)" 
+                                         (ein:log 'info "WS action [%s] %s (%s)" 
                                                   err action (websocket-url ws)))))
          (websocket (make-ein:$websocket :ws ws :kernel kernel :closed-by-client nil)))
     (setf (websocket-client-data ws) websocket)

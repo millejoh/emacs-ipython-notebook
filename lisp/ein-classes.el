@@ -376,6 +376,8 @@ auto-execution mode flag in the connected buffer is `t'.")))
      :s2m
      '((status_idle.Kernel . nil)
        (status_busy.Kernel . "Kernel is busy...")
+       (status_restarted.Kernel . "Kernel restarted")
+       (status_restarting.Kernel . "Kernel restarting...")
        (status_dead.Kernel . "Kernel requires restart C-c C-r")))
     :type ein:notification-status))
   "Notification widget for Notebook.")

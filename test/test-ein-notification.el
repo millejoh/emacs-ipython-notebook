@@ -59,9 +59,10 @@
             notebook_create_checkpoint.Notebook
             notebook_checkpoint_created.Notebook
             execution_count.Kernel
-            status_restarting.Kernel
             status_idle.Kernel
             status_busy.Kernel
+            status_restarting.Kernel
+            status_restarted.Kernel
             status_dead.Kernel
             ))
          (callbacks (oref events :callbacks)))

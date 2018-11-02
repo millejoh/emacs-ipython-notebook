@@ -58,7 +58,7 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   (let* ((message (cdr (assoc status (slot-value ns 's2m)))))
     (setf (slot-value ns 'status) status)
     (setf (slot-value ns 'message) message)
-    (force-mode-line-update)))
+    (force-mode-line-update t)))
 
 (defmethod ein:notification-bind-events ((notification ein:notification)
                                          events)
@@ -94,11 +94,9 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  notification)
   (ein:events-on events
                  'status_restarting.Kernel
-                 #'ein:notification--fadeout-callback
-                 (list (slot-value notification 'kernel)
-                       "Restarting kernel..."
-                       'status_restarting.Kernel
-                       'status_idle.Kernel)))
+                 #'ein:notification--callback
+                 (list (slot-value notification 'kernel) 
+                       'status_restarting.Kernel)))
 
 (defun ein:notification--callback (packed data)
   (let ((ns (car packed))
