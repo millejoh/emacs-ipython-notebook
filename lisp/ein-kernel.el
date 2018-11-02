@@ -104,8 +104,6 @@ CALLBACK of arity 0 (e.g., print a message kernel started)"
     (setq iteration 0))
   (if (<= (ein:$kernel-api-version kernel) 2)
       (error "Api version %s unsupported" (ein:$kernel-api-version kernel))
-    (if (ein:kernel-live-p kernel)
-        (ein:log 'warn "Orphaning live kernel %s" (ein:$kernel-kernel-id kernel)))
     (let ((kernelspec (ein:$notebook-kernelspec notebook)))
       (ein:query-singleton-ajax
        (list 'kernel-start (ein:$kernel-kernel-id kernel))
@@ -259,10 +257,7 @@ See: https://github.com/ipython/ipython/pull/3307"
 (defun ein:kernel-disconnect (kernel)
   "Disconnect websocket connection to running kernel, but do not
 kill the kernel."
-  (when (ein:kernel-live-p kernel)
-    ;; until someone implements true reconnection to an existing kernel,
-    ;; act in accordance with death
-    (ein:events-trigger (ein:$kernel-events kernel) 'status_dead.Kernel))
+  (ein:events-trigger (ein:$kernel-events kernel) 'status_disconnected.Kernel)
   (ein:aif (ein:$kernel-websocket kernel)
       (progn (ein:websocket-close it)
              (setf (ein:$kernel-websocket kernel) nil))))

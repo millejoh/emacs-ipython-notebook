@@ -485,6 +485,23 @@ notebook buffer."
                  (ein:$notebook-notebook-name notebook))
          (ein:$notebook-events notebook))))
 
+(defun ein:notebook-reconnect-kernel ()
+   "Assuming server will give us back the old kernel id if we send the same noteobook path.  TODO - Need to re-verify."
+   (interactive)
+   (ein:aif ein:%notebook%
+       (progn
+         (ein:kernel-disconnect (ein:$notebook-kernel it))
+         (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
+                             'status_reconnecting.Kernel)
+         (ein:kernel-start (ein:$notebook-kernel it) it
+                           (apply-partially 
+                            (lambda (nb)
+                              (with-current-buffer (ein:notebook-buffer nb)
+                                (ein:notification-status-set 
+                                 (slot-value ein:%notification% 'kernel) 
+                                 'status_reconnected.Kernel)))
+                            it)))))
+
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output
   'ein:shared-output-show-code-cell-at-point "0.1.2")
@@ -561,8 +578,6 @@ notebook buffer then the user will be prompted to select an opened notebook."
                 (y-or-n-p "Restart kernel? "))
         (ein:notebook-restart-kernel it))
     (ein:log 'error "Not in notebook buffer!")))
-
-(define-obsolete-function-alias 'ein:notebook-reconnect-kernel 'ein:notebook-restart-kernel-command "0.14.2")
 
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
@@ -1372,7 +1387,8 @@ This hook is run regardless the actual major mode used."
   (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map (kbd "C-c C-$") 'ein:tb-show)
   (define-key map "\C-c\C-x\C-l" 'ein:notebook-toggle-latex-fragment)
-  (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
+  (define-key map "\C-c\C-x\C-r" 'ein:notebook-restart-kernel-command)
+  (define-key map "\C-c\C-r" 'ein:notebook-reconnect-kernel)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
   (define-key map (kbd "C-c C-#") 'ein:notebook-close)

@@ -8,9 +8,9 @@
         (let ((equal-p (string= says (slot-value (slot-value ein:%notification% 'kernel) 'message))))
           (cl-assert (if negate (not equal-p) equal-p)))))
 
-(When "I force restart kernel$"
+(When "I reconnect kernel$"
       (lambda ()
-        (ein:notebook-restart-kernel ein:%notebook%)
+        (ein:notebook-reconnect-kernel)
         (And "I wait for the smoke to clear")))
 
 (When "I kill processes like \"\\(.+\\)\"$"

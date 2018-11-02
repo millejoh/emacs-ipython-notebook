@@ -44,7 +44,7 @@
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
              (concat "IP[y]: Saving Notebook... | "
-                     "Kernel requires restart C-c C-r | "
+                     "Kernel requires restart C-c C-x C-r | "
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()
@@ -64,6 +64,9 @@
             status_restarting.Kernel
             status_restarted.Kernel
             status_dead.Kernel
+            status_reconnecting.Kernel
+            status_reconnected.Kernel
+            status_disconnected.Kernel
             ))
          (callbacks (oref events :callbacks)))
     (ein:notification-bind-events notification events)
@@ -76,5 +79,5 @@
           do (should (equal (oref notebook :status) nil)))
     (loop for et in (mapcar #'car (oref notebook :s2m))
           do (ein:events-trigger events et)
-          do (should (equal (oref kernel :status) 'status_dead.Kernel))
+          do (should (equal (oref kernel :status) 'status_disconnected.Kernel))
           do (should (equal (oref notebook :status) et)))))
