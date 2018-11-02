@@ -202,11 +202,15 @@
         (f-mkdir dir)
         (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
 
-(When "^I set \"\\(.+\\)\" to \\(.+\\)$"
+(When "^I set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (set (intern variable) value)))
 
-(When "^I custom set \"\\(.+\\)\" to \\(.+\\)$"
+(When "^I fset \"\\(.+\\)\" to \"\\(.+\\)\"$"
+      (lambda (variable value)
+        (fset (intern variable) (function value))))
+
+(When "^I custom set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (custom-variable value)
         (customize-set-value (intern custom-variable) value)))
 

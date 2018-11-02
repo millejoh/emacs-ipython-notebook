@@ -7,7 +7,7 @@ Scenario: try autosaving
 @eldoc
 Scenario: not running server locally
   Given I enable "ein:enable-eldoc-support"
-  Given I set "ein:source-dir" to "foo"
+  Given I fset "ein:pytools-add-sys-path" to "ignore"
   Given new default notebook
   And I type "import math"
   And I press "C-a"
