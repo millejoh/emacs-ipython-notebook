@@ -54,10 +54,20 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 
 (defun ein:pytools-setup-hooks (kernel notebook)
   (push (cons #'ein:pytools-add-sys-path kernel)
+        (ein:$kernel-after-start-hook kernel))
+  (push (cons #'ein:pytools-load-safely kernel)
         (ein:$kernel-after-start-hook kernel)))
 
 (defun ein:pytools-wrap-hy-code (code)
   (format "__import__('hy').eval(__import__('hy').read_str('''%s'''))" code))
+
+(defun ein:pytools-load-safely (kernel)
+  (with-temp-buffer
+    (let ((pytools-file (format "%s/%s" ein:source-dir "ein_remote_safe.py")))
+      (insert-file-contents pytools-file)
+      (ein:kernel-execute
+       kernel
+       (buffer-string)))))
 
 (defun ein:pytools-add-sys-path (kernel)
   (ein:kernel-execute
@@ -99,7 +109,7 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
     (if (>= (ein:$kernel-api-version kernel) 3)
         (ein:kernel-execute
          kernel
-         (format "__import__('ein').print_object_info_for(%s)" func)
+         (format "__ein_print_object_info_for(%s)" func)
          (list
           :output (cons
                    (lambda (name msg-type content -metadata-not-used-)
@@ -200,7 +210,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
       (setq ein:pytools-jump-stack (list (point-marker)))))
   (ein:kernel-execute
    kernel
-   (format "__import__('ein').find_source('%s')" object)
+   (format "__ein_find_source('%s')" object)
    (list
     :output
     (cons
@@ -216,7 +226,7 @@ called with a cons of the filename and line number where object
 is defined."
   (ein:kernel-execute
    kernel
-   (format "__import__('ein').find_source('%s')" object)
+   (format "__ein_find_source('%s')" object)
    (list
     :output
     (cons
@@ -276,7 +286,7 @@ given, open the last point in the other window."
   (interactive)
   (let ((object (ein:object-at-point)))
     (ein:shared-output-eval-string
-     (format "__import__('ein').run_docstring_examples(%s)" object)
+     (format "__ein_run_docstring_examples(%s)" object)
      t)))
 
 (defun ein:pytools-whos ()
@@ -370,7 +380,7 @@ Currently EIN/IPython supports exporting to the following formats:
           (json-pretty-print (point-min) (point-max)))
       (ein:kernel-request-stream
        (ein:get-kernel)
-       (format "__import__('ein').export_nb(r'%s', '%s')"
+       (format "__ein_export_nb(r'%s', '%s')"
                json
                format)
        (lambda (export buffer)
@@ -387,7 +397,7 @@ Currently EIN/IPython supports exporting to the following formats:
 (defun ein:pytools-set-figure-size (width height)
   "Set the default figure size for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
   (interactive "nWidth: \nnHeight: ")
-  (ein:shared-output-eval-string (format "__import__('ein').set_figure_size(%s,%s)" width height)))
+  (ein:shared-output-eval-string (format "__ein_set_figure_size(%s,%s)" width height)))
 
 (provide 'ein-pytools)
 

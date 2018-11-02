@@ -139,7 +139,7 @@ notebook buffers and connected buffers."
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel
-         (format "__import__('ein').print_object_info_for(__import__('ein').maybe_undefined_object(\"%s\", locals()))" obj)
+         (format "__ein_print_object_info_for(__ein_maybe_undefined_object(\"%s\", locals()))" obj)
          (list
           :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
       (deferred:callback-post d (list nil nil)))
