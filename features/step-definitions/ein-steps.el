@@ -13,6 +13,12 @@
         (ein:notebook-restart-kernel ein:%notebook%)
         (And "I wait for the smoke to clear")))
 
+(When "I call eldoc-documentation-function$"
+      (lambda ()
+        (funcall (symbol-value 'eldoc-documentation-function))
+        (And "I wait for the smoke to clear")
+        ))
+
 (When "I kill processes like \"\\(.+\\)\"$"
       (lambda (substr)
         (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p))) 
@@ -130,7 +136,8 @@
 
 (When "^I wait for the smoke to clear"
       (lambda ()
-        (ein:testing-flush-queries)))
+        (ein:testing-flush-queries)
+        (And "I wait 1 second"))) ;; eldoc-documentation-function not flushing
 
 (When "^I click on \"\\(.+\\)\"$"
       (lambda (word)
