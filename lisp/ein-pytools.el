@@ -53,8 +53,6 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   :group 'ein)
 
 (defun ein:pytools-setup-hooks (kernel notebook)
-  (push (cons #'ein:pytools-add-sys-path kernel)
-        (ein:$kernel-after-start-hook kernel))
   (push (cons #'ein:pytools-load-safely kernel)
         (ein:$kernel-after-start-hook kernel)))
 
