@@ -130,13 +130,17 @@ notebook buffers and connected buffers."
 ;;; Retrieving Python Object Info
 (defvar *ein:oinfo-cache* (make-hash-table :test #'equal))
 
+(defun ein:completions--reset-oinfo-cache ()
+  (setf *ein:oinfo-cache* (make-hash-table :test #'equal)))
+
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
+    (ein:log 'verbose "Getting completion in session %s" (ein:$kernel-session-id kernel))
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel
-         (format "__import__('ein').print_object_info_for(%s)" obj)
+         (format "__import__('ein').print_object_info_for(__import__('ein').maybe_undefined_object(\"%s\", locals()))" obj)
          (list
           :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
       (deferred:callback-post d (list nil nil)))
@@ -147,7 +151,7 @@ notebook buffers and connected buffers."
     (deferred:$
       (deferred:next
         (lambda ()
-          (ein:completions--get-oinfo o)))
+          (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
       (deferred:nextc it
         (lambda (output)
           (ein:completions--prepare-oinfo output o))))))
@@ -157,7 +161,8 @@ notebook buffers and connected buffers."
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
-           (setf (gethash obj *ein:oinfo-cache*) (plist-get content :text)))
+           (ein:log 'verbose "ein:completions--prepare-oinfo: Adding %s with pdef %s." obj (plist-get content :text))
+           (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string (plist-get content :text))))
           (("error" "pyerr")
            (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
     (error (ein:log 'error "ein:completions--prepare-oinfo: [%s] %s" err obj)

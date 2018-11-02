@@ -89,14 +89,24 @@ def run_docstring_examples(obj, verbose=True):
     return doctest.run_docstring_examples(obj, globs, verbose=verbose)
 
 
+def maybe_undefined_object(obj, locals=None):
+    try:
+        return eval(obj, None, locals)
+    except Exception:
+        return None
+
 def print_object_info_for(obj):
     import IPython.core.oinspect
     import json
 
-    inspector = IPython.core.oinspect.Inspector()
-
     try:
-        print(json.dumps(inspector.info(obj)))
+        inspector = IPython.core.oinspect.Inspector()
+        if obj:
+            print(json.dumps(inspector.info(obj)))
+        else:
+            print(json.dumps(inspector.noinfo()))
+    except AttributeError:
+        print(json.dumps(inspector.noinfo()))
     except NameError:
         print(json.dumps(inspector.noinfo()))
 

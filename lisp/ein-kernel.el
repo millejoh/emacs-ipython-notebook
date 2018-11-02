@@ -96,7 +96,7 @@
    :parent_header (make-hash-table)))
 
 (defun ein:kernel-start (kernel notebook &optional iteration callback)
-  "Start kernel of the notebook whose id is NOTEBOOK-ID.  
+  "Start kernel of the notebook whose id is NOTEBOOK-ID.
 
 CALLBACK of arity 0 (e.g., print a message kernel started)"
   (assert (and (ein:$notebook-p notebook) (ein:$kernel-p kernel)))
@@ -114,7 +114,7 @@ CALLBACK of arity 0 (e.g., print a message kernel started)"
        :data (json-encode
               (cond ((<= (ein:$kernel-api-version kernel) 4)
                      `(("notebook" .
-                        (("path" . ,(ein:$notebook-notebook-path notebook)))) 
+                        (("path" . ,(ein:$notebook-notebook-path notebook))))
                        ,@(if kernelspec
                              `(("kernel" .
                                 (("name" . ,(ein:$kernelspec-name kernelspec))))))))
@@ -130,28 +130,28 @@ CALLBACK of arity 0 (e.g., print a message kernel started)"
        :error (apply-partially #'ein:kernel-start--error kernel notebook iteration callback)))))
 
 (defun ein:kernel-restart (kernel)
-  "Will not restart kernel if kernel doesn't have a session-id.  
+  "Will not restart kernel if kernel doesn't have a session-id.
 
 Kernel can be dead (as in the websocket died unexpectedly) but must be fully-formed for the restart."
   (ein:kernel-delete kernel
                      (apply-partially
-                      (lambda (kernel* notebook) 
+                      (lambda (kernel* notebook)
                         (if (ein:kernel-live-p kernel*)
                             (ein:log 'error "Kernel %s still live!" (ein:$kernel-kernel-id kernel*))
-                          (ein:events-trigger (ein:$kernel-events kernel*) 
+                          (ein:events-trigger (ein:$kernel-events kernel*)
                                               'status_restarting.Kernel)
-                          (ein:kernel-start kernel* notebook 0 
-                                            (apply-partially 
+                          (ein:kernel-start kernel* notebook 0
+                                            (apply-partially
                                              (lambda (nb)
                                                (with-current-buffer (ein:notebook-buffer nb)
-                                                 (ein:notification-status-set 
-                                                  (slot-value ein:%notification% 'kernel) 
+                                                 (ein:notification-status-set
+                                                  (slot-value ein:%notification% 'kernel)
                                                   'status_restarted.Kernel)))
                                              notebook))))
                       kernel (ein:get-notebook-or-error))))
 
 (defun* ein:kernel-start--complete (kernel callback &key data response
-                                           &allow-other-keys 
+                                           &allow-other-keys
                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-start--complete %s" resp-string))
 
@@ -168,7 +168,7 @@ Kernel can be dead (as in the websocket died unexpectedly) but must be fully-for
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))
     (destructuring-bind (&key id &allow-other-keys) data
-      (ein:log 'verbose "ein:kernel-start--success: kernel-id=%s session-id=%s" 
+      (ein:log 'verbose "ein:kernel-start--success: kernel-id=%s session-id=%s"
                id session-id)
       (setf (ein:$kernel-kernel-id kernel) id)
       (setf (ein:$kernel-session-id kernel) session-id)
@@ -227,7 +227,7 @@ See: https://github.com/ipython/ipython/pull/3307"
                          "/channels?session_id="
                          (ein:$kernel-session-id kernel))))
     (ein:log 'verbose "WS start: %s" ws-url)
-    (setf (ein:$kernel-websocket kernel) 
+    (setf (ein:$kernel-websocket kernel)
           (ein:websocket ws-url kernel
                          (apply-partially #'ein:kernel--handle-websocket-reply kernel)
                          (lambda (ws)
@@ -578,7 +578,7 @@ Example::
 (defun* ein:kernel-delete--error (session-id callback
                                              &key response error-thrown
                                              &allow-other-keys)
-  (ein:log 'error "ein:kernel-delete--error %s: ERROR %s DATA %s" 
+  (ein:log 'error "ein:kernel-delete--error %s: ERROR %s DATA %s"
            session-id (car error-thrown) (cdr error-thrown)))
 
 (defun* ein:kernel-delete--success (session-id callback &key data symbol-status response
@@ -586,7 +586,7 @@ Example::
   (ein:log 'verbose "ein:kernel-delete--success: %s deleted" session-id))
 
 (defun* ein:kernel-delete--complete (kernel session-id callback &key data response
-                                            &allow-other-keys 
+                                            &allow-other-keys
                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-delete--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
@@ -683,7 +683,7 @@ Example::
              (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
              (events (ein:$kernel-events kernel)))
         (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type=%s msg_id=%s"
-                 msg-type msg-id)  
+                 msg-type msg-id)
         (if (and (not (equal msg-type "status")) (null callbacks))
             (ein:log 'verbose "Not processing msg_type=%s msg_id=%s" msg-type msg-id)
           (ein:case-equal msg-type
