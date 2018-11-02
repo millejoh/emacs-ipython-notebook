@@ -13,12 +13,12 @@ Scenario: kernel restart succeeds
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "WS closed unexpectedly"
   And I switch to buffer like "Untitled"
-  And header says "Kernel requires restart C-c C-r"
+  And header says "Kernel requires reconnect C-c C-r"
   And I press "C-c C-r"
   And I wait for the smoke to clear
-  And header does not say "Kernel requires restart C-c C-r"
+  And header does not say "Kernel requires reconnect C-c C-r"
   And I clear log expr "ein:log-all-buffer-name"
-  And I force restart kernel
+  And I reconnect kernel
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see "[error]"
