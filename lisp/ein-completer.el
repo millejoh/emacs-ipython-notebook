@@ -136,7 +136,6 @@ notebook buffers and connected buffers."
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
-    (ein:log 'verbose "Getting completion in session %s" (ein:$kernel-session-id kernel))
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel
@@ -161,7 +160,6 @@ notebook buffers and connected buffers."
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
-           (ein:log 'verbose "ein:completions--prepare-oinfo: Adding %s with pdef %s." obj (plist-get content :text))
            (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string (plist-get content :text))))
           (("error" "pyerr")
            (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
