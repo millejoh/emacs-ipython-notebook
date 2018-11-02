@@ -549,6 +549,10 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-restart-kernel (notebook)
   (ein:kernel-restart (ein:$notebook-kernel notebook)))
 
+(autoload 'org-toggle-latex-fragment "org")
+(defalias 'ein:notebook-toggle-latex-fragment 'org-toggle-latex-fragment
+  "Borrow from org-mode the rendering of latex overlays")
+
 (defun ein:notebook-restart-kernel-command ()
   "Send request to the server to restart kernel."
   (interactive)
@@ -1366,7 +1370,8 @@ This hook is run regardless the actual major mode used."
   (define-key map (kbd "M-<down>") 'ein:worksheet-move-cell-down)
   (define-key map "\C-c\C-h" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:completer-complete)
-  (define-key map "\C-c\C-x" 'ein:tb-show)
+  (define-key map (kbd "C-c C-$") 'ein:tb-show)
+  (define-key map "\C-c\C-x\C-l" 'ein:notebook-toggle-latex-fragment)
   (define-key map "\C-c\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
