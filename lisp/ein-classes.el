@@ -228,10 +228,8 @@
 ;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
 ;;        testing since I can mock I/O using method overriding.
 (defstruct ein:$kernel
-  "Hold kernel variables.
+  "Should perhaps be named ein:$session.  We glom session and kernel as defined by the server as just ein:$kernel in the client.
 
-`ein:$kernel-url-or-port'
-  URL or port of IPython server.
 "
   url-or-port
   events

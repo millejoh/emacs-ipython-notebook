@@ -41,12 +41,9 @@
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
                                      :notebook-version 3
                                      :path path)))
-    ;; using dynamically scoped flet instead of cl-flet, where
-    ;; "bindings are lexical... all references to the named functions
-    ;; must appear physically within the body of the cl-flet"
     (flet ((pop-to-buffer (buf) buf)
            (ein:need-notebook-version (url-or-port) 3)
-           (ein:notebook-start-kernel (notebook))
+           (ein:notebook-new-session (notebook))
            (ein:notebook-enable-autosaves (notebook)))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)

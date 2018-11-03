@@ -3,17 +3,20 @@
 
 (require 'ein-kernel)
 (require 'ein-testing-kernel)
+(require 'ein-testing-notebook)
 
 (defun eintest:kernel-new (port)
   (ein:kernel-new port "/api/kernels"
                   (get-buffer-create "*eintest: dummy for kernel test*")))
 
 (ert-deftest ein:kernel-restart-check-url ()
-  (lexical-let* ((kernel (eintest:kernel-new 8888))
+  (lexical-let* ((notebook (ein:notebook-new ein:testing-notebook-dummy-url "" nil))
+                 (kernel (eintest:kernel-new 8888))
                  (kernel-id "KERNEL-ID")
                  (desired-url "http://127.0.0.1:8888/api/sessions/KERNEL-ID")
                  (dummy-response (make-request-response))
                  got-url)
+    (setq (ein:$notebook-kernel notebook) kernel)
     (cl-letf (((symbol-function 'request) 
                (lambda (url &rest ignore) (setq got-url url) dummy-response))
               ((symbol-function 'set-process-query-on-exit-flag) #'ignore)
@@ -21,9 +24,9 @@
               ((symbol-function 'ein:websocket) (lambda (&rest ignore) (make-ein:$websocket :ws nil :kernel kernel :closed-by-client nil)))
               ((symbol-function 'ein:events-trigger) #'ignore)
               ((symbol-function 'ein:get-notebook-or-error) (lambda () (ein:get-notebook))))
-      (ein:kernel-start--success
+      (ein:kernel-retrieve-session--success
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
-      (ein:kernel-restart kernel)
+      (ein:kernel-restart-session notebook)
       (should (equal got-url desired-url)))))
 
 (ert-deftest ein:kernel-interrupt-check-url ()
@@ -37,7 +40,7 @@
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (url kernel on-message on-close on-open) (make-ein:$websocket :ws nil :kernel kernel :closed-by-client nil))
            (ein:websocket-open-p (websocket) t))
-      (ein:kernel-start--success
+      (ein:kernel-retrieve-session--success
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
       (ein:kernel-interrupt kernel)
       (should (equal got-url desired-url)))))
@@ -52,10 +55,10 @@
            (set-process-query-on-exit-flag (process flag))
            (ein:kernel-stop-channels (&rest ignore))
            (ein:websocket (url kernel on-message on-close on-open) (make-ein:$websocket :ws nil :kernel kernel :closed-by-client nil)))
-      (ein:kernel-start--success
+      (ein:kernel-retrieve-session--success
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
-      (ein:kernel-delete kernel)
-      (should (equal got-url desired-url)))))
+      (ein:kernel-delete-session kernel))
+    (should (equal got-url desired-url))))
 
 
 ;;; Test `ein:kernel-construct-help-string'
