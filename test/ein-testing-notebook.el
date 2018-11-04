@@ -43,7 +43,7 @@
                                      :path path)))
     (flet ((pop-to-buffer (buf) buf)
            (ein:need-notebook-version (url-or-port) 3)
-           (ein:notebook-new-session (notebook))
+           (ein:notebook-retrieve-session (notebook))
            (ein:notebook-enable-autosaves (notebook)))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
