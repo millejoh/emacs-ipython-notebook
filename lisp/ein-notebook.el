@@ -494,11 +494,11 @@ notebook buffer."
          (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
                              'status_reconnecting.Kernel)
          (ein:kernel-start (ein:$notebook-kernel it) it
-                           (apply-partially 
+                           (apply-partially
                             (lambda (nb)
                               (with-current-buffer (ein:notebook-buffer nb)
-                                (ein:notification-status-set 
-                                 (slot-value ein:%notification% 'kernel) 
+                                (ein:notification-status-set
+                                 (slot-value ein:%notification% 'kernel)
                                  'status_reconnected.Kernel)))
                             it)))))
 
@@ -1386,6 +1386,7 @@ This hook is run regardless the actual major mode used."
   (define-key map "\C-c\C-h" 'ein:pytools-request-tooltip-or-help)
   (define-key map "\C-c\C-i" 'ein:completer-complete)
   (define-key map (kbd "C-c C-$") 'ein:tb-show)
+  (define-key map "\C-c\C-x" nil)
   (define-key map "\C-c\C-x\C-l" 'ein:notebook-toggle-latex-fragment)
   (define-key map "\C-c\C-x\C-r" 'ein:notebook-restart-kernel-command)
   (define-key map "\C-c\C-r" 'ein:notebook-reconnect-kernel)
