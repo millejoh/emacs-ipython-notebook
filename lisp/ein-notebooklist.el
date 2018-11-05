@@ -172,7 +172,13 @@ This function adds NBLIST to `ein:notebooklist-map'."
   "Generate a hash table of authorization tokens (when they
 exist) for allow local jupyter instances, keyed by they url and
 port the instance is running on."
-  (let ((lines (process-lines ein:jupyter-default-server-command "notebook" "list" "--json"))
+  (let ((lines
+         (condition-case err
+             ;; there may be NO local jupyter installation
+             (process-lines ein:jupyter-default-server-command
+                            "notebook" "list" "--json")
+           (error (message "Error getting local tokens: %s" err)
+                  ())))         ; empty list
         (url-tokens (make-hash-table :test #'equal)))
     (loop for line in lines
           do (destructuring-bind
@@ -185,7 +191,7 @@ port the instance is running on."
   (let ((pw-pairs (gethash url-or-port (ein:crib-token--all-local-tokens))))
     ;; pw-pairs is of the form ((PASSWORD-P TOKEN) (PASSWORD-P TOKEN))
     (cond ((= (length pw-pairs) 1) (car pw-pairs))
-          ((> (length pw-pairs) 1) 
+          ((> (length pw-pairs) 1)
            ;; orig code: (list :json-false token) meant "no password, yes token"
            ;; It's not clear how two entries for the same url could happen but if it did,
            ;; 1. what if both entries don't have any auth enabled?
@@ -214,9 +220,9 @@ port the instance is running on."
                                (ein:default-url-or-port)))))
          (url-or-port-list
           (-distinct (mapcar #'ein:url
-                             (append (list default) 
+                             (append (list default)
                                      ein:url-or-port
-                                     (hash-table-keys 
+                                     (hash-table-keys
                                       (ein:crib-token--all-local-tokens))))))
          (url-or-port (let ((ido-report-no-match nil)
                             (ido-use-faces nil))
@@ -706,7 +712,7 @@ You may find the new one in the notebook list." error)
                                (lambda (&rest ignore)
                                  (run-at-time 3 nil #'ein:notebooklist-reload) ;; TODO using deferred better?
                                  (ein:notebook-open url-or-port path)))
-                                
+
                      "Open")
                     (widget-insert " ")
                     (if (gethash path sessions)
@@ -855,7 +861,7 @@ See also:
   "Deal with security before main entry of ein:notebooklist-open*.
 
 CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success."
-  (interactive `(,(ein:notebooklist-ask-url-or-port) 
+  (interactive `(,(ein:notebooklist-ask-url-or-port)
                  ,#'pop-to-buffer
                  ,(if current-prefix-arg (ein:notebooklist-ask-one-cookie))))
   (unless callback (setq callback (lambda (buffer))))
