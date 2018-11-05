@@ -183,12 +183,11 @@ notebook, which will automatically create and associate a kernel with the notebo
                                 (("name" . ,(ein:$kernelspec-name kernelspec))))))))
                     (t `(("path" . ,(ein:$notebook-notebook-path notebook))
                          ("type" . "notebook")
-                         ("kernel" .
-                          (,@(if kernelspec 
-                                 `(("name" . ,(ein:$kernelspec-name kernelspec))))
-                           ,@(if kernel-id
-                                 `(("id" . ,kernel-id)))))
-                         ))))
+                         ,@(if kernelspec
+                               `(("kernel" .
+                                  (("name" . ,(ein:$kernelspec-name kernelspec))
+                                   ,@(if kernel-id
+                                         `(("id" . ,kernel-id)))))))))))
        :sync ein:force-sync
        :parser #'ein:json-read
        :complete (apply-partially #'ein:kernel-retrieve-session--complete kernel callback)
@@ -201,7 +200,7 @@ notebook, which will automatically create and associate a kernel with the notebo
   (ein:log 'debug "ein:kernel-retrieve-session--complete %s" resp-string))
 
 (defun* ein:kernel-retrieve-session--error (notebook iteration callback &key error-thrown symbol-status &allow-other-keys)
-  (let* ((max-tries 6)
+  (let* ((max-tries 3)
          (tries-left (1- (- max-tries iteration))))
     (ein:log 'verbose "ein:kernel-retrieve-session--error [%s], %s tries left"
              (car error-thrown) tries-left)
