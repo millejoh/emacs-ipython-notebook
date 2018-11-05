@@ -493,7 +493,7 @@ notebook buffer."
          (ein:kernel-disconnect (ein:$notebook-kernel it))
          (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
                              'status_reconnecting.Kernel)
-         (ein:kernel-start (ein:$notebook-kernel it) it
+         (ein:kernel-start (ein:$notebook-kernel it) it 0
                            (apply-partially
                             (lambda (nb)
                               (with-current-buffer (ein:notebook-buffer nb)
