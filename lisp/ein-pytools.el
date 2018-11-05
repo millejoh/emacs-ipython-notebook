@@ -67,6 +67,15 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
        kernel
        (buffer-string)))))
 
+(defun ein:pytools-reinject ()
+  "Re-send ein's pytools code to the current kernel.
+
+If the kernel is reset by the notebook server then it may become
+necessary to call this command to ensure pytools continue
+working."
+  (interactive)
+  (ein:pytools-load-safely (ein:get-kernel-or-error)))
+
 (defun ein:pytools-add-sys-path (kernel)
   (ein:kernel-execute
    kernel

@@ -94,6 +94,8 @@ def __ein_maybe_undefined_object(obj, locals=None):
         return eval(obj, None, locals)
     except Exception:
         return None
+    except SyntaxError:
+        return None
 
 def __ein_print_object_info_for(obj):
     import IPython.core.oinspect
