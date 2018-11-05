@@ -15,8 +15,10 @@
 
 (When "^my reconnect is questioned"
       (lambda ()
-        (ein:notebook-reconnect-session-command  (lambda (notebook session-p)
-                                                   (assert (not session-p))))))
+        (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest ignore) t)))
+          (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%) 
+                                        (lambda (kernel session-p)
+                                          (assert (not session-p)))))))
 
 (When "I restart kernel$"
       (lambda ()
@@ -190,8 +192,16 @@
 
 (When "^I wait for cell to execute$"
       (lambda ()
-        (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-          (ein:testing-wait-until (lambda () (not (slot-value cell 'running)))))))
+        (let* ((cell (ein:worksheet-get-current-cell :cell-p #'ein:codecell-p))
+               (orig (if (slot-boundp cell 'input-prompt-number)
+                         (slot-value cell 'input-prompt-number))))
+          (call-interactively #'ein:worksheet-execute-cell)
+          (ein:testing-wait-until 
+           (lambda () 
+             (ein:aand (and (slot-boundp cell 'input-prompt-number) 
+                            (slot-value cell 'input-prompt-number))
+                       (and (numberp it)
+                            (not (equal orig it)))))))))
 
 (When "^I undo again$"
       (lambda ()

@@ -347,13 +347,13 @@ notebook buffer.  Let's warn for now to see who is doing this.
                      (ein:notebook-new url-or-port path kernelspec)))
          (callback0 (ein:notebook-open--decorate-callback notebook existing pending-clear
                                                           callback)))
-    (if pending-p
-        (ein:log 'warn "Notebook %s is pending open!" pending-key)
-      (if existing
-          (progn
-            (ein:log 'warn "Notebook %s is already open"
-                     (ein:$notebook-notebook-name notebook))
-            (funcall callback0))
+    (if existing
+        (progn
+          (ein:log 'warn "Notebook %s is already open"
+                   (ein:$notebook-notebook-name notebook))
+          (funcall callback0))
+      (when (or (not pending-p)
+                (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
         (setf (gethash pending-key *ein:notebook--pending-query*) t)
         (ein:content-query-contents url-or-port path
                                     (apply-partially #'ein:notebook-open--callback
@@ -536,7 +536,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
   (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
                                                                 kernel-name))
   (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
-  (ein:kernel-restart-session notebook))
+  (ein:kernel-restart-session (ein:$notebook-kernel notebook)))
 
 (defun ein:notebook-retrieve-session (notebook)
   "Formerly ein:notebook-start-kernel.
@@ -545,42 +545,27 @@ If 'picking up from where we last off', that is, we restart emacs and reconnect 
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
+                                 (ein:$notebook-notebook-path notebook)
+                                 kernelspec
                                  base-url
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
     (when (eq (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)) 'python)
       (ein:pytools-setup-hooks kernel notebook))
-    (ein:kernel-retrieve-session notebook)))
+    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))))
 
-(defun ein:notebook-reconnect-session-command (&optional callback)
-   "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists.  CALLBACK takes notebook and session-p."
+(defun ein:notebook-reconnect-session-command ()
+   "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists."
    (interactive)
-   (unless callback
-     (setq callback
-           (lambda (notebook session-p)
-             (if (or session-p (y-or-n-p "Session not found.  Restart?"))
-                 (ein:kernel-retrieve-session notebook 0
-                    (apply-partially (lambda (nb)
-                                       (with-current-buffer (ein:notebook-buffer nb)
-                                         (ein:notification-status-set
-                                          (slot-value ein:%notification% 'kernel)
-                                          'status_reconnected.Kernel)))
-                                     notebook))))))
-   (ein:aif ein:%notebook%
-       (progn
-         (ein:kernel-disconnect (ein:$notebook-kernel it))
-         (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
-                             'status_reconnecting.Kernel)
-         (ein:kernel-session-p
-          it (apply-partially callback it)))))
+   (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)))
 
 (defun ein:notebook-restart-session-command ()
    "Delete session on server side.  Start new session."
   (interactive)
   (ein:aif ein:%notebook%
            (if (y-or-n-p "Are you sure? ")
-               (ein:kernel-restart-session it))
+               (ein:kernel-restart-session (ein:$notebook-kernel it)))
     (message "Not in notebook buffer!")))
 
 (define-obsolete-function-alias

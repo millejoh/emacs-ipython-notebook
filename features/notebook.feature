@@ -34,6 +34,19 @@ Scenario: kernel reconnect succeeds
   And I should not see "[error]"
   And I should see "ein:kernel-retrieve-session--complete"
   And I switch to buffer like "Untitled"
+  And I kill processes like "websocket"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "WS closed unexpectedly"
+  And I switch to buffer like "Untitled"
+  And header says "Kernel requires reconnect C-c C-r"
+  And I clear log expr "ein:log-all-buffer-name"
+  And I wait for cell to execute
+  And header does not say "Kernel requires reconnect C-c C-r"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "[warn]"
+  And I should not see "[error]"
+  And I should see "ein:kernel-retrieve-session--complete"
+  And I switch to buffer like "Untitled"
   And I clear log expr "ein:log-all-buffer-name"
   And I restart kernel
   And I switch to log expr "ein:log-all-buffer-name"
@@ -45,6 +58,3 @@ Scenario: kernel reconnect succeeds
   And header says "Kernel requires reconnect C-c C-r"
   And I clear log expr "ein:log-all-buffer-name"
   And my reconnect is questioned
-
-
-  
