@@ -26,6 +26,8 @@
 ;; is needed.  This module buffer containing one special cell for that
 ;; purpose.
 
+;; TODO - Undo accounting is almost certainly broken by this module
+
 ;;; Code:
 
 (eval-when-compile (require 'cl))

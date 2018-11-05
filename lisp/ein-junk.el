@@ -52,8 +52,8 @@ When prefix argument is given, it asks URL or port to use."
   (interactive (let* ((name (ein:junk-notebook-name))
                       (url-or-port (or (ein:get-url-or-port)
                                        (ein:default-url-or-port)))
-                      (kernelspec (completing-read
-                                   "Select kernel [default]: "
+                      (kernelspec (ido-completing-read
+                                   "Select kernel: "
                                    (ein:list-available-kernels url-or-port) nil t nil nil "default" nil)))
                  (setq name (read-string "Open notebook as: " name))
                  (when current-prefix-arg
