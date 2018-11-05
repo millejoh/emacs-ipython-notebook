@@ -39,8 +39,8 @@
                        (cons #'ein:prepare-inspector
                              (list kernel object)))))
 
-(defun ein:prepare-inspector (packed msg-type content -metadata-not-used-)
-  (destructuring-bind (kernel oname)
+(defun ein:prepare-inspector (packed _msg-type content _metadata)
+  (destructuring-bind (_kernel oname)
       packed
     (ein:aif (or (plist-get content :text) (plist-get content :data))
         (let ((oinfo (ein:json-read-from-string it)))
@@ -97,7 +97,7 @@
       (if sfile
           (widget-create 'link
                          :notify
-                         (lambda (&rest ignore)
+                         (lambda (&rest _ignore)
                            (ein:goto-file sfile (car slines)))
                          info-str)
         (widget-insert (propertize info-str 'face 'bold)))
@@ -115,11 +115,11 @@
 
 (defun ein:inspector-visit-thing ())
 
-(defun ein:inspector-section-toggle (section))
+(defun ein:inspector-section-toggle (_section))
 
-(defun ein:inspector-section-show (section))
+(defun ein:inspector-section-show (_section))
 
-(defun ein:inspector-section-hide (section)
+(defun ein:inspector-section-hide (_section)
   )
 
 (provide 'ein-inspector)
