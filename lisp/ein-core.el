@@ -126,14 +126,21 @@ pair of TO-PYTHON and FROM-PYTHON."
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
 (defun ein:version ()
-  "Return a string containing `ein:version' and git revision if
-the source is in git repository."
-  (ein:aif (when (ein:git-root-p
-                  (concat (file-name-as-directory ein:source-dir) ".."))
-             (let ((default-directory ein:source-dir))
-               (ein:git-revision-dirty)))
-      (concat ein:version "." it)
-    ein:version))
+  "Return a longer version string.
+The result contains `ein:version' and either git revision (if
+the source is in git repository) or elpa version."
+  (interactive)
+  (let* ((suffix                ; git or elpa
+          (or (and (ein:git-root-p
+                    (concat (file-name-as-directory ein:source-dir) ".."))
+                   (let ((default-directory ein:source-dir))
+                     (ein:git-revision-dirty)))
+              (and (string-match "/ein-\\([0-9\\.]*\\)/$" ein:source-dir)
+                   (match-string 1 ein:source-dir))))
+         (version (if suffix (concat ein:version "-" suffix) ein:version)))
+    (when (called-interactively-p 'interactive)
+      (message "EIN version is %s" version))
+    version))
 
 
 ;;; Server attribute getters.  These should be moved to ein-open.el
@@ -184,7 +191,7 @@ the source is in git repository."
                                  ks))))))
   (when callback (funcall callback)))
 
-(defun* ein:query-kernelspecs--error (url-or-port callback iteration 
+(defun* ein:query-kernelspecs--error (url-or-port callback iteration
                                                   &key response error-thrown
                                                   &allow-other-keys)
   (if (< iteration 3)
@@ -196,7 +203,7 @@ the source is in git repository."
     (when callback (funcall callback))))
 
 (defun* ein:query-kernelspecs--complete (url-or-port &key data response
-                                                     &allow-other-keys 
+                                                     &allow-other-keys
                                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
@@ -218,7 +225,7 @@ the source is in git repository."
   "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
   (ein:query-singleton-ajax
    (list 'query-notebook-version url-or-port)
-   (ein:jupyterhub-correct-query-url-maybe 
+   (ein:jupyterhub-correct-query-url-maybe
     (ein:url url-or-port "api"))
    :parser #'ein:json-read
    :sync ein:force-sync
