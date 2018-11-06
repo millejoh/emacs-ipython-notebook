@@ -48,7 +48,8 @@ See `ein:format-time-string'."
                      etime)
         (setf (ein:cell-metadata cell) (list :execute-time etime))))
   (ein:cell-running-set cell nil)
-  (ewoc-invalidate (ein:basecell--ewoc cell) (ein:cell-element-get cell :footer)))
+  (let ((buffer-undo-list t))
+    (ewoc-invalidate (ein:basecell--ewoc cell) (ein:cell-element-get cell :footer))))
 
 (defmethod ein:cell-insert-footer :after ((cell ein:codecell))
   (if (slot-value cell 'running)

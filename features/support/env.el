@@ -15,6 +15,10 @@
 (require 'ein-ipynb-mode)
 (require 'ein-contents-api)
 
+(if (member "timestamp" ecukes-include-tags)
+    (require 'ein-timestamp)
+  (!cons "timestamp" ecukes-exclude-tags))
+
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
 (defun ein:testing-after-scenario ()
