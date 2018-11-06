@@ -485,9 +485,7 @@ notebook buffer."
                  (ein:$notebook-notebook-name notebook))
          (ein:$notebook-events notebook))))
 
-(defun ein:notebook-reconnect-kernel ()
-  (interactive)
-  (ein:notebook-reconnect-session-command))
+(defalias 'ein:notebook-reconnect-kernel 'ein:notebook-reconnect-session-command "The distinction between kernel and session is a bit mysterious, all the action is now occurring in `ein:notebook-reconnect-session-command' these days, for which this function is now an alias.")
 
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output
