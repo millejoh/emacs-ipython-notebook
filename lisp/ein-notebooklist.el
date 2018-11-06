@@ -378,9 +378,10 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 TODO - New and open should be separate, and we should flag an exception if we try to new an existing.
 "
+
   (interactive (list (ein:notebooklist-ask-url-or-port)
-                     (completing-read
-                      "Select kernel [default]: "
+                     (ido-completing-read
+                      "Select kernel: "
                       (ein:list-available-kernels (ein:$notebooklist-url-or-port ein:%notebooklist%)) nil t nil nil "default" nil)))
   (let ((path (or path (ein:$notebooklist-path (or ein:%notebooklist%
                                                    (ein:notebooklist-list-get url-or-port)))))
@@ -442,8 +443,8 @@ You may find the new one in the notebook list." error)
   "Open new notebook and rename the notebook."
   (interactive (let* ((url-or-port (or (ein:get-url-or-port)
                                        (ein:default-url-or-port)))
-                      (kernelspec (completing-read
-                                   "Select kernel [default]: "
+                      (kernelspec (ido-completing-read
+                                   "Select kernel: "
                                    (ein:list-available-kernels url-or-port) nil t nil nil "default" nil))
                       (name (read-from-minibuffer
                              (format "Notebook name (at %s): " url-or-port))))
@@ -657,6 +658,7 @@ You may find the new one in the notebook list." error)
             (ein:format-time-string ein:notebooklist-date-format dt))))
 
 (defun render-directory (url-or-port sessions)
+  ;; SESSIONS is a hashtable of path to (session-id . kernel-id) pairs
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert "\n------------------------------------------\n\n")
     (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
@@ -718,12 +720,14 @@ You may find the new one in the notebook list." error)
                     (if (gethash path sessions)
                         (widget-create
                          'link
-                         :notify (lexical-let ((session (car (gethash path sessions)))
-                                               (nblist ein:%notebooklist%))
+                         :notify (lexical-let ((url-or-port url-or-port)
+                                               (path path)
+                                               (session (car (gethash path sessions))))
                                    (lambda (&rest ignore)
                                      (run-at-time 1 nil #'ein:notebooklist-reload)
-                                     (ein:kernel-delete (make-ein:$kernel :url-or-port (ein:$notebooklist-url-or-port nblist)
-                                                                        :session-id session))))
+                                     ;; can only stop opened notebooks
+                                     (ein:and-let* ((nb (ein:notebook-get-opened-notebook url-or-port path)))
+                                       (ein:kernel-delete-session (ein:$notebook-kernel nb)))))
                          "Stop")
                       (widget-insert "------"))
                     (widget-insert " ")

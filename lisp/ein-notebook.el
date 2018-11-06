@@ -253,7 +253,7 @@ jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
            (ein:$notebook-notebook-name notebook))
   (setf (ein:$notebook-url-or-port notebook) new-url-or-port)
   (with-current-buffer (ein:notebook-buffer notebook)
-    (ein:notebook-start-kernel notebook)
+    (ein:notebook-retrieve-session notebook)
     (rename-buffer (format ein:notebook-buffer-name-template
                            (ein:$notebook-url-or-port notebook)
                            (ein:$notebook-notebook-name notebook)))))
@@ -369,7 +369,7 @@ notebook buffer.  Let's warn for now to see who is doing this.
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
-    (ein:notebook-start-kernel notebook)
+    (ein:notebook-retrieve-session notebook)
     (ein:notebook-from-json notebook (ein:$content-raw-content content)) ; notebook buffer is created here
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-new (ein:$notebook-kernel notebook)
@@ -486,25 +486,16 @@ notebook buffer."
          (ein:$notebook-events notebook))))
 
 (defun ein:notebook-reconnect-kernel ()
-   "Assuming server will give us back the old kernel id if we send the same noteobook path.  TODO - Need to re-verify."
-   (interactive)
-   (ein:aif ein:%notebook%
-       (progn
-         (ein:kernel-disconnect (ein:$notebook-kernel it))
-         (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
-                             'status_reconnecting.Kernel)
-         (ein:kernel-start (ein:$notebook-kernel it) it 0
-                           (apply-partially
-                            (lambda (nb)
-                              (with-current-buffer (ein:notebook-buffer nb)
-                                (ein:notification-status-set
-                                 (slot-value ein:%notification% 'kernel)
-                                 'status_reconnected.Kernel)))
-                            it)))))
+  (interactive)
+  (ein:notebook-reconnect-session-command))
 
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output
   'ein:shared-output-show-code-cell-at-point "0.1.2")
+
+(autoload 'org-toggle-latex-fragment "org")
+(defalias 'ein:notebook-toggle-latex-fragment 'org-toggle-latex-fragment
+  "Borrow from org-mode the rendering of latex overlays")
 
 
 ;;; Kernel related things
@@ -537,21 +528,22 @@ notebook buffer."
 notebook buffer then the user will be prompted to select an opened notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
-                        (completing-read
-                         "Select notebook [URL-OR-PORT/NAME]: "
+                        (ido-completing-read
+                         "Select notebook: "
                          (ein:notebook-opened-buffer-names))))
-          (kernel-name (completing-read
+          (kernel-name (ido-completing-read
                         "Select kernel: "
                         (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
   (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
                                                                 kernel-name))
   (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
-  (ein:notebook-restart-kernel notebook))
+  (ein:kernel-restart-session notebook))
 
-;;; This no longer works in iPython-2.0. Protocol is to create a session for a
-;;; notebook, which will automatically create and associate a kernel with the notebook.
-(defun ein:notebook-start-kernel (notebook)
+(defun ein:notebook-retrieve-session (notebook)
+  "Formerly ein:notebook-start-kernel.
+
+If 'picking up from where we last off', that is, we restart emacs and reconnect to same server, jupyter will hand us back the original, still running session."
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
@@ -561,23 +553,37 @@ notebook buffer then the user will be prompted to select an opened notebook."
     (setf (ein:$notebook-kernel notebook) kernel)
     (when (eq (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)) 'python)
       (ein:pytools-setup-hooks kernel notebook))
-    (ein:kernel-start kernel notebook)))
+    (ein:kernel-retrieve-session notebook)))
 
-(defun ein:notebook-restart-kernel (notebook)
-  (ein:kernel-restart (ein:$notebook-kernel notebook)))
+(defun ein:notebook-reconnect-session-command (&optional callback)
+   "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists.  CALLBACK takes notebook and session-p."
+   (interactive)
+   (unless callback
+     (setq callback
+           (lambda (notebook session-p)
+             (if (or session-p (y-or-n-p "Session not found.  Restart?"))
+                 (ein:kernel-retrieve-session notebook 0
+                    (apply-partially (lambda (nb)
+                                       (with-current-buffer (ein:notebook-buffer nb)
+                                         (ein:notification-status-set
+                                          (slot-value ein:%notification% 'kernel)
+                                          'status_reconnected.Kernel)))
+                                     notebook))))))
+   (ein:aif ein:%notebook%
+       (progn
+         (ein:kernel-disconnect (ein:$notebook-kernel it))
+         (ein:events-trigger (ein:$kernel-events (ein:$notebook-kernel it))
+                             'status_reconnecting.Kernel)
+         (ein:kernel-session-p
+          it (apply-partially callback it)))))
 
-(autoload 'org-toggle-latex-fragment "org")
-(defalias 'ein:notebook-toggle-latex-fragment 'org-toggle-latex-fragment
-  "Borrow from org-mode the rendering of latex overlays")
-
-(defun ein:notebook-restart-kernel-command ()
-  "Send request to the server to restart kernel."
+(defun ein:notebook-restart-session-command ()
+   "Delete session on server side.  Start new session."
   (interactive)
   (ein:aif ein:%notebook%
-      (when (or (not (ein:kernel-live-p (ein:$notebook-kernel it)))
-                (y-or-n-p "Restart kernel? "))
-        (ein:notebook-restart-kernel it))
-    (ein:log 'error "Not in notebook buffer!")))
+           (if (y-or-n-p "Are you sure? ")
+               (ein:kernel-restart-session it))
+    (message "Not in notebook buffer!")))
 
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
@@ -597,11 +603,6 @@ notebook buffer then the user will be prompted to select an opened notebook."
 This is equivalent to do ``C-c`` in the console program."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:%notebook%)))
-
-(defun ein:notebook-kernel-delete-command ()
-  (interactive)
-  (when (y-or-n-p "Delete kernel?")
-    (ein:kernel-delete (ein:$notebook-kernel ein:%notebook%))))
 
 ;; autoexec
 
@@ -903,7 +904,7 @@ as usual."
     (let ((kernel (ein:$notebook-kernel notebook)))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-delete kernel (apply-partially #'ein:notebook-close notebook))
+          (ein:kernel-delete-session kernel (apply-partially #'ein:notebook-close notebook))
         (ein:notebook-close notebook)))))
 
 (defun ein:fast-content-from-notebook (notebook)
@@ -1388,8 +1389,8 @@ This hook is run regardless the actual major mode used."
   (define-key map (kbd "C-c C-$") 'ein:tb-show)
   (define-key map "\C-c\C-x" nil)
   (define-key map "\C-c\C-x\C-l" 'ein:notebook-toggle-latex-fragment)
-  (define-key map "\C-c\C-x\C-r" 'ein:notebook-restart-kernel-command)
-  (define-key map "\C-c\C-r" 'ein:notebook-reconnect-kernel)
+  (define-key map "\C-c\C-x\C-r" 'ein:notebook-restart-session-command)
+  (define-key map "\C-c\C-r" 'ein:notebook-reconnect-session-command)
   (define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
   (define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
   (define-key map (kbd "C-c C-#") 'ein:notebook-close)
@@ -1494,8 +1495,8 @@ This hook is run regardless the actual major mode used."
              ein:worksheet-next-input-history))))
       ("Kernel"
        ,@(ein:generate-menu
-          '(("Restart kernel" ein:notebook-restart-kernel-command)
-            ("Reconnect kernel" ein:notebook-reconnect-kernel)
+          '(("Restart session" ein:notebook-restart-session-command)
+            ("Reconnect session" ein:notebook-reconnect-session-command)
             ("Switch kernel" ein:notebook-switch-kernel)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"

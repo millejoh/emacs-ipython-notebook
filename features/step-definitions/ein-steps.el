@@ -1,16 +1,27 @@
-(When "with no opened notebooks call \"\\(.+\\)\"$"
+(When "^with no opened notebooks call \"\\(.+\\)\"$"
       (lambda (func)
         (cl-letf (((symbol-function 'ein:notebook-opened-buffer-names) #'ignore))
           (When (format "I call \"%s\"" func)))))
 
-(When "header \\(does not \\)?says? \"\\(.+\\)\"$"
+(When "^header \\(does not \\)?says? \"\\(.+\\)\"$"
       (lambda (negate says)
         (let ((equal-p (string= says (slot-value (slot-value ein:%notification% 'kernel) 'message))))
           (cl-assert (if negate (not equal-p) equal-p)))))
 
-(When "I reconnect kernel$"
+(When "^I kill kernel$"
       (lambda ()
-        (ein:notebook-reconnect-kernel)
+        (ein:kernel-delete-session (ein:$notebook-kernel ein:%notebook%))
+        (And "I wait for the smoke to clear")))
+
+(When "^my reconnect is questioned"
+      (lambda ()
+        (ein:notebook-reconnect-session-command  (lambda (notebook session-p)
+                                                   (assert (not session-p))))))
+
+(When "I restart kernel$"
+      (lambda ()
+        (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest ignore) t)))
+          (ein:notebook-restart-session-command))
         (And "I wait for the smoke to clear")))
 
 (When "I call eldoc-documentation-function$"

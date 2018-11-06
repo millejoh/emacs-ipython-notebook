@@ -968,7 +968,7 @@ defined."
           ((ein:kernel-live-p
             (kernel)
             ((:input (list kernel) :output t)))
-           (ein:kernel-delete
+           (ein:kernel-delete-session
             (kernel &optional callback)
             ((:input (list kernel (apply-partially #'ein:notebook-close notebook))))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))

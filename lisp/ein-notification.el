@@ -91,12 +91,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
   (ein:events-on events
                  'execution_count.Kernel
                  #'ein:notification--set-execution-count
-                 notification)
-  (ein:events-on events
-                 'status_restarting.Kernel
-                 #'ein:notification--callback
-                 (list (slot-value notification 'kernel) 
-                       'status_restarting.Kernel)))
+                 notification))
 
 (defun ein:notification--callback (packed data)
   (let ((ns (car packed))

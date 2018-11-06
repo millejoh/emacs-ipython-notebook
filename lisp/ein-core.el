@@ -161,11 +161,11 @@ the source is in git repository."
    :timeout ein:content-query-timeout
    :parser 'ein:json-read
    :sync ein:force-sync
-   :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port callback)
-   :success (apply-partially #'ein:query-kernelspecs--success url-or-port)
+   :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port)
+   :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
    :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
 
-(defun* ein:query-kernelspecs--success (url-or-port
+(defun* ein:query-kernelspecs--success (url-or-port callback
                                        &key data symbol-status response
                                        &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))
@@ -181,7 +181,8 @@ the source is in git repository."
                                                                   :language (plist-get (plist-get info :spec)
                                                                                        :language)
                                                                   :spec (plist-get info :spec)))
-                                 ks)))))))
+                                 ks))))))
+  (when callback (funcall callback)))
 
 (defun* ein:query-kernelspecs--error (url-or-port callback iteration 
                                                   &key response error-thrown
@@ -191,13 +192,13 @@ the source is in git repository."
         (ein:log 'verbose "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
         (ein:query-kernelspecs url-or-port callback (1+ iteration)))
     (ein:log 'error
-             "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))))
+             "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
+    (when callback (funcall callback))))
 
-(defun* ein:query-kernelspecs--complete (url-or-port callback &key data response
+(defun* ein:query-kernelspecs--complete (url-or-port &key data response
                                                      &allow-other-keys 
                                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
-  (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string)
-  (when callback (funcall callback)))
+  (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
 (defsubst ein:get-ipython-major-version (vstr)
   (if vstr
