@@ -131,9 +131,9 @@ of the skewer package."
 
 (defcustom ein:cell-traceback-level 1
   "Number of traceback stack to show.
-Hidden tracebacks are not discarded.  You can always view them
-using the command `ein:notebook-view-traceback'."
-  :type '(choice (integer :tag "Number of stack to show" 1)
+Hidden tracebacks are not discarded.
+You can view them using \\[ein:tb-show]."
+  :type '(choice (integer :tag "Depth of stack to show" 1)
                  (const :tag "Show all traceback" nil))
   :group 'ein)
 
@@ -897,7 +897,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
         (let ((tb (plist-get json :traceback))
               (level ein:cell-traceback-level))
           (if (and level (> (- (length tb) 2) level))
-              (cons "\nTruncated Traceback (Use C-c C-x to view full TB):"
+              (cons (substitute-command-keys
+                     "\nTruncated Traceback (Use \\[ein:tb-show] to view full TB):")
                     (last tb (1+ level)))
             tb)))
   (ein:insert-read-only "\n"))

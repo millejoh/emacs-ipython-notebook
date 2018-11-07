@@ -57,14 +57,14 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
 (defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (slot-value ns 's2m)))))
     (setf (slot-value ns 'status) status)
-    (setf (slot-value ns 'message) message)
+    (setf (slot-value ns 'message) (substitute-command-keys message))
     (force-mode-line-update t)))
 
 (defmethod ein:notification-bind-events ((notification ein:notification)
                                          events)
   "Bind a callback to events of the event handler EVENTS which
-just set the status \(= event-type):
-    \(ein:notification-status-set NS EVENT-TYPE)
+just set the status (= event-type):
+    (ein:notification-status-set NS EVENT-TYPE)
 where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
   (loop for ns in (list (slot-value notification 'kernel)
                         (slot-value notification 'notebook))
