@@ -46,7 +46,7 @@
   (ein:aif (ein:notebook-opened-notebooks)
       (loop for nb in it
             for path = (ein:$notebook-notebook-path nb)
-            do (ein:log 'verbose "Notebook %s still open" path)
+            do (ein:log 'debug "Notebook %s still open" path)
             finally do (assert nil))))
 
 (Setup
