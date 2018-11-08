@@ -65,9 +65,11 @@
 
 ;;; Initialization and connection.
 
-(defun ein:kernel-new (url-or-port base-url events &optional api-version)
+(defun ein:kernel-new (url-or-port path kernelspec base-url events &optional api-version)
   (make-ein:$kernel
    :url-or-port url-or-port
+   :path path
+   :kernelspec kernelspec
    :events events
    :api-version (or api-version 5)
    :session-id (ein:utils-uuid)
@@ -98,8 +100,8 @@
    :content content
    :parent_header (make-hash-table)))
 
-(defun* ein:kernel-session-p (notebook callback &optional iteration &aux (kernel (ein:$notebook-kernel notebook)))
-  "Don't make any changes on the server side.  CALLBACK with arity 1, a boolean whether session exists on server."
+(defun* ein:kernel-session-p (kernel callback &optional iteration)
+  "Don't make any changes on the server side.  CALLBACK with arity 2, kernel and a boolean whether session exists on server."
   (unless iteration
     (setq iteration 0))
   (let ((session-id (ein:$kernel-session-id kernel)))
@@ -110,56 +112,48 @@
      :sync ein:force-sync
      :parser #'ein:json-read
      :complete (apply-partially #'ein:kernel-session-p--complete session-id)
-     :success (apply-partially #'ein:kernel-session-p--success session-id callback)
-     :error (apply-partially #'ein:kernel-session-p--error notebook callback iteration))))
+     :success (apply-partially #'ein:kernel-session-p--success kernel session-id callback)
+     :error (apply-partially #'ein:kernel-session-p--error kernel callback iteration))))
 
 (defun* ein:kernel-session-p--complete (session-id &key data response
                                                    &allow-other-keys 
                                                    &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-session-p--complete %s" resp-string))
 
-(defun* ein:kernel-session-p--error (notebook callback iteration &key error-thrown symbol-status data &allow-other-keys)
+(defun* ein:kernel-session-p--error (kernel callback iteration &key error-thrown symbol-status data &allow-other-keys)
   (if (ein:aand (plist-get data :message) (search "not found" it))
-      (when callback (funcall callback nil))
+      (when callback (funcall callback kernel nil))
     (let* ((max-tries 3)
            (tries-left (1- (- max-tries iteration))))
       (ein:log 'verbose "ein:kernel-session-p--error [%s], %s tries left"
                (car error-thrown) tries-left)
       (if (> tries-left 0)
-          (ein:kernel-session-p notebook callback (1+ iteration))))))
+          (ein:kernel-session-p kernel callback (1+ iteration))))))
 
-(defun* ein:kernel-session-p--success (session-id callback &key data &allow-other-keys)
+(defun* ein:kernel-session-p--success (kernel session-id callback &key data &allow-other-keys)
   (let ((session-p (equal (plist-get data :id) session-id)))
     (ein:log 'verbose "ein:kernel-session-p--success: session-id=%s session-p=%s" 
              session-id session-p)
-    (when callback (funcall callback session-p))))
+    (when callback (funcall callback kernel session-p))))
 
-(defun* ein:kernel-restart-session (notebook
-                                    &aux (kernel (ein:$notebook-kernel notebook)))
-  "Server side delete of NOTEBOOK session and subsequent restart with all new state"
-  (ein:kernel-delete-session kernel
-                     (apply-partially
-                      (lambda (notebook*)
-                        (ein:events-trigger (ein:$kernel-events kernel)
-                                            'status_restarting.Kernel)
-                        (ein:kernel-retrieve-session notebook* 0 
-                                          (apply-partially 
-                                           (lambda (nb)
-                                             (with-current-buffer (ein:notebook-buffer nb)
-                                               (ein:notification-status-set 
-                                                (slot-value ein:%notification% 'kernel) 
-                                                'status_restarted.Kernel)))
-                                           notebook*)))
-                      notebook)))
+(defun* ein:kernel-restart-session (kernel)
+  "Server side delete of KERNEL session and subsequent restart with all new state"
+  (ein:kernel-delete-session 
+   kernel
+   (lambda (kernel)
+     (ein:events-trigger (ein:$kernel-events kernel) 'status_restarting.Kernel)
+     (ein:kernel-retrieve-session kernel 0
+                                  (lambda (kernel)
+                                    (ein:events-trigger (ein:$kernel-events kernel)
+                                                        'status_restarted.Kernel))))))
 
-(defun* ein:kernel-retrieve-session (notebook &optional iteration callback 
-                                              &aux (kernel (ein:$notebook-kernel notebook)))
+(defun* ein:kernel-retrieve-session (kernel &optional iteration callback)
   "Formerly ein:kernel-start, but that was misnomer because 1. the server really starts a session (and an accompanying kernel), and 2. it may not even start a session if one exists for the same path.
 
 The server logic is here (could not find other documentation)
 https://github.com/jupyter/notebook/blob/04a686dbaf9dfe553324a03cb9e6f778cf1e3da1/notebook/services/sessions/handlers.py#L56-L81
 
-CALLBACK of arity 0 (e.g., print a message kernel started)
+CALLBACK of arity 1, the kernel.
 
 This no longer works in iPython-2.0. Protocol is to create a session for a
 notebook, which will automatically create and associate a kernel with the notebook.
@@ -168,8 +162,9 @@ notebook, which will automatically create and associate a kernel with the notebo
     (setq iteration 0))
   (if (<= (ein:$kernel-api-version kernel) 2)
       (error "Api %s unsupported" (ein:$kernel-api-version kernel))
-    (let ((kernelspec (ein:$notebook-kernelspec notebook))
-          (kernel-id (ein:$kernel-kernel-id kernel)))
+    (let ((kernel-id (ein:$kernel-kernel-id kernel))
+          (kernelspec (ein:$kernel-kernelspec kernel))
+          (path (ein:$kernel-path kernel)))
       (ein:query-singleton-ajax
        (list 'kernel-retrieve-session kernel-id)
        (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
@@ -177,11 +172,11 @@ notebook, which will automatically create and associate a kernel with the notebo
        :data (json-encode
               (cond ((<= (ein:$kernel-api-version kernel) 4)
                      `(("notebook" .
-                        (("path" . ,(ein:$notebook-notebook-path notebook))))
+                        (("path" . ,path)))
                        ,@(if kernelspec
                              `(("kernel" .
                                 (("name" . ,(ein:$kernelspec-name kernelspec))))))))
-                    (t `(("path" . ,(ein:$notebook-notebook-path notebook))
+                    (t `(("path" . ,path)
                          ("type" . "notebook")
                          ,@(if kernelspec
                                `(("kernel" .
@@ -192,21 +187,21 @@ notebook, which will automatically create and associate a kernel with the notebo
        :parser #'ein:json-read
        :complete (apply-partially #'ein:kernel-retrieve-session--complete kernel callback)
        :success (apply-partially #'ein:kernel-retrieve-session--success kernel callback)
-       :error (apply-partially #'ein:kernel-retrieve-session--error notebook iteration callback)))))
+       :error (apply-partially #'ein:kernel-retrieve-session--error kernel iteration callback)))))
 
 (defun* ein:kernel-retrieve-session--complete (kernel callback &key data response
                                            &allow-other-keys 
                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-retrieve-session--complete %s" resp-string))
 
-(defun* ein:kernel-retrieve-session--error (notebook iteration callback &key error-thrown symbol-status &allow-other-keys)
+(defun* ein:kernel-retrieve-session--error (kernel iteration callback &key error-thrown symbol-status &allow-other-keys)
   (let* ((max-tries 3)
          (tries-left (1- (- max-tries iteration))))
     (ein:log 'verbose "ein:kernel-retrieve-session--error [%s], %s tries left"
              (car error-thrown) tries-left)
     (sleep-for 0 (* (1+ iteration) 500))
     (if (> tries-left 0)
-        (ein:kernel-retrieve-session notebook (1+ iteration) callback))))
+        (ein:kernel-retrieve-session kernel (1+ iteration) callback))))
 
 (defun* ein:kernel-retrieve-session--success (kernel callback &key data &allow-other-keys)
   (let ((session-id (plist-get data :id)))
@@ -220,8 +215,29 @@ notebook, which will automatically create and associate a kernel with the notebo
       (setf (ein:$kernel-ws-url kernel) (ein:kernel--ws-url (ein:$kernel-url-or-port kernel)))
       (setf (ein:$kernel-kernel-url kernel)
             (concat (file-name-as-directory (ein:$kernel-base-url kernel)) id)))
-    (ein:kernel-start-websocket kernel)
-    (when callback (funcall callback))))
+    (ein:kernel-start-websocket kernel callback)))
+
+(defun ein:kernel-reconnect-session (kernel &optional callback)
+  "Check if session still exists.  If it does, retrieve it.  If it doesn't, ask the user to create a new session (ein:kernel-retrieve-session both retrieves and creates).
+
+CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
+  (ein:kernel-disconnect kernel)
+  (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
+  (ein:kernel-session-p
+   kernel
+   (apply-partially 
+    (lambda (callback* kernel session-p) 
+      (if (or session-p 
+              (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
+          (ein:kernel-retrieve-session
+           kernel 0
+           (apply-partially 
+            (lambda (callback** kernel)
+              (ein:events-trigger (ein:$kernel-events kernel)
+                                  'status_reconnected.Kernel)
+              (when callback** (funcall callback** kernel)))
+            callback*))))
+    callback)))
 
 (defun ein:kernel--ws-url (url-or-port &optional securep)
   "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
@@ -266,7 +282,8 @@ See: https://github.com/ipython/ipython/pull/3307"
            (ein:kernel--handle-stdin-reply kernel packet))
           (t (ein:log 'warn "Received reply from unforeseen channel %s" channel)))))
 
-(defun ein:start-single-websocket (kernel)
+(defun ein:start-single-websocket (kernel open-callback)
+  "OPEN-CALLBACK (kernel) (e.g., execute cell)"
   (let ((ws-url (concat (ein:$kernel-ws-url kernel)
                          (ein:$kernel-kernel-url kernel)
                          "/channels?session_id="
@@ -279,19 +296,23 @@ See: https://github.com/ipython/ipython/pull/3307"
                            (let* ((websocket (websocket-client-data ws))
                                   (kernel (ein:$websocket-kernel websocket)))
                              (unless (ein:$websocket-closed-by-client websocket)
-                               (ein:log 'warn "WS closed unexpectedly: %s" (websocket-url ws))
+                               (ein:log 'verbose "WS closed unexpectedly: %s" (websocket-url ws))
                                (ein:kernel-disconnect kernel))))
-                         (lambda (ws)
-                           (let* ((websocket (websocket-client-data ws))
-                                  (kernel (ein:$websocket-kernel websocket)))
-                             (when (ein:kernel-live-p kernel)
-                               (ein:kernel-run-after-start-hook kernel))
-                             (ein:log 'verbose "WS opened: %s" (websocket-url ws))))))))
+                         (apply-partially
+                          (lambda (cb ws)
+                            (let* ((websocket (websocket-client-data ws))
+                                   (kernel (ein:$websocket-kernel websocket)))
+                              (when (ein:kernel-live-p kernel)
+                                (ein:kernel-run-after-start-hook kernel)
+                                (when cb
+                                  (funcall cb kernel)))
+                              (ein:log 'verbose "WS opened: %s" (websocket-url ws))))
+                          open-callback)))))
 
-(defun ein:kernel-start-websocket (kernel)
+(defun ein:kernel-start-websocket (kernel callback)
   (cond ((<= (ein:$kernel-api-version kernel) 2)
          (error "Api version %s unsupported" (ein:$kernel-api-version kernel)))
-        (t (ein:start-single-websocket kernel))))
+        (t (ein:start-single-websocket kernel callback))))
 
 (defun ein:kernel-on-connect (kernel content -metadata-not-used-)
   (ein:log 'info "Kernel connect_request_reply received."))
@@ -313,13 +334,12 @@ delete the kernel on the server side"
   (and (ein:$kernel-p kernel)
        (ein:aand (ein:$kernel-websocket kernel) (ein:websocket-open-p it))))
 
-(defmacro ein:kernel-if-ready (kernel &rest body)
-  "Execute BODY if KERNEL is ready.  Warn user otherwise."
-  (declare (indent 1))
-  `(if (ein:kernel-live-p ,kernel)
-       (progn ,@body)
-     (message "Kernel unready or closed")
-     (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id ,kernel))))
+(defun ein:kernel-when-ready (kernel callback)
+  "Execute CALLBACK of arity 0 (executing cell) when KERNEL is ready.  Warn user otherwise."
+  (if (ein:kernel-live-p kernel)
+      (funcall callback kernel)
+    (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id kernel))
+    (ein:kernel-reconnect-session kernel callback)))
 
 
 ;;; Main public methods
@@ -606,7 +626,7 @@ Example::
                 (ein:log 'info "Sent interruption command.")))))
 
 (defun ein:kernel-delete-session (kernel &optional callback)
-  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK of arity 0 (e.g., kernel restart)"
+  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK of arity 1, the kernel"
   (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
      (list 'kernel-delete-session session-id)
@@ -631,7 +651,7 @@ Example::
                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
-  (when callback (funcall callback)))
+  (when callback (funcall callback kernel)))
 
 
 ;; Reply handlers.

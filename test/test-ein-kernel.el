@@ -6,7 +6,7 @@
 (require 'ein-testing-notebook)
 
 (defun eintest:kernel-new (port)
-  (ein:kernel-new port "/api/kernels"
+  (ein:kernel-new port "" nil "/api/kernels"
                   (get-buffer-create "*eintest: dummy for kernel test*")))
 
 (ert-deftest ein:kernel-restart-check-url ()
@@ -26,7 +26,7 @@
               ((symbol-function 'ein:get-notebook-or-error) (lambda () (ein:get-notebook))))
       (ein:kernel-retrieve-session--success
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
-      (ein:kernel-restart-session notebook)
+      (ein:kernel-restart-session (ein:$notebook-kernel notebook))
       (should (equal got-url desired-url)))))
 
 (ert-deftest ein:kernel-interrupt-check-url ()

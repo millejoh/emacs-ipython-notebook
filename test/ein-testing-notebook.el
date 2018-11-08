@@ -47,7 +47,7 @@
            (ein:notebook-enable-autosaves (notebook)))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
-              (ein:kernel-new 8888 "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))
+              (ein:kernel-new 8888 "" nil  "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
         ; matryoshka: new-content makes a ein:$content using CONTENT as template 

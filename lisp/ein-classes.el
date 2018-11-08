@@ -232,6 +232,8 @@
 
 "
   url-or-port
+  path
+  kernelspec
   events
   api-version
   session-id

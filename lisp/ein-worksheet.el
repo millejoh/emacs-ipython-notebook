@@ -1011,20 +1011,19 @@ Do not clear input prompts when the prefix argument is given."
                         (cl-typep x 'ein:codecell))
                     (ein:worksheet-get-cells ws))))
 
-(defun ein:undo-execute-cell (ws cell old-cell)
-  (ein:worksheet-insert-cell-below ws old-cell cell)
-  (ein:worksheet-delete-cell ws cell))
-
 (defun ein:worksheet-execute-cell (ws cell)
   "Execute code type CELL."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
-  (let ((buffer-undo-list t))
-    (ein:kernel-if-ready (slot-value ws 'kernel)
-      (ein:cell-execute cell)
-      (oset ws :dirty t)))
-  (ein:worksheet--unshift-undo-list cell)
+  (ein:kernel-when-ready (slot-value ws 'kernel)
+                         (apply-partially 
+                          (lambda (ws* cell* kernel)
+                            (let ((buffer-undo-list t))
+                              (ein:cell-execute cell*)
+                              (oset ws* :dirty t))
+                            (ein:worksheet--unshift-undo-list cell*))
+                          ws cell))
   cell)
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
@@ -1206,10 +1205,16 @@ buffer, so you don't need to set current buffer to call this
 function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (ein:kernel-if-ready (slot-value ws 'kernel)
-      (mapc #'ein:cell-execute
-            (ein:filter #'ein:cell-autoexec-p
-                        (ein:worksheet-get-cells ws))))))
+    (ein:kernel-when-ready 
+     (slot-value ws 'kernel)
+     
+     (apply-partially 
+      (lambda (ws kernel)
+        (let ((buffer-undo-list t))
+          (mapc #'ein:cell-execute
+                (ein:filter #'ein:cell-autoexec-p
+                            (ein:worksheet-get-cells ws)))))
+      ws))))
 
 
 ;;; Imenu
