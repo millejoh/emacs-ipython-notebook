@@ -26,7 +26,7 @@
 (require 'cl)
 (require 'ein-classes)
 
-(defmethod ein:cell-insert-prompt ((cell ein:hy-codecell))
+(cl-defmethod ein:cell-insert-prompt ((cell ein:hy-codecell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
@@ -37,15 +37,15 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
-(defmethod ein:cell-execute-internal ((cell ein:hy-codecell)
-                                      kernel code &rest args)
+(cl-defmethod ein:cell-execute-internal ((cell ein:hy-codecell)
+                                         kernel code &rest args)
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
   (ein:cell-running-set cell t)
   (setf (slot-value cell 'dynamic) t)
   (apply #'ein:kernel-execute kernel (ein:pytools-wrap-hy-code code) (ein:cell-make-callbacks cell) args))
 
-(defmethod ein:cell-to-nb4-json :before ((cell ein:hy-codecell) _ &optional _ignore)
+(cl-defmethod ein:cell-to-nb4-json :before ((cell ein:hy-codecell) _ &optional _ignore)
   (let ((metadata (slot-value cell 'metadata)))
     (setf metadata (plist-put metadata :ein.hycell t))))
 

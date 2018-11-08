@@ -44,8 +44,8 @@
     (ein:log 'info "Unknown event: %S" event-type)))
 
 
-(defmethod ein:events-on ((events ein:events) event-type
-                          callback &optional arg)
+(cl-defmethod ein:events-on ((events ein:events) event-type
+                             callback &optional arg)
   "Set event trigger hook.
 
 When EVENT-TYPE is triggered on the event handler EVENTS,

@@ -44,7 +44,7 @@
          :discard-output-p discard-output-p :kernel kernel :events events
          args))
 
-(defmethod ein:worksheet--buffer-name ((ws ein:scratchsheet))
+(cl-defmethod ein:worksheet--buffer-name ((ws ein:scratchsheet))
   (format ein:scratchsheet-buffer-name-template
           (ein:worksheet-url-or-port ws)
           (ein:worksheet-full-name ws)))

@@ -54,14 +54,13 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   "Help message.")
 ;; Note: can't put this below of `ein:notification-setup'...
 
-(defmethod ein:notification-status-set ((ns ein:notification-status) status)
+(cl-defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (slot-value ns 's2m)))))
     (setf (slot-value ns 'status) status)
     (setf (slot-value ns 'message) (substitute-command-keys message))
     (force-mode-line-update t)))
 
-(defmethod ein:notification-bind-events ((notification ein:notification)
-                                         events)
+(cl-defmethod ein:notification-bind-events ((notification ein:notification) events)
   "Bind a callback to events of the event handler EVENTS which
 just set the status (= event-type):
     (ein:notification-status-set NS EVENT-TYPE)
@@ -173,7 +172,7 @@ insert-prev insert-next move-prev move-next)"
   "Face for headline selected tab."
   :group 'ein)
 
-(defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
+(cl-defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
   (let ((list (funcall (slot-value tab 'get-list)))
         (current (funcall (slot-value tab 'get-current)))
         (get-name (slot-value tab 'get-name)))

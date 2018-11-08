@@ -58,7 +58,7 @@
 
 ;;; Cell related
 
-(defmethod ein:cell-insert-prompt ((cell ein:shared-output-cell))
+(cl-defmethod ein:cell-insert-prompt ((cell ein:shared-output-cell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
@@ -68,16 +68,16 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
-(defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
-                             &optional popup &rest args)
+(cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
+                                &optional popup &rest args)
   (unless (plist-get args :silent)
     (setq args (plist-put args :silent nil)))
   (setf (slot-value cell 'popup) popup)
   (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
-(defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
-                                    msg-type content _metadata-not-used-)
+(cl-defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
+                                       msg-type content _metadata)
   ;; Show short message
   (ein:case-equal msg-type
     (("pyout")
@@ -165,7 +165,7 @@ Create a cell if the buffer has none."
   (ein:shared-output-get-or-create)
   (pop-to-buffer (ein:shared-output-create-buffer)))
 
-(defmethod ein:shared-output-show-code-cell ((cell ein:codecell))
+(cl-defmethod ein:shared-output-show-code-cell ((cell ein:codecell))
   "Show code CELL in shared-output buffer.
 Note that this function assumed to be called in the buffer
 where CELL locates."
