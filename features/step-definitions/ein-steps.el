@@ -71,7 +71,7 @@
           (lexical-let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
               (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)))
-                (loop repeat 3
+                (loop repeat 2
                       until notebook
                       do (setq notebook (ein:testing-new-notebook url-or-port ks)))))
             (let ((buf-name (format ein:notebook-buffer-name-template

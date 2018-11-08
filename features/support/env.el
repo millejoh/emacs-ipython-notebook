@@ -25,17 +25,34 @@
   (ein:testing-flush-queries)
   (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
     (if ein:%notebooklist%
-        (let ((urlport (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-          (loop for notebook in (ein:notebook-opened-notebooks)
-                for path = (ein:$notebook-notebook-path notebook)
-                do (ein:notebook-kill-kernel-then-close-command notebook t)
-                (if (search "Untitled" path )
-                    (ein:notebooklist-delete-notebook path))))))
-  (ein:testing-flush-queries))
+        (loop for notebook in (ein:notebook-opened-notebooks)
+              for path = (ein:$notebook-notebook-path notebook)
+              do (ein:notebook-kill-kernel-then-close-command notebook t)
+              do (loop repeat 8
+                       until (not (ein:notebook-live-p notebook))
+                       do (sleep-for 0 500)
+                       finally do (when (ein:notebook-live-p notebook)
+                                    (ein:display-warning (format "cannot close %s" path))))
+              do (when (search "Untitled" path)
+                   (lexical-let (done-p)
+                     (ein:notebooklist-delete-notebook
+                      path
+                      (lambda () (setq done-p t)))
+                     (loop repeat 8
+                       until done-p
+                       do (sleep-for 0 500)
+                       finally do (when (not done-p) 
+                                    (ein:display-warning (format "cannot del %s" path)))))))))
+  (ein:aif (ein:notebook-opened-notebooks)
+      (loop for nb in it
+            for path = (ein:$notebook-notebook-path nb)
+            do (ein:log 'verbose "Notebook %s still open" path)
+            finally do (assert nil))))
 
 (Setup
  (ein:dev-start-debug)
  (setq ein:notebook-autosave-frequency 0)
+ (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
  (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))
