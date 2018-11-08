@@ -5,7 +5,7 @@
 
 (When "^header \\(does not \\)?says? \"\\(.+\\)\"$"
       (lambda (negate says)
-        (let ((equal-p (string= says (slot-value (slot-value ein:%notification% 'kernel) 'message))))
+        (let ((equal-p (string= (substitute-command-keys says) (substitute-command-keys (slot-value (slot-value ein:%notification% 'kernel) 'message)))))
           (cl-assert (if negate (not equal-p) equal-p)))))
 
 (When "^I kill kernel$"
@@ -16,7 +16,7 @@
 (When "^my reconnect is questioned"
       (lambda ()
         (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest ignore) t)))
-          (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%) 
+          (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)
                                         (lambda (kernel session-p)
                                           (assert (not session-p)))))))
 
@@ -34,7 +34,7 @@
 
 (When "I kill processes like \"\\(.+\\)\"$"
       (lambda (substr)
-        (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p))) 
+        (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p)))
               (process-list))))
 
 (When "^I clear log expr \"\\(.+\\)\"$"
@@ -87,7 +87,7 @@
         (loop repeat 10
               with buffer = (get-buffer ein:jupyter-server-buffer-name)
               until (null (get-buffer-process buffer))
-              do (sleep-for 1) 
+              do (sleep-for 1)
               finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
         (When "I clear log expr \"ein:log-all-buffer-name\"")
         (When "I clear log expr \"ein:jupyter-server-buffer-name\"")))
@@ -97,7 +97,7 @@
         (When "I stop the server")
         (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
         (let ((ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py")))
-          (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) 
+          (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command)
                                     ein:testing-jupyter-server-root (not login)))
         (if login
             (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
@@ -137,10 +137,10 @@
       (lambda (no-crib password)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let ((bindings '(((symbol-function 'ein:notebooklist-ask-url-or-port)
-                             (lambda (&rest args) url-or-port)) 
+                             (lambda (&rest args) url-or-port))
                             ((symbol-function 'read-passwd)
                              (lambda (&rest args) password)))))
-            (if no-crib 
+            (if no-crib
                 (setq bindings (append bindings
                                        (list '((symbol-function 'ein:notebooklist-token-or-password) (lambda (&rest args) nil))))))
             (eval `(cl-letf ,bindings
@@ -196,9 +196,9 @@
                (orig (if (slot-boundp cell 'input-prompt-number)
                          (slot-value cell 'input-prompt-number))))
           (call-interactively #'ein:worksheet-execute-cell)
-          (ein:testing-wait-until 
-           (lambda () 
-             (ein:aand (and (slot-boundp cell 'input-prompt-number) 
+          (ein:testing-wait-until
+           (lambda ()
+             (ein:aand (and (slot-boundp cell 'input-prompt-number)
                             (slot-value cell 'input-prompt-number))
                        (and (numberp it)
                             (not (equal orig it)))))))))
