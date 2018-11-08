@@ -39,7 +39,6 @@
 (require 'deferred)
 (require 'dash)
 (require 'ido)
-(require 'f)
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
@@ -877,7 +876,7 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
            (securep (string-match "^wss://" url-or-port)))
       (loop for (name content) on cookie-plist by (function cddr)
             for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
-            do (f-append-text line 'utf-8 (request--curl-cookie-jar)))))
+            do (write-region line nil (request--curl-cookie-jar) 'append))))
 
   (lexical-let* (done-p
                  (done-callback (lambda (&rest ignore) (setf done-p t)))

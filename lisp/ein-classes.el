@@ -381,7 +381,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
        (status_dead.Kernel . "Kernel requires restart \\[ein:notebook-restart-kernel-command]")
        (status_reconnecting.Kernel . "Kernel reconnecting...")
        (status_reconnected.Kernel . "Kernel reconnected")
-       (status_disconnected.Kernel . "Kernel requires reconnect \\[ein:notebook-reconnect-session-command]")))
+       (status_disconnected.Kernel . "Kernel requires reconnect \\[ein:notebook-reconnect-kernel]")))
     :type ein:notification-status))
   "Notification widget for Notebook.")
 
