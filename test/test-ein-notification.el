@@ -44,7 +44,8 @@
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
              (concat "IP[y]: Saving Notebook... | "
-                     "Kernel requires restart C-c C-x C-r | "
+                     (substitute-command-keys "Kernel requires restart \\[ein:notebook-restart-kernel-command] | ")
+                     ;;"Kernel requires restart C-c C-x C-r | "
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()
