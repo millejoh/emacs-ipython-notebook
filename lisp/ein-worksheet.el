@@ -70,7 +70,7 @@
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)
   "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
-  (intern (substring (oref cell :cell-id) 0 5)))
+  (intern (substring (slot-value cell 'cell-id) 0 5)))
 
 (defsubst delete-if (clause lst)
   (delete-if-not (lambda (u) (not (funcall clause u))) lst))
@@ -99,7 +99,7 @@
 
 (defun ein:worksheet--element-start (cell key &optional cached)
   (if cached
-      (plist-get (nth 4 (plist-get ein:%cell-lengths% (oref cell :cell-id))) key)
+      (plist-get (nth 4 (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) key)
     (let ((node (ein:cell-element-get cell key (if (eq key :output) 0))))
       (if node
           (marker-position (ewoc-location node))
@@ -107,11 +107,11 @@
             (ein:worksheet--element-start cell :footer))))))
 
 (defsubst ein:worksheet--saved-input-length (cell)
-  (or (fourth (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0))
+  (or (fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
 
 (defsubst ein:worksheet--prompt-length (cell &optional cached)
   (if cached
-      (or (first (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0)
+      (or (first (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     ;; 1+ for newline
     (1+ (- (ein:worksheet--element-start cell :input)
            (ein:worksheet--element-start cell :prompt)))))
@@ -119,18 +119,18 @@
 (defsubst ein:worksheet--output-length (cell &optional cached)
   (if cached
       ;; 1 for when cell un-executed, there is still a newline
-      (or (second (plist-get ein:%cell-lengths% (oref cell :cell-id))) 1)
+      (or (second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
     (- (ein:worksheet--next-cell-start cell)
-       (ein:worksheet--element-start cell (if (string= (oref cell :cell-type) "code") :output :footer)))))
+       (ein:worksheet--element-start cell (if (string= (slot-value cell 'cell-type) "code") :output :footer)))))
 
 (defsubst ein:worksheet--total-length (cell &optional cached)
   (if cached
-      (or (third (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0)
+      (or (third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     (- (ein:worksheet--next-cell-start cell)
        (ein:worksheet--element-start cell :prompt))))
 
 (defun ein:worksheet--update-cell-lengths (cell &optional saved-input-length)
-  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (oref cell :cell-id)
+  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (slot-value cell 'cell-id)
                                       (list (ein:worksheet--prompt-length cell)
                                             (ein:worksheet--output-length cell)
                                             (ein:worksheet--total-length cell)
@@ -259,7 +259,7 @@
         (setq buffer-undo-list (nreverse lst))
         (setq ein:%which-cell% (nreverse wc))
         (ein:worksheet--jigger-undo-list)
-        (remprop 'ein:%cell-lengths% (oref cell :cell-id))))))
+        (remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
 
 
 ;;; Class and variable
@@ -618,7 +618,6 @@ kill-ring of Emacs (kill-ring for texts)."
   (let ((clone (ein:cell-copy cell)))
     ;; Cell can be from another buffer, so reset `ewoc'.
     (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws))
-                                        ;(oset clone :ewoc (oref ws :ewoc))
     (funcall (intern (concat "ein:worksheet-insert-cell-" up)) ws clone pivot)
     clone))
 
@@ -639,7 +638,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
-    (loop for k in (oref cell :element-names)
+    (loop for k in (slot-value cell 'element-names)
           do (setq result
                    (plist-put result k
                               (let* ((en-or-list (ein:cell-element-get cell k))
@@ -649,7 +648,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet-maybe-new-cell (ws type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
-  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)                    ;(ein:basecell-child-p type-or-cell)
+  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)
                   type-or-cell
                 (ein:worksheet-cell-from-type ws type-or-cell))))
     ;; When newly created or copied, kernel is not attached or not the
@@ -1017,7 +1016,7 @@ Do not clear input prompts when the prefix argument is given."
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-when-ready (slot-value ws 'kernel)
-                         (apply-partially 
+                         (apply-partially
                           (lambda (ws* cell* kernel)
                             (let ((buffer-undo-list t))
                               (ein:cell-execute cell*)
@@ -1205,10 +1204,10 @@ buffer, so you don't need to set current buffer to call this
 function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (ein:kernel-when-ready 
+    (ein:kernel-when-ready
      (slot-value ws 'kernel)
-     
-     (apply-partially 
+
+     (apply-partially
       (lambda (ws kernel)
         (let ((buffer-undo-list t))
           (mapc #'ein:cell-execute

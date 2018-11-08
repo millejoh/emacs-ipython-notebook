@@ -37,7 +37,7 @@
   (let ((val (ein:js-prepare-result
               (cdr (assoc 'value result))
               (plist-get json :output_type))))
-    (setf (oref cell :outputs) (list val))
+    (setf (slot-value cell 'outputs) (list val))
     (ein:cell-append-display-data cell val)))
 
 ;; Format of result is ((id . STR) (type . STR) (status . STR) (value . STR) (time . FLOAT))

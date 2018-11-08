@@ -96,7 +96,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (when (slot-value cell 'popup)
     (pop-to-buffer (ein:shared-output-create-buffer)))
   ;; Finally do the normal drawing
-  (call-next-method))
+  (cl-call-next-method))
 
 
 ;;; Main
@@ -243,7 +243,7 @@ shared output buffer.  You can open the buffer by the command
 
 (defun ein:get-kernel--shared-output ()
   (let ((cell (ein:get-cell-at-point--shared-output)))
-    (when (and (object-p cell) (slot-boundp cell :kernel))
+    (when (and (eieio-object-p cell) (slot-boundp cell :kernel))
       (slot-value cell 'kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()

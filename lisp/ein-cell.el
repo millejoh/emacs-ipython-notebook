@@ -282,7 +282,7 @@ a number will limit the number of lines in a cell output."
   cell)
 
 (defmethod ein:cell-init ((cell ein:headingcell) data) ;; FIXME: Was :after method
-  (call-next-method)
+  (cl-call-next-method)
   (ein:aif (plist-get data :level)
       (setf (slot-value cell 'level) it))
   cell)
@@ -291,27 +291,27 @@ a number will limit the number of lines in a cell output."
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
     (loop for k in '(read-only ewoc)
-          do (set-slot-value new k (slot-value cell k)))
+      do (setf (slot-value new k) (slot-value cell k)))
     ;; copy input
-    (set-slot-value new 'input (if (ein:cell-active-p cell)
-                                   (ein:cell-get-text cell)
-                                 (slot-value cell 'input)))
+    (setf (slot-value new 'input) (if (ein:cell-active-p cell)
+                                      (ein:cell-get-text cell)
+                                    (slot-value cell 'input)))
     ;; copy slidetype
-    (set-slot-value new 'slidetype (slot-value cell 'slidetype))
+    (setf (slot-value new 'slidetype) (slot-value cell 'slidetype))
     ;; copy output when the new cell has it
     (when (memq :output (slot-value new 'element-names))
-      (set-slot-value new 'outputs (mapcar 'identity (slot-value cell 'outputs))))
+      (setf (slot-value new 'outputs) (mapcar 'identity (slot-value cell 'outputs))))
     new))
 
 (defmethod ein:cell-convert ((cell ein:codecell) type)
-  (let ((new (call-next-method)))
-    (when (and (ein:codecell-child-p new)
+  (let ((new (cl-call-next-method)))
+    (when (and (cl-typep new 'ein:codecell)
                (slot-boundp cell :kernel))
       (setf (slot-value new 'kernel) (slot-value cell 'kernel)))
     new))
 
 (defmethod ein:cell-convert ((cell ein:headingcell) type)
-  (let ((new (call-next-method)))
+  (let ((new (cl-call-next-method)))
     (when (ein:headingcell-p new)
       (setf (slot-value new 'level) (slot-value cell 'level)))
     new))
@@ -397,14 +397,14 @@ a number will limit the number of lines in a cell output."
          (ein:aif (plist-get element :output)
              (car (last it))
            (plist-get element :input)))
-        (t (call-next-method))))))
+        (t (cl-call-next-method))))))
 
 (defmethod ein:cell-element-get ((cell ein:textcell) prop &rest args)
   (let ((element (slot-value cell 'element)))
     (case prop
       (:after-input (plist-get element :footer))
       (:before-input (plist-get element :prompt))
-      (t (call-next-method)))))
+      (t (cl-call-next-method)))))
 
 (defmethod ein:cell-all-element ((cell ein:basecell))
   (list (ein:cell-element-get cell :prompt)
@@ -412,7 +412,7 @@ a number will limit the number of lines in a cell output."
         (ein:cell-element-get cell :footer)))
 
 (defmethod ein:cell-all-element  ((cell ein:codecell))
-  (append (call-next-method)
+  (append (cl-call-next-method)
           (ein:cell-element-get cell :output)))
 
 (defmethod ein:cell-language ((cell ein:basecell))
@@ -1147,7 +1147,7 @@ prettified text thus be used instead of HTML type."
       (metadata . ,metadata))))
 
 (defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
-  (let ((json (call-next-method)))
+  (let ((json (cl-call-next-method)))
     (append json `((level . ,(slot-value cell 'level))))))
 
 (defmethod ein:cell-next ((cell ein:basecell))
@@ -1155,7 +1155,7 @@ prettified text thus be used instead of HTML type."
   (ein:aif (ewoc-next (slot-value cell 'ewoc)
                       (ein:cell-element-get cell :footer))
       (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (ein:basecell-child-p cell)
+        (when (cl-typep cell 'ein:basecell)
           cell))))
 
 (defmethod ein:cell-prev ((cell ein:basecell))
@@ -1163,7 +1163,7 @@ prettified text thus be used instead of HTML type."
   (ein:aif (ewoc-prev (slot-value cell 'ewoc)
                       (ein:cell-element-get cell :prompt))
       (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (ein:basecell-child-p cell)
+        (when (cl-typep cell 'ein:basecell)
           cell))))
 
 

@@ -67,7 +67,7 @@ This function may raise an error."
       ;; Emacs fontification mechanism requires the function to move
       ;; the point.  Do *not* use `(goto-char end)'.  As END is in the
       ;; input area, fontification falls into an infinite loop.
-      (ewoc-goto-node (oref cell :ewoc) (ein:cell-element-get cell :footer)))
+      (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell :footer)))
     t))
 
 (defun ein:ml-back-to-prev-node ()
