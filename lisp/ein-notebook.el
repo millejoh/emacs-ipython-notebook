@@ -887,7 +887,9 @@ as usual."
     (let ((kernel (ein:$notebook-kernel notebook)))
       ;; If kernel is live, kill it before closing.
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-delete-session kernel (apply-partially #'ein:notebook-close notebook))
+          (ein:kernel-delete-session kernel 
+                                     (lambda (kernel)
+                                       (ein:notebook-close notebook)))
         (ein:notebook-close notebook)))))
 
 (defun ein:fast-content-from-notebook (notebook)
@@ -1685,6 +1687,8 @@ Called via `kill-emacs-query-functions'."
 ;; -- `kill-buffer-hook'
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
+  ;; TODO - it remains a bug that neither `ein:notebook-kill-buffer-callback'
+  ;; nor `ein:notebook-close' updates ein:notebook--opened-map
   (when (ein:$notebook-p ein:%notebook%)
     (ein:notebook-disable-autosaves ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))

@@ -472,6 +472,7 @@ You may find the new one in the notebook list." error)
     (ein:notebooklist-delete-notebook path)))
 
 (defun ein:notebooklist-delete-notebook (path &optional callback)
+  "CALLBACK with no arguments, e.g., semaphore"
   (lexical-let* ((path path)
                  (notebooklist ein:%notebooklist%)
                  (callback callback)
