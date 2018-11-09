@@ -31,7 +31,6 @@
 (require 'ein-jupyter)
 (require 'ein-file)
 (require 'ein-notebooklist)
-(require 'f)
 
 (defcustom ein:process-jupyter-regexp "\\(jupyter\\|ipython\\)\\(-\\|\\s-+\\)note"
   "Regexp by which we recognize notebook servers."
@@ -141,7 +140,9 @@
   "Return the uppermost parent dir of DIR that contains ipynb files."
   (let ((fn (expand-file-name filename)))
     (loop with directory = (directory-file-name 
-                            (if (f-file? fn) (f-parent fn) fn))
+                            (if (file-regular-p fn) 
+                                (file-name-directory (directory-file-name fn)) 
+                              fn))
           with suitable = directory
           until (string= (file-name-nondirectory directory) "")
           do (if (directory-files directory nil "\\.ipynb$")

@@ -1,13 +1,17 @@
 SRC=$(shell cask files)
+PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
+ifeq ($(TRAVIS_PULL_REQUEST_SLUG),)
+TRAVIS_PULL_REQUEST_SLUG := $(shell git config --global user.name)/$(shell basename `git rev-parse --show-toplevel`)
+endif
+ifeq ($(TRAVIS_PULL_REQUEST_BRANCH),)
+TRAVIS_PULL_REQUEST_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+endif
+ifeq ($(TRAVIS_PULL_REQUEST_SHA),)
+TRAVIS_PULL_REQUEST_SHA := $(shell git rev-parse origin/$(TRAVIS_PULL_REQUEST_BRANCH))
+endif
 
 .DEFAULT_GOAL := test-compile
-
-.PHONY: install
-install:
-	rm -rf dist/
-	cask package
-	emacs -Q --batch --eval "(package-initialize)" --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"
 
 .PHONY: autoloads
 autoloads:
@@ -40,3 +44,38 @@ test-int:
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
+
+.PHONY: test-install
+test-install:
+	mkdir -p test/test-install
+	if [ ! -s "test/test-install/$(PKBUILD).tar.gz" ] ; then \
+	  cd test/test-install ; curl -sLOk https://github.com/melpa/package-build/archive/$(PKBUILD).tar.gz ; fi
+	cd test/test-install ; tar xfz $(PKBUILD).tar.gz
+	cd test/test-install ; rm -f $(PKBUILD).tar.gz
+	cd test/test-install/package-build-$(PKBUILD) ; make -s loaddefs
+	mkdir -p test/test-install/recipes
+	cd test/test-install/recipes ; curl -sLOk https://raw.githubusercontent.com/melpa/melpa/master/recipes/ein
+	! ( emacs -Q --batch -L test/test-install/package-build-$(PKBUILD) \
+	--eval "(require 'package-build)" \
+	--eval "(require 'subr-x)" \
+	--eval "(package-initialize)" \
+	--eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
+	--eval "(package-refresh-contents)" \
+	--eval "(setq rcp (package-recipe-lookup \"ein\"))" \
+	--eval "(unless (file-exists-p package-build-archive-dir) \
+	           (make-directory package-build-archive-dir))" \
+	--eval "(let* ((my-repo \"$(TRAVIS_PULL_REQUEST_SLUG)\") \
+	               (my-branch \"$(TRAVIS_PULL_REQUEST_BRANCH)\") \
+	               (my-commit \"$(TRAVIS_PULL_REQUEST_SHA)\")) \
+	           (oset rcp :repo my-repo) \
+	           (oset rcp :branch my-branch) \
+	           (oset rcp :commit my-commit))" \
+	--eval "(package-build--package rcp (package-build--checkout rcp))" \
+	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | egrep -a "Error: " )
+
+.PHONY: install
+install:
+	rm -rf dist/
+	cask package
+	emacs -Q --batch --eval "(package-initialize)" --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"
+
