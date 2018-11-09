@@ -51,7 +51,7 @@ See `ein:format-time-string'."
   (let ((buffer-undo-list t))
     (ewoc-invalidate (ein:basecell--ewoc cell) (ein:cell-element-get cell :footer))))
 
-(defmethod ein:cell-insert-footer :after ((cell ein:codecell))
+(cl-defmethod ein:cell-insert-footer :after ((cell ein:codecell))
   (if (slot-value cell 'running)
       (ein:insert-read-only "Execution pending\n\n")
     (if-let ((etime (plist-get (ein:cell-metadata cell) :execute-time)))

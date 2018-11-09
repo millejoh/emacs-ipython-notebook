@@ -721,7 +721,7 @@ This is equivalent to do ``C-c`` in the console program."
          (ws-cells (mapcar (lambda (data) (ein:cell-from-json data)) cells))
          (worksheet (ein:notebook--worksheet-new notebook)))
     (oset worksheet :saved-cells ws-cells)
-    ;(mapcar (lambda (data) (message "test %s" (oref data :metadata))) ws-cells)
+    ;(mapcar (lambda (data) (message "test %s" (slot-value data 'metadata))) ws-cells)
     (list worksheet)))
 
 (defun ein:notebook-to-json (notebook)

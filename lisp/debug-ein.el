@@ -30,7 +30,7 @@
 (require 'ein-dev)
 
 (ein:dev-start-debug)
-(ein:notebooklist-open)
+;; (ein:notebooklist-login ...)
 
 
 ;;; Extra stuff

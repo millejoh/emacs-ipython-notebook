@@ -70,7 +70,7 @@
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)
   "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
-  (intern (substring (oref cell :cell-id) 0 5)))
+  (intern (substring (slot-value cell 'cell-id) 0 5)))
 
 (defsubst delete-if (clause lst)
   (delete-if-not (lambda (u) (not (funcall clause u))) lst))
@@ -99,7 +99,7 @@
 
 (defun ein:worksheet--element-start (cell key &optional cached)
   (if cached
-      (plist-get (nth 4 (plist-get ein:%cell-lengths% (oref cell :cell-id))) key)
+      (plist-get (nth 4 (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) key)
     (let ((node (ein:cell-element-get cell key (if (eq key :output) 0))))
       (if node
           (marker-position (ewoc-location node))
@@ -107,11 +107,11 @@
             (ein:worksheet--element-start cell :footer))))))
 
 (defsubst ein:worksheet--saved-input-length (cell)
-  (or (fourth (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0))
+  (or (fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
 
 (defsubst ein:worksheet--prompt-length (cell &optional cached)
   (if cached
-      (or (first (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0)
+      (or (first (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     ;; 1+ for newline
     (1+ (- (ein:worksheet--element-start cell :input)
            (ein:worksheet--element-start cell :prompt)))))
@@ -119,18 +119,18 @@
 (defsubst ein:worksheet--output-length (cell &optional cached)
   (if cached
       ;; 1 for when cell un-executed, there is still a newline
-      (or (second (plist-get ein:%cell-lengths% (oref cell :cell-id))) 1)
+      (or (second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
     (- (ein:worksheet--next-cell-start cell)
-       (ein:worksheet--element-start cell (if (string= (oref cell :cell-type) "code") :output :footer)))))
+       (ein:worksheet--element-start cell (if (string= (slot-value cell 'cell-type) "code") :output :footer)))))
 
 (defsubst ein:worksheet--total-length (cell &optional cached)
   (if cached
-      (or (third (plist-get ein:%cell-lengths% (oref cell :cell-id))) 0)
+      (or (third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     (- (ein:worksheet--next-cell-start cell)
        (ein:worksheet--element-start cell :prompt))))
 
 (defun ein:worksheet--update-cell-lengths (cell &optional saved-input-length)
-  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (oref cell :cell-id)
+  (setq ein:%cell-lengths% (plist-put ein:%cell-lengths% (slot-value cell 'cell-id)
                                       (list (ein:worksheet--prompt-length cell)
                                             (ein:worksheet--output-length cell)
                                             (ein:worksheet--total-length cell)
@@ -259,7 +259,7 @@
         (setq buffer-undo-list (nreverse lst))
         (setq ein:%which-cell% (nreverse wc))
         (ein:worksheet--jigger-undo-list)
-        (remprop 'ein:%cell-lengths% (oref cell :cell-id))))))
+        (remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
 
 
 ;;; Class and variable
@@ -280,7 +280,7 @@
          :show-slide-data-p ein:worksheet-show-slide-data
          args))
 
-(defmethod ein:worksheet-bind-events ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-bind-events ((ws ein:worksheet))
   (with-slots (events) ws
     ;; Bind events for sub components:
     (mapc (lambda (cell) (setf (slot-value cell 'events) events))
@@ -311,49 +311,49 @@
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
-(defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
   (ein:funcall-packed (ein:worksheet--notebook-name ws)))
 
-(defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
   (ein:kernel-url-or-port (ein:worksheet--kernel ws)))
 
-(defmethod ein:worksheet-name ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-name ((ws ein:worksheet))
   (plist-get (ein:worksheet--metadata ws) :name))
 
-(defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
+(cl-defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
   "Set worksheet name.
 
 \(fn ws name)"
   (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
   (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
 
-(defmethod ein:worksheet-full-name ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-full-name ((ws ein:worksheet))
   (let ((nb-name (ein:worksheet-notebook-name ws)))
     (ein:aif (ein:worksheet-name ws)
         (concat nb-name "/" it)
       nb-name)))
 
-(defmethod ein:worksheet-buffer ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
                  (ewoc (ein:worksheet--ewoc ws))
                  (buffer (ewoc-buffer ewoc))
                  ((buffer-live-p buffer)))
     buffer))
 
-(defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
+(cl-defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
   (format ein:worksheet-buffer-name-template
           (ein:worksheet-url-or-port ws)
           (ein:worksheet-full-name ws)))
 
-(defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
+(cl-defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
   (or (ein:worksheet-buffer ws)
       (generate-new-buffer (ein:worksheet--buffer-name ws))))
 
-(defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (rename-buffer (ein:worksheet--buffer-name ws) t)))
 
-(defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
+(cl-defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (set-buffer-modified-p dirty))
   (setf (slot-value ws 'dirty) dirty))
@@ -367,7 +367,7 @@
           (not (ein:worksheet--show-slide-data-p ws)))
     (ein:worksheet-render ws)))
 
-(defmethod ein:worksheet-render ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
     (setq ein:%worksheet% ws)
 
@@ -413,17 +413,17 @@
 
 ;;; Persistance and loading
 
-(defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
+(cl-defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (destructuring-bind (&key cells metadata &allow-other-keys) data
     (setf (slot-value ws 'metadata) metadata)
     (setf (slot-value ws 'saved-cells)
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
-(defmethod ein:worksheet-from-cells ((ws ein:worksheet) cells)
+(cl-defmethod ein:worksheet-from-cells ((ws ein:worksheet) cells)
   )
 
-(defmethod ein:worksheet-to-json ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-to-json ((ws ein:worksheet))
   "Convert worksheet WS into JSON ready alist.
 It sets buffer internally so that caller doesn not have to set
 current buffer."
@@ -436,7 +436,7 @@ current buffer."
     `((cells . ,(apply #'vector cells))
       ,@(ein:aand (ein:worksheet--metadata ws) `((metadata . ,it))))))
 
-(defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
+(cl-defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
   (let* ((discard-output-p (slot-value ws 'discard-output-p))
          (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
@@ -445,7 +445,7 @@ current buffer."
                           (ein:worksheet-get-cells ws)))))
     cells))
 
-(defmethod ein:worksheet-save-cells ((ws ein:worksheet) &optional deactivate)
+(cl-defmethod ein:worksheet-save-cells ((ws ein:worksheet) &optional deactivate)
   "Save cells in worksheet buffer in cache before killing the buffer.
 
 .. warning:: After called with non-nil DEACTIVATE flag is given,
@@ -475,7 +475,7 @@ worksheet WS is reopened.
       (mapc #'ein:cell-deactivate (slot-value ws 'saved-cells))))
   (setf (slot-value ws 'dont-save-cells) nil))
 
-(defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-dont-save-cells ((ws ein:worksheet))
   "Turn on `:dont-save-cells' flag so that next call on
 `ein:worksheet-save-cells' actually do nothing.
 
@@ -485,7 +485,7 @@ worksheet WS is reopened.
 
 ;;; Cell indexing, retrieval, etc.
 
-(defmethod ein:worksheet-cell-from-type ((ws ein:worksheet) type &rest args)
+(cl-defmethod ein:worksheet-cell-from-type ((ws ein:worksheet) type &rest args)
   "Create a cell of TYPE (symbol or string)."
   ;; FIXME: unify type of TYPE to symbol or string.
   (apply #'ein:cell-from-type
@@ -494,7 +494,7 @@ worksheet WS is reopened.
          :events (slot-value ws 'events)
          args))
 
-(defmethod ein:worksheet-get-cells ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-get-cells ((ws ein:worksheet))
   (if (ein:worksheet-has-buffer-p ws)
       (let* ((ewoc (slot-value ws 'ewoc))
              (nodes (ewoc-collect ewoc
@@ -502,7 +502,7 @@ worksheet WS is reopened.
         (mapcar #'ein:$node-data nodes))
     (slot-value ws 'saved-cells)))
 
-(defmethod ein:worksheet-ncells ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-ncells ((ws ein:worksheet))
   (length (ein:worksheet-get-cells ws)))
 
 (defun ein:worksheet-get-ewoc (&optional ws)
@@ -618,7 +618,6 @@ kill-ring of Emacs (kill-ring for texts)."
   (let ((clone (ein:cell-copy cell)))
     ;; Cell can be from another buffer, so reset `ewoc'.
     (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws))
-                                        ;(oset clone :ewoc (oref ws :ewoc))
     (funcall (intern (concat "ein:worksheet-insert-cell-" up)) ws clone pivot)
     clone))
 
@@ -639,7 +638,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
-    (loop for k in (oref cell :element-names)
+    (loop for k in (slot-value cell 'element-names)
           do (setq result
                    (plist-put result k
                               (let* ((en-or-list (ein:cell-element-get cell k))
@@ -649,7 +648,7 @@ Prefixes are act same as the normal `yank' command."
 
 (defun ein:worksheet-maybe-new-cell (ws type-or-cell)
   "Return TYPE-OR-CELL as-is if it is a cell, otherwise return a new cell."
-  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)                    ;(ein:basecell-child-p type-or-cell)
+  (let ((cell (if (cl-typep type-or-cell 'ein:basecell)
                   type-or-cell
                 (ein:worksheet-cell-from-type ws type-or-cell))))
     ;; When newly created or copied, kernel is not attached or not the
@@ -1005,7 +1004,7 @@ Do not clear input prompts when the prefix argument is given."
                             ein:$kernel-shell-channel
                             ein:$kernel-iopub-channel)))))
 
-(defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
         (ein:filter #'(lambda (x)
                         (cl-typep x 'ein:codecell))
@@ -1017,7 +1016,7 @@ Do not clear input prompts when the prefix argument is given."
                      (ein:worksheet-get-current-cell
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-when-ready (slot-value ws 'kernel)
-                         (apply-partially 
+                         (apply-partially
                           (lambda (ws* cell* kernel)
                             (let ((buffer-undo-list t))
                               (ein:cell-execute cell*)
@@ -1154,10 +1153,10 @@ in the history."
   "Return non-`nil' if the current buffer is a worksheet buffer."
   ein:%worksheet%)
 
-(defmethod ein:worksheet-has-buffer-p ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-has-buffer-p ((ws ein:worksheet))
   (ein:aand (ein:worksheet-buffer ws) (buffer-live-p it)))
 
-(defmethod ein:worksheet-modified-p ((ws ein:worksheet))
+(cl-defmethod ein:worksheet-modified-p ((ws ein:worksheet))
   (let ((buffer (ein:worksheet-buffer ws)))
     (and (buffer-live-p buffer)
          (or (slot-value ws 'dirty)
@@ -1205,10 +1204,10 @@ buffer, so you don't need to set current buffer to call this
 function."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (ein:kernel-when-ready 
+    (ein:kernel-when-ready
      (slot-value ws 'kernel)
-     
-     (apply-partially 
+
+     (apply-partially
       (lambda (ws kernel)
         (let ((buffer-undo-list t))
           (mapc #'ein:cell-execute

@@ -544,9 +544,9 @@ You may find the new one in the notebook list." error)
         (widget-insert " | ")
         (widget-create
          'link
-         :notify (lambda (&rest ignore) (ein:notebooklist-open
-                                         (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                         path))
+         :notify (lambda (&rest ignore)
+                   (ein:notebooklist-login
+                    (ein:$notebooklist-url-or-port ein:%notebooklist%) path))
          name)))
     (widget-insert " |\n\n"))
 

@@ -66,6 +66,7 @@
 
 This variable applies to both `helm-ein-kernel-history' and
 `anything-ein-kernel-history'."
+  :type 'boolean
   :group 'ein)
 
 (defun ein:helm-kernel-history-search-construct-pattern (pattern)
