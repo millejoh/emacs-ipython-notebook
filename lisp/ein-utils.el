@@ -604,8 +604,15 @@ otherwise it should be a function, which is called on `time'."
 
 
 ;;; Emacs utilities
+(defmacro ein:message-whir (mesg &rest body)
+  "Display MESG with a modest animation until ASYNC-CALL completes."
+  `(lexical-let* (done-p
+                  (done-callback (lambda (&rest ignore) (setf done-p t)))
+                  (errback (lambda (&rest ignore) (setf done-p 'error))))
+     (ein:message-whir-subr ,mesg (lambda () done-p))
+     ,@body))
 
-(defun ein:message-whir (mesg doneback)
+(defun ein:message-whir-subr (mesg doneback)
   "Display MESG with a modest animation until done-p returns t.  
 
 DONEBACK returns t or 'error when calling process is done, and nil if not done."

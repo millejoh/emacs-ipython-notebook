@@ -200,6 +200,12 @@ the log of the running jupyter server."
           (ein:jupyter-server-login-and-open login-callback)))))
 
 ;;;###autoload
+(defalias 'ein:run 'ein:jupyter-server-start)
+
+;;;###autoload
+(defalias 'ein:stop 'ein:jupyter-server-stop)
+
+;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   "Stop a running jupyter notebook server.
 
