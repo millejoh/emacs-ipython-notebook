@@ -884,13 +884,16 @@ To close notebook without killing kernel, just close the buffer
 as usual."
   (interactive (list ein:%notebook%))
   (when (or force (ein:notebook-ask-before-kill-buffer))
-    (let ((kernel (ein:$notebook-kernel notebook)))
-      ;; If kernel is live, kill it before closing.
+    (let ((kernel (ein:$notebook-kernel notebook))
+          (callback (apply-partially
+                     (lambda (notebook* kernel)
+                       (ein:notebook-close notebook*))
+                     notebook)))
       (if (ein:kernel-live-p kernel)
-          (ein:kernel-delete-session kernel 
-                                     (lambda (kernel)
-                                       (ein:notebook-close notebook)))
-        (ein:notebook-close notebook)))))
+          (ein:message-whir "Ending session"  
+                            (add-function :before callback done-callback)
+                            (ein:kernel-delete-session kernel callback))
+        (funcall callback nil)))))
 
 (defun ein:fast-content-from-notebook (notebook)
   "Quickly generate a basic content structure from notebook. This

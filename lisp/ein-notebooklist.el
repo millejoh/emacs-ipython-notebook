@@ -848,9 +848,6 @@ See also:
 ;;;###autoload
 (defalias 'ein:login 'ein:notebooklist-login)
 
-;;;###autoload
-(defalias 'ein-login 'ein:notebooklist-login)
-
 (defun ein:notebooklist-ask-one-cookie ()
   "If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
   (plist-put nil (intern (read-no-blanks-input "Cookie name: "))
@@ -874,18 +871,15 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
             for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
             do (write-region line nil (request--curl-cookie-jar) 'append))))
 
-  (lexical-let* (done-p
-                 (done-callback (lambda (&rest ignore) (setf done-p t)))
-                 (errback (lambda (&rest ignore) (setf done-p 'error)))
-                 (token (ein:notebooklist-token-or-password url-or-port)))
-    (add-function :before callback done-callback)
-    (ein:message-whir "Establishing session" (lambda () done-p))
-    (cond ((null token) ;; don't know
-           (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
-          ((string= token "") ;; all authentication disabled
-           (ein:log 'verbose "Skipping login %s" url-or-port)
-           (ein:notebooklist-open* url-or-port nil nil callback errback))
-          (t (ein:notebooklist-login--iteration url-or-port callback errback token 0 nil)))))
+  (ein:message-whir "Establishing session"
+    (let ((token (ein:notebooklist-token-or-password url-or-port)))
+      (add-function :before callback done-callback)
+      (cond ((null token) ;; don't know
+             (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
+            ((string= token "") ;; all authentication disabled
+             (ein:log 'verbose "Skipping login %s" url-or-port)
+             (ein:notebooklist-open* url-or-port nil nil callback errback))
+            (t (ein:notebooklist-login--iteration url-or-port callback errback token 0 nil))))))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))

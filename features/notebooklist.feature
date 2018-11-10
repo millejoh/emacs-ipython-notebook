@@ -19,6 +19,18 @@ Scenario: Resync
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "kernelspecs--complete"
 
+@stop
+Scenario: Stop after closing notebook
+  Given I am in notebooklist buffer
+  And I click on "New Notebook"
+  And I switch to buffer like "Untitled"
+  And I press "C-x k"
+  And I am in notebooklist buffer
+  And I keep clicking "Resync" until "Stop"
+  And I click on "Stop"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "Deleted session" 
+
 @login
 Scenario: No token server
   Given I start the server configured "c.NotebookApp.token = u''\n"

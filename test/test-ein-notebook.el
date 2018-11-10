@@ -962,19 +962,10 @@ defined."
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
           (notebook ein:%notebook%)
-          (kernel (ein:$notebook-kernel ein:%notebook%))
           (ein:notebook-kill-buffer-ask nil))
-      (mocker-let
-          ((ein:kernel-live-p
-            (kernel)
-            ((:input (list kernel) :output t)))
-           (ein:kernel-delete-session
-            (kernel &optional callback)
-            ((:input (list kernel (lambda (kernel) (ein:notebook-close notebook)))))))
+      (cl-letf (((symbol-function 'ein:kernel-live-p) (lambda (&rest args) t))
+                ((symbol-function 'ein:kernel-delete-session) (lambda (kernel callback) (funcall callback kernel))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))
-      (should (buffer-live-p buffer))
-      ;; Pretend that `ein:notebook-close' is called.
-      (ein:notebook-close notebook)
       (ein:testing-notebook-should-be-closed notebook buffer))))
 
 (ert-deftest ein:notebook-kill-kernel-then-close-when-already-dead ()

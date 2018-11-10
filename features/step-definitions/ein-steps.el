@@ -152,6 +152,14 @@
         (ein:testing-flush-queries)
         (And "I wait 1 second"))) ;; eldoc-documentation-function not flushing
 
+(When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
+      (lambda (go stop)
+        (loop repeat 10
+              until (search stop (buffer-string))
+              do (And "I click on \"Resync\"")
+              do (sleep-for 0 1000)
+              finally do (if (not (search stop (buffer-string))) (assert nil)))))
+
 (When "^I click on \"\\(.+\\)\"$"
       (lambda (word)
         ;; from espuds "go to word" without the '\\b's

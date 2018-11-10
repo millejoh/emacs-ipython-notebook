@@ -645,7 +645,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   (ein:log 'info "Error, could not delete session %s." session-id))
 
 (defun ein:kernel-delete-session (kernel &optional callback)
-  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK of arity 1, the kernel"
+  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK (kernel)"
   (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
      (list 'kernel-delete-session session-id)

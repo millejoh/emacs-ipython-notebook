@@ -20,9 +20,7 @@ autoloads:
 .PHONY: clean
 clean:
 	cask clean-elc
-
-env-ipy.%:
-	tools/makeenv.sh env/ipy.$* tools/requirement-ipy.$*.txt
+	rm -rf test/test-install
 
 .PHONY: test-compile
 test-compile: clean autoloads
