@@ -231,17 +231,22 @@
         (f-mkdir dir)
         (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
 
+(When "^\"\\(.+\\)\" should \\(not \\)?include \"\\(.+\\)\"$"
+      (lambda (variable negate value)
+        (let ((member-p (member value (symbol-value (intern variable)))))
+          (if negate (should-not member-p) (should member-p)))))
+
 (When "^I set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (set (intern variable) value)))
 
+(When "^I set \"\\(.+\\)\" to eval \"\\(.+\\)\"$"
+      (lambda (variable value)
+        (set (intern variable) (eval (car (read-from-string value))))))
+
 (When "^I fset \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (fset (intern variable) (function value))))
-
-(When "^I custom set \"\\(.+\\)\" to \"\\(.+\\)\"$"
-      (lambda (custom-variable value)
-        (customize-set-value (intern custom-variable) value)))
 
 (When "^I get into notebook mode \"\\(.+\\)\" \"\\(.+\\)\"$"
       (lambda (notebook-dir file-path)

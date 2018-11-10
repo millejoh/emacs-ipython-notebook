@@ -9,5 +9,4 @@
   (with-current-buffer "*scratch*"
     (erase-buffer))
   (ein:process-divine-dir 1 "" "*scratch*")
-  (ein:process-divine-port 1 "" "*scratch*")
-  (should (zerop (with-current-buffer "*scratch*" (length (buffer-string))))))
+  (ein:process-divine-port 1 "" "*scratch*"))

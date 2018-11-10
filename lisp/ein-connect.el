@@ -395,18 +395,20 @@ notebook."
   :keymap ein:connect-mode-map
   :group 'ein
   (case ein:completion-backend
-    (ein:use-ac-backend (ein:complete-on-dot-install ein:connect-mode-map)
-                        (auto-complete-mode +1))
-    (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:connect-mode-map)
-                             (auto-complete-mode +1))
-    (ein:use-company-backend (company-mode +1)
-                             (when (boundp 'company-backends)
-                               (add-to-list 'company-backends 'ein:company-backend)))
-    (ein:use-company-jedi-backend (company-mode +1)
-                                  (when (boundp 'company-backends)
-                                    (add-to-list 'company-backends 'ein:company-backend)))
-
-    (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'."))))
+    (ein:use-ac-backend
+     (assert (featurep 'ein-ac))
+     (ein:complete-on-dot-install ein:connect-mode-map)
+     (auto-complete-mode))
+    (ein:use-ac-jedi-backend
+     (assert (featurep 'ein-ac))
+     (ein:jedi-complete-on-dot-install ein:connect-mode-map)
+     (auto-complete-mode))
+    (ein:use-company-backend
+     (assert (featurep 'ein-company))
+     (company-mode))
+    (ein:use-company-jedi-backend
+     (assert (featurep 'ein-company))
+     (company-mode))))
 
 (put 'ein:connect-mode 'permanent-local t)
 

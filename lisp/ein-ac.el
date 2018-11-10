@@ -34,6 +34,11 @@
 
 
 ;;; Configuration
+(defcustom ein:use-auto-complete-superpack nil
+  "Set to `t' to use preset a little bit hacky auto-complete configuration.
+When this option is enabled, cached omni completion is available."
+  :type 'boolean
+  :group 'ein-completion)
 
 (defvar ein:ac-sources (and (boundp 'ac-sources)
                             (default-value 'ac-sources))
@@ -238,14 +243,7 @@ Specifying non-`nil' to SUPERPACK enables richer auto-completion
   (when superpack
     (ein:ac-superpack)))
 
-
-(defvar ein:ac-config-once-called nil)
-
-(defun ein:ac-config-once (&optional superpack)
-  (unless ein:ac-config-once-called
-    (setq ein:ac-config-once-called t)
-    (ein:ac-config superpack)))
-
+(ein:ac-config ein:use-auto-complete-superpack)
 (provide 'ein-ac)
 
 ;;; ein-ac.el ends here

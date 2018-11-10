@@ -28,3 +28,4 @@ _static
 *.zip
 .gitattributes
 .ecukes-temp*
+dist

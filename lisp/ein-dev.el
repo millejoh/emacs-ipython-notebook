@@ -68,8 +68,7 @@
   (ein:notebook-kill-all-buffers)
   (makunbound 'ein:notebook-mode-map)   ; so defvar works.
   (load "ein-notebook")  ; ... but make sure it will be defined first.
-  (ein:load-files "^ein-.*\\.el$")
-  (ein:subpackages-reload))
+  (ein:load-files "^ein-.*\\.el$"))
 
 (defun* ein:dev-require-all (&key (ignore-p #'ignore))
   (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")

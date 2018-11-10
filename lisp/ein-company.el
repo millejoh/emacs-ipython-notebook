@@ -32,6 +32,8 @@
 (require 'ein-completer)
 (require 'company nil t)
 
+(declare-function jedi:complete-request "jedi-core")
+
 (autoload 'company-begin-backend "company")
 (autoload 'company-doc-buffer "company")
 
@@ -63,7 +65,7 @@
 (defun ein:company--complete-jedi (fetcher-callback)
   (deferred:$
     (deferred:parallel
-      ;;     (jedi:complete-request) ;; we need tkf-emacs submodule
+      (jedi:complete-request)
      (ein:company--deferred-complete))
     (deferred:nextc it
       (lambda (replies)
@@ -94,11 +96,9 @@
                                                                   (eql it 'ein:connect-mode)))
                            minor-mode-list)
                  (ein:object-at-point)))
-    (annotation (if ein:allow-company-annotations
-                    (let ((kernel (ein:get-kernel)))
-                      (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
-                          (plist-get it :definition)
-                        ""))))
+    (annotation (let ((kernel (ein:get-kernel)))
+                  (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
+                           (plist-get it :definition))))
     (doc-buffer (lexical-let ((arg arg))
                   (cons :async
                         (lambda (cb)
@@ -109,21 +109,20 @@
                         (ein:pytools-find-source (ein:get-kernel-or-error)
                                                  obj
                                                  cb)))))
-    (candidates () (or
-                    (ein:completions--find-cached-completion (ein:object-at-point)
-                                                           (ein:$kernel-oinfo-cache (ein:get-kernel-or-error)))
-                    (lexical-let ((kernel (ein:get-kernel-or-error))
-                                  (col (current-column)))
-                      (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
-                        (case ein:completion-backend
-                          (ein:use-company-jedi-backend
-                           (cons :async (lambda (cb)
-                                          (ein:company--complete-jedi cb))))
-                          (t
-                           (cons :async
-                                 (lambda (cb)
-                                   (ein:company--complete cb)))))))))))
-
+    (candidates (or
+                 (ein:completions--find-cached-completion (ein:object-at-point)
+                                                          (ein:$kernel-oinfo-cache (ein:get-kernel-or-error)))
+                 (lexical-let ((kernel (ein:get-kernel-or-error))
+                               (col (current-column)))
+                   (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
+                     (case ein:completion-backend
+                       (ein:use-company-jedi-backend
+                        (cons :async (lambda (cb)
+                                       (ein:company--complete-jedi cb))))
+                       (t
+                        (cons :async
+                              (lambda (cb)
+                                (ein:company--complete cb)))))))))))
 
 (defun ein:company-backend--punctuation-check (thing col)
   (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
@@ -144,5 +143,7 @@
                                                     :callback cb)))))
 
 (setq ein:complete-on-dot nil)
+(when (boundp 'company-backends)
+  (add-to-list 'company-backends 'ein:company-backend))
 
 (provide 'ein-company)
