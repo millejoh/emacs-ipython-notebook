@@ -26,6 +26,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
+(require 'request)
 (require 'request-deferred)
 (require 'url)
 
@@ -154,6 +155,14 @@ variable to a reasonable value you can avoid this situation."
   :group 'ein
   :type 'integer)
 
+(defsubst ein:query-enforce-curl ()
+  (when (not (eq request-backend 'curl))
+    (ein:display-warning 
+     (format "request-backend: %s unsupported" request-backend))
+    (if (executable-find "curl")
+        (setq request-backend 'curl)
+      (ein:display-warning "The 'curl' program was not found"))))
+
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
                                       (timeout ein:query-timeout)
@@ -161,6 +170,7 @@ variable to a reasonable value you can avoid this situation."
   "Cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
+  (ein:query-enforce-curl)
   (with-local-quit
     (ein:query-gc-running-process-table)
     (when timeout
@@ -191,7 +201,8 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
                                 &key
                                 (timeout ein:query-timeout)
                                 &allow-other-keys)
-  ""
+  "Appears to be used by ein-jupyterhub only"
+  (ein:query-enforce-curl)
   (apply #'request-deferred (url-encode-url url)
          (ein:query-prepare-header url settings)))
 

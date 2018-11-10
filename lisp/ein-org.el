@@ -106,7 +106,7 @@ node `(org) External links' and Info node `(org) Search options'"
                                 :follow 'ein:org-open
                                 :help-echo "Open ipython notebook."
                                 :store 'ein:org-store-link)
-     (org-link-set-parameters "ipynb" :follow 'ein:org-open)
+     (org-add-link-type "ipynb" :follow 'ein:org-open)
      (add-hook 'org-store-link-functions 'ein:org-store-link)))
 
 ;; The above expression is evaluated via loaddef file.  At the moment,
