@@ -632,16 +632,16 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   (ein:query-singleton-ajax
    (list 'kernel-delete-session session-id)
    (ein:url url "api/sessions" session-id)
-   :complete (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
-   :error (apply-partially #'kernel-delete--from-session-error session-id)
+   :success (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
+   :error (apply-partially #'ein:kernel-delete--from-session-error session-id)
    :type "DELETE"))
 
-(cl-defun ein:kernel-delete--from-session-complete (session-id callback &allow-other-keys)
+(defun ein:kernel-delete--from-session-complete (session-id callback &rest _)
   (ein:log 'info "Deleted session %s and its associated kernel process." session-id)
   (when callback
     (funcall callback)))
 
-(cl-defun ein:kernel-delete--from-session-complete (session-id &allow-other-keys)
+(defun ein:kernel-delete--from-session-error (session-id &rest _)
   (ein:log 'info "Error, could not delete session %s." session-id))
 
 (defun ein:kernel-delete-session (kernel &optional callback)
