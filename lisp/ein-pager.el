@@ -30,8 +30,11 @@
 (require 'ein-core)
 (require 'ein-events)
 (require 'view)
+(require 'ess-help nil t)
 
 ;; FIXME: Make a class with `:get-notebook-name' slot like `ein:worksheet'
+
+(declare-function ess-help-underline "ess-help")
 
 (defun ein:pager-new (name events)
   ;; currently pager = name.
@@ -63,6 +66,8 @@
 (defun ein:pager-append-text (pager text)
   (ein:with-read-only-buffer (get-buffer-create pager)
     (insert (ansi-color-apply text))
+    (if (featurep 'ess-help)
+        (ess-help-underline))
     (unless (eql 'ein:pager-mode major-mode)
       (ein:pager-mode))))
 
