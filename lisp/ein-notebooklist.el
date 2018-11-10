@@ -720,14 +720,11 @@ You may find the new one in the notebook list." error)
                     (if (gethash path sessions)
                         (widget-create
                          'link
-                         :notify (lexical-let ((url-or-port url-or-port)
-                                               (path path)
+                         :notify (lexical-let ((url url-or-port)
                                                (session (car (gethash path sessions))))
                                    (lambda (&rest ignore)
                                      (run-at-time 1 nil #'ein:notebooklist-reload)
-                                     ;; can only stop opened notebooks
-                                     (ein:and-let* ((nb (ein:notebook-get-opened-notebook url-or-port path)))
-                                       (ein:kernel-delete-session (ein:$notebook-kernel nb)))))
+                                     (ein:kernel-delete--from-session-id url session)))
                          "Stop")
                       (widget-insert "------"))
                     (widget-insert " ")

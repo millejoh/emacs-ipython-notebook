@@ -116,7 +116,7 @@
      :error (apply-partially #'ein:kernel-session-p--error kernel callback iteration))))
 
 (defun* ein:kernel-session-p--complete (session-id &key data response
-                                                   &allow-other-keys 
+                                                   &allow-other-keys
                                                    &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-session-p--complete %s" resp-string))
 
@@ -132,13 +132,13 @@
 
 (defun* ein:kernel-session-p--success (kernel session-id callback &key data &allow-other-keys)
   (let ((session-p (equal (plist-get data :id) session-id)))
-    (ein:log 'verbose "ein:kernel-session-p--success: session-id=%s session-p=%s" 
+    (ein:log 'verbose "ein:kernel-session-p--success: session-id=%s session-p=%s"
              session-id session-p)
     (when callback (funcall callback kernel session-p))))
 
 (defun* ein:kernel-restart-session (kernel)
   "Server side delete of KERNEL session and subsequent restart with all new state"
-  (ein:kernel-delete-session 
+  (ein:kernel-delete-session
    kernel
    (lambda (kernel)
      (ein:events-trigger (ein:$kernel-events kernel) 'status_restarting.Kernel)
@@ -190,7 +190,7 @@ notebook, which will automatically create and associate a kernel with the notebo
        :error (apply-partially #'ein:kernel-retrieve-session--error kernel iteration callback)))))
 
 (defun* ein:kernel-retrieve-session--complete (kernel callback &key data response
-                                           &allow-other-keys 
+                                           &allow-other-keys
                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-retrieve-session--complete %s" resp-string))
 
@@ -208,7 +208,7 @@ notebook, which will automatically create and associate a kernel with the notebo
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))
     (destructuring-bind (&key id &allow-other-keys) data
-      (ein:log 'verbose "ein:kernel-retrieve-session--success: kernel-id=%s session-id=%s" 
+      (ein:log 'verbose "ein:kernel-retrieve-session--success: kernel-id=%s session-id=%s"
                id session-id)
       (setf (ein:$kernel-kernel-id kernel) id)
       (setf (ein:$kernel-session-id kernel) session-id)
@@ -225,13 +225,13 @@ CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
   (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
   (ein:kernel-session-p
    kernel
-   (apply-partially 
-    (lambda (callback* kernel session-p) 
-      (if (or session-p 
+   (apply-partially
+    (lambda (callback* kernel session-p)
+      (if (or session-p
               (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
           (ein:kernel-retrieve-session
            kernel 0
-           (apply-partially 
+           (apply-partially
             (lambda (callback** kernel)
               (ein:events-trigger (ein:$kernel-events kernel)
                                   'status_reconnected.Kernel)
@@ -625,6 +625,25 @@ Example::
      :success (lambda (&rest ignore)
                 (ein:log 'info "Sent interruption command.")))))
 
+(defun ein:kernel-delete--from-session-id (url session-id &optional callback)
+  "Stop/delete a running kernel from a session id. May also specify a callback function of 0 args to be called once oepration is complete.
+
+We need this to have proper behavior for the 'Stop' command in the ein:notebooklist buffer."
+  (ein:query-singleton-ajax
+   (list 'kernel-delete-session session-id)
+   (ein:url url "api/sessions" session-id)
+   :complete (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
+   :error (apply-partially #'kernel-delete--from-session-error session-id)
+   :type "DELETE"))
+
+(cl-defun ein:kernel-delete--from-session-complete (session-id callback &allow-other-keys)
+  (ein:log 'info "Deleted session %s and its associated kernel process." session-id)
+  (when callback
+    (funcall callback)))
+
+(cl-defun ein:kernel-delete--from-session-complete (session-id &allow-other-keys)
+  (ein:log 'info "Error, could not delete session %s." session-id))
+
 (defun ein:kernel-delete-session (kernel &optional callback)
   "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK of arity 1, the kernel"
   (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
@@ -639,7 +658,7 @@ Example::
 (defun* ein:kernel-delete-session--error (session-id callback
                                              &key response error-thrown
                                              &allow-other-keys)
-  (ein:log 'error "ein:kernel-delete-session--error %s: ERROR %s DATA %s" 
+  (ein:log 'error "ein:kernel-delete-session--error %s: ERROR %s DATA %s"
            session-id (car error-thrown) (cdr error-thrown)))
 
 (defun* ein:kernel-delete-session--success (session-id callback &key data symbol-status response
@@ -647,7 +666,7 @@ Example::
   (ein:log 'verbose "ein:kernel-delete-session--success: %s deleted" session-id))
 
 (defun* ein:kernel-delete-session--complete (kernel session-id callback &key data response
-                                            &allow-other-keys 
+                                            &allow-other-keys
                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
