@@ -116,8 +116,8 @@ pair of TO-PYTHON and FROM-PYTHON."
 
 ;;; Constants
 
-(defvar ein:source-dir (file-name-directory load-file-name)
-  "Directory in which ``ein*.el`` locate.")
+(defconst ein:source-dir (file-name-directory load-file-name)
+  "Directory in which `ein*.el` files are located.")
 
 
 ;;; Configuration getter
