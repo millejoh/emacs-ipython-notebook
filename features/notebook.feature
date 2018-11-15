@@ -24,11 +24,11 @@ Scenario: kernel reconnect succeeds
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "WS closed unexpectedly"
   And I switch to buffer like "Untitled"
-  And header says "Kernel requires reconnect \\<notebook-mode-map>\[ein:notebook-reconnect-session-command]"
+  And header says "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I clear log expr "ein:log-all-buffer-name"
   And I press "C-c C-r"
   And I wait for the smoke to clear
-  And header does not say "Kernel requires reconnect \\<notebook-mode-map>\[ein:notebook-reconnect-session-command]"
+  And header does not say "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see "[error]"
@@ -38,10 +38,10 @@ Scenario: kernel reconnect succeeds
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "WS closed unexpectedly"
   And I switch to buffer like "Untitled"
-  And header says "Kernel requires reconnect \\<notebook-mode-map>\[ein:notebook-reconnect-session-command]"
+  And header says "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I clear log expr "ein:log-all-buffer-name"
   And I wait for cell to execute
-  And header does not say "Kernel requires reconnect \\<notebook-mode-map>\[ein:notebook-reconnect-session-command]"
+  And header does not say "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see "[error]"
@@ -55,6 +55,6 @@ Scenario: kernel reconnect succeeds
   And I should see "ein:kernel-retrieve-session--complete"
   And I switch to buffer like "Untitled"
   And I kill kernel
-  And header says "Kernel requires reconnect \\<notebook-mode-map>\[ein:notebook-reconnect-session-command]"
+  And header says "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I clear log expr "ein:log-all-buffer-name"
   And my reconnect is questioned
