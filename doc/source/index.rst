@@ -390,13 +390,14 @@ Org-mode integration
 --------------------
 
 You can execute org source blocks in EIN by adding `ein` to
-`org:babel-load-languages`. You need to specify a notebook via the :session
+`org:babel-load-languages`. You need to specify a notebook via the `:session`
 argument. The format for the session argument is
-`{url-or-port}/{path-to-notebook}`. For example:
+`{url-or-port}/{path-to-notebook}`. You should also specify `:results raw drawer`
+for proper rendering inside the org buffer. For example:
 
 .. code:: python
 
-   #+BEGIN_SRC ein :session 8888/Untitled.ipynb
+   #+BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer
    import sys
 
    a = 14500
@@ -414,7 +415,7 @@ argument as in the example below:
 
 .. code:: python
 
-   #BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
+   #BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer :image output.png
    import matplotlib.pyplot as plt
    import numpy as np
 
