@@ -425,6 +425,22 @@ argument as in the example below:
    plt.plot(x,y)
    #+END_SRC
 
+To get proper syntax highlighting for non-Python kernels, use the function
+:el:symbol:`ein:org-register-lang-mode` to define a new ein-based org source
+language. For example, to get proper syntax highlighting for an R kernel, first call
+
+.. sourcecode:: cl
+
+    (ein:org-register-lang-mode "ein-R" 'R)
+
+Then org SRC blocks with language "ein-R" will use R syntax highlighting:
+
+.. code:: python
+
+   #BEGIN_SRC ein-R :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   plot(1:10, 1:10)
+   #+END_SRC
+
 You can also link to an IPython notebook from org-mode_ files.
 
 1. Call org-mode function :el:symbol:`org-store-link`
@@ -448,6 +464,7 @@ Customization
 
 .. el:variable:: ein:org-async-p
 .. el:variable:: ein:org-inline-image-directory
+.. el:function:: ein:org-register-lang-mode
 
 Support for The Hy Language (EXPERIMENTAL)
 ------------------------------------------
