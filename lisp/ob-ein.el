@@ -56,6 +56,18 @@
 (add-to-list 'org-src-lang-modes '("ein" . python))
 (add-to-list 'org-src-lang-modes '("ein-hy" . hy))
 
+;; based on ob-ipython--configure-kernel
+(defun ein:org-register-lang-mode (lang-name lang-mode)
+  "Define org+ein language LANG-NAME with syntax highlighting from LANG-MODE.
+For example, call (ein:org-register-lang-mode \"ein-R\" 'R) to define a language \"ein-R\" with R syntax highlighting for use with org-babel and ein."
+  (add-to-list 'org-src-lang-modes `(,lang-name . ,lang-mode))
+  (defvaralias (intern (concat "org-babel-default-header-args:" lang-name))
+    'org-babel-default-header-args:ein)
+  (defalias (intern (concat "org-babel-execute:" lang-name))
+    'org-babel-execute:ein)
+  (defalias (intern (concat "org-babel-" lang-name "-initiate-session"))
+    'org-babel-ein-initiate-session))
+
 ;; Handling source block execution results
 (defun ein:temp-inline-image-info (value)
   (let* ((f (md5 value))
@@ -76,10 +88,7 @@
 
 (defun ein:return-mime-type (json file)
   (loop
-   for key in (cond
-               ((functionp ein:output-type-preference)
-                (funcall ein:output-type-preference json))
-               (t ein:output-type-preference))
+   for key in ein:output-types-text-preferred
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)

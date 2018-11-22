@@ -959,6 +959,12 @@ Note that ``html`` comes before ``text``."
   :type '(choice function (repeat symbol))
   :group 'ein)
 
+(defvar ein:output-types-text-preferred
+  '(emacs-lisp svg image/svg png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript))
+
+(defvar ein:output-types-html-preferred
+  '(emacs-lisp svg image/svg png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
+
 (defun ein:output-type-prefer-pretty-text-over-html (data)
   "Use text type if it is a \"prettified\" text instead of HTML.
 This is mostly for *not* using HTML table for pandas but using
@@ -967,8 +973,8 @@ HTML for other object.
 If the text type output contains a newline, it is assumed be a
 prettified text thus be used instead of HTML type."
   (if (ein:aand (plist-get data :text) (string-match-p "\n" it))
-      '(emacs-lisp svg image/svg png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript)
-    '(emacs-lisp svg image/svg png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain)))
+      ein:output-types-text-preferred
+    ein:output-types-html-preferred))
 
 (defun ein:fix-mime-type (type)
   (ein:aif (assoc type ein:mime-type-map)

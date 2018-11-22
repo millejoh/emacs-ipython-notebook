@@ -390,13 +390,14 @@ Org-mode integration
 --------------------
 
 You can execute org source blocks in EIN by adding `ein` to
-`org:babel-load-languages`. You need to specify a notebook via the :session
+`org:babel-load-languages`. You need to specify a notebook via the `:session`
 argument. The format for the session argument is
-`{url-or-port}/{path-to-notebook}`. For example:
+`{url-or-port}/{path-to-notebook}`. You should also specify `:results raw drawer`
+for proper rendering inside the org buffer. For example:
 
 .. code:: python
 
-   #+BEGIN_SRC ein :session 8888/Untitled.ipynb
+   #+BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer
    import sys
 
    a = 14500
@@ -414,7 +415,7 @@ argument as in the example below:
 
 .. code:: python
 
-   #BEGIN_SRC ein :session 8888/Untitled.ipynb :image output.png
+   #BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer :image output.png
    import matplotlib.pyplot as plt
    import numpy as np
 
@@ -422,6 +423,22 @@ argument as in the example below:
    x = np.linspace(0, 1, 100)
    y = np.random.rand(100,1)
    plt.plot(x,y)
+   #+END_SRC
+
+To get proper syntax highlighting for non-Python kernels, use the function
+:el:symbol:`ein:org-register-lang-mode` to define a new ein-based org source
+language. For example, to get proper syntax highlighting for an R kernel, first call
+
+.. sourcecode:: cl
+
+    (ein:org-register-lang-mode "ein-R" 'R)
+
+Then org SRC blocks with language "ein-R" will use R syntax highlighting:
+
+.. code:: python
+
+   #BEGIN_SRC ein-R :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   plot(1:10, 1:10)
    #+END_SRC
 
 You can also link to an IPython notebook from org-mode_ files.
@@ -447,6 +464,7 @@ Customization
 
 .. el:variable:: ein:org-async-p
 .. el:variable:: ein:org-inline-image-directory
+.. el:function:: ein:org-register-lang-mode
 
 Support for The Hy Language (EXPERIMENTAL)
 ------------------------------------------
