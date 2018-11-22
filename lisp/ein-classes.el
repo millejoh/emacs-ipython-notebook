@@ -247,6 +247,7 @@
   stdin-activep
   username
   msg-callbacks
+  oinfo-cache
   ;; FIXME: Use event instead of hook.
   after-start-hook
   after-execute-hook)

@@ -128,10 +128,13 @@ notebook buffers and connected buffers."
 
 
 ;;; Retrieving Python Object Info
-(defvar *ein:oinfo-cache* (make-hash-table :test #'equal))
+(defun ein:completions--reset-oinfo-cache (kernel)
+  (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
-(defun ein:completions--reset-oinfo-cache ()
-  (setf *ein:oinfo-cache* (make-hash-table :test #'equal)))
+(defun ein:completions--find-cached-completion (partial oinfo-cache)
+  (loop for candidate being the hash-keys of oinfo-cache
+        when (string-prefix-p partial candidate)
+        collect candidate))
 
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
@@ -146,22 +149,23 @@ notebook buffers and connected buffers."
     d))
 
 (defun ein:completions--build-oinfo-cache (objs)
-  (dolist (o (-non-nil objs))
-    (deferred:$
-      (deferred:next
-        (lambda ()
-          (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
-      (deferred:nextc it
-        (lambda (output)
-          (ein:completions--prepare-oinfo output o))))))
+  (let ((kernel (ein:get-kernel)))
+    (dolist (o (-non-nil objs))
+      (deferred:$
+        (deferred:next
+          (lambda ()
+            (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
+        (deferred:nextc it
+          (lambda (output)
+            (ein:completions--prepare-oinfo output o kernel)))))))
 
-(defun ein:completions--prepare-oinfo (output obj)
+(defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)
-               (setf (gethash obj *ein:oinfo-cache*) (ein:json-read-from-string it))))
+               (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) (ein:json-read-from-string it))))
           (("error" "pyerr")
            (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
     ;; It's okay, bad things happen. Not everything in python is going to have a
@@ -170,13 +174,14 @@ notebook buffers and connected buffers."
     ;; register a debug message in case someone really needs to know what is
     ;; happening.
     (error (ein:log 'debug "ein:completions--prepare-oinfo: [%s] %s" err obj)
-           (setf (gethash obj *ein:oinfo-cache*) :json-false))))
+           (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
 
 ;;; Support for Eldoc
 
 (defun ein:completer--get-eldoc-signature ()
-  (let ((func (ein:function-at-point)))
-    (ein:aif (gethash func *ein:oinfo-cache*)
+  (let ((func (ein:function-at-point))
+        (kernel (ein:get-kernel)))
+    (ein:aif (gethash func (ein:$kernel-oinfo-cache kernel))
         (ein:kernel-construct-defstring it)
       (ein:completions--build-oinfo-cache (list func)))))
 

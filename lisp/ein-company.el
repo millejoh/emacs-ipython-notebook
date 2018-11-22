@@ -95,9 +95,10 @@
                            minor-mode-list)
                  (ein:object-at-point)))
     (annotation (if ein:allow-company-annotations
-                    (ein:aif (gethash arg *ein:oinfo-cache*)
-                        (plist-get it :definition)
-                      "")))
+                    (let ((kernel (ein:get-kernel)))
+                      (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
+                          (plist-get it :definition)
+                        ""))))
     (doc-buffer (lexical-let ((arg arg))
                   (cons :async
                         (lambda (cb)
@@ -108,17 +109,20 @@
                         (ein:pytools-find-source (ein:get-kernel-or-error)
                                                  obj
                                                  cb)))))
-    (candidates () (lexical-let ((kernel (ein:get-kernel-or-error))
-                                 (col (current-column)))
-                     (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
-                       (case ein:completion-backend
-                         (ein:use-company-jedi-backend
-                          (cons :async (lambda (cb)
-                                         (ein:company--complete-jedi cb))))
-                         (t
-                          (cons :async
-                                  (lambda (cb)
-                                    (ein:company--complete cb))))))))))
+    (candidates () (or
+                    (ein:completions--find-cached-completion (ein:object-at-point)
+                                                           (ein:$kernel-oinfo-cache (ein:get-kernel-or-error)))
+                    (lexical-let ((kernel (ein:get-kernel-or-error))
+                                  (col (current-column)))
+                      (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
+                        (case ein:completion-backend
+                          (ein:use-company-jedi-backend
+                           (cons :async (lambda (cb)
+                                          (ein:company--complete-jedi cb))))
+                          (t
+                           (cons :async
+                                 (lambda (cb)
+                                   (ein:company--complete cb)))))))))))
 
 
 (defun ein:company-backend--punctuation-check (thing col)
