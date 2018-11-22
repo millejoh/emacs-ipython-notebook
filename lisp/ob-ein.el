@@ -88,10 +88,7 @@ For example, call (ein:org-register-lang-mode \"ein-R\" 'R) to define a language
 
 (defun ein:return-mime-type (json file)
   (loop
-   for key in (cond
-               ((functionp ein:output-type-preference)
-                (funcall ein:output-type-preference json))
-               (t ein:output-type-preference))
+   for key in ein:output-types-text-preferred
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
    when (plist-member json type)
