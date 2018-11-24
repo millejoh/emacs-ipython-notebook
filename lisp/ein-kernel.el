@@ -77,6 +77,7 @@
    :websocket nil
    :base-url base-url
    :stdin-activep nil
+   :oinfo-cache (make-hash-table :test #'equal)
    :username "username"
    :msg-callbacks (make-hash-table :test 'equal)))
 
