@@ -34,6 +34,7 @@
 (require 'ein-log)
 (require 'ein-subpackages)
 (require 'ein-kernel)
+(require 'ein-pytools)
 (require 'dash)
 
 (defun ein:completer-choose ()
@@ -167,7 +168,11 @@ notebook buffers and connected buffers."
            (ein:aif (plist-get content :text)
                (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) (ein:json-read-from-string it))))
           (("error" "pyerr")
-           (ein:log 'error "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
+           ;; This should only happen if ein-pytools is not loaded, which can
+           ;; happen if the user restarts the kernel. Could probably use better logic
+           ;; to determine if pytools have been loaded or not.
+           (ein:pytools-load-safely)
+           (ein:log 'verbose "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
     ;; It's okay, bad things happen. Not everything in python is going to have a
     ;; pdef, which might cause the call to the json parser to fail. No need to
     ;; log an error as that will unnecessarily fill the log buffer, but we do
