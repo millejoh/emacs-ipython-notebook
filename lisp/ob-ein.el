@@ -74,7 +74,7 @@ For example, call (ein:org-register-lang-mode \"ein-R\" 'R) to define a language
          (d ein:org-inline-image-directory)
          (tf (concat d "/ob-ein-" f ".png")))
     (unless (file-directory-p d)
-      (make-directory d))
+      (make-directory d 'parents))
     tf))
 
 (defun ein:write-base64-image (img-string file)
