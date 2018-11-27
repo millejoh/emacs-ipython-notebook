@@ -1173,6 +1173,35 @@ in the history."
     (indent-rigidly
      beg end (- (ein:find-leftmot-column beg end)))))
 
+(defun ein:worksheet--cells-before-cell (ws cell)
+  (let ((cells (ein:worksheet-get-cells ws)))
+    (loop for c in cells
+          collecting c
+          until (eql (ein:cell-id c) (ein:cell-id cell)))))
+
+(defun ein:worksheet--cells-after-cell (ws cell)
+  (let ((cells (ein:worksheet-get-cells ws))
+        (prior-cells (length (ein:worksheet--cells-before-cell ws cell))))
+    (seq-drop cells prior-cells)))
+
+(defun ein:worksheet-first-executing-cell (cells)
+  (loop for c in cells
+        when (and (ein:codecell-p c)
+                  (slot-value c 'running))
+        return c))
+
+(defun ein:worksheet-jump-to-first-executing-cell ()
+  "Move the point to the first executing cell in the current worksheet."
+  (interactive)
+  (ein:cell-goto (ein:worksheet-first-executing-cell (ein:worksheet-get-cells ein:%worksheet%))))
+
+(defun ein:worksheet-jump-to-next-executing-cell ()
+  "Move the point to the next executing cell in the current worksheet."
+  (interactive)
+  (let* ((curcell (ein:get-cell-at-point--worksheet))
+         (restcells (ein:worksheet--cells-after-cell ein:%worksheet% curcell)))
+   (ein:cell-goto (ein:worksheet-first-executing-cell restcells))))
+
 
 ;;; Auto-execution
 
