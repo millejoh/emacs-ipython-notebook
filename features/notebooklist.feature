@@ -30,6 +30,10 @@ Scenario: Stop after closing notebook
   And I click on "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "Deleted session" 
+  And I am in notebooklist buffer
+  And I go to word "Untitled"
+  And I go to beginning of line
+  And I click without going top on "Open"
 
 @login
 Scenario: No token server

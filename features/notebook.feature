@@ -78,4 +78,3 @@ Scenario: kernel reconnect succeeds
   And header says "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I clear log expr "ein:log-all-buffer-name"
   And my reconnect is questioned
-  And I restart kernel
