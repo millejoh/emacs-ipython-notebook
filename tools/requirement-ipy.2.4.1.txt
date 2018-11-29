@@ -1,4 +1,0 @@
-ipython==2.4.1
-pyzmq
-jinja2
-tornado

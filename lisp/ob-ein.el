@@ -31,9 +31,9 @@
 ;; which was in turn inspired by the scimax starter kit by @jkitchin: https://github.com/jkitchin/scimax
 
 ;;; Code:
+(eval-when-compile (require 'cl))
 (require 'ob)
 (require 'ob-python)
-(require 'cl)
 (require 'ein-shared-output)
 (require 'ein-utils)
 (require 'python)
@@ -242,7 +242,7 @@ jupyter kernels.
                                      path
                                      kernelspec
                                      (apply-partially 
-                                      (lambda (session* kernelspec* notebook created)
+                                      (lambda (session* kernelspec* _notebook _created)
                                         (org-babel-ein-initiate-session session* kernelspec*))
                                       session kernelspec)))))
 

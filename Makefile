@@ -22,9 +22,16 @@ clean:
 	cask clean-elc
 	rm -rf test/test-install
 
+.PHONY: dist-clean
+dist-clean: clean
+	rm -rf dist
+
+
 .PHONY: test-compile
 test-compile: clean autoloads
-	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref" )
+#	TODO When we are ready to properly compile, replace the disaster here
+#	with (setq byte-compile-error-on-warn t) --dickmao
+	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
 	cask clean-elc
 
 .PHONY: quick
@@ -71,9 +78,14 @@ test-install:
 	--eval "(package-build--package rcp (package-build--checkout rcp))" \
 	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | egrep -a "Error: " )
 
-.PHONY: install
-install:
-	rm -rf dist/
+.PHONY: dist
+dist:
+	rm -rf dist
 	cask package
-	emacs -Q --batch --eval "(package-initialize)" --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"
 
+.PHONY: install
+install: dist
+	emacs -Q --batch --eval "(package-initialize)" \
+	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
+	  --eval "(package-refresh-contents)" \
+	  --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"
