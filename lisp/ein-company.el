@@ -90,7 +90,7 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend) )
-    (prefix (and (--filter (and (boundp it) (symbol-value it) (or (eql it 'ein:notebook-minor-mode)
+    (prefix (and (--filter (and (boundp it) (symbol-value it) (or (eql it 'ein:notebook-mode)
                                                                   (eql it 'ein:connect-mode)))
                            minor-mode-list)
                  (ein:object-at-point)))

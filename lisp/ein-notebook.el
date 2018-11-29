@@ -1319,12 +1319,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
 
-(defcustom ein:notebook-mode-hook
-  '(ein:worksheet-imenu-setup ein:worksheet-reinstall-which-cell-hook)
-  "Hook for `ein:notebook-mode'.
-This hook is run regardless the actual major mode used."
-  :type '(repeat function)
-  :group 'ein)
 
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
@@ -1545,7 +1539,6 @@ watch the fireworks!"
 (defun ein:notebook-configure-eldoc ()
   "eldoc comments say: Major modes for other languages may use ElDoc by defining an
 appropriate function as the buffer-local value of `eldoc-documentation-function'."
-  ;; TODO
   (when ein:enable-eldoc-support
     (require 'eldoc nil t)
     (if (boundp 'eldoc-documentation-function)
@@ -1556,39 +1549,49 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
                                      eldoc-documentation-function))
       (setq-local eldoc-documentation-function #'ein:completer--get-eldoc-signature))))
 
-(defun ein:notebook-mode ()
-  (funcall (ein:notebook-choose-mode))
-  (case ein:completion-backend
-    (ein:use-ac-backend (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
-                        (auto-complete-mode +1))
-    (ein:use-ac-jedi-backend (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
-                             (auto-complete-mode +1))
-    (ein:use-company-backend
-     (when (boundp 'company-backends) (add-to-list 'company-backends 'ein:company-backend))
-     (company-mode +1))
-    (ein:use-company-jedi-backend (warn "Support for jedi+company currently not implemented. Defaulting to just company-mode")
-                                  (when (boundp 'company-backends)
-                                    (add-to-list 'company-backends 'ein:company-backend))
-                                  (company-mode +1))
+(define-minor-mode ein:notebook-mode
+  "A mode for jupyter notebooks.
 
-    (t (warn "No autocompletion backend has been selected - see `ein:completion-backend'.")))
-  (ein:aif ein:helm-kernel-history-search-key
-      (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
-  (ein:aif ein:anything-kernel-history-search-key
-      (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
-  (ein:notebook-minor-mode +1)
-  (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
-  (ein:notebook-configure-eldoc)
-  (run-hooks 'ein:notebook-mode-hook))
-
-(define-minor-mode ein:notebook-minor-mode
-  "Minor mode to install `ein:notebook-mode-map' for `ein:notebook-mode'."
+\\{ein:notebook-mode-map}
+"
+  :init-value nil
+  :lighter " Notebook"
   :keymap ein:notebook-mode-map
-  :group 'ein)
+  :group 'ein
 
-;; To avoid MuMaMo to discard `ein:notebook-minor-mode', make it
+  ;; BODY contains code to execute each time the mode is enabled or disabled.
+  ;; It is executed after toggling the mode, and before running MODE-hook.
+
+  (when ein:notebook-mode
+    (funcall (ein:notebook-choose-mode)) ;; TODO odd seems out of place
+
+    (case ein:completion-backend
+      (ein:use-ac-backend
+       (assert (featurep 'ein-ac))
+       (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
+       (auto-complete-mode))
+      (ein:use-ac-jedi-backend
+       (assert (featurep 'ein-ac))
+       (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
+       (auto-complete-mode))
+      (ein:use-company-backend
+       (assert (featurep 'ein-company))
+       (company-mode))
+      (ein:use-company-jedi-backend
+       (assert (featurep 'ein-company))
+       (company-mode)))
+    (ein:aif ein:helm-kernel-history-search-key
+        (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
+    (ein:aif ein:anything-kernel-history-search-key
+        (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
+    (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
+    (ein:notebook-configure-eldoc)
+    (ein:worksheet-imenu-setup)
+    (ein:worksheet-reinstall-which-cell-hook)))
+
+;; To avoid MuMaMo to discard `ein:notebook-mode', make it
 ;; permanent local.
-(put 'ein:notebook-minor-mode 'permanent-local t)
+(put 'ein:notebook-mode 'permanent-local t)
 
 (define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
   "IPython notebook mode without fancy coloring."
