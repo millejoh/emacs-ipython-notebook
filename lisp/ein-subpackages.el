@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (defvar ein:smartrep-config-once-called))
-
 (declare-function ein:smartrep-config "ein-smartrep")
 
 (defcustom ein:completion-backend 'ein:use-ac-backend
