@@ -38,15 +38,14 @@
 (require 'dash)
 
 (defun ein:completer-choose ()
-  (require 'ein-ac)
   (cond
-   ((and (or (eql ein:completion-backend 'ein:use-ac-backend)
-             (eql ein:completion-backend 'ein:use-ac-jedi-backend))
+   ((and (or (eq ein:completion-backend 'ein:use-ac-backend)
+             (eq ein:completion-backend 'ein:use-ac-jedi-backend))
          (ein:eval-if-bound 'auto-complete-mode)
          (fboundp 'ein:completer-finish-completing-ac))
     #'ein:completer-finish-completing-ac)
-   (t
-    #'ein:completer-finish-completing-default)))
+   ((eq ein:completion-backend 'ein:use-none-backend) #'ignore)
+   (t #'ein:completer-finish-completing-default)))
 
 (defun ein:completer-beginning (matched-text)
   (save-excursion
@@ -113,9 +112,8 @@
 
 (defcustom ein:complete-on-dot t
   "Start completion when inserting a dot.  Note that
-`ein:use-auto-complete' (or `ein:use-auto-complete-superpack')
-must be `t' to enable this option.  This variable has effect on
-notebook buffers and connected buffers."
+`ein:use-auto-complete-superpack' must be `t' to enable this option.
+This variable has effect on notebook buffers and connected buffers."
   :type 'boolean
   :group 'ein-completion)
 

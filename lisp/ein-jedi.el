@@ -29,9 +29,10 @@
 (require 'jedi nil t)
 (require 'jedi-core nil t)
 
-(require 'ein-ac)
 (require 'ein-completer)
 (eval-when-compile (require 'ein-connect))
+(declare-function jedi:complete-request "jedi-core")
+(declare-function ein:ac-prepare-completion "ein-ac")
 
 (defvar ein:jedi-dot-complete-sources
   '(ac-source-jedi-direct ac-source-ein-direct))
@@ -57,7 +58,7 @@
   (lexical-let ((expand expand))
     (deferred:$
       (deferred:parallel              ; or `deferred:earlier' is better?
-        ;; (jedi:complete-request) ;; need tkf/emacs-jedi submodule
+        (jedi:complete-request) ;; need tkf/emacs-jedi submodule
         (ein:jedi--completer-complete))
       (deferred:nextc it
         (lambda (replies)

@@ -47,19 +47,10 @@
   :group 'ein)
 
 (defun ein:smartrep-config ()
-  (interactive)
   (smartrep-define-key
       ein:notebook-mode-map
       "C-c"
     ein:smartrep-notebook-mode-alist))
-
-
-(defvar ein:smartrep-config-once-called nil)
-
-(defun ein:smartrep-config-once ()
-  (unless ein:smartrep-config-once-called
-    (setq ein:smartrep-config-once-called t)
-    (ein:smartrep-config)))
 
 (provide 'ein-smartrep)
 

@@ -25,11 +25,7 @@
 
 ;;; Code:
 
-(eval-when-compile (defvar ein:ac-config-once-called)
-                   (defvar ein:smartrep-config-once-called))
-
-(declare-function ein:ac-config-once "ein-ac")
-(declare-function ein:smartrep-config-once "ein-smartrep")
+(declare-function ein:smartrep-config "ein-smartrep")
 
 (defcustom ein:completion-backend 'ein:use-ac-backend
   "Determines which completion backend to use in opened EIN notebooks.
@@ -41,32 +37,14 @@ you restart Emacs. The available completion backends are::
  * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
  * ein:use-company-backend : Use company-mode with IPython's builtin completion engine.
  * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
- * ein:use-custom-backend: EIN will not enable any backend, leaving it to the user to configure their own custom solution.
+ * ein:use-none-backend: Avoid autocomplete altogether
 "
   :type '(choice
           (const ein:use-ac-backend)
           (const ein:use-ac-jedi-backend)
           (const ein:use-company-backend)
           (const ein:use-company-jedi-backend)
-          (const ein:use-custom-backed))
-  :group 'ein-completion)
-
-(defcustom ein:allow-company-annotations nil
-  "Allow annotations to be shown when using the company completion backend in EIN. You can disable this if you are seeing poor performance completing symbols."
-  :type 'boolean
-  :group 'ein-completion)
-
-;; (defcustom ein:use-auto-complete nil
-;;   "Set to `t' to use preset auto-complete configuration.
-;; Use `ein:use-auto-complete-superpack' when you need more powerful
-;; auto completion."
-;;   :type 'boolean
-;;   :group 'ein-completion)
-
-(defcustom ein:use-auto-complete-superpack nil
-  "Set to `t' to use preset a little bit hacky auto-complete configuration.
-When this option is enabled, cached omni completion is available."
-  :type 'boolean
+          (const ein:use-none-backend))
   :group 'ein-completion)
 
 (defcustom ein:use-smartrep nil
@@ -85,47 +63,17 @@ When this option is enabled, cached omni completion is available."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:load-dev nil
-  "Load development helper."
-  :type 'boolean
-  :group 'ein)
-
 (defun ein:subpackages-load ()
   "Load sub-packages depending on configurations."
-  (cl-ecase ein:completion-backend
-    (ein:use-ac-backend  (require 'ein-ac)
-                         (ein:ac-config-once ein:use-auto-complete-superpack))
-    (ein:use-ac-jedi-backend  (require 'ein-jedi)
-                              ;; (jedi:setup) ;; need tkf/emacs-jedi submodule
-                              (ein:jedi-setup)
-                              (ein:ac-config-once ein:use-auto-complete-superpack))
-    (ein:use-company-backend  (require 'ein-company)
-                              (when (boundp 'company-backends)
-                                (add-to-list 'company-backends 'ein:company-backend)))
-    (ein:use-company-jedi-backend (require 'ein-company)
-                                  (when (boundp 'company-backends)
-                                    (add-to-list 'company-backends 'ein:company-backend)))
-    (ein:use-custom-backend  (warn "Automatic configuration of autocompletiong for EIN is disabled."))
-    (t (if (and (boundp 'ein:use-auto-complete)
-                (not (featurep 'company)))
-           (progn
-             (warn "ein:use-auto-complete has been deprecated. Please see `ein:completion-backend' for configuring autocompletion in ein.")
-             (setq ein:completion-backend 'ein:use-ac-backend)
-             (require 'ein-ac)
-             (ein:ac-config-once ein:use-auto-complete-superpack)))))
+  (cl-case ein:completion-backend
+    (ein:use-ac-backend (require 'ein-ac))
+    (ein:use-ac-jedi-backend (require 'ein-ac))
+    (ein:use-company-backend (require 'ein-company))
+    (ein:use-company-jedi-backend (require 'ein-company)))
   (when ein:use-smartrep
-    (require 'ein-smartrep)
-    (ein:smartrep-config-once))
-  (when ein:load-dev
-    (require 'ein-dev)))
-
-
-(defun ein:subpackages-reload ()
-  "Reload sub-packages."
-  (interactive)
-  (setq ein:ac-config-once-called nil)
-  (setq ein:smartrep-config-once-called nil)
-  (ein:subpackages-load))
+    (with-eval-after-load "ein-smartrep"
+      (ein:smartrep-config))
+    (require 'ein-smartrep)))
 
 (provide 'ein-subpackages)
 

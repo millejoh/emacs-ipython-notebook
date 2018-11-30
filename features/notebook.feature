@@ -15,6 +15,26 @@ Scenario: not running server locally
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "ein:completions--prepare-oinfo"
 
+@complete
+Scenario: auto completion
+  Given I set "ein:ac-direct-matches" to eval "nil"
+  Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
+  Given new default notebook
+  And I type "import itertool"
+  And I press "C-c C-i"
+  And I wait for the smoke to clear
+  Then "ein:ac-direct-matches" should include "itertools"
+
+@complete
+Scenario: no auto completion
+  Given I set "ein:ac-direct-matches" to eval "nil"
+  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+  Given new default notebook
+  And I type "import itertool"
+  And I press "C-c C-i"
+  And I wait for the smoke to clear
+  Then "ein:ac-direct-matches" should not include "itertools"
+
 @reconnect
 Scenario: kernel reconnect succeeds
   Given new default notebook

@@ -156,17 +156,18 @@
       (lambda (go stop)
         (loop repeat 10
               until (search stop (buffer-string))
-              do (And "I click on \"Resync\"")
+              do (And (format "I click on \"%s\"" go))
               do (sleep-for 0 1000)
               finally do (if (not (search stop (buffer-string))) (assert nil)))))
 
-(When "^I click on \"\\(.+\\)\"$"
-      (lambda (word)
+(When "^I click\\( without going top\\)? on \"\\(.+\\)\"$"
+      (lambda (stay word)
         ;; from espuds "go to word" without the '\\b's
-        (goto-char (point-min))
+        (when (not stay)
+          (goto-char (point-min)))
         (let ((search (re-search-forward (format "\\[%s\\]" word) nil t))
-              (message "Cannot go to link '%s' in buffer: %s"))
-          (cl-assert search nil message word (buffer-string))
+              (msg "Cannot go to link '%s' in buffer: %s"))
+          (cl-assert search nil msg word (buffer-string))
           (backward-char)
           (When "I press \"RET\"")
           (sit-for 0.8)
@@ -184,11 +185,13 @@
       (lambda (path)
         (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (ein:notebook-open url-or-port path nil
-                               (lambda (nb created) (setq notebook nb)))
-            (ein:testing-wait-until (lambda () (and (not (null notebook))
-                                                    (ein:aand (ein:$notebook-kernel notebook)
-                                                              (ein:kernel-live-p it))))))
+            (loop repeat 2
+                  until (and notebook
+                             (ein:aand (ein:$notebook-kernel notebook)
+                                       (ein:kernel-live-p it)))
+                  do (ein:notebook-open url-or-port path nil
+                                        (lambda (nb created) (setq notebook nb)))
+                  do (sleep-for 0 1000)))
           (let ((buf-name (format ein:notebook-buffer-name-template
                                   (ein:$notebook-url-or-port notebook)
                                   (ein:$notebook-notebook-name notebook))))
@@ -231,17 +234,22 @@
         (f-mkdir dir)
         (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
 
+(When "^\"\\(.+\\)\" should \\(not \\)?include \"\\(.+\\)\"$"
+      (lambda (variable negate value)
+        (let ((member-p (member value (symbol-value (intern variable)))))
+          (if negate (should-not member-p) (should member-p)))))
+
 (When "^I set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (set (intern variable) value)))
 
+(When "^I set \"\\(.+\\)\" to eval \"\\(.+\\)\"$"
+      (lambda (variable value)
+        (set (intern variable) (eval (car (read-from-string value))))))
+
 (When "^I fset \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (fset (intern variable) (function value))))
-
-(When "^I custom set \"\\(.+\\)\" to \"\\(.+\\)\"$"
-      (lambda (custom-variable value)
-        (customize-set-value (intern custom-variable) value)))
 
 (When "^I get into notebook mode \"\\(.+\\)\" \"\\(.+\\)\"$"
       (lambda (notebook-dir file-path)

@@ -34,15 +34,14 @@
                        finally do (when (ein:notebook-live-p notebook)
                                     (ein:display-warning (format "cannot close %s" path))))
               do (when (search "Untitled" path)
-                   (lexical-let (done-p)
-                     (ein:notebooklist-delete-notebook
-                      path
-                      (lambda () (setq done-p t)))
-                     (loop repeat 8
-                       until done-p
-                       do (sleep-for 0 500)
-                       finally do (when (not done-p) 
-                                    (ein:display-warning (format "cannot del %s" path)))))))))
+                   (ein:notebooklist-delete-notebook path)
+                   (loop repeat 8
+                         with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
+                         for extant = (file-exists-p fullpath)
+                         until (not extant)
+                         do (sleep-for 0 500)
+                         finally do (when extant 
+                                      (ein:display-warning (format "cannot del %s" path))))))))
   (ein:aif (ein:notebook-opened-notebooks)
       (loop for nb in it
             for path = (ein:$notebook-notebook-path nb)

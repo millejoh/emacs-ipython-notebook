@@ -106,8 +106,6 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                                   nil 10000 2000)
           notebook)
       (error (message "ein:testing-new-notebook: %s" (error-message-string err))
-             (when notebook
-               (ein:notebook-close notebook))
              nil))))
 
 (defadvice ert-run-tests-batch (after ein:testing-dump-logs-hook activate)

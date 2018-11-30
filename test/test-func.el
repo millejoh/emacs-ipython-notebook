@@ -70,10 +70,9 @@
   (ein:log 'verbose "ERT OPEN-NOTEBOOKLIST start")
   (ein:notebooklist-open* *ein:testing-port*)
   (ein:testing-wait-until
-   (lambda ()
-     (ein:notebooklist-get-buffer *ein:testing-port*)))
-  (with-current-buffer (ein:notebooklist-get-buffer *ein:testing-port*)
-    (should (eql major-mode 'ein:notebooklist-mode))))
+   (lambda () (ein:aand
+               (ein:notebooklist-get-buffer *ein:testing-port*)
+               (with-current-buffer it (eq major-mode 'ein:notebooklist-mode))))))
 
 
 (ert-deftest 00-query-kernelspecs ()
