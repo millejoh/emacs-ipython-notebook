@@ -64,15 +64,16 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                           nil ms interval t))
 
 (defun ein:testing-make-directory-level (parent current-depth width depth)
-  (f-touch (concat (file-name-as-directory parent) "foo.txt"))
-  (f-touch (concat (file-name-as-directory parent) "bar.ipynb"))
-  (f-write-text "{
+  (let ((write-region-inhibit-sync nil))
+    (f-touch (concat (file-name-as-directory parent) "foo.txt"))
+    (f-touch (concat (file-name-as-directory parent) "bar.ipynb"))
+    (f-write-text "{
  \"cells\": [],
  \"metadata\": {},
  \"nbformat\": 4,
  \"nbformat_minor\": 2
 }
-" 'utf-8 (concat (file-name-as-directory parent) "bar.ipynb"))
+" 'utf-8 (concat (file-name-as-directory parent) "bar.ipynb")))
   (if (< current-depth depth)
       (loop for w from 1 to width
             for dir = (concat (file-name-as-directory parent) (number-to-string w))

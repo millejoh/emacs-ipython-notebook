@@ -204,7 +204,7 @@ global setting.  For global setting and more information, see
     content))
 
 (defun ein:content-query-hierarchy* (url-or-port path callback sessions depth content)
-  "Returns list (tree) of content objects"
+  "Returns list (tree) of content objects.  CALLBACK accepts tree."
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
                  (callback callback)
@@ -222,8 +222,8 @@ global setting.  For global setting and more information, see
                                with c0
                                if (not (string= "directory" (plist-get item :type)))
                                do (setf c0 (ein:new-content url-or-port path item))
-                               (setf (ein:$content-session-p c0)
-                                     (gethash (ein:$content-path c0) sessions))
+                                  (setf (ein:$content-session-p c0)
+                                        (gethash (ein:$content-path c0) sessions))
                                and collect c0
                                end)))
     (deferred:$
@@ -246,8 +246,8 @@ global setting.  For global setting and more information, see
       (deferred:nextc it
         (lambda (tree)
           (let ((result (append others tree)))
-            (if (string= path "")
-                (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
+            (when (string= path "")
+              (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
             (funcall callback result)))))))
 
 (defun ein:content-query-hierarchy (url-or-port callback)

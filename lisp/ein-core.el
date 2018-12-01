@@ -37,7 +37,6 @@
 (require 'ein)  ; get autoloaded functions into namespace
 (require 'ein-utils)
 
-
 (defgroup ein nil
   "IPython notebook client in Emacs"
   :group 'applications
@@ -220,13 +219,11 @@ the source is in git repository) or elpa version."
     (ein:log 'warn "No recorded notebook version for %s" url-or-port)
     5))
 
-;; TODO: Use symbols instead of numbers for notebook version ('jupyter and 'legacy)?
 (defun ein:query-notebook-version (url-or-port callback)
   "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
   (ein:query-singleton-ajax
    (list 'query-notebook-version url-or-port)
-   (ein:jupyterhub-correct-query-url-maybe
-    (ein:url url-or-port "api"))
+   (ein:url url-or-port "api")
    :parser #'ein:json-read
    :sync ein:force-sync
    :complete (apply-partially #'ein:query-notebook-version--complete url-or-port callback)))

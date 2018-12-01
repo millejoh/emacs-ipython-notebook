@@ -35,17 +35,18 @@ Scenario: Stop after closing notebook
   And I go to beginning of line
   And I click without going top on "Open"
 
+@content
+Scenario: Read a massive directory
+  Given I create a directory "/var/tmp/fg7Cv8" with depth 5 and width 10
+  And I get into notebook mode "/var/tmp/fg7Cv8" "8/4/3/bar.ipynb"
+  And I open notebook "bar.ipynb"
+  And I open file "foo.txt"
+  And notebooklist-list-paths does not contain "5/5/5/foo.txt"
+  And notebooklist-list-paths contains "foo.txt"
+
 @login
 Scenario: No token server
   Given I start the server configured "c.NotebookApp.token = u''\n"
-  And I switch to log expr "ein:log-all-buffer-name"
-  Then I should not see "[warn]"
-  And I should not see "[error]"
-
-@login
-Scenario: With token server
-  Given I start the server configured "\n"
-  And I login if necessary
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see "[error]"
@@ -84,11 +85,10 @@ Scenario: Logging into nowhere
   Given I login erroneously to adfljdsf.org:8432
   Then I should see message "ein: [error] Login to https://adfljdsf.org:8432 failed"
 
-@content
-Scenario: Read a massive directory
-  Given I create a directory "/var/tmp/fg7Cv8" with depth 5 and width 10
-  And I get into notebook mode "/var/tmp/fg7Cv8" "8/4/3/bar.ipynb"
-  And I open notebook "bar.ipynb"
-  And I open file "foo.txt"
-  And notebooklist-list-paths does not contain "5/5/5/foo.txt"
-  And notebooklist-list-paths contains "foo.txt"
+@login
+Scenario: With token server
+  Given I start the server configured "\n"
+  And I login if necessary
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "[warn]"
+  And I should not see "[error]"

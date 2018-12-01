@@ -240,31 +240,17 @@ CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
             callback*))))
     callback)))
 
-(defun ein:kernel--ws-url (url-or-port &optional securep)
-  "Use `ein:$kernel-url-or-port' if BASE_URL is an empty string.
-See: https://github.com/ipython/ipython/pull/3307"
-  (let* ((base-url url-or-port)
-         (url-or-port (ein:jupyterhub-correct-query-url-maybe url-or-port))
-         (protocol (if (or securep
-                          (and (stringp url-or-port)
-                               (string-match "^https://" url-or-port)))
-                      "wss"
-                    "ws")))
-    (if (integerp url-or-port)
-        (format "%s://127.0.0.1:%s" protocol url-or-port)
-      (let* ((url (if (string-match "^https?://" url-or-port)
-                      url-or-port
-                    (format "http://%s" url-or-port)))
-             (parsed-url (url-generic-parse-url url)))
-        (if (ein:jupyterhub-url-p base-url)
-            (ein:trim-right (format "%s://%s:%s%s"
-                                    protocol
-                                    (url-host parsed-url)
-                                    (url-port parsed-url)
-                                    (url-filename parsed-url))
-                            "/")
-          (format "%s://%s:%s" protocol (url-host parsed-url) (url-port parsed-url)))))))
+(defun ein:kernel--ws-url (url-or-port)
+  "Assuming URL-OR-PORT already normalized by `ein:url'
 
+See https://github.com/ipython/ipython/pull/3307"
+  (let* ((parsed-url (url-generic-parse-url url-or-port))
+         (protocol (if (string= (url-type parsed-url) "https") "wss" "ws")))
+    (format "%s://%s:%s%s"
+            protocol
+            (url-host parsed-url)
+            (url-port parsed-url)
+            (url-filename parsed-url))))
 
 (defun ein:kernel-send-cookie (channel host)
   ;; cookie can be an empty string for IPython server with no password,

@@ -243,9 +243,7 @@ the jupyter server dies and restarted on a different port.
 If you have enabled token or password security on server running
 at the new url/port, then please be aware that this new url-port
 combo must match exactly these url/port you used format
-`ein:notebooklist-login'. For example, as far as Emacs and
-jupyter are concerned, 'localhost:8888' and '127.0.0.1:8888' are
-*not* the same URL."
+`ein:notebooklist-login'."
   (interactive (list
                 (ein:notebooklist-ask-url-or-port)
                 (ein:get-notebook-or-error)))
@@ -303,7 +301,7 @@ will be updated with kernel's cwd."
 (defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback)
   "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
   (apply-partially (lambda (notebook* created callback* pending-clear*)
-                     (funcall pending-clear*)
+                     (funcall pending-clear* nil)
                      (with-current-buffer (ein:notebook-buffer notebook*)
                        (ein:worksheet-focus-cell))
                      (pop-to-buffer (ein:notebook-buffer notebook*))
@@ -338,7 +336,7 @@ notebook buffer.  Let's warn for now to see who is doing this.
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
   (let* ((pending-key (cons url-or-port path))
          (pending-p (gethash pending-key *ein:notebook--pending-query*))
-         (pending-clear (apply-partially (lambda (pending-key*)
+         (pending-clear (apply-partially (lambda (pending-key* _contents)
                                            (remhash pending-key*
                                                     *ein:notebook--pending-query*))
                                          pending-key))

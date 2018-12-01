@@ -6,7 +6,7 @@
 (When "^header \\(does not \\)?says? \"\\(.+\\)\"$"
       (lambda (negate says)
         (let ((equal-p (string= (substitute-command-keys says) (substitute-command-keys (slot-value (slot-value ein:%notification% 'kernel) 'message)))))
-          (cl-assert (if negate (not equal-p) equal-p)))))
+          (if negate (should-not equal-p) (should equal-p)))))
 
 (When "^I kill kernel$"
       (lambda ()
@@ -18,7 +18,7 @@
         (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest ignore) t)))
           (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)
                                         (lambda (kernel session-p)
-                                          (assert (not session-p)))))))
+                                          (should-not session-p))))))
 
 (When "I restart kernel$"
       (lambda ()
@@ -55,7 +55,8 @@
 
 (When "^I am in notebooklist buffer$"
       (lambda ()
-        (switch-to-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info))))))
+        (switch-to-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info))))
+        (ein:testing-wait-until (lambda () (eq major-mode 'ein:notebooklist-mode)))))
 
 (When "^I wait \\([.0-9]+\\) seconds?$"
       (lambda (seconds)
@@ -82,6 +83,7 @@
 
 (When "^I stop the server$"
       (lambda ()
+        (cancel-function-timers #'ein:notebooklist-reload)
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
         (loop repeat 10
@@ -89,8 +91,20 @@
               until (null (get-buffer-process buffer))
               do (sleep-for 1)
               finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
+        (clrhash ein:notebooklist-map)
         (When "I clear log expr \"ein:log-all-buffer-name\"")
         (When "I clear log expr \"ein:jupyter-server-buffer-name\"")))
+
+(When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
+      (lambda (config)
+        (When "I stop the server")
+        (cl-letf (((symbol-function 'ein:notebooklist-ask-user-pw-pair)
+                   (lambda (&rest args) (list (intern (user-login-name)) ""))))
+          (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
+          (let ((ein:jupyter-server-args
+                 '("--debug" "--no-db" "--config=.ecukes-temp-config.py")))
+            (ein:jupyter-server-start (executable-find "jupyterhub") nil))
+          (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
 
 (When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
       (lambda (login config)
@@ -158,7 +172,7 @@
               until (search stop (buffer-string))
               do (And (format "I click on \"%s\"" go))
               do (sleep-for 0 1000)
-              finally do (if (not (search stop (buffer-string))) (assert nil)))))
+              finally do (should (search stop (buffer-string))))))
 
 (When "^I click\\( without going top\\)? on \"\\(.+\\)\"$"
       (lambda (stay word)
@@ -167,7 +181,7 @@
           (goto-char (point-min)))
         (let ((search (re-search-forward (format "\\[%s\\]" word) nil t))
               (msg "Cannot go to link '%s' in buffer: %s"))
-          (cl-assert search nil msg word (buffer-string))
+          (should search)
           (backward-char)
           (When "I press \"RET\"")
           (sit-for 0.8)
@@ -233,7 +247,10 @@
         (when (f-exists? dir)
           (f-delete dir t))
         (f-mkdir dir)
-        (ein:testing-make-directory-level dir 1 (string-to-number width) (string-to-number depth))))
+        (ein:testing-make-directory-level dir 1
+                                          (string-to-number width)
+                                          (string-to-number depth))
+        (call-process-shell-command (format "find %s -print | xargs du" dir))))
 
 (When "^\"\\(.+\\)\" should \\(not \\)?include \"\\(.+\\)\"$"
       (lambda (variable negate value)
@@ -257,8 +274,7 @@
         (When "I stop the server")
         (When (format "I find file \"%s\"" (concat (file-name-as-directory notebook-dir) file-path)))
         (When "I press \"C-c C-z\"")
-        (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000)
-        ))
+        (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000)))
 
 (When "^I find file \"\\(.+\\)\"$"
       (lambda (file-name)
@@ -267,23 +283,18 @@
           (ein:ipynb-mode))
 ))
 
-(When "notebooklist-list-paths does not contain \"\\(.+\\)\"$"
-      (lambda (file-name)
+(When "notebooklist-list-paths\\( does not\\)? contains? \"\\(.+\\)\"$"
+      (lambda (negate file-name)
         (Given "I am in notebooklist buffer")
-        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
-          (assert (not (member nbpath (ein:notebooklist-list-paths)))))))
-
-(When "notebooklist-list-paths contains \"\\(.+\\)\"$"
-      (lambda (file-name)
-        (Given "I am in notebooklist buffer")
-        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
-          (assert (member nbpath (ein:notebooklist-list-paths))))))
+        (let* ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name))
+               (contains-p (member nbpath (ein:notebooklist-list-paths))))
+          (should (if negate (not contains-p) contains-p)))))
 
 (When "I open \\(notebook\\|file\\) \"\\(.+\\)\"$"
       (lambda (content-type file-name)
         (Given "I am in notebooklist buffer")
         (And "I clear log expr \"ein:log-all-buffer-name\"")
-        (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+        (lexical-let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
           (cl-letf (((symbol-function 'ein:notebooklist-ask-path)
                      (lambda (&rest args) nbpath)))
             (When (format "I press \"C-c C-%s\"" (if (string= content-type "file") "f" "o")))
