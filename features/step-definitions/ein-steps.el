@@ -212,7 +212,8 @@
              (ein:aand (and (slot-boundp cell 'input-prompt-number)
                             (slot-value cell 'input-prompt-number))
                        (and (numberp it)
-                            (not (equal orig it)))))))))
+                            (not (equal orig it)))))
+           nil 10000 2000))))
 
 (When "^I undo again$"
       (lambda ()

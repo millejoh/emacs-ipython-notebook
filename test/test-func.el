@@ -42,7 +42,7 @@
                                          (setq *ein:testing-notebook-name*
                                                (ein:$notebook-notebook-name notebook))
                                          (setq done-p t)))
-        (ein:testing-wait-until (lambda () done-p))
+        (ein:testing-wait-until (lambda () done-p) nil 10000 2000)
         (prog1
             (ein:testing-get-notebook url-or-port path *ein:testing-notebook-name*)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
