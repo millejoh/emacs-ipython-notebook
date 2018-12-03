@@ -13,6 +13,21 @@ endif
 
 .DEFAULT_GOAL := test-compile
 
+README.rst: README.in.rst
+	cask eval "(progn \
+	             (add-to-list 'load-path \"./lisp\") \
+	             (load \"ein-notebook\") \
+	             (describe-minor-mode \"ein:notebook-mode\") \
+	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
+	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst > README.rst0
+	cask eval "(progn \
+	             (add-to-list 'load-path \"./lisp\") \
+	             (load \"ein-connect\") \
+	             (describe-minor-mode \"ein:connect-mode\") \
+	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
+	| tools/readme-sed.sh "KEYS CONNECT" README.rst0 > README.rst
+	rm README.rst0
+
 .PHONY: autoloads
 autoloads:
 	emacs -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
