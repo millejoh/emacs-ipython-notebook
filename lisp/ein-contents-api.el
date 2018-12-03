@@ -100,7 +100,7 @@ global setting.  For global setting and more information, see
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
 (defun* ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown &allow-other-keys)
-  (if (< iteration 3)
+  (if (< iteration (if noninteractive 6 3))
       (progn
         (ein:log 'verbose "Retry content-query-contents #%s in response to %s" iteration (request-response-status-code response))
         (sleep-for 0 (* (1+ iteration) 500))
@@ -390,7 +390,7 @@ global setting.  For global setting and more information, see
 (defun* ein:content-query-sessions--error (url-or-port callback errback iteration
                                                        &key response error-thrown
                                                        &allow-other-keys)
-  (if (< iteration 3)
+  (if (< iteration (if noninteractive 6 3))
       (progn
         (ein:log 'verbose "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
         (sleep-for 0 (* (1+ iteration) 500))
