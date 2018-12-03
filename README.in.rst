@@ -32,7 +32,7 @@ Usage
 =====
 Launch a local session
 ----------------------
-``M-x jupyter-server-start`` (aliased ``M-x ein:run``) launches a jupyter process from emacs.
+``M-x ein:jupyter-server-start`` (aliased ``M-x ein:run``) launches a jupyter process from emacs.
 
 Login to a local or remote session
 ----------------------------------
