@@ -169,7 +169,7 @@ This variable has effect on notebook buffers and connected buffers."
            ;; This should only happen if ein-pytools is not loaded, which can
            ;; happen if the user restarts the kernel. Could probably use better logic
            ;; to determine if pytools have been loaded or not.
-           (ein:pytools-load-safely)
+           (ein:pytools-load-safely kernel)
            (ein:log 'verbose "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
     ;; It's okay, bad things happen. Not everything in python is going to have a
     ;; pdef, which might cause the call to the json parser to fail. No need to
