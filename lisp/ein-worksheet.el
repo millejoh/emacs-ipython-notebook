@@ -1193,14 +1193,18 @@ in the history."
 (defun ein:worksheet-jump-to-first-executing-cell ()
   "Move the point to the first executing cell in the current worksheet."
   (interactive)
-  (ein:cell-goto (ein:worksheet-first-executing-cell (ein:worksheet-get-cells ein:%worksheet%))))
+  (ein:aif (ein:worksheet-first-executing-cell (ein:worksheet-get-cells ein:%worksheet%))
+      (ein:cell-goto it)
+    (message "No cell currently executing.")))
 
 (defun ein:worksheet-jump-to-next-executing-cell ()
   "Move the point to the next executing cell in the current worksheet."
   (interactive)
   (let* ((curcell (ein:get-cell-at-point--worksheet))
          (restcells (ein:worksheet--cells-after-cell ein:%worksheet% curcell)))
-   (ein:cell-goto (ein:worksheet-first-executing-cell restcells))))
+    (ein:aif (ein:worksheet-first-executing-cell restcells)
+        (ein:cell-goto it)
+      (message "No additional cells are executing."))))
 
 
 ;;; Auto-execution
