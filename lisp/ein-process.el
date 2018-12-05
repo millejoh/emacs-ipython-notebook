@@ -136,22 +136,6 @@
                                          :dir (directory-file-name notebook_dir))
                       ein:%processes%))))
 
-(defun ein:process-ps-refresh-processes ()
-  "Can delete this.  It pokes around unix ps when it's far better to use `jupyter notebook list'"
-  (loop for pid in (list-system-processes)
-        for attrs = (process-attributes pid)
-        for args = (alist-get 'args attrs)
-        with seen = (mapcar #'ein:$process-pid (ein:hash-vals ein:%processes%))
-        if (and (null (member pid seen))
-                (string-match ein:process-jupyter-regexp (alist-get 'comm attrs)))
-          do (ein:and-let* ((dir (ein:process-divine-dir pid args))
-                            (port (ein:process-divine-port pid args))
-                            (ip (ein:process-divine-ip pid args)))
-               (puthash dir (make-ein:$process :pid pid
-                                               :url (ein:url (format "http://%s:%s" ip port))                                               :dir dir)
-                        ein:%processes%))
-        end))
-
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
   (loop for dir in (ein:hash-keys ein:%processes%)
@@ -173,23 +157,22 @@
     (if proc
         (let* ((url-or-port (ein:process-url-or-port proc))
                (path (ein:process-path proc filename))
-               (callback1 (apply-partially (lambda (url-or-port* path* callback* buffer)
+               (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                              (ein:notebook-open
-                                              url-or-port* path* nil callback*))
-                                           url-or-port path callback)))
+                                              url-or-port path* nil callback*))
+                                           path callback)))
           (if (ein:notebooklist-list-get url-or-port)
               (ein:notebook-open url-or-port path nil callback)
-            (ein:notebooklist-login url-or-port callback1)))
+            (ein:notebooklist-login url-or-port callback2)))
       (let* ((nbdir (read-directory-name "Notebook directory: " 
                                          (ein:process-suitable-notebook-dir filename)))
              (path (subseq filename (length (file-name-as-directory nbdir))))
-             (callback1 (apply-partially (lambda (path* callback* buffer)
+             (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
-                                           (ein:notebook-open
-                                            (car (ein:jupyter-server-conn-info))
-                                            path* nil callback*))
+                                           (ein:notebook-open url-or-port
+                                                              path* nil callback*))
                                          path callback)))
-        (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) nbdir nil callback1)))))
+        (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) nbdir nil callback2)))))
 
 (defun ein:process-open-notebook (&optional filename buffer-callback)
   "When FILENAME is unspecified the variable `buffer-file-name'

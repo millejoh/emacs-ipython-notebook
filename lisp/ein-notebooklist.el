@@ -40,6 +40,8 @@
 (require 'dash)
 (require 'ido)
 
+(autoload 'ein:jupyterhub-connect "ein-jupyterhub")
+
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
   :group 'ein
@@ -154,7 +156,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
                          ((>= version 3) "api/contents"))))
     (ein:url url-or-port base-path path)))
 
-(defun ein:notebooklist-proc--sentinel (url-or-port process event)
+(defun ein:notebooklist-sentinel (url-or-port process event)
   "Remove URL-OR-PORT from ein:notebooklist-map when PROCESS dies"
   (when (not (string= "open" (substring event 0 4)))
     (ein:log 'info "Process %s %s %s"
@@ -164,6 +166,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
     (ein:notebooklist-list-remove url-or-port)))
 
 (defun ein:notebooklist-get-buffer (url-or-port)
+  (assert url-or-port)
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
@@ -234,14 +237,17 @@ port the instance is running on."
 (defun ein:notebooklist-open* (url-or-port &optional path resync callback errback)
   "The main entry to server at URL-OR-PORT.  Users should not directly call this, but instead `ein:notebooklist-login'.
 
-PATH is specifying directory from file navigation.  PATH is empty on login.  RESYNC is requery server attributes such as ipython version and kernelspecs.  CALLBACK takes one argument, the resulting buffer.  ERRBACK takes one argument, the resulting buffer.
+PATH is specifying directory from file navigation.  PATH is empty on login.  RESYNC is requery server attributes such as ipython version and kernelspecs.  CALLBACK takes two arguments, the resulting buffer and URL-OR-PORT.  ERRBACK takes one argument, the resulting buffer.
+
+TODO: going to maintain jupyterhub hooks here
 "
   (unless path (setq path ""))
   (setq url-or-port (ein:url url-or-port)) ;; should work towards not needing this
   (ein:subpackages-load)
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
-                 (success (apply-partially #'ein:notebooklist-open--finish url-or-port callback))
+                 (success (apply-partially #'ein:notebooklist-open--finish
+                                           url-or-port callback))
                  (failure errback))
     (if (or resync (not (ein:notebooklist-list-get url-or-port)))
         (deferred:$
@@ -315,7 +321,7 @@ automatically be called during calls to `ein:notebooklist-open`."
   (setq ein:notebooklist--keepalive-timer nil))
 
 (defun ein:notebooklist-open--finish (url-or-port callback content)
-  "Called via `ein:notebooklist-open'."
+  "Called via `ein:notebooklist-open*'."
   (let ((path (ein:$content-path content))
         (nb-version (ein:$content-notebook-version content))
         (data (ein:$content-raw-content content)))
@@ -336,8 +342,8 @@ automatically be called during calls to `ein:notebooklist-open`."
         (when ein:enable-keepalive
           (ein:notebooklist-enable-keepalive url-or-port))
         (when callback
-          (funcall callback (current-buffer)))
-        (current-buffer)))))
+          (funcall callback (current-buffer) url-or-port)))
+      (current-buffer))))
 
 (defun* ein:notebooklist-open-error (url-or-port path
                                      &key error-thrown
@@ -435,7 +441,8 @@ TODO - New and open should be separate, and we should flag an exception if we tr
   (ein:log 'error
     "Failed to open new notebook (error: %S). \
 You may find the new one in the notebook list." error)
-  (ein:notebooklist-open* url-or-port nil nil #'pop-to-buffer))
+  (ein:notebooklist-open* url-or-port nil nil (lambda (buffer url-or-port)
+                                                (pop-to-buffer buffer))))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name (name kernelspec url-or-port &optional path)
@@ -584,7 +591,9 @@ You may find the new one in the notebook list." error)
           (widget-create
            'link
            :notify (lambda (&rest ignore)
-                     (ein:notebooklist-open* url-or-port path nil #'pop-to-buffer))
+                     (ein:notebooklist-open* url-or-port path nil
+                                             (lambda (buffer url-or-port)
+                                               (pop-to-buffer buffer))))
            name)))
       (widget-insert " |\n\n"))
 
@@ -685,7 +694,11 @@ You may find the new one in the notebook list." error)
                                (lambda (&rest ignore)
                                  ;; each directory creates a whole new notebooklist
                                  (ein:notebooklist-open* url-or-port
-                                                        (concat (file-name-as-directory (ein:$notebooklist-path ein:%notebooklist%)) name) nil #'pop-to-buffer)))
+                                    (concat (file-name-as-directory
+                                             (ein:$notebooklist-path ein:%notebooklist%))
+                                            name)
+                                    nil
+                                    (lambda (buffer url-or-port) (pop-to-buffer buffer)))))
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
@@ -771,16 +784,21 @@ Notebook list data is passed via the buffer local variable
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
                collect
                (loop for content in (ein:content-need-hierarchy url-or-port)
-                     when (or (null content-type) (string= (ein:$content-type content) content-type))
+                     when (or (null content-type)
+                              (string= (ein:$content-type content) content-type))
                      collect (ein:url url-or-port (ein:$content-path content))))))
 
 
-(defsubst ein:notebooklist-parse-nbpath (nbpath)
+(defun ein:notebooklist-parse-nbpath (nbpath)
   "Return `(,url-or-port ,path) from URL-OR-PORT/PATH"
-  (let* ((parsed (url-generic-parse-url nbpath))
-         (path (url-filename parsed)))
-    (list (substring nbpath 0 (- (length nbpath) (length path)))
-          (substring path 1))))
+  (loop for url-or-port in (ein:hash-keys ein:notebooklist-map)
+        if (search url-or-port nbpath :end2 (length url-or-port))
+        return (list (substring nbpath 0 (length url-or-port))
+                     (substring nbpath (1+ (length url-or-port))))
+        end
+        finally (ein:display-warning
+                 (format "%s not among: %s" nbpath (ein:hash-keys ein:notebooklist-map))
+                 :error)))
 
 (defsubst ein:notebooklist-ask-path (&optional content-type)
   (ido-completing-read (format  "Open %s: " content-type)
@@ -807,40 +825,35 @@ in order to make this code work.
 
 See also:
 `ein:connect-to-default-notebook', `ein:connect-default-notebook'."
-  (ein:notebooklist-open* url-or-port nil))
+  (ein:notebooklist-open* url-or-port))
 
 ;;; Login
 
 (defun ein:notebooklist-login--iteration (url-or-port callback errback token iteration response-status)
-  "Called from `ein:notebooklist-login'."
   (ein:log 'debug "Login attempt #%d in response to %s from %s."
            iteration response-status url-or-port)
   (unless callback
     (setq callback #'ignore))
   (unless errback
     (setq errback #'ignore))
-  (lexical-let (done-p)
-    (add-function :after callback (lambda (&rest ignore) (setq done-p t)))
-    (add-function :after errback (lambda (&rest ignore) (setq done-p t)))
-    (ein:query-singleton-ajax
-     (list 'notebooklist-login--iteration url-or-port)
-     (ein:url url-or-port "login")
-     ;; do not use :type "POST" here (see git history)
-     :timeout ein:notebooklist-login-timeout
-     :data (if token (concat "password=" (url-hexify-string token)))
-     :parser #'ein:notebooklist-login--parser
-     :complete (apply-partially #'ein:notebooklist-login--complete url-or-port)
-     :error (apply-partially #'ein:notebooklist-login--error url-or-port token callback errback iteration)
-     :success (apply-partially #'ein:notebooklist-login--success url-or-port callback errback token iteration))
-    (unless noninteractive
-      (with-local-quit
-        (loop until done-p
-              do (sleep-for 0 450))))))
+  (ein:query-singleton-ajax
+   (list 'notebooklist-login--iteration url-or-port)
+   (ein:url url-or-port "login")
+   ;; do not use :type "POST" here (see git history)
+   :timeout ein:notebooklist-login-timeout
+   :data (if token (concat "password=" (url-hexify-string token)))
+   :parser #'ein:notebooklist-login--parser
+   :complete (apply-partially #'ein:notebooklist-login--complete url-or-port)
+   :error (apply-partially #'ein:notebooklist-login--error url-or-port token
+                           callback errback iteration)
+   :success (apply-partially #'ein:notebooklist-login--success url-or-port callback
+                             errback token iteration)))
 
 ;;;###autoload
 (defun ein:notebooklist-open (url-or-port callback)
   "This is now an alias for ein:notebooklist-login"
-  (interactive `(,(ein:notebooklist-ask-url-or-port) ,#'pop-to-buffer))
+  (interactive `(,(ein:notebooklist-ask-url-or-port)
+                 ,(lambda (buffer url-or-port) (pop-to-buffer buffer))))
   (ein:notebooklist-login url-or-port callback))
 
 (make-obsolete 'ein:notebooklist-open 'ein:notebooklist-login "0.14.2")
@@ -848,20 +861,21 @@ See also:
 ;;;###autoload
 (defalias 'ein:login 'ein:notebooklist-login)
 
-(defun ein:notebooklist-ask-one-cookie ()
-  "If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
-  (plist-put nil (intern (read-no-blanks-input "Cookie name: "))
-             (read-no-blanks-input "Cookie content: ")))
+(defun ein:notebooklist-ask-user-pw-pair (user-prompt pw-prompt)
+  "Currently used for cookie and jupyterhub additional inputs.  If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
+  (plist-put nil (intern (read-no-blanks-input (format "%s: " user-prompt)))
+             (read-no-blanks-input (format "%s: " pw-prompt))))
 
 ;;;###autoload
 (defun ein:notebooklist-login (url-or-port callback &optional cookie-plist)
   "Deal with security before main entry of ein:notebooklist-open*.
 
-CALLBACK takes one argument, the buffer created by ein:notebooklist-open--success."
+CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--success
+and the url-or-port argument of ein:notebooklist-open*."
   (interactive `(,(ein:notebooklist-ask-url-or-port)
-                 ,#'pop-to-buffer
-                 ,(if current-prefix-arg (ein:notebooklist-ask-one-cookie))))
-  (unless callback (setq callback (lambda (buffer))))
+                 ,(lambda (buffer url-or-port) (pop-to-buffer buffer))
+                 ,(if current-prefix-arg (ein:notebooklist-ask-user-pw-pair "Cookie name" "Cookie content"))))
+  (unless callback (setq callback (lambda (buffer url-or-port))))
 
   (when cookie-plist
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
@@ -901,12 +915,18 @@ CALLBACK takes one argument, the buffer created by ein:notebooklist-open--succes
                                                      &allow-other-keys
                                                      &aux
                                                      (response-status (request-response-status-code response)))
-  (if (plist-get data :bad-page)
-      (if (>= iteration 0)
-          (ein:notebooklist-login--error-1 url-or-port errback)
-        (setq token (read-passwd (format "Password for %s: " url-or-port)))
-        (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))
-    (ein:notebooklist-login--success-1 url-or-port callback errback)))
+  (cond ((plist-get data :bad-page)
+         (if (>= iteration 0)
+             (ein:notebooklist-login--error-1 url-or-port errback)
+           (setq token (read-passwd (format "Password for %s: " url-or-port)))
+           (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status)))
+        ((request-response-header response "x-jupyterhub-version")
+         (let ((pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
+           (destructuring-bind (user pw)
+               (loop for (user pw) on pam-plist by (function cddr)
+                     return (list (symbol-name user) pw))
+             (ein:jupyterhub-connect url-or-port user pw callback))))
+        (t (ein:notebooklist-login--success-1 url-or-port callback errback))))
 
 (defun* ein:notebooklist-login--error
     (url-or-port token callback errback iteration &key
@@ -944,7 +964,7 @@ on all the notebooks opened from the current notebooklist."
          (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
                                                      (equal (ein:$notebook-url-or-port nb)
                                                             (ein:$notebooklist-url-or-port current-nblist))))))
-    (ein:notebooklist-open* new-url-or-port nil)
+    (ein:notebooklist-open* new-url-or-port)
     (loop for x upfrom 0 by 1
           until (or (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
                     (= x 100))
@@ -952,7 +972,8 @@ on all the notebooks opened from the current notebooklist."
     (dolist (nb open-nb)
       (ein:notebook-update-url-or-port new-url-or-port nb))
     (kill-buffer (ein:notebooklist-get-buffer old-url))
-    (ein:notebooklist-open* new-url-or-port nil nil #'pop-to-buffer)))
+    (ein:notebooklist-open* new-url-or-port nil nil (lambda (buffer url-or-port)
+                                                      (pop-to-buffer buffer)))))
 
 (defun ein:notebooklist-change-url-port--deferred (new-url-or-port)
   (lexical-let* ((current-nblist ein:%notebooklist%)
@@ -965,7 +986,7 @@ on all the notebooks opened from the current notebooklist."
     (deferred:$
       (deferred:next
         (lambda ()
-          (ein:notebooklist-open* new-url-or-port nil)
+          (ein:notebooklist-open* new-url-or-port)
           (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
                 do (sit-for 0.1))))
       (deferred:nextc it
@@ -975,7 +996,8 @@ on all the notebooks opened from the current notebooklist."
       (deferred:nextc it
         (lambda ()
           (kill-buffer (ein:notebooklist-get-buffer old-url))
-          (ein:notebooklist-open* new-url-or-port nil nil #'pop-to-buffer))))))
+          (ein:notebooklist-open* new-url-or-port nil nil (lambda (buffer url-or-port)
+                                                            (pop-to-buffer buffer))))))))
 
 ;;; Generic getter
 

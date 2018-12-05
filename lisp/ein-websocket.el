@@ -61,30 +61,30 @@
                            name
                            value))))
 
-;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
+(defsubst ein:websocket-store-cookie (c host-port url-filename securep)
+  (url-cookie-store (car c) (cdr c) nil host-port url-filename securep))
 
-;; Websocket gets its cookies using the url-cookie API, so we need to copy over
-;; any cookies that are made and stored during the contents API calls via
-;; emacs-request.
+(defun ein:maybe-get-jhconn-user (url)
+  (let ((paths (rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
+    (if (string= (first paths) "user")
+        (format "/%s/%s/" (first paths) (second paths))
+      "")))
+
+;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
 (defun ein:websocket--prepare-cookies (url)
-  (let* ((jh-conn (ein:jupyterhub-url-p url))
-         (parsed-url (url-generic-parse-url url))
+  "Websocket gets its cookies using the url-cookie API, so we need to copy over
+ any cookies that are made and stored during the contents API calls via
+ emacs-request."
+  (let* ((parsed-url (url-generic-parse-url url))
          (host-port (if (url-port-if-non-default parsed-url)
                         (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
                       (url-host parsed-url)))
          (securep (string-match "^wss://" url))
-         (http-only-cookies (request-cookie-alist (concat "#HttpOnly_" (url-host (url-generic-parse-url url))) "/" securep)) ;; Current version of Jupyter store cookies as HttpOnly)
-         (cookies (request-cookie-alist (url-host (url-generic-parse-url url)) "/" securep))
-         (hub-cookies (request-cookie-alist (url-host (url-generic-parse-url url)) "/hub/" securep))
-         (user-cookies (and jh-conn
-                            (request-cookie-alist
-                             (url-host (url-generic-parse-url url))
-                             (ein:$jh-user-server (ein:$jh-conn-user jh-conn))
-                             securep))))
-    (when (or cookies http-only-cookies hub-cookies user-cookies)
-      (ein:log 'debug "EIN:WEBSOCKET--PREPARE-COOKIES Storing cookies in prep for opening websocket (%s)" cookies)
-      (dolist (c (append cookies http-only-cookies hub-cookies user-cookies))
-        (url-cookie-store (car c) (cdr c) nil host-port (car (url-path-and-query parsed-url)) securep)))))
+         (cookies (request-cookie-alist (url-host parsed-url) "/" securep))
+         (hub-cookies (request-cookie-alist (url-host parsed-url) "/hub/" securep))
+         (user-cookies (request-cookie-alist (url-host parsed-url) (ein:maybe-get-jhconn-user url) securep)))
+    (dolist (c (append cookies (append hub-cookies user-cookies)))
+      (ein:websocket-store-cookie c host-port (car (url-path-and-query parsed-url)) securep))))
 
 (defun ein:websocket (url kernel on-message on-close on-open)
   (ein:websocket--prepare-cookies url)
@@ -93,12 +93,11 @@
                              :on-message on-message
                              :on-close on-close
                              :on-error (lambda (ws action err)
-                                         (ein:log 'info "WS action [%s] %s (%s)" 
+                                         (ein:log 'info "WS action [%s] %s (%s)"
                                                   err action (websocket-url ws)))))
          (websocket (make-ein:$websocket :ws ws :kernel kernel :closed-by-client nil)))
     (setf (websocket-client-data ws) websocket)
     websocket))
-
 
 (defun ein:websocket-open-p (websocket)
   (eql (websocket-ready-state (ein:$websocket-ws websocket)) 'open))

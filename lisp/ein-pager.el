@@ -30,7 +30,6 @@
 (require 'ein-core)
 (require 'ein-events)
 (require 'view)
-(require 'ess-help nil t)
 
 ;; FIXME: Make a class with `:get-notebook-name' slot like `ein:worksheet'
 

@@ -7,6 +7,7 @@
 (ert-deftest ein-url-simple ()
   (should (null (ein:url nil)))
   (should (equal (ein:url 8888) "http://127.0.0.1:8888"))
+  (should (equal (ein:url "http://:8000") "http://127.0.0.1:8000"))
   (should (equal (ein:url "http://localhost") "http://127.0.0.1"))
   (should (equal (ein:url "https://localhost:8888") "https://127.0.0.1:8888"))
   (should (equal (ein:url "http://localhost:8000" "" "" "" "Untitled.ipynb") "http://127.0.0.1:8000/Untitled.ipynb"))
