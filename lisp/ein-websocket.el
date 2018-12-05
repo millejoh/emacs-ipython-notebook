@@ -64,6 +64,12 @@
 (defsubst ein:websocket-store-cookie (c host-port url-filename securep)
   (url-cookie-store (car c) (cdr c) nil host-port url-filename securep))
 
+(defun ein:maybe-get-jhconn-user (url)
+  (let ((paths (rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
+    (if (string= (first paths) "user")
+        (format "/%s/%s/" (first paths) (second paths))
+      "")))
+
 ;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
 (defun ein:websocket--prepare-cookies (url)
   "Websocket gets its cookies using the url-cookie API, so we need to copy over
@@ -74,8 +80,10 @@
                         (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
                       (url-host parsed-url)))
          (securep (string-match "^wss://" url))
-         (cookies (request-cookie-alist (url-host parsed-url) "/" securep)))
-    (dolist (c cookies)
+         (cookies (request-cookie-alist (url-host parsed-url) "/" securep))
+         (hub-cookies (request-cookie-alist (url-host parsed-url) "/hub/" securep))
+         (user-cookies (request-cookie-alist (url-host parsed-url) (ein:maybe-get-jhconn-user url) securep)))
+    (dolist (c (append cookies (append hub-cookies user-cookies)))
       (ein:websocket-store-cookie c host-port (car (url-path-and-query parsed-url)) securep))))
 
 (defun ein:websocket (url kernel on-message on-close on-open)
@@ -85,7 +93,7 @@
                              :on-message on-message
                              :on-close on-close
                              :on-error (lambda (ws action err)
-                                         (ein:log 'info "WS action [%s] %s (%s)" 
+                                         (ein:log 'info "WS action [%s] %s (%s)"
                                                   err action (websocket-url ws)))))
          (websocket (make-ein:$websocket :ws ws :kernel kernel :closed-by-client nil)))
     (setf (websocket-client-data ws) websocket)
