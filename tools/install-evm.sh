@@ -16,6 +16,4 @@ then
     git pull origin master
 else
     git clone https://github.com/rejeep/evm.git $EVMDIR
-    evm config path /tmp
-    travis_retry evm install emacs-24.3-travis --use --skip
 fi

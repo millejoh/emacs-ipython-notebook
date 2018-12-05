@@ -151,13 +151,12 @@
 (defun* ein:kernel-retrieve-session (kernel &optional iteration callback)
   "Formerly ein:kernel-start, but that was misnomer because 1. the server really starts a session (and an accompanying kernel), and 2. it may not even start a session if one exists for the same path.
 
+If 'picking up from where we last left off', that is, we restart emacs and reconnect to same server, jupyter will hand us back the original, still running session.
+
 The server logic is here (could not find other documentation)
 https://github.com/jupyter/notebook/blob/04a686dbaf9dfe553324a03cb9e6f778cf1e3da1/notebook/services/sessions/handlers.py#L56-L81
 
 CALLBACK of arity 1, the kernel.
-
-This no longer works in iPython-2.0. Protocol is to create a session for a
-notebook, which will automatically create and associate a kernel with the notebook.
 "
   (unless iteration
     (setq iteration 0))
@@ -223,21 +222,21 @@ notebook, which will automatically create and associate a kernel with the notebo
 
 CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
   (ein:kernel-disconnect kernel)
-  (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
   (ein:kernel-session-p
    kernel
    (apply-partially
     (lambda (callback* kernel session-p)
-      (if (or session-p
-              (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
-          (ein:kernel-retrieve-session
-           kernel 0
-           (apply-partially
-            (lambda (callback** kernel)
-              (ein:events-trigger (ein:$kernel-events kernel)
-                                  'status_reconnected.Kernel)
-              (when callback** (funcall callback** kernel)))
-            callback*))))
+      (when (or session-p
+                (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
+        (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
+        (ein:kernel-retrieve-session
+         kernel 0
+         (apply-partially
+          (lambda (callback** kernel)
+            (ein:events-trigger (ein:$kernel-events kernel)
+                                'status_reconnected.Kernel)
+            (when callback** (funcall callback** kernel)))
+          callback*))))
     callback)))
 
 (defun ein:kernel--ws-url (url-or-port)

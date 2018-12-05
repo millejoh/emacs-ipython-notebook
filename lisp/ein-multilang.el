@@ -32,6 +32,12 @@
 (require 'ein-worksheet)
 (require 'ein-multilang-fontify)
 (require 'python)
+(require 'ess-r-mode nil t)
+(require 'ess-custom nil t)
+
+(declare-function ess-indent-line "ess")
+(declare-function ess-r-eldoc-function "ess-r-completion")
+(declare-function ess-setq-vars-local "ess-utils")
 
 (defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -78,7 +84,7 @@ This function may raise an error."
   "Default `font-lock-keywords' for `ein:notebook-multilang-mode'.")
 
 (defun ein:ml-set-font-lock-defaults ()
-  (set (make-local-variable 'font-lock-defaults)
+  (setq-local font-lock-defaults
        '(ein:ml-font-lock-keywords
          ;; The following are adapted from org-mode but I am not sure
          ;; if I need them:
@@ -86,19 +92,15 @@ This function may raise an error."
          ein:ml-back-to-prev-node)))
 
 ;;;###autoload
-(define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
-  "Notebook mode with multiple language fontification."
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-start-skip)
-  (make-local-variable 'parse-sexp-lookup-properties)
-  (make-local-variable 'parse-sexp-ignore-comments)
-  (make-local-variable 'indent-line-function)
-  (make-local-variable 'indent-region-function)
-  (set (make-local-variable 'beginning-of-defun-function)
+(define-derived-mode ein:notebook-multilang-mode prog-mode "EIN"
+  "A mode for fontifying multiple languages.
+
+\\{ein:notebook-multilang-mode-map}
+"
+  (setq-local beginning-of-defun-function
        'ein:worksheet-beginning-of-cell-input)
-  (set (make-local-variable 'end-of-defun-function)
+  (setq-local end-of-defun-function
        'ein:worksheet-end-of-cell-input)
-  (ein:ml-lang-setup-python)
   (ein:ml-set-font-lock-defaults))
 
 (eval-after-load "auto-complete"
@@ -107,7 +109,7 @@ This function may raise an error."
 
 ;;; Language setup functions
 
-(defun ein:narrow-to-cell ()
+(defun ein:ml-narrow-to-cell ()
   "Narrow to the current cell."
   (ein:and-let* ((pos (point))
                  (node (ein:worksheet-get-nearest-cell-ewoc-node pos))
@@ -117,33 +119,56 @@ This function may raise an error."
                  ((< start end)))
     (narrow-to-region start end)))
 
-(defun ein:python-indent-line-function ()
-  "Call `python-indent-line-function' on the current cell."
+(defun ein:ml-indent-line-function (lang-func)
   (save-restriction
-    (ein:narrow-to-cell)
-    (python-indent-line-function)))
+    (ein:ml-narrow-to-cell)
+    (funcall lang-func)))
 
-(defun ein:python-indent-region (start end)
-  "Call `python-indent-region' on the current cell."
+(defun ein:ml-indent-region (lang-func start end)
   (save-restriction
-    (ein:narrow-to-cell)
-    (python-indent-region start end)))
+    (ein:ml-narrow-to-cell)
+    (funcall lang-func start end)))
 
 (defun ein:ml-lang-setup-python ()
-  (setq comment-start "# ")
-  (setq comment-start-skip "#+\\s-*")
-  (setq parse-sexp-lookup-properties t)
-  (setq parse-sexp-ignore-comments t)
+  "Presumably tkf had good reasons to choose only these forms from `python-mode'."
+  (setq-local mode-name "EIN[Py]")
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip  "#+\\s-*")
+  (setq-local parse-sexp-lookup-properties t)
+  (setq-local indent-line-function
+              (apply-partially #'ein:ml-indent-line-function #'python-indent-line-function))
+  (setq-local indent-region-function
+              (apply-partially #'ein:ml-indent-region #'python-indent-region))
+  (set-syntax-table python-mode-syntax-table)
+  (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
 
-  (when (boundp 'python-mode-map)
-    (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
-  (cond
-   ((featurep 'python)
-    (setq indent-line-function #'ein:python-indent-line-function)
-    (setq indent-region-function #'ein:python-indent-region))
-   ((featurep 'python-mode)
-    ;; FIXME: write keymap setup for python-mode.el
-    )))
+(defun ein:ml-lang-setup-R ()
+  (when (and (featurep 'ess-r-mode) (featurep 'ess-custom))
+    (setq-local mode-name "EIN[R]")
+    (when (boundp 'ess-r-customize-alist)
+      (ess-setq-vars-local ess-r-customize-alist))
+    (setq-local paragraph-start (concat "\\s-*$\\|" page-delimiter))
+    (setq-local paragraph-separate (concat "\\s-*$\\|" page-delimiter))
+    (setq-local paragraph-ignore-fill-prefix t)
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'ess-indent-line))
+    (when (and (boundp 'ess-style) (boundp 'ess-default-style))
+      (setq-local ess-style ess-default-style))
+    (when (and (boundp 'prettify-symbols-alist) (boundp 'ess-r-prettify-symbols))
+      (setq-local prettify-symbols-alist ess-r-prettify-symbols))
+    (add-function :before-until (local 'eldoc-documentation-function)
+                  #'ess-r-eldoc-function)
+    (when (boundp 'ess-use-eldoc)
+      (when ess-use-eldoc (eldoc-mode)))
+    (when (boundp 'ess-r-mode-syntax-table)
+      (set-syntax-table ess-r-mode-syntax-table))
+    (when (boundp 'ess-r-mode-map)
+      (set-keymap-parent ein:notebook-multilang-mode-map ess-r-mode-map))))
+
+(defun ein:ml-lang-setup (kernelspec)
+  (ein:case-equal (ein:$kernelspec-language kernelspec)
+                  (("python") (ein:ml-lang-setup-python))
+                  (("R") (ein:ml-lang-setup-R))))
 
 ;; (defun ein:ml-lang-setup-markdown ()
 ;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."

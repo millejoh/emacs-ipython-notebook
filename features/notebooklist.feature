@@ -1,3 +1,4 @@
+@bread
 Scenario: Breadcrumbs
   Given I am in notebooklist buffer
   When I click on dir "step-definitions"

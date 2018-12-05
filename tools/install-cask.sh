@@ -24,6 +24,8 @@ cask_install_or_reset() {
         set +x
     fi
     cask install || { rm -rf .cask && false; }
+    # travis cache
+    rsync -vazSHe ssh .cask $HOME/
 }
 
 # Bootstrap the cask tool and its dependencies

@@ -36,6 +36,7 @@
 
 ;; Class and variable
 
+
 (ein:deflocal ein:%notification% nil
   "Buffer local variable to hold an instance of `ein:notification'.")
 (define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")

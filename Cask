@@ -3,14 +3,12 @@
 (source org)
 
 (package-descriptor "lisp/ein-pkg.el")
-(files "lisp/*.el" "lisp/*.py" (:exclude "lisp/zeroein.el"))
+(files "lisp/*.el" "lisp/*.py")
 
 (development
  (depends-on "websocket")
  (depends-on "request")
- (depends-on "request-deferred")
  (depends-on "dash")
- (depends-on "cl-generic")
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")

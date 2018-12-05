@@ -19,8 +19,11 @@
     (require 'ein-timestamp)
   (!cons "timestamp" ecukes-exclude-tags))
 
-(if (null (executable-find "jupyterhub"))
-    (!cons "jupyterhub" ecukes-exclude-tags))
+(unless (member "jupyterhub" ecukes-include-tags)
+  (!cons "jupyterhub" ecukes-exclude-tags))
+
+(if (eq system-type 'darwin)
+    (!cons "switch" ecukes-exclude-tags))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
@@ -66,7 +69,7 @@
  (ein:testing-after-scenario))
 
 (Teardown
- (Given "I stop the server"))
+ (Given "I finally stop the server"))
 
 (Fail
  (if noninteractive

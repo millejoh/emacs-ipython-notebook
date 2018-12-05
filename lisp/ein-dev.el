@@ -240,7 +240,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
                 (ein:dev-dump-vars '("source-dir")))
    :lib (ein:filter (lambda (info) (plist-get info :path))
                     (mapcar #'ein:dev-sys-info--lib
-                            '("websocket" "request" "auto-complete" "mumamo"
+                            '("websocket" "request" "mumamo"
                               "auto-complete" "popup" "fuzzy" "pos-tip"
                               "python" "python-mode" "markdown-mode"
                               "smartrep" "anything" "helm")))))
