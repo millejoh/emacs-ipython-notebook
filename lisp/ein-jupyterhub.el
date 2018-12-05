@@ -21,7 +21,7 @@
 ;; along with ein-jupyter.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;   
+;;
 ;;;
 ;;; An interface to the Jupyterhub login and management API as described in
 ;;; http://jupyterhub.readthedocs.io/en/latest/api/index.html
@@ -69,7 +69,7 @@
                         (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
                       (url-host parsed-url)))
          (securep (string= (url-type parsed-url) "https"))
-         (cookies (append 
+         (cookies (append
                    (request-cookie-alist (url-host parsed-url) "/hub/" securep)
                    (ein:aand (ein:$jh-conn-user conn) (ein:$jh-user-server it)
                              (request-cookie-alist (url-host parsed-url) it securep)))))
@@ -82,7 +82,7 @@
 
 (defmacro ein:jupyterhub--add-header (header)
   `(setq my-settings
-         (plist-put my-settings :headers 
+         (plist-put my-settings :headers
                     (append (plist-get my-settings :headers) (list ,header)))))
 
 (defmacro ein:jupyterhub-query (conn-key url cb cbargs &rest settings)
@@ -93,16 +93,16 @@
        (ein:aif (ein:$jh-conn-token conn)
            (ein:jupyterhub--add-header
             (cons "Authorization" (format "token %s" it)))))
-     (apply #'ein:query-singleton-ajax 
+     (apply #'ein:query-singleton-ajax
             ,url ,url
-            :error 
+            :error
             (lambda (&rest args)
-              (ein:log 'error "ein:jupyterhub-query--error (%s) %s (%s)" ,url 
+              (ein:log 'error "ein:jupyterhub-query--error (%s) %s (%s)" ,url
                        (request-response-status-code (plist-get args :response))
                        (plist-get args :symbol-status)))
-            :complete 
+            :complete
             (lambda (&rest args)
-              (ein:log 'debug "ein:jupyterhub-query--complete (%s) %s (%s)" ,url 
+              (ein:log 'debug "ein:jupyterhub-query--complete (%s) %s (%s)" ,url
                        (request-response-status-code (plist-get args :response))
                        (plist-get args :symbol-status)))
             :success
@@ -111,7 +111,7 @@
             my-settings)))
 
 (defun ein:jupyterhub--receive-version (data url-or-port callback username password)
-  (let ((conn (make-ein:$jh-conn 
+  (let ((conn (make-ein:$jh-conn
                :url-or-port url-or-port
                :version (plist-get data :version))))
     (setf (gethash url-or-port *ein:jupyterhub-connections*) conn)
@@ -160,7 +160,7 @@
 (defsubst ein:jupyterhub--query-server (callback username password conn)
   (ein:jupyterhub-query
    (ein:$jh-conn-url-or-port conn)
-   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn) 
+   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn)
                             "users" username "server")
    #'ein:jupyterhub--receive-server
    `(,callback ,username ,password ,conn)
