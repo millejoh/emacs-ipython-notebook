@@ -32,6 +32,7 @@
 (require 'ein-worksheet)
 (require 'ein-multilang-fontify)
 (require 'python)
+(require 'ess-r-mode nil t)
 
 (defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -86,19 +87,12 @@ This function may raise an error."
          ein:ml-back-to-prev-node)))
 
 ;;;###autoload
-(define-derived-mode ein:notebook-multilang-mode fundamental-mode "ein:ml"
+(define-derived-mode ein:notebook-multilang-mode prog-mode "ein:ml"
   "Notebook mode with multiple language fontification."
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-start-skip)
-  (make-local-variable 'parse-sexp-lookup-properties)
-  (make-local-variable 'parse-sexp-ignore-comments)
-  (make-local-variable 'indent-line-function)
-  (make-local-variable 'indent-region-function)
   (set (make-local-variable 'beginning-of-defun-function)
        'ein:worksheet-beginning-of-cell-input)
   (set (make-local-variable 'end-of-defun-function)
        'ein:worksheet-end-of-cell-input)
-  (ein:ml-lang-setup-python)
   (ein:ml-set-font-lock-defaults))
 
 (eval-after-load "auto-complete"
@@ -129,21 +123,23 @@ This function may raise an error."
     (ein:narrow-to-cell)
     (python-indent-region start end)))
 
-(defun ein:ml-lang-setup-python ()
-  (setq comment-start "# ")
-  (setq comment-start-skip "#+\\s-*")
-  (setq parse-sexp-lookup-properties t)
-  (setq parse-sexp-ignore-comments t)
+(defun ein:ml-lang-setup--python ()
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start-skip)  "#+\\s-*")
+  (set (make-local-variable 'parse-sexp-lookup-properties) t)
+  (set (make-local-variable 'indent-line-function) #'ein:python-indent-line-function)
+  (set (make-local-variable 'indent-region-function) #'ein:python-indent-region)
+  (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
 
-  (when (boundp 'python-mode-map)
-    (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
-  (cond
-   ((featurep 'python)
-    (setq indent-line-function #'ein:python-indent-line-function)
-    (setq indent-region-function #'ein:python-indent-region))
-   ((featurep 'python-mode)
-    ;; FIXME: write keymap setup for python-mode.el
-    )))
+(defun ein:ml-lang-setup--R ()
+  (if (boundp 'inferior-ess-r-mode-map)
+      (set-keymap-parent ein:notebook-multilang-mode-map inferior-ess-r-mode-map)))
+
+(defun ein:ml-lang-setup (kernelspec)
+  "The reasons as to why tkf only chose this subset of forms from `python-mode' are lost in obscurity.  A concerted effort to just use `python-mode' will require testing."
+  (ein:case-equal (ein:$kernelspec-language kernelspec)
+                  (("python") (ein:ml-lang-setup--python))
+                  (("R") (ein:ml-lang-setup--R))))
 
 ;; (defun ein:ml-lang-setup-markdown ()
 ;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."

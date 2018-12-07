@@ -223,21 +223,21 @@ notebook, which will automatically create and associate a kernel with the notebo
 
 CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
   (ein:kernel-disconnect kernel)
-  (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
   (ein:kernel-session-p
    kernel
    (apply-partially
     (lambda (callback* kernel session-p)
-      (if (or session-p
-              (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
-          (ein:kernel-retrieve-session
-           kernel 0
-           (apply-partially
-            (lambda (callback** kernel)
-              (ein:events-trigger (ein:$kernel-events kernel)
-                                  'status_reconnected.Kernel)
-              (when callback** (funcall callback** kernel)))
-            callback*))))
+      (when (or session-p
+                (and (not noninteractive) (y-or-n-p "Session not found.  Restart?")))
+        (ein:events-trigger (ein:$kernel-events kernel) 'status_reconnecting.Kernel)
+        (ein:kernel-retrieve-session
+         kernel 0
+         (apply-partially
+          (lambda (callback** kernel)
+            (ein:events-trigger (ein:$kernel-events kernel)
+                                'status_reconnected.Kernel)
+            (when callback** (funcall callback** kernel)))
+          callback*))))
     callback)))
 
 (defun ein:kernel--ws-url (url-or-port)

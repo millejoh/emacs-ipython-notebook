@@ -67,7 +67,7 @@
 (require 'ein-inspector)
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
-(require 'ein-junk)
+(require 'ein-multilang)
 
 ;;; Configuration
 
@@ -304,7 +304,7 @@ will be updated with kernel's cwd."
                      (funcall pending-clear* nil)
                      (with-current-buffer (ein:notebook-buffer notebook*)
                        (ein:worksheet-focus-cell))
-                     (pop-to-buffer (ein:notebook-buffer notebook*))
+                     (pop-to-buffer-same-window (ein:notebook-buffer notebook*))
                      (when (null (plist-member (ein:$notebook-metadata notebook*)
                                                :kernelspec))
                        (ein:aif (ein:$notebook-kernelspec notebook*)
@@ -531,10 +531,19 @@ notebook buffer then the user will be prompted to select an opened notebook."
                         "Select kernel: "
                         (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
-  (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
-                                                                kernel-name))
-  (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
-  (ein:kernel-restart-session (ein:$notebook-kernel notebook)))
+  (let* ((kernelspec (ein:get-kernelspec
+                      (ein:$notebook-url-or-port notebook) kernel-name)))
+    (setf (ein:$notebook-kernelspec notebook) kernelspec)
+    (setf (ein:$notebook-metadata notebook)
+          (plist-put (ein:$notebook-metadata notebook)
+                     :kernelspec kernelspec))
+    (ein:notebook-save-notebook notebook #'ein:notebook-kill-kernel-then-close-command
+                                (list notebook))
+    (loop repeat 10
+          until (null (ein:$kernel-websocket (ein:$notebook-kernel notebook)))
+          do (sleep-for 0 500)
+          finally do (ein:notebook-open (ein:$notebook-url-or-port notebook)
+                                        (ein:$notebook-notebook-path notebook)))))
 
 (defun ein:notebook-retrieve-session (notebook)
   "Formerly ein:notebook-start-kernel.
@@ -628,6 +637,7 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
+    (ein:ml-lang-setup (ein:$notebook-kernelspec notebook))
     ;; Now that major-mode is set, set buffer local variables:
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
@@ -693,7 +703,8 @@ This is equivalent to do ``C-c`` in the console program."
         (cl-case (ein:$notebook-nbformat notebook)
           (3 (ein:read-nbformat3-worksheets notebook data))
           (4 (ein:read-nbformat4-worksheets notebook data))
-          (t (ein:log 'error "Do not currently support nbformat version %s" (ein:$notebook-nbformat notebook)))))
+          (t (ein:log 'error "nbformat version %s unsupported" 
+                      (ein:$notebook-nbformat notebook)))))
   (ein:notebook--worksheet-render notebook
                                   (nth 0 (ein:$notebook-worksheets notebook)))
   notebook)
@@ -774,7 +785,8 @@ This is equivalent to do ``C-c`` in the console program."
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
-    (error (ein:log 'warn "ein:notebook-save-notebook: Error running save hooks: '%s'. Regardless, proceeding with save. Wish me luck." (error-message-string err))))
+    (error (ein:log 'warn "ein:notebook-save-notebook: Saving despite '%s'."
+                    (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
@@ -1513,10 +1525,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
                   (format "Open %d-th worksheet" n)
                   (intern (format "ein:notebook-worksheet-open-%sth" n))))
            '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
-      ("Junk notebook"
-       ,@(ein:generate-menu
-          '(("Junk this notebook" ein:junk-rename)
-            ("Open new junk" ein:junk-new))))
       ;; Misc:
       ,@(ein:generate-menu
          '(("Open regular IPython console" ein:console-open)
@@ -1561,7 +1569,7 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
   (when ein:notebook-mode
-    (funcall (ein:notebook-choose-mode)) ;; TODO odd seems out of place
+    (funcall (ein:notebook-choose-mode)) ;; set major mode
 
     (case ein:completion-backend
       (ein:use-ac-backend

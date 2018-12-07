@@ -238,7 +238,7 @@ a number will limit the number of lines in a cell output."
   cell-data)
 
 (defun ein:cell-from-type (type &rest args)
-  (apply (ein:cell-class-from-type type) "Cell" args))
+  (apply (ein:cell-class-from-type type) args))
 
 (defun ein:cell--determine-cell-type (json-data)
   (let ((base-type (plist-get json-data :cell_type))
@@ -420,7 +420,10 @@ a number will limit the number of lines in a cell output."
 Return language name as a string or `nil' when not defined.
   (fn cell)")
 
-(cl-defmethod ein:cell-language ((cell ein:codecell)) nil "python")
+(cl-defmethod ein:cell-language ((cell ein:codecell))
+  (ein:and-let* ((kernel (slot-value cell 'kernel))
+                 (kernelspec (ein:$kernel-kernelspec kernel)))
+    (ein:$kernelspec-language kernelspec)))
 (cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
 (cl-defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
 (cl-defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
