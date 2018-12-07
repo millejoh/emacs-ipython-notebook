@@ -37,6 +37,7 @@
 (eval-when-compile (require 'auto-complete))
 
 (require 'ewoc)
+(require 'mumamo nil t)
 (require 'company nil t)
 
 (require 'ein-core)
@@ -1332,10 +1333,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
-  ;; So try to load extra modules here.
-  (when (require 'mumamo nil t)
-    (require 'ein-mumamo))
-  ;; Return first matched mode
   (autoload 'ein:notebook-multilang-mode "ein-multilang")
   (loop for mode in ein:notebook-modes
         if (functionp mode)
@@ -1569,8 +1566,7 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
   (when ein:notebook-mode
-    (funcall (ein:notebook-choose-mode)) ;; set major mode
-
+    (funcall (ein:notebook-choose-mode))
     (case ein:completion-backend
       (ein:use-ac-backend
        (assert (featurep 'ein-ac))
@@ -1599,11 +1595,11 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
 ;; permanent local.
 (put 'ein:notebook-mode 'permanent-local t)
 
-(define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
+(define-derived-mode ein:notebook-plain-mode fundamental-mode "EIN[plain]"
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
-(define-derived-mode ein:notebook-python-mode python-mode "ein:python"
+(define-derived-mode ein:notebook-python-mode python-mode "EIN[python]"
   "Use `python-mode' for whole notebook buffer.")
 
 (defun ein:notebook-open-in-browser (&optional print)

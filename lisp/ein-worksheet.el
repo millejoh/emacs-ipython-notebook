@@ -184,7 +184,11 @@
     (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
-        (error "show stopper %s %s | %s" buffer-undo-list ein:%which-cell% fill)
+        ;; TODO: reset ein:%which-cell% when major mode gets swapped
+        (ein:display-warning
+         (format "Undo failure diagnostic %s %s | %s" 
+                 buffer-undo-list ein:%which-cell% fill)
+         :error)
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
         (if (> fill 0)
