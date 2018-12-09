@@ -67,6 +67,8 @@ before_script:
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
       evm config path $HOME/.evm
+    else
+      evm config path /tmp
     fi
   - evm install $EVM_EMACS --use --skip
   - emacs --version
