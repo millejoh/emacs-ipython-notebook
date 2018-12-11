@@ -389,8 +389,8 @@ When calling this method pass a CALLBACKS structure of the form:
    :clear_output   CLEAR-OUTPUT-CALLBACK
    :set_next_input SET-NEXT-INPUT)
 
-Right hand sides ending -CALLBACK above must pack a FUNCTION and its
-first ARGUMENT in a `cons'::
+Right hand sides ending -CALLBACK above must cons a FUNCTION and its
+`packed' ARGUMENT which is a sublist of args:
 
   (FUNCTION . ARGUMENT)
 

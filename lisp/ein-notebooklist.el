@@ -938,6 +938,58 @@ and the url-or-port argument of ein:notebooklist-open*."
               (request-response-header response "set-cookie"))
          (ein:notebooklist-login--success-1 url-or-port callback errback))
         (t (ein:notebooklist-login--error-1 url-or-port errback))))
+
+;;;###autoload
+
+(defun ein:notebooklist-change-url-port (new-url-or-port)
+  "Update the ipython/jupyter notebook server URL for all the
+notebooks currently opened from the current notebooklist buffer.
+
+This function works by calling `ein:notebook-update-url-or-port'
+on all the notebooks opened from the current notebooklist."
+  (interactive (list (ein:notebooklist-ask-url-or-port)))
+  (unless (eql major-mode 'ein:notebooklist-mode)
+    (error "This command needs to be called from within a notebooklist buffer."))
+  (let* ((current-nblist ein:%notebooklist%)
+         (old-url (ein:$notebooklist-url-or-port current-nblist))
+         (new-url-or-port new-url-or-port)
+         (open-nb (ein:notebook-opened-notebooks #'(lambda (nb)
+                                                     (equal (ein:$notebook-url-or-port nb)
+                                                            (ein:$notebooklist-url-or-port current-nblist))))))
+    (ein:notebooklist-open* new-url-or-port)
+    (loop for x upfrom 0 by 1
+          until (or (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+                    (= x 100))
+          do (sit-for 0.1))
+    (dolist (nb open-nb)
+      (ein:notebook-update-url-or-port new-url-or-port nb))
+    (kill-buffer (ein:notebooklist-get-buffer old-url))
+    (ein:notebooklist-open* new-url-or-port nil nil (lambda (buffer url-or-port)
+                                                      (pop-to-buffer buffer)))))
+
+(defun ein:notebooklist-change-url-port--deferred (new-url-or-port)
+  (lexical-let* ((current-nblist ein:%notebooklist%)
+                 (old-url (ein:$notebooklist-url-or-port current-nblist))
+                 (new-url-or-port new-url-or-port)
+                 (open-nb (ein:notebook-opened-notebooks
+                           (lambda (nb)
+                             (equal (ein:$notebook-url-or-port nb)
+                                    (ein:$notebooklist-url-or-port current-nblist))))))
+    (deferred:$
+      (deferred:next
+        (lambda ()
+          (ein:notebooklist-open* new-url-or-port)
+          (loop until (get-buffer (format ein:notebooklist-buffer-name-template new-url-or-port))
+                do (sit-for 0.1))))
+      (deferred:nextc it
+        (lambda ()
+          (dolist (nb open-nb)
+            (ein:notebook-update-url-or-port new-url-or-port nb))))
+      (deferred:nextc it
+        (lambda ()
+          (kill-buffer (ein:notebooklist-get-buffer old-url))
+          (ein:notebooklist-open* new-url-or-port nil nil (lambda (buffer url-or-port)
+                                                            (pop-to-buffer buffer))))))))
 
 ;;; Generic getter
 
