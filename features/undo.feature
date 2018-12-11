@@ -216,6 +216,28 @@ Scenario: Undo needs to at least work for reopened notebooks
   And I undo again
   Then the cursor should be at point "125"
 
+@toggle
+Scenario: Toggling between markdown and codecell does not break undo
+  Given I enable "ein:worksheet-enable-undo"
+  Given new default notebook
+  When I type ""to be markdown""
+  And I press "C-c C-b"
+  And I type "200"
+  And I wait for cell to execute
+  And I press "C-<up>"
+  And I press "C-c C-t"
+  And I press "C-/"
+  Then the cursor should be at point "38"
+  And I press "C-<up>"
+  And I press "C-c C-t"
+  And I press "C-/"
+  Then the cursor should be at point "33"
+  And I press "C-<up>"
+  And I press "C-c C-t"
+  And I wait for cell to execute
+  And I press "C-/"
+  Then the cursor should be at point "62"
+
 @timestamp
 Scenario: Undo (kind of) needs to work when someone explicitly requires ein-timestamp
   Given I start the server configured "\n"

@@ -66,7 +66,7 @@
   "Buffer local variable with buffer-undo-list's current knowledge of cell lengths.")
 
 (ein:deflocal ein:%which-cell% '()
-  "Buffer local variable one-to-one cell-id corresponding buffer-undo-list item.")
+  "Buffer local variable one-to-one buffer-undo-list item to cell id.")
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)
   "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
@@ -120,8 +120,10 @@
   (if cached
       ;; 1 for when cell un-executed, there is still a newline
       (or (second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
-    (- (ein:worksheet--next-cell-start cell)
-       (ein:worksheet--element-start cell (if (string= (slot-value cell 'cell-type) "code") :output :footer)))))
+    (if (string= (slot-value cell 'cell-type) "code")
+      (- (ein:worksheet--next-cell-start cell)
+         (ein:worksheet--element-start cell :output))
+      0)))
 
 (defsubst ein:worksheet--total-length (cell &optional cached)
   (if cached
@@ -173,12 +175,20 @@
       (setq cell0 (ein:cell-next cell0)))
     result))
 
-(defun ein:worksheet--jigger-undo-list ()
+(defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
   (if (/= (length buffer-undo-list) (length ein:%which-cell%))
       (ein:log 'debug "jig %s to %s: %S %S" (length ein:%which-cell%) (length buffer-undo-list) buffer-undo-list ein:%which-cell%))
+  (ein:and-let* ((old-cell-id (car change-cell-id))
+                 (new-cell-id (cdr change-cell-id))
+                 (changed-p (not (eq old-cell-id new-cell-id))))
+    (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
-        (error "show stopper %s %s | %s" buffer-undo-list ein:%which-cell% fill)
+        ;; TODO: reset ein:%which-cell% when major mode gets swapped
+        (ein:display-warning
+         (format "Undo failure diagnostic %s %s | %s" 
+                 buffer-undo-list ein:%which-cell% fill)
+         :error)
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
         (if (> fill 0)
@@ -187,24 +197,34 @@
                          ein:%which-cell%))))))
   (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%))))
 
-(defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input)
+(defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.  Unshift in list parlance means prepending to list."
+  (unless old-cell
+    (setq old-cell cell))
   (when buffer-local-enable-undo
     (ein:with-live-buffer (ein:cell-buffer cell)
-      (let* ((opl (ein:worksheet--prompt-length cell t))
-             (ool (ein:worksheet--output-length cell t))
-             (otl (ein:worksheet--total-length cell t))
+      (let* ((opl (ein:worksheet--prompt-length old-cell t))
+             (ool (ein:worksheet--output-length old-cell t))
+             (otl (ein:worksheet--total-length old-cell t))
              (npl (ein:worksheet--prompt-length cell))
              (nol (ein:worksheet--output-length cell))
              (ntl (ein:worksheet--total-length cell))
              (pdist (- npl opl))
              (odist (- nol ool))
+             (has-output (memq :output (slot-value cell 'element-names)))
+             (old-has-output (memq :output (slot-value old-cell 'element-names)))
+             (converted-newline (if (eq has-output old-has-output) 0
+                                  (if has-output -1 1)))
              (after-ids (ein:worksheet--get-ids-after cell))
              (func-same-cell (hof-add pdist))
-             (func-after-cell (hof-add (if (zerop otl) ntl (+ pdist odist))))
+             (func-after-cell (hof-add (if (zerop otl)
+                                           ntl (+ pdist odist converted-newline))))
              lst)
-        (ein:log 'debug "unsh trig=%s pdist=%s odist=%s otl=%s ntl=%s" (ein:worksheet--unique-enough-cell-id cell) pdist odist otl ntl)
-        (ein:worksheet--jigger-undo-list)
+        (ein:log 'debug "unsh trig=%s pdist=%s odist=%s otl=%s ntl=%s conv=%s"
+                 (ein:worksheet--unique-enough-cell-id cell) pdist odist otl ntl converted-newline)
+        (ein:worksheet--jigger-undo-list
+         (cons (ein:worksheet--unique-enough-cell-id old-cell)
+               (ein:worksheet--unique-enough-cell-id cell)))
         (dolist (uc (mapcar* 'cons buffer-undo-list ein:%which-cell%))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
@@ -730,9 +750,10 @@ directly."
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
-        (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
-      (ein:worksheet--unshift-undo-list cell)
-      (when focus (ein:cell-goto new relpos)))))
+        (setf (slot-value new 'kernel) (slot-value ws 'kernel))
+        (setf (slot-value new 'events) (slot-value ws 'events)))
+      (when focus (ein:cell-goto new relpos))
+      (ein:worksheet--unshift-undo-list new nil cell))))
 
 (defun ein:worksheet-toggle-slide-type (ws cell &optional focus)
   "Toggle the slide metadata of the cell at point. Available slide settings are:

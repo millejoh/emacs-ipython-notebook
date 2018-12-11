@@ -37,6 +37,7 @@
 (eval-when-compile (require 'auto-complete))
 
 (require 'ewoc)
+(require 'mumamo nil t)
 (require 'company nil t)
 
 (require 'ein-core)
@@ -67,7 +68,7 @@
 (require 'ein-inspector)
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
-(require 'ein-junk)
+(require 'ein-multilang)
 
 ;;; Configuration
 
@@ -251,7 +252,7 @@ combo must match exactly these url/port you used format
            (ein:$notebook-notebook-name notebook))
   (setf (ein:$notebook-url-or-port notebook) new-url-or-port)
   (with-current-buffer (ein:notebook-buffer notebook)
-    (ein:notebook-retrieve-session notebook)
+    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
     (rename-buffer (format ein:notebook-buffer-name-template
                            (ein:$notebook-url-or-port notebook)
                            (ein:$notebook-notebook-name notebook)))))
@@ -321,6 +322,7 @@ will be updated with kernel's cwd."
 
 (defun ein:notebook-open (url-or-port path &optional kernelspec callback)
   "Returns notebook at URL-OR-PORT/PATH.
+
 Note that notebook sends for its contents and won't have them right away.
 
 After the notebook is opened, CALLBACK is called as::
@@ -328,9 +330,6 @@ After the notebook is opened, CALLBACK is called as::
   \(funcall CALLBACK notebook created)
 
 where `created' indicates a new notebook or an existing one.
-
-TODO - This function should not be used to switch to an existing
-notebook buffer.  Let's warn for now to see who is doing this.
 "
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
@@ -350,7 +349,8 @@ notebook buffer.  Let's warn for now to see who is doing this.
           (ein:log 'info "Notebook %s is already open"
                    (ein:$notebook-notebook-name notebook))
           (funcall callback0))
-      (when (or (not pending-p)
+      (when (or noninteractive
+                (not pending-p)
                 (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
         (setf (gethash pending-key *ein:notebook--pending-query*) t)
         (ein:content-query-contents url-or-port path
@@ -367,8 +367,12 @@ notebook buffer.  Let's warn for now to see who is doing this.
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
-    (ein:notebook-retrieve-session notebook)
-    (ein:notebook-from-json notebook (ein:$content-raw-content content)) ; notebook buffer is created here
+    (ein:notebook-install-kernel notebook)
+    (ein:notebook-from-json notebook (ein:$content-raw-content content))
+    ;; start websocket only after worksheet is rendered:  why
+    ;; ein:notification-bind-events only gets called after worksheet's
+    ;; buffer local notification widget gets instantiated
+    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-new (ein:$notebook-kernel notebook)
                               (cons #'ein:notebook-buffer-list notebook)
@@ -531,15 +535,21 @@ notebook buffer then the user will be prompted to select an opened notebook."
                         "Select kernel: "
                         (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
-  (setf (ein:$notebook-kernelspec notebook) (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
-                                                                kernel-name))
-  (ein:log 'info "Restarting notebook %s with new kernel %s." (ein:$notebook-notebook-name notebook) kernel-name)
-  (ein:kernel-restart-session (ein:$notebook-kernel notebook)))
+  (let* ((kernelspec (ein:get-kernelspec
+                      (ein:$notebook-url-or-port notebook) kernel-name)))
+    (setf (ein:$notebook-kernelspec notebook) kernelspec)
+    (setf (ein:$notebook-metadata notebook)
+          (plist-put (ein:$notebook-metadata notebook)
+                     :kernelspec kernelspec))
+    (ein:notebook-save-notebook notebook #'ein:notebook-kill-kernel-then-close-command
+                                (list notebook))
+    (loop repeat 10
+          until (null (ein:$kernel-websocket (ein:$notebook-kernel notebook)))
+          do (sleep-for 0 500)
+          finally return (ein:notebook-open (ein:$notebook-url-or-port notebook)
+                                            (ein:$notebook-notebook-path notebook)))))
 
-(defun ein:notebook-retrieve-session (notebook)
-  "Formerly ein:notebook-start-kernel.
-
-If 'picking up from where we last off', that is, we restart emacs and reconnect to same server, jupyter will hand us back the original, still running session."
+(defun ein:notebook-install-kernel (notebook)
   (let* ((base-url (concat ein:base-kernel-url "kernels"))
          (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
@@ -550,8 +560,7 @@ If 'picking up from where we last off', that is, we restart emacs and reconnect 
                                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)
     (when (eq (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)) 'python)
-      (ein:pytools-setup-hooks kernel notebook))
-    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))))
+      (ein:pytools-setup-hooks kernel notebook))))
 
 (defun ein:notebook-reconnect-session-command ()
    "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists."
@@ -628,6 +637,8 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
     (ein:notebook-mode)
+    (when (ein:$notebook-kernelspec notebook)
+      (ein:ml-lang-setup (ein:$notebook-kernelspec notebook)))
     ;; Now that major-mode is set, set buffer local variables:
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
@@ -693,7 +704,8 @@ This is equivalent to do ``C-c`` in the console program."
         (cl-case (ein:$notebook-nbformat notebook)
           (3 (ein:read-nbformat3-worksheets notebook data))
           (4 (ein:read-nbformat4-worksheets notebook data))
-          (t (ein:log 'error "Do not currently support nbformat version %s" (ein:$notebook-nbformat notebook)))))
+          (t (ein:log 'error "nbformat version %s unsupported" 
+                      (ein:$notebook-nbformat notebook)))))
   (ein:notebook--worksheet-render notebook
                                   (nth 0 (ein:$notebook-worksheets notebook)))
   notebook)
@@ -706,7 +718,7 @@ This is equivalent to do ``C-c`` in the console program."
           (or (plist-get data :worksheets)
               (list nil))))
 
-;; nbformat4 gets rid of the concenpt of worksheets. That means, for the moment,
+;; nbformat4 gets rid of the concept of worksheets. That means, for the moment,
 ;; ein will no longer support worksheets. There may be a path forward for
 ;; reimplementing this feature, however.  The nbformat 4 json definition says
 ;; that cells are allowed to have tags. Clever use of this feature may lead to
@@ -728,7 +740,8 @@ This is equivalent to do ``C-c`` in the console program."
          (case (ein:$notebook-nbformat notebook)
            (3 (ein:write-nbformat3-worksheets notebook))
            (4 (ein:write-nbformat4-worksheets notebook))
-           (t (ein:log 'error "EIN does not support saving notebook format %s" (ein:$notebook-nbformat notebook))))))
+           (t (ein:log 'error "nbformat version %s unsupported"
+                       (ein:$notebook-nbformat notebook))))))
     ;; Apparently metadata can be either a hashtable or a plist...
     (let ((metadata (cdr (assq 'metadata data))))
       (if (hash-table-p metadata)
@@ -774,7 +787,8 @@ This is equivalent to do ``C-c`` in the console program."
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
-    (error (ein:log 'warn "ein:notebook-save-notebook: Error running save hooks: '%s'. Regardless, proceeding with save. Wish me luck." (error-message-string err))))
+    (error (ein:log 'warn "ein:notebook-save-notebook: Saving despite '%s'."
+                    (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_saving.Notebook)
@@ -905,21 +919,15 @@ notebook worksheets."
 
 (defun ein:notebook-create-checkpoint (notebook)
   "Create checkpoint for current notebook based on most recent save."
-  (interactive
-   (let* ((notebook (ein:get-notebook)))
-     (list notebook)))
-  (ein:events-trigger (ein:$notebook-events notebook)
-                      'notebook_create_checkpoint.Notebook)
+  (interactive (list (ein:get-notebook)))
   (ein:content-create-checkpoint (ein:fast-content-from-notebook notebook)
-                                 (lexical-let ((notebook notebook))
-                                   #'(lambda (content)
-                                       (ein:log 'verbose "Checkpoint %s for %s generated."
-                                                (plist-get (first (ein:$content-checkpoints content)) :id)
-                                                (ein:$notebook-notebook-name notebook))
-                                       (ein:events-trigger (ein:$notebook-events notebook)
-                                                           'notebook_checkpoint_created.Notebook)
-                                       (setf (ein:$notebook-checkpoints notebook)
-                                             (ein:$content-checkpoints content))))))
+    (lexical-let ((notebook notebook))
+      #'(lambda (content)
+          (ein:log 'verbose "Checkpoint %s for %s generated."
+                   (plist-get (first (ein:$content-checkpoints content)) :id)
+                   (ein:$notebook-notebook-name notebook))
+          (setf (ein:$notebook-checkpoints notebook)
+                (ein:$content-checkpoints content))))))
 
 (defun ein:notebook-list-checkpoint-ids (notebook)
   (unless (ein:$notebook-checkpoints notebook)
@@ -1320,10 +1328,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
-  ;; So try to load extra modules here.
-  (when (require 'mumamo nil t)
-    (require 'ein-mumamo))
-  ;; Return first matched mode
   (autoload 'ein:notebook-multilang-mode "ein-multilang")
   (loop for mode in ein:notebook-modes
         if (functionp mode)
@@ -1513,10 +1517,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
                   (format "Open %d-th worksheet" n)
                   (intern (format "ein:notebook-worksheet-open-%sth" n))))
            '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
-      ("Junk notebook"
-       ,@(ein:generate-menu
-          '(("Junk this notebook" ein:junk-rename)
-            ("Open new junk" ein:junk-new))))
       ;; Misc:
       ,@(ein:generate-menu
          '(("Open regular IPython console" ein:console-open)
@@ -1561,8 +1561,7 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
   (when ein:notebook-mode
-    (funcall (ein:notebook-choose-mode)) ;; TODO odd seems out of place
-
+    (funcall (ein:notebook-choose-mode))
     (case ein:completion-backend
       (ein:use-ac-backend
        (assert (featurep 'ein-ac))
@@ -1591,11 +1590,11 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
 ;; permanent local.
 (put 'ein:notebook-mode 'permanent-local t)
 
-(define-derived-mode ein:notebook-plain-mode fundamental-mode "ein:notebook"
+(define-derived-mode ein:notebook-plain-mode fundamental-mode "EIN[plain]"
   "IPython notebook mode without fancy coloring."
   (font-lock-mode))
 
-(define-derived-mode ein:notebook-python-mode python-mode "ein:python"
+(define-derived-mode ein:notebook-python-mode python-mode "EIN[python]"
   "Use `python-mode' for whole notebook buffer.")
 
 (defun ein:notebook-open-in-browser (&optional print)

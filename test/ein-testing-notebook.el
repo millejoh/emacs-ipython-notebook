@@ -37,14 +37,13 @@
 (defun ein:testing-notebook-from-json (json-string)
   (let* ((data (ein:json-read-from-string json-string))
          (path (plist-get data :path))
-         (kernelspec (make-ein:$kernelspec :name "python3" :language "python"))
+         (kernelspec (make-ein:$kernelspec :name "python" :language "python"))
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
-                                     :notebook-version 3
+                                     :notebook-version 4
                                      :path path)))
-    (flet ((pop-to-buffer (buf) buf)
-           (ein:need-notebook-version (url-or-port) 3)
-           (ein:notebook-retrieve-session (notebook))
-           (ein:notebook-enable-autosaves (notebook)))
+    (cl-letf (((symbol-function 'ein:need-notebook-version) (lambda (&rest ignore) 4))
+              ((symbol-function 'ein:kernel-retrieve-session) #'ignore)
+              ((symbol-function 'ein:notebook-enable-autosaves) #'ignore))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
               (ein:kernel-new 8888 "" nil  "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))

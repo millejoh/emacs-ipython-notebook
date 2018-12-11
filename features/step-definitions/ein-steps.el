@@ -5,8 +5,21 @@
 
 (When "^header \\(does not \\)?says? \"\\(.+\\)\"$"
       (lambda (negate says)
-        (let ((equal-p (string= (substitute-command-keys says) (substitute-command-keys (slot-value (slot-value ein:%notification% 'kernel) 'message)))))
+        (let ((equal-p (string= (substitute-command-keys says)
+                                (substitute-command-keys
+                                 (slot-value
+                                  (slot-value ein:%notification% 'kernel)
+                                  'message)))))
           (if negate (should-not equal-p) (should equal-p)))))
+
+(When "^I switch kernel to \"\\(.+\\)\"$"
+      (lambda (kernel-name)
+        (let ((notebook (ein:notebook-switch-kernel (ein:get-notebook) kernel-name)))
+          (loop repeat 10
+                until (ein:kernel-live-p (ein:$notebook-kernel notebook))
+                do (sleep-for 0 500)
+                finally do (should (string= "R" (ein:$kernelspec-language 
+                                                 (ein:$notebook-kernelspec notebook))))))))
 
 (When "^I kill kernel$"
       (lambda ()
@@ -81,19 +94,20 @@
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
 
-(When "^I stop the server$"
-      (lambda ()
+(When "^I \\(finally \\)?stop the server\\(\\)$"
+      (lambda (final-p &rest args)
         (cancel-function-timers #'ein:notebooklist-reload)
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
         (loop repeat 10
               with buffer = (get-buffer ein:jupyter-server-buffer-name)
               until (null (get-buffer-process buffer))
-              do (sleep-for 1)
+              do (sleep-for 0 1000)
               finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
         (clrhash ein:notebooklist-map)
-        (When "I clear log expr \"ein:log-all-buffer-name\"")
-        (When "I clear log expr \"ein:jupyter-server-buffer-name\"")))
+        (unless final-p
+          (When "I clear log expr \"ein:log-all-buffer-name\"")
+          (When "I clear log expr \"ein:jupyter-server-buffer-name\""))))
 
 (When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
       (lambda (config)
@@ -183,17 +197,19 @@
               (msg "Cannot go to link '%s' in buffer: %s"))
           (should search)
           (backward-char)
-          (When "I press \"RET\"")
-          (sit-for 0.8)
-          (When "I wait for the smoke to clear"))))
+          (let ((was (point)))
+            (When "I press \"RET\"")
+            (loop until (/= was (point))
+                  do (sleep-for 0 1000))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
         (When (format "I go to word \"%s\"" dir))
         (re-search-backward "Dir" nil t)
-        (When "I press \"RET\"")
-        (sit-for 0.8)
-        (When "I wait for the smoke to clear")))
+        (let ((was (point)))
+          (When "I press \"RET\"")
+          (loop until (/= was (point))
+                do (sleep-for 0 1000)))))
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)

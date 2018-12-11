@@ -74,14 +74,20 @@ aborts).  Instead you will see Race! in debug messages.
 
 (defvar ein:query-running-process-table (make-hash-table :test 'equal))
 
+(defvar ein:query-xsrf-cache (make-hash-table :test 'equal)
+  "Hack: remember the last xsrf token by host in case we catch cookie jar in transition.  The proper fix is to sempahore between competing curl processes.")
+
 (defun ein:query-prepare-header (url settings &optional securep)
   "Ensure that REST calls to the jupyter server have the correct _xsrf argument."
-  (let* ((parsed-url (url-generic-parse-url url))
-         (cookies (request-cookie-alist (url-host parsed-url)
-                                       "/" securep)))
-    (ein:aif (assoc-string "_xsrf" cookies)
-        (setq settings (plist-put settings :headers (append (plist-get settings :headers)
-                                                            (list (cons "X-XSRFTOKEN" (cdr it)))))))
+  (let* ((host (url-host (url-generic-parse-url url)))
+         (cookies (request-cookie-alist host "/" securep))
+         (xsrf (or (cdr (assoc-string "_xsrf" cookies))
+                   (gethash host ein:query-xsrf-cache))))
+    (when xsrf
+      (setq settings (plist-put settings :headers
+                                (append (plist-get settings :headers)
+                                        (list (cons "X-XSRFTOKEN" xsrf)))))
+      (setf (gethash host ein:query-xsrf-cache) xsrf))
     settings))
 
 (defcustom ein:max-simultaneous-queries 100
@@ -110,25 +116,16 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
   (ein:query-enforce-curl)
   (with-local-quit
-    (ein:query-gc-running-process-table)
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (when (>= (hash-table-count ein:query-running-process-table)
-             ein:max-simultaneous-queries)
-      (let ((loopcnt 0))
-        (loop until (or (< (hash-table-count ein:query-running-process-table) ein:max-simultaneous-queries)
-                        (> loopcnt 10))
-              do (progn
-                   (incf loopcnt)
-                   (ein:query-gc-running-process-table)
-                   (ein:log 'debug "Stuck waiting for %s processes to complete."
-                            (hash-table-count ein:query-running-process-table))
-                   (sleep-for 3)))))
-    (ein:log 'debug "Currently at %s simultaneous request calls." (hash-table-count ein:query-running-process-table))
+    (loop do (ein:query-gc-running-process-table)
+          for running = (hash-table-count ein:query-running-process-table)
+          until (< running ein:max-simultaneous-queries)
+          do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
+                      running)
+          do (sleep-for 3))
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
-          ;; This seems to result in clobbered cookie jars
-          ;;(request-abort it) ; This will run callbacks
           (ein:log 'debug "Race! %s %s" key (request-response-data it))))
     (let ((response (apply #'request (url-encode-url url)
                            (ein:query-prepare-header url settings))))

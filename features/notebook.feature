@@ -35,6 +35,13 @@ Scenario: no auto completion
   And I wait for the smoke to clear
   Then "ein:ac-direct-matches" should not include "itertools"
 
+@switch
+Scenario: switch kernel
+  Given new default notebook
+  And I type "import itertools"
+  And I wait for cell to execute
+  And I switch kernel to "ir"
+
 @reconnect
 Scenario: kernel reconnect succeeds
   Given new default notebook

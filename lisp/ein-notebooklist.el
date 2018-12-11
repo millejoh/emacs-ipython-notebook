@@ -31,7 +31,6 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
-(require 'ein-junk)
 (require 'ein-connect)
 (require 'ein-file)
 (require 'ein-contents-api)
@@ -379,11 +378,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook (&optional url-or-port kernelspec path callback)
-  "Ask server to create a new notebook and open it in a new buffer.
-
-TODO - New and open should be separate, and we should flag an exception if we try to new an existing.
-"
-
+  "Ask server to create a new notebook and open it in a new buffer."
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (ido-completing-read
                       "Select kernel: "
@@ -394,9 +389,6 @@ TODO - New and open should be separate, and we should flag an exception if we tr
                                                     (ein:notebooklist-list-get url-or-port)))))
     (unless url-or-port
       (setq url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
-    (assert url-or-port nil
-            (concat "URL-OR-PORT is not given and the current buffer "
-                    "is not the notebook list buffer."))
     (let ((url (ein:notebooklist-url url-or-port
                                      version
                                      path)))
@@ -1033,8 +1025,7 @@ on all the notebooks opened from the current notebooklist."
        '(("Reload" ein:notebooklist-reload)
          ("New Notebook" ein:notebooklist-new-notebook)
          ("New Notebook (with name)"
-          ein:notebooklist-new-notebook-with-name)
-         ("New Junk Notebook" ein:junk-new)))))
+          ein:notebooklist-new-notebook-with-name)))))
 
 (defun ein:notebooklist-revert-wrapper (&optional ignore-auto noconfirm preserve-modes)
   (ein:notebooklist-reload))
