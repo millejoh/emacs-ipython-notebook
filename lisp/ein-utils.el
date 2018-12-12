@@ -1,4 +1,3 @@
-;; -*- lexical-binding: t -*-
 ;;; ein-utils.el --- Utility module
 
 ;; Copyright (C) 2012- Takafumi Arakaki
@@ -427,12 +426,12 @@ Example::
 
 (defun ein:hash-keys (table)
   (let (keys)
-    (maphash (lambda (k _v) (push k keys)) table)
+    (maphash (lambda (k v) (push k keys)) table)
     keys))
 
 (defun ein:hash-vals (table)
   (let (vals)
-    (maphash (lambda (_k v) (push v vals)) table)
+    (maphash (lambda (k v) (push v vals)) table)
     vals))
 
 (defun ein:filter (predicate sequence)
@@ -659,26 +658,18 @@ Use `ein:log' for debugging and logging."
       (ein:display-warning message level)
       (puthash key t ein:display-warning-once--db))))
 
-(defun ein:get-docstring (func)
+(defun ein:get-docstring (function)
   "Return docstring of FUNCTION."
   ;; Borrowed from `ac-symbol-documentation'.
-  (let ((f func))
-    (deferred:$
-      (deferred:next
-        (lambda ()
-          (with-temp-buffer
-            ;; import help-xref-following
-            (require 'help-mode)
-            (erase-buffer)
-            (let ((standard-output (current-buffer))
-                  (help-xref-following t)
-                  (major-mode 'help-mode) ; avoid error in Emacs 24
-                  (d (deferred:new #'identity)))
-              (describe-function-1 f)
-              (deferred:callback-post d (buffer-string))))))
-      (deferred:nextc it
-        (lambda (bufstring)
-          bufstring)))))
+  (with-temp-buffer
+    ;; import help-xref-following
+    (require 'help-mode)
+    (erase-buffer)
+    (let ((standard-output (current-buffer))
+          (help-xref-following t)
+          (major-mode 'help-mode)) ; avoid error in Emacs 24
+      (describe-function-1 function))
+    (buffer-string)))
 
 (defun ein:generate-menu (list-name-callback)
   (mapcar (lambda (name-callback)
