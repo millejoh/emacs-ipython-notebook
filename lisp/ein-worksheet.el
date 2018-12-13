@@ -72,12 +72,9 @@
   "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
   (intern (substring (slot-value cell 'cell-id) 0 5)))
 
-(defsubst delete-if (clause lst)
-  (delete-if-not (lambda (u) (not (funcall clause u))) lst))
-
 (defun ein:worksheet--which-cell-hook (change-beg change-end prev-len)
   (when (and (not (null buffer-undo-list)) (listp buffer-undo-list))
-    (setq buffer-undo-list (delete-if (lambda (u) (or (numberp u) (and (consp u) (markerp (car u))))) buffer-undo-list))
+    (setq buffer-undo-list (cl-delete-if (lambda (u) (or (numberp u) (and (consp u) (markerp (car u))))) buffer-undo-list))
     (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
       (if (< fill 0)
           (progn
