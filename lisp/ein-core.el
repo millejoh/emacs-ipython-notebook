@@ -124,11 +124,12 @@ pair of TO-PYTHON and FROM-PYTHON."
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
-(defun ein:version ()
+(defun ein:version (&optional copy-to-kill)
   "Return a longer version string.
+With prefix argument, copy the string to kill ring.
 The result contains `ein:version' and either git revision (if
 the source is in git repository) or elpa version."
-  (interactive)
+  (interactive "P")
   (let* ((suffix                ; git or elpa
           (or (and (ein:git-root-p
                     (concat (file-name-as-directory ein:source-dir) ".."))
@@ -139,6 +140,8 @@ the source is in git repository) or elpa version."
          (version (if suffix (concat ein:version "-" suffix) ein:version)))
     (when (called-interactively-p 'interactive)
       (message "EIN version is %s" version))
+    (when copy-to-kill
+      (kill-new version))
     version))
 
 
