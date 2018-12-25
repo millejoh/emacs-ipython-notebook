@@ -414,7 +414,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 &allow-other-keys)
   (let ((nbname (plist-get data :name))
         (nbpath (plist-get data :path)))
-    (when (= (ein:need-notebook-version url-or-port) 2)
+    (when (< (ein:notebook-version-numeric url-or-port) 3)
       (if (string= nbpath "")
           (setq nbpath nbname)
         (setq nbpath (format "%s/%s" nbpath nbname))))
@@ -572,7 +572,7 @@ You may find the new one in the notebook list." error)
   "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
-     (format "Notebook v%s (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port))
+     (format "Contents API %s (%s)\n\n" (ein:need-notebook-version url-or-port) url-or-port))
 
     (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
@@ -694,7 +694,7 @@ You may find the new one in the notebook list." error)
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
-          if (and (string= type "file") (> (ein:need-notebook-version url-or-port) 2))
+          if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
           do (progn (widget-create
                      'link
                      :notify (lexical-let ((url-or-port url-or-port)

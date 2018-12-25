@@ -68,7 +68,7 @@ global setting.  For global setting and more information, see
   (apply #'ein:content-url* (ein:$content-url-or-port content) (ein:$content-path content) params))
 
 (defun ein:content-url* (url-or-port path &rest params)
-  (let* ((which (if (<= (ein:need-notebook-version url-or-port) 2)
+  (let* ((which (if (< (ein:notebook-version-numeric url-or-port) 3)
                     "notebooks" "contents"))
          (api-path (concat "api/" which)))
     (url-encode-url (apply #'ein:url
@@ -116,7 +116,7 @@ global setting.  For global setting and more information, see
                                                          &key data symbol-status response
                                                          &allow-other-keys)
   (let (content)
-    (if (<= (ein:need-notebook-version url-or-port) 2)
+    (if (< (ein:notebook-version-numeric url-or-port) 3)
         (setq content (ein:new-content-legacy url-or-port path data))
       (setq content (ein:new-content url-or-port path data)))
     (ein:aif response
@@ -173,7 +173,7 @@ global setting.  For global setting and more information, see
       (ein:new-content url-or-port path data)
     (let ((content (make-ein:$content
                     :url-or-port url-or-port
-                    :notebook-version (ein:need-notebook-version url-or-port)
+                    :notebook-version (ein:notebook-version-numeric url-or-port)
                     :path path)))
       (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
             (ein:$content-path content) path
@@ -190,7 +190,7 @@ global setting.  For global setting and more information, see
   ;; data is like (:size 72 :content nil :writable t :path Untitled7.ipynb :name Untitled7.ipynb :type notebook)
   (let ((content (make-ein:$content
                   :url-or-port url-or-port
-                  :notebook-version (ein:need-notebook-version url-or-port)
+                  :notebook-version (ein:notebook-version-numeric url-or-port)
                   :path path)))
     (setf (ein:$content-name content) (plist-get data :name)
           (ein:$content-path content) (plist-get data :path)
@@ -377,7 +377,7 @@ global setting.  For global setting and more information, see
 
 (defun* ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
-                       (if (= (ein:need-notebook-version url-or-port) 2)
+                       (if (< (ein:notebook-version-numeric url-or-port) 3)
                            (if (string= (plist-get nb-json :path) "")
                                (plist-get nb-json :name)
                              (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))

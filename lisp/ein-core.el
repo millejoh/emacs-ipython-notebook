@@ -206,18 +206,14 @@ the source is in git repository) or elpa version."
                                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
-(defsubst ein:get-ipython-major-version (vstr)
-  (if vstr
-      (string-to-number (car (split-string vstr "\\.")))
-    (if (>= ein:log-level (ein:log-level-name-to-int 'debug))
-        (throw 'error "Null value passed to ein:get-ipython-major-version.")
-      (ein:log 'warn "Null value passed to ein:get-ipython-major-version."))))
+(defsubst ein:notebook-version-numeric (url-or-port)
+  (truncate (string-to-number (ein:need-notebook-version url-or-port))))
 
 (defun ein:need-notebook-version (url-or-port)
   "Callers assume ein:query-notebook-version succeeded.  If not, we hardcode a guess."
   (ein:aif (gethash url-or-port *ein:notebook-version*) it
     (ein:log 'warn "No recorded notebook version for %s" url-or-port)
-    5))
+    "5.7.0"))
 
 (defun ein:query-notebook-version (url-or-port callback)
   "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
@@ -234,11 +230,10 @@ the source is in git repository) or elpa version."
                                              &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
   (ein:aif (plist-get data :version)
-      (setf (gethash url-or-port *ein:notebook-version*)
-            (ein:get-ipython-major-version it))
+      (setf (gethash url-or-port *ein:notebook-version*) it)
     (case (request-response-status-code response)
       (404 (ein:log 'warn "notebook version api not implemented")
-           (setf (gethash url-or-port *ein:notebook-version*) 2))
+           (setf (gethash url-or-port *ein:notebook-version*) "2.0.0"))
       (t (ein:log 'warn "notebook version currently unknowable"))))
   (when callback (funcall callback)))
 
