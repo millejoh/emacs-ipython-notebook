@@ -91,11 +91,8 @@
 (defun ein:company-backend (command &optional arg &rest _)
   (interactive (list 'interactive))
   (cl-case command
-    (interactive (company-begin-backend 'ein:company-backend) )
-    (prefix (and (--filter (and (boundp it) (symbol-value it) (or (eql it 'ein:notebook-mode)
-                                                                  (eql it 'ein:connect-mode)))
-                           minor-mode-list)
-                 (ein:object-at-point)))
+    (interactive (company-begin-backend 'ein:company-backend))
+    (prefix (and (eq major-mode 'ein:notebook-multilang-mode) (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
                            (plist-get it :definition))))
@@ -142,7 +139,6 @@
                                               (list :object object
                                                     :callback cb)))))
 
-(setq ein:complete-on-dot nil)
 (when (boundp 'company-backends)
   (add-to-list 'company-backends 'ein:company-backend))
 

@@ -37,6 +37,8 @@
 (require 'ein-pytools)
 (require 'dash)
 
+(make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
+
 (defun ein:completer-choose ()
   (cond
    ((and (or (eq ein:completion-backend 'ein:use-ac-backend)
@@ -109,22 +111,6 @@
                  ((not (ac-cursor-on-diable-face-p)))
                  ((ein:kernel-live-p kernel)))
     (ein:completer-complete kernel :expand nil)))
-
-(defcustom ein:complete-on-dot t
-  "Start completion when inserting a dot.  Note that
-`ein:use-auto-complete-superpack' must be `t' to enable this option.
-This variable has effect on notebook buffers and connected buffers."
-  :type 'boolean
-  :group 'ein-completion)
-
-(defun ein:complete-on-dot-install (map &optional func)
-  (if (and ein:complete-on-dot
-           (featurep 'auto-complete)
-           (or (eql ein:completion-backend 'ein:use-ac-backend)
-               (eql ein:completion-backend 'ein:use-ac-jedi-backend)))
-      (define-key map "." (or func #'ein:completer-dot-complete))
-    (define-key map "." nil)))
-
 
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)

@@ -582,11 +582,9 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-complete-dot ()
   "Insert dot and request completion."
   (interactive)
-  (unless (or (eql ein:completion-backend 'ein:use-company-backend)
-              (eql ein:completion-backend 'ein:use-company-jedi-backend))
-    (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
-        (ein:completer-dot-complete)
-      (insert "."))))
+  (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
+      (ein:completer-dot-complete)
+    (insert ".")))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
@@ -1565,11 +1563,11 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
     (case ein:completion-backend
       (ein:use-ac-backend
        (assert (featurep 'ein-ac))
-       (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
+       (define-key ein:notebook-mode-map "." #'ein:notebook-complete-dot)
        (auto-complete-mode))
       (ein:use-ac-jedi-backend
        (assert (featurep 'ein-ac))
-       (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
+       (define-key ein:notebook-mode-map "." #'ein:notebook-complete-dot)
        (auto-complete-mode))
       (ein:use-company-backend
        (assert (featurep 'ein-company))
