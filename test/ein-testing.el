@@ -100,7 +100,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
           (ein:notebooklist-new-notebook url-or-port ks nil
                                          (lambda (nb created &rest ignore)
                                            (setq notebook nb)))
-          (ein:testing-wait-until (lambda () 
+          (ein:testing-wait-until (lambda ()
                                     (and notebook
                                          (ein:aand (ein:$notebook-kernel notebook)
                                                    (ein:kernel-live-p it))))

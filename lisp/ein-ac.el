@@ -106,19 +106,25 @@ When this option is enabled, cached omni completion is available."
 
 (defun ein:ac-request-in-background ()
   (cl-ecase ein:completion-backend
-    (ein:use-ac-backend (ein:and-let* ((kernel (ein:get-kernel))
-                                       ((ein:kernel-live-p kernel)))
-                          (ein:completer-complete
-                           kernel
-                           :callbacks
-                           (list :complete_reply
-                                 (cons (lambda (_ content __)
-                                         (ein:ac-prepare-completion (plist-get content :matches)))
-                                       nil)))))
+    (ein:use-ac-backend (ein:aif (ein:get-kernel)
+                            (ein:completer-complete 
+                             it
+                             (list :complete_reply
+                                   (cons (lambda (_ content __)
+                                           (ein:ac-prepare-completion (plist-get content :matches)))
+                                         nil))
+                             #'ignore)))
     (ein:use-ac-jedi-backend (ein:jedi-complete))))
 
 
 ;;; Completer interface
+
+(defun ein:ac-dot-complete (callback)
+  "Insert a dot and request completion via CALLBACK of 0-arity"
+  (interactive (list (lambda () (call-interactively #'ein:completer-complete))))
+  (insert ".")
+  (if (not (ac-cursor-on-diable-face-p))
+      (funcall callback)))
 
 (defun ein:ac-prepare-completion (matches)
   "Prepare `ac-source-ein-direct' using MATCHES from kernel.

@@ -50,6 +50,27 @@
         (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p)))
               (process-list))))
 
+(When "^I clear websocket log$"
+      (lambda ()
+        (let ((buffer (cl-some (lambda (x) (and (search "*websocket" x) x))
+                               (mapcar #'buffer-name (buffer-list)))))
+          (with-current-buffer buffer
+            (let ((inhibit-read-only t))
+              (erase-buffer))))))
+
+(When "^I kill all websocket buffers$"
+      (lambda ()
+        (dolist (b (buffer-list))
+          (when (search "*websocket" (buffer-name b))
+            (kill-buffer b)))))
+
+(When "^no completion traffic"
+      (lambda ()
+        (let ((buffer (cl-some (lambda (x) (and (search "*websocket" x) x))
+                                (mapcar #'buffer-name (buffer-list)))))
+          (with-current-buffer buffer
+            (should-not (search "\"matches\"" (buffer-string)))))))
+
 (When "^I clear log expr \"\\(.+\\)\"$"
       (lambda (log-expr)
         (let ((buffer (get-buffer (symbol-value (intern log-expr)))))
@@ -85,9 +106,7 @@
           (lexical-let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
               (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)))
-                (loop repeat 2
-                      until notebook
-                      do (setq notebook (ein:testing-new-notebook url-or-port ks)))))
+                (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-name notebook))))
@@ -174,6 +193,13 @@
             (eval `(cl-letf ,bindings
                      (When "I call \"ein:notebooklist-login\"")
                      (And "I wait for the smoke to clear")))))))
+
+(When "^I wait for completions \"\\(.+\\)\"$"
+      (lambda (key)
+        (loop repeat 10
+              until (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))
+              do (sleep-for 0 500)
+              finally do (should (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))))))
 
 (When "^I wait for the smoke to clear"
       (lambda ()

@@ -17,5 +17,7 @@
  (depends-on "skewer-mode")
  (depends-on "deferred")
  (depends-on "auto-complete")
+ (depends-on "company")
+ (depends-on "smartrep")
  (depends-on "f")
  (depends-on "s"))

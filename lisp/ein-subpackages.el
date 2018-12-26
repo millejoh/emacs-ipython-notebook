@@ -20,12 +20,12 @@
 ;; along with ein-subpackages.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+;; This module was more important when packages came from git submodules.
+;; It has been gutted since.
 
 ;;
 
 ;;; Code:
-
-(declare-function ein:smartrep-config "ein-smartrep")
 
 (defcustom ein:completion-backend 'ein:use-ac-backend
   "Determines which completion backend to use in opened EIN notebooks.
@@ -46,34 +46,6 @@ you restart Emacs. The available completion backends are::
           (const ein:use-company-jedi-backend)
           (const ein:use-none-backend))
   :group 'ein-completion)
-
-(defcustom ein:use-smartrep nil
-  "Set to `t' to use preset smartrep configuration.
-
-.. warning:: When used with MuMaMo (see `ein:notebook-modes'),
-   keyboard macro which manipulates cell (add, remove, move,
-   etc.) may start infinite loop (you need to stop it with
-   ``C-g``).  Please be careful using this option if you are a
-   heavy keyboard macro user.  Using keyboard macro for other
-   commands is fine.
-
-.. (Comment) I guess this infinite loop happens because the three
-   modules (kmacro.el, mumamo.el and smartrep.el) touches to
-   `unread-command-events' in somehow inconsistent ways."
-  :type 'boolean
-  :group 'ein)
-
-(defun ein:subpackages-load ()
-  "Load sub-packages depending on configurations."
-  (cl-case ein:completion-backend
-    (ein:use-ac-backend (require 'ein-ac))
-    (ein:use-ac-jedi-backend (require 'ein-ac))
-    (ein:use-company-backend (require 'ein-company))
-    (ein:use-company-jedi-backend (require 'ein-company)))
-  (when ein:use-smartrep
-    (with-eval-after-load "ein-smartrep"
-      (ein:smartrep-config))
-    (require 'ein-smartrep)))
 
 (provide 'ein-subpackages)
 

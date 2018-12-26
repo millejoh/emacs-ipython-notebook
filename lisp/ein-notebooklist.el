@@ -35,6 +35,8 @@
 (require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
+(require 'ein-ac)
+(require 'ein-company)
 (require 'deferred)
 (require 'dash)
 (require 'ido)
@@ -165,7 +167,6 @@ This function adds NBLIST to `ein:notebooklist-map'."
     (ein:notebooklist-list-remove url-or-port)))
 
 (defun ein:notebooklist-get-buffer (url-or-port)
-  (assert url-or-port)
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
@@ -242,7 +243,6 @@ TODO: going to maintain jupyterhub hooks here
 "
   (unless path (setq path ""))
   (setq url-or-port (ein:url url-or-port)) ;; should work towards not needing this
-  (ein:subpackages-load)
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
                  (success (apply-partially #'ein:notebooklist-open--finish
@@ -457,11 +457,10 @@ You may find the new one in the notebook list." error)
      path
      (apply-partially
       (lambda (name* notebook created)
-        (assert created)
+        (unless created
+          (ein:log 'warn "Notebook %s already existed" name))
         (with-current-buffer (ein:notebook-buffer notebook)
           (ein:notebook-rename-command name*)
-          ;; As `ein:notebook-open' does not call `pop-to-buffer' when
-          ;; callback is specified, `pop-to-buffer' must be called here:
           (pop-to-buffer (current-buffer))))
       name))))
 

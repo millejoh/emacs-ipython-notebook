@@ -379,6 +379,7 @@ notebook."
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
+
   map)
 
 (defun ein:connect-mode-get-lighter ()
@@ -396,18 +397,14 @@ notebook."
   :group 'ein
   (case ein:completion-backend
     (ein:use-ac-backend
-     (assert (featurep 'ein-ac))
-     (ein:complete-on-dot-install ein:connect-mode-map)
+     (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))
     (ein:use-ac-jedi-backend
-     (assert (featurep 'ein-ac))
-     (ein:jedi-complete-on-dot-install ein:connect-mode-map)
+     (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))
     (ein:use-company-backend
-     (assert (featurep 'ein-company))
      (company-mode))
     (ein:use-company-jedi-backend
-     (assert (featurep 'ein-company))
      (company-mode))))
 
 (put 'ein:connect-mode 'permanent-local t)
