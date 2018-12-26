@@ -76,7 +76,7 @@
       (insert word))))
 
 (defun* ein:completer-complete
-    (kernel &rest args &key callbacks &allow-other-keys)
+    (kernel &rest args &key callbacks errback &allow-other-keys)
   "Start completion for the code at point.
 
 .. It sends `:complete_request' to KERNEL.
@@ -101,7 +101,7 @@
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
                        (current-column)
-                       callbacks))
+                       callbacks errback))
 
 (defun ein:completer-dot-complete ()
   "Insert dot and request completion."
@@ -116,7 +116,7 @@
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
-(defun ein:completions--find-cached-completion (partial oinfo-cache)
+(defun ein:completions-get-cached (partial oinfo-cache)
   (loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)
         collect candidate))
@@ -129,8 +129,8 @@
          kernel
          (format "__ein_print_object_info_for(__ein_maybe_undefined_object(r\"%s\", locals()))" obj)
          (list
-          :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
-      (deferred:callback-post d (list nil nil)))
+          :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
+      (deferred:callback-post d "Kernel not live"))
     d))
 
 (defun ein:completions--build-oinfo-cache (objs)
@@ -142,7 +142,9 @@
             (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
         (deferred:nextc it
           (lambda (output)
-            (ein:completions--prepare-oinfo output o kernel)))))))
+            (if (stringp output)
+                (ein:display-warning output :error)
+              (ein:completions--prepare-oinfo output o kernel))))))))
 
 (defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err
