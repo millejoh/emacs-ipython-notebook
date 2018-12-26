@@ -37,8 +37,6 @@
 (require 'ein-pytools)
 (require 'dash)
 
-(make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
-
 (defun ein:completer-choose ()
   (cond
    ((and (or (eq ein:completion-backend 'ein:use-ac-backend)
@@ -76,7 +74,7 @@
       (insert word))))
 
 (defun* ein:completer-complete
-    (kernel &rest args &key callbacks errback &allow-other-keys)
+    (kernel &rest args &key callbacks &allow-other-keys)
   "Start completion for the code at point.
 
 .. It sends `:complete_request' to KERNEL.
@@ -101,7 +99,7 @@
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
                        (current-column)
-                       callbacks errback))
+                       callbacks))
 
 (defun ein:completer-dot-complete ()
   "Insert dot and request completion."
@@ -112,11 +110,27 @@
                  ((ein:kernel-live-p kernel)))
     (ein:completer-complete kernel :expand nil)))
 
+(defcustom ein:complete-on-dot t
+  "Start completion when inserting a dot.  Note that
+`ein:use-auto-complete-superpack' must be `t' to enable this option.
+This variable has effect on notebook buffers and connected buffers."
+  :type 'boolean
+  :group 'ein-completion)
+
+(defun ein:complete-on-dot-install (map &optional func)
+  (if (and ein:complete-on-dot
+           (featurep 'auto-complete)
+           (or (eql ein:completion-backend 'ein:use-ac-backend)
+               (eql ein:completion-backend 'ein:use-ac-jedi-backend)))
+      (define-key map "." (or func #'ein:completer-dot-complete))
+    (define-key map "." nil)))
+
+
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
-(defun ein:completions-get-cached (partial oinfo-cache)
+(defun ein:completions--find-cached-completion (partial oinfo-cache)
   (loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)
         collect candidate))
@@ -129,8 +143,8 @@
          kernel
          (format "__ein_print_object_info_for(__ein_maybe_undefined_object(r\"%s\", locals()))" obj)
          (list
-          :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
-      (deferred:callback-post d "Kernel not live"))
+          :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
+      (deferred:callback-post d (list nil nil)))
     d))
 
 (defun ein:completions--build-oinfo-cache (objs)
@@ -142,9 +156,7 @@
             (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
         (deferred:nextc it
           (lambda (output)
-            (if (stringp output)
-                (ein:display-warning output :error)
-              (ein:completions--prepare-oinfo output o kernel))))))))
+            (ein:completions--prepare-oinfo output o kernel)))))))
 
 (defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err

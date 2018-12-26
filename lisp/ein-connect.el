@@ -397,11 +397,11 @@ notebook."
   (case ein:completion-backend
     (ein:use-ac-backend
      (assert (featurep 'ein-ac))
-     (define-key ein:connect-mode-map "." #'ein:completer-dot-complete)
+     (ein:complete-on-dot-install ein:connect-mode-map)
      (auto-complete-mode))
     (ein:use-ac-jedi-backend
      (assert (featurep 'ein-ac))
-     (define-key ein:connect-mode-map "." #'ein:completer-dot-complete)
+     (ein:jedi-complete-on-dot-install ein:connect-mode-map)
      (auto-complete-mode))
     (ein:use-company-backend
      (assert (featurep 'ein-company))

@@ -84,6 +84,9 @@
   (unless (ac-cursor-on-diable-face-p)
     (ein:jedi-complete :expand nil)))
 
+(defun ein:jedi-complete-on-dot-install (map)
+  (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
+
 ;;;###autoload
 (defun ein:jedi-setup ()
   "Setup auto-completion using EIN and Jedi.el_ together.
@@ -95,7 +98,8 @@ To use EIN and Jedi together, add the following in your Emacs setup before loadi
 
 .. _Jedi.el: https://github.com/tkf/emacs-jedi"
   (let ((map ein:connect-mode-map))
-    (define-key map "\C-c\C-i" 'ein:jedi-complete)))
+    (define-key map "\C-c\C-i" 'ein:jedi-complete)
+    (ein:jedi-complete-on-dot-install map)))
 
 (provide 'ein-jedi)
 

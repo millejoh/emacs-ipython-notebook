@@ -458,7 +458,7 @@ Sample implementations
             (ein:$kernel-after-execute-hook kernel)))
     msg-id))
 
-(defun ein:kernel-complete (kernel line cursor-pos callbacks errback)
+(defun ein:kernel-complete (kernel line cursor-pos callbacks)
   "Complete code at CURSOR-POS in a string LINE on KERNEL.
 
 CURSOR-POS is the position in the string LINE, not in the buffer.
@@ -469,30 +469,27 @@ When calling this method pass a CALLBACKS structure of the form:
 
 Call signature::
 
-  (funcall FUNCTION ARGUMENT CONTENT METADATA)
+  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
 
 CONTENT and METADATA are given by `complete_reply' message.
 
 `complete_reply' message is documented here:
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
-  (condition-case err
-      (let* ((content (if (< (ein:$kernel-api-version kernel) 5)
-                          (list
-                           ;; :text ""
-                           :line line
-                           :cursor_pos cursor-pos)
-                        (list
-                         :code line
-                         :cursor_pos cursor-pos)))
-             (msg (ein:kernel--get-msg kernel "complete_request" content))
-             (msg-id (plist-get (plist-get msg :header) :msg_id)))
-        (assert (ein:kernel-live-p kernel) nil "complete_reply: Kernel is not active.")
-        (ein:websocket-send-shell-channel kernel msg)
-        (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-        msg-id)
-    (error (if errback (funcall errback (error-message-string err))
-             (ein:display-warning (error-message-string err) :error)))))
+  (assert (ein:kernel-live-p kernel) nil "complete_reply: Kernel is not active.")
+  (let* ((content (if (< (ein:$kernel-api-version kernel) 5)
+                      (list
+                       ;; :text ""
+                       :line line
+                       :cursor_pos cursor-pos)
+                    (list
+                     :code line
+                     :cursor_pos cursor-pos)))
+         (msg (ein:kernel--get-msg kernel "complete_request" content))
+         (msg-id (plist-get (plist-get msg :header) :msg_id)))
+    (ein:websocket-send-shell-channel kernel msg)
+    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
+    msg-id))
 
 
 (defun* ein:kernel-history-request (kernel callbacks
