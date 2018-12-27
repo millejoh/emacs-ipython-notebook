@@ -36,6 +36,7 @@
 
 (autoload 'company-begin-backend "company")
 (autoload 'company-doc-buffer "company")
+(autoload 'company-prefix "company")
 
 ;; Duplicates ein:jedi--completer-complete in ein-jedi.
 ;; Let's refactor and enhance our calm!
