@@ -150,6 +150,8 @@ This variable has effect on notebook buffers and connected buffers."
 (defun ein:completions--build-oinfo-cache (objs)
   (let ((kernel (ein:get-kernel)))
     (dolist (o (-non-nil objs))
+      (when (not (string-prefix-p company-prefix o))
+        (setq o (concatenate 'string company-prefix o)))
       (deferred:$
         (deferred:next
           (lambda ()
