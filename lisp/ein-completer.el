@@ -147,11 +147,11 @@ This variable has effect on notebook buffers and connected buffers."
       (deferred:callback-post d (list nil nil)))
     d))
 
-(defun ein:completions--build-oinfo-cache (objs)
+(defun ein:completions--build-oinfo-cache (objs &optional prefix)
   (let ((kernel (ein:get-kernel)))
     (dolist (o (-non-nil objs))
-      (when (not (string-prefix-p company-prefix o))
-        (setq o (concatenate 'string company-prefix o)))
+      (when (and prefix (not (string-prefix-p prefix o)))
+        (setq o (concatenate 'string prefix o)))
       (deferred:$
         (deferred:next
           (lambda ()

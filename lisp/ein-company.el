@@ -76,7 +76,7 @@
       (_ ((&key matches &allow-other-keys) ; :complete_reply
           _))
       replies
-    (ein:completions--build-oinfo-cache matches)
+    (ein:completions--build-oinfo-cache matches company-prefix)
     (funcall cb matches)))
 
 (defun ein:completions--prepare-matches (cb replies)
@@ -84,7 +84,7 @@
       ((&key _matched_text matches &allow-other-keys) ; :complete_reply
        _)
       replies
-    (ein:completions--build-oinfo-cache matches)
+    (ein:completions--build-oinfo-cache matches company-prefix)
     (funcall cb matches)))
 
 ;;;###autoload
