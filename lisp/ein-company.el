@@ -36,7 +36,7 @@
 
 (autoload 'company-begin-backend "company")
 (autoload 'company-doc-buffer "company")
-(autoload 'company-prefix "company")
+(defvar-local company-prefix nil) ;; Just like in company.el
 
 ;; Duplicates ein:jedi--completer-complete in ein-jedi.
 ;; Let's refactor and enhance our calm!
