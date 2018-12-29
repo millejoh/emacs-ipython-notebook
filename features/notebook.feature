@@ -44,7 +44,7 @@ Scenario: company completion
   And I press "M-RET"
   And I type "itertools."
   And I call "company-complete"
-  And I wait for completions "itertools.accumulate"
+  And I wait for completions "itertools.chain"
   And I press "C-a"
   And I press "C-k"
   And I clear websocket log

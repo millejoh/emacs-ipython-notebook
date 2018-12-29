@@ -25,7 +25,7 @@
 
 ;;; Code:
 
-(require 'smartrep)
+(require 'smartrep nil t)
 
 (defcustom ein:smartrep-notebook-mode-alist
   '(("C-t" . ein:worksheet-toggle-cell-type)
