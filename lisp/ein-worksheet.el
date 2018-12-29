@@ -192,7 +192,9 @@
             (setq ein:%which-cell%
                   (nconc (make-list fill (car ein:%which-cell%))
                          ein:%which-cell%))))))
-  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%))))
+  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
+             "ein:worksheet--jigger-undo-list %d != %d"
+             (length buffer-undo-list) (length ein:%which-cell%)))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.  Unshift in list parlance means prepending to list."
@@ -232,7 +234,9 @@
                     (ein:log 'debug "unsh adj %s %s" u cell-id)
                     (setq lst (nconc lst (list (funcall func-after-cell u)))))
                 (setq lst (nconc lst (list u)))))))
-        (cl-assert (= (length buffer-undo-list) (length lst)))
+        (cl-assert (= (length buffer-undo-list) (length lst)) t
+                   "ein:worksheet--unshift-undo-list %d != %d"
+                   (length buffer-undo-list) (length lst))
         (setq buffer-undo-list lst)
         (ein:worksheet--update-cell-lengths cell exogenous-input)))))
 
@@ -418,7 +422,6 @@
     (set-buffer-modified-p nil)
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
-    (ein:gc-complete-operation)
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
 
 (defun ein:worksheet-pp (ewoc-data)

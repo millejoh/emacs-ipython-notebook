@@ -35,6 +35,30 @@ Scenario: no auto completion
   And I wait for the smoke to clear
   Then "ein:ac-direct-matches" should not include "itertools"
 
+@complete
+Scenario: company completion
+  Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
+  Given I kill all websocket buffers
+  Given new default notebook
+  And I type "import itertools"
+  And I press "M-RET"
+  And I type "itertools."
+  And I call "company-complete"
+  And I wait for completions "itertools.chain"
+  And I press "C-a"
+  And I press "C-k"
+  And I clear websocket log
+  And I type "itertool"
+  And I call "company-complete"
+  Then I should see "itertools"
+  And I type ".chai"
+  And I call "company-complete"
+  Then I should see "itertools.chain"
+  Then no completion traffic
+  Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
+  Given new default notebook
+  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+
 @switch
 Scenario: switch kernel
   Given new default notebook

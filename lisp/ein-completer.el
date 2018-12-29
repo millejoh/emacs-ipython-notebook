@@ -35,16 +35,15 @@
 (require 'ein-subpackages)
 (require 'ein-kernel)
 (require 'ein-pytools)
+(require 'ein-ac)
 (require 'dash)
+
+(make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
 
 (defun ein:completer-choose ()
   (cond
-   ((and (or (eq ein:completion-backend 'ein:use-ac-backend)
-             (eq ein:completion-backend 'ein:use-ac-jedi-backend))
-         (ein:eval-if-bound 'auto-complete-mode)
-         (fboundp 'ein:completer-finish-completing-ac))
-    #'ein:completer-finish-completing-ac)
    ((eq ein:completion-backend 'ein:use-none-backend) #'ignore)
+   ((ein:eval-if-bound 'auto-complete-mode) #'ein:completer-finish-completing-ac)
    (t #'ein:completer-finish-completing-default)))
 
 (defun ein:completer-beginning (matched-text)
@@ -73,64 +72,27 @@
       (delete-region beg end)
       (insert word))))
 
-(defun* ein:completer-complete
-    (kernel &rest args &key callbacks &allow-other-keys)
+(defun ein:completer-complete (kernel callbacks errback)
   "Start completion for the code at point.
-
-.. It sends `:complete_request' to KERNEL.
-   CALLBACKS is passed to `ein:kernel-complete'.
-
-   If you specify CALLBACKS explicitly (i.e., you are not using
-   `ein:completer-finish-completing'), keyword argument will be
-   ignored.  Otherwise, ARGS are passed as additional arguments
-   to completer callback functions.  ARGS **must** be keyword
-   arguments.
 
    EXPAND keyword argument is supported by
    `ein:completer-finish-completing-ac'.  When it is specified,
    it overrides `ac-expand-on-auto-complete' when calling
    `auto-complete'."
-  (interactive (list (ein:get-kernel)))
-  (unless callbacks
-    (setq callbacks
-          (list :complete_reply
-                (cons #'ein:completer-finish-completing
-                      (ein:plist-exclude args '(:callbacks))))))
+  (interactive (list (ein:get-kernel) 
+                     (list :complete_reply
+                           (cons #'ein:completer-finish-completing '(:expand nil)))
+                     #'ignore))
   (ein:kernel-complete kernel
                        (thing-at-point 'line)
                        (current-column)
-                       callbacks))
-
-(defun ein:completer-dot-complete ()
-  "Insert dot and request completion."
-  (interactive)
-  (insert ".")
-  (ein:and-let* ((kernel (ein:get-kernel))
-                 ((not (ac-cursor-on-diable-face-p)))
-                 ((ein:kernel-live-p kernel)))
-    (ein:completer-complete kernel :expand nil)))
-
-(defcustom ein:complete-on-dot t
-  "Start completion when inserting a dot.  Note that
-`ein:use-auto-complete-superpack' must be `t' to enable this option.
-This variable has effect on notebook buffers and connected buffers."
-  :type 'boolean
-  :group 'ein-completion)
-
-(defun ein:complete-on-dot-install (map &optional func)
-  (if (and ein:complete-on-dot
-           (featurep 'auto-complete)
-           (or (eql ein:completion-backend 'ein:use-ac-backend)
-               (eql ein:completion-backend 'ein:use-ac-jedi-backend)))
-      (define-key map "." (or func #'ein:completer-dot-complete))
-    (define-key map "." nil)))
-
+                       callbacks errback))
 
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
-(defun ein:completions--find-cached-completion (partial oinfo-cache)
+(defun ein:completions-get-cached (partial oinfo-cache)
   (loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)
         collect candidate))
@@ -143,8 +105,8 @@ This variable has effect on notebook buffers and connected buffers."
          kernel
          (format "__ein_print_object_info_for(__ein_maybe_undefined_object(r\"%s\", locals()))" obj)
          (list
-          :output `(,(lambda (d &rest args) (deferred:callback-post d args)) . ,d)))
-      (deferred:callback-post d (list nil nil)))
+          :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
+      (deferred:callback-post d "kernel not live"))
     d))
 
 (defun ein:completions--build-oinfo-cache (objs)
@@ -156,7 +118,9 @@ This variable has effect on notebook buffers and connected buffers."
             (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
         (deferred:nextc it
           (lambda (output)
-            (ein:completions--prepare-oinfo output o kernel)))))))
+            (if (stringp output)
+                (ein:display-warning output :error)
+              (ein:completions--prepare-oinfo output o kernel))))))))
 
 (defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err

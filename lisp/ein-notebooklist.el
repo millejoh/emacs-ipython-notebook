@@ -35,6 +35,8 @@
 (require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
+(require 'ein-ac)
+(require 'ein-company)
 (require 'deferred)
 (require 'dash)
 (require 'ido)
@@ -165,7 +167,6 @@ This function adds NBLIST to `ein:notebooklist-map'."
     (ein:notebooklist-list-remove url-or-port)))
 
 (defun ein:notebooklist-get-buffer (url-or-port)
-  (assert url-or-port)
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
@@ -242,7 +243,6 @@ TODO: going to maintain jupyterhub hooks here
 "
   (unless path (setq path ""))
   (setq url-or-port (ein:url url-or-port)) ;; should work towards not needing this
-  (ein:subpackages-load)
   (lexical-let* ((url-or-port url-or-port)
                  (path path)
                  (success (apply-partially #'ein:notebooklist-open--finish
@@ -414,7 +414,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                 &allow-other-keys)
   (let ((nbname (plist-get data :name))
         (nbpath (plist-get data :path)))
-    (when (= (ein:need-notebook-version url-or-port) 2)
+    (when (< (ein:notebook-version-numeric url-or-port) 3)
       (if (string= nbpath "")
           (setq nbpath nbname)
         (setq nbpath (format "%s/%s" nbpath nbname))))
@@ -457,11 +457,10 @@ You may find the new one in the notebook list." error)
      path
      (apply-partially
       (lambda (name* notebook created)
-        (assert created)
+        (unless created
+          (ein:log 'warn "Notebook %s already existed" name))
         (with-current-buffer (ein:notebook-buffer notebook)
           (ein:notebook-rename-command name*)
-          ;; As `ein:notebook-open' does not call `pop-to-buffer' when
-          ;; callback is specified, `pop-to-buffer' must be called here:
           (pop-to-buffer (current-buffer))))
       name))))
 
@@ -572,7 +571,7 @@ You may find the new one in the notebook list." error)
   "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
-     (format "Notebook v%s (%s)\n\n" (ein:$notebooklist-api-version ein:%notebooklist%) url-or-port))
+     (format "Contents API %s (%s)\n\n" (ein:need-notebook-version url-or-port) url-or-port))
 
     (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
@@ -694,7 +693,7 @@ You may find the new one in the notebook list." error)
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
-          if (and (string= type "file") (> (ein:need-notebook-version url-or-port) 2))
+          if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
           do (progn (widget-create
                      'link
                      :notify (lexical-let ((url-or-port url-or-port)

@@ -74,6 +74,24 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
+(declare-function ein:smartrep-config "ein-smartrep")
+
+(defcustom ein:use-smartrep nil
+  "Set to `t' to use preset smartrep configuration.
+
+.. warning:: When used with MuMaMo (see `ein:notebook-modes'),
+   keyboard macro which manipulates cell (add, remove, move,
+   etc.) may start infinite loop (you need to stop it with
+   ``C-g``).  Please be careful using this option if you are a
+   heavy keyboard macro user.  Using keyboard macro for other
+   commands is fine.
+
+.. (Comment) I guess this infinite loop happens because the three
+   modules (kmacro.el, mumamo.el and smartrep.el) touches to
+   `unread-command-events' in somehow inconsistent ways."
+  :type 'boolean
+  :group 'ein)
+
 (defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
   "A map: (URL-OR-PORT . PATH) => t/nil")
 
@@ -369,9 +387,9 @@ where `created' indicates a new notebook or an existing one.
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
     (ein:notebook-install-kernel notebook)
     (ein:notebook-from-json notebook (ein:$content-raw-content content))
-    ;; start websocket only after worksheet is rendered:  why
-    ;; ein:notification-bind-events only gets called after worksheet's
-    ;; buffer local notification widget gets instantiated
+    ;; Start websocket only after worksheet is rendered
+    ;; because ein:notification-bind-events only gets called after worksheet's
+    ;; buffer local notification widget is instantiated
     (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
     (setf (ein:$notebook-kernelinfo notebook)
           (ein:kernelinfo-new (ein:$notebook-kernel notebook)
@@ -579,14 +597,13 @@ notebook buffer then the user will be prompted to select an opened notebook."
   'ein:notebook-request-tool-tip-or-help-command
   'ein:pytools-request-tooltip-or-help "0.1.2")
 
-(defun ein:notebook-complete-dot ()
+(defun ein:notebook-ac-dot-complete ()
   "Insert dot and request completion."
   (interactive)
-  (unless (or (eql ein:completion-backend 'ein:use-company-backend)
-              (eql ein:completion-backend 'ein:use-company-jedi-backend))
-    (if (and ein:%notebook% (ein:codecell-p (ein:get-cell-at-point)))
-        (ein:completer-dot-complete)
-      (insert "."))))
+  (if (and (ein:get-notebook)
+           (ein:codecell-p (ein:get-cell-at-point)))
+      (call-interactively #'ein:ac-dot-complete)
+    (insert ".")))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
@@ -1087,7 +1104,7 @@ See also `ein:notebook-worksheet-open-next'."
 
 (defmacro ein:notebook-worksheet--defun-open-nth (n)
   "Define a command to open N-th (one-origin) worksheet."
-  (assert (and (integerp n) (> n 0)) t)
+  (assert (and (integerp n) (> n 0)) t "Bad nth worksheet n=%s" n)
   (let ((func (intern (format "ein:notebook-worksheet-open-%sth" n))))
     `(defun ,func (notebook &optional show)
        ,(format "Open %d-th worksheet." n)
@@ -1335,6 +1352,9 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
+(with-eval-after-load "ein-smartrep"
+  (ein:smartrep-config ein:notebook-mode-map))
+
 (let ((map ein:notebook-mode-map))
   (define-key map "\C-ci" 'ein:inspect-object)
   (define-key map "\C-c'" 'ein:edit-cell-contents)
@@ -1564,18 +1584,16 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
     (funcall (ein:notebook-choose-mode))
     (case ein:completion-backend
       (ein:use-ac-backend
-       (assert (featurep 'ein-ac))
-       (ein:complete-on-dot-install ein:notebook-mode-map 'ein:notebook-complete-dot)
+       (define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
        (auto-complete-mode))
       (ein:use-ac-jedi-backend
-       (assert (featurep 'ein-ac))
-       (ein:jedi-complete-on-dot-install ein:notebook-mode-map)
+       (define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
        (auto-complete-mode))
       (ein:use-company-backend
-       (assert (featurep 'ein-company))
+       (define-key ein:notebook-mode-map "." nil)
        (company-mode))
       (ein:use-company-jedi-backend
-       (assert (featurep 'ein-company))
+       (define-key ein:notebook-mode-map "." nil)
        (company-mode)))
     (ein:aif ein:helm-kernel-history-search-key
         (define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
@@ -1584,6 +1602,8 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
     (ein:notebook-configure-eldoc)
     (ein:worksheet-imenu-setup)
+    (when ein:use-smartrep
+      (require 'ein-smartrep))
     (ein:worksheet-reinstall-which-cell-hook)))
 
 ;; To avoid MuMaMo to discard `ein:notebook-mode', make it

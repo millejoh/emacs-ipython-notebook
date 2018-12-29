@@ -25,9 +25,7 @@
 
 ;;; Code:
 
-(require 'ein-notebook)
-
-(declare-function smartrep-define-key "smartrep")
+(require 'smartrep nil t)
 
 (defcustom ein:smartrep-notebook-mode-alist
   '(("C-t" . ein:worksheet-toggle-cell-type)
@@ -45,10 +43,10 @@
   :type '(repeat (cons string function))
   :group 'ein)
 
-(defun ein:smartrep-config ()
-  (smartrep-define-key
-      ein:notebook-mode-map
-      "C-c"
+(defmacro ein:smartrep-config (map)
+  `(smartrep-define-key
+    ,map
+    "C-c"
     ein:smartrep-notebook-mode-alist))
 
 (provide 'ein-smartrep)

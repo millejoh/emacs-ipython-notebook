@@ -40,91 +40,87 @@
 ;; Duplicates ein:jedi--completer-complete in ein-jedi.
 ;; Let's refactor and enhance our calm!
 (defun ein:company--deferred-complete ()
-  (let ((d (deferred:new #'identity))
-        (kernel (ein:get-kernel)))
-    (if (ein:kernel-live-p kernel)
-        (ein:completer-complete
-         kernel
-         :callbacks
-         (list :complete_reply
-               (cons (lambda (d &rest args) (deferred:callback-post d args))
-                     d)))
-      ;; Pass "no match" result when kernel the request was not sent:
-      (deferred:callback-post d (list nil nil)))
+  (let ((d (deferred:new #'identity)))
+    (ein:completer-complete
+     (ein:get-kernel)
+     (list :complete_reply
+           (cons (lambda (d* &rest args) (deferred:callback-post d* args))
+                 d))
+     (apply-partially (lambda (d* err) (deferred:callback-post d* err)) d))
     d))
 
-(defun ein:company--complete (fetcher-callback)
+(defun ein:company--complete (prefix fetcher)
   (deferred:$
     (deferred:next
       (lambda ()
         (ein:company--deferred-complete)))
     (deferred:nextc it
       (lambda (replies)
-        (ein:completions--prepare-matches fetcher-callback replies)))))
+        (unless (stringp replies) ;; if not an error
+          (ein:completions--prepare-matches prefix fetcher replies))))))
 
-(defun ein:company--complete-jedi (fetcher-callback)
+(defun ein:company--complete-jedi (fetcher)
   (deferred:$
     (deferred:parallel
       (jedi:complete-request)
      (ein:company--deferred-complete))
     (deferred:nextc it
       (lambda (replies)
-        (ein:completions--prepare-matches-jedi fetcher-callback replies)))))
+        (ein:completions--prepare-matches-jedi fetcher replies)))))
 
 (defun ein:completions--prepare-matches-jedi (cb replies)
   (destructuring-bind
       (_ ((&key matches &allow-other-keys) ; :complete_reply
-          _))
+          _metadata))
       replies
     (ein:completions--build-oinfo-cache matches)
     (funcall cb matches)))
 
-(defun ein:completions--prepare-matches (cb replies)
+(defun ein:completions--prepare-matches (prefix fetcher replies)
   (destructuring-bind
-      ((&key _matched_text matches &allow-other-keys) ; :complete_reply
-       _)
+      ((&key matches cursor_start cursor_end &allow-other-keys) ; :complete_reply
+       _metadata)
       replies
-    (ein:completions--build-oinfo-cache matches)
-    (funcall cb matches)))
+    (let ((nix (- cursor_end cursor_start))
+          prefixed-matches)
+      (dolist (match matches)
+        (setq prefixed-matches 
+              (nconc prefixed-matches (list (concat prefix (substring match nix))))))
+      (ein:completions--build-oinfo-cache prefixed-matches)
+      (funcall fetcher prefixed-matches))))
 
 ;;;###autoload
 (defun ein:company-backend (command &optional arg &rest _)
   (interactive (list 'interactive))
   (cl-case command
-    (interactive (company-begin-backend 'ein:company-backend) )
-    (prefix (and (--filter (and (boundp it) (symbol-value it) (or (eql it 'ein:notebook-mode)
-                                                                  (eql it 'ein:connect-mode)))
-                           minor-mode-list)
-                 (ein:object-at-point)))
+    (interactive (company-begin-backend 'ein:company-backend))
+    (prefix (and (eq major-mode 'ein:notebook-multilang-mode) (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
                            (plist-get it :definition))))
-    (doc-buffer (lexical-let ((arg arg))
-                  (cons :async
-                        (lambda (cb)
-                          (ein:company-handle-doc-buffer arg cb)))))
-    (location (lexical-let ((obj arg))
-                (cons :async
+    (doc-buffer (cons :async
                       (lambda (cb)
-                        (ein:pytools-find-source (ein:get-kernel-or-error)
-                                                 obj
-                                                 cb)))))
-    (candidates (or
-                 (ein:completions--find-cached-completion (ein:object-at-point)
-                                                          (ein:$kernel-oinfo-cache (ein:get-kernel-or-error)))
-                 (lexical-let ((kernel (ein:get-kernel-or-error))
-                               (col (current-column)))
-                   (unless (ein:company-backend--punctuation-check (thing-at-point 'line) col)
-                     (case ein:completion-backend
-                       (ein:use-company-jedi-backend
-                        (cons :async (lambda (cb)
-                                       (ein:company--complete-jedi cb))))
-                       (t
-                        (cons :async
-                              (lambda (cb)
-                                (ein:company--complete cb)))))))))))
+                        (ein:company-handle-doc-buffer arg cb))))
+    (location (cons :async
+                    (lambda (cb)
+                      (ein:pytools-find-source (ein:get-kernel-or-error)
+                                               arg
+                                               cb))))
+    (candidates 
+     (let* ((kernel (ein:get-kernel-or-error))
+            (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
+       (ein:aif cached it
+         (unless (ein:company--punctuation-check (thing-at-point 'line) (current-column))
+           (case ein:completion-backend
+             (ein:use-company-jedi-backend
+              (cons :async (lambda (cb)
+                             (ein:company--complete-jedi cb))))
+             (t
+              (cons :async
+                    (lambda (cb)
+                      (ein:company--complete arg cb)))))))))))
 
-(defun ein:company-backend--punctuation-check (thing col)
+(defun ein:company--punctuation-check (thing col)
   (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
     (string-match "[]()\",[{}'=: ]$" query (- col 2))))
 
@@ -142,7 +138,6 @@
                                               (list :object object
                                                     :callback cb)))))
 
-(setq ein:complete-on-dot nil)
 (when (boundp 'company-backends)
   (add-to-list 'company-backends 'ein:company-backend))
 
