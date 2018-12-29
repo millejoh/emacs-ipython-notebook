@@ -1,5 +1,5 @@
-@default
-Scenario: Undo by default turned off
+Scenario: Undo turned off
+  Given I disable "ein:worksheet-enable-undo"
   Given new default notebook
   When I type "import math"
   And I wait for cell to execute

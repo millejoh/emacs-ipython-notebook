@@ -253,6 +253,10 @@
       (lambda (flag-name)
         (set (intern flag-name) t)))
 
+(When "^I disable \"\\(.+\\)\"$"
+      (lambda (flag-name)
+        (set (intern flag-name) nil)))
+
 (When "^I undo demoting errors$"
       (lambda ()
         (with-demoted-errors "demoted: %s"
