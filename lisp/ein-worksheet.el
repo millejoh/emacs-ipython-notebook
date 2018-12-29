@@ -49,7 +49,7 @@
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:worksheet-enable-undo nil
+(defcustom ein:worksheet-enable-undo t
   "When non-`nil', allow undo of cell inputs only (as opposed to
   whole-cell operations such as killing, moving, executing cells).
 
