@@ -1,0 +1,13 @@
+
+.. _changelog_0_14_2:
+
+
+v0.14.2
+-------
+
+Some improvements to company-mode support and very preliminary support for
+eldoc, but to be honest things are still not too stable here for autocompletion.
+
+Also, last release likely with any hope of support early versions of IPython
+(2.x or 3.x), but why would you be using old and crufty versions of IPython?
+Life is much better at later releases, come join us!
