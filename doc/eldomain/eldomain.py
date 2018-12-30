@@ -161,7 +161,7 @@ class ELSExp(ObjectDescription):
 
         indextext = self.get_index_text(name, type)
         if indextext:
-            self.indexnode['entries'].append(('single', indextext, name, ''))
+            self.indexnode['entries'].append(('single', indextext, name, '', None))
 
     def run(self):
         result = super(ELSExp, self).run()

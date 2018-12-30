@@ -698,7 +698,6 @@ EWOC objects freezes Emacs otherwise.  It also changes log level to report
 everything the log buffer.  You can reset the patch and log level with
 :el:symbol:`ein:dev-stop-debug`.
 
-
 Change Log
 ==========
 
