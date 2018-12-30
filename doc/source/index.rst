@@ -499,7 +499,6 @@ Subpackages
 .. el:variable:: ein:completion-backend
 .. el:variable:: ein:use-auto-complete-superpack
 .. el:variable:: ein:ac-max-cache
-.. el:variable:: ein:use-smartrep
 .. el:variable:: ein:load-dev
 
 Notebook list

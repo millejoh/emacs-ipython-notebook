@@ -8,7 +8,7 @@
        (bundle (cask-setup project-directory))
        (elpa-path (cask-elpa-path bundle))
        (path (lambda (&rest ps) (apply join project-directory ps))))
-  (add-to-list 'load-path elpa-path)
+  (setq load-path (cask-load-path bundle))
   (add-to-list 'load-path (funcall path "lisp"))
   (cask-build bundle))
   ;; (add-to-list 'load-path (funcall path ".cask" version-str "websocket"))
@@ -20,7 +20,7 @@
 
 (package-initialize)
 (require 'ein-dev)
-(ein:dev-require-all)
+(ein:dev-require-all :ignore-p #'(lambda (f) (equal f "ein-smartrep.el")))
 (require 'ob-ein)
 
 ;; Load `wid-edit'.  Otherwise the following error will be raised:
