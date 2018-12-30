@@ -576,10 +576,6 @@ Misc
 Gotchas and caveats
 -------------------
 
-Although EIN is much more stable starting in v0.15, there may still be some
-deficits. It seems that they originate from some upstream bugs so there is
-little that EIN can do.
-
 :el:symbol:`url-retrieve`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
