@@ -90,7 +90,7 @@ Requirements
 ------------
 
 * EMACS 24.5, 25.3, or 26
-* IPython_ 2.0 or higher.
+* IPython_ 4.0 or higher.
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ >= 1.7
 * `request.el`_ >= 0.3
@@ -103,10 +103,8 @@ Requirements
 * `skewer-mode`_ >= 1.6.2:
   Skewer mode gives EIN the ability to execute dynamic javascript in the
   note book.
-* (optional) Jupyterhub_ 0.8 or higher:
-  EIN supports logging in to Jupyterhub servers using PAM authentication,
-  though this only works with v0.8, which currently is the development version
-  of Jupyterhub.
+* (optional) Jupyterhub_ 0.9 or higher: EIN currently only supports logging in
+  to Jupyterhub servers using PAM authentication.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el. `python.el`_ is
@@ -230,13 +228,15 @@ Usage
    emacs will automatically call ``ein:jupyter-server-login-and-open``, making
    steps 2 and 3 below unnecessary!
 
-2. If you have token or password authentication enabled then you will need to
-   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
+2. Call ``M-x ein:notebooklist-login``. EIN will detect any local, running
+   jupyter instances and list them in the minibuffer. If you wish to connect to
+   a remote instance you will need to input the url and port for the running
+   jupyter server. After selecting the instance you wish to connect to EIN will
+   try to automatically detect and use the security token for the server. If it
+   cannot find a token, or if you are trying to connect to a remote jupyter
+   instance you will be prompted for a password.
 
-3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open
-   :ref:`notebook list <notebook-list-commands>` buffer.
-
-4. In the notebook list buffer, you can open notebooks by selecting the
+3. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
@@ -266,13 +266,12 @@ Note that the below work best with current (> v4.3.1) versions of jupyter.
 Notebook list
 ^^^^^^^^^^^^^
 
-You can start notebook by ``M-x ein:notebooklist-open`` and enter the
-port or URL of the IPython notebook server.
+You can connect to notebook server calling ``M-x ein:notebooklist-login`` and
+enter the port or URL of the IPython notebook server.
 
-.. el:function:: ein:notebooklist-open
+.. el:function:: ein:notebooklist-login
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
-.. el:function:: ein:notebooklist-login
 .. el:function:: ein:junk-new
 .. el:function:: ein:notebooklist-enable-keepalive
 .. el:function:: ein:notebooklist-disable-keepalive
@@ -405,7 +404,8 @@ for proper rendering inside the org buffer. For example:
    sys.version
    #+END_SRC
 
-By default EIN will execute asynchronously so you can continue to work in Emacs, but you may control this behavior via the :el:symbol:`ein-org-async-p`.
+By default EIN will execute asynchronously so you can continue to work in Emacs,
+but you may control this behavior via the :el:symbol:`ein-org-async-p`.
 
 If your code block generates an image, like from an matplotlib plot, ein will
 automatically save to a file in the directory specified by
@@ -577,23 +577,17 @@ Misc
 Gotchas and caveats
 -------------------
 
-Although EIN mostly works fine, there are some deficits I noticed but
-have not fixed yet.  It seems that they originate from some upstream
-bugs so there is little I can do in EIN (but I'm not sure -- it's
-possible that I am misusing the libraries!).
-
-If you know how to fix/workaround them, patches are very welcome.
+Although EIN is much more stable starting in v0.15, there may still be some
+deficits. It seems that they originate from some upstream bugs so there is
+little that EIN can do.
 
 :el:symbol:`url-retrieve`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While using EIN, probably most of the error messages are about server
-connections.  It looks like the problem is in :el:symbol:`url-retrieve`.
-But in those cases you don't lose any notebook data and your IPython
-kernel is fine.  You can just type the command again and it will go
-fine most of the time.  For saving notebook, I implemented code to
-retry when there is an error comes from :el:symbol:`url-retrieve` to
-make it even safer.
+While using EIN, you may encounter error messages about server
+connections. It is recommended that :el:symbol:`request-backend` is set to
+'curl' and that you are using the latest version of curl, as earlier versions
+seem to have problems communicating with the jupyter server.
 
 MuMaMo
 ^^^^^^
@@ -710,6 +704,8 @@ Change Log
 ==========
 
 .. include:: Changelog/v0_15_0.txt
+
+.. include:: Changelog/v0_14_2.txt
 
 .. include:: Changelog/v0_14_1.txt
 
