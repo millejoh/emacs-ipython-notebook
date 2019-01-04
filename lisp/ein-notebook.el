@@ -39,7 +39,7 @@
 (require 'ewoc)
 (require 'mumamo nil t)
 (require 'company nil t)
-
+(require 'px nil t)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-console)
@@ -211,9 +211,10 @@ Current buffer for these functions is set to the notebook buffer.")
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
+(ein:deflocal ein:%notebook-latex-p% nil
+  "Is latex preview toggled")
+
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
-
-
 
 ;;; Constructor
 
@@ -511,10 +512,19 @@ notebook buffer."
   'ein:notebook-show-in-shared-output
   'ein:shared-output-show-code-cell-at-point "0.1.2")
 
-(autoload 'org-toggle-latex-fragment "org")
-(defalias 'ein:notebook-toggle-latex-fragment 'org-toggle-latex-fragment
-  "Borrow from org-mode the rendering of latex overlays")
-
+(defsubst ein:notebook-toggle-latex-fragment ()
+  (interactive)
+  (if (featurep 'px)
+      (let ((outline-regexp "$a")
+            (kill-buffer-hook nil)) ;; outline-regexp never matches to avoid headline
+        (cl-letf (((symbol-function 'px-remove) #'ignore))
+          (if ein:%notebook-latex-p%
+              (progn
+                (ein:worksheet-render (ein:worksheet--get-ws-or-error))
+                (setq ein:%notebook-latex-p% nil))
+            (px-preview)
+            (setq ein:%notebook-latex-p% t))))
+    (ein:display-warning "px package not found")))
 
 ;;; Kernel related things
 
@@ -1712,13 +1722,14 @@ Called via `kill-emacs-query-functions'."
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   ;; TODO - it remains a bug that neither `ein:notebook-kill-buffer-callback'
   ;; nor `ein:notebook-close' updates ein:notebook--opened-map
+  (ein:log 'debug "ein:notebook-kill-buffer-callback called")
   (when (ein:$notebook-p ein:%notebook%)
     (ein:notebook-disable-autosaves ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
   "Add \"notebook destructor\" to `kill-buffer-hook'."
-  (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback))
+  (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback nil t))
 
 ;; Useful command to close notebooks.
 (defun ein:notebook-kill-all-buffers ()
