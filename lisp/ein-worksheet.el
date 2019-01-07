@@ -182,10 +182,15 @@
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
         ;; TODO: reset ein:%which-cell% when major mode gets swapped
-        (ein:display-warning
-         (format "Undo failure diagnostic %s %s | %s" 
-                 buffer-undo-list ein:%which-cell% fill)
-         :error)
+        (progn
+          (ein:display-warning
+           (format "Undo failure diagnostic %s %s | %s" 
+                   buffer-undo-list ein:%which-cell% fill)
+           :error)
+          (setq ein:worksheet-enable-undo nil)
+          (setq buffer-local-enable-undo ein:worksheet-enable-undo)
+          (ein:worksheet-render (ein:worksheet--get-ws-or-error))
+          (ein:worksheet-focus-cell))
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
         (if (> fill 0)
