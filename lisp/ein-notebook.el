@@ -319,7 +319,7 @@ will be updated with kernel's cwd."
          (ein:url url-or-port "api/contents" path))))
 
 (defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback)
-  "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, and save to disk the kernelspec metadata."
+  "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, save to disk the kernelspec metadata, and put last warning in minibuffer."
   (apply-partially (lambda (notebook* created callback* pending-clear*)
                      (funcall pending-clear* nil)
                      (with-current-buffer (ein:notebook-buffer notebook*)
@@ -334,7 +334,12 @@ will be updated with kernel's cwd."
                                               :kernelspec (ein:kernelspec-for-nb-metadata it)))
                              (ein:notebook-save-notebook notebook*))))
                      (when callback*
-                       (funcall callback* notebook* created)))
+                       (funcall callback* notebook* created))
+                     (ein:and-let* ((created)
+                                    (buffer (get-buffer "*Warnings*"))
+                                    (last-warning (with-current-buffer buffer 
+                                                    (thing-at-point 'line t))))
+                       (message "%s" last-warning)))
                    notebook (not existing) callback pending-clear))
 
 ;;;###autoload
@@ -667,6 +672,7 @@ This is equivalent to do ``C-c`` in the console program."
     (when (ein:$notebook-kernelspec notebook)
       (ein:ml-lang-setup (ein:$notebook-kernelspec notebook)))
     ;; Now that major-mode is set, set buffer local variables:
+    (ein:worksheet-maybe-disable-undo ws)
     (ein:notebook--notification-setup notebook)
     (ein:notebook-setup-kill-buffer-hook)
     (setq ein:%notebook% notebook)))
