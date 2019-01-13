@@ -183,14 +183,12 @@
     (if (> (abs fill) 1)
         ;; TODO: reset ein:%which-cell% when major mode gets swapped
         (progn
-          (ein:display-warning
-           (format "Undo failure diagnostic %s %s | %s" 
-                   buffer-undo-list ein:%which-cell% fill)
-           :error)
-          (setq ein:worksheet-enable-undo nil)
-          (setq buffer-local-enable-undo ein:worksheet-enable-undo)
-          (ein:worksheet-render (ein:worksheet--get-ws-or-error))
-          (ein:worksheet-focus-cell))
+          (let ((msg (format "Undo failure diagnostic %s %s | %s"
+                             buffer-undo-list ein:%which-cell% fill)))
+            (setq ein:worksheet-enable-undo nil)
+            (ein:worksheet-maybe-disable-undo ein:%worksheet%)
+            (ein:display-warning msg :error)
+            (error "ein:worksheet--jigger-undo-list: aborting")))
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
         (if (> fill 0)
@@ -393,6 +391,18 @@
           (not (ein:worksheet--show-slide-data-p ws)))
     (ein:worksheet-render ws)))
 
+(cl-defmethod ein:worksheet-maybe-disable-undo ((ws ein:worksheet))
+  (with-current-buffer (ein:worksheet--get-buffer ws)
+    (let ((undo-binding (key-binding (kbd "C-/"))))
+      (if ein:worksheet-enable-undo
+          (if (eq undo-binding 'undo)
+              (setq buffer-local-enable-undo t)
+            (setq buffer-local-enable-undo nil)
+            (ein:display-warning-once (format "Disabling undo for %s" undo-binding)))
+        (setq buffer-local-enable-undo nil)))
+    (when (not buffer-local-enable-undo)
+        (setq buffer-undo-list t))))
+
 (cl-defmethod ein:worksheet-render ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
     (setq ein:%worksheet% ws)
@@ -401,10 +411,6 @@
       (setq buffer-undo-list nil)
       (setq ein:%which-cell% nil)
       (setq ein:%cell-lengths% nil))
-
-    (setq buffer-local-enable-undo ein:worksheet-enable-undo)
-    (if (not buffer-local-enable-undo)
-        (setq buffer-undo-list t))
 
     (ein:worksheet-reinstall-which-cell-hook)
     (let ((inhibit-read-only t))
