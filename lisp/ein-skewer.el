@@ -1,3 +1,4 @@
+;;; -*- mode: emacs-lisp; lexical-binding: t; -*-
 ;;; ein-skewer.el --- Cell module
 
 ;; (C) 2016 - John M Miller
@@ -38,20 +39,30 @@
               (cdr (assoc 'value result))
               (plist-get json :output_type))))
     (setf (slot-value cell 'outputs) (list val))
-    (ein:cell-append-display-data cell val)))
+    (ein:cell-append-output cell val (slot-value cell 'dynamic))))
 
 ;; Format of result is ((id . STR) (type . STR) (status . STR) (value . STR) (time . FLOAT))
 (defun ein:execute-javascript (cell json)
-  (unless *ein:skewer-running-p*
-    (run-skewer)
-    (setq *ein:skewer-running-p* t))
-  ;; Call synchronously is a bit dangerous here - we should maybe come up with a timeout
-  ;; check.
-  ;; (skewer-eval (plist-get json :javascript)
-  ;;              (apply-partially #'ein:update-javascript-output cell json))
-  (ein:update-javascript-output cell
-                                json
-                                (skewer-eval-synchronously (plist-get json :javascript)))
-  )
+  (let ((payload (or (plist-get json :html)
+                     (plist-get json :javascript))))
+    (unless (httpd-running-p) ;; *ein:skewer-running-p*
+      (run-skewer))
+    (deferred:$
+      (deferred:next
+        (lambda ()
+          (let ((result nil))
+            (skewer-eval payload (lambda (v)
+                                      (setq result v))
+                         :type (if (plist-get json :html)
+                                   "html"
+                                 "eval"))
+            (message "Result=%s" result)
+            (cl-loop until result
+                     do (accept-process-output nil 0.01)
+                     finally (return result)))))
+      (deferred:nextc it
+        (lambda (result)
+          (message "Result=%s" result)
+          (ein:update-javascript-output cell json result))))))
 
 (provide 'ein-skewer)
