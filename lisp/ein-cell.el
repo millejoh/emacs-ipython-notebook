@@ -934,7 +934,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (if (and (plist-get json :javascript)
+  (if (and (or (plist-get json :javascript)
+               (plist-get json :html))
            (slot-value cell 'dynamic) ein:enable-dynamic-javascript)
       (ein:execute-javascript cell json)
     (progn

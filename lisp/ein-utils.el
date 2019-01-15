@@ -677,14 +677,21 @@ Use `ein:log' for debugging and logging."
               `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
           list-name-callback))
 
+(defcustom ein:enable-gc-adjust t
+  "When t, EIN will set the `gc-cons-threshold' to an arbitrarily large value when opening notebookes. In some cases this adjustment will improve emacs performance, particularly when loading large notebooks."
+  :type 'boolean
+  :group 'ein)
+
 (lexical-let ((current-gc-cons-threshold gc-cons-threshold))
   (defun ein:gc-prepare-operation ()
     (ein:log 'debug "[GC-PREPARE-OPERATION] Setting cons threshold to %s." (* current-gc-cons-threshold 10000) )
-    (setq gc-cons-threshold (* current-gc-cons-threshold 10000)))
+    (when ein:enable-gc-adjust
+      (setq gc-cons-threshold (* current-gc-cons-threshold 10000))))
 
   (defun ein:gc-complete-operation ()
     (ein:log 'debug "[GC-COMPLETE-OPERATION] Reverting cons threshold to %s." current-gc-cons-threshold)
-    (setq gc-cons-threshold current-gc-cons-threshold)))
+    (when ein:enable-gc-adjust
+      (setq gc-cons-threshold current-gc-cons-threshold))))
 
 
 ;;; Git utilities
