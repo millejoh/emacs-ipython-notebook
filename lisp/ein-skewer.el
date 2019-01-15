@@ -28,6 +28,8 @@
 ;;; Code:
 
 (require 'skewer-mode)
+(require 'skewer-html)
+(require 'simple-httpd)
 
 (defvar *ein:skewer-running-p* nil "True if the emacs httpd server has been started.")
 
@@ -36,33 +38,61 @@
 
 (defun ein:update-javascript-output (cell json result)
   (let ((val (ein:js-prepare-result
-              (cdr (assoc 'value result))
+              (or (cdr (assoc 'value result)) "See browser for result.")
               (plist-get json :output_type))))
     (setf (slot-value cell 'outputs) (list val))
     (ein:cell-append-output cell val (slot-value cell 'dynamic))))
 
+(defservlet current-jupyter-cell-output text/html (path)
+  (let ((cell-id (file-name-nondirectory path)))
+    (insert (gethash cell-id *ein:skewer-cell-output-cache*))))
+
+(defvar *ein:skewer-html-template*
+  "<html>
+   <head>
+    <title>Emacs IPython Notebook</title>
+    <script src=\"/skewer\"></script>
+   </head>
+   <body>
+    %s
+   </body>
+  </html>")
+
+(defvar *ein:skewer-cell-output-cache* (make-hash-table :test #'equal))
+
+(defun ein:skewer--handle-html (cell string)
+  (setf (gethash (slot-value cell 'cell-id) *ein:skewer-cell-output-cache*)
+        (format *ein:skewer-html-template* string) ))
+
 ;; Format of result is ((id . STR) (type . STR) (status . STR) (value . STR) (time . FLOAT))
 (defun ein:execute-javascript (cell json)
-  (let ((payload (or (plist-get json :html)
-                     (plist-get json :javascript))))
-    (unless (httpd-running-p) ;; *ein:skewer-running-p*
-      (run-skewer))
-    (deferred:$
-      (deferred:next
-        (lambda ()
-          (let ((result nil))
-            (skewer-eval payload (lambda (v)
-                                      (setq result v))
+  (unless (httpd-running-p) ;; *ein:skewer-running-p*
+    (run-skewer))
+  (deferred:$
+    (deferred:next
+      (lambda ()
+        (let ((result nil))
+          (ein:aif (plist-get json :html)
+              (progn
+                (let ((cell-id (slot-value cell 'cell-id)))
+                  (ein:skewer--handle-html cell it)
+                  (setq result (list '(id . nil)
+                                     '(type . str)
+                                     '(stats . nil)
+                                     (cons 'value  (format "Open http://localhost:8080/current-jupyter-cell-output/%s" cell-id))
+                                     '(time . nil)))
+                  (browse-url (format "http://localhost:8080/current-jupyter-cell-output/%s" cell-id))))
+            (skewer-eval (plist-get json :javascript)
+                         (lambda (v)
+                           (setq result v))
                          :type (if (plist-get json :html)
                                    "html"
-                                 "eval"))
-            (message "Result=%s" result)
-            (cl-loop until result
-                     do (accept-process-output nil 0.01)
-                     finally (return result)))))
-      (deferred:nextc it
-        (lambda (result)
-          (message "Result=%s" result)
-          (ein:update-javascript-output cell json result))))))
+                                 "eval")))
+          (cl-loop until result
+                   do (accept-process-output nil 0.01)
+                   finally (return result)))))
+    (deferred:nextc it
+      (lambda (result)
+        (ein:update-javascript-output cell json result)))))
 
 (provide 'ein-skewer)
