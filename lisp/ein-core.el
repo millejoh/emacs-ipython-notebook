@@ -373,10 +373,8 @@ but can operate in different contexts."
   (interactive)
   (ein:clean-compiled-files)
   (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
-         (errors (ein:filter
-                  'identity
-                  (mapcar (lambda (f) (unless (byte-compile-file f) f))
-                          files))))
+         (errors (mapcan (lambda (f) (unless (byte-compile-file f) (list f)))
+                         files)))
     (ein:aif errors
         (error "Got %s errors while compiling these files: %s"
                (length errors)

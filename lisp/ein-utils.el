@@ -198,9 +198,9 @@ at point, i.e. any word before then \"(\", if it is present."
         finally return (directory-file-name result)))
 
 (defun ein:url (url-or-port &rest paths)
-  (if (null url-or-port) 
+  (if (null url-or-port)
       nil
-    (if (or (integerp url-or-port) 
+    (if (or (integerp url-or-port)
             (and (stringp url-or-port) (string-match "^[0-9]+$" url-or-port)))
         (setq url-or-port (format "http://localhost:%s" url-or-port)))
     (let ((parsed-url (url-generic-parse-url url-or-port)))
@@ -424,21 +424,6 @@ Example::
         unless (memq k keys)
         nconc (list k v)))
 
-(defun ein:hash-keys (table)
-  (let (keys)
-    (maphash (lambda (k v) (push k keys)) table)
-    keys))
-
-(defun ein:hash-vals (table)
-  (let (vals)
-    (maphash (lambda (k v) (push v vals)) table)
-    vals))
-
-(defun ein:filter (predicate sequence)
-  (loop for item in sequence
-        when (funcall predicate item)
-        collect item))
-
 (defun ein:clip-list (list first last)
   "Return elements in region of the LIST specified by FIRST and LAST element.
 
@@ -614,13 +599,13 @@ otherwise it should be a function, which is called on `time'."
      ,@body))
 
 (defun ein:message-whir-subr (mesg doneback)
-  "Display MESG with a modest animation until done-p returns t.  
+  "Display MESG with a modest animation until done-p returns t.
 
 DONEBACK returns t or 'error when calling process is done, and nil if not done."
   (lexical-let* ((mesg mesg)
                  (doneback doneback)
                  (count -1))
-    (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))    
+    (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
     ;; https://github.com/kiwanami/emacs-deferred/issues/28
     ;; "complicated timings of macro expansion lexical-let, deferred:lambda"
     ;; using deferred:loop instead
@@ -635,7 +620,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
                   (sleep-for 0 365)))))))
       (deferred:nextc it
         (lambda (status)
-          (message "%s... %s" mesg 
+          (message "%s... %s" mesg
                    (if (or (null status) (eq status 'error)) "failed" "done")))))))
 
 

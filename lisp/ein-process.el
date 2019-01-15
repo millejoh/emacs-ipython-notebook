@@ -48,10 +48,10 @@
   (if (string-match "\\bnotebook-dir\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
       (directory-file-name (match-string 2 args))
     (if (executable-find ein:process-lsof)
-        (ein:trim-right 
-         (with-output-to-string 
+        (ein:trim-right
+         (with-output-to-string
            (shell-command (format "%s -p %d -a -d cwd -Fn | grep ^n | tail -c +2"
-                                  ein:process-lsof pid) 
+                                  ein:process-lsof pid)
                           standard-output error-buffer))))))
 
 (defun ein:process-divine-port (pid args &optional error-buffer)
@@ -60,10 +60,10 @@
       (string-to-number (match-string 2 args))
     (if (executable-find ein:process-lsof)
         (string-to-number
-         (ein:trim-right 
+         (ein:trim-right
           (with-output-to-string
             (shell-command (format "%s -p %d -a -iTCP -sTCP:LISTEN -Fn | grep ^n | sed \"s/[^0-9]//g\""
-                                   ein:process-lsof pid) 
+                                   ein:process-lsof pid)
                            standard-output error-buffer)))))))
 
 (defun ein:process-divine-ip (pid args)
@@ -103,7 +103,7 @@
   "Process table of `ein:$process' keyed on dir.")
 
 (defun ein:process-processes ()
-  (ein:hash-vals ein:%processes%))
+  (hash-table-values ein:%processes%))
 
 (defun ein:process-alive-p (proc)
   (not (null (process-attributes (ein:$process-pid proc)))))
@@ -111,9 +111,9 @@
 (defun ein:process-suitable-notebook-dir (filename)
   "Return the uppermost parent dir of DIR that contains ipynb files."
   (let ((fn (expand-file-name filename)))
-    (loop with directory = (directory-file-name 
-                            (if (file-regular-p fn) 
-                                (file-name-directory (directory-file-name fn)) 
+    (loop with directory = (directory-file-name
+                            (if (file-regular-p fn)
+                                (file-name-directory (directory-file-name fn))
                               fn))
           with suitable = directory
           until (string= (file-name-nondirectory directory) "")
@@ -127,18 +127,18 @@
   (clrhash ein:%processes%)
   (loop for line in (process-lines ein:jupyter-default-server-command
                                    "notebook" "list" "--json")
-        do (destructuring-bind 
+        do (destructuring-bind
                (&key pid url notebook_dir &allow-other-keys)
                (ein:json-read-from-string line)
-             (puthash (directory-file-name notebook_dir) 
-                      (make-ein:$process :pid pid 
-                                         :url (ein:url url) 
+             (puthash (directory-file-name notebook_dir)
+                      (make-ein:$process :pid pid
+                                         :url (ein:url url)
                                          :dir (directory-file-name notebook_dir))
                       ein:%processes%))))
 
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
-  (loop for dir in (ein:hash-keys ein:%processes%)
+  (loop for dir in (hash-table-keys ein:%processes%)
         when (search dir filename)
         return (gethash dir ein:%processes%)))
 
@@ -164,7 +164,7 @@
           (if (ein:notebooklist-list-get url-or-port)
               (ein:notebook-open url-or-port path nil callback)
             (ein:notebooklist-login url-or-port callback2)))
-      (let* ((nbdir (read-directory-name "Notebook directory: " 
+      (let* ((nbdir (read-directory-name "Notebook directory: "
                                          (ein:process-suitable-notebook-dir filename)))
              (path (subseq filename (length (file-name-as-directory nbdir))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
@@ -181,7 +181,7 @@
   (interactive)
   (unless filename (setq filename buffer-file-name))
   (assert filename nil "Not visiting a file")
-  (let ((callback2 (apply-partially (lambda (buffer buffer-callback* notebook created 
+  (let ((callback2 (apply-partially (lambda (buffer buffer-callback* notebook created
                                                     &rest args)
                                       (when (buffer-live-p buffer)
                                         (funcall buffer-callback* buffer)))
