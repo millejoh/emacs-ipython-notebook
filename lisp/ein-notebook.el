@@ -244,7 +244,7 @@ call notebook destructor `ein:notebook-del'."
     (cond
      ((ein:worksheet-p ws) (ein:worksheet-save-cells ws t))
      (t (setq scratchsheets (delq ws scratchsheets))))
-    (unless (or (ein:filter (lambda (x)
+    (unless (or (seq-filter (lambda (x)
                               (and (not (eq x ws))
                                    (ein:worksheet-has-buffer-p x)))
                             worksheets)
@@ -290,10 +290,10 @@ combo must match exactly these url/port you used format
   "Return the buffers associated with NOTEBOOK's kernel.
 The buffer local variable `default-directory' of these buffers
 will be updated with kernel's cwd."
-  (ein:filter #'identity
-              (mapcar #'ein:worksheet-buffer
-                      (append (ein:$notebook-worksheets notebook)
-                              (ein:$notebook-scratchsheets notebook)))))
+  (delete nil
+          (mapcar #'ein:worksheet-buffer
+                  (append (ein:$notebook-worksheets notebook)
+                          (ein:$notebook-scratchsheets notebook)))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))
@@ -337,7 +337,7 @@ will be updated with kernel's cwd."
                        (funcall callback* notebook* created))
                      (ein:and-let* ((created)
                                     (buffer (get-buffer "*Warnings*"))
-                                    (last-warning (with-current-buffer buffer 
+                                    (last-warning (with-current-buffer buffer
                                                     (thing-at-point 'line t))))
                        (message "%s" last-warning)))
                    notebook (not existing) callback pending-clear))
@@ -737,7 +737,7 @@ This is equivalent to do ``C-c`` in the console program."
         (cl-case (ein:$notebook-nbformat notebook)
           (3 (ein:read-nbformat3-worksheets notebook data))
           (4 (ein:read-nbformat4-worksheets notebook data))
-          (t (ein:log 'error "nbformat version %s unsupported" 
+          (t (ein:log 'error "nbformat version %s unsupported"
                       (ein:$notebook-nbformat notebook)))))
   (ein:notebook--worksheet-render notebook
                                   (nth 0 (ein:$notebook-worksheets notebook)))
@@ -935,7 +935,7 @@ as usual."
                        (ein:notebook-close notebook*))
                      notebook)))
       (if (ein:kernel-live-p kernel)
-          (ein:message-whir "Ending session"  
+          (ein:message-whir "Ending session"
                             (add-function :before callback done-callback)
                             (ein:kernel-delete-session kernel callback))
         (funcall callback nil)))))
@@ -1273,7 +1273,7 @@ in the returned list only when PREDICATE returns non-nil value."
                              (remhash k ein:notebook--opened-map)))
              ein:notebook--opened-map)
     (if predicate
-        (ein:filter predicate notebooks)
+        (seq-filter predicate notebooks)
       notebooks)))
 
 (defun ein:notebook-opened-buffers (&optional predicate)
@@ -1705,7 +1705,7 @@ Called via `kill-buffer-query-functions'."
   "Return `nil' to prevent killing Emacs when unsaved notebook exists.
 Called via `kill-emacs-query-functions'."
   (condition-case err
-      (let ((unsaved (ein:filter #'ein:notebook-modified-p
+      (let ((unsaved (seq-filter #'ein:notebook-modified-p
                                  (ein:notebook-opened-notebooks))))
         (if (null unsaved)
             t
@@ -1742,7 +1742,7 @@ Called via `kill-emacs-query-functions'."
   "Close all opened notebooks."
   (interactive)
   (let* ((notebooks (ein:notebook-opened-notebooks))
-         (unsaved (ein:filter #'ein:notebook-modified-p notebooks)))
+         (unsaved (seq-filter #'ein:notebook-modified-p notebooks)))
     (if notebooks
         (if (y-or-n-p
              (format (concat "You have %s opened notebook(s). "

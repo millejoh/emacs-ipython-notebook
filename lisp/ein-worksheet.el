@@ -576,7 +576,7 @@ buffer or there is no cell in the current buffer, return `nil'."
 
 (defun* ein:worksheet-get-cells-in-region-or-at-point
     (&key noerror (cell-p #'ein:basecell-child-p))
-  (or (ein:filter cell-p
+  (or (seq-filter cell-p
                   (if (region-active-p)
                       (ein:worksheet-get-cells-in-region (region-beginning)
                                                          (region-end))
@@ -1017,7 +1017,7 @@ Do not clear input prompt when the prefix argument is given."
 Do not clear input prompts when the prefix argument is given."
   (interactive (list (ein:worksheet--get-ws-or-error) current-prefix-arg))
   (mapc (lambda (c) (ein:worksheet-clear-output c preserve-input-prompt))
-        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+        (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 
 ;;; Kernel related things
@@ -1038,9 +1038,7 @@ Do not clear input prompts when the prefix argument is given."
 
 (cl-defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
-        (ein:filter #'(lambda (x)
-                        (cl-typep x 'ein:codecell))
-                    (ein:worksheet-get-cells ws))))
+        (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 (defun ein:worksheet-execute-cell (ws cell)
   "Execute code type CELL."
@@ -1079,7 +1077,7 @@ cell bellow."
   "Execute all cells in the current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (mapc #'ein:cell-execute
-        (ein:filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+        (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
 (defun ein:worksheet-insert-last-input-history (ws cell index)
   "Insert INDEX-th previous history into CELL in worksheet WS."
@@ -1276,7 +1274,7 @@ function."
       (lambda (ws kernel)
         (let ((buffer-undo-list t))
           (mapc #'ein:cell-execute
-                (ein:filter #'ein:cell-autoexec-p
+                (seq-filter #'ein:cell-autoexec-p
                             (ein:worksheet-get-cells ws)))))
       ws))))
 
@@ -1288,7 +1286,7 @@ function."
   ;; As Imenu does not provide the way to represent level *and*
   ;; position, use #'s to do that.
   (loop for cell in (when (ein:worksheet-p ein:%worksheet%)
-                      (ein:filter #'ein:headingcell-p
+                      (seq-filter #'ein:headingcell-p
                                   (ein:worksheet-get-cells ein:%worksheet%)))
         for sharps = (loop repeat (slot-value cell 'level) collect "#")
         for text = (ein:cell-get-text cell)

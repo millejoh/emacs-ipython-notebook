@@ -233,12 +233,12 @@ callback (`websocket-callback-debug-on-error') is enabled."
         :uname (ein:dev-stdout-program "uname" '("-a"))
         :lsb-release (ein:dev-stdout-program "lsb_release" '("-a")))
    :image-types (ein:eval-if-bound 'image-types)
-   :image-types-available (ein:filter #'image-type-available-p
+   :image-types-available (seq-filter #'image-type-available-p
                                       (ein:eval-if-bound 'image-types))
    :request (list :backend request-backend)
    :ein (append (list :version (ein:version))
                 (ein:dev-dump-vars '("source-dir")))
-   :lib (ein:filter (lambda (info) (plist-get info :path))
+   :lib (seq-filter (lambda (info) (plist-get info :path))
                     (mapcar #'ein:dev-sys-info--lib
                             '("websocket" "request" "mumamo"
                               "auto-complete" "popup" "fuzzy" "pos-tip"

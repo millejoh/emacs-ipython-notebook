@@ -92,11 +92,10 @@ in these buffer will be synced with the kernel's cwd.")
            (oset kerinfo :ccwd cwd)
            ;; sync buffer's `default-directory' with CWD
            (when (file-accessible-directory-p cwd)
-             (mapc (lambda (buffer)
-                     (with-current-buffer buffer
-                       (setq default-directory (file-name-as-directory cwd))))
-                   (ein:filter #'buffer-live-p
-                               (ein:funcall-packed get-buffers))))))
+             (dolist (buffer (ein:funcall-packed get-buffers))
+               (when (buffer-live-p buffer)
+                 (with-current-buffer buffer
+                   (setq default-directory (file-name-as-directory cwd))))))))
        (list kerinfo)))))
 
 (defun ein:kernelinfo-update-hostname (kerinfo)

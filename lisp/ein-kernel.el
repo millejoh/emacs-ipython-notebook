@@ -809,7 +809,7 @@ Used in `ein:pytools-finish-tooltip', etc."
                          )
                      (ansi-color-apply it)))
          (help (ein:aand
-                (ein:filter 'identity (list defstring docstring))
+                (delete nil (list defstring docstring))
                 (ein:join-str "\n" it))))
     (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING: help=%s" help)
     help))

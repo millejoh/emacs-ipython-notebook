@@ -136,7 +136,7 @@ Mapping from URL-OR-PORT to an instance of `ein:$notebooklist'.")
 
 (defun ein:notebooklist-list ()
   "Get a list of opened `ein:$notebooklist'."
-  (ein:hash-vals ein:notebooklist-map))
+  (hash-table-values ein:notebooklist-map))
 
 (defun ein:notebooklist-list-remove (url-or-port)
   (remhash url-or-port ein:notebooklist-map))
@@ -782,13 +782,14 @@ Notebook list data is passed via the buffer local variable
 
 (defun ein:notebooklist-parse-nbpath (nbpath)
   "Return `(,url-or-port ,path) from URL-OR-PORT/PATH"
-  (loop for url-or-port in (ein:hash-keys ein:notebooklist-map)
+  (loop for url-or-port in (hash-table-keys ein:notebooklist-map)
         if (search url-or-port nbpath :end2 (length url-or-port))
         return (list (substring nbpath 0 (length url-or-port))
                      (substring nbpath (1+ (length url-or-port))))
         end
         finally (ein:display-warning
-                 (format "%s not among: %s" nbpath (ein:hash-keys ein:notebooklist-map))
+                 (format "%s not among: %s" nbpath
+                         (hash-table-keys ein:notebooklist-map))
                  :error)))
 
 (defsubst ein:notebooklist-ask-path (&optional content-type)
