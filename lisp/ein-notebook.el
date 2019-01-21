@@ -817,6 +817,14 @@ This is equivalent to do ``C-c`` in the console program."
       (ein:notebook-save-notebook notebook callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook &optional callback cbargs)
+  (unless (ein:notebook-buffer notebook)
+    (let ((buf (format ein:notebook-buffer-name-template
+                       (ein:$notebook-url-or-port notebook)
+                       (ein:$notebook-notebook-name notebook))))
+      (ein:log 'error "ein:notebook-save-notebook: notebook %s has no buffer!" buf)
+      (setf (ewoc--buffer (ein:worksheet--ewoc
+                           (car (ein:$notebook-worksheets notebook))))
+            (get-buffer buf))))
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (run-hooks 'before-save-hook))
