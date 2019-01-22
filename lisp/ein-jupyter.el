@@ -38,7 +38,7 @@
   :group 'ein
   :type 'integer)
 
-(defcustom ein:jupyter-server-args '("--no-browser" "--debug")
+(defcustom ein:jupyter-server-args '("--no-browser")
   "Add any additional command line options you wish to include
 with the call to the jupyter notebook."
   :group 'ein
