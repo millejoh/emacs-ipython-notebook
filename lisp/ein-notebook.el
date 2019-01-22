@@ -40,6 +40,7 @@
 (require 'mumamo nil t)
 (require 'company nil t)
 (require 'px nil t)
+(require 'eldoc nil t)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-console)
@@ -1578,19 +1579,6 @@ watch the fireworks!"
   :type 'boolean
   :group 'ein)
 
-(defun ein:notebook-configure-eldoc ()
-  "eldoc comments say: Major modes for other languages may use ElDoc by defining an
-appropriate function as the buffer-local value of `eldoc-documentation-function'."
-  (when ein:enable-eldoc-support
-    (require 'eldoc nil t)
-    (if (boundp 'eldoc-documentation-function)
-        (setq-local eldoc-documentation-function
-                    (apply-partially (lambda (oldfun &rest args)
-                                       (or (apply #'ein:completer--get-eldoc-signature args)
-                                           (apply oldfun args)))
-                                     eldoc-documentation-function))
-      (setq-local eldoc-documentation-function #'ein:completer--get-eldoc-signature))))
-
 (define-minor-mode ein:notebook-mode
   "A mode for jupyter notebooks.
 
@@ -1624,7 +1612,10 @@ appropriate function as the buffer-local value of `eldoc-documentation-function'
     (ein:aif ein:anything-kernel-history-search-key
         (define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
-    (ein:notebook-configure-eldoc)
+    (when (and (featurep 'eldoc) ein:enable-eldoc-support)
+        (add-function :before-until (local 'eldoc-documentation-function)
+                      #'ein:completer--get-eldoc-signature)
+        (eldoc-mode))
     (ein:worksheet-imenu-setup)
     (when ein:use-smartrep
       (require 'ein-smartrep))

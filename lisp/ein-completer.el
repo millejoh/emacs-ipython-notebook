@@ -146,11 +146,12 @@
 ;;; Support for Eldoc
 
 (defun ein:completer--get-eldoc-signature ()
-  (let ((func (ein:function-at-point))
-        (kernel (ein:get-kernel)))
+  (ein:and-let* ((func (ein:function-at-point))
+                 (kernel (ein:get-kernel)))
     (ein:aif (gethash func (ein:$kernel-oinfo-cache kernel))
-        (ein:kernel-construct-defstring it)
-      (ein:completions--build-oinfo-cache (list func)))))
+        (ein:kernel-construct-help-string it)
+      (ein:completions--build-oinfo-cache (list func))
+      nil)))
 
 (provide 'ein-completer)
 

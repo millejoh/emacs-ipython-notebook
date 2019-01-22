@@ -106,6 +106,12 @@ Otherwise, return result of last form in BODY."
         (ein:log 'error (error-message-string err))
         nil))))
 
+(defun ein:log-pop-to-request-buffer ()
+  (interactive)
+  (ein:aif (get-buffer request-log-buffer-name)
+      (pop-to-buffer it)
+    (message "No buffer named \"%s\"" request-log-buffer-name)))
+
 (defun ein:log-pop-to-all-buffer ()
   (interactive)
   (pop-to-buffer (get-buffer-create ein:log-all-buffer-name)))
@@ -113,3 +119,4 @@ Otherwise, return result of last form in BODY."
 (provide 'ein-log)
 
 ;;; ein-log.el ends here
+ 

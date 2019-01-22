@@ -111,7 +111,7 @@ variable to a reasonable value you can avoid this situation."
                                       &key
                                       (timeout ein:query-timeout)
                                       &allow-other-keys)
-  "Cancel the old process if there is a process associated with
+  "Do not cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
   (ein:query-enforce-curl)

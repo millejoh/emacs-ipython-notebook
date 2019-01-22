@@ -79,12 +79,21 @@ Scenario: To the cloud with password
 @login
 Scenario: Logging into nowhere
   Given I login erroneously to 0
-  Then I should see message "ein: [error] Login to http://127.0.0.1:0 failed"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "[error] Login to http://127.0.0.1:0 failed"
 
 @login
 Scenario: Logging into nowhere
   Given I login erroneously to adfljdsf.org:8432
-  Then I should see message "ein: [error] Login to https://adfljdsf.org:8432 failed"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "[error] Login to https://adfljdsf.org:8432 failed"
+
+@login
+Scenario: Bad curl invocation produces sensible error message
+  Given I start the server configured "\n"
+  And I login with bad curl
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "no-such-option"
 
 @login
 Scenario: With token server

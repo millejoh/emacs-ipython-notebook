@@ -893,8 +893,11 @@ and the url-or-port argument of ein:notebooklist-open*."
   (ein:log 'info "Login to %s complete." url-or-port)
   (ein:notebooklist-open* url-or-port nil nil callback errback))
 
-(defun ein:notebooklist-login--error-1 (url-or-port errback)
-  (ein:log 'error "Login to %s failed" url-or-port)
+(defun ein:notebooklist-login--error-1 (url-or-port error-thrown response errback)
+  (ein:log 'error "Login to %s failed, error-thrown %s, raw-header %s"
+           url-or-port
+           (subst-char-in-string ?\n ?\  (format "%s" error-thrown))
+           (request-response--raw-header response))
   (funcall errback))
 
 (defun* ein:notebooklist-login--complete (url-or-port &key data response
@@ -903,13 +906,13 @@ and the url-or-port argument of ein:notebooklist-open*."
   (ein:log 'debug "ein:notebooklist-login--complete %s" resp-string))
 
 (defun* ein:notebooklist-login--success (url-or-port callback errback token iteration
-                                                     &key data response
+                                                     &key data response error-thrown
                                                      &allow-other-keys
                                                      &aux
                                                      (response-status (request-response-status-code response)))
   (cond ((plist-get data :bad-page)
          (if (>= iteration 0)
-             (ein:notebooklist-login--error-1 url-or-port errback)
+             (ein:notebooklist-login--error-1 url-or-port error-thrown response errback)
            (setq token (read-passwd (format "Password for %s: " url-or-port)))
            (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status)))
         ((request-response-header response "x-jupyterhub-version")
@@ -925,6 +928,7 @@ and the url-or-port argument of ein:notebooklist-open*."
                  data
                  symbol-status
                  response
+                 error-thrown
                  &allow-other-keys
                  &aux
                  (response-status (request-response-status-code response)))
@@ -937,7 +941,7 @@ and the url-or-port argument of ein:notebooklist-open*."
               (eq response-status 302)
               (request-response-header response "set-cookie"))
          (ein:notebooklist-login--success-1 url-or-port callback errback))
-        (t (ein:notebooklist-login--error-1 url-or-port errback))))
+        (t (ein:notebooklist-login--error-1 url-or-port error-thrown response errback))))
 
 ;;;###autoload
 

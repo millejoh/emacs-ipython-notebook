@@ -159,6 +159,16 @@
             (When "I call \"ein:notebooklist-login\"")
             (And "I wait for the smoke to clear")))))
 
+(When "^I login with bad curl$"
+      (lambda ()
+        (let ((request-curl-options '("--no-such-option")))
+          (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                     (lambda (&rest args) (ein:url 8888)))
+                    ((symbol-function 'read-passwd)
+                     (lambda (&rest args) "foo")))
+            (When "I call \"ein:notebooklist-login\"")
+            (And "I wait for the smoke to clear")))))
+
 (When "^I login if necessary$"
       (lambda ()
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)

@@ -288,7 +288,7 @@ See: http://api.jquery.com/jQuery.ajax/"
   (condition-case nil
       (ewoc-create pretty-printer header footer nosep)
     ((debug wrong-number-of-arguments)
-     (ein:display-warning "Incompatible EOWC version.
+     (ein:display-warning "Incompatible EWOC version.
   The version of ewoc.el you are using is too old for EIN.
   Please install the newer version.
   See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
