@@ -520,16 +520,20 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
-  (let ((start (1+ (point))))
+  (let ((start (1+ (point))) pos-newline)
     ;; Newlines must allow insertion before/after its position.
-    (insert (propertize "\n" 'read-only t 'rear-nonsticky t)
-            (or (ein:oref-safe cell 'input) "")
+    (insert (propertize "\n" 'read-only t 'rear-nonsticky t))
+    (setq pos-newline (1- (point)))
+    (insert (or (ein:oref-safe cell 'input) "")
             (propertize "\n" 'read-only t))
     ;; Highlight background using overlay.
     (let ((ol (make-overlay start (point))))
       (overlay-put ol 'face (ein:cell-get-input-area-face cell))
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
-      (overlay-put ol 'evaporate t))))
+      (overlay-put ol 'evaporate t))
+    (unless (get-text-property pos-newline 'rear-nonsticky)
+      (put-text-property pos-newline (1+ pos-newline) 'rear-nonsticky t)
+      (ein:log 'debug "ein:cell-insert-input: missing rear-nonsticky at %s" pos-newline))))
 
 (cl-defmethod ein:cell-get-input-area-face ((cell ein:basecell))
   "Return the face (symbol) for input area."
