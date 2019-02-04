@@ -97,7 +97,7 @@
     (prefix (and (eq major-mode 'ein:notebook-multilang-mode) (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
-                           (plist-get it :definition))))
+                      (plist-get it :definition))))
     (doc-buffer (cons :async
                       (lambda (cb)
                         (ein:company-handle-doc-buffer arg cb))))
@@ -110,7 +110,7 @@
      (let* ((kernel (ein:get-kernel-or-error))
             (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
        (ein:aif cached it
-         (unless (ein:company--punctuation-check (thing-at-point 'line) (current-column))
+         (unless (and (looking-at "[[:nonascii:]]") (ein:company--punctuation-check (thing-at-point 'line) (current-column)))
            (case ein:completion-backend
              (ein:use-company-jedi-backend
               (cons :async (lambda (cb)
