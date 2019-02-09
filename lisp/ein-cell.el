@@ -191,7 +191,7 @@ a number will limit the number of lines in a cell output."
 
 ;;; Utils
 (defvar ein:mime-type-map
-  '((image/svg . svg) (image/png . png) (image/jpeg . jpeg)))
+  '((image/svg+xml . svg) (image/png . png) (image/jpeg . jpeg)))
 
 (defun ein:insert-image (&rest args)
   ;; Try to insert the image, otherwise emit a warning message and proceed.
@@ -950,7 +950,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (if (and (fboundp 'shr-insert-document)
            (fboundp 'libxml-parse-xml-region))
       #'ein:output-type-prefer-pretty-text-over-html
-    '(emacs-lisp svg image/svg png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
+    '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
   "Output types to be used in notebook.
 First output-type found in this list will be used.
 This variable can be a list or a function returning a list given
@@ -968,10 +968,10 @@ Note that ``html`` comes before ``text``."
   :group 'ein)
 
 (defvar ein:output-types-text-preferred
-  '(emacs-lisp svg image/svg png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript))
+  '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript))
 
 (defvar ein:output-types-html-preferred
-  '(emacs-lisp svg image/svg png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
+  '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
 
 (defun ein:output-type-prefer-pretty-text-over-html (data)
   "Use text type if it is a \"prettified\" text instead of HTML.
@@ -1017,7 +1017,7 @@ prettified text thus be used instead of HTML type."
       (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
      ((latex text/latex text text/plain)
       (ein:insert-read-only (plist-get json type)))
-     ((svg image/svg)
+     ((svg image/svg+xml)
       (ein:insert-image value (ein:fix-mime-type key) t))
      ((png image/png jpeg image/jpeg)
       (ein:insert-image (base64-decode-string value) (ein:fix-mime-type key) t)))))
@@ -1092,7 +1092,8 @@ prettified text thus be used instead of HTML type."
                                             ((equal prop :stream) (progn (push value new-output)
                                                                          (push :name new-output)))
 
-                                            ((and (equal otype "display_data")
+                                            ((and (or (equal otype "display_data")
+                                                      (equal otype "execute_result"))
                                                   (ein:output-property-p prop))
                                              (let ((new-prop (cdr (ein:output-property-p prop))))
                                                (if (plist-member new-output :data)
@@ -1108,14 +1109,16 @@ prettified text thus be used instead of HTML type."
                                                   (equal prop :text))
                                              (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
 
-                                            ((and (equal otype "execute_result")
-                                                  (or (equal prop :text)
-                                                      (equal prop :html)
-                                                      (equal prop :latex)))
-                                             (ein:log 'debug "Fixing execute_result (%s?)." otype)
-                                             (let ((new-prop (cdr (ein:output-property-p prop))))
-                                               (push (list new-prop (list value)) new-output)
-                                               (push :data new-output)))
+                                            ;; ((and (equal otype "execute_result")
+                                            ;;       (ein:output-property-p prop)
+                                            ;;       ;; (or (equal prop :text)
+                                            ;;       ;;     (equal prop :html)
+                                            ;;       ;;     (equal prop :latex))
+                                            ;;       )
+                                            ;;  (ein:log 'debug "Fixing execute_result (%s?)." otype)
+                                            ;;  (let ((new-prop (cdr (ein:output-property-p prop))))
+                                            ;;    (push (list new-prop (list value)) new-output)
+                                            ;;    (push :data new-output)))
 
 
                                             ((and (equal otype "execute_result")
@@ -1290,7 +1293,7 @@ prettified text thus be used instead of HTML type."
   "Return `t' if given cell has image output, `nil' otherwise."
   (loop for out in (slot-value cell 'outputs)
         when (or (plist-member out :svg)
-                 (plist-member out :image/svg)
+                 (plist-member out :image/svg+xml)
                  (plist-member out :png)
                  (plist-member out :image/png)
                  (plist-member out :jpeg)
