@@ -1049,7 +1049,7 @@ prettified text thus be used instead of HTML type."
 
 
 (defvar ein:output-type-map
-  '((:svg . :image/svg) (:png . :image/png) (:jpeg . :image/jpeg)
+  '((:svg . :image/svg+xml) (:png . :image/png) (:jpeg . :image/jpeg)
     (:text . :text/plain)
     (:html . :text/html) (:latex . :text/latex) (:javascript . :text/javascript)))
 
