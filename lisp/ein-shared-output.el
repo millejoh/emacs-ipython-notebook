@@ -42,7 +42,7 @@
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
    (popup :initarg :popup :initform nil :type boolean)
-   )
+   (callback :initarg :callback :initform #'ignore :type function))
   "A singleton cell to show output from non-notebook buffers.")
 
 (defclass ein:shared-output ()
@@ -50,7 +50,7 @@
    (events :initarg :events :type ein:events)
    (ewoc :initarg :ewoc :type ewoc)))
 
-(defvar ein:%shared-output% nil
+(defvar *ein:shared-output* nil
   "Hold an instance of `ein:shared-output'.")
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
@@ -68,35 +68,27 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
-                                &optional popup &rest args)
+(cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code popup
+                                &rest args)
   (unless (plist-get args :silent)
     (setq args (plist-put args :silent nil)))
   (setf (slot-value cell 'popup) popup)
   (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
-(cl-defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
-                                       msg-type content _metadata)
-  ;; Show short message
-  (ein:case-equal msg-type
-    (("pyout")
-     (let ((num (plist-get content :execution_count))
-           (text (plist-get (plist-get content :data) :text/plain)))
-       (when text
-         (ein:log 'info "Out[%s]: %s" num (car (split-string text "\n"))))))
-    (("stream")
-     (let ((stream (or (plist-get content :stream) "stdout"))
-           (text (plist-get content :data)))
-       (when text
-         (ein:log 'info "%s: %s" stream (car (split-string text "\n"))))))
-    (t
-     (ein:log 'info "Got output '%s' in the shared buffer." msg-type)))
-  ;; Open `ein:shared-output-buffer-name' if necessary
-  (when (slot-value cell 'popup)
-    (pop-to-buffer (ein:shared-output-create-buffer)))
-  ;; Finally do the normal drawing
-  (cl-call-next-method))
+(cl-defmethod ein:cell--handle-execute-reply ((cell ein:shared-output-cell)
+                                              content _metadata)
+  (ein:log 'debug
+    "ein:cell--handle-execute-reply (cell ein:shared-output-cell): %s"
+    content)
+
+  ;; do the normal drawing
+  (cl-call-next-method)
+  (ein:aif (ein:oref-safe cell 'callback)
+      (progn
+        (funcall it cell)
+        ;; clear the way for waiting block in `ob-ein--execute-async' 
+        (setf (slot-value cell 'callback) #'ignore))))
 
 
 ;;; Main
@@ -106,26 +98,25 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (get-buffer-create ein:shared-output-buffer-name))
 
 (defun ein:shared-output-buffer ()
-  "Get the buffer associated with `ein:%shared-output%'."
-  (ewoc-buffer (slot-value ein:%shared-output% 'ewoc)))
+  "Get the buffer associated with `*ein:shared-output*'."
+  (ewoc-buffer (slot-value *ein:shared-output* 'ewoc)))
 
 (defun ein:shared-output-buffer-p (&optional buffer)
   "Return non-`nil' when BUFFER (or current buffer) is shared-output buffer."
   (eq (or buffer (current-buffer)) (ein:shared-output-buffer)))
 
 (defun ein:shared-output-healthy-p ()
-  (and (ein:shared-output-p ein:%shared-output%)
+  (and (ein:shared-output-p *ein:shared-output*)
        (buffer-live-p (ein:shared-output-buffer))))
 
 (defun ein:shared-output-get-or-create ()
   (if (ein:shared-output-healthy-p)
-      ein:%shared-output%
+      *ein:shared-output*
     (with-current-buffer (ein:shared-output-create-buffer)
       ;; FIXME: This is a duplication of `ein:worksheet-render'.
-      ;;        Must be merged.
       (let* ((inhibit-read-only t)
-             ;; Enable nonsep for ewoc object (the last argument is non-nil).
-             ;; This is for putting read-only text properties to the newlines.
+             ;; Apply read-only text property to newlines by
+             ;; setting nonsep flag to `ein:ewoc-create'
              (ewoc (let ((buffer-undo-list t))
                      (ein:ewoc-create 'ein:worksheet-pp
                                       (ein:propertize-read-only "\n")
@@ -135,13 +126,13 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                                            :events events)))
         (erase-buffer)
         (ein:shared-output-bind-events events)
-        (setq ein:%shared-output%
+        (setq *ein:shared-output*
               (ein:shared-output :ewoc ewoc :cell cell
                                  :events events))
         (ein:cell-enter-last cell))
       (setq buffer-read-only t)
       (ein:shared-output-mode)
-      ein:%shared-output%)))
+      *ein:shared-output*)))
 
 (defun ein:shared-output-bind-events (events)
   "Add dummy event handlers."
@@ -166,19 +157,17 @@ Create a cell if the buffer has none."
   (pop-to-buffer (ein:shared-output-create-buffer)))
 
 (cl-defmethod ein:shared-output-show-code-cell ((cell ein:codecell))
-  "Show code CELL in shared-output buffer.
-Note that this function assumed to be called in the buffer
-where CELL locates."
+  "Show code CELL in shared-output buffer."
   (let ((new (ein:cell-convert cell "shared-output")))
-    ;; Make sure `ein:%shared-output%' is initialized:
+    ;; Make sure `*ein:shared-output*' is initialized:
     (ein:shared-output-get-or-create)
     (with-current-buffer (ein:shared-output-create-buffer)
       (let ((inhibit-read-only t)
             (ein:cell-max-num-outputs nil))
-        (setf (slot-value new 'ewoc) (slot-value ein:%shared-output% 'ewoc))
-        (setf (slot-value new 'events) (slot-value ein:%shared-output% 'events))
+        (setf (slot-value new 'ewoc) (slot-value *ein:shared-output* 'ewoc))
+        (setf (slot-value new 'events) (slot-value *ein:shared-output* 'events))
         (erase-buffer)  ; because there are only one cell anyway
-        (setf (slot-value ein:%shared-output% 'cell) new)
+        (setf (slot-value *ein:shared-output* 'cell) new)
         (ein:cell-enter-last new)
         (pop-to-buffer (current-buffer))))))
 
@@ -197,8 +186,7 @@ See also `ein:cell-max-num-outputs'."
   "History of the `ein:shared-output-eval-string' prompt.")
 
 ;;;###autoload
-(defun ein:shared-output-eval-string (code &optional popup verbose kernel
-                                           &rest args)
+(defun ein:shared-output-eval-string (kernel code popup &rest args)
   "Evaluate a piece of code.  Prompt will appear asking the code to run.
 This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
@@ -208,30 +196,15 @@ shared output buffer.  You can open the buffer by the command
 .. ARGS is passed to `ein:kernel-execute'.  Unlike `ein:kernel-execute',
    `:silent' is `nil' by default."
   (interactive
-   (let ((kernel (ein:get-kernel-or-error))
-         ;; ... so error will be raised before user typing code if it
-         ;; is impossible to execute
-         (code (read-string
-                "IP[y]: "
-                (when (region-active-p)
-                  (buffer-substring (region-beginning) (region-end)))
-                'ein:shared-output-eval-string-history)))
-     (list code nil t kernel)))
+   (list nil
+         (read-string
+          "IP[y]: "
+          (when (region-active-p)
+            (buffer-substring (region-beginning) (region-end)))
+          'ein:shared-output-eval-string-history)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
-    ;; If cell is already running, wait until it is finished
-    ;; before executing more code.
-    (deferred:$
-      (deferred:next
-        (deferred:lambda ()
-          (if (not (null (slot-value cell 'running)))
-              (deferred:nextc (deferred:wait 50) self))))
-      (deferred:nextc it
-        (lambda ()
-          (deferred:wait 100) ;; Give everyone a few milliseconds to breath.
-          (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args)
-          (when verbose
-            (ein:log 'info "Code \"%s\" is sent to the kernel." code)))))))
+    (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args)))
 
 
 ;;; Generic getter
@@ -247,9 +220,9 @@ shared output buffer.  You can open the buffer by the command
       (slot-value cell 'kernel))))
 
 (defun ein:get-cell-at-point--shared-output ()
-  (when (and (ein:shared-output-p ein:%shared-output%)
+  (when (and (ein:shared-output-p *ein:shared-output*)
              (ein:shared-output-buffer-p))
-    (slot-value ein:%shared-output% 'cell)))
+    (slot-value *ein:shared-output* 'cell)))
 
 (defun ein:get-traceback-data--shared-output ()
   (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))

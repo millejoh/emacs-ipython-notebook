@@ -199,8 +199,8 @@ a number will limit the number of lines in a cell output."
       (let* ((img (apply #'create-image args)))
         (if ein:slice-image
             (destructuring-bind (&optional rows cols)
-                                (when (listp ein:slice-image) ein:slice-image)
-                                (insert-sliced-image img "." nil (or rows 20) cols))
+                (when (listp ein:slice-image) ein:slice-image)
+              (insert-sliced-image img "." nil (or rows 20) cols))
           (insert-image img ".")))
     (error (ein:log 'warn "Could not insert image: %s" err) nil)))
 
@@ -520,20 +520,16 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
-  (let ((start (1+ (point))) pos-newline)
+  (let ((start (1+ (point))))
     ;; Newlines must allow insertion before/after its position.
     (insert (propertize "\n" 'read-only t 'rear-nonsticky t))
-    (setq pos-newline (1- (point)))
     (insert (or (ein:oref-safe cell 'input) "")
             (propertize "\n" 'read-only t))
     ;; Highlight background using overlay.
     (let ((ol (make-overlay start (point))))
       (overlay-put ol 'face (ein:cell-get-input-area-face cell))
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
-      (overlay-put ol 'evaporate t))
-    (unless (get-text-property pos-newline 'rear-nonsticky)
-      (put-text-property pos-newline (1+ pos-newline) 'rear-nonsticky t)
-      (ein:log 'debug "ein:cell-insert-input: missing rear-nonsticky at %s" pos-newline))))
+      (overlay-put ol 'evaporate t))))
 
 (cl-defmethod ein:cell-get-input-area-face ((cell ein:basecell))
   "Return the face (symbol) for input area."
@@ -610,7 +606,6 @@ Return language name as a string or `nil' when not defined.
     (let ((last-out (car (last (slot-value cell 'outputs)))))
       (when (equal (plist-get last-out :output_type) "stream")
         (ein:cell-append-stream-text-fontified "\n" last-out)))))
-
 
 (defun ein:cell-node-p (node &optional element-name)
   (let* ((path (ein:$node-path node))
@@ -1248,17 +1243,15 @@ prettified text thus be used instead of HTML type."
        (when (or (equal msg-type "pyout")
                  (equal msg-type "execute_result"))
          (plist-put json :prompt_number (plist-get content :execution_count)))
-       (setq json (ein:output-area-convert-mime-types
-                   json (plist-get content :data)))
-       )
+       (setq json
+             (ein:output-area-convert-mime-types json (plist-get content :data))))
       (("pyerr" "error")
        (plist-put json :ename (plist-get content :ename))
        (plist-put json :evalue (plist-get content :evalue))
        (plist-put json :traceback (plist-get content :traceback))))
     (ein:cell-append-output cell json t)
     ;; (setf (slot-value cell 'dirty) t)
-    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)
-    ))
+    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))
 
 
 (defun ein:output-area-convert-mime-types (json data)
@@ -1305,9 +1298,8 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
   (loop for out in (slot-value cell 'outputs)
-        when (and
-              (not (null (plist-get out :traceback)))
-              (member (plist-get out :output_type) '("pyerr" "error")))
+        when (and (plist-get out :traceback)
+                  (member (plist-get out :output_type) '("pyerr" "error")))
         return (plist-get out :traceback)))
 
 (provide 'ein-cell)

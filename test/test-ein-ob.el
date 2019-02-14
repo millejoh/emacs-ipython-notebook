@@ -17,12 +17,12 @@ sys.version
 ")
 
 (ert-deftest ein:ob-aware ()
-  (let ((org-babel-load-languages (quote ((ipython . t) (ein . t)))))
+  (let ((org-babel-load-languages (quote ((ein . t)))))
     (with-temp-buffer
       (save-excursion
         (org-mode)
         (insert eintest:ob-src-block)
         (search-backward "SRC")
-        (cl-letf (((symbol-function 'ein:org-find-or-open-session) (lambda (&rest args) (make-ein:$notebook))))
-          (setq python-indent-guess-indent-offset-verbose nil)
+        (cl-letf (((symbol-function 'ob-ein--initiate-session)
+                   (lambda (&rest args) (make-ein:$notebook))))
           (should (call-interactively #'org-edit-special)))))))

@@ -208,8 +208,10 @@ at point, i.e. any word before then \"(\", if it is present."
         (setq url-or-port (concat "https://" url-or-port))
         (setq parsed-url (url-generic-parse-url url-or-port)))
       (when (or (string= (url-host parsed-url) "localhost")
+                (string= (url-host parsed-url) ein:url-localhost)
                 (string= (url-host parsed-url) ""))
-        (setf (url-host parsed-url) ein:url-localhost))
+        (setf (url-host parsed-url) ein:url-localhost)
+        (setf (url-type parsed-url) "http"))
       (directory-file-name (concat (file-name-as-directory (url-recreate-url parsed-url))
                                    (apply #'ein:glom-paths paths))))))
 

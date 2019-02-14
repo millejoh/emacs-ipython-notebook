@@ -1,4 +1,3 @@
-
 * Tests
 
 This is a [[ipynb:(:url-or-port%20"http://localhost:8888"%20:name%20"emacs-ipython-notebook/The%20Emacs%20IPython%20Notebook.ipynb")][link]] to an ein notebook. It might not work if your setup is not the same as mine!

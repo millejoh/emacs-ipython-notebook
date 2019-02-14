@@ -37,7 +37,7 @@
         "TESTING-GET-UNTITLED0-OR-CREATE creating notebook")
       (lexical-let (done-p
                     (kernelspec (ein:get-kernelspec url-or-port "default")))
-        (ein:notebooklist-new-notebook url-or-port kernelspec path
+        (ein:notebooklist-new-notebook url-or-port kernelspec
                                        (lambda (notebook created)
                                          (setq *ein:testing-notebook-name*
                                                (ein:$notebook-notebook-name notebook))
@@ -46,7 +46,9 @@
         (prog1
             (ein:testing-get-notebook url-or-port path *ein:testing-notebook-name*)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (deferred:sync! (ein:notebooklist-reload nil t)))
+            (lexical-let (done-p)
+              (ein:notebooklist-reload nil t (lambda (&rest args) (setq done-p t)))
+              (ein:testing-wait-until (lambda () done-p) nil 10000 1000)))
           (ein:log 'debug "TESTING-GET-UNTITLED0-OR-CREATE end"))))))
 
 (defvar ein:notebooklist-after-open-hook nil)
@@ -96,13 +98,21 @@
   (ein:log 'verbose "----------------------------------")
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 start")
   (with-current-buffer (ein:notebooklist-get-buffer *ein:testing-port*)
-    (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))
-      (should (member (ein:url *ein:testing-port* (ein:$notebook-notebook-path notebook))
-                      (ein:notebooklist-list-paths "notebook")))
+    (let* ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*))
+           (the-url (ein:url *ein:testing-port* (ein:$notebook-notebook-path notebook))))
+      (should (member the-url (ein:notebooklist-list-paths "notebook")))
       (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 deleting notebook")
-      (ein:notebooklist-delete-notebook (ein:$notebook-notebook-path notebook))
-      (deferred:sync! (ein:notebooklist-reload ein:%notebooklist% t))
-      (should-not (member (ein:url *ein:testing-port* (ein:$notebook-notebook-path notebook)) (ein:notebooklist-list-paths "notebook")))))
+      (lexical-let (done-p)
+        (ein:notebooklist-delete-notebook
+         (ein:$notebook-notebook-path notebook)
+         (lambda (&rest args) (setq done-p t)))
+        (ein:testing-wait-until (lambda () done-p) nil 10000 1000))
+      (lexical-let (done-p)
+        (ein:content-query-hierarchy
+         (ein:url *ein:testing-port*)
+         (lambda (&rest args) (setq done-p t)))
+        (ein:testing-wait-until (lambda () done-p) nil 10000 1000))
+      (should-not (member the-url (ein:notebooklist-list-paths "notebook")))))
   (ein:log 'verbose "ERT TESTING-DELETE-UNTITLED0 end"))
 
 (ert-deftest 11-notebook-execute-current-cell-simple ()

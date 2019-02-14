@@ -292,14 +292,14 @@ given, open the last point in the other window."
   "Do the doctest of the object at point."
   (interactive)
   (let ((object (ein:object-at-point)))
-    (ein:shared-output-eval-string
-     (format "__ein_run_docstring_examples(%s)" object)
-     t)))
+    (ein:shared-output-eval-string (ein:get-kernel)
+                                   (format "__ein_run_docstring_examples(%s)" object)
+                                   t)))
 
 (defun ein:pytools-whos ()
   "Execute ``%whos`` magic command and popup the result."
   (interactive)
-  (ein:shared-output-eval-string "%whos" t))
+  (ein:shared-output-eval-string (ein:get-kernel) "%whos" t))
 
 (defun ein:pytools-hierarchy (&optional ask)
   "Draw inheritance graph of the class at point.
@@ -313,7 +313,7 @@ You can explicitly specify the object by selecting it.
       (setq object (read-from-minibuffer "class or object: " object)))
     (assert (and object (not (equal object "")))
             nil "Object at point not found.")
-    (ein:shared-output-eval-string (format "%%hierarchy %s" object) t)))
+    (ein:shared-output-eval-string (ein:get-kernel) (format "%%hierarchy %s" object) t)))
 
 (defun ein:pytools-pandas-to-ses (dataframe)
   "View pandas_ DataFrame in SES_ (Simple Emacs Spreadsheet).
@@ -404,7 +404,9 @@ Currently EIN/IPython supports exporting to the following formats:
 (defun ein:pytools-set-figure-size (width height)
   "Set the default figure size for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
   (interactive "nWidth: \nnHeight: ")
-  (ein:shared-output-eval-string (format "__ein_set_figure_size(%s,%s)" width height)))
+  (ein:shared-output-eval-string (ein:get-kernel)
+                                 (format "__ein_set_figure_size(%s,%s)" width height)
+                                 nil))
 
 (provide 'ein-pytools)
 

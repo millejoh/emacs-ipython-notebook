@@ -390,22 +390,19 @@ Org-mode integration
 --------------------
 
 You can execute org source blocks in EIN by adding `ein` to
-`org:babel-load-languages`. You need to specify a notebook via the `:session`
-argument. The format for the session argument is
-`{url-or-port}/{path-to-notebook}`. You should also specify `:results raw drawer`
+`org:babel-load-languages`. The format for the `:session` header argument is
+`{url-or-port}/{path-to-notebook}`. Just specifying `{url-or-port}` executes your source block in a single anonymous notebook (this effects an ipython repl in org).  You should also specify `:results raw drawer`
 for proper rendering inside the org buffer. For example:
 
 .. code:: python
 
-   #+BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer
+   #+BEGIN_SRC ein :session localhost :results raw drawer
    import sys
 
    a = 14500
    b = a+1000
    sys.version
    #+END_SRC
-
-By default EIN will execute asynchronously so you can continue to work in Emacs, but you may control this behavior via the :el:symbol:`ein-org-async-p`.
 
 If your code block generates an image, like from an matplotlib plot, ein will
 automatically save to a file in the directory specified by
@@ -415,7 +412,7 @@ argument as in the example below:
 
 .. code:: python
 
-   #BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
    import matplotlib.pyplot as plt
    import numpy as np
 
@@ -437,7 +434,7 @@ Then org SRC blocks with language "ein-R" will use R syntax highlighting:
 
 .. code:: python
 
-   #BEGIN_SRC ein-R :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   #BEGIN_SRC ein-R :session localhost :results raw drawer :image output.png
    plot(1:10, 1:10)
    #+END_SRC
 

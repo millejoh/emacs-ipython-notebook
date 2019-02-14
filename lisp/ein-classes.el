@@ -152,6 +152,9 @@
 `ein:$notebook-checkpoints'
   Names auto-saved checkpoints for content. Stored as a list
   of (<id> . <last_modified>) pairs.
+
+`ein:$notebook-q-checkpoints'
+  Whether to checkpoint on save.  Overrides ein:notebook-create-checkpoint-on-save
 "
   url-or-port
   notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
@@ -170,7 +173,8 @@
   scratchsheets
   api-version
   autosave-timer
-  checkpoints)
+  checkpoints
+  q-checkpoints)
 
 
 

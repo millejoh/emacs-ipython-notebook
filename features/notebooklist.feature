@@ -38,11 +38,11 @@ Scenario: Stop after closing notebook
 
 @content
 Scenario: Read a massive directory
-  Given I create a directory "/var/tmp/fg7Cv8" with depth 5 and width 10
+  Given I create a directory "/var/tmp/fg7Cv8" with depth 4 and width 8
   And I get into notebook mode "/var/tmp/fg7Cv8" "8/4/3/bar.ipynb"
   And I open notebook "bar.ipynb"
   And I open file "foo.txt"
-  And notebooklist-list-paths does not contain "5/5/5/foo.txt"
+  And notebooklist-list-paths does not contain "4/4/4/foo.txt"
   And notebooklist-list-paths contains "foo.txt"
 
 @login
@@ -97,8 +97,7 @@ Scenario: Bad curl invocation produces sensible error message
 
 @login
 Scenario: With token server
-  Given I start the server configured "\n"
-  And I login if necessary
+  Given I start and login to the server configured "\n"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see "[error]"

@@ -319,33 +319,39 @@ will be updated with kernel's cwd."
         ((>= api-version 3)
          (ein:url url-or-port "api/contents" path))))
 
-(defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback)
+(defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback no-pop)
   "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, save to disk the kernelspec metadata, and put last warning in minibuffer."
-  (apply-partially (lambda (notebook* created callback* pending-clear*)
-                     (funcall pending-clear* nil)
-                     (with-current-buffer (ein:notebook-buffer notebook*)
-                       (ein:worksheet-focus-cell))
-                     (pop-to-buffer (ein:notebook-buffer notebook*))
-                     (when (null (plist-member (ein:$notebook-metadata notebook*)
-                                               :kernelspec))
-                       (ein:aif (ein:$notebook-kernelspec notebook*)
-                           (progn
-                             (setf (ein:$notebook-metadata notebook*)
-                                   (plist-put (ein:$notebook-metadata notebook*)
-                                              :kernelspec (ein:kernelspec-for-nb-metadata it)))
-                             (ein:notebook-save-notebook notebook*))))
-                     (when callback*
-                       (funcall callback* notebook* created))
-                     (ein:and-let* ((created)
-                                    (buffer (get-buffer "*Warnings*"))
-                                    (last-warning (with-current-buffer buffer
-                                                    (thing-at-point 'line t))))
-                       (message "%s" last-warning)))
-                   notebook (not existing) callback pending-clear))
+  (apply-partially
+   (lambda (notebook* created callback* pending-clear* no-pop*)
+     (funcall pending-clear*)
+     (with-current-buffer (ein:notebook-buffer notebook*)
+       (ein:worksheet-focus-cell))
+     (unless no-pop*
+       (pop-to-buffer (ein:notebook-buffer notebook*)))
+     (when (null (plist-member (ein:$notebook-metadata notebook*)
+                               :kernelspec))
+       (ein:aif (ein:$notebook-kernelspec notebook*)
+           (progn
+             (setf (ein:$notebook-metadata notebook*)
+                   (plist-put (ein:$notebook-metadata notebook*)
+                              :kernelspec (ein:kernelspec-for-nb-metadata it)))
+             (ein:notebook-save-notebook notebook*))))
+     (when callback*
+       (funcall callback* notebook* created))
+     (ein:and-let* ((created)
+                    (buffer (get-buffer "*Warnings*"))
+                    (last-warning (with-current-buffer buffer
+                                    (thing-at-point 'line t))))
+       (message "%s" last-warning)))
+   notebook (not existing) callback pending-clear no-pop))
+
+(defun ein:notebook-open-or-create (url-or-port path &optional kernelspec callback no-pop)
+  "Same as `ein:notebook-open' but create PATH if not found."
+  (let ((if-not-found (lambda (contents status-code) )))
+    (ein:notebook-open url-or-port path kernelspec callback if-not-found no-pop)))
 
 ;;;###autoload
-
-(defun ein:notebook-open (url-or-port path &optional kernelspec callback)
+(defun ein:notebook-open (url-or-port path &optional kernelspec callback errback no-pop)
   "Returns notebook at URL-OR-PORT/PATH.
 
 Note that notebook sends for its contents and won't have them right away.
@@ -358,9 +364,10 @@ where `created' indicates a new notebook or an existing one.
 "
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
+  (unless errback (setq errback #'ignore))
   (let* ((pending-key (cons url-or-port path))
          (pending-p (gethash pending-key *ein:notebook--pending-query*))
-         (pending-clear (apply-partially (lambda (pending-key* _contents)
+         (pending-clear (apply-partially (lambda (pending-key* &rest args)
                                            (remhash pending-key*
                                                     *ein:notebook--pending-query*))
                                          pending-key))
@@ -368,23 +375,25 @@ where `created' indicates a new notebook or an existing one.
          (notebook (ein:aif existing it
                      (ein:notebook-new url-or-port path kernelspec)))
          (callback0 (ein:notebook-open--decorate-callback notebook existing pending-clear
-                                                          callback)))
+                                                          callback no-pop)))
     (if existing
         (progn
           (ein:log 'info "Notebook %s is already open"
                    (ein:$notebook-notebook-name notebook))
           (funcall callback0))
-      (when (or noninteractive
-                (not pending-p)
-                (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
-        (setf (gethash pending-key *ein:notebook--pending-query*) t)
-        (ein:content-query-contents url-or-port path
-                                    (apply-partially #'ein:notebook-open--callback
-                                                     notebook callback0)
-                                    pending-clear)))
+      (if (and pending-p noninteractive)
+          (ein:log 'error "Notebook %s pending open!" path)
+        (when (or (not pending-p)
+                  (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
+          (setf (gethash pending-key *ein:notebook--pending-query*) t)
+          (add-function :before errback pending-clear)
+          (ein:content-query-contents url-or-port path
+                                      (apply-partially #'ein:notebook-open--callback
+                                                       notebook callback0 (not no-pop))
+                                      errback))))
     notebook))
 
-(defun ein:notebook-open--callback (notebook callback0 content)
+(defun ein:notebook-open--callback (notebook callback0 q-checkpoints content)
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
   (let ((notebook-path (ein:$notebook-notebook-path notebook)))
     (ein:gc-prepare-operation)
@@ -404,8 +413,8 @@ where `created' indicates a new notebook or an existing one.
                               (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
     (ein:notebook-put-opened-notebook notebook)
     (ein:notebook--check-nbformat (ein:$content-raw-content content))
-    (if (> ein:notebook-autosave-frequency 0)
-        (ein:notebook-enable-autosaves notebook))
+    (setf (ein:$notebook-q-checkpoints notebook) q-checkpoints)
+    (ein:notebook-enable-autosaves notebook)
     (ein:gc-complete-operation)
     (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-name notebook)))
   (when callback0
@@ -456,18 +465,16 @@ of minor mode."
                        (with-current-buffer (ido-completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
-  (if (> ein:notebook-autosave-frequency 0)
-      (if notebook
-          (progn (setf (ein:$notebook-autosave-timer notebook)
-                       (run-at-time ein:notebook-autosave-frequency
-                                    ein:notebook-autosave-frequency
-                                    #'ein:notebook-maybe-save-notebook
-                                    notebook))
-                 (ein:log 'verbose "Enabling autosaves for %s with frequency %s seconds."
-                          (ein:$notebook-notebook-name notebook)
-                          ein:notebook-autosave-frequency))
-        (message "Open notebook first"))
-    (message "ein:notebook-autosave-frequency is %d" ein:notebook-autosave-frequency)))
+  (when (and (ein:$notebook-q-checkpoints notebook)
+             (> ein:notebook-autosave-frequency 0))
+      (setf (ein:$notebook-autosave-timer notebook)
+            (run-at-time ein:notebook-autosave-frequency
+                         ein:notebook-autosave-frequency
+                         #'ein:notebook-maybe-save-notebook
+                         notebook))
+      (ein:log 'verbose "Enabling autosaves for %s with frequency %s seconds."
+               (ein:$notebook-notebook-name notebook)
+               ein:notebook-autosave-frequency)))
 
 (defun ein:notebook-disable-autosaves (notebook)
   "Disable automatic, periodic saving for current notebook."
@@ -538,16 +545,6 @@ notebook buffer."
   (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
     `((:name . ,(ein:$kernelspec-name kernelspec))
       (:display_name . ,(format "%s" display-name)))))
-
-(defun ein:get-kernelspec (url-or-port name)
-  (let* ((kernelspecs (ein:need-kernelspecs url-or-port))
-         (name (if (stringp name)
-                   (intern (format ":%s" name))
-                 name))
-         (ks (plist-get kernelspecs name)))
-    (if (stringp ks)
-        (ein:get-kernelspec url-or-port ks)
-      ks)))
 
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (ein:need-kernelspecs url-or-port)))
@@ -881,13 +878,16 @@ This is equivalent to do ``C-c`` in the console program."
 
 NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
-   (list (read-string "Rename notebook: " (ein:$notebook-notebook-path ein:%notebook%))))
+   (list (read-string "Rename notebook: "
+                      (ein:$notebook-notebook-path ein:%notebook%))))
   (unless (and (string-match ".ipynb" path) (= (match-end 0) (length path)))
     (setq path (format "%s.ipynb" path)))
   (let ((content (ein:content-from-notebook ein:%notebook%))
         (old-name (ein:$notebook-notebook-name ein:%notebook%)))
-    (ein:log 'info "Renaming notebook at URL %s" (ein:notebook-url ein:%notebook%))
-    (ein:content-rename content path #'ein:notebook-rename-success (list ein:%notebook% content))))
+    (ein:log 'info "Renaming notebook at URL %s"
+             (ein:notebook-url ein:%notebook%))
+    (ein:content-rename content path #'ein:notebook-rename-success
+                        (list ein:%notebook% content))))
 
 (defun ein:notebook-save-to-command (path)
   "Make a copy of the notebook and save it to a new path specified by NAME.
@@ -905,20 +905,11 @@ NAME is any non-empty string that does not contain '/' or '\\'.
                       (list (ein:$notebook-url-or-port ein:%notebook%)
                             path))))
 
-;; (defun* ein:notebook-rename-error (old new notebook &key symbol-status response
-;;                                        error-thrown
-;;                                        &allow-other-keys)
-;;   (if (= (request-response-status-code response) 409)
-;;       (progn
-;;         (ein:log 'warn "IPython returned a 409 status code, but has still renamed the notebook. This may be an IPython bug.")
-;;         (ein:notebook-rename-success notebook new response))
-;;     (ein:log 'error
-;;       "Error (%s :: %s) while renaming notebook %s to %s."
-;;       symbol-status error-thrown old new)))
-
 (defun* ein:notebook-rename-success (notebook content)
+  (ein:notebook-remove-opened-notebook notebook)
   (ein:notebook-set-notebook-name notebook (ein:$content-name content))
   (setf (ein:$notebook-notebook-path notebook) (ein:$content-path content))
+  (ein:notebook-put-opened-notebook notebook)
   (mapc #'ein:worksheet-set-buffer-name
         (ein:$notebook-worksheets notebook))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
@@ -962,14 +953,16 @@ notebook worksheets."
 (defun ein:notebook-create-checkpoint (notebook)
   "Create checkpoint for current notebook based on most recent save."
   (interactive (list (ein:get-notebook)))
-  (ein:content-create-checkpoint (ein:fast-content-from-notebook notebook)
-    (lexical-let ((notebook notebook))
-      #'(lambda (content)
-          (ein:log 'verbose "Checkpoint %s for %s generated."
-                   (plist-get (first (ein:$content-checkpoints content)) :id)
-                   (ein:$notebook-notebook-name notebook))
-          (setf (ein:$notebook-checkpoints notebook)
-                (ein:$content-checkpoints content))))))
+  (if (ein:$notebook-q-checkpoints notebook)
+      (ein:content-create-checkpoint
+       (ein:fast-content-from-notebook notebook)
+       (lexical-let ((notebook notebook))
+         #'(lambda (content)
+             (ein:log 'verbose "Checkpoint %s for %s generated."
+                      (plist-get (first (ein:$content-checkpoints content)) :id)
+                      (ein:$notebook-notebook-name notebook))
+             (setf (ein:$notebook-checkpoints notebook)
+                   (ein:$content-checkpoints content)))))))
 
 (defun ein:notebook-list-checkpoint-ids (notebook)
   (unless (ein:$notebook-checkpoints notebook)
@@ -1269,6 +1262,11 @@ worksheet to save result."
   (puthash (list (ein:$notebook-url-or-port notebook)
                  (ein:$notebook-notebook-path notebook))
            notebook
+           ein:notebook--opened-map))
+
+(defun ein:notebook-remove-opened-notebook (notebook)
+  (remhash (list (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-path notebook))
            ein:notebook--opened-map))
 
 (defun ein:notebook-opened-notebooks (&optional predicate)
