@@ -49,7 +49,7 @@
   :type 'integer
   :group 'ein)
 
-(defcustom ein:content-query-timeout (* 60 1000) ;1 min
+(defcustom ein:content-query-timeout nil ; (* 60 1000) ;1 min
   "Query timeout for getting content from Jupyter/IPython notebook.
 If you cannot open large notebooks because of a timeout error try
 increasing this value.  Setting this value to `nil' means to use
