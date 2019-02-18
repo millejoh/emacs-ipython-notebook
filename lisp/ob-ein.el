@@ -156,6 +156,7 @@ emacs-ipython-notebook's facilities for communicating with
 jupyter kernels.
  This function is called by `org-babel-execute-src-block'"
   (let* ((processed-params (org-babel-process-params params))
+         (result-params (cdr (assq :result-params params)))
          (kernelspec (cdr (assoc :kernelspec params)))
          ;; set the session if the session variable is non-nil
          (session-kernel (org-babel-ein-initiate-session
@@ -168,13 +169,13 @@ jupyter kernels.
                                                    params
                                                    (org-babel-variable-assignments:python params))))
     (if ein:org-async-p
-        (ein:ob-ein--execute-async full-body session-kernel processed-params (ein:org-get-name-create))
+        (ein:ob-ein--execute-async full-body session-kernel processed-params (ein:org-get-name-create) result-params)
       (ein:ob-ein--execute full-body session-kernel processed-params))))
 
 (defun org-babel-execute:ein-hy (body params)
   (org-babel-execute:ein (ein:pytools-wrap-hy-code body) params))
 
-(defun ein:ob-ein--execute-async (body kernel params name)
+(defun ein:ob-ein--execute-async (body kernel params name result-params)
   (let ((buffer (current-buffer))
         (name name)
         (body body)
@@ -192,13 +193,15 @@ jupyter kernels.
                 (deferred:nextc (deferred:wait 50) self)))))
       (deferred:nextc it
         (lambda ()
-          (let ((cell (ein:shared-output-get-cell)))
-            (if (and (slot-boundp cell 'traceback)
-                     (slot-value cell 'traceback))
-                (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
-                                                              (format "%s\n" s))
-                                                          (slot-value cell 'traceback))))
-              (org-babel-ein-process-outputs (slot-value cell 'outputs) params)))))
+          (let* ((cell (ein:shared-output-get-cell))
+                 (raw (if (and (slot-boundp cell 'traceback)
+                               (slot-value cell 'traceback))
+                          (ansi-color-apply (apply #'concat (mapcar #'(lambda (s)
+                                                                        (format "%s\n" s))
+                                                                    (slot-value cell 'traceback))))
+                        (org-babel-ein-process-outputs (slot-value cell 'outputs) params))))
+            (org-babel-result-cond result-params raw
+                                   (org-babel-python-table-or-string raw)))))
       (deferred:nextc it
         (lambda (formatted-result)
           (ein:ob-ein--execute-async-update formatted-result buffer name))))
@@ -210,7 +213,11 @@ jupyter kernels.
     (save-excursion
       (org-babel-goto-named-result name)
       (search-forward (format "[[ob-ein-async-running: %s]]" name))
-      (replace-match formatted-result t t)
+      (re-search-backward "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")
+      (org-babel-remove-result)
+      (org-babel-insert-result
+       formatted-result
+       (cdr (assoc :result-params (nth 2 (org-babel-get-src-block-info)))))
       (org-redisplay-inline-images)
       ;; (when (member "drawer" (cdr (assoc :result-params params)))
       ;;   ;; open the results drawer

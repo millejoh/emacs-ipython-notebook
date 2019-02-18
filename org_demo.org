@@ -45,15 +45,14 @@ cell there.
 #+END_SRC
 
 #+RESULTS: 47c36fa5-1b53-413b-8f5b-814f1ae66a3b
-:RESULTS:
----------------------------------------------------------------------------
-ZeroDivisionError                         Traceback (most recent call last)
-<ipython-input-3-9e1622b385b6> in <module>()
+:results:
+
+ZeroDivisionErrorTraceback (most recent call last)
+<ipython-input-23-9e1622b385b6> in <module>
 ----> 1 1/0
 
 ZeroDivisionError: division by zero
-
-:END:
+:end:
 
 #+NAME: 00052904-6ca5-46e0-9797-c6039d0daf5e
 #+BEGIN_SRC ein :session http://localhost:8888/The Emacs IPython Notebook.ipynb :results output drawer
@@ -69,7 +68,7 @@ ZeroDivisionError: division by zero
 #+END_SRC
 
 #+RESULTS: 00052904-6ca5-46e0-9797-c6039d0daf5e
-:RESULTS:
+:results:
 array([0.        , 0.01010101, 0.02020202, 0.03030303, 0.04040404,
        0.05050505, 0.06060606, 0.07070707, 0.08080808, 0.09090909,
        0.1010101 , 0.11111111, 0.12121212, 0.13131313, 0.14141414,
@@ -90,10 +89,11 @@ array([0.        , 0.01010101, 0.02020202, 0.03030303, 0.04040404,
        0.85858586, 0.86868687, 0.87878788, 0.88888889, 0.8989899 ,
        0.90909091, 0.91919192, 0.92929293, 0.93939394, 0.94949495,
        0.95959596, 0.96969697, 0.97979798, 0.98989899, 1.        ])
-[[file:ein-images/ob-ein-20cc07237ee50759d02573c3ebe9a0c9.png]]
-:END:
+[[file:ein-images/ob-ein-958ea9b193e7657e6b8b77069728be7a.png]]
+:end:
 
 
+#+NAME: 84b146f2-0b8d-46ca-9fb9-96759657927c
 #+BEGIN_SRC ein :session http://localhost:8888/The Emacs IPython Notebook.ipynb :results output
   from sympy import *
 
@@ -102,3 +102,32 @@ array([0.        , 0.01010101, 0.02020202, 0.03030303, 0.04040404,
   x
 
 #+END_SRC
+
+#+RESULTS: 84b146f2-0b8d-46ca-9fb9-96759657927c
+#+begin_example
+
+ModuleNotFoundErrorTraceback (most recent call last)
+<ipython-input-21-a0c2aa571a36> in <module>
+----> 1 from sympy import *
+      2 
+      3 init_printing()
+      4 x = symbols('x')
+      5 x
+
+ModuleNotFoundError: No module named 'sympy'
+#+end_example
+
+
+* SVG Images
+* Issue #468: Results in org mode
+
+#+NAME: ffbf0b19-515a-4966-9220-70063cf2948d
+#+BEGIN_SRC ein :session http://localhost:8888/The Emacs IPython Notebook.ipynb :results value 
+  import numpy as np
+  np.zeros(18)
+#+END_SRC
+
+#+RESULTS: ffbf0b19-515a-4966-9220-70063cf2948d
+: array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+:        0.])
+       
