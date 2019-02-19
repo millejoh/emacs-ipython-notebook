@@ -119,9 +119,9 @@
 (When "^new \\(.+\\) notebook$"
       (lambda (kernel)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (lexical-let (notebook)
+          (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)))
+              (let ((ks (ein:get-kernelspec url-or-port kernel)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)

@@ -368,7 +368,7 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:content-upload nb-path upload-path)))
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop)
+(defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry)
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (ido-completing-read
                       "Select kernel: "
@@ -386,18 +386,18 @@ This function is called via `ein:notebook-after-rename-hook'."
      :data (json-encode '((:type . "notebook")))
      :parser #'ein:json-read
      :error (apply-partially #'ein:notebooklist-new-notebook-error
-                             url-or-port path callback)
-     :success (apply-partially #'ein:notebooklist-new-notebook-callback
+                             url-or-port kernelspec path callback no-pop retry)
+     :success (apply-partially #'ein:notebooklist-new-notebook-success
                                url-or-port kernelspec path callback no-pop))))
 
-(defun* ein:notebooklist-new-notebook-callback (url-or-port
-                                                kernelspec
-                                                path
-                                                callback
-                                                no-pop
-                                                &key
-                                                data
-                                                &allow-other-keys)
+(defun* ein:notebooklist-new-notebook-success (url-or-port
+                                               kernelspec
+                                               path
+                                               callback
+                                               no-pop
+                                               &key
+                                               data
+                                               &allow-other-keys)
   (let ((nbname (plist-get data :name))
         (nbpath (plist-get data :path)))
     (when (< (ein:notebook-version-numeric url-or-port) 3)
@@ -408,19 +408,15 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:notebooklist-open* url-or-port path)))
 
 (defun* ein:notebooklist-new-notebook-error
-    (url-or-port callback
-                 &key response &allow-other-keys
-                 &aux
-                 (error (request-response-error-thrown response))
-                 (dest (request-response-url response)))
-  (ein:log 'verbose
-    "NOTEBOOKLIST-NEW-NOTEBOOK-ERROR url-or-port: %S; error: %S; dest: %S"
-    url-or-port error dest)
-  (ein:log 'error
-    "Failed to open new notebook (error: %S). \
-You may find the new one in the notebook list." error)
-  (ein:notebooklist-open* url-or-port nil nil (lambda (buffer url-or-port)
-                                                (pop-to-buffer buffer))))
+    (url-or-port kernelspec path callback no-pop retry
+                 &key symbol-status error-thrown &allow-other-keys)
+  (let ((notice (format "ein:notebooklist-new-notebook-error: %s %s"
+                        symbol-status error-thrown)))
+    (if retry
+        (ein:log 'error notice)
+      (ein:log 'info notice)
+      (sleep-for 0 1500)
+      (ein:notebooklist-new-notebook url-or-port kernelspec callback no-pop t))))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name
