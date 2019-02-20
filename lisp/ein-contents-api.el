@@ -115,7 +115,7 @@ global setting.  For global setting and more information, see
                           symbol-status (cdr error-thrown))))
              (if (and (= status-code 403) noninteractive)
                  (progn
-                   (ein:log 'warn notice)
+                   (ein:log 'info notice)
                    (when callback
                      (funcall callback (ein:new-content url-or-port path data))))
                (ein:log 'error notice)

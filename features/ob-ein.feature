@@ -44,7 +44,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I wait for buffer to say "3.1415"
 
 @org
-Scenario: portless url with path and image
+Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   When I open temp file "path.org"
   And I call "org-mode"
   And I type "<s"
@@ -66,3 +66,15 @@ Scenario: portless url with path and image
   And I ctrl-c-ctrl-c
   And I dump buffer
   And I wait for buffer to say "file:ein-image"
+  And I press "C-c '"
+  And I switch to buffer like "Org Src"
+  And I press "C-a"
+  And I press "C-k"
+  And I type "import math ; math.e"
+  And I dump buffer
+  And I press "C-c C-c"
+  And I press "C-c C-k"
+  And I switch to buffer like "path.org"
+  And I dump buffer
+  And I wait for buffer to say "2.718"
+  And I should not see "file:ein-image"

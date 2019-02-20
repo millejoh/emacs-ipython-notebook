@@ -88,6 +88,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
       (progn
         (funcall it cell)
         ;; clear the way for waiting block in `ob-ein--execute-async' 
+        (message "got here ein:cell--handle-execute-reply %s" content)
         (setf (slot-value cell 'callback) #'ignore))))
 
 
