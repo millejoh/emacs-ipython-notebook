@@ -26,6 +26,7 @@
 ;;; Code:
 (require 'ein-cell)
 
+(autoload 'julia-mode "julia-mode")
 (autoload 'markdown-mode "markdown-mode")
 (autoload 'R-mode "ess-r-mode")
 (autoload 'org-src--remove-overlay "org-src")
@@ -162,7 +163,7 @@ previous value."
   (if (null kernelspec)
       'python ;; FIXME
     (ein:case-equal (ein:$kernelspec-language kernelspec)
-      (("python" "R") (intern (ein:$kernelspec-language kernelspec)))
+      (("julia" "python" "R") (intern (ein:$kernelspec-language kernelspec)))
       (t 'python))))
 
 (defun ein:edit-src-continue (e)
@@ -233,6 +234,7 @@ appropriate language major mode. Functionality is very similar to
     (if raw-cell-p
         (funcall ein:raw-cell-default-edit-mode)
       (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
+	(julia (julia-mode))
         (python (python-mode))
         (R (R-mode))))))
 
