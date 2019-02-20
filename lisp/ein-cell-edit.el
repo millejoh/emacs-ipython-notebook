@@ -163,7 +163,7 @@ previous value."
   (if (null kernelspec)
       'python ;; FIXME
     (ein:case-equal (ein:$kernelspec-language kernelspec)
-      (("python" "R" "julia") (intern (ein:$kernelspec-language kernelspec)))
+      (("julia" "python" "R") (intern (ein:$kernelspec-language kernelspec)))
       (t 'python))))
 
 (defun ein:edit-src-continue (e)
