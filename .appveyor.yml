@@ -102,7 +102,7 @@ install:
   - python -m pip install jupyter
   - jupyter kernelspec list
   - ipython --version
-  - choco install emacs64
+  - choco install emacs
   - emacs --version
   - if not exist %userprofile%\local mkdir %userprofile%\local
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
@@ -112,7 +112,7 @@ install:
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
   - curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
   - choco install make
-  - bash -lc "cd /c/projects/myproject ; cask install"
+  - bash -lc "cd /c/projects/myproject ; cask install --verbose"
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
