@@ -292,7 +292,7 @@
       (lambda (bogey)
         (ein:testing-wait-until
          (lambda () (s-contains? bogey (buffer-string)))
-         nil 60000 2000)))
+         nil 40000 2000)))
 
 (When "^I wait for cell to execute$"
       (lambda ()

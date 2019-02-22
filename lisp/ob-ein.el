@@ -139,7 +139,6 @@ Based on ob-ipython--configure-kernel.
                      processed-params
                      result-params
                      name))))
-    (message "got here org-babel-execute:ein %s" name)
     (ob-ein--initiate-session session kernelspec callback))
   *ob-ein-sentinel*)
 
@@ -158,8 +157,7 @@ Based on ob-ipython--configure-kernel.
                     (ein:oref-safe cell 'outputs) params*)))
             (result (org-babel-result-cond result-params*
                       raw (org-babel-python-table-or-string raw))))
-       (message "got here ob-ein--execute-async-callback %s %s"
-                name* result)
+       (ein:log 'debug "ob-ein--execute-async-callback %s %s" name* result)
        (save-excursion
          (save-restriction
            (with-current-buffer buffer*
@@ -169,9 +167,7 @@ Based on ob-ipython--configure-kernel.
               result
               (cdr (assoc :result-params
                           (third (org-babel-get-src-block-info)))))
-             (org-redisplay-inline-images)
-             (message "got here ob-ein--execute-async-callback %s"
-                      (buffer-string)))))))
+             (org-redisplay-inline-images))))))
    buffer params result-params name))
 
 (defun ob-ein--execute-async (buffer body kernel params result-params name)
@@ -181,17 +177,14 @@ one at a time.  Further, we do not order the queued up blocks!"
     (deferred:next
       (deferred:lambda ()
         (let ((cell (ein:shared-output-get-cell)))
-          (message "got here ob-ein--execute-async %s %s" name (slot-value cell 'callback))
           (if (eq (slot-value cell 'callback) #'ignore)
               (let ((callback
                      (ob-ein--execute-async-callback buffer params
                                                      result-params name)))
-                (message "got here ob-ein--execute-async assigning %s" name)
                 (setf (slot-value cell 'callback) callback))
             (deferred:nextc (deferred:wait 1200) self)))))
     (deferred:nextc it
       (lambda (_x)
-        (message "got here ob-ein--execute-async running %s" name)
         (ein:shared-output-eval-string kernel body nil)))))
 
 (defun ob-ein--edit-ctrl-c-ctrl-c ()
@@ -265,7 +258,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
          (callback-login (lambda (_buffer url-or-port)
                            (ein:notebook-open url-or-port path kernelspec
                                               callback-nbopen errback-nbopen t))))
-    (cond (notebook (message "got here ob-ein--initiate-session %s" (ein:$notebook-notebook-name notebook)) (funcall callback notebook))
+    (cond (notebook (funcall callback notebook))
           ((string= (url-host parsed-url) ein:url-localhost)
            (ein:process-refresh-processes)
            (ein:aif (ein:process-url-match nbpath)

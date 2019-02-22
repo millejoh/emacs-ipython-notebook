@@ -76,20 +76,29 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
+(cl-defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
+                                       msg-type _content _metadata)
+  (ein:log 'debug
+    "ein:cell--handle-output (cell ein:shared-output-cell): %s" msg-type)
+  (when (slot-value cell 'popup)
+    (pop-to-buffer (ein:shared-output-create-buffer)))
+  (cl-call-next-method)
+  (ein:aif (ein:oref-safe cell 'callback)
+      (funcall it cell)))
+
 (cl-defmethod ein:cell--handle-execute-reply ((cell ein:shared-output-cell)
                                               content _metadata)
   (ein:log 'debug
     "ein:cell--handle-execute-reply (cell ein:shared-output-cell): %s"
     content)
-
-  ;; do the normal drawing
   (cl-call-next-method)
-  (ein:aif (ein:oref-safe cell 'callback)
-      (progn
-        (funcall it cell)
-        ;; clear the way for waiting block in `ob-ein--execute-async' 
-        (message "got here ein:cell--handle-execute-reply %s" content)
-        (setf (slot-value cell 'callback) #'ignore))))
+  (when (ein:oref-safe cell 'callback)
+    ;; clear the way for waiting block in `ob-ein--execute-async'
+    ;; but only after 2 seconds to get handle-output stragglers
+    ;; TODO avoid this hack
+    (run-at-time 2 nil (lambda ()
+                         (ein:log 'debug "Clearing callback shared output cell")
+                         (setf (slot-value cell 'callback) #'ignore)))))
 
 
 ;;; Main
