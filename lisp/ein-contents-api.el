@@ -90,8 +90,7 @@ global setting.  For global setting and more information, see
    :sync ein:force-sync
    :complete (apply-partially #'ein:content-query-contents--complete url-or-port path)
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
-   :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)
-   ))
+   :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)))
 
 (defun* ein:content-query-contents--complete (url-or-port path
                                                           &key data symbol-status response
@@ -99,14 +98,28 @@ global setting.  For global setting and more information, see
                                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
-(defun* ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown &allow-other-keys)
-  (if (< iteration (if noninteractive 6 3))
-      (progn
-        (ein:log 'verbose "Retry content-query-contents #%s in response to %s" iteration (request-response-status-code response))
-        (sleep-for 0 (* (1+ iteration) 500))
-        (ein:content-query-contents url-or-port path callback errback (1+ iteration)))
-    (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s" (concat (file-name-as-directory url-or-port) path) symbol-status (cdr error-thrown))
-    (when errback (funcall errback nil))))
+(defun* ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown data &allow-other-keys)
+  (let ((status-code (request-response-status-code response)))
+    (case status-code
+      (404 (ein:log 'error "ein:content-query-contents--error %s %s"
+                    (request-response-status-code response) (plist-get data :message))
+           (when errback (funcall errback url-or-port status-code)))
+      (t (if (< iteration (if noninteractive 6 3))
+             (progn
+               (ein:log 'verbose "Retry content-query-contents #%s in response to %s" iteration status-code)
+               (sleep-for 0 (* (1+ iteration) 500))
+               (ein:content-query-contents url-or-port path callback errback (1+ iteration)))
+           (let ((notice
+                  (format "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s"
+                          (concat (file-name-as-directory url-or-port) path)
+                          symbol-status (cdr error-thrown))))
+             (if (and (= status-code 403) noninteractive)
+                 (progn
+                   (ein:log 'info notice)
+                   (when callback
+                     (funcall callback (ein:new-content url-or-port path data))))
+               (ein:log 'error notice)
+               (when errback (funcall errback url-or-port status-code)))))))))
 
 
 ;; TODO: This is one place to check for redirects - update the url slot if so.
@@ -296,11 +309,10 @@ global setting.  For global setting and more information, see
   (when callback
     (apply callback cbargs)))
 
-(defun* ein:content-save-error (url errcb errcbargs &key response status-code &allow-other-keys)
+(defun* ein:content-save-error (url errcb errcbargs &key response data &allow-other-keys)
   (ein:log 'error
-    "Error thrown: %S" (request-response-error-thrown response))
-  (ein:log 'error
-    "Content save call %s failed with status %s." url status-code)
+    "Content save %s failed %s %s."
+    url (request-response-error-thrown response) (plist-get data :message))
   (when errcb
     (apply errcb errcbargs)))
 
@@ -348,11 +360,10 @@ global setting.  For global setting and more information, see
   (when callback
     (apply callback cbargs)))
 
-(defun* ein:content-rename-error (path &key symbol-status response &allow-other-keys)
-  (ein:log 'verbose
-    "Error thrown: %S" (request-response-error-thrown response))
+(defun* ein:content-rename-error (path &key response data &allow-other-keys)
   (ein:log 'error
-    "Renaming content %s failed with status %s." path symbol-status))
+    "Renaming content %s failed %s %s."
+    path (request-response-error-thrown response) (plist-get data :message)))
 
 
 ;;; Sessions

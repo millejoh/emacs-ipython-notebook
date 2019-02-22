@@ -51,6 +51,8 @@ install:
       pyenv activate $TOXENV ;
     fi
   - pip install jupyter ipython\<=$IPYTHON
+  - pip install numpy
+  - pip install matplotlib
   - |
     if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
       pip install jupyterhub ;
@@ -77,7 +79,7 @@ before_script:
 script:
   - make test-install
   - |
-    if [ "x$TRAVIS_OS_NAME" = "xlinux" ]; then
+    if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
       make test-jupyterhub
     fi
   - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | dos2unix | sed '/^begin 664/,/^end/!d' | uudecode" ) && false)

@@ -153,6 +153,16 @@ the source is in git repository) or elpa version."
 (defvar *ein:kernelspecs* (make-hash-table :test #'equal)
   "url-or-port to kernelspecs")
 
+(defun ein:get-kernelspec (url-or-port name)
+  (let* ((kernelspecs (ein:need-kernelspecs url-or-port))
+         (name (if (stringp name)
+                   (intern (format ":%s" name))
+                 name))
+         (ks (plist-get kernelspecs name)))
+    (if (stringp ks)
+        (ein:get-kernelspec url-or-port ks)
+      ks)))
+
 (defun ein:need-kernelspecs (url-or-port)
   "Callers assume ein:query-kernelspecs succeeded.  If not, nil."
   (ein:aif (gethash url-or-port *ein:kernelspecs*) it
@@ -380,7 +390,6 @@ but can operate in different contexts."
                (length errors)
                (ein:join-str " " (mapcar #'file-name-nondirectory it))))
     (message "Compiled %s files" (length files))))
-
 
 (provide 'ein-core)
 

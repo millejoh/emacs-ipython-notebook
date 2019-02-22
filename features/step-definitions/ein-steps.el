@@ -1,3 +1,19 @@
+(When "^I insert percent sign$" ;; https://github.com/ecukes/ecukes/issues/58
+      (lambda ()
+        (insert-char 37)))
+
+(When "^I type session port \\([0-9]+\\)$"
+      (lambda (port)
+        (ein:process-refresh-processes)
+        (assert (not (ein:process-url-match (ein:url port))))
+        (When (format "I type \"ein :session localhost:%s :result raw drawer\"" port))))
+
+(When "^I ctrl-c-ctrl-c$"
+      (lambda ()
+        (cl-letf (((symbol-function 'read-directory-name)
+                   (lambda (&rest args) ein:testing-jupyter-server-root)))
+          (When "I press \"C-c C-c\""))))
+
 (When "^with no opened notebooks call \"\\(.+\\)\"$"
       (lambda (func)
         (cl-letf (((symbol-function 'ein:notebook-opened-buffer-names) #'ignore))
@@ -103,9 +119,9 @@
 (When "^new \\(.+\\) notebook$"
       (lambda (kernel)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-          (lexical-let (notebook)
+          (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (lexical-let ((ks (ein:get-kernelspec url-or-port kernel)))
+              (let ((ks (ein:get-kernelspec url-or-port kernel)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
@@ -114,7 +130,7 @@
               (Then "I should be in buffer \"%s\"" buf-name))))))
 
 (When "^I \\(finally \\)?stop the server\\(\\)$"
-      (lambda (final-p &rest args)
+      (lambda (final-p _workaround)
         (cancel-function-timers #'ein:notebooklist-reload)
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
@@ -123,7 +139,12 @@
               until (null (get-buffer-process buffer))
               do (sleep-for 0 1000)
               finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
-        (clrhash ein:notebooklist-map)
+        (condition-case err
+            (ein:testing-wait-until (lambda ()
+                                      (null (ein:notebooklist-keys)))
+                                    nil 10000 1000)
+          (error (ein:log 'warn "Stopping server: orphaned %s" (ein:notebooklist-keys))
+                 (clrhash ein:notebooklist-map)))
         (unless final-p
           (When "I clear log expr \"ein:log-all-buffer-name\"")
           (When "I clear log expr \"ein:jupyter-server-buffer-name\""))))
@@ -266,6 +287,12 @@
 
 (When "^I dump buffer"
       (lambda () (message "%s" (buffer-string))))
+
+(When "^I wait for buffer to say \"\\(.+\\)\"$"
+      (lambda (bogey)
+        (ein:testing-wait-until
+         (lambda () (s-contains? bogey (buffer-string)))
+         nil 40000 2000)))
 
 (When "^I wait for cell to execute$"
       (lambda ()

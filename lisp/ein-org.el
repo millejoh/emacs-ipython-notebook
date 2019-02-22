@@ -45,9 +45,7 @@
       (pop-to-buffer (ein:notebook-buffer notebook)))
     (when search
       (goto-char (point-min))
-      (search-forward search nil t))
-    ;; More to come here:
-    ))
+      (search-forward search nil t))))
 
 ;;;###autoload
 (defun ein:org-open (link-path)

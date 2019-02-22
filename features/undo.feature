@@ -170,7 +170,6 @@ Scenario: Split and merge don't break undo
 
 @reopened
 Scenario: Undo needs to at least work for reopened notebooks
-  Given I start the server configured "\n"
   Given I enable "ein:worksheet-enable-undo"
   Given old notebook "undo.ipynb"
   And I type "howdy"

@@ -63,22 +63,23 @@ the notebook directory, you can set it here for future calls to
 
 (defun ein:jupyter-server--run (buf cmd dir &optional args)
   (let* ((vargs (append (if dir
-                            `("notebook" ,(format "--notebook-dir=%s"
-                                                  (convert-standard-filename dir))))
-                        (or args ein:jupyter-server-args)))
+                            `("notebook"
+                              ,(format "--notebook-dir=%s"
+                                       (convert-standard-filename dir))))
+                        args
+                        ein:jupyter-server-args))
          (proc (apply #'start-process
-                     *ein:jupyter-server-process-name*
-                     buf
-                     cmd
-                     vargs)))
+                      *ein:jupyter-server-process-name* buf cmd vargs)))
+    (ein:log 'info "ein:jupyter-server--run: %s %s" cmd (ein:join-str " " vargs))
     (set-process-query-on-exit-flag proc nil)
     proc))
 
-(defun ein:jupyter-server-conn-info (&optional buffer)
+(defun ein:jupyter-server-conn-info (&optional buffer-name)
   "Return the url-or-port and password for BUFFER or the global session."
-  (unless buffer
-    (setq buffer (get-buffer ein:jupyter-server-buffer-name)))
-  (let ((result '(nil nil)))
+  (unless buffer-name
+    (setq buffer-name ein:jupyter-server-buffer-name))
+  (let ((buffer (get-buffer buffer-name))
+        (result '(nil nil)))
     (if buffer
         (with-current-buffer buffer
           (save-excursion
@@ -121,7 +122,8 @@ our singleton jupyter server process here."
                     url-or-port (process-sentinel proc))))
 
 ;;;###autoload
-(defun ein:jupyter-server-start (server-cmd-path notebook-directory &optional no-login-p login-callback)
+(defun ein:jupyter-server-start (server-cmd-path notebook-directory
+                                                 &optional no-login-p login-callback port)
   "Start SERVER-CMD_PATH with `--notebook-dir' NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--finish, and the url-or-port argument of ein:notebooklist-open*.
 
 This command opens an asynchronous process running the jupyter
@@ -159,12 +161,14 @@ the log of the running jupyter server."
   (setf *ein:last-jupyter-command* server-cmd-path
         *ein:last-jupyter-directory* notebook-directory)
   (if (ein:jupyter-server-process)
-      (error "Please first M-x ein:jupyter-server-stop"))
+      (error "Please first M-x ein:stop"))
   (add-hook 'kill-emacs-hook #'(lambda ()
                                  (ignore-errors (ein:jupyter-server-stop t))))
   (let ((proc (ein:jupyter-server--run ein:jupyter-server-buffer-name
                                        *ein:last-jupyter-command*
-                                       *ein:last-jupyter-directory*)))
+                                       *ein:last-jupyter-directory*
+                                       (if (numberp port)
+                                           `("--port" ,(format "%s" port))))))
     (when (eql system-type 'windows-nt)
       (accept-process-output proc (/ ein:jupyter-server-run-timeout 1000)))
     (loop repeat 30
@@ -191,25 +195,21 @@ the log of the running jupyter server."
 
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
-  "Stop a running jupyter notebook server.
-
-Use this command to stop a running jupyter notebook server. If
-there is no running server then no action will be taken.
-"
   (interactive)
-  (when (and (ein:jupyter-server-process)
-             (or force (y-or-n-p "Kill jupyter server and close all open notebooks?")))
+  (ein:and-let* ((proc (ein:jupyter-server-process))
+                 (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (let ((unsaved (ein:notebook-opened-notebooks #'ein:notebook-modified-p))
           (check-for-saved (make-hash-table :test #'equal)))
       (when unsaved
         (loop for nb in unsaved
-              when (y-or-n-p (format "Save notebook %s before stopping the server?" (ein:$notebook-notebook-name nb)))
+              for nb-name = (ein:$notebook-notebook-name nb)
+              when (y-or-n-p (format "Save %s?" nb-name))
               do (progn
-                   (setf (gethash (ein:$notebook-notebook-name nb) check-for-saved) t)
-                   (ein:notebook-save-notebook nb
-                                               #'(lambda (name check-hash)
-                                                   (remhash name check-hash))
-                                               (list (ein:$notebook-notebook-name nb) check-for-saved)))))
+                   (setf (gethash nb-name check-for-saved) t)
+                   (ein:notebook-save-notebook
+                    nb
+                    (lambda (name check-hash) (remhash name check-hash))
+                    (list nb-name check-for-saved)))))
       (loop for x upfrom 0 by 1
             until (or (zerop (hash-table-count check-for-saved))
                       (> x 20))
@@ -224,14 +224,18 @@ there is no running server then no action will be taken.
           do (sleep-for 0 500))
 
     ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
-    (ein:aif (ein:jupyter-server-process)
-        (progn
-          (if (eql system-type 'windows-nt)
-              (delete-process it)
-            (let ((pid (process-id it)))
-              (ein:log 'verbose "Signaled %s with pid %s" it pid)
-              (signal-process pid 15)))
-          (ein:log 'info "Stopped Jupyter notebook server.")))
+    (if (eql system-type 'windows-nt)
+        (delete-process proc)
+      (let ((pid (process-id proc)))
+        (ein:log 'verbose "Signaled %s with pid %s" proc pid)
+        (signal-process pid 15)))
+
+    (ein:log 'info "Stopped Jupyter notebook server.")
+
+    ;; `ein:notebooklist-sentinel' frequently does not trigger
+    (multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
+      (ein:notebooklist-list-remove url-or-port))
+
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name
         (write-region (point-min) (point-max) log)))))

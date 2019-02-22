@@ -51,7 +51,7 @@
               (ein:events-new))
         ; matryoshka: new-content makes a ein:$content using CONTENT as template 
         ; populating its raw_content field with DATA's content field
-        (ein:notebook-open--callback notebook nil (ein:new-content (ein:$notebook-url-or-port notebook) (ein:$notebook-notebook-path notebook) data))
+        (ein:notebook-open--callback notebook nil nil (ein:new-content (ein:$notebook-url-or-port notebook) (ein:$notebook-notebook-path notebook) data))
         (ein:notebook-buffer notebook)))))
 
 (defun ein:testing-notebook-make-data (name path cells)

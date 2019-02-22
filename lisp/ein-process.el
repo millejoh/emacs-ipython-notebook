@@ -125,8 +125,11 @@
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
-  (loop for line in (process-lines ein:jupyter-default-server-command
-                                   "notebook" "list" "--json")
+  (loop for line in (condition-case err
+                        (process-lines ein:jupyter-default-server-command
+                                       "notebook" "list" "--json")
+                      ;; often there is no local jupyter installation
+                      (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
         do (destructuring-bind
                (&key pid url notebook_dir &allow-other-keys)
                (ein:json-read-from-string line)
@@ -141,6 +144,15 @@
   (loop for dir in (hash-table-keys ein:%processes%)
         when (search dir filename)
         return (gethash dir ein:%processes%)))
+
+(defun ein:process-url-match (url-or-port)
+  "Return ein:process whose url matches URL-OR-PORT."
+  (loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
+        for proc in (ein:process-processes)
+        for parsed-url-proc = (url-generic-parse-url (ein:process-url-or-port proc))
+        when (and (string= (url-host parsed-url-or-port) (url-host parsed-url-proc))
+                  (= (url-port parsed-url-or-port) (url-port parsed-url-proc)))
+        return proc))
 
 (defsubst ein:process-url-or-port (proc)
   "Naively construct url-or-port from ein:process PROC's port and ip fields"

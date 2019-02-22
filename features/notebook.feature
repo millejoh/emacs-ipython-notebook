@@ -1,9 +1,3 @@
-@autosave
-Scenario: try autosaving
-  Given new default notebook
-  And I call "ein:notebook-enable-autosaves"
-  Then I should see message "ein:notebook-autosave-frequency is 0"
-
 @eldoc
 Scenario: not running server locally
   Given I enable "ein:enable-eldoc-support"

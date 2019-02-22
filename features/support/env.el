@@ -14,6 +14,7 @@
 (require 'ein-testing)
 (require 'ein-ipynb-mode)
 (require 'ein-contents-api)
+(require 'ob-ein)
 
 (if (member "timestamp" ecukes-include-tags)
     (require 'ein-timestamp)
@@ -24,6 +25,9 @@
 
 (if (eq system-type 'darwin)
     (!cons "switch" ecukes-exclude-tags))
+
+(if (> (string-to-number org-version) 9.1) ;; they got rid of easy templates
+    (!cons "org" ecukes-exclude-tags))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
@@ -56,14 +60,15 @@
 
 (Setup
  (ein:dev-start-debug)
+ (setq ein:jupyter-server-args '("--no-browser" "--debug"))
  (setq ein:notebook-autosave-frequency 0)
  (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
  (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))
  (setq ein:testing-dump-file-request  (concat default-directory "log/ecukes.request"))
- (Given "I start and login to the server configured \"\\n\"")
-)
+ (setq org-confirm-babel-evaluate nil)
+ (Given "I start and login to the server configured \"\\n\""))
 
 (After
  (ein:testing-after-scenario))

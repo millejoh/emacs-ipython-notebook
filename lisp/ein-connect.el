@@ -220,7 +220,7 @@ inside the ``if __name__ == \"__main__\":`` block."
   (deferred:$
     (deferred:next
       (lambda ()
-        (ein:shared-output-eval-string (buffer-string) nil nil nil :silent t)))
+        (ein:shared-output-eval-string (ein:connect-get-kernel) (buffer-string) nil :silent t)))
     (deferred:nextc it
       (lambda ()
         (ein:connect-execute-autoexec-cells))))
@@ -239,7 +239,7 @@ Variable `ein:connect-run-command' sets the default command."
              (cmd (format "%s \"%s\"" command it)))
         (if (ein:maybe-save-buffer ein:connect-save-before-run)
             (progn
-              (ein:shared-output-eval-string cmd nil nil nil :silent t)
+              (ein:shared-output-eval-string (ein:connect-get-kernel) cmd nil :silent t)
               (ein:connect-execute-autoexec-cells)
               (ein:log 'info "Command sent to the kernel: %s" cmd))
           (ein:log 'info "Buffer must be saved before %%run.")))
@@ -265,7 +265,7 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 
 (defun ein:connect-eval-region (start end)
   (interactive "r")
-  (ein:shared-output-eval-string (buffer-substring start end))
+  (ein:shared-output-eval-string (ein:connect-get-kernel) (buffer-substring start end) nil)
   (ein:log 'info "Selected region is sent to the kernel."))
 
 (define-obsolete-function-alias
