@@ -45,6 +45,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
 
 @org
 Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
+  Given I stop the server
   When I open temp file "path.org"
   And I call "org-mode"
   And I type "<s"
@@ -57,7 +58,17 @@ Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   And I press "M->"
   And I type "<s"
   And I press "TAB"
-  And I type "ein :session localhost/undo.ipynb :results raw drawer"
+  And I type "ein :session localhost :results raw drawer"
+  And I press "RET"
+  And I insert percent sign
+  And I type "matplotlib inline"
+  And I press "RET"
+  And I type "import matplotlib.pyplot as plt ; import numpy as np ; x = np.linspace(0, 1, 100) ; y = np.random.rand(100,1) ; plt.plot(x,y)"
+  And I ctrl-c-ctrl-c
+  And I press "M->"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :session localhost :results raw drawer"
   And I press "RET"
   And I insert percent sign
   And I type "matplotlib inline"
@@ -77,4 +88,3 @@ Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   And I switch to buffer like "path.org"
   And I dump buffer
   And I wait for buffer to say "2.718"
-  And I should not see "file:ein-image"
