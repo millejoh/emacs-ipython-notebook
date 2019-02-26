@@ -214,7 +214,10 @@ shared output buffer.  You can open the buffer by the command
           'ein:shared-output-eval-string-history)))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
-    (apply #'ein:cell-execute cell kernel (ein:trim-indent code) popup args)))
+    (ein:kernel-when-ready
+     kernel
+     (lambda (ready-kernel)
+       (apply #'ein:cell-execute cell ready-kernel (ein:trim-indent code) popup args)))))
 
 
 ;;; Generic getter
