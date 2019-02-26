@@ -96,6 +96,10 @@ Scenario: Bad curl invocation produces sensible error message
   Then I should see "no-such-option"
 
 @login
+Scenario: jupyter not found
+  And I start bad jupyter path
+
+@login
 Scenario: With token server
   Given I start and login to the server configured "\n"
   And I switch to log expr "ein:log-all-buffer-name"

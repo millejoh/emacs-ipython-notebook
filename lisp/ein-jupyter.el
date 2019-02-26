@@ -155,9 +155,12 @@ the log of the running jupyter server."
                                     ein:jupyter-default-notebook-directory))))
      (list server-cmd-path notebook-directory nil (lambda (buffer url-or-port)
                                                     (pop-to-buffer buffer)))))
-  (assert (and (file-exists-p server-cmd-path)
+  (unless (and (stringp server-cmd-path)
+               (file-exists-p server-cmd-path)
                (file-executable-p server-cmd-path))
-          t "Command %s is not valid!" server-cmd-path)
+    (error "Command %s not found or not executable"
+           (or *ein:last-jupyter-command*
+               ein:jupyter-default-server-command)))
   (setf *ein:last-jupyter-command* server-cmd-path
         *ein:last-jupyter-directory* notebook-directory)
   (if (ein:jupyter-server-process)
