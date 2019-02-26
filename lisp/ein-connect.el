@@ -403,8 +403,10 @@ notebook."
      (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))
     (ein:use-company-backend
+     (add-to-list 'company-backends #'ein:company-backend)
      (company-mode))
     (ein:use-company-jedi-backend
+     (add-to-list 'company-backends #'ein:company-backend)
      (company-mode))))
 
 (put 'ein:connect-mode 'permanent-local t)

@@ -94,7 +94,9 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend))
-    (prefix (and (eq major-mode 'ein:notebook-multilang-mode) (ein:object-at-point)))
+    (prefix (and (or (eq major-mode 'ein:notebook-multilang-mode)
+                     (boundp 'ein:%connect%))
+                 (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
                       (plist-get it :definition))))
@@ -106,7 +108,7 @@
                       (ein:pytools-find-source (ein:get-kernel-or-error)
                                                arg
                                                cb))))
-    (candidates 
+    (candidates
      (let* ((kernel (ein:get-kernel-or-error))
             (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
        (ein:aif cached it
