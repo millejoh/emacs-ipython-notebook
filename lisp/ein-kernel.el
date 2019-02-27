@@ -219,7 +219,7 @@ CALLBACK of arity 1, the kernel.
 (defun ein:kernel-reconnect-session (kernel &optional callback)
   "Check if session still exists.  If it does, retrieve it.  If it doesn't, ask the user to create a new session (ein:kernel-retrieve-session both retrieves and creates).
 
-CALLBACK with arity 0 (e.g., execute cell now that we're reconnected)"
+CALLBACK takes one argument kernel (e.g., execute cell now that we're reconnected)"
   (ein:kernel-disconnect kernel)
   (ein:kernel-session-p
    kernel
@@ -320,7 +320,7 @@ delete the kernel on the server side"
        (ein:aand (ein:$kernel-websocket kernel) (ein:websocket-open-p it))))
 
 (defun ein:kernel-when-ready (kernel callback)
-  "Execute CALLBACK of arity 0 (executing cell) when KERNEL is ready.  Warn user otherwise."
+  "Execute CALLBACK of arity 1 (the kernel) when KERNEL is ready.  Warn user otherwise."
   (if (ein:kernel-live-p kernel)
       (funcall callback kernel)
     (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id kernel))
