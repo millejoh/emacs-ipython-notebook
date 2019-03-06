@@ -96,6 +96,7 @@
     (interactive (company-begin-backend 'ein:company-backend))
     (prefix (and (or (eq major-mode 'ein:notebook-multilang-mode)
                      (boundp 'ein:%connect%))
+                 (ein:get-kernel)
                  (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
