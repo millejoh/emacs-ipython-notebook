@@ -78,7 +78,7 @@ Org-mode Integration
 
 EIN provides org-babel functionality similar to ob-ipython_ and scimax_.  Acknowledgements to those fine packages.
 
-*Language* is `ein`::
+*Language* is ``ein``.  The ``:session`` header argument is the notebook url, e.g., ``https://localhost:8888/my.ipynb``, or simply ``localhost``, in which case EIN will evaluate org blocks in an anonymous notebook::
 
    #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
    import matplotlib.pyplot as plt
@@ -90,8 +90,11 @@ EIN provides org-babel functionality similar to ob-ipython_ and scimax_.  Acknow
    plt.plot(x,y)
    #+END_SRC
 
+You may also specify the port, i.e., ``localhost:8889``.  See `complete details`_.
+
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython/
 .. _scimax: https://github.com/jkitchin/scimax
+.. _complete details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 
 Screenshots
 ===========
