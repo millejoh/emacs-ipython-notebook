@@ -14,6 +14,7 @@ In your `init.el` or `.emacs`, add the following:
 
 ```
 (add-to-list 'load-path "~/emacs-ipython-notebook/lisp")
+(load "ein-autoloads")
 ```
 
 Now whatever changes you make to the repo will be reflected in new emacs instances.
