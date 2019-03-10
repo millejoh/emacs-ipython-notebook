@@ -4,7 +4,7 @@ The Emacs IPython Notebook
 
 .. el:package:: ein
 
-The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
+The `Emacs IPython Notebook (EIN)`_ package provides a `Jupyter Notebook`_ client and
 integrated REPL (like SLIME_) in Emacs. EIN improves notebook editing by
 allowing you to use Emacs, it also expose IPython features such as code
 evaluation, object inspection and code completion. These features can be
@@ -15,16 +15,18 @@ general in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
+.. _`Jupyter Notebook`: https://jupyter-notebook.readthedocs.io/en/stable/
+
 Highlighted features:
 
 * Copy/paste cells in and between notebooks.
 * Console integration: You can easily connect to a kernel via a console
   application.  This enables you to start debugging in the same kernel.  It is
   even possible to connect a console over ssh [#]_.
-* IPython kernel can be "connected" to a buffer.  This enables you to evaluate
+* An IPython kernel can be "connected" to a buffer.  This enables you to evaluate
   buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
   help, help browser and code completion are available in these buffers. [#]_
-* Jump to definition (go to the definition by hitting ``M-.`` over an
+* Jump to definition (go to the definition by executing ``M-.`` over an
   object).
 * Execute code from an org-mode source block in a running kernel.
 
@@ -89,8 +91,9 @@ available after emacs starts, try adding the following to your emacs init file:
 Requirements
 ------------
 
-* EMACS 24.5, 25.3, or 26
-* IPython_ 2.0 or higher.
+* EMACS 25.3, 26.x, or 27
+* `Jupyter Notebook`_ 4.x or higher
+* IPython_ 5.8 or higher.
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ >= 1.7
 * `request.el`_ >= 0.3
@@ -125,7 +128,7 @@ Requirements
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.
 
-.. _IPython: http://ipython.org/
+.. _IPython: http://ipython.readthedocs.io/en/stable/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
@@ -178,7 +181,7 @@ for more information.
 Using package.el (MELPA)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can install EIN using `package.el`_ when MELPA_ package repository
+You can install EIN using `package.el`_ when the MELPA_ package repository
 is added to its setting. See MELPA_ website for more information.
 
 .. _`package.el`: http://emacswiki.org/emacs/ELPA
@@ -188,7 +191,7 @@ is added to its setting. See MELPA_ website for more information.
 Manual install
 ^^^^^^^^^^^^^^
 
-Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in
+Put Emacs lisp ``ein*.el`` files and the Python file ``ein_remote_safe.py`` in
 a directory defined in your :el:symbol:`load-path`.
 
 You should byte compile EIN, especially when using MuMaMo, otherwise
@@ -226,9 +229,10 @@ Usage
 -----
 
 1. Start the `Jupyter notebook server`_ from the terminal or call ``M-x
-   ein:jupyter-server-start`` from emacs. Note starting the notebook server from
-   emacs will automatically call ``ein:jupyter-server-login-and-open``, making
-   steps 2 and 3 below unnecessary!
+   ein:run`` or ``M-x ein:jupyter-server-start`` from emacs. Note starting the
+   notebook server from emacs will automatically call
+   ``ein:jupyter-server-login-and-open``, making steps 2 and 3 below
+   unnecessary!
 
 2. If you have token or password authentication enabled then you will need to
    call ``M-x ein:notebooklist-login`` and enter the appropriate password.
@@ -260,6 +264,7 @@ authentication for the running server and automatically log you in.
 Note that the below work best with current (> v4.3.1) versions of jupyter.
 
 .. el:function:: ein:jupyter-server-start
+.. el:function:: ein:run                
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
 
