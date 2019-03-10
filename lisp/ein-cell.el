@@ -675,7 +675,8 @@ Return language name as a string or `nil' when not defined.
     (setf (slot-value cell 'collapsed) collapsed)
     (apply #'ewoc-invalidate
            (slot-value cell 'ewoc)
-           (ein:cell-element-get cell :output))))
+           (append (ein:cell-element-get cell :output)
+                   (list (ein:cell-element-get cell :footer))))))
 
 (cl-defmethod ein:cell-collapse ((cell ein:codecell))
   (ein:cell-set-collapsed cell t))
