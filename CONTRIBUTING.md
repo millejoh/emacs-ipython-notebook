@@ -1,51 +1,40 @@
-# Guidelines for submitting bug reports
+Getting started
+---------------
+Thank you for contributing!  EIN development will work best in a UNIX environment.
 
-Please use `M-x ein:dev-bug-report-template` to write a bug report.  It pops up
-a buffer containing system information and instructions for submitting a bug
-report.
+Fork the repo on github.  Clone the fork to your home directory.
 
+Install cask.  Run `make dist` to ensure correct cask functionality.
 
-## Avoiding Common Emacs Traps
+Run `make test` to ensure a correct baseline.  This locally replicates the travis ci build.  You may need to install other software such as jupyter, R, matplotlib, etc.
 
-### Is it just Emacs?
+Remove the MELPA-installed EIN by deleting the package directory (on my system, it's `~/.emacs.d/elpa/ein-20190122.1341`) or running `M-x package-delete`.
 
-Did you try the same thing in a normal IPython notebook, i.e. from the browser
-interface?
+In your `init.el` or `.emacs`, add the following:
 
-### Your Emacs configuration
+```
+(add-to-list 'load-path "~/emacs-ipython-notebook/lisp")
+(load "ein-autoloads")
+```
 
-There is always the possibility of an unintended interaction with another
-package, so to elimate this possibility the best way is to start EIN in a clean
-Emacs (i.e., without your configuration).
+Now whatever changes you make to the repo will be reflected in new emacs instances.
 
-You can use zeroein.el to start EIN in a clean Emacs.  See the Quick try section
-in the manual: http://millejoh.github.com/emacs-ipython-notebook/#quick-try
+Dev tools
+---------------
+Most dev functionality lies in `ein-dev.el` the most important of which is `ein:dev-start-debug` which activates full logging and backtrace on error.
 
+Quick sanity checking
+---------------------
+`make quick` runs a syntax check and the unit tests.  It is far quicker than the laborious `make test`.
 
-### Badly compiled file
+Unit tests
+----------
+Located in `~/emacs-ipython-notebook/test`.
 
-Remove all `*.elc` files from EIN source directory and its dependencies.  Then
-restart Emacs and try to reproduce the problem.
+Integration tests
+-----------------
+If you add a feature, we encourage writing an integration test.
 
-You will have problem with compiled files if they are older than the
-source files and/or the files are compiled with different Emacs
-versions.
+`cask exec ecukes` is the bulk of `make test`.  Ecukes is our friend and guardian.  We follow its opinionated file structure in `~/emacs-ipython-notebook/features`.
 
-
-### Make sure that the right library is loaded.
-
-Sometimes you accidentally load libraries from unexpected location,
-if you installed it in different places in the past or another
-Emacs lisp libraries you are using bundles the old version of the
-libraries.
-
-To make sure that all EIN dependencies are loaded from the intended
-place, use `M-x locate-library`.  Also, `M-x ein:dev-bug-report-template`
-does it for you for all EIN dependencies.
-
-
-## Log and backtrace
-
-Please consider putting log and backtrace in your bug report.
-Follow the instruction in the manual:
-http://millejoh.github.com/emacs-ipython-notebook/#reporting-issue
+To run say just the login tests, `cask exec ecukes --tags "@login"`.

@@ -385,12 +385,10 @@ Misc
 
 .. Is it better to remove el:package from eldomain??
 
-
-Org-mode integration
+Org-mode Integration
 --------------------
 
-You can execute org source blocks in EIN by adding `ein` to
-`org:babel-load-languages`. The format for the `:session` header argument is
+The format for the `:session` header argument is
 `{url-or-port}/{path-to-notebook}`. Just specifying `{url-or-port}` executes your source block in a single anonymous notebook (this effects an ipython repl in org).  You should also specify `:results raw drawer`
 for proper rendering inside the org buffer. For example:
 
