@@ -976,7 +976,9 @@ HTML for other object.
 
 If the text type output contains a newline, it is assumed be a
 prettified text thus be used instead of HTML type."
-  (if (ein:aand (plist-get data :text) (string-match-p "\n" it))
+  (if (ein:aand (or (plist-get data :text)
+                    (plist-get data :text/plain))
+                (string-match-p "\n" it))
       ein:output-types-text-preferred
     ein:output-types-html-preferred))
 
