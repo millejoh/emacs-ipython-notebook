@@ -29,3 +29,4 @@ _static
 .gitattributes
 .ecukes-temp*
 dist
+*.ob-ein.ipynb
