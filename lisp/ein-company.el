@@ -94,8 +94,7 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend))
-    (prefix (and (or (eq major-mode 'ein:notebook-multilang-mode)
-                     (boundp 'ein:%connect%))
+    (prefix (and (or (ein:worksheet-at-codecell-p) ein:connect-mode)
                  (ein:get-kernel)
                  (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
@@ -113,20 +112,14 @@
      (let* ((kernel (ein:get-kernel-or-error))
             (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
        (ein:aif cached it
-         (unless (and (looking-at "[[:nonascii:]]") (ein:company--punctuation-check (thing-at-point 'line) (current-column)))
-           (case ein:completion-backend
-             (ein:use-company-jedi-backend
-              (cons :async (lambda (cb)
-                             (ein:company--complete-jedi cb))))
-             (t
-              (cons :async
-                    (lambda (cb)
-                      (ein:company--complete arg cb)))))))))))
-
-(defun ein:company--punctuation-check (thing col)
-  (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
-    (string-match "[]()\",[{}'=: ]$" query (- col 2))))
-
+         (case ein:completion-backend
+           (ein:use-company-jedi-backend
+            (cons :async (lambda (cb)
+                           (ein:company--complete-jedi cb))))
+           (t
+            (cons :async
+                  (lambda (cb)
+                    (ein:company--complete arg cb))))))))))
 
 (defun ein:company-handle-doc-buffer-finish (packed content _metadata-not-used_)
   (when (plist-get content :found)
