@@ -4,9 +4,9 @@ The Emacs IPython Notebook
 
 .. el:package:: ein
 
-The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
-integrated REPL (like SLIME_) in Emacs. EIN improves notebook editing by
-allowing you to use Emacs, it also expose IPython features such as code
+The `Emacs IPython Notebook (EIN)`_ package provides a `Jupyter Notebook`_
+client and integrated REPL (like SLIME_) in Emacs. EIN improves notebook editing
+by allowing you to use Emacs. It also expose IPython features such as code
 evaluation, object inspection and code completion. These features can be
 accessed anywhere in Emacs and improve Python code editing and reading in
 general in Emacs.
@@ -15,16 +15,18 @@ general in Emacs.
 
 .. _SLIME: http://common-lisp.net/project/slime/
 
+.. _`Jupyter Notebook`: https://jupyter-notebook.readthedocs.io/en/stable/
+
 Highlighted features:
 
 * Copy/paste cells in and between notebooks.
 * Console integration: You can easily connect to a kernel via a console
   application.  This enables you to start debugging in the same kernel.  It is
   even possible to connect a console over ssh [#]_.
-* IPython kernel can be "connected" to a buffer.  This enables you to evaluate
+* An IPython kernel can be "connected" to a buffer.  This enables you to evaluate
   buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
   help, help browser and code completion are available in these buffers. [#]_
-* Jump to definition (go to the definition by hitting ``M-.`` over an
+* Jump to definition (go to the definition by executing ``M-.`` over an
   object).
 * Execute code from an org-mode source block in a running kernel.
 
@@ -33,7 +35,7 @@ Other notebook features:
 * Inline images
 * Auto/manual-completion
 * Popup (tooltip) help
-* Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)
+* Syntax highlighting in each cell type (Python/Markdown/ReST/HTML)
 * Help browser (opens when executing ``function?``)
 * Traceback viewer
 * Integration with the emacs debugger
@@ -89,8 +91,9 @@ available after emacs starts, try adding the following to your emacs init file:
 Requirements
 ------------
 
-* EMACS 24.5, 25.3, or 26
-* IPython_ 4.0 or higher.
+* EMACS 25.3, 26.x, or 27
+* `Jupyter Notebook`_ 4.x or higher
+* IPython_ 5.8 or higher.
 * Tornado_ 4.0.2 or higher.
 * `websocket.el`_ >= 1.7
 * `request.el`_ >= 0.3
@@ -103,12 +106,14 @@ Requirements
 * `skewer-mode`_ >= 1.6.2:
   Skewer mode gives EIN the ability to execute dynamic javascript in the
   note book.
-* (optional) Jupyterhub_ 0.9 or higher: EIN currently only supports logging in
-  to Jupyterhub servers using PAM authentication.
+* (optional) Jupyterhub_ 0.8 or higher:
+  EIN supports logging in to Jupyterhub servers using PAM authentication,
+  though this only works with v0.8, which currently is the development version
+  of Jupyterhub.
 * (optional) markdown-mode
 * (optional) python-mode:
   It should work with either python.el or python-mode.el. `python.el`_ is
-  required to use ``ein:console-open`` command.
+  required to use the ``ein:console-open`` command.
 * (optional) `smartrep.el`_:
   This package enables you to omit typing prefix keys (e.g.,
   ``C-c C-n C-n C-n ...`` instead of ``C-c C-n C-c C-n C-c C-n ...``).
@@ -123,7 +128,7 @@ Requirements
 Also, EIN heavily relies on standard Emacs libraries including EWOC,
 EIEIO and json.el.
 
-.. _IPython: http://ipython.org/
+.. _IPython: http://ipython.readthedocs.io/en/stable/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _websocket.el: https://github.com/ahyatt/emacs-websocket
 .. _request.el: https://github.com/tkf/emacs-request
@@ -176,7 +181,7 @@ for more information.
 Using package.el (MELPA)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can install EIN using `package.el`_ when MELPA_ package repository
+You can install EIN using `package.el`_ when the MELPA_ package repository
 is added to its setting. See MELPA_ website for more information.
 
 .. _`package.el`: http://emacswiki.org/emacs/ELPA
@@ -186,7 +191,7 @@ is added to its setting. See MELPA_ website for more information.
 Manual install
 ^^^^^^^^^^^^^^
 
-Put Emacs lisp ``ein*.el`` files and Python file ``ein.py`` in
+Put Emacs lisp ``ein*.el`` files and the Python file ``ein_remote_safe.py`` in
 a directory defined in your :el:symbol:`load-path`.
 
 You should byte compile EIN, especially when using MuMaMo, otherwise
@@ -224,19 +229,18 @@ Usage
 -----
 
 1. Start the `Jupyter notebook server`_ from the terminal or call ``M-x
-   ein:jupyter-server-start`` from emacs. Note starting the notebook server from
-   emacs will automatically call ``ein:jupyter-server-login-and-open``, making
-   steps 2 and 3 below unnecessary!
+   ein:run`` or ``M-x ein:jupyter-server-start`` from emacs. Note starting the
+   notebook server from emacs will automatically call
+   ``ein:jupyter-server-login-and-open``, making steps 2 and 3 below
+   unnecessary!
 
-2. Call ``M-x ein:notebooklist-login``. EIN will detect any local, running
-   jupyter instances and list them in the minibuffer. If you wish to connect to
-   a remote instance you will need to input the url and port for the running
-   jupyter server. After selecting the instance you wish to connect to EIN will
-   try to automatically detect and use the security token for the server. If it
-   cannot find a token, or if you are trying to connect to a remote jupyter
-   instance you will be prompted for a password.
+2. If you have token or password authentication enabled then you will need to
+   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
 
-3. In the notebook list buffer, you can open notebooks by selecting the
+3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open the
+   :ref:`notebook list <notebook-list-commands>` buffer.
+
+4. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
@@ -253,25 +257,27 @@ Running a Jupyter Notebook Server from Emacs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Using the commands below you start a jupyter notebook session from within emacs
-(i.e. no need to drop to the terminal shell and call ``jupyter notebook``). If
-you are particularly lucky ein will also determine the access url and token
-authentication for the running server and automatically log you in.
+(i.e. no need to drop to the terminal shell and call ``jupyter notebook``). EIN
+will also try to determine the access url and token authentication for the
+running server and automatically log you in.
 
 Note that the below work best with current (> v4.3.1) versions of jupyter.
 
 .. el:function:: ein:jupyter-server-start
+.. el:function:: ein:run                
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
 
 Notebook list
 ^^^^^^^^^^^^^
 
-You can connect to notebook server calling ``M-x ein:notebooklist-login`` and
-enter the port or URL of the IPython notebook server.
+You can start notebook by ``M-x ein:notebooklist-open`` and enter the
+port or URL of the IPython notebook server.
 
-.. el:function:: ein:notebooklist-login
+.. el:function:: ein:notebooklist-open
 .. el:function:: ein:notebooklist-new-notebook
 .. el:function:: ein:notebooklist-open-notebook-global
+.. el:function:: ein:notebooklist-login
 .. el:function:: ein:junk-new
 .. el:function:: ein:notebooklist-enable-keepalive
 .. el:function:: ein:notebooklist-disable-keepalive
@@ -384,28 +390,24 @@ Misc
 
 .. Is it better to remove el:package from eldomain??
 
-
-Org-mode integration
+Org-mode Integration
 --------------------
 
-You can execute org source blocks in EIN by adding `ein` to
-`org:babel-load-languages`. You need to specify a notebook via the `:session`
-argument. The format for the session argument is
-`{url-or-port}/{path-to-notebook}`. You should also specify `:results raw drawer`
-for proper rendering inside the org buffer. For example:
+The format for the `:session` header argument is
+`{url-or-port}/{path-to-notebook}`. Just specifying `{url-or-port}` executes
+your source block in a single anonymous notebook (this effects an ipython repl
+in org). You should also specify `:results raw drawer` for proper rendering
+inside the org buffer. For example:
 
 .. code:: python
 
-   #+BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer
+   #+BEGIN_SRC ein :session localhost :results raw drawer
    import sys
 
    a = 14500
    b = a+1000
    sys.version
    #+END_SRC
-
-By default EIN will execute asynchronously so you can continue to work in Emacs,
-but you may control this behavior via the :el:symbol:`ein-org-async-p`.
 
 If your code block generates an image, like from an matplotlib plot, ein will
 automatically save to a file in the directory specified by
@@ -415,7 +417,7 @@ argument as in the example below:
 
 .. code:: python
 
-   #BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
    import matplotlib.pyplot as plt
    import numpy as np
 
@@ -437,7 +439,7 @@ Then org SRC blocks with language "ein-R" will use R syntax highlighting:
 
 .. code:: python
 
-   #BEGIN_SRC ein-R :session 8888/Untitled.ipynb :results raw drawer :image output.png
+   #BEGIN_SRC ein-R :session localhost :results raw drawer :image output.png
    plot(1:10, 1:10)
    #+END_SRC
 
@@ -499,6 +501,7 @@ Subpackages
 .. el:variable:: ein:completion-backend
 .. el:variable:: ein:use-auto-complete-superpack
 .. el:variable:: ein:ac-max-cache
+.. el:variable:: ein:use-smartrep
 .. el:variable:: ein:load-dev
 
 Notebook list
@@ -576,17 +579,23 @@ Misc
 Gotchas and caveats
 -------------------
 
-Although EIN is much more stable starting in v0.15, there may still be some
-deficits. It seems that they originate from some upstream bugs so there is
-little that EIN can do.
+Although EIN mostly works fine, there are some deficits I noticed but
+have not fixed yet.  It seems that they originate from some upstream
+bugs so there is little I can do in EIN (but I'm not sure -- it's
+possible that I am misusing the libraries!).
+
+If you know how to fix/workaround them, patches are very welcome.
 
 :el:symbol:`url-retrieve`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While using EIN, you may encounter error messages about server
-connections. It is recommended that :el:symbol:`request-backend` is set to
-'curl' and that you are using the latest version of curl, as earlier versions
-seem to have problems communicating with the jupyter server.
+While using EIN, probably most of the error messages are about server
+connections.  It looks like the problem is in :el:symbol:`url-retrieve`.
+But in those cases you don't lose any notebook data and your IPython
+kernel is fine.  You can just type the command again and it will go
+fine most of the time.  For saving notebook, I implemented code to
+retry when there is an error comes from :el:symbol:`url-retrieve` to
+make it even safer.
 
 MuMaMo
 ^^^^^^
@@ -607,13 +616,12 @@ If you are using smartrep and MuMaMo together, see also the warning in
 python-mode.el
 ^^^^^^^^^^^^^^
 
-In my environment, using `python-mode.el`_ without byte-compiling it
-in MuMaMo based notebook mode produces segfault.
+Using `python-mode.el`_ without fisrt byte-compiling can cause a segfault with
+the MuMaMo based notebook mode.
 
-Also, ``mumamo-idle-set-major-mode`` messages error
-``(wrong-type-argument listp python-saved-check-command)``
-time to time, making minibuffer bit noisy while editing notebook.
-See Tips_ to fix this problem.
+Also, ``mumamo-idle-set-major-mode`` generates the error message
+``(wrong-type-argument listp python-saved-check-command)`` time to time, making
+minibuffer bit noisy while editing notebook. See Tips_ to fix this problem.
 
 
 Advanced
@@ -648,8 +656,8 @@ for bug report.
 Logging
 ^^^^^^^
 
-Sometime more information than provided in the ``*Message*`` is
-needed to debug.
+Sometime more information than provided in the ``*Message*`` buffer is needed to
+debug.
 
 1. Execute ``(ein:log-set-level 'debug)``
    (e.g., ``M-: (ein:log-set-level 'debug) RET``).
@@ -703,8 +711,6 @@ Change Log
 ==========
 
 .. include:: Changelog/v0_15_0.txt
-
-.. include:: Changelog/v0_14_2.txt
 
 .. include:: Changelog/v0_14_1.txt
 

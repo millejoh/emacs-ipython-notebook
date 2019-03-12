@@ -14,6 +14,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -58,7 +59,7 @@
 <li><a class="reference internal" href="#misc">Misc</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#org-mode-integration">Org-mode integration</a><ul>
+<li><a class="reference internal" href="#org-mode-integration">Org-mode Integration</a><ul>
 <li><a class="reference internal" href="#customization">Customization</a></li>
 </ul>
 </li>
@@ -157,9 +158,9 @@
   <div class="section" id="the-emacs-ipython-notebook">
 <h1>The Emacs IPython Notebook<a class="headerlink" href="#the-emacs-ipython-notebook" title="Permalink to this headline">¶</a></h1>
 <img alt="_images/ein_logo.jpg" src="_images/ein_logo.jpg" />
-<p>The Emacs IPython Notebook (EIN) package provides a IPython Notebook client and
-integrated REPL (like <a class="reference external" href="http://common-lisp.net/project/slime/">SLIME</a>) in Emacs. EIN improves notebook editing by
-allowing you to use Emacs, it also expose IPython features such as code
+<p>The <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook">Emacs IPython Notebook (EIN)</a> package provides a <a class="reference external" href="https://jupyter-notebook.readthedocs.io/en/stable/">Jupyter Notebook</a>
+client and integrated REPL (like <a class="reference external" href="http://common-lisp.net/project/slime/">SLIME</a>) in Emacs. EIN improves notebook editing
+by allowing you to use Emacs. It also expose IPython features such as code
 evaluation, object inspection and code completion. These features can be
 accessed anywhere in Emacs and improve Python code editing and reading in
 general in Emacs.</p>
@@ -169,10 +170,10 @@ general in Emacs.</p>
 <li>Console integration: You can easily connect to a kernel via a console
 application.  This enables you to start debugging in the same kernel.  It is
 even possible to connect a console over ssh <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</li>
-<li>IPython kernel can be “connected” to a buffer.  This enables you to evaluate
+<li>An IPython kernel can be “connected” to a buffer.  This enables you to evaluate
 buffer/region using same kernel as notebook.  Notebook goodies such as tooltip
 help, help browser and code completion are available in these buffers. <a class="footnote-reference" href="#id4" id="id2">[2]</a></li>
-<li>Jump to definition (go to the definition by hitting <code class="docutils literal notranslate"><span class="pre">M-.</span></code> over an
+<li>Jump to definition (go to the definition by executing <code class="docutils literal notranslate"><span class="pre">M-.</span></code> over an
 object).</li>
 <li>Execute code from an org-mode source block in a running kernel.</li>
 </ul>
@@ -181,7 +182,7 @@ object).</li>
 <li>Inline images</li>
 <li>Auto/manual-completion</li>
 <li>Popup (tooltip) help</li>
-<li>Syntax highlighting in each cell types (Python/Markdown/ReST/HTML)</li>
+<li>Syntax highlighting in each cell type (Python/Markdown/ReST/HTML)</li>
 <li>Help browser (opens when executing <code class="docutils literal notranslate"><span class="pre">function?</span></code>)</li>
 <li>Traceback viewer</li>
 <li>Integration with the emacs debugger</li>
@@ -228,9 +229,11 @@ available after emacs starts, try adding the following to your emacs init file:<
 <div class="section" id="requirements">
 <span id="requirements-label"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">EMACS 24.5, 25.3, or 26</p>
+<li><p class="first">EMACS 25.3, 26.x, or 27</p>
 </li>
-<li><p class="first"><a class="reference external" href="http://ipython.org/">IPython</a> 4.0 or higher.</p>
+<li><p class="first"><a class="reference external" href="https://jupyter-notebook.readthedocs.io/en/stable/">Jupyter Notebook</a> 4.x or higher</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://ipython.readthedocs.io/en/stable/">IPython</a> 5.8 or higher.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.tornadoweb.org/en/stable/">Tornado</a> 4.0.2 or higher.</p>
 </li>
@@ -252,14 +255,16 @@ this feature.</p>
 Skewer mode gives EIN the ability to execute dynamic javascript in the
 note book.</p>
 </li>
-<li><p class="first">(optional) <a href="#id28"><span class="problematic" id="id29">Jupyterhub_</span></a> 0.9 or higher: EIN currently only supports logging in
-to Jupyterhub servers using PAM authentication.</p>
+<li><p class="first">(optional) <a href="#id28"><span class="problematic" id="id29">Jupyterhub_</span></a> 0.8 or higher:
+EIN supports logging in to Jupyterhub servers using PAM authentication,
+though this only works with v0.8, which currently is the development version
+of Jupyterhub.</p>
 </li>
 <li><p class="first">(optional) markdown-mode</p>
 </li>
 <li><p class="first">(optional) python-mode:
 It should work with either python.el or python-mode.el. <a class="reference external" href="https://github.com/fgallina/python.el">python.el</a> is
-required to use <code class="docutils literal notranslate"><span class="pre">ein:console-open</span></code> command.</p>
+required to use the <code class="docutils literal notranslate"><span class="pre">ein:console-open</span></code> command.</p>
 </li>
 <li><p class="first">(optional) <a class="reference external" href="https://github.com/myuhe/smartrep.el">smartrep.el</a>:
 This package enables you to omit typing prefix keys (e.g.,
@@ -313,12 +318,12 @@ for more information.</p>
 </div>
 <div class="section" id="using-package-el-melpa">
 <h3>Using package.el (MELPA)<a class="headerlink" href="#using-package-el-melpa" title="Permalink to this headline">¶</a></h3>
-<p>You can install EIN using <a class="reference external" href="http://emacswiki.org/emacs/ELPA">package.el</a> when <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> package repository
+<p>You can install EIN using <a class="reference external" href="http://emacswiki.org/emacs/ELPA">package.el</a> when the <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> package repository
 is added to its setting. See <a class="reference external" href="https://github.com/milkypostman/melpa">MELPA</a> website for more information.</p>
 </div>
 <div class="section" id="manual-install">
 <h3>Manual install<a class="headerlink" href="#manual-install" title="Permalink to this headline">¶</a></h3>
-<p>Put Emacs lisp <code class="docutils literal notranslate"><span class="pre">ein*.el</span></code> files and Python file <code class="docutils literal notranslate"><span class="pre">ein.py</span></code> in
+<p>Put Emacs lisp <code class="docutils literal notranslate"><span class="pre">ein*.el</span></code> files and the Python file <code class="docutils literal notranslate"><span class="pre">ein_remote_safe.py</span></code> in
 a directory defined in your <code class="xref el el-symbol docutils literal notranslate"><span class="pre">load-path</span></code>.</p>
 <p>You should byte compile EIN, especially when using MuMaMo, otherwise
 editing large notebook will be very slow.  You can use the following
@@ -352,16 +357,14 @@ don’t use that optional package.</p>
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Start the <a class="reference external" href="https://jupyter.readthedocs.io/en/latest/running.html">Jupyter notebook server</a> from the terminal or call <code class="docutils literal notranslate"><span class="pre">M-x</span>
-<span class="pre">ein:jupyter-server-start</span></code> from emacs. Note starting the notebook server from
-emacs will automatically call <code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-login-and-open</span></code>, making
-steps 2 and 3 below unnecessary!</li>
-<li>Call <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code>. EIN will detect any local, running
-jupyter instances and list them in the minibuffer. If you wish to connect to
-a remote instance you will need to input the url and port for the running
-jupyter server. After selecting the instance you wish to connect to EIN will
-try to automatically detect and use the security token for the server. If it
-cannot find a token, or if you are trying to connect to a remote jupyter
-instance you will be prompted for a password.</li>
+<span class="pre">ein:run</span></code> or <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:jupyter-server-start</span></code> from emacs. Note starting the
+notebook server from emacs will automatically call
+<code class="docutils literal notranslate"><span class="pre">ein:jupyter-server-login-and-open</span></code>, making steps 2 and 3 below
+unnecessary!</li>
+<li>If you have token or password authentication enabled then you will need to
+call <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code> and enter the appropriate password.</li>
+<li>Hit <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> to open notebook list. This will open the
+<a class="reference internal" href="#notebook-list-commands"><span class="std std-ref">notebook list</span></a> buffer.</li>
 <li>In the notebook list buffer, you can open notebooks by selecting the
 <code class="docutils literal notranslate"><span class="pre">[Open]</span></code> buttons.  See the <a class="reference internal" href="#notebook-commands"><span class="std std-ref">notebook</span></a> section for
 operations and commands available in the notebook buffer.</li>
@@ -372,13 +375,31 @@ operations and commands available in the notebook buffer.</li>
 <div class="section" id="running-a-jupyter-notebook-server-from-emacs">
 <span id="notebook-list-commands"></span><h3>Running a Jupyter Notebook Server from Emacs<a class="headerlink" href="#running-a-jupyter-notebook-server-from-emacs" title="Permalink to this headline">¶</a></h3>
 <p>Using the commands below you start a jupyter notebook session from within emacs
-(i.e. no need to drop to the terminal shell and call <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>). If
-you are particularly lucky ein will also determine the access url and token
-authentication for the running server and automatically log you in.</p>
+(i.e. no need to drop to the terminal shell and call <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>). EIN
+will also try to determine the access url and token authentication for the
+running server and automatically log you in.</p>
 <p>Note that the below work best with current (&gt; v4.3.1) versions of jupyter.</p>
 <dl class="function">
 <dt id="ein:jupyter-server-start">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-p</em> <em>login-callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-start </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-p</em> <em>login-callback</em> <em>port</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start SERVER-CMD_PATH with ‘–notebook-dir’ NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open–finish, and the url-or-port argument of ein:notebooklist-open*.</p>
+<p>This command opens an asynchronous process running the jupyter
+notebook server and then tries to detect the url and password to
+generate automatic calls to ‘ein:notebooklist-login’ and
+‘ein:notebooklist-open’.</p>
+<p>With C-u prefix arg, it will prompt the user for the path to
+the jupyter executable first. Else, it will try to use the
+value of ‘<em>ein:last-jupyter-command</em>’ or the value of the
+customizable variable ‘ein:jupyter-default-server-command’.</p>
+<p>Then it prompts the user for the path of the root directory
+containing the notebooks the user wants to access.</p>
+<p>The buffer named by ‘ein:jupyter-server-buffer-name’ will contain
+the log of the running jupyter server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:run">
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:run </code><em>server-cmd-path</em> <em>notebook-directory</em> <em>&amp;optional</em> <em>no-login-p</em> <em>login-callback</em> <em>port</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start SERVER-CMD_PATH with ‘–notebook-dir’ NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open–finish, and the url-or-port argument of ein:notebooklist-open*.</p>
 <p>This command opens an asynchronous process running the jupyter
 notebook server and then tries to detect the url and password to
@@ -397,10 +418,7 @@ the log of the running jupyter server.</p>
 <dl class="function">
 <dt id="ein:jupyter-server-stop">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:jupyter-server-stop </code><em>&amp;optional</em> <em>force</em> <em>log</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:jupyter-server-stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stop a running jupyter notebook server.</p>
-<p>Use this command to stop a running jupyter notebook server. If
-there is no running server then no action will be taken.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="ein:jupyter-server-login-and-open">
@@ -416,8 +434,24 @@ via a call to ‘ein:notebooklist-open’.</p>
 </div>
 <div class="section" id="notebook-list">
 <h3>Notebook list<a class="headerlink" href="#notebook-list" title="Permalink to this headline">¶</a></h3>
-<p>You can connect to notebook server calling <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-login</span></code> and
-enter the port or URL of the IPython notebook server.</p>
+<p>You can start notebook by <code class="docutils literal notranslate"><span class="pre">M-x</span> <span class="pre">ein:notebooklist-open</span></code> and enter the
+port or URL of the IPython notebook server.</p>
+<dl class="function">
+<dt id="ein:notebooklist-open">
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-open </code><em>url-or-port</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-open" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is now an alias for ein:notebooklist-login</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-new-notebook">
+<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-new-notebook </code><em>url-or-port</em> <em>kernelspec</em> <em>&amp;optional</em> <em>callback</em> <em>no-pop</em> <em>retry</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-new-notebook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ein:notebooklist-open-notebook-global">
+<em class="property">function </em><code class="descname">ein:notebooklist-open-notebook-global</code><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="function">
 <dt id="ein:notebooklist-login">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-login </code><em>url-or-port</em> <em>callback</em> <em>&amp;optional</em> <em>cookie-plist</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-login" title="Permalink to this definition">¶</a></dt>
@@ -425,17 +459,6 @@ enter the port or URL of the IPython notebook server.</p>
 <p>CALLBACK takes two arguments, the buffer created by ein:notebooklist-open–success
 and the url-or-port argument of ein:notebooklist-open*.</p>
 </dd></dl>
-
-<dl class="function">
-<dt id="ein:notebooklist-new-notebook">
-<em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:notebooklist-new-notebook </code><em>&amp;optional</em> <em>url-or-port</em> <em>kernelspec</em> <em>path</em> <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:notebooklist-new-notebook" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ask server to create a new notebook and open it in a new buffer.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="ein:notebooklist-open-notebook-global">
-<em class="property">function </em><code class="descname">ein:notebooklist-open-notebook-global</code><a class="headerlink" href="#ein:notebooklist-open-notebook-global" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="ein:junk-new">
@@ -636,9 +659,6 @@ created via <cite>ein:notebook-create-checkpoint</cite>.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c i</code><code class="descclassname"> ein:inspect-object</code></dt>
-</dt>
-<dd><dd class="first last"><p>(fn KERNEL OBJECT)</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -702,10 +722,6 @@ This does not alter the actual data stored in the cell.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-l</code><code class="descclassname"> ein:worksheet-clear-output</code></dt>
-</dt>
-<dd><dd class="first last"><p>Clear output from the current cell at point.
-Do not clear input prompt when the prefix argument is given.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -730,11 +746,6 @@ See also ‘ein:cell-max-num-outputs’.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-k</code><code class="descclassname"> ein:worksheet-kill-cell</code></dt>
-</dt>
-<dd><dd class="first last"><p>Kill (“cut”) the cell at point or cells in region.
-Note that the kill-ring for cells is not shared with the default
-kill-ring of Emacs (kill-ring for texts).</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -782,41 +793,21 @@ See also ‘ein:notebook-worksheet-insert-next’.</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-y</code><code class="descclassname"> ein:worksheet-yank-cell</code></dt>
-</dt>
-<dd><dd class="first last"><p>Insert (“paste”) the latest killed cell.
-Prefixes are act same as the normal ‘yank’ command.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-a</code><code class="descclassname"> ein:worksheet-insert-cell-above</code></dt>
-</dt>
-<dd><dd class="first last"><p>Insert cell above.  Insert markdown cell instead of code cell
-when the prefix argument is given.
-See also: ‘ein:worksheet-insert-cell-below’.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-b</code><code class="descclassname"> ein:worksheet-insert-cell-below</code></dt>
-</dt>
-<dd><dd class="first last"><p>Insert cell below.  Insert markdown cell instead of code cell
-when the prefix argument is given.</p>
-<p>When used as a lisp function, insert a cell of TYPE-OR-CELL just
-after PIVOT and return the new cell.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-t</code><code class="descclassname"> ein:worksheet-toggle-cell-type</code></dt>
-</dt>
-<dd><dd class="first last"><p>Toggle the cell type of the cell at point.
-Use ‘ein:worksheet-change-cell-type’ to change the cell type
-directly.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -855,10 +846,6 @@ argument (C-u).</p>
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-m</code><code class="descclassname"> ein:worksheet-merge-cell</code></dt>
-</dt>
-<dd><dd class="first last"><p>Merge previous cell into current cell.
-If prefix is given, merge current cell into next cell.</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -901,7 +888,6 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 ‘ein:completer-finish-completing-ac’.  When it is specified,
 it overrides ‘ac-expand-on-auto-complete’ when calling
 ‘auto-complete’.</div></blockquote>
-<p>(fn KERNEL CALLBACKS ERRBACK)</p>
 </dd></dd>
 </dl>
 
@@ -916,9 +902,6 @@ it overrides ‘ac-expand-on-auto-complete’ when calling
 <dl class="keybind">
 <dt>
 <code class="descname">C-c C-x C-l</code><code class="descclassname"> ein:notebook-toggle-latex-fragment</code></dt>
-</dt>
-<dd><dd class="first last"><p>Borrow from org-mode the rendering of latex overlays</p>
-</dd></dd>
 </dl>
 
 <dl class="keybind">
@@ -1229,7 +1212,6 @@ This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
 ‘ein:shared-output-pop-to-buffer’.</p>
-<p>(fn CODE &amp;optional POPUP VERBOSE KERNEL &amp;rest ARGS)</p>
 </dd></dd>
 </dl>
 
@@ -1461,7 +1443,6 @@ pager buffer.  You can explicitly specify the object by selecting it.</p>
 ‘ein:completer-finish-completing-ac’.  When it is specified,
 it overrides ‘ac-expand-on-auto-complete’ when calling
 ‘auto-complete’.</div></blockquote>
-<p>(fn KERNEL CALLBACKS ERRBACK)</p>
 </dd></dd>
 </dl>
 
@@ -1564,7 +1545,6 @@ This is handy when you want to execute something quickly without
 making a cell.  If the code outputs something, it will go to the
 shared output buffer.  You can open the buffer by the command
 ‘ein:shared-output-pop-to-buffer’.</p>
-<p>(fn CODE &amp;optional POPUP VERBOSE KERNEL &amp;rest ARGS)</p>
 </dd></dd>
 </dl>
 
@@ -1758,13 +1738,13 @@ to install it if you are using newer Emacs.</p>
 </div>
 </div>
 <div class="section" id="org-mode-integration">
-<h2>Org-mode integration<a class="headerlink" href="#org-mode-integration" title="Permalink to this headline">¶</a></h2>
-<p>You can execute org source blocks in EIN by adding <cite>ein</cite> to
-<cite>org:babel-load-languages</cite>. You need to specify a notebook via the <cite>:session</cite>
-argument. The format for the session argument is
-<cite>{url-or-port}/{path-to-notebook}</cite>. You should also specify <cite>:results raw drawer</cite>
-for proper rendering inside the org buffer. For example:</p>
-<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="o">#+</span><span class="nv">BEGIN_SRC</span> <span class="nv">ein</span> <span class="ss">:session</span> <span class="nv">8888/Untitled.ipynb</span> <span class="ss">:results</span> <span class="nv">raw</span> <span class="nv">drawer</span>
+<h2>Org-mode Integration<a class="headerlink" href="#org-mode-integration" title="Permalink to this headline">¶</a></h2>
+<p>The format for the <cite>:session</cite> header argument is
+<cite>{url-or-port}/{path-to-notebook}</cite>. Just specifying <cite>{url-or-port}</cite> executes
+your source block in a single anonymous notebook (this effects an ipython repl
+in org). You should also specify <cite>:results raw drawer</cite> for proper rendering
+inside the org buffer. For example:</p>
+<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="o">#+</span><span class="nv">BEGIN_SRC</span> <span class="nv">ein</span> <span class="ss">:session</span> <span class="nv">localhost</span> <span class="ss">:results</span> <span class="nv">raw</span> <span class="nv">drawer</span>
 <span class="nb">import</span> <span class="nv">sys</span>
 
 <span class="nv">a</span> <span class="nb">=</span> <span class="mi">14500</span>
@@ -1773,14 +1753,12 @@ for proper rendering inside the org buffer. For example:</p>
 <span class="o">#+</span><span class="nv">END_SRC</span>
 </pre></div>
 </div>
-<p>By default EIN will execute asynchronously so you can continue to work in Emacs,
-but you may control this behavior via the <code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein-org-async-p</span></code>.</p>
 <p>If your code block generates an image, like from an matplotlib plot, ein will
 automatically save to a file in the directory specified by
 <a class="reference internal" href="#ein:org-inline-image-directory" title="ein:org-inline-image-directory"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:org-inline-image-directory</span></code></a> and generate an appropriate inline
 link. You can also specify the file to save the image to using by the <cite>:image</cite>
 argument as in the example below:</p>
-<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session 8888/Untitled.ipynb :results raw drawer :image output.png
+<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein :session localhost :results raw drawer :image output.png
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -1798,7 +1776,7 @@ language. For example, to get proper syntax highlighting for an R kernel, first 
 </pre></div>
 </div>
 <p>Then org SRC blocks with language “ein-R” will use R syntax highlighting:</p>
-<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein-R :session 8888/Untitled.ipynb :results raw drawer :image output.png
+<div class="code python highlight-cl notranslate"><div class="highlight"><pre><span></span>#BEGIN_SRC ein-R :session localhost :results raw drawer :image output.png
 plot(1:10, 1:10)
 #+END_SRC
 </pre></div>
@@ -1825,20 +1803,19 @@ the link at the point of cursor.</li>
 <dl class="variable">
 <dt id="ein:org-async-p">
 <em class="property">variable </em><code class="descname">ein:org-async-p</code><a class="headerlink" href="#ein:org-async-p" title="Permalink to this definition">¶</a></dt>
-<dd><p>If non-nil run ein org-babel source blocks asyncronously.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="variable">
 <dt id="ein:org-inline-image-directory">
 <em class="property">variable </em><code class="descname">ein:org-inline-image-directory</code><a class="headerlink" href="#ein:org-inline-image-directory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default directory where to save images generated from ein org-babel source blocks.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="ein:org-register-lang-mode">
 <em class="property">function </em><span class="sig-paren">(</span><code class="descname">ein:org-register-lang-mode </code><em>lang-name</em> <em>lang-mode</em><span class="sig-paren">)</span><a class="headerlink" href="#ein:org-register-lang-mode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define org+ein language LANG-NAME with syntax highlighting from LANG-MODE.
-For example, call (ein:org-register-lang-mode “ein-R” ’R) to define a language “ein-R” with R syntax highlighting for use with org-babel and ein.</p>
+<dd><p>Define org+ein language LANG-NAME with syntax highlighting from LANG-MODE.  Untested.</p>
+<p>For example, call (ein:org-register-lang-mode “ein-R” ’R) to define a language “ein-R” with R syntax highlighting for use with org-babel and ein.</p>
+<p>Based on ob-ipython–configure-kernel.</p>
 </dd></dl>
 
 </div>
@@ -1888,6 +1865,21 @@ When this option is enabled, cached omni completion is available.</p>
 <dt id="ein:ac-max-cache">
 <em class="property">variable </em><code class="descname">ein:ac-max-cache</code><a class="headerlink" href="#ein:ac-max-cache" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="variable">
+<dt id="ein:use-smartrep">
+<em class="property">variable </em><code class="descname">ein:use-smartrep</code><a class="headerlink" href="#ein:use-smartrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to <code class="xref el el-symbol docutils literal notranslate"><span class="pre">t</span></code> to use preset smartrep configuration.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When used with MuMaMo (see <a class="reference internal" href="#ein:notebook-modes" title="ein:notebook-modes"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:notebook-modes</span></code></a>),
+keyboard macro which manipulates cell (add, remove, move,
+etc.) may start infinite loop (you need to stop it with
+<code class="docutils literal notranslate"><span class="pre">C-g</span></code>).  Please be careful using this option if you are a
+heavy keyboard macro user.  Using keyboard macro for other
+commands is fine.</p>
+</div>
+</dd></dl>
 
 <dl class="variable">
 <dt id="ein:load-dev">
@@ -2398,15 +2390,20 @@ let me know or send pull request at github!
 </div>
 <div class="section" id="gotchas-and-caveats">
 <h2>Gotchas and caveats<a class="headerlink" href="#gotchas-and-caveats" title="Permalink to this headline">¶</a></h2>
-<p>Although EIN is much more stable starting in v0.15, there may still be some
-deficits. It seems that they originate from some upstream bugs so there is
-little that EIN can do.</p>
+<p>Although EIN mostly works fine, there are some deficits I noticed but
+have not fixed yet.  It seems that they originate from some upstream
+bugs so there is little I can do in EIN (but I’m not sure – it’s
+possible that I am misusing the libraries!).</p>
+<p>If you know how to fix/workaround them, patches are very welcome.</p>
 <div class="section" id="url-retrieve">
 <h3><code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code><a class="headerlink" href="#url-retrieve" title="Permalink to this headline">¶</a></h3>
-<p>While using EIN, you may encounter error messages about server
-connections. It is recommended that <code class="xref el el-symbol docutils literal notranslate"><span class="pre">request-backend</span></code> is set to
-‘curl’ and that you are using the latest version of curl, as earlier versions
-seem to have problems communicating with the jupyter server.</p>
+<p>While using EIN, probably most of the error messages are about server
+connections.  It looks like the problem is in <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code>.
+But in those cases you don’t lose any notebook data and your IPython
+kernel is fine.  You can just type the command again and it will go
+fine most of the time.  For saving notebook, I implemented code to
+retry when there is an error comes from <code class="xref el el-symbol docutils literal notranslate"><span class="pre">url-retrieve</span></code> to
+make it even safer.</p>
 </div>
 <div class="section" id="id16">
 <h3>MuMaMo<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
@@ -2414,7 +2411,7 @@ seem to have problems communicating with the jupyter server.</p>
 highlighting outside of the cell input is turned off while you are in
 the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference" href="#m3bug" id="id17">[6]</a>.</p>
 <p>If you are using smartrep and MuMaMo together, see also the warning in
-<code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-smartrep</span></code> document.</p>
+<a class="reference internal" href="#ein:use-smartrep" title="ein:use-smartrep"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:use-smartrep</span></code></a> document.</p>
 <table class="docutils footnote" frame="void" id="m3bug" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -2425,12 +2422,11 @@ the input area.  It seems there is a bug in MuMaMo <a class="footnote-reference"
 </div>
 <div class="section" id="python-mode-el">
 <span id="gotchas-python-mode-el"></span><h3>python-mode.el<a class="headerlink" href="#python-mode-el" title="Permalink to this headline">¶</a></h3>
-<p>In my environment, using <a class="reference internal" href="#python-mode-el">python-mode.el</a> without byte-compiling it
-in MuMaMo based notebook mode produces segfault.</p>
-<p>Also, <code class="docutils literal notranslate"><span class="pre">mumamo-idle-set-major-mode</span></code> messages error
-<code class="docutils literal notranslate"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></code>
-time to time, making minibuffer bit noisy while editing notebook.
-See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
+<p>Using <a class="reference internal" href="#python-mode-el">python-mode.el</a> without fisrt byte-compiling can cause a segfault with
+the MuMaMo based notebook mode.</p>
+<p>Also, <code class="docutils literal notranslate"><span class="pre">mumamo-idle-set-major-mode</span></code> generates the error message
+<code class="docutils literal notranslate"><span class="pre">(wrong-type-argument</span> <span class="pre">listp</span> <span class="pre">python-saved-check-command)</span></code> time to time, making
+minibuffer bit noisy while editing notebook. See <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips">Tips</a> to fix this problem.</p>
 </div>
 </div>
 <div class="section" id="advanced">
@@ -2455,8 +2451,8 @@ It pops up a buffer containing some system information and instruction
 for bug report.</p>
 <div class="section" id="logging">
 <h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
-<p>Sometime more information than provided in the <code class="docutils literal notranslate"><span class="pre">*Message*</span></code> is
-needed to debug.</p>
+<p>Sometime more information than provided in the <code class="docutils literal notranslate"><span class="pre">*Message*</span></code> buffer is needed to
+debug.</p>
 <ol class="arabic">
 <li><p class="first">Execute <code class="docutils literal notranslate"><span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span></code>
 (e.g., <code class="docutils literal notranslate"><span class="pre">M-:</span> <span class="pre">(ein:log-set-level</span> <span class="pre">'debug)</span> <span class="pre">RET</span></code>).</p>
@@ -2511,22 +2507,16 @@ everything the log buffer.  You can reset the patch and log level with
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="v0-15-0">
 <span id="changelog-0-15-0"></span><h2>v0.15.0<a class="headerlink" href="#v0-15-0" title="Permalink to this headline">¶</a></h2>
-<p>The usual slew of fixes: see PR’s 294, 296, 299, 301, 302, 303, 308, 309, 312,
-314, 318, 319, among others.</p>
-<p>Testing is back, thanks to &#64;dickmao! Travis-ci is also working again, so
-downloadig the development version from MELPA should be much less riskier than
-before.</p>
-<p>Also some quality of life improvements for the completion backend. The code
+<p>Many, many fixes and improvements. See PR’s 294-481.</p>
+<p>Some quality of life improvements for the company completion backend. The code
 should be more robust, sort of supports jedi, and works when in a connected
 buffer. And, if you set <a href="#id19"><span class="problematic" id="id20">`</span></a>ein:use-company-annotations’ to <a href="#id21"><span class="problematic" id="id22">`</span></a>t’ you will get
-annotation in the matches list, though there may be an initial performance hit as
-ein builds a cache of of function definitions.</p>
+annotation in the matches list, though there may be an initial performance hit
+as ein builds a cache of of function definitions.</p>
+<p>Support for older Jupyter notebook server (&lt; 4) and the even older IPython
+notebook server is deprecated. That alone probably qualifies this for a 1.x
+release, but who’s keeping track, really?</p>
 <p>Add basic support for eldoc.</p>
-<p>Note that ein no longer supports versions of ipython earlier than 3.0. Since
-most everyone is probably using Jupyter and ipython 5.x or later at this point I
-hope this won’t be an issue.</p>
-<p>Given this break in backward compatibility and the large improvements in
-stability from &#64;dickmao’s many recent contributions.</p>
 </div>
 <div class="section" id="v0-14-1">
 <span id="changelog-0-14-1"></span><h2>v0.14.1<a class="headerlink" href="#v0-14-1" title="Permalink to this headline">¶</a></h2>
@@ -2884,8 +2874,8 @@ See COPYING for details.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, John Miller.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+        &#169; Copyright 2019, John Miller.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>
