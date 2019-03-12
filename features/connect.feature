@@ -25,9 +25,8 @@ Scenario: Connect buffer to a running notebook
   And I press "RET"
   And I press "RET"
   And I call "ein:connect-eval-buffer"
+  And I wait 2 seconds
   And I evaluate the python code "test01()"
   And I switch to buffer like "*ein:shared-output*"
   And I dump buffer
-  And I wait for buffer to say "4"
-
-
+  And I wait for buffer to say "'hello'"
