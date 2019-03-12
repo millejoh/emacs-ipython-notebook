@@ -1288,8 +1288,13 @@ in the returned list only when PREDICATE returns non-nil value."
   (mapcar #'ein:notebook-buffer (ein:notebook-opened-notebooks predicate)))
 
 (defun ein:notebook-opened-buffer-names (&optional predicate)
-  "Return list of opened notebook buffer names."
-  (mapcar #'buffer-name (ein:notebook-opened-buffers predicate)))
+  "Return list of opened notebook buffer names.
+If PREDICATE is given, the list is filtered by PREDICATE.
+PREDICATE is called with the buffer name for each opened notebook."
+  (let ((notebooks (mapcar #'buffer-name (ein:notebook-opened-buffers))))
+    (if predicate
+        (seq-filter predicate notebooks)
+      notebooks)))
 
 
 ;;; Generic getter
