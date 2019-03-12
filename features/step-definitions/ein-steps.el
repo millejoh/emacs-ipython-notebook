@@ -367,6 +367,18 @@
       (lambda (variable value)
         (set (intern variable) (eval (car (read-from-string value))))))
 
+(When "^I connect to default notebook"
+      (lambda ()
+        (ein:connect-to-notebook-buffer (car (ein:notebook-opened-buffer-names
+                                             #'(lambda (bufname)
+                                                 (string-match "Untitled" bufname)))))))
+
+(When "^I connect to \"\\(.+\\)\"$"
+      (lambda (name)
+        (ein:connect-to-notebook-buffer (car (ein:notebook-opened-buffer-names
+                                              #'(lambda (bufname)
+                                                  (string-match name bufname)))))))
+
 (When "^I fset \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (fset (intern variable) (function value))))
@@ -403,3 +415,7 @@
             (And "I wait for the smoke to clear")
             (Given "I switch to log expr \"ein:log-all-buffer-name\"")
             (Then (format "I should see \"Opened %s %s\"" content-type file-name))))))
+
+(When "I evaluate the python code \"\\(.+\\)\"$"
+      (lambda (code-str)
+        (ein:shared-output-eval-string nil code-str nil)))
