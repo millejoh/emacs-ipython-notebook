@@ -431,7 +431,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                        nil t nil nil "default" nil))
           (name (read-from-minibuffer
                  (format "Notebook name (at %s): " url-or-port))))
-     (list name kernelspec url-or-port)))
+     (list url-or-port kernelspec name)))
   (unless callback
     (setq callback #'ignore))
   (add-function :before callback
