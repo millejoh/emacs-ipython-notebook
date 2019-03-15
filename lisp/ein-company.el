@@ -112,14 +112,20 @@
      (let* ((kernel (ein:get-kernel-or-error))
             (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
        (ein:aif cached it
-         (case ein:completion-backend
-           (ein:use-company-jedi-backend
-            (cons :async (lambda (cb)
-                           (ein:company--complete-jedi cb))))
-           (t
-            (cons :async
-                  (lambda (cb)
-                    (ein:company--complete arg cb))))))))))
+         (unless (and (looking-at "[[:nonascii:]]") (ein:company--punctuation-check (thing-at-point 'line) (current-column)))
+           (case ein:completion-backend
+             (ein:use-company-jedi-backend
+              (cons :async (lambda (cb)
+                             (ein:company--complete-jedi cb))))
+             (t
+              (cons :async
+                    (lambda (cb)
+                      (ein:company--complete arg cb)))))))))))
+
+(defun ein:company--punctuation-check (thing col)
+  (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
+    (string-match "[]()\",[{}'=: ]$" query (- col 2))))
+
 
 (defun ein:company-handle-doc-buffer-finish (packed content _metadata-not-used_)
   (when (plist-get content :found)
