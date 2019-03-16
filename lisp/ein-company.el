@@ -94,8 +94,7 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend))
-    (prefix (and (or (eq major-mode 'ein:notebook-multilang-mode)
-                     (boundp 'ein:%connect%))
+    (prefix (and (or (ein:worksheet-at-codecell-p) ein:connect-mode)
                  (ein:get-kernel)
                  (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
