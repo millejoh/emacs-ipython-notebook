@@ -25,7 +25,7 @@ EIN was originally written by tkf_.  More `complete documentation`_ is available
 
 Install
 =======
-Install from MELPA_ (recommended) or ``make install`` from github source.  You will need to install Cask_ for the latter.
+Install from MELPA_ (recommended) or ``make install`` from github source.
 
 Usage
 =====
@@ -50,9 +50,11 @@ Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``.
 
 It doesn't work
 ---------------
-As an emacs user, you are likely accustomed to self-diagnose.
+EIN is tested and developed on GNU Emacs.  Your mileage may vary with the `spacemacs layer`_ and other *emacsen*.
 
-First issue ``M-x ein:dev-start-debug``.  Then reproduce the error.
+You may also try to self-diagnose:
+
+First invoke ``M-x ein:dev-start-debug``.  Then reproduce the error.
 
 Higher level diagnostics appear in ``M-x ein:log-pop-to-all-buffer``.
 
@@ -66,9 +68,10 @@ Highlighted Features
 * Easily copy cells between different notebooks.
 * Execute code from an arbitrary buffer in a running kernel.  See `Keybindings - Connect`_.
 * Jump to definition via ``M-.``
-* Completion via auto-complete_ or company-mode_.
+* Completion via company-mode_.
 * Limited jupyterhub_ support.
 
+.. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _auto-complete: https://github.com/auto-complete/auto-complete
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
