@@ -228,6 +228,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
    ;; http://coderepos.org/share/browser/lang/elisp/init-loader/init-loader.el
    :emacs-variant
    (cond ((featurep 'meadow) 'meadow)
+         ((featurep 'core-spacemacs) 'spacemacs)
          ((featurep 'carbon-emacs-package) 'carbon))
    :os (list
         :uname (ein:dev-stdout-program "uname" '("-a"))

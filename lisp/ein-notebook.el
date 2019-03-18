@@ -825,7 +825,8 @@ This is equivalent to do ``C-c`` in the console program."
             (get-buffer buf))))
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
-        (run-hooks 'before-save-hook))
+        (cl-letf (((symbol-function 'delete-trailing-whitespace) #'ignore))
+          (run-hooks 'before-save-hook)))
     (error (ein:log 'warn "ein:notebook-save-notebook: Saving despite '%s'."
                     (error-message-string err))))
   (let ((content (ein:content-from-notebook notebook)))
@@ -1752,6 +1753,9 @@ Called via `kill-emacs-query-functions'."
                    (ein:log 'info "Killing all notebook buffers... Done!"))
           (ein:log 'info "Canceled to kill all notebooks."))
       (ein:log 'info "No opened notebooks."))))
+
+(if (boundp 'undo-tree-incompatible-major-modes)
+      (nconc undo-tree-incompatible-major-modes (list (ein:notebook-choose-mode))))
 
 (provide 'ein-notebook)
 
