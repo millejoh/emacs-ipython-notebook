@@ -122,6 +122,16 @@ callback (`websocket-callback-debug-on-error') is enabled."
 ;;  (setq deferred:debug-on-signal t)
 ;;  (setq deferred:debug t)
   (setq request-log-level (quote debug))
+  (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
+    (setq request-curl-options `("--trace-ascii" ,curl-trace))
+    (add-function :after 
+                  (symbol-function 'request--curl-callback)
+                  (lambda (&rest args)
+                    (if (file-readable-p curl-trace)
+                        (with-temp-buffer
+                          (insert-file-contents curl-trace)
+                          (request-log 'debug (buffer-string)))
+                      (request-log 'debug "%s unreadable" curl-trace)))))
   (setq request-message-level (quote verbose))
   (setq websocket-debug t)
   (when ws-callback
