@@ -62,6 +62,8 @@ the notebook directory, you can set it here for future calls to
   (get-buffer-process (get-buffer ein:jupyter-server-buffer-name)))
 
 (defun ein:jupyter-server--run (buf cmd dir &optional args)
+  (when ein:debug
+    (add-to-list 'ein:jupyter-server-args "--debug"))
   (let* ((vargs (append (if dir
                             `("notebook"
                               ,(format "--notebook-dir=%s"
