@@ -211,7 +211,8 @@ shared output buffer.  You can open the buffer by the command
           "IP[y]: "
           (when (region-active-p)
             (buffer-substring (region-beginning) (region-end)))
-          'ein:shared-output-eval-string-history)))
+          'ein:shared-output-eval-string-history)
+         nil))
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
     (ein:kernel-when-ready
