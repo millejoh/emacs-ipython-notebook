@@ -1,6 +1,5 @@
 @eldoc
 Scenario: not running server locally
-  Given I stop the server
   Given I enable "ein:enable-eldoc-support"
   Given I fset "ein:pytools-add-sys-path" to "ignore"
   Given new default notebook
