@@ -50,7 +50,10 @@ Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``.
 
 It doesn't work
 ---------------
-EIN is tested and developed on GNU Emacs.  Your mileage may vary with the `spacemacs layer`_ and other *emacsen*.
+
+EIN is tested and developed on GNU Emacs and works best on Emacs versions 25.3
+and later. Your mileage may vary with the `spacemacs layer`_ and other
+*emacsen*. For a full list of dependencies see the `documentation`_.
 
 You may also try to self-diagnose:
 
@@ -61,6 +64,8 @@ Higher level diagnostics appear in ``M-x ein:log-pop-to-all-buffer``.
 Lower level diagnostics (the actual ``curl`` requests) appear in ``M-x ein:log-pop-to-request-buffer``.
 
 If you cannot resolve the problem, file an issue using ``M-x ein:dev-bug-report-template``.  Please ensure the resulting system output does not include information sensitive to your institution.
+
+.. _`documentation`: http://millejoh.github.io/emacs-ipython-notebook/#requirements
 
 Highlighted Features
 ====================
