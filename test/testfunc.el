@@ -19,6 +19,8 @@
 (setq ein:testing-dump-file-messages (concat default-directory "log/testfunc.messages"))
 (setq ein:testing-dump-file-server  (concat default-directory  "log/testfunc.server"))
 (setq ein:testing-dump-file-request  (concat default-directory "log/testfunc.request"))
+(with-eval-after-load "python"
+  (setq python-indent-guess-indent-offset-verbose nil))
 (ein:dev-start-debug)
 (ein:jupyter-server-start *ein:testing-jupyter-server-command* *ein:testing-jupyter-server-directory*)
 (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 15000 1000)

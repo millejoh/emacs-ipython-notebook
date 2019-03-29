@@ -49,6 +49,9 @@ Note that this variable must be set *before* compiling EIN.")
 ;;;###autoload
 (add-to-list 'auto-mode-alist '(".*\\.ipynb\\'" . ein:ipynb-mode))
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '(".*\\.irnb\\'" . ein:ipynb-mode))
+
 (provide 'ein-ipynb-mode)
 
 ;;; ein-ipynb-mode.el ends here

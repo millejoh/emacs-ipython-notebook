@@ -123,7 +123,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
 ;;  (setq deferred:debug t)
   (setq request-log-level (quote debug))
   (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
-    (setq request-curl-options `("--trace-ascii" ,curl-trace))
+    (nconc request-curl-options `("--trace-ascii" ,curl-trace))
     (add-function :after 
                   (symbol-function 'request--curl-callback)
                   (lambda (&rest args)

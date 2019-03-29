@@ -19,6 +19,8 @@
  (depends-on "auto-complete")
  (depends-on "company")
  (depends-on "smartrep")
+ (depends-on "polymode")
+ (depends-on "markdown-mode")
  (depends-on "px")
  (depends-on "f")
  (depends-on "s"))

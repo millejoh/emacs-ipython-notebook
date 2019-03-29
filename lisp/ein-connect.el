@@ -217,13 +217,16 @@ notebooks."
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (deferred:$
-    (deferred:next
-      (lambda ()
-        (ein:shared-output-eval-string (ein:connect-get-kernel) (buffer-string) nil :silent t)))
-    (deferred:nextc it
-      (lambda ()
-        (ein:connect-execute-autoexec-cells))))
+  (lexical-let ((b (current-buffer)))
+    (deferred:$
+      (deferred:next
+        (lambda ()
+          (with-current-buffer b
+            (ein:shared-output-eval-string (ein:connect-get-kernel) (buffer-string) nil :silent t))))
+      (deferred:nextc it
+        (lambda ()
+          (with-current-buffer b
+            (ein:connect-execute-autoexec-cells))))))
   (ein:log 'info "Whole buffer is sent to the kernel."))
 
 (defun ein:connect-run-buffer (&optional ask-command)
@@ -399,13 +402,7 @@ notebook."
     (ein:use-ac-backend
      (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))
-    (ein:use-ac-jedi-backend
-     (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
-     (auto-complete-mode))
     (ein:use-company-backend
-     (add-to-list 'company-backends #'ein:company-backend)
-     (company-mode))
-    (ein:use-company-jedi-backend
      (add-to-list 'company-backends #'ein:company-backend)
      (company-mode))))
 

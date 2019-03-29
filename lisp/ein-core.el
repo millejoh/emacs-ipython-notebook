@@ -42,10 +42,6 @@
   :group 'applications
   :prefix "ein:")
 
-(defvar ein:version "0.15.0"
-  "Version number for Emacs IPython Notebook (EIN).")
-
-
 ;;; Configuration
 
 (defcustom ein:url-or-port '(8888)
@@ -124,27 +120,25 @@ pair of TO-PYTHON and FROM-PYTHON."
 (defun ein:default-url-or-port ()
   (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
-(defun ein:version (&optional copy-to-kill)
+(defun ein:version (&optional interactively copy-to-kill)
   "Return a longer version string.
 With prefix argument, copy the string to kill ring.
 The result contains `ein:version' and either git revision (if
 the source is in git repository) or elpa version."
-  (interactive "P")
-  (let* ((suffix                ; git or elpa
+  (interactive (list t current-prefix-arg))
+  (let* ((version
           (or (and (ein:git-root-p
                     (concat (file-name-as-directory ein:source-dir) ".."))
                    (let ((default-directory ein:source-dir))
                      (ein:git-revision-dirty)))
               (and (string-match "/ein-\\([0-9\\.]*\\)/$" ein:source-dir)
-                   (match-string 1 ein:source-dir))))
-         (version (if suffix (concat ein:version "-" suffix) ein:version)))
-    (when (called-interactively-p 'interactive)
+                   (match-string 1 ein:source-dir)))))
+    (when interactively
       (message "EIN version is %s" version))
     (when copy-to-kill
       (kill-new version))
     version))
 
-
 ;;; Server attribute getters.  These should be moved to ein-open.el
 
 (defvar *ein:notebook-version* (make-hash-table :test #'equal)

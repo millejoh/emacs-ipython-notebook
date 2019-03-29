@@ -130,16 +130,9 @@
            (ein:aif (plist-get content :text)
                (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) (ein:json-read-from-string it))))
           (("error" "pyerr")
-           ;; This should only happen if ein-pytools is not loaded, which can
-           ;; happen if the user restarts the kernel. Could probably use better logic
-           ;; to determine if pytools have been loaded or not.
+           ;; Might happen if user restarts kernel (and ein-pytools not loaded).
            (ein:pytools-load-safely kernel)
            (ein:log 'verbose "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
-    ;; It's okay, bad things happen. Not everything in python is going to have a
-    ;; pdef, which might cause the call to the json parser to fail. No need to
-    ;; log an error as that will unnecessarily fill the log buffer, but we do
-    ;; register a debug message in case someone really needs to know what is
-    ;; happening.
     (error (ein:log 'debug "ein:completions--prepare-oinfo: [%s] %s" err obj)
            (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
 

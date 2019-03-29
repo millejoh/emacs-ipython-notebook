@@ -2,6 +2,7 @@
 Scenario: not running server locally
   Given I enable "ein:enable-eldoc-support"
   Given I fset "ein:pytools-add-sys-path" to "ignore"
+  Given I clear log expr "ein:log-all-buffer-name"
   Given new default notebook
   And I type "import math"
   And I press "C-a"
@@ -52,6 +53,13 @@ Scenario: company completion
   Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
   Given new default notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+
+@rename
+Scenario: rename notebook
+  Given new default notebook
+  And I press "C-c C-/"
+  And I switch to buffer like "Untitled"
+  And rename notebook to "Renamed" succeeds
 
 @switch
 Scenario: switch kernel

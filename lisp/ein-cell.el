@@ -216,7 +216,6 @@ a number will limit the number of lines in a cell output."
     (("markdown") 'ein:markdowncell)
     (("raw") 'ein:rawcell)
     (("heading") 'ein:headingcell)
-    ;; Defined in ein-shared-output.el:
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
@@ -225,17 +224,6 @@ a number will limit the number of lines in a cell output."
         (ss-table (make-hash-table)))
     (setf (gethash 'slide_type ss-table) slide-type)
     ss-table))
-
-(defun ein:preprocess-nb4-cell (cell-data)
-  (let ((source (plist-get cell-data :source)))
-    (when (and  (string= (plist-get cell-data :cell_type) "markdown")
-                (string-match "\\(^#+\\)" source)
-                (not (string-match "\n+" source)))
-      (let ((heading-level (match-end 0)))
-        (plist-put cell-data :cell_type "heading")
-        (plist-put cell-data :level heading-level)
-        (plist-put cell-data :source (substring source (1+ heading-level))))))
-  cell-data)
 
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) args))
@@ -250,10 +238,9 @@ a number will limit the number of lines in a cell output."
       base-type)))
 
 (defun ein:cell-from-json (data &rest args)
-  (let ((data (ein:preprocess-nb4-cell data))
-        (cell (ein:cell-init (apply #'ein:cell-from-type
-					                          (ein:cell--determine-cell-type data) args)
-				                     data)))
+  (let ((cell (ein:cell-init (apply #'ein:cell-from-type
+                                    (ein:cell--determine-cell-type data) args)
+                             data)))
     (when (plist-get data :metadata)
       (ein:oset-if-empty cell 'metadata (plist-get data :metadata))
       (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
@@ -328,9 +315,7 @@ a number will limit the number of lines in a cell output."
           do (progn
                (setf (slot-value new 'element)
                      (plist-put (slot-value new 'element) k
-                                (plist-get old-element k)))
-	       )
-	  )
+                                (plist-get old-element k)))))
     ;; setting ewoc nodes
     (loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
@@ -558,7 +543,7 @@ Return language name as a string or `nil' when not defined.
         (when (and (not (slot-value cell 'collapsed))
                    (= index ein:cell-max-num-outputs)
                    (> (point) (point-at-bol)))
-          ;; The first output which exceeds `ein:cell-max-num-outputs'.
+         ;; The first output which exceeds `ein:cell-max-num-outputs'.
           (ein:insert-read-only "\n"))
         (ein:insert-read-only "."))
     (let ((out (nth index (slot-value cell 'outputs))))
@@ -673,10 +658,12 @@ Return language name as a string or `nil' when not defined.
   "Set `:collapsed' slot of CELL and invalidate output ewoc nodes."
   (unless (eq (slot-value cell 'collapsed) collapsed)
     (setf (slot-value cell 'collapsed) collapsed)
-    (apply #'ewoc-invalidate
-           (slot-value cell 'ewoc)
-           (append (ein:cell-element-get cell :output)
-                   (list (ein:cell-element-get cell :footer))))))
+    (let ((inhibit-read-only t)
+          (buffer-undo-list t))
+      (apply #'ewoc-invalidate
+             (slot-value cell 'ewoc)
+             (append (ein:cell-element-get cell :output)
+                     (list (ein:cell-element-get cell :footer)))))))
 
 (cl-defmethod ein:cell-collapse ((cell ein:codecell))
   (ein:cell-set-collapsed cell t))

@@ -19,14 +19,19 @@ README.rst: README.in.rst
 	             (load \"ein-notebook\") \
 	             (describe-minor-mode \"ein:notebook-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
-	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst > README.rst0
+	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
+	sed "/CI VERSION/c"`grep -o 'emacs-[0-9][.0-9]*' .travis.yml | sort -n | head -1 | grep -o '[.0-9]*'` README.rst0 > README.rst1
+	grep ';;' lisp/ein.el \
+	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
+	    | sed -e 's/^\s*;;*\s*//g' \
+	    | tools/readme-sed.sh "COMMENTARY" README.rst1 > README.rst0
 	cask eval "(progn \
 	             (add-to-list 'load-path \"./lisp\") \
 	             (load \"ein-connect\") \
 	             (describe-minor-mode \"ein:connect-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
-	| tools/readme-sed.sh "KEYS CONNECT" README.rst0 > README.rst
-	rm README.rst0
+	| tools/readme-sed.sh "KEYS CONNECT" README.rst0 "key.*binding" > README.rst
+	rm README.rst0 README.rst1
 
 .PHONY: autoloads
 autoloads:
@@ -59,7 +64,13 @@ test-jupyterhub:
 	-cask exec ecukes --tags @jupyterhub
 
 .PHONY: test
-test: quick test-int
+test: quick test-int test-poly
+
+.PHONY: test-poly
+test-poly:
+	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
+	cp test/test-poly.el features/support/test-poly.el
+	cask exec ecukes; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
 
 .PHONY: test-int
 test-int:

@@ -4,7 +4,10 @@
 
 # Define sample multi-line literal.
 input=`cat`
-replace=$(awk '/key.*binding/,EOF { print "   " $0 }' <<<"$input")
+replace="$input"
+if [ ! -z "$3" ]; then
+    replace=$(awk "/$3/,EOF { print \"   \" \$0 }" <<<"$input")
+fi
 
 # Escape it for use as a Sed replacement string.
 IFS= read -d '' -r < <(sed -e ':a' -e '$!{N;ba' -e '}' -e 's/[&/\]/\\&/g; s/\n/\\&/g' <<<"$replace")

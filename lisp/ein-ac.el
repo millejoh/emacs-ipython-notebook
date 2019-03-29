@@ -38,7 +38,7 @@
   "Set to `t' to use preset a little bit hacky auto-complete configuration.
 When this option is enabled, cached omni completion is available."
   :type 'boolean
-  :group 'ein-completion)
+  :group 'ein)
 
 (defvar ein:ac-sources (and (boundp 'ac-sources)
                             (default-value 'ac-sources))
@@ -113,8 +113,7 @@ When this option is enabled, cached omni completion is available."
                                    (cons (lambda (_ content __)
                                            (ein:ac-prepare-completion (plist-get content :matches)))
                                          nil))
-                             #'ignore)))
-    (ein:use-ac-jedi-backend (ein:jedi-complete))))
+                             #'ignore)))))
 
 
 ;;; Completer interface
@@ -150,7 +149,6 @@ compatibility with `ein:completer-finish-completing-default'."
   (when matches      ; No auto-complete drop-down list when no matches
     (let ((ac-expand-on-auto-complete expand))
       (ac-start))))
-;; Why `ac-start'?  See: `jedi:complete'.
 
 
 ;;; Async document request hack
@@ -235,7 +233,7 @@ first candidate when the `ac-menu' pops up."
    Adding `ac-sources' to them makes it impossible to different
    `ac-sources' between chunks, which is good for EIN but may not
    for other package."
-  (and ein:%notebook%
+  (and ein:notebook-mode
        (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
        (ein:ac-setup)))

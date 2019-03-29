@@ -117,7 +117,7 @@
                               fn))
           with suitable = directory
           until (string= (file-name-nondirectory directory) "")
-          do (if (directory-files directory nil "\\.ipynb$")
+          do (if (directory-files directory nil "\\.i.*nb$")
                  (setq suitable directory))
           (setq directory (directory-file-name (file-name-directory directory)))
           finally return suitable)))
@@ -204,7 +204,7 @@
   "A callback function for `find-file-hook' to open notebook."
   (interactive)
   (ein:and-let* ((filename buffer-file-name)
-                 ((string-match-p "\\.ipynb$" filename)))
+                 ((string-match-p "\\.i.*nb$" filename)))
     (ein:process-open-notebook filename #'kill-buffer-if-not-modified)))
 
 (provide 'ein-process)
