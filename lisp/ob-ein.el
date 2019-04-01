@@ -102,6 +102,7 @@
       (let ((el (org-element-context))
             (id (org-id-new 'none)))
         (goto-char (org-element-property :begin el))
+        (indent-according-to-mode)
         (insert (format "#+NAME: %s\n" id))
         id))))
 
