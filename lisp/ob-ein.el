@@ -102,8 +102,9 @@
       (let ((el (org-element-context))
             (id (org-id-new 'none)))
         (goto-char (org-element-property :begin el))
-        (indent-according-to-mode)
-        (insert (format "#+NAME: %s\n" id))
+        (back-to-indentation)
+        (split-line)
+        (insert (format "#+NAME: %s" id))
         id))))
 
 (defun ein:org-register-lang-mode (lang-name lang-mode)
