@@ -128,12 +128,13 @@
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)
-               (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) (ein:json-read-from-string it))))
+               (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
+                     (ein:json-read-from-string it))))
           (("error" "pyerr")
-           ;; Might happen if user restarts kernel (and ein-pytools not loaded).
-           (ein:pytools-load-safely kernel)
-           (ein:log 'verbose "ein:completions--prepare-oinfo: %S" (plist-get content :traceback)))))
-    (error (ein:log 'debug "ein:completions--prepare-oinfo: [%s] %s" err obj)
+           (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
+                    (plist-get content :traceback)))))
+    (error (ein:log 'verbose "ein:completions--prepare-oinfo: [%s] %s"
+                    (error-message-string err) output)
            (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
 
 ;;; Support for Eldoc

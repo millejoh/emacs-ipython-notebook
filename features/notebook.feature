@@ -1,7 +1,6 @@
 @eldoc
 Scenario: not running server locally
   Given I enable "ein:enable-eldoc-support"
-  Given I fset "ein:pytools-add-sys-path" to "ignore"
   Given I clear log expr "ein:log-all-buffer-name"
   Given new default notebook
   And I type "import math"
