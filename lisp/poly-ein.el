@@ -89,8 +89,7 @@ TYPE can be 'body, nil."
              (let ((syntax-propertize--done (point-min)))
                (jit-lock-function (nth 1 span)))
            (error (ein:log 'warn "ein:notebook--worksheet-render: %s"
-                           (error-message-string err)))))
-       nil nil nil nil t))))
+                           (error-message-string err)))))))))
 
 (defun poly-ein--relative-to-input (pos cell)
   "Return -1 if POS before input, 1 if after input, 0 if within"

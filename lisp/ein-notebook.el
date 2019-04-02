@@ -685,9 +685,7 @@ This is equivalent to do ``C-c`` in the console program."
       (ein:notebook-setup-kill-buffer-hook)
       (setq ein:%notebook% notebook)
       (when ein:polymode
-        (poly-ein-fontify-buffer notebook))))
-  ;; undo the damage of poly-ein-fontify-buffer
-  (switch-to-buffer (current-buffer)))
+        (poly-ein-fontify-buffer notebook)))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
@@ -893,11 +891,8 @@ NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
    (list (read-string "Rename to: "
                       (ein:$notebook-notebook-path ein:%notebook%))))
-  (unless (and (string-match "\\.i.*nb" path) (= (match-end 0) (length path)))
-    (let ((ext (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec ein:%notebook%))
-                 (R "r")
-                 (t "py"))))
-      (setq path (format "%s.i%snb" path ext))))
+  (unless (and (string-match "\\.ipynb" path) (= (match-end 0) (length path)))
+    (setq path (format "%s.ipynb" path)))
   (let ((content (ein:content-from-notebook ein:%notebook%)))
     (ein:log 'verbose "Renaming notebook %s" (ein:notebook-url ein:%notebook%))
     (ein:content-rename content path #'ein:notebook-rename-success
