@@ -27,18 +27,13 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'jedi-core nil t)
 (require 'deferred)
 (require 'ein-completer)
 (require 'company nil t)
 
-(declare-function jedi:complete-request "jedi-core")
-
 (autoload 'company-begin-backend "company")
 (autoload 'company-doc-buffer "company")
 
-;; Duplicates ein:jedi--completer-complete in ein-jedi.
-;; Let's refactor and enhance our calm!
 (defun ein:company--deferred-complete ()
   (let ((d (deferred:new #'identity)))
     (ein:completer-complete
@@ -59,23 +54,6 @@
         (unless (stringp replies) ;; if not an error
           (ein:completions--prepare-matches prefix fetcher replies))))))
 
-(defun ein:company--complete-jedi (fetcher)
-  (deferred:$
-    (deferred:parallel
-      (jedi:complete-request)
-     (ein:company--deferred-complete))
-    (deferred:nextc it
-      (lambda (replies)
-        (ein:completions--prepare-matches-jedi fetcher replies)))))
-
-(defun ein:completions--prepare-matches-jedi (cb replies)
-  (destructuring-bind
-      (_ ((&key matches &allow-other-keys) ; :complete_reply
-          _metadata))
-      replies
-    (ein:completions--build-oinfo-cache matches)
-    (funcall cb matches)))
-
 (defun ein:completions--prepare-matches (prefix fetcher replies)
   (destructuring-bind
       ((&key matches cursor_start cursor_end &allow-other-keys) ; :complete_reply
@@ -94,7 +72,8 @@
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'ein:company-backend))
-    (prefix (and (or (ein:worksheet-at-codecell-p) ein:connect-mode)
+    (prefix (and (eq ein:completion-backend 'ein:use-company-backend)
+                 (or (ein:worksheet-at-codecell-p) ein:connect-mode)
                  (ein:get-kernel)
                  (ein:object-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
@@ -114,9 +93,6 @@
        (ein:aif cached it
          (unless (and (looking-at "[[:nonascii:]]") (ein:company--punctuation-check (thing-at-point 'line) (current-column)))
            (case ein:completion-backend
-             (ein:use-company-jedi-backend
-              (cons :async (lambda (cb)
-                             (ein:company--complete-jedi cb))))
              (t
               (cons :async
                     (lambda (cb)

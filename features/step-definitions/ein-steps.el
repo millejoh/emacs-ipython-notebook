@@ -30,12 +30,13 @@
 
 (When "^I switch kernel to \"\\(.+\\)\"$"
       (lambda (kernel-name)
-        (let ((notebook (ein:notebook-switch-kernel (ein:get-notebook) kernel-name)))
-          (loop repeat 10
-                until (ein:kernel-live-p (ein:$notebook-kernel notebook))
-                do (sleep-for 0 500)
-                finally do (should (string= "R" (ein:$kernelspec-language 
-                                                 (ein:$notebook-kernelspec notebook))))))))
+        (cl-letf (((symbol-function 'R-mode) #'ignore))
+          (let ((notebook (ein:notebook-switch-kernel (ein:get-notebook) kernel-name)))
+            (loop repeat 10
+                  until (ein:kernel-live-p (ein:$notebook-kernel notebook))
+                  do (sleep-for 0 500)
+                  finally do (should (string= "R" (ein:$kernelspec-language
+                                                   (ein:$notebook-kernelspec notebook)))))))))
 
 (When "^I kill kernel$"
       (lambda ()
@@ -103,6 +104,21 @@
       (lambda (substr)
         (switch-to-buffer (car (-non-nil (mapcar (lambda (b) (if (search substr (buffer-name b)) b)) (buffer-list)))))))
 
+(When "^rename notebook to \"\\(.+\\)\" succeeds$"
+      (lambda (new-name)
+        (let* ((old-name (ein:$notebook-notebook-name ein:%notebook%))
+               (old-count
+                (length (seq-filter (lambda (b)
+                                      (search old-name (buffer-name b)))
+                                    (buffer-list)))))
+          (ein:notebook-rename-command new-name)
+          (ein:testing-wait-until
+           (lambda ()
+             (= old-count
+                (length (seq-filter (lambda (b)
+                                      (search new-name (buffer-name b)))
+                                    (buffer-list)))))))))
+
 (When "^I am in notebooklist buffer$"
       (lambda ()
         (switch-to-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info))))
@@ -159,6 +175,11 @@
                  '("--debug" "--no-db" "--config=.ecukes-temp-config.py")))
             (ein:jupyter-server-start (executable-find "jupyterhub") nil))
           (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
+
+(When "^newlined region should be \"\\(.*\\)\"$"
+      (lambda (region)
+        (should (string= (s-replace "\\n" "\n" region)
+                         (buffer-substring-no-properties (region-beginning) (region-end))))))
 
 (When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
       (lambda (login config)
@@ -301,17 +322,18 @@
 
 (When "^I wait for cell to execute$"
       (lambda ()
-        (let* ((cell (ein:worksheet-get-current-cell :cell-p #'ein:codecell-p))
-               (orig (if (slot-boundp cell 'input-prompt-number)
-                         (slot-value cell 'input-prompt-number))))
-          (call-interactively #'ein:worksheet-execute-cell)
-          (ein:testing-wait-until
-           (lambda ()
-             (ein:aand (and (slot-boundp cell 'input-prompt-number)
-                            (slot-value cell 'input-prompt-number))
-                       (and (numberp it)
-                            (not (equal orig it)))))
-           nil 10000 2000))))
+        (poly-ein-base
+         (let* ((cell (ein:worksheet-get-current-cell :cell-p #'ein:codecell-p))
+                (orig (if (slot-boundp cell 'input-prompt-number)
+                          (slot-value cell 'input-prompt-number))))
+           (call-interactively #'ein:worksheet-execute-cell)
+           (ein:testing-wait-until
+            (lambda ()
+              (ein:aand (and (slot-boundp cell 'input-prompt-number)
+                             (slot-value cell 'input-prompt-number))
+                        (and (numberp it)
+                             (not (equal orig it)))))
+            nil 10000 2000)))))
 
 (When "^I undo again$"
       (lambda ()

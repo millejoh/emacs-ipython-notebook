@@ -162,20 +162,13 @@ This function may raise an error."
       (set-keymap-parent ein:notebook-multilang-mode-map ess-r-mode-map))))
 
 (defun ein:ml-lang-setup (kernelspec)
-  (ein:case-equal (ein:$kernelspec-language kernelspec)
-                  (("python") (ein:ml-lang-setup-python))
-                  (("R") (ein:ml-lang-setup-R))))
+  (funcall (intern (concat "ein:ml-lang-setup-" (ein:$kernelspec-language kernelspec)))))
 
 ;; (defun ein:ml-lang-setup-markdown ()
 ;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."
 ;;   (when (featurep 'markdown-mode)
 ;;     (set-keymap-parent ein:notebook-multilang-mode-map markdown-mode-map)))
 
-;; FIXME: dynamically call ein:ml-lang-setup-LANG using
-;;        `post-command-hook'.
-;; FIMXE: add more ein:ml-lang-setup-LANG to switch kaymap.
-
-
 ;;; yasnippet
 
 (defvar ein:ml-yasnippet-parents '(python-mode markdown-mode)
@@ -194,7 +187,6 @@ This function may raise an error."
 
 (eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 
-
 ;;; Imenu Support
 
 ;; Most of this is borrowed from python.el

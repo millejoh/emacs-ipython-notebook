@@ -71,6 +71,9 @@ while maintaining the undo list for the current buffer."
        ((= (length head) 1) `(if ,(car head) ,rest))
        (t `(let (,head) (if ,(car head) ,rest)))))))
 
+(defvar ein:local-variables '()
+  "Modified by `ein:deflocal'")
+
 (defmacro ein:deflocal (name &optional initvalue docstring)
   "Define permanent buffer local variable named NAME.
 INITVALUE and DOCSTRING are passed to `defvar'."
@@ -79,7 +82,8 @@ INITVALUE and DOCSTRING are passed to `defvar'."
   `(progn
      (defvar ,name ,initvalue ,docstring)
      (make-variable-buffer-local ',name)
-     (put ',name 'permanent-local t)))
+     (put ',name 'permanent-local t)
+     (setq ein:local-variables (append ein:local-variables '(,name)))))
 
 (defmacro ein:with-read-only-buffer (buffer &rest body)
   (declare (indent 1))

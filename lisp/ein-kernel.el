@@ -775,7 +775,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                  (ein:funcall-packed it content metadata))))))))
   (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
 
-
 ;;; Utility functions
 
 (defun ein:kernel-filename-to-python (kernel filename)

@@ -264,25 +264,32 @@ When the prefix argument ``C-u`` is given, open the source code
 in the other window.  You can explicitly specify the object by
 selecting it."
   (interactive "P")
-  (let ((kernel (ein:get-kernel))
-        (object (ein:object-at-point)))
-    (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
-    (assert object nil "Object at point not found.")
-    (ein:pytools-jump-to-source kernel object other-window
-                                (when ein:propagate-connect
-                                  (ein:get-notebook)))))
+  (if poly-ein-mode
+      (cl-letf (((symbol-function 'xref--prompt-p) #'ignore))
+        (if other-window
+            (call-interactively #'xref-find-definitions-other-window)
+          (call-interactively #'xref-find-definitions)))
+    (let ((kernel (ein:get-kernel))
+          (object (ein:object-at-point)))
+      (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
+      (assert object nil "Object at point not found.")
+      (ein:pytools-jump-to-source kernel object other-window
+                                  (when ein:propagate-connect
+                                    (ein:get-notebook))))))
 
 (defun ein:pytools-jump-back-command (&optional other-window)
   "Go back to the point where `ein:pytools-jump-to-source-command'
 is executed last time.  When the prefix argument ``C-u`` is
 given, open the last point in the other window."
   (interactive "P")
-  (when (ein:aand (car ein:pytools-jump-stack)
-                  (equal (point) (marker-position it)))
-    (setq ein:pytools-jump-stack (cdr ein:pytools-jump-stack)))
-  (ein:aif (car ein:pytools-jump-stack)
-      (ein:goto-marker it other-window)
-    (ein:log 'info "Nothing on stack.")))
+  (if poly-ein-mode
+      (call-interactively #'xref-pop-marker-stack)
+    (when (ein:aand (car ein:pytools-jump-stack)
+                    (equal (point) (marker-position it)))
+      (setq ein:pytools-jump-stack (cdr ein:pytools-jump-stack)))
+    (ein:aif (car ein:pytools-jump-stack)
+        (ein:goto-marker it other-window)
+      (ein:log 'info "Nothing on stack."))))
 
 (define-obsolete-function-alias
   'ein:pytools-eval-string-internal

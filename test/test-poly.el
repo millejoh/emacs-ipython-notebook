@@ -1,0 +1,1 @@
+(setq ein:polymode t)

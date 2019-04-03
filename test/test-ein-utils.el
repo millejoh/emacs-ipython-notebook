@@ -1,7 +1,7 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
-(require 'ein)  ; for `ein:version'
+(require 'ein)
 (require 'ein-utils)
 
 (ert-deftest ein-url-simple ()

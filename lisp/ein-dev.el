@@ -123,7 +123,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
 ;;  (setq deferred:debug t)
   (setq request-log-level (quote debug))
   (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
-    (setq request-curl-options `("--trace-ascii" ,curl-trace))
+    (nconc request-curl-options `("--trace-ascii" ,curl-trace))
     (add-function :after 
                   (symbol-function 'request--curl-callback)
                   (lambda (&rest args)
@@ -228,6 +228,14 @@ callback (`websocket-callback-debug-on-error') is enabled."
               (apply #'call-process it nil t nil args)
               (buffer-string))))
 
+(defsubst ein:dev-packages ()
+  (lexical-let (result)
+    (cl-letf (((symbol-function 'define-package)
+               (lambda (&rest args)
+                 (setq result (mapcar (lambda (x) (symbol-name (first x))) (nth 3 args))))))
+      (load "ein-pkg")
+      result)))
+
 (defun ein:dev-sys-info ()
   (list
    "EIN system info"
@@ -253,10 +261,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
                 (ein:dev-dump-vars '("source-dir")))
    :lib (seq-filter (lambda (info) (plist-get info :path))
                     (mapcar #'ein:dev-sys-info--lib
-                            '("websocket" "request" "mumamo"
-                              "auto-complete" "popup" "fuzzy" "pos-tip"
-                              "python" "python-mode" "markdown-mode"
-                              "smartrep" "anything" "helm")))))
+                            (ein:dev-packages)))))
 
 (defun ein:dev-show-sys-info (&optional show-in-buffer)
   "Show Emacs and library information."
@@ -285,8 +290,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
         (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
       (insert "```\n")
       (goto-char (point-min))
-      (when (fboundp 'markdown-mode)
-        (markdown-mode))
+      (markdown-mode)
       (pop-to-buffer buffer))))
 
 (defun ein:dev-print-sys-info (&optional stream)

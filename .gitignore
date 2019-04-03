@@ -27,6 +27,6 @@ _static
 .travis.yml.swp
 *.zip
 .gitattributes
-.ecukes-temp*
+.ecukes*
 dist
 *.ob-ein.ipynb

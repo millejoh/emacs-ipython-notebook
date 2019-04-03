@@ -4,7 +4,9 @@
 
   --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
 
-Emacs IPython Notebook (EIN) lets you edit and run Jupyter_ (formerly IPython) notebooks within Emacs.  It channels all the power of Emacs without the idiosyncrasies of in-browser editing.
+Emacs IPython Notebook (EIN) lets you edit and run Jupyter_ (formerly IPython)
+notebooks within Emacs.  It channels all the power of Emacs without the
+idiosyncrasies of in-browser editing.
 
 EIN was originally written by tkf_.  More `complete documentation`_ is available.
 
@@ -29,21 +31,13 @@ Install from MELPA_ (recommended) or ``make install`` from github source.
 
 Usage
 =====
-There are multiple, mutually exclusive ways to launch EIN.
+Start EIN using ONE of the following:
 
-Launch a local session
-----------------------
-``M-x ein:jupyter-server-start`` (aliased ``M-x ein:run``) launches a jupyter process from emacs.
+- Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``, or,
+- ``M-x ein:run`` launches a jupyter process from emacs, or,
+- ``M-x ein:login`` to a running jupyter server
 
-Login to a local or remote session
-----------------------------------
-``M-x ein:notebooklist-login`` (aliased ``M-x ein:login``) to a running jupyter server.
-
-Jupyter services relayed over HTTP such as ``mybinder.org`` require cookie authentication.  Issuing ``C-u M-x ein:login`` prompts for cookie information.  See the `Wiki`_ for more information.
-
-Open a notebook file
---------------------
-Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``.
+Use ``C-u M-x ein:login`` for services such as ``mybinder.org`` requiring cookie authentication.
 
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
 .. _MELPA: http://melpa.org/#/
@@ -51,40 +45,37 @@ Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``.
 It doesn't work
 ---------------
 
-EIN is tested and developed on GNU Emacs and works best on Emacs versions 25.3
-and later. Your mileage may vary with the `spacemacs layer`_ and other
-*emacsen*. For a full list of dependencies see the `documentation`_.
+EIN is tested on GNU Emacs versions
+25.2
+and later. Your mileage may vary with the `spacemacs layer`_ and other *emacsen*.
 
 You may also try to self-diagnose:
 
 First invoke ``M-x ein:dev-start-debug``.  Then reproduce the error.
 
-Higher level diagnostics appear in ``M-x ein:log-pop-to-all-buffer``.
+High level diagnostics appear in ``M-x ein:log-pop-to-all-buffer``.
 
-Lower level diagnostics (the actual ``curl`` requests) appear in ``M-x ein:log-pop-to-request-buffer``.
+Low level diagnostics appear in ``M-x ein:log-pop-to-request-buffer``.
 
-If you cannot resolve the problem, file an issue using ``M-x ein:dev-bug-report-template``.  Please ensure the resulting system output does not include information sensitive to your institution.
-
-.. _`documentation`: http://millejoh.github.io/emacs-ipython-notebook/#requirements
-
-Highlighted Features
-====================
-
-* Easily copy cells between different notebooks.
-* Execute code from an arbitrary buffer in a running kernel.  See `Keybindings - Connect`_.
-* Jump to definition via ``M-.``
-* Completion via company-mode_.
-* Limited jupyterhub_ support.
+If you cannot resolve the problem, file an issue using ``M-x ein:dev-bug-report-template``.
 
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _auto-complete: https://github.com/auto-complete/auto-complete
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 
+I want to use Elpy, ESS, LSP, etc.
+==================================
+
+Enable `polymode`_ via::
+
+   M-x customize-group RET ein
+   Toggle Ein:Polymode
+  
 Org-mode Integration
 ====================
 
-EIN provides org-babel functionality similar to ob-ipython_ and scimax_.  Acknowledgements to those fine packages.
+EIN provides org-babel functionality similar to ob-ipython_ and scimax_.
 
 *Language* is ``ein``.  The ``:session`` header argument is the notebook url, e.g., ``https://localhost:8888/my.ipynb``, or simply ``localhost``, in which case EIN will evaluate org blocks in an anonymous notebook::
 
@@ -98,25 +89,22 @@ EIN provides org-babel functionality similar to ob-ipython_ and scimax_.  Acknow
    plt.plot(x,y)
    #+END_SRC
 
-You may also specify the port, i.e., ``localhost:8889``.  See `complete details`_.
+You may also specify the port, i.e., ``localhost:8889``.  See `ob-ein details`_.
 
-.. _ob-ipython: https://github.com/gregsexton/ob-ipython/
+.. _polymode: https://github.com/polymode/polymode
+.. _ob-ipython: https://github.com/gregsexton/ob-ipython
 .. _scimax: https://github.com/jkitchin/scimax
-.. _complete details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _ob-ein details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 
-Screenshots
-===========
+Connected Buffers
+=================
 
-.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/demo_plotnormal.PNG
-   :alt: Plotting in Emacs IPython Notebook
+Use ``M-x ein:connect-to-notebook`` to submit code from an arbitrary buffer to a running jupyter kernel.  See `connected buffer details`_.
 
-.. figure:: https://github.com/millejoh/emacs-ipython-notebook/wiki/images/R-kernel-example.PNG
-   :alt: EIN connecting to an R kernel
+.. _connected buffer details: http://millejoh.github.io/emacs-ipython-notebook/#connected-buffer
 
-See `more <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_!
-
-Keybindings - Notebook
-----------------------
+Keymap (C-h m)
+==============
 
 ::
 
@@ -202,37 +190,6 @@ Keybindings - Notebook
    C-c M-w		ein:worksheet-copy-cell
    C-c M-{		ein:notebook-worksheet-move-prev
    C-c M-}		ein:notebook-worksheet-move-next
-
-Keybindings - Connect
----------------------
-
-You can execute code from an arbitrary buffer in a running kernel via 
-``M-x ein:connect-to-notebook``.
-
-::
-
-   key             binding
-   ---             -------
-   
-   C-c		Prefix Command
-   ESC		Prefix Command
-   C-:		ein:shared-output-eval-string
-   
-   M-,		ein:pytools-jump-back-command
-   M-.		ein:pytools-jump-to-source-command
-   
-   C-c C-a		ein:connect-toggle-autoexec
-   C-c C-c		ein:connect-run-or-eval-buffer
-   C-c C-h		ein:pytools-request-tooltip-or-help
-   C-c TAB		ein:completer-complete
-   C-c C-l		ein:connect-reload-buffer
-   C-c C-o		ein:console-open
-   C-c C-r		ein:connect-eval-region
-   C-c C-x		ein:tb-show
-   C-c C-z		ein:connect-pop-to-notebook
-   C-c C-,		ein:pytools-jump-back-command
-   C-c C-.		ein:pytools-jump-to-source-command
-   C-c C-/		ein:notebook-scratchsheet-open
 
 Links
 =====

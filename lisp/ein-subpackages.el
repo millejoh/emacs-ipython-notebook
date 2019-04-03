@@ -27,25 +27,18 @@
 
 ;;; Code:
 
-(defcustom ein:completion-backend 'ein:use-ac-backend
-  "Determines which completion backend to use in opened EIN notebooks.
+(defcustom ein:completion-backend 'ein:use-none-backend
+  "EIN defaults to your individual company-mode or auto-complete-mode configuration.  Change this setting to gather completions from the jupyter server::
 
-After changing the value of this variable it is recommended that
-you restart Emacs. The available completion backends are::
-
- * ein:use-ac-backend : Use auto-complete with IPython's builtin completion engine.
- * ein:use-ac-jedi-backend : Use auto-complete with the Jedi backend.
- * ein:use-company-backend : Use company-mode with IPython's builtin completion engine.
- * ein:use-company-jedi-backends : Use company-mode with the Jedi backend (currently not implemented).
- * ein:use-none-backend: Avoid autocomplete altogether
+ * ein:use-none-backend: local completions only (configured outside EIN)
+ * ein:use-company-backend: company-style remote completions (elpy takes precedence)
+ * ein:use-ac-backend: deprecated auto-complete remote completions
 "
   :type '(choice
-          (const ein:use-ac-backend)
-          (const ein:use-ac-jedi-backend)
+          (const ein:use-none-backend)
           (const ein:use-company-backend)
-          (const ein:use-company-jedi-backend)
-          (const ein:use-none-backend))
-  :group 'ein-completion)
+          (const ein:use-ac-backend))
+  :group 'ein)
 
 (provide 'ein-subpackages)
 

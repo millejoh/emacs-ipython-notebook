@@ -1,3 +1,4 @@
+@undo
 Scenario: Undo turned off
   Given I disable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -6,7 +7,7 @@ Scenario: Undo turned off
   And I undo demoting errors
   Then I should see message "demoted: (user-error No undo information in this buffer)"
 
-@yank
+@undo
 Scenario: Kill yank doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -24,6 +25,7 @@ Scenario: Kill yank doesn't break undo
   And I press "C-/"
   Then the cursor should be at point "74"
 
+@undo
 Scenario: Collapse doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -48,7 +50,7 @@ Scenario: Collapse doesn't break undo
   And I undo again
   Then the cursor should be at point "55"
 
-@prob
+@undo
 Scenario: Test the conflagrative commands
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -79,6 +81,7 @@ Scenario: Test the conflagrative commands
   And I undo again
   Then the cursor should be at point "22"
 
+@undo
 Scenario: Clear output doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -103,6 +106,7 @@ Scenario: Clear output doesn't break undo
   And I undo again
   Then the cursor should be at point "55"
 
+@undo
 Scenario: Moving cells doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook
@@ -168,7 +172,7 @@ Scenario: Split and merge don't break undo
   And I undo again
   Then the cursor should be at point "50"
 
-@reopened
+@undo
 Scenario: Undo needs to at least work for reopened notebooks
   Given I enable "ein:worksheet-enable-undo"
   Given old notebook "undo.ipynb"
@@ -215,7 +219,7 @@ Scenario: Undo needs to at least work for reopened notebooks
   And I undo again
   Then the cursor should be at point "125"
 
-@toggle
+@undo
 Scenario: Toggling between markdown and codecell does not break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new default notebook

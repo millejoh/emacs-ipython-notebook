@@ -17,6 +17,8 @@
               (map-keymap assert-fboundp value))
              ((and (listp value) (eq (car value) 'menu-item))
               (funcall assert-fboundp (cadr value) (caddr value)))
+             ((consp value)
+              (should (functionp (cdr value))))
              (value  ; nil is also valid in keymap
               (should (commandp value))))))
     (map-keymap assert-fboundp keymap)))

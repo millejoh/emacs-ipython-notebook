@@ -168,7 +168,6 @@ global setting.  For global setting and more information, see
                        :notebook-version (ein:$notebook-api-version nb)
                        :raw-content nb-content)))
 
-
 ;;; Managing/listing the content hierarchy
 
 (defvar *ein:content-hierarchy* (make-hash-table :test #'equal)

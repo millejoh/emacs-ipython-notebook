@@ -43,7 +43,7 @@
                        do (sleep-for 0 500)
                        finally do (when (ein:notebook-live-p notebook)
                                     (ein:display-warning (format "cannot close %s" path))))
-              do (when (search "Untitled" path)
+              do (when (or (search "Untitled" path) (search "Renamed" path))
                    (ein:notebooklist-delete-notebook path)
                    (loop repeat 8
                          with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
@@ -60,7 +60,6 @@
 
 (Setup
  (ein:dev-start-debug)
- (setq ein:jupyter-server-args '("--no-browser" "--debug"))
  (setq ein:notebook-autosave-frequency 0)
  (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
@@ -68,6 +67,7 @@
  (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))
  (setq ein:testing-dump-file-request  (concat default-directory "log/ecukes.request"))
  (setq org-confirm-babel-evaluate nil)
+ (setq transient-mark-mode t)
  (Given "I start and login to the server configured \"\\n\""))
 
 (After

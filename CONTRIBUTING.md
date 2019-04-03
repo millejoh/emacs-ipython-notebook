@@ -20,8 +20,8 @@ In your `init.el` or `.emacs`, add the following:
 Now whatever changes you make to the repo will be reflected in new emacs instances.
 
 Dev tools
----------------
-Most dev functionality lies in `ein-dev.el` the most important of which is `ein:dev-start-debug` which activates full logging and backtrace on error.
+---------
+`M-x ein:dev-start-debug` activates full logging and backtrace on error.
 
 Quick sanity checking
 ---------------------
