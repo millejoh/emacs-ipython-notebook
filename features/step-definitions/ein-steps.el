@@ -277,8 +277,10 @@
           (backward-char)
           (let ((was (point)))
             (When "I press \"RET\"")
-            (loop until (/= was (point))
-                  do (sleep-for 0 1000))))))
+            ;; (loop until (/= was (point))
+            ;;       do (sleep-for 0 1000))
+            (sleep-for 5)
+            ))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
@@ -286,8 +288,10 @@
         (re-search-backward "Dir" nil t)
         (let ((was (point)))
           (When "I press \"RET\"")
-          (loop until (/= was (point))
-                do (sleep-for 0 1000)))))
+          ;; (loop until (/= was (point))
+          ;;       do (sleep-for 0 1000))
+          (sleep-for 5)
+          )))
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
