@@ -323,8 +323,7 @@ automatically be called during calls to `ein:notebooklist-open`."
                                       :data data
                                       :api-version nb-version))
         (ein:notebooklist-list-add ein:%notebooklist%)
-        (ein:notebooklist-render nb-version)
-        (goto-char orig-point)
+        (ein:notebooklist-render nb-version orig-point)
         (ein:log 'verbose "Opened notebooklist at %s" (ein:url url-or-port path))
         (unless already-opened-p
           (run-hooks 'ein:notebooklist-first-open-hook))
@@ -720,7 +719,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                     (widget-insert " : " (ein:format-nbitem-data name last-modified))
                     (widget-insert "\n")))))
 
-(defun ein:notebooklist-render (nb-version)
+(defun ein:notebooklist-render (nb-version &optional restore-point)
   "Render notebook list widget.
 Notebook list data is passed via the buffer local variable
 `ein:notebooklist-data'."
@@ -731,10 +730,10 @@ Notebook list data is passed via the buffer local variable
 
   (let ((url-or-port (ein:$notebooklist-url-or-port ein:%notebooklist%)))
     (ein:content-query-sessions url-or-port
-                                (apply-partially #'ein:notebooklist-render--finish nb-version url-or-port)
+                                (apply-partially #'ein:notebooklist-render--finish nb-version url-or-port restore-point)
                                 nil)))
 
-(defun ein:notebooklist-render--finish (nb-version url-or-port sessions)
+(defun ein:notebooklist-render--finish (nb-version url-or-port restore-point sessions)
   (cl-letf (((symbol-function 'render-header) (if (< nb-version 3)
                                                   #'render-header-ipy2
                                                 #'render-header*)))
@@ -743,7 +742,7 @@ Notebook list data is passed via the buffer local variable
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (ein:notebooklist-mode)
     (widget-setup)
-    (goto-char (point-min))))
+    (goto-char (or restore-point (point-min)))))
 
 ;;;###autoload
 
