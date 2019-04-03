@@ -133,7 +133,6 @@ Keymap (C-h m)
    C-c C-a		ein:worksheet-insert-cell-above
    C-c C-b		ein:worksheet-insert-cell-below
    C-c C-c		ein:worksheet-execute-cell
-   C-c C-d		ein:worksheet-toggle-slide-type
    C-c C-e		ein:worksheet-toggle-output
    C-c C-f		ein:file-open
    C-c C-h		ein:pytools-request-tooltip-or-help
@@ -168,7 +167,7 @@ Keymap (C-h m)
    C-c 7		ein:notebook-worksheet-open-7th
    C-c 8		ein:notebook-worksheet-open-8th
    C-c 9		ein:notebook-worksheet-open-last
-   C-c S		ein:worksheet-toggle-slideshow-view
+   C-c S		ein:worksheet-toggle-slide-type
    C-c i		ein:inspect-object
    C-c {		ein:notebook-worksheet-open-prev-or-last
    C-c }		ein:notebook-worksheet-open-next-or-first

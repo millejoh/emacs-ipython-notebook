@@ -529,7 +529,6 @@ Notebook
 .. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
-.. el:variable:: ein:worksheet-show-slide-data
 .. el:variable:: ein:notebook-autosave-frequency
 .. el:variable:: ein:notebook-create-checkpoint-on-save
 

@@ -474,8 +474,8 @@ Return language name as a string or `nil' when not defined.
     (footer (ein:cell-insert-footer data))))
 
 (defun ein:maybe-show-slideshow-data (cell)
-  (when (ein:worksheet--show-slide-data-p ein:%worksheet%)
-    (format " - Slide [%s]:" (or (ein:oref-safe cell 'slidetype)  " "))))
+  (unless (equal (slot-value cell 'slidetype) "-")
+    (format " - Slide [%s]:" (slot-value cell 'slidetype))))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.

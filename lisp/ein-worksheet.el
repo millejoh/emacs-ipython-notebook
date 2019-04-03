@@ -41,14 +41,6 @@
 ;; (define-obsolete-variable-alias
 ;;   'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
 
-(defcustom ein:worksheet-show-slide-data nil
-  "Controls whether to show slide metadata by default when
-  opening or creating worksheets. Note that viewing of slide
-  metadata can be toggled in an open worksheet using the command
-  C-cS."
-  :type 'boolean
-  :group 'ein)
-
 (defcustom ein:worksheet-enable-undo t
   "When non-`nil', allow undo of cell inputs only (as opposed to
   whole-cell operations such as killing, moving, executing cells).
@@ -306,7 +298,6 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   (apply #'make-instance 'ein:worksheet
          :nbformat nbformat :get-notebook-name get-notebook-name
          :discard-output-p discard-output-p :kernel kernel :events events
-         :show-slide-data-p ein:worksheet-show-slide-data
          args))
 
 (cl-defmethod ein:worksheet-bind-events ((ws ein:worksheet))
@@ -404,15 +395,6 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (set-buffer-modified-p dirty))
   (setf (slot-value ws 'dirty) dirty))
-
-(defun ein:worksheet-toggle-slideshow-view ()
-  "Changes the display of
- slideshow metadata in the current worksheet."
-  (interactive)
-  (let ((ws (ein:worksheet--get-ws-or-error)))
-    (setf (ein:worksheet--show-slide-data-p ws)
-          (not (ein:worksheet--show-slide-data-p ws)))
-    (ein:worksheet-render ws)))
 
 (cl-defmethod ein:worksheet-undo-setup ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
@@ -802,9 +784,9 @@ directly."
                           (("fragment") "skip")
                           (("skip") "notes")
                           (("notes") "-"))))
-    (message "changing slide type %s" new-slide-type)
     (oset cell :slidetype new-slide-type))
-  (ewoc-invalidate (slot-value cell 'ewoc) (ein:cell-element-get cell :prompt))
+  (ein:cell-invalidate-prompt cell)
+  (ein:worksheet--unshift-undo-list cell)
   (when focus (ein:cell-goto cell)))
 
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)

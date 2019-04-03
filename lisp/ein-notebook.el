@@ -668,24 +668,23 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook--worksheet-render (notebook ws)
   (ein:worksheet-render ws)
-  (save-current-buffer
-    (with-current-buffer (ein:worksheet-buffer ws)
-      (if ein:polymode
-          (poly-ein-mode)
-        ;; Changing major mode here is super dangerous as it
-        ;; kill-all-local-variables.
-        ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
-        ;; to variables assigned up to this point, but we ought not rely on it
-        (funcall (ein:notebook-choose-mode))
-        (ein:worksheet-reinstall-undo-hooks ws)
-        (ein:aif (ein:$notebook-kernelspec notebook)
-            (ein:ml-lang-setup it)))
-      (ein:notebook-mode)
-      (ein:notebook--notification-setup notebook)
-      (ein:notebook-setup-kill-buffer-hook)
-      (setq ein:%notebook% notebook)
-      (when ein:polymode
-        (poly-ein-fontify-buffer notebook)))))
+  (with-current-buffer (ein:worksheet-buffer ws)
+    (if ein:polymode
+        (poly-ein-mode)
+      ;; Changing major mode here is super dangerous as it
+      ;; kill-all-local-variables.
+      ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
+      ;; to variables assigned up to this point, but we ought not rely on it
+      (funcall (ein:notebook-choose-mode))
+      (ein:worksheet-reinstall-undo-hooks ws)
+      (ein:aif (ein:$notebook-kernelspec notebook)
+          (ein:ml-lang-setup it)))
+    (ein:notebook-mode)
+    (ein:notebook--notification-setup notebook)
+    (ein:notebook-setup-kill-buffer-hook)
+    (setq ein:%notebook% notebook)
+    (when ein:polymode
+      (poly-ein-fontify-buffer notebook))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
@@ -1406,7 +1405,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 (let ((map ein:notebook-mode-map))
   (ein:notebook--define-key map "\C-ci" 'ein:inspect-object)
   (ein:notebook--define-key map "\C-c'" 'ein:edit-cell-contents)
-  (ein:notebook--define-key map "\C-cS" 'ein:worksheet-toggle-slideshow-view)
   (ein:notebook--define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (ein:notebook--define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
   (ein:notebook--define-key map (kbd "<M-S-return>")
@@ -1424,7 +1422,7 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
   (ein:notebook--define-key map "\C-c\C-a" 'ein:worksheet-insert-cell-above)
   (ein:notebook--define-key map "\C-c\C-b" 'ein:worksheet-insert-cell-below)
   (ein:notebook--define-key map "\C-c\C-t" 'ein:worksheet-toggle-cell-type)
-  (ein:notebook--define-key map "\C-c\C-d" 'ein:worksheet-toggle-slide-type)
+  (ein:notebook--define-key map "\C-cS" 'ein:worksheet-toggle-slide-type)
   (ein:notebook--define-key map "\C-c\C-u" 'ein:worksheet-change-cell-type)
   (ein:notebook--define-key map "\C-c\C-s" 'ein:worksheet-split-cell-at-point)
   (ein:notebook--define-key map "\C-c\C-m" 'ein:worksheet-merge-cell)
@@ -1558,8 +1556,7 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
       ("Worksheets [Experimental]"
        ,@(ein:generate-menu
-          '(("Toggle slide metadata view" ein:worksheet-toggle-slideshow-view)
-            ("Rename worksheet" ein:worksheet-rename-sheet)
+          '(("Rename worksheet" ein:worksheet-rename-sheet)
             ("Insert next worksheet"
              ein:notebook-worksheet-insert-next)
             ("Insert previous worksheet"
