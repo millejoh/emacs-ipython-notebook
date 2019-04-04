@@ -198,9 +198,6 @@
    (kernel :initarg :kernel :type ein:$kernel :accessor ein:worksheet--kernel)
    (dirty :initarg :dirty :type boolean :initform nil :accessor ein:worksheet--dirty-p)
    (metadata :initarg :metadata :initform nil :accessor ein:worksheet--metadata)
-   (show-slide-data-p :initarg :show-slide-data-p
-                      :initform nil
-                      :accessor ein:worksheet--show-slide-data-p)
    (events :initarg :events :accessor ein:worksheet--events)))
 
 
