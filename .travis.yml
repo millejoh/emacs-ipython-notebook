@@ -28,7 +28,7 @@ matrix:
   include:
     - os: linux
       python: 2.7
-      env: EVM_EMACS=emacs-25.2-travis IPYTHON=5.8.0
+      env: EVM_EMACS=emacs-25.1-travis IPYTHON=5.8.0
     - os: linux
       python: 3.5
       env: EVM_EMACS=emacs-26.1-travis IPYTHON=6.5.0
