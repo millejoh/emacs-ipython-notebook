@@ -91,7 +91,8 @@
      (let* ((kernel (ein:get-kernel-or-error))
             (cached (ein:completions-get-cached arg (ein:$kernel-oinfo-cache kernel))))
        (ein:aif cached it
-         (unless (and (looking-at "[[:nonascii:]]") (ein:company--punctuation-check (thing-at-point 'line) (current-column)))
+         (unless (ein:company--punctuation-check (thing-at-point 'line)
+                                                 (current-column))
            (case ein:completion-backend
              (t
               (cons :async
@@ -99,8 +100,9 @@
                       (ein:company--complete arg cb)))))))))))
 
 (defun ein:company--punctuation-check (thing col)
-  (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
-    (string-match "[]()\",[{}'=: ]$" query (- col 2))))
+  (or (string-match "[[:nonascii:]]" thing)
+      (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
+        (string-match "[]()\",[{}'=: ]$" query (- col 2)))))
 
 
 (defun ein:company-handle-doc-buffer-finish (packed content _metadata-not-used_)
