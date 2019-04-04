@@ -103,8 +103,8 @@ This function may raise an error."
        'ein:worksheet-end-of-cell-input)
   (ein:ml-set-font-lock-defaults))
 
-(eval-after-load "auto-complete"
-  '(add-to-list 'ac-modes 'ein:notebook-multilang-mode))
+;; (eval-after-load "auto-complete"
+;;   '(add-to-list 'ac-modes 'ein:notebook-multilang-mode))
 
 
 ;;; Language setup functions

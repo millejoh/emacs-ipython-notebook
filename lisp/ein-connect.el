@@ -33,7 +33,7 @@
 (require 'eieio)
 (require 'company nil t)
 (require 'ein-notebook)
-(eval-when-compile (require 'auto-complete))
+(eval-when-compile (require 'auto-complete nil t))
 
 (autoload 'company-mode "company")
 
@@ -199,8 +199,8 @@ notebooks."
     (if (or (not no-reconnection)
             (not ein:%connect%))
         (let ((connection (ein:connect-setup notebook buffer)))
-          (when (ein:eval-if-bound 'ac-sources)
-            (push 'ac-source-ein-async ac-sources))
+          ;; (when (ein:eval-if-bound 'ac-sources)
+          ;;   (push 'ac-source-ein-async ac-sources))
           (ein:connect-mode)
           (ein:log 'info "Connected to %s"
                    (ein:$notebook-notebook-name notebook))
@@ -399,9 +399,9 @@ notebook."
   :keymap ein:connect-mode-map
   :group 'ein
   (case ein:completion-backend
-    (ein:use-ac-backend
-     (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
-     (auto-complete-mode))
+    ;; (ein:use-ac-backend
+    ;;  (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
+    ;;  (auto-complete-mode))
     (ein:use-company-backend
      (add-to-list 'company-backends #'ein:company-backend)
      (company-mode))))

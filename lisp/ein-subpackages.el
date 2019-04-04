@@ -32,12 +32,10 @@
 
  * ein:use-none-backend: local completions only (configured outside EIN)
  * ein:use-company-backend: company-style remote completions (elpy takes precedence)
- * ein:use-ac-backend: deprecated auto-complete remote completions
 "
   :type '(choice
           (const ein:use-none-backend)
-          (const ein:use-company-backend)
-          (const ein:use-ac-backend))
+          (const ein:use-company-backend))
   :group 'ein)
 
 (provide 'ein-subpackages)

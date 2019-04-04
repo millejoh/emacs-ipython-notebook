@@ -100,6 +100,7 @@
 
 (defun ein:company--punctuation-check (thing col)
   (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
+    (ein:log 'debug "ein:company--punctuation-check:%s/%s%s" thing col query)
     (string-match "[]()\",[{}'=: ]$" query (- col 2))))
 
 

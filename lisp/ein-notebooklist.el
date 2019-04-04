@@ -35,7 +35,7 @@
 (require 'ein-file)
 (require 'ein-contents-api)
 (require 'ein-subpackages)
-(require 'ein-ac)
+(require 'ein-ac nil t)
 (require 'ein-company)
 (require 'deferred)
 (require 'dash)

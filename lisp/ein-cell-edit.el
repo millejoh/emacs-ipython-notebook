@@ -25,6 +25,9 @@
 
 ;;; Code:
 (require 'ein-cell)
+(require 'ein-worksheet)
+(require 'ein-notebook)
+(require 'ein-traceback)
 
 (autoload 'julia-mode "julia-mode")
 (autoload 'markdown-mode "markdown-mode")

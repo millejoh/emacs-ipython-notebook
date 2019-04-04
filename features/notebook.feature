@@ -10,26 +10,6 @@ Scenario: not running server locally
   Then I should not see "ein:completions--prepare-oinfo"
 
 @complete
-Scenario: auto completion
-  Given I set "ein:ac-direct-matches" to eval "nil"
-  Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
-  Given new default notebook
-  And I type "import itertool"
-  And I press "C-c C-i"
-  And I wait for the smoke to clear
-  Then "ein:ac-direct-matches" should include "itertools"
-
-@complete
-Scenario: no auto completion
-  Given I set "ein:ac-direct-matches" to eval "nil"
-  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
-  Given new default notebook
-  And I type "import itertool"
-  And I press "C-c C-i"
-  And I wait for the smoke to clear
-  Then "ein:ac-direct-matches" should not include "itertools"
-
-@complete
 Scenario: company completion
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
   Given I kill all websocket buffers

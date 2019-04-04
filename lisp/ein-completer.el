@@ -35,7 +35,7 @@
 (require 'ein-subpackages)
 (require 'ein-kernel)
 (require 'ein-pytools)
-(require 'ein-ac)
+(require 'ein-ac nil t)
 (require 'dash)
 
 (make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
@@ -43,7 +43,6 @@
 (defun ein:completer-choose ()
   (cond
    ((eq ein:completion-backend 'ein:use-none-backend) #'ignore)
-   ((ein:eval-if-bound 'auto-complete-mode) #'ein:completer-finish-completing-ac)
    (t #'ein:completer-finish-completing-default)))
 
 (defun ein:completer-beginning (matched-text)

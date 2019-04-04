@@ -34,7 +34,6 @@
 
 
 (eval-when-compile (require 'cl))
-(eval-when-compile (require 'auto-complete))
 
 (require 'ewoc)
 (require 'mumamo nil t)
@@ -617,7 +616,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
   "Insert dot and request completion."
   (interactive)
   (if (and (ein:get-notebook)
-           (ein:codecell-p (ein:get-cell-at-point)))
+           (ein:codecell-p (ein:get-cell-at-point))
+           (fboundp 'ein:ac-dot-complete))
       (call-interactively #'ein:ac-dot-complete)
     (insert ".")))
 
@@ -1619,9 +1619,9 @@ watch the fireworks!"
 
   (when ein:notebook-mode
     (case ein:completion-backend
-      (ein:use-ac-backend
-       (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
-       (auto-complete-mode))
+      ;; (ein:use-ac-backend
+      ;;  (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
+      ;;  (auto-complete-mode))
       (ein:use-company-backend
        (ein:notebook--define-key ein:notebook-mode-map "." nil)
        (company-mode)))
