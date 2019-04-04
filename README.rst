@@ -46,7 +46,7 @@ It doesn't work
 ---------------
 
 EIN is tested on GNU Emacs versions
-25.2
+25.1
 and later. Your mileage may vary with the `spacemacs layer`_ and other *emacsen*.
 
 You may also try to self-diagnose:
