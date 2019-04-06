@@ -226,7 +226,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
                                      (ein:crib-running-servers)))))
          (url-or-port (let ((ido-report-no-match nil)
                             (ido-use-faces nil))
-                        (ido-completing-read "URL or port: "
+                        (completing-read "URL or port: "
                                              url-or-port-list
                                              nil nil nil nil
                                              default))))

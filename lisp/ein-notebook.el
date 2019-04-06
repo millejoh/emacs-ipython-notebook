@@ -465,7 +465,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read
+                       (with-current-buffer (completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (when (and (ein:$notebook-q-checkpoints notebook)
@@ -484,7 +484,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read
+                       (with-current-buffer (completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if (and notebook (ein:$notebook-autosave-timer notebook))
