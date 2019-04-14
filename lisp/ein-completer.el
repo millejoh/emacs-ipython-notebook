@@ -133,9 +133,11 @@
           (("error" "pyerr")
            (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
                     (plist-get content :traceback)))))
-    (error (ein:log 'verbose "ein:completions--prepare-oinfo: [%s] %s"
-                    (error-message-string err) output)
-           (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
+    (error
+     (let (eval-expression-print-length eval-expression-print-level)
+       (ein:log 'verbose "ein:completions--prepare-oinfo: [%s] %s"
+                (error-message-string err) output))
+     (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
 
 ;;; Support for Eldoc
 

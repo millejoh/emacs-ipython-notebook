@@ -1,5 +1,5 @@
 @eldoc
-Scenario: not running server locally
+Scenario: remote eldoc (largely unused)
   Given I enable "ein:enable-eldoc-support"
   Given I clear log expr "ein:log-all-buffer-name"
   Given new default notebook
