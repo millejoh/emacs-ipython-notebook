@@ -5,7 +5,6 @@
     (auto-complete "1.4.0")
     (request "0.3")
     (deferred "0.5")
-    (cl-generic "1.0")
     (polymode "20190102.1910")
     (markdown-mode "20171116.756")
     (dash "2.13.0")
