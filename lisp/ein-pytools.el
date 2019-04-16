@@ -372,7 +372,7 @@ Currently EIN/IPython supports exporting to the following formats:
 
 .. _nbconvert: http://ipython.org/ipython-doc/stable/notebook/nbconvert.html"
   (interactive (list (read-buffer "Buffer: " (current-buffer) t)
-                     (completing-read "Export format: "
+                     (ein:completing-read "Export format: "
                                       (list "html"
                                             "json"
                                             "latex"

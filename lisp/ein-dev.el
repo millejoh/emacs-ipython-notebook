@@ -49,7 +49,8 @@
   (let* ((dir (or dir ein:source-dir))
          (regex (or regex ".+"))
          (files (-remove #'(lambda (x)
-                             (string-match-p "ein-pkg\\.el" x))
+                             (or (string-match-p "ein-pkg\\.el" x)
+                                 (string-match-p "ein-smartrep\\.el" x)))
                          (and
                           (file-accessible-directory-p dir)
                           (directory-files dir 'full regex)))))
