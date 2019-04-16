@@ -696,9 +696,8 @@ This function is called via `ein:notebook-after-rename-hook'."
                      :notify (lexical-let ((url-or-port url-or-port)
                                            (path path))
                                (lambda (&rest ignore)
-                                 (run-at-time 3 nil #'ein:notebooklist-reload) ;; TODO using deferred better?
+                                 (run-at-time 3 nil #'ein:notebooklist-reload)
                                  (ein:notebook-open url-or-port path)))
-
                      "Open")
                     (widget-insert " ")
                     (if (gethash path sessions)
