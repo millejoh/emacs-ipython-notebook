@@ -66,7 +66,7 @@
   (let* ((end (point))
          (beg (ein:completer-beginning matched-text))
          (word (if (and beg matches)
-                   (completing-read "Complete: " matches
+                   (ein:completing-read "Complete: " matches
                                     nil nil matched-text))))
     (when word
       (delete-region beg end)

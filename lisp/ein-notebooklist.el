@@ -226,7 +226,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
                                      (ein:crib-running-servers)))))
          (url-or-port (let ((ido-report-no-match nil)
                             (ido-use-faces nil))
-                        (completing-read "URL or port: "
+                        (ein:completing-read "URL or port: "
                                              url-or-port-list
                                              nil nil nil nil
                                              default))))
@@ -371,7 +371,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 ;;;###autoload
 (defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry)
   (interactive (list (ein:notebooklist-ask-url-or-port)
-                     (ido-completing-read
+                     (ein:completing-read
                       "Select kernel: "
                       (ein:list-available-kernels
                        (ein:$notebooklist-url-or-port ein:%notebooklist%))
@@ -426,7 +426,7 @@ This function is called via `ein:notebook-after-rename-hook'."
   (interactive
    (let* ((url-or-port (or (ein:get-url-or-port)
                            (ein:default-url-or-port)))
-          (kernelspec (ido-completing-read
+          (kernelspec (ein:completing-read
                        "Select kernel: "
                        (ein:list-available-kernels url-or-port)
                        nil t nil nil "default" nil))
@@ -772,7 +772,7 @@ Notebook list data is passed via the buffer local variable
                  :error)))
 
 (defsubst ein:notebooklist-ask-path (&optional content-type)
-  (ido-completing-read (format  "Open %s: " content-type)
+  (ein:completing-read (format  "Open %s: " content-type)
                        (ein:notebooklist-list-paths content-type)
                        nil t))
 

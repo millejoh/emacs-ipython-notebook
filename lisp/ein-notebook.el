@@ -465,7 +465,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (completing-read
+                       (with-current-buffer (ein:completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (when (and (ein:$notebook-q-checkpoints notebook)
@@ -484,7 +484,7 @@ of minor mode."
   (interactive
    (list (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (completing-read
+                       (with-current-buffer (ein:completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if (and notebook (ein:$notebook-autosave-timer notebook))
@@ -500,7 +500,7 @@ notebook buffer."
    (list (read-number "New autosaves frequency (0 to disable): ")
          (or (ein:get-notebook)
              (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ido-completing-read
+                       (with-current-buffer (ein:completing-read
                                              "Notebook: " it nil t)
                          (ein:get-notebook))))))
   (if notebook
@@ -562,10 +562,10 @@ notebook buffer."
 notebook buffer then the user will be prompted to select an opened notebook."
   (interactive
    (let* ((notebook (or (ein:get-notebook)
-                        (ido-completing-read
+                        (ein:completing-read
                          "Select notebook: "
                          (ein:notebook-opened-buffer-names))))
-          (kernel-name (ido-completing-read
+          (kernel-name (ein:completing-read
                         "Select kernel: "
                         (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
      (list notebook kernel-name)))
@@ -990,7 +990,7 @@ server. Note that if there are multiple checkpoints the user will
 be prompted on which one to use."
   (interactive
    (let* ((notebook (ein:get-notebook))
-          (checkpoint (completing-read
+          (checkpoint (ein:completing-read
                        "Select checkpoint: "
                        (ein:notebook-list-checkpoint-ids notebook))))
      (list notebook checkpoint)))
