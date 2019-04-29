@@ -388,7 +388,8 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                          (replace-regexp-in-string
                           "poly-\\|-mode" ""
                           (symbol-name
-                           (pm--get-existing-mode (eieio-oref chunkmode 'mode))))))
+                           (pm--get-existing-mode (eieio-oref chunkmode 'mode)
+                                                  (eieio-oref chunkmode 'fallback-mode))))))
              simple-name)))))))
 
 (cl-defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
