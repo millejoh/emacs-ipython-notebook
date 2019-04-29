@@ -231,9 +231,13 @@ the log of the running jupyter server."
     ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
     (if (eql system-type 'windows-nt)
         (delete-process proc)
-      (let ((pid (process-id proc)))
+      (lexical-let* ((proc proc)
+                     (pid (process-id proc)))
         (ein:log 'verbose "Signaled %s with pid %s" proc pid)
-        (signal-process pid 15)))
+        (signal-process pid 15)
+        (run-at-time 2 nil (lambda ()
+                             (ein:log 'verbose "Resignaled %s with pid %s" proc pid)
+                             (signal-process pid 15)))))
 
     (ein:log 'info "Stopped Jupyter notebook server.")
 

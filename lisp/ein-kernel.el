@@ -671,7 +671,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel--handle-stdin-reply (kernel packet)
-  (ein:log 'debug "KERNEL--HANDLE-STDIN-REPLY")
   (setf (ein:$kernel-stdin-activep kernel) t)
   (destructuring-bind
       (&key header parent_header metadata content &allow-other-keys)
@@ -697,7 +696,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                           (setf (ein:$kernel-stdin-activep kernel) nil))))))))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
-  (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY")
   (destructuring-bind
       (&key header content metadata parent_header &allow-other-keys)
       (ein:json-read-from-string packet)
@@ -716,8 +714,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
           (("execute_reply")
            (ein:aif (plist-get content :execution_count)
                ;; It can be `nil' for silent execution
-               (ein:events-trigger events 'execution_count.Kernel it)))))))
-  (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: finished"))
+               (ein:events-trigger events 'execution_count.Kernel it))))))))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (loop with events = (ein:$kernel-events kernel)
@@ -742,7 +739,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
              (when cb (ein:funcall-packed cb text)))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
-  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY")
   (if (ein:$kernel-stdin-activep kernel)
       (ein:ipdb--handle-iopub-reply kernel packet)
     (destructuring-bind
@@ -772,8 +768,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
             (("clear_output")
              (ein:aif (plist-get callbacks :clear_output)
-                 (ein:funcall-packed it content metadata))))))))
-  (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: finished"))
+                 (ein:funcall-packed it content metadata)))))))))
 
 ;;; Utility functions
 
