@@ -49,6 +49,21 @@
           (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)
                                         (lambda (kernel session-p)
                                           (should-not session-p))))))
+(When "^I cannot save upon quit$"
+      (lambda ()
+        (let ((always-errback
+               (lambda (args)
+                 (cl-destructuring-bind (notebook callback cbargs errback)
+                     args
+                   (list notebook errback nil errback)))))
+          (add-function :filter-args (symbol-function 'ein:notebook-save-notebook)
+                        always-errback)
+          (cl-letf (((symbol-function 'y-or-n-p)
+                     (lambda (prompt) (message "%s" prompt) t)))
+            (should (ein:notebook-opened-notebooks))
+            (ein:notebook-close-notebooks)
+            (Then "I should see message \"Some notebooks could not be saved.  Exit anyway?\""))
+          (remove-function (symbol-function 'ein:notebook-save-notebook) always-errback))))
 
 (When "I restart kernel$"
       (lambda ()
@@ -144,6 +159,11 @@
                                     (ein:$notebook-notebook-name notebook))))
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
+(When "^I kill buffer and reopen$"
+      (lambda ()
+        (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
+          (When "I press \"C-x k\"")
+          (And (format "old notebook \"%s\"" name)))))
 
 (When "^I \\(finally \\)?stop the server\\(\\)$"
       (lambda (final-p _workaround)

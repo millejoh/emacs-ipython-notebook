@@ -118,7 +118,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
   (with-local-quit
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (loop do (ein:query-gc-running-process-table)
+    (loop do (ein:query-running-process-table)
           for running = (hash-table-count ein:query-running-process-table)
           until (< running ein:max-simultaneous-queries)
           do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
@@ -132,8 +132,8 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
       (puthash key response ein:query-running-process-table)
       response)))
 
-(defun ein:query-gc-running-process-table ()
-  "Garbage collect dead processes in `ein:query-running-process-table'."
+(defun ein:query-running-process-table ()
+  "Keep track of unfinished curl requests."
   (maphash
    (lambda (key buffer)
      (when (request-response-done-p buffer)

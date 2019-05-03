@@ -130,3 +130,27 @@ Scenario: kernel reconnect succeeds
   And header says "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command]"
   And I clear log expr "ein:log-all-buffer-name"
   And my reconnect is questioned
+
+@exit
+Scenario: Saving fails upon quit, need to consult user
+  Given new default notebook
+  When I type "import math"
+  And I wait for cell to execute
+  And I cannot save upon quit
+
+@kill
+Scenario: Assign variable, save, kill notebook buffer, get it back, check variable
+  Given new default notebook
+  When I type "import math"
+  And I press "RET"
+  And I type "b = math.pi"
+  And I press "RET"
+  And I wait for cell to execute
+  And I press "C-x C-s"
+  And I wait for the smoke to clear
+  And I kill buffer and reopen
+  And I press "C-c C-b"
+  And I type "b"
+  And I wait for cell to execute
+  Then I should see "3.1415"
+  And I press "C-x k"

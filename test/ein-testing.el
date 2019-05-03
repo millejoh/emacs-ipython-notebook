@@ -59,7 +59,7 @@
 if I call this between links in a deferred chain.  Adding a flush-queue."
   (deferred:flush-queue!)
   (ein:testing-wait-until (lambda ()
-                            (ein:query-gc-running-process-table)
+                            (ein:query-running-process-table)
                             (zerop (hash-table-count ein:query-running-process-table)))
                           nil ms interval t))
 
@@ -123,6 +123,16 @@ is not run in batch mode before Emacs 24.1."
   (ein:testing-dump-logs))
 
 (add-hook 'kill-emacs-hook #'ein:testing-dump-logs)
+
+(with-eval-after-load "ein-notebook"
+  ;; if y-or-n-p isn't specially overridden, make it always "no"
+  (lexical-let ((original-y-or-n-p (symbol-function 'y-or-n-p)))
+    (add-function :around (symbol-function 'ein:notebook-ask-save)
+                  (lambda (f &rest args)
+                    (if (not (eq (symbol-function 'y-or-n-p) original-y-or-n-p))
+                        (apply f args)
+                      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+                        (apply f args)))))))
 
 (provide 'ein-testing)
 

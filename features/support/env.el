@@ -37,7 +37,7 @@
     (if ein:%notebooklist%
         (loop for notebook in (ein:notebook-opened-notebooks)
               for path = (ein:$notebook-notebook-path notebook)
-              do (ein:notebook-kill-kernel-then-close-command notebook t)
+              do (ein:notebook-kill-kernel-then-close-command notebook)
               do (loop repeat 8
                        until (not (ein:notebook-live-p notebook))
                        do (sleep-for 0 500)
