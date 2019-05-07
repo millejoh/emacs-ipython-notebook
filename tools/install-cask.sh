@@ -23,8 +23,8 @@ cask_install_or_reset() {
         mv ./Cask.tmp ./Cask
         set +x
     fi
-    cask install || { rm -rf .cask && false; }
-    cask update
+    cask install </dev/null
+    cask update </dev/null
     # travis cache
     rsync -vazSHe ssh .cask $HOME/
 }
