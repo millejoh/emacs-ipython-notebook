@@ -75,16 +75,28 @@
   "Websocket gets its cookies using the url-cookie API, so we need to copy over
  any cookies that are made and stored during the contents API calls via
  emacs-request."
-  (let* ((parsed-url (url-generic-parse-url url))
-         (host-port (if (url-port-if-non-default parsed-url)
-                        (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
-                      (url-host parsed-url)))
-         (securep (string-match "^wss://" url))
-         (cookies (request-cookie-alist (url-host parsed-url) "/" securep))
-         (hub-cookies (request-cookie-alist (url-host parsed-url) "/hub/" securep))
-         (user-cookies (request-cookie-alist (url-host parsed-url) (ein:maybe-get-jhconn-user url) securep)))
-    (dolist (c (append cookies (append hub-cookies user-cookies)))
-      (ein:websocket-store-cookie c host-port (car (url-path-and-query parsed-url)) securep))))
+  (lexical-let*
+      ((parsed-url (url-generic-parse-url url))
+       (host-port (if (url-port-if-non-default parsed-url)
+                      (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
+                    (url-host parsed-url)))
+       (securep (string-match "^wss://" url))
+       (read-cookies-func (lambda (path)
+                            (request-cookie-alist
+                             (url-host parsed-url) path securep)))
+       (cookies (loop repeat 4
+                      for cand = (mapcan read-cookies-func
+                                         `("/" "/hub/"
+                                           ,(ein:maybe-get-jhconn-user url)))
+                      until (cl-some (lambda (x) (string= "_xsrf" (car x))) cand)
+                      do (ein:log 'info
+                           "ein:websocket--prepare-cookies: no _xsrf among %s, retrying."
+                           cand)
+                      do (sleep-for 0 300)
+                      finally return cand)))
+    (dolist (c cookies)
+      (ein:websocket-store-cookie c host-port
+                                  (car (url-path-and-query parsed-url)) securep))))
 
 (defun ein:websocket (url kernel on-message on-close on-open)
   (ein:websocket--prepare-cookies url)

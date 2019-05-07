@@ -46,11 +46,24 @@
 (defun ein:testing-save-buffer (buffer-or-name file-name)
   (when (and buffer-or-name (get-buffer buffer-or-name) file-name)
     (with-current-buffer buffer-or-name
-      (write-region (point-min) (point-max) file-name))))
+      (let ((coding-system-for-write 'raw-text))
+        (write-region (point-min) (point-max) file-name)))))
 
 (defun ein:testing-dump-logs ()
   (ein:testing-save-buffer "*Messages*" ein:testing-dump-file-messages)
   (ein:testing-save-buffer "*ein:jupyter-server*" ein:testing-dump-file-server)
+  (mapc (lambda (b)
+          (ein:and-let* ((bname (buffer-name b))
+                         (prefix "kernels/")
+                         (is-websocket (search "*websocket" bname))
+                         (kernel-start (search prefix bname))
+                         (sofar (subseq bname (+ kernel-start (length prefix))))
+                         (kernel-end (search "/" sofar)))
+            (ein:testing-save-buffer
+             bname
+             (concat ein:testing-dump-file-websocket "."
+                     (seq-take sofar kernel-end)))))
+        (buffer-list))
   (ein:testing-save-buffer ein:log-all-buffer-name ein:testing-dump-file-log)
   (ein:testing-save-buffer request-log-buffer-name ein:testing-dump-file-request))
 

@@ -18,6 +18,7 @@
 (setq ein:testing-dump-file-log (concat default-directory "log/testfunc.log"))
 (setq ein:testing-dump-file-messages (concat default-directory "log/testfunc.messages"))
 (setq ein:testing-dump-file-server  (concat default-directory  "log/testfunc.server"))
+(setq ein:testing-dump-file-websocket (concat default-directory  "log/testfunc.websocket"))
 (setq ein:testing-dump-file-request  (concat default-directory "log/testfunc.request"))
 (with-eval-after-load "python"
   (setq python-indent-guess-indent-offset-verbose nil))
