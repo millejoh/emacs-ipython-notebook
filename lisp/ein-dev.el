@@ -61,7 +61,6 @@
 (defun ein:dev-reload ()
   "Reload ein-*.el modules."
   (interactive)
-  (ein:notebook-kill-all-buffers)
   (makunbound 'ein:notebook-mode-map)   ; so defvar works.
   (load "ein-notebook")  ; ... but make sure it will be defined first.
   (ein:load-files "^ein-.*\\.el$"))

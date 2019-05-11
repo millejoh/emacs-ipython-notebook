@@ -46,11 +46,24 @@
 (defun ein:testing-save-buffer (buffer-or-name file-name)
   (when (and buffer-or-name (get-buffer buffer-or-name) file-name)
     (with-current-buffer buffer-or-name
-      (write-region (point-min) (point-max) file-name))))
+      (let ((coding-system-for-write 'raw-text))
+        (write-region (point-min) (point-max) file-name)))))
 
 (defun ein:testing-dump-logs ()
   (ein:testing-save-buffer "*Messages*" ein:testing-dump-file-messages)
   (ein:testing-save-buffer "*ein:jupyter-server*" ein:testing-dump-file-server)
+  (mapc (lambda (b)
+          (ein:and-let* ((bname (buffer-name b))
+                         (prefix "kernels/")
+                         (is-websocket (search "*websocket" bname))
+                         (kernel-start (search prefix bname))
+                         (sofar (subseq bname (+ kernel-start (length prefix))))
+                         (kernel-end (search "/" sofar)))
+            (ein:testing-save-buffer
+             bname
+             (concat ein:testing-dump-file-websocket "."
+                     (seq-take sofar kernel-end)))))
+        (buffer-list))
   (ein:testing-save-buffer ein:log-all-buffer-name ein:testing-dump-file-log)
   (ein:testing-save-buffer request-log-buffer-name ein:testing-dump-file-request))
 
@@ -59,7 +72,7 @@
 if I call this between links in a deferred chain.  Adding a flush-queue."
   (deferred:flush-queue!)
   (ein:testing-wait-until (lambda ()
-                            (ein:query-gc-running-process-table)
+                            (ein:query-running-process-table)
                             (zerop (hash-table-count ein:query-running-process-table)))
                           nil ms interval t))
 
@@ -123,6 +136,16 @@ is not run in batch mode before Emacs 24.1."
   (ein:testing-dump-logs))
 
 (add-hook 'kill-emacs-hook #'ein:testing-dump-logs)
+
+(with-eval-after-load "ein-notebook"
+  ;; if y-or-n-p isn't specially overridden, make it always "no"
+  (lexical-let ((original-y-or-n-p (symbol-function 'y-or-n-p)))
+    (add-function :around (symbol-function 'ein:notebook-ask-save)
+                  (lambda (f &rest args)
+                    (if (not (eq (symbol-function 'y-or-n-p) original-y-or-n-p))
+                        (apply f args)
+                      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+                        (apply f args)))))))
 
 (provide 'ein-testing)
 

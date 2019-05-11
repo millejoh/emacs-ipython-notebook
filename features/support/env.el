@@ -37,7 +37,7 @@
     (if ein:%notebooklist%
         (loop for notebook in (ein:notebook-opened-notebooks)
               for path = (ein:$notebook-notebook-path notebook)
-              do (ein:notebook-kill-kernel-then-close-command notebook t)
+              do (ein:notebook-kill-kernel-then-close-command notebook)
               do (loop repeat 8
                        until (not (ein:notebook-live-p notebook))
                        do (sleep-for 0 500)
@@ -64,7 +64,8 @@
  (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
- (setq ein:testing-dump-file-server  (concat default-directory  "log/ecukes.server"))
+ (setq ein:testing-dump-file-server (concat default-directory  "log/ecukes.server"))
+ (setq ein:testing-dump-file-websocket (concat default-directory  "log/ecukes.websocket"))
  (setq ein:testing-dump-file-request  (concat default-directory "log/ecukes.request"))
  (setq org-confirm-babel-evaluate nil)
  (setq transient-mark-mode t)

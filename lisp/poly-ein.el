@@ -212,7 +212,7 @@ TYPE can be 'body, nil."
     (save-restriction
       (widen)
       (let ((range (pm-innermost-range
-                    (or (when (car args) (funcall modifier (car args)))
+                    (or (when (car args) (max (point-min) (funcall modifier (car args))))
                         (point)))))
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))

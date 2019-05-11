@@ -6,7 +6,9 @@ Fork the repo on github.  Clone the fork to your home directory.
 
 Install cask.  Run `make dist` to ensure correct cask functionality.
 
-Run `make test` to ensure a correct baseline.  This locally replicates the travis ci build.  You may need to install other software such as jupyter, R, matplotlib, etc.
+Run `make test` to ensure a correct baseline.
+
+Until we institute a virtualenv for the required testing software (jupyter, R, matplotlib, etc.), out-of-the-box `make test` remains problematic.
 
 Remove the MELPA-installed EIN by deleting the package directory (on my system, it's `~/.emacs.d/elpa/ein-20190122.1341`) or running `M-x package-delete`.
 

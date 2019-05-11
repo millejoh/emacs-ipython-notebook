@@ -41,6 +41,7 @@ autoloads:
 clean:
 	cask clean-elc
 	rm -rf test/test-install
+	rm -rf log/*websocket*
 
 .PHONY: dist-clean
 dist-clean: clean

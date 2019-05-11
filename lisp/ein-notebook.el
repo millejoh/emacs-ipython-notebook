@@ -266,7 +266,7 @@ combo must match exactly these url/port you used format
 `ein:notebooklist-login'."
   (interactive (list
                 (ein:notebooklist-ask-url-or-port)
-                (ein:get-notebook-or-error)))
+                (ein:notebook--get-nb-or-error)))
   (message "Updating server info and restarting kernel for notebooklist %s"
            (ein:$notebook-notebook-name notebook))
   (setf (ein:$notebook-url-or-port notebook) new-url-or-port)
@@ -277,14 +277,11 @@ combo must match exactly these url/port you used format
                            (ein:$notebook-notebook-name notebook)))))
 
 (defun ein:notebook-buffer (notebook)
-  "Return the buffer that is associated with NOTEBOOK."
-  ;; FIXME: Find a better way to define notebook buffer!
-  ;;        For example, the last accessed buffer.
-  (let ((first-buffer
-         (lambda (ws-list)
-           (loop for ws in ws-list if (ein:worksheet-buffer ws) return it))))
-    (or (funcall first-buffer (ein:$notebook-worksheets    notebook))
-        (funcall first-buffer (ein:$notebook-scratchsheets notebook)))))
+  "Return first buffer in NOTEBOOK's worksheets."
+  (loop for ws in (append (ein:$notebook-worksheets notebook)
+                          (ein:$notebook-scratchsheets notebook))
+        if (ein:worksheet-buffer ws)
+        return it))
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the buffers associated with NOTEBOOK's kernel.
@@ -823,7 +820,7 @@ This is equivalent to do ``C-c`` in the console program."
                (ein:$notebook-worksheets notebook))
       (ein:notebook-save-notebook notebook callback cbargs)))
 
-(defun ein:notebook-save-notebook (notebook &optional callback cbargs)
+(defun ein:notebook-save-notebook (notebook &optional callback cbargs errback)
   (unless (ein:notebook-buffer notebook)
     (let ((buf (format ein:notebook-buffer-name-template
                        (ein:$notebook-url-or-port notebook)
@@ -845,7 +842,7 @@ This is equivalent to do ``C-c`` in the console program."
                       #'ein:notebook-save-notebook-success
                       (list notebook callback cbargs)
                       #'ein:notebook-save-notebook-error
-                      (list notebook))))
+                      (list notebook errback))))
 
 (defun ein:notebook-save-notebook-command ()
   "Save the notebook."
@@ -923,31 +920,79 @@ NAME is any non-empty string that does not contain '/' or '\\'.
                 (ein:$notebook-scratchsheets notebook)))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
-(defun ein:notebook-close (notebook)
-  "Close NOTEBOOK and kill its buffer."
-  (interactive (prog1 (list (ein:notebook--get-nb-or-error))
-                 (or (ein:notebook-ask-before-kill-buffer)
-                     (error "Quit"))))
-  (let ((ein:notebook-kill-buffer-ask nil))
-    ;; Let `ein:notebook-kill-buffer-callback' do its job.
-    (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
+(defmacro ein:notebook-avoid-recursion (&rest body)
+  `(let ((kill-buffer-query-functions
+          (remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
+                     kill-buffer-query-functions)))
+     ,@body))
 
-(defun ein:notebook-kill-kernel-then-close-command (notebook &optional force)
+(defun ein:notebook-kill-notebook-buffers (notebook)
+  "Kill all of NOTEBOOK's buffers"
+  (mapc #'ein:notebook-kill-current-buffer (ein:notebook-buffer-list notebook)))
+
+(defun ein:notebook-kill-current-buffer (buf)
+  "Kill BUF and avoid recursion in kill-buffer-query-functions"
+  (ein:notebook-avoid-recursion
+   (let ((notebook (buffer-local-value 'ein:%notebook% buf)))
+     (when (kill-buffer buf)
+       (ein:notebook-tidy-opened-notebooks notebook)))))
+
+(defsubst ein:notebook-kill-buffer-query ()
+  (ein:aif (ein:get-notebook--notebook)
+      (let ((buf (or (buffer-base-buffer (current-buffer))
+                     (current-buffer))))
+        (ein:notebook-ask-save it (apply-partially
+                                   #'ein:notebook-kill-current-buffer
+                                   buf))
+        ;; don't kill buffer!
+        nil)
+    ;; kill buffer!
+    t))
+
+(defun ein:notebook-ask-save (notebook callback0)
+  (unless callback0
+    (setq callback0 #'ignore))
+  (if (ein:notebook-modified-p notebook)
+      (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
+          (lexical-let ((success-positive 0))
+            (add-function :before callback0 (lambda () (setq success-positive 1)))
+            (ein:notebook-save-notebook notebook callback0 nil
+                                        (lambda () (setq success-positive -1)))
+            (loop repeat 10
+                  until (not (zerop success-positive))
+                  do (sleep-for 0 200)
+                  finally return (> success-positive 0)))
+        (when (ein:worksheet-p ein:%worksheet%)
+          (ein:worksheet-dont-save-cells ein:%worksheet%)) ;; TODO de-obfuscate
+        (funcall callback0)
+        t)
+    (funcall callback0)
+    t))
+
+(defun ein:notebook-close (notebook &optional callback &rest cbargs)
+  (interactive (list (ein:notebook--get-nb-or-error)))
+  (lexical-let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
+                 (callback0 (apply-partially #'ein:notebook-kill-notebook-buffers notebook)))
+    (when callback
+      (add-function :after callback0
+                    (apply #'apply-partially callback cbargs)))
+    (ein:notebook-ask-save notebook callback0)))
+
+(defun ein:notebook-kill-kernel-then-close-command (notebook)
   "Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual."
-  (interactive (list ein:%notebook%))
-  (when (or force (ein:notebook-ask-before-kill-buffer))
-    (let ((kernel (ein:$notebook-kernel notebook))
-          (callback (apply-partially
-                     (lambda (notebook* kernel)
-                       (ein:notebook-close notebook*))
-                     notebook)))
-      (if (ein:kernel-live-p kernel)
-          (ein:message-whir "Ending session"
-                            (add-function :before callback done-callback)
-                            (ein:kernel-delete-session kernel callback))
-        (funcall callback nil)))))
+  (interactive (list (ein:notebook--get-nb-or-error)))
+  (let ((kernel (ein:$notebook-kernel notebook))
+        (callback1 (apply-partially
+                    (lambda (notebook* kernel)
+                      (ein:notebook-close notebook*))
+                    notebook)))
+    (if (ein:kernel-live-p kernel)
+        (ein:message-whir "Ending session"
+                          (add-function :before callback1 done-callback)
+                          (ein:kernel-delete-session kernel callback1))
+      (funcall callback1 nil))))
 
 (defun ein:fast-content-from-notebook (notebook)
   "Quickly generate a basic content structure from notebook. This
@@ -1201,8 +1246,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
   (setf (ein:$notebook-worksheets notebook)
         (delq ws (ein:$notebook-worksheets notebook)))
   (setf (ein:$notebook-dirty notebook) t)
-  (let ((ein:notebook-kill-buffer-ask nil))
-    (kill-buffer (ein:worksheet-buffer ws))))
+  (kill-buffer (ein:worksheet-buffer ws)))
 
 (defun ein:notebook-worksheet-move-prev (notebook ws)
   "Switch the current worksheet with the previous one."
@@ -1243,7 +1287,7 @@ Scratch sheet is almost identical to worksheet.  However, EIN
 will not save the buffer.  Use this buffer like of normal IPython
 console.  Note that you can always copy cells into the normal
 worksheet to save result."
-  (interactive (list (ein:get-notebook-or-error)
+  (interactive (list (ein:notebook--get-nb-or-error)
                      current-prefix-arg
                      t))
   (let ((ss (or (unless new
@@ -1260,7 +1304,6 @@ worksheet to save result."
   "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook instance.")
 
 (defun ein:notebook-get-opened-notebook (url-or-port path)
-  (ein:notebook-opened-notebooks) ;; garbage collects dead notebooks -- TODO refactor
   (gethash (list url-or-port path) ein:notebook--opened-map))
 
 (defun ein:notebook-get-opened-buffer (url-or-port path)
@@ -1273,6 +1316,11 @@ worksheet to save result."
            notebook
            ein:notebook--opened-map))
 
+(defun ein:notebook-tidy-opened-notebooks (notebook)
+  "Remove NOTEBOOK from ein:notebook--opened-map if it's not ein:notebook-live-p"
+  (unless (ein:notebook-live-p notebook)
+    (ein:notebook-remove-opened-notebook notebook)))
+
 (defun ein:notebook-remove-opened-notebook (notebook)
   (remhash (list (ein:$notebook-url-or-port notebook)
                  (ein:$notebook-notebook-path notebook))
@@ -1283,11 +1331,7 @@ worksheet to save result."
 If PREDICATE is given, notebooks are filtered by PREDICATE.
 PREDICATE is called with each notebook and notebook is included
 in the returned list only when PREDICATE returns non-nil value."
-  (let (notebooks)
-    (maphash (lambda (k n) (if (ein:notebook-live-p n)
-                               (push n notebooks)
-                             (remhash k ein:notebook--opened-map)))
-             ein:notebook--opened-map)
+  (let ((notebooks (hash-table-values ein:notebook--opened-map)))
     (if predicate
         (seq-filter predicate notebooks)
       notebooks)))
@@ -1320,10 +1364,6 @@ PREDICATE is called with the buffer name for each opened notebook."
 
 
 ;;; Predicate
-
-(defun ein:notebook-buffer-p ()
-  "Return non-`nil' if current buffer is notebook buffer."
-  ein:%notebook%)
 
 (defun ein:notebook-live-p (notebook)
   "Return non-`nil' if NOTEBOOK has live buffer."
@@ -1482,8 +1522,7 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
           '(("Save notebook" ein:notebook-save-notebook-command)
             ("Copy and rename notebook" ein:notebook-save-to-command)
             ("Rename notebook" ein:notebook-rename-command)
-            ("Close notebook without saving"
-             ein:notebook-close)
+            ("Close notebook" ein:notebook-close)
             ("Kill kernel then close notebook"
              ein:notebook-kill-kernel-then-close-command))))
       ("Edit"
@@ -1691,55 +1730,20 @@ the first argument and CBARGS as the rest of arguments."
                          (apply callback data cbargs)))
                       callback cbargs))))
 
-
 ;;; Buffer and kill hooks
+(add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
 
-(defcustom ein:notebook-kill-buffer-ask t
-  "Whether EIN should ask before killing unsaved notebook buffer."
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil))
-  :group 'ein)
+(defun ein:notebook-close-notebooks (&optional blithely)
+  "Used in `ein:jupyter-server-stop' and `kill-emacs-query-functions' hook."
+  (ein:aif (ein:notebook-opened-notebooks)
+      (if (and (cl-notevery #'identity (mapcar #'ein:notebook-close it))
+               (not blithely))
+          (y-or-n-p "Some notebooks could not be saved.  Exit anyway?")
+        t)
+    t))
 
-;; -- `kill-buffer-query-functions'
-(defun ein:notebook-ask-before-kill-buffer ()
-  "Return `nil' to prevent killing the notebook buffer.
-Called via `kill-buffer-query-functions'."
-  (not (or (and ein:notebook-kill-buffer-ask
-                (ein:worksheet-p ein:%worksheet%) ; it's not `ein:scratchsheet'
-                (ein:notebook-modified-p)
-                (not (y-or-n-p
-                      "This notebook has unsaved changes. Discard those changes?")))
-           (when (ein:worksheet-p ein:%worksheet%)
-             ;; To make `ein:worksheet-save-cells' no-op.
-             (ein:worksheet-dont-save-cells ein:%worksheet%)
-             nil))))
+(add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 
-(add-hook 'kill-buffer-query-functions 'ein:notebook-ask-before-kill-buffer)
-
-;; -- `kill-emacs-query-functions'
-(defun ein:notebook-ask-before-kill-emacs ()
-  "Return `nil' to prevent killing Emacs when unsaved notebook exists.
-Called via `kill-emacs-query-functions'."
-  (condition-case err
-      (let ((unsaved (seq-filter #'ein:notebook-modified-p
-                                 (ein:notebook-opened-notebooks))))
-        (if (null unsaved)
-            t
-          (let ((answer
-                 (y-or-n-p
-                  (format "You have %s unsaved notebook(s). Discard changes?"
-                          (length unsaved)))))
-            ;; kill all unsaved buffers forcefully
-            (when answer
-              (mapc #'ein:notebook-close unsaved))
-            answer)))
-    ((debug error)
-     (ein:log 'error "Got error: %S" err)
-     (y-or-n-p "Error while examine notebooks.  Kill Emacs anyway? "))))
-
-(add-hook 'kill-emacs-query-functions 'ein:notebook-ask-before-kill-emacs)
-
-;; -- `kill-buffer-hook'
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   ;; TODO - it remains a bug that neither `ein:notebook-kill-buffer-callback'
@@ -1752,25 +1756,6 @@ Called via `kill-emacs-query-functions'."
 (defun ein:notebook-setup-kill-buffer-hook ()
   "Add \"notebook destructor\" to `kill-buffer-hook'."
   (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback nil t))
-
-;; Useful command to close notebooks.
-(defun ein:notebook-kill-all-buffers ()
-  "Close all opened notebooks."
-  (interactive)
-  (let* ((notebooks (ein:notebook-opened-notebooks))
-         (unsaved (seq-filter #'ein:notebook-modified-p notebooks)))
-    (if notebooks
-        (if (y-or-n-p
-             (format (concat "You have %s opened notebook(s). "
-                             (when unsaved
-                               (format "%s are UNSAVED. " (length unsaved)))
-                             "Really kill all of them?")
-                     (length notebooks)))
-            (progn (ein:log 'info "Killing all notebook buffers...")
-                   (mapc #'ein:notebook-close notebooks)
-                   (ein:log 'info "Killing all notebook buffers... Done!"))
-          (ein:log 'info "Canceled to kill all notebooks."))
-      (ein:log 'info "No opened notebooks."))))
 
 (if (boundp 'undo-tree-incompatible-major-modes)
       (nconc undo-tree-incompatible-major-modes (list (ein:notebook-choose-mode))))

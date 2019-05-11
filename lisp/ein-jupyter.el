@@ -203,31 +203,11 @@ the log of the running jupyter server."
   (interactive)
   (ein:and-let* ((proc (ein:jupyter-server-process))
                  (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
-    (let ((unsaved (ein:notebook-opened-notebooks #'ein:notebook-modified-p))
-          (check-for-saved (make-hash-table :test #'equal)))
-      (when unsaved
-        (loop for nb in unsaved
-              for nb-name = (ein:$notebook-notebook-name nb)
-              when (y-or-n-p (format "Save %s?" nb-name))
-              do (progn
-                   (setf (gethash nb-name check-for-saved) t)
-                   (ein:notebook-save-notebook
-                    nb
-                    (lambda (name check-hash) (remhash name check-hash))
-                    (list nb-name check-for-saved)))))
-      (loop for x upfrom 0 by 1
-            until (or (zerop (hash-table-count check-for-saved))
-                      (> x 20))
-            do (sleep-for 0 500)))
-
-    (mapc #'ein:notebook-close (ein:notebook-opened-notebooks))
-
+    (ein:notebook-close-notebooks t)
     (loop repeat 10
-          do (ein:query-gc-running-process-table)
-          when (zerop (hash-table-count ein:query-running-process-table))
-          return t
+          do (ein:query-running-process-table)
+          until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
-
     ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
     (if (eql system-type 'windows-nt)
         (delete-process proc)

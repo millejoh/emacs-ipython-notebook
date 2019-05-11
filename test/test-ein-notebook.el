@@ -208,8 +208,7 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
         (setq ss-list
               (append ss-list (list (make-instance 'ein:scratchsheet)))))
       ;; Close worksheet
-      (let ((ws (car (ein:$notebook-worksheets notebook)))
-            (ein:notebook-kill-buffer-ask nil))
+      (let ((ws (car (ein:$notebook-worksheets notebook))))
         (ein:notebook-close-worksheet notebook ws)
         (kill-buffer (ein:worksheet-buffer ws)))
       ;; Make sure adding scratchsheet work.
@@ -233,7 +232,6 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
 (ert-deftest ein:notebook-close-scratchsheet/open-two-close-one ()
   (ein:testing-notebook-close-scratchsheet-open-and-close 2 1))
 
-
 ;;; Insertion and deletion of cells
 
 (ert-deftest ein:notebook-insert-cell-below-command-simple ()
@@ -320,10 +318,7 @@ some text
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 1))
       (call-interactively #'ein:worksheet-kill-cell)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))
-      (flet ((y-or-n-p (&rest ignore) t)
-             (ein:notebook-del (&rest ignore)))
-        ;; FIXME: are there anyway to skip confirmation?
-        (kill-buffer)))
+      (kill-buffer))
     (with-current-buffer (ein:testing-notebook-make-empty "NB2")
       (call-interactively #'ein:worksheet-yank-cell)
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 1)))))
@@ -900,7 +895,7 @@ defined."
 
 (defun ein:testing-notebook-data-assert-nb4-worksheet-contents (notebook &optional text)
   (let* ((data (ein:notebook-to-json notebook))
-         (cells (assoc-default 'cells data #'eq)))
+         (cells (assoc-default 'cells data)))
     (if text
         (progn
           (should (= (length cells) 1))
@@ -945,9 +940,9 @@ defined."
       ;; Open scratch sheet.
       (ein:notebook-scratchsheet-open notebook)
       ;; Discard a worksheet buffer
-      (should (ein:notebook-modified-p notebook))
-      (let (ein:notebook-kill-buffer-ask)
-        (kill-buffer buffer))
+      (should-not (kill-buffer buffer))
+      (ein:testing-wait-until (lambda ()
+                                (not (buffer-live-p buffer))))
       (should (ein:notebook-live-p notebook))
       ;; to-json should still work
       (if (< (ein:$notebook-nbformat notebook) 4)
@@ -961,8 +956,7 @@ defined."
 (ert-deftest ein:notebook-kill-kernel-then-close-when-its-alive ()
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
-          (notebook ein:%notebook%)
-          (ein:notebook-kill-buffer-ask nil))
+          (notebook ein:%notebook%))
       (cl-letf (((symbol-function 'ein:kernel-live-p) (lambda (&rest args) t))
                 ((symbol-function 'ein:kernel-delete-session) (lambda (kernel callback) (funcall callback kernel))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))
@@ -972,8 +966,7 @@ defined."
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
           (notebook ein:%notebook%)
-          (kernel (ein:$notebook-kernel ein:%notebook%))
-          (ein:notebook-kill-buffer-ask nil))
+          (kernel (ein:$notebook-kernel ein:%notebook%)))
       (mocker-let
           ((ein:kernel-live-p
             (kernel)
@@ -1210,7 +1203,6 @@ value of `ein:worksheet-enable-undo'."
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
   (let ((ein:notebook--opened-map (make-hash-table :test 'equal)))
-    (should (ein:notebook-ask-before-kill-emacs))
     (with-current-buffer
         (ein:testing-notebook-make-empty "Modified Notebook.ipynb")
       (call-interactively #'ein:worksheet-insert-cell-below)
@@ -1219,57 +1211,57 @@ value of `ein:worksheet-enable-undo'."
         (ein:testing-notebook-make-empty "Saved Notebook.ipynb")
       (ein:notebook-save-notebook-success ein:%notebook%)
       (should-not (ein:notebook-modified-p)))
-    (flet ((y-or-n-p (&rest ignore) t)
-           (ein:notebook-del (&rest ignore)))
-      (kill-buffer
-       (ein:testing-notebook-make-empty "Killed Notebook.ipynb")))
+    (kill-buffer (ein:testing-notebook-make-empty "Killed Notebook.ipynb"))
     (should (gethash `(,ein:testing-notebook-dummy-url "Modified Notebook.ipynb") ein:notebook--opened-map))
     (should (gethash `(,ein:testing-notebook-dummy-url "Saved Notebook.ipynb") ein:notebook--opened-map))
-    (should (gethash `(,ein:testing-notebook-dummy-url "Killed Notebook.ipynb") ein:notebook--opened-map))
-    (should (= (hash-table-count ein:notebook--opened-map) 3))
-    (mocker-let ((y-or-n-p
-                  (prompt)
-                  ((:input '("You have 1 unsaved notebook(s). Discard changes?")
-                           :output t))))
-      (should (ein:notebook-ask-before-kill-emacs)))))
+    (should-not (gethash `(,ein:testing-notebook-dummy-url "Killed Notebook.ipynb") ein:notebook--opened-map))
+    (should (= (hash-table-count ein:notebook--opened-map) 2))
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+      (ein:notebook-close-notebooks t)
+      (should-not (ein:notebook-opened-notebooks)))))
 
 
 ;;; Buffer and kill hooks
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/no-ein-buffer ()
   (with-temp-buffer
-    (mocker-let ((y-or-n-p (prompt) ()))
-      (should (ein:notebook-ask-before-kill-buffer)))))
+    (should (kill-buffer))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/new-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (mocker-let ((y-or-n-p (prompt) ()))
-      (should (ein:notebook-ask-before-kill-buffer)))))
+    (lexical-let ((buf (current-buffer)))
+      (should-not (kill-buffer buf))
+      (ein:testing-wait-until (lambda ()
+                                (not (buffer-live-p buf)))))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (call-interactively #'ein:worksheet-insert-cell-below)
-    (mocker-let ((y-or-n-p
-                  (prompt)
-                  ((:input '("This notebook has unsaved changes. Discard those changes?")
-                           :output t))))
-      (should (ein:notebook-ask-before-kill-buffer)))))
+    (lexical-let ((buffer (current-buffer)))
+      (call-interactively #'ein:worksheet-insert-cell-below)
+      (should-not (kill-buffer buffer))
+      (ein:testing-wait-until (lambda ()
+                                (not (buffer-live-p buffer)))))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (with-current-buffer (ein:worksheet-buffer
-                          (ein:notebook-scratchsheet-open ein:%notebook%))
-      (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
-      (call-interactively #'ein:worksheet-insert-cell-below)
-      (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
-      (should (ein:worksheet-modified-p ein:%worksheet%))
-      (mocker-let ((y-or-n-p (prompt) ()))
-        (should (ein:notebook-ask-before-kill-buffer))))
-    (should-not (ein:worksheet-modified-p ein:%worksheet%))
-    (mocker-let ((y-or-n-p (prompt) ()))
-      (should (ein:notebook-ask-before-kill-buffer)))))
+    (lexical-let ((buf (current-buffer)))
+      (should (buffer-live-p buf))
+      (with-current-buffer (ein:worksheet-buffer
+                            (ein:notebook-scratchsheet-open ein:%notebook%))
+        (lexical-let ((buf2 (current-buffer)))
+          (should-not (eq buf buf2))
+          (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
+          (call-interactively #'ein:worksheet-insert-cell-below)
+          (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
+          (should (ein:worksheet-modified-p ein:%worksheet%))
+          (should-not (kill-buffer buf2))
+          (ein:testing-wait-until (lambda ()
+                                    (not (buffer-live-p buf2))))))
+      (should-not (ein:worksheet-modified-p ein:%worksheet%))
+      (should-not (kill-buffer buf))
+      (ein:testing-wait-until (lambda ()
+                                (not (buffer-live-p buf)))))))
 
-
 ;; Misc unit tests
 
 (ert-deftest ein:notebook-test-notebook-name-simple ()

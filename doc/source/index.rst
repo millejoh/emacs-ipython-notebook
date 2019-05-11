@@ -305,7 +305,6 @@ created via `ein:notebook-create-checkpoint`.
 .. el:function:: ein:worksheet-execute-all-cell
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
-.. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
 .. el:function:: ein:notebook-create-checkpoint
 .. el:function:: ein:notebook-restore-to-checkpoint
@@ -516,7 +515,6 @@ Notebook
 
 .. el:variable:: ein:worksheet-enable-undo
 .. el:variable:: ein:notebook-modes
-.. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:cell-traceback-level
