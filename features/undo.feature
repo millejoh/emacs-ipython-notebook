@@ -1,7 +1,7 @@
 @undo
 Scenario: Undo turned off
   Given I disable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I wait for cell to execute
   And I undo demoting errors
@@ -10,7 +10,7 @@ Scenario: Undo turned off
 @undo
 Scenario: Kill yank doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I press "M-RET"
   And I type "[i for i in [1,2]]"
@@ -28,7 +28,7 @@ Scenario: Kill yank doesn't break undo
 @undo
 Scenario: Collapse doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "from time import sleep"
   And I press "RET"
   And I press "C-c C-b"
@@ -53,7 +53,7 @@ Scenario: Collapse doesn't break undo
 @undo
 Scenario: Test the conflagrative commands
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I press "RET"
   And I press "M-RET"
@@ -84,7 +84,7 @@ Scenario: Test the conflagrative commands
 @undo
 Scenario: Clear output doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "from time import sleep"
   And I press "RET"
   And I press "C-c C-b"
@@ -109,7 +109,7 @@ Scenario: Clear output doesn't break undo
 @undo
 Scenario: Moving cells doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "100"
   And I press "C-c C-b"
   And I type "200"
@@ -132,7 +132,7 @@ Scenario: Moving cells doesn't break undo
 @forlorn
 Scenario: Split and merge don't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "print("hello")"
   And I press "C-c C-b"
   And I type "1111"
@@ -222,7 +222,7 @@ Scenario: Undo needs to at least work for reopened notebooks
 @undo
 Scenario: Toggling between markdown and codecell does not break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type ""to be markdown""
   And I press "C-c C-b"
   And I type "200"
@@ -292,7 +292,7 @@ Scenario: Undo (kind of) needs to work when someone explicitly requires ein-time
 @timestamp
 Scenario: Kill yank doesn't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I press "M-RET"
   And I type "[i for i in [1,2]]"
@@ -310,7 +310,7 @@ Scenario: Kill yank doesn't break undo
 @timestamp
 Scenario: Split and merge don't break undo
   Given I enable "ein:worksheet-enable-undo"
-  Given new default notebook
+  Given new python notebook
   When I type "print("hello")"
   And I press "C-c C-b"
   And I type "1111"

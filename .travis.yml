@@ -22,7 +22,7 @@ cache:
 
 env:
   global:
-    - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$HOME/local/R/bin:$PATH
+    - PATH=$HOME/local/bin:$HOME/local/evm/bin:$HOME/local/cask/bin:$HOME/local/R/bin:$HOME/local/julia-1.1.0/bin:$PATH
 
 matrix:
   include:
@@ -34,7 +34,7 @@ matrix:
       env: EVM_EMACS=emacs-26.1-travis IPYTHON=6.5.0
     - os: linux
       python: 3.6
-      env: EVM_EMACS=emacs-26.1-travis IPYTHON=7.4.0
+      env: EVM_EMACS=emacs-26.2-travis IPYTHON=7.4.0
     - os: osx
       language: generic
       env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 TOXENV=py27
@@ -60,6 +60,7 @@ install:
       pip install jupyterhub-dummyauthenticator ;
     fi
   - sh tools/install-R.sh
+  - sh tools/install-julia.sh
   - jupyter kernelspec list
   - curl --version
   - ipython --version
@@ -82,4 +83,5 @@ script:
     if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
       make test-jupyterhub
     fi
+  - rm -rf $HOME/.matplotlib $HOME/.cache/fontconfig
   - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | dos2unix | sed '/^begin 664/,/^end/!d' | uudecode" ) && false)

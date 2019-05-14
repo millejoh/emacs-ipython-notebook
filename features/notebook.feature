@@ -2,7 +2,7 @@
 Scenario: remote eldoc (largely unused)
   Given I enable "ein:enable-eldoc-support"
   Given I clear log expr "ein:log-all-buffer-name"
-  Given new default notebook
+  Given new python notebook
   And I type "import math"
   And I press "C-a"
   And I call eldoc-documentation-function
@@ -13,7 +13,7 @@ Scenario: remote eldoc (largely unused)
 Scenario: auto completion
   Given I set "ein:ac-direct-matches" to eval "nil"
   Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
-  Given new default notebook
+  Given new python notebook
   And I type "import itertool"
   And I press "C-c C-i"
   And I wait for the smoke to clear
@@ -23,7 +23,7 @@ Scenario: auto completion
 Scenario: no auto completion
   Given I set "ein:ac-direct-matches" to eval "nil"
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
-  Given new default notebook
+  Given new python notebook
   And I type "import itertool"
   And I press "C-c C-i"
   And I wait for the smoke to clear
@@ -33,7 +33,7 @@ Scenario: no auto completion
 Scenario: company completion
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
   Given I kill all websocket buffers
-  Given new default notebook
+  Given new python notebook
   And I type "import itertools"
   And I press "M-RET"
   And I type "itertools."
@@ -50,19 +50,19 @@ Scenario: company completion
   Then I should see "itertools.chain"
   Then no completion traffic
   Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
-  Given new default notebook
+  Given new python notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
 
 @rename
 Scenario: rename notebook
-  Given new default notebook
+  Given new python notebook
   And I press "C-c C-/"
   And I switch to buffer like "Untitled"
   And rename notebook to "Renamed" succeeds
 
 @image
 Scenario: image fails to materialize initially.  Document this in a test.
-  Given new default notebook
+  Given new python notebook
   And I type "import numpy, math, matplotlib.pyplot as plt"
   And I press "RET"
   And I type "x = numpy.linspace(0, 2*math.pi)"
@@ -82,14 +82,14 @@ Scenario: image fails to materialize initially.  Document this in a test.
 
 @switch
 Scenario: switch kernel
-  Given new default notebook
+  Given new python notebook
   And I type "import itertools"
   And I wait for cell to execute
   And I switch kernel to "ir"
 
 @reconnect
 Scenario: kernel reconnect succeeds
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I wait for cell to execute
   And I kill processes like "websocket"
@@ -133,14 +133,14 @@ Scenario: kernel reconnect succeeds
 
 @exit
 Scenario: Saving fails upon quit, need to consult user
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I wait for cell to execute
   And I cannot save upon quit
 
 @kill
 Scenario: Assign variable, save, kill notebook buffer, get it back, check variable
-  Given new default notebook
+  Given new python notebook
   When I type "import math"
   And I press "RET"
   And I type "b = math.pi"
@@ -154,3 +154,10 @@ Scenario: Assign variable, save, kill notebook buffer, get it back, check variab
   And I wait for cell to execute
   Then I should see "3.1415"
   And I press "C-x k"
+
+@julia
+Scenario: Smoke test julia
+  Given new julia notebook
+  When I type "isapprox(Base.MathConstants.e ^ (pi * im), -1)"
+  And I wait for cell to execute
+  Then I should see "true"
