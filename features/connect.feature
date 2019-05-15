@@ -2,7 +2,7 @@
 Scenario: Company completion in a python buffer
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
   Given I kill all websocket buffers
-  Given new default notebook
+  Given new python notebook
   When I open temp file "connect.py"
   And I switch to buffer like "connect.py"
   And I call "python-mode"
@@ -26,7 +26,7 @@ Scenario: Company completion in a python buffer
 
 @connect
 Scenario: Test shared eval
-  Given new default notebook
+  Given new python notebook
   When I open temp file "connect.py"
   And I switch to buffer like "connect.py"
   And I connect to default notebook
@@ -36,7 +36,7 @@ Scenario: Test shared eval
 
 @connect
 Scenario: Connect buffer to a running notebook
-  Given new default notebook
+  Given new python notebook
   When I open temp file "connect.py"
   And I switch to buffer like "connect.py"
   And I connect to default notebook

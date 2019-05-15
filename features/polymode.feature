@@ -1,6 +1,6 @@
 @poly
 Scenario: selection spans cells
-  Given new default notebook
+  Given new python notebook
   And I press "C-c C-b"
   And I press "C-<up>"
   And I press "C-p"

@@ -2,7 +2,7 @@
  EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
 ========================================================================
 
-  --- or **E**\ IN **I**\ s not only for **N**\ otebooks.
+  --- or **E**\ IN **I**\ s not only for pytho\ **N**\ .
 
 Emacs IPython Notebook (EIN) lets you edit and run Jupyter_ (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
@@ -31,7 +31,7 @@ Install from MELPA_ (recommended) or ``make install`` from github source.
 
 Usage
 =====
-Start EIN using ONE of the following:
+Start EIN using **one** of the following:
 
 - Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``, or,
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
@@ -64,8 +64,8 @@ If you cannot resolve the problem, file an issue using ``M-x ein:dev-bug-report-
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 
-I want to use Elpy, ESS, LSP, etc.
-==================================
+I want to use Elpy, ESS, LSP, julia-mode
+========================================
 
 Enable `polymode`_ via::
 

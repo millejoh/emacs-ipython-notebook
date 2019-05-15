@@ -23,6 +23,9 @@
 (unless (member "jupyterhub" ecukes-include-tags)
   (!cons "jupyterhub" ecukes-exclude-tags))
 
+(unless ein:polymode
+  (!cons "julia" ecukes-exclude-tags))
+
 (if (eq system-type 'darwin)
     (!cons "switch" ecukes-exclude-tags))
 

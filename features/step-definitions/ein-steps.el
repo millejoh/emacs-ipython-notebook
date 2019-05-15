@@ -148,17 +148,21 @@
         (switch-to-buffer ein:log-all-buffer-name)))
 
 (When "^new \\(.+\\) notebook$"
-      (lambda (kernel)
+      (lambda (prefix)
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (let ((ks (ein:get-kernelspec url-or-port kernel)))
+              (let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
+                     (found (or (seq-some (lambda (x) (and (search prefix x) x)) kslist)
+                                (error "No kernel %s among %s" prefix kslist)))
+                     (ks (ein:get-kernelspec url-or-port found)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-name notebook))))
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
+
 (When "^I kill buffer and reopen$"
       (lambda ()
         (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
