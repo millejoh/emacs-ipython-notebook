@@ -120,7 +120,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                                     (and notebook
                                          (ein:aand (ein:$notebook-kernel notebook)
                                                    (ein:kernel-live-p it))))
-                                  nil 10000 1000)
+                                  nil 20000 1000)
           notebook)
       (error (let ((notice (format "ein:testing-new-notebook: [%s] %s"
                                    url-or-port (error-message-string err))))

@@ -4,11 +4,14 @@
 
   --- or **E**\ IN **I**\ s not only for pytho\ **N**\ .
 
-Emacs IPython Notebook (EIN) lets you edit and run Jupyter_ (formerly IPython)
+Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
 idiosyncrasies of in-browser editing.
 
-EIN was originally written by tkf_.  More `complete documentation`_ is available.
+Org_ users please find ob-ein_, a jupyter Babel_ backend.
+
+EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
+introduced by `[gregsexton]`_.
 
 .. |build-status|
    image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
@@ -23,7 +26,10 @@ EIN was originally written by tkf_.  More `complete documentation`_ is available
    :target: http://melpa-stable.milkbox.net/#/ein
    :alt: MELPA stable version
 .. _Jupyter: http://jupyter.org
-.. _tkf: https://tkf.github.io/emacs-ipython-notebook
+.. _Babel: https://orgmode.org/worg/org-contrib/babel/intro.html
+.. _Org: https://orgmode.org
+.. _[tkf]: http://tkf.github.io
+.. _[gregsexton]: https://github.com/gregsexton/ob-ipython
 
 Install
 =======
@@ -39,6 +45,8 @@ Start EIN using **one** of the following:
 
 Use ``C-u M-x ein:login`` for services such as ``mybinder.org`` requiring cookie authentication.
 
+Alternatively, ob-ein_.
+
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
 .. _MELPA: http://melpa.org/#/
 
@@ -47,7 +55,7 @@ It doesn't work
 
 EIN is tested on GNU Emacs versions
 25.1
-and later. Your mileage may vary with the `spacemacs layer`_ and other *emacsen*.
+and later.  We presently do not recommend the `spacemacs layer`_.
 
 You may also try to self-diagnose:
 
@@ -72,29 +80,41 @@ Enable `polymode`_ via::
    M-x customize-group RET ein
    Toggle Ein:Polymode
   
-Org-mode Integration
-====================
+ob-ein
+======
 
-EIN provides org-babel functionality similar to ob-ipython_ and scimax_.
+Configuration:
 
-*Language* is ``ein``.  The ``:session`` header argument is the notebook url, e.g., ``https://localhost:8888/my.ipynb``, or simply ``localhost``, in which case EIN will evaluate org blocks in an anonymous notebook::
+::
 
-   #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
-   import matplotlib.pyplot as plt
-   import numpy as np
+   M-x customize-group RET org-babel
+   Org Babel Load Languages:
+     Insert (ein . t)
+     For example, '((emacs-lisp . t) (ein . t))
 
-   %matplotlib inline
-   x = np.linspace(0, 1, 100)
-   y = np.random.rand(100,1)
-   plt.plot(x,y)
+Snippet:
+
+::
+
+   #BEGIN_SRC ein-python :session localhost :results raw drawer
+     import numpy, math, matplotlib.pyplot as plt
+     %matplotlib inline
+     x = numpy.linspace(0, 2*math.pi)
+     plt.plot(x, numpy.sin(x))
    #+END_SRC
 
-You may also specify the port, i.e., ``localhost:8889``.  See `ob-ein details`_.
+The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, or simply ``localhost``, in which case org evaluates anonymously.  A port may also be specified, e.g., ``localhost:8889``.
+
+*Language* can be ``ein-python``, ``ein-r``, or ``ein-julia``.  **The relevant** `jupyter kernel`_ **must be installed before use**.  Additional languages can be configured via::
+
+   M-x customize-group RET ein
+   Ob Ein Languages
 
 .. _polymode: https://github.com/polymode/polymode
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython
 .. _scimax: https://github.com/jkitchin/scimax
 .. _ob-ein details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 Connected Buffers
 =================

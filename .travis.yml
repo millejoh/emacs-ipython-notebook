@@ -17,6 +17,7 @@ cache:
   - $HOME/.cache/pip
   - $HOME/.evm
   - $HOME/.emacs.d
+  - $HOME/Library/Caches/Homebrew
   - $HOME/.pyenv
   - $HOME/Library/Caches/pip
 
@@ -84,4 +85,4 @@ script:
       make test-jupyterhub
     fi
   - rm -rf $HOME/.matplotlib $HOME/.cache/fontconfig
-  - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | dos2unix | sed '/^begin 664/,/^end/!d' | uudecode" ) && false)
+  - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | dos2unix | sed '/^begin 644/,/^end/!d' | uudecode" ) && false)

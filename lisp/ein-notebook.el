@@ -69,6 +69,7 @@
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
 (require 'ein-multilang)
+(require 'ob-ein)
 (require 'poly-ein)
 
 ;;; Configuration
@@ -219,15 +220,22 @@ Current buffer for these functions is set to the notebook buffer.")
 
 ;;; Constructor
 
-(defun ein:notebook-new (url-or-port notebook-path kernelspec &rest args)
-  (if (or (stringp kernelspec) (symbolp kernelspec))
-      (setq kernelspec (ein:get-kernelspec url-or-port kernelspec)))
-  (let ((notebook (apply #'make-ein:$notebook
-                         :url-or-port url-or-port
-                         :kernelspec kernelspec
-                         :notebook-path notebook-path
-                         args)))
-    notebook))
+(defun ein:notebook-new (url-or-port notebook-path pre-kernelspec &rest args)
+  (let ((kernelspec
+         (cond ((ein:$kernelspec-p pre-kernelspec) pre-kernelspec)
+               ((consp pre-kernelspec)
+                (loop for (name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
+                      when (and (ein:$kernelspec-p ks)
+                                (string= (cdr pre-kernelspec)
+                                         (cl-struct-slot-value
+                                          'ein:$kernelspec (car pre-kernelspec) ks)))
+                      return ks))
+               (t (ein:get-kernelspec url-or-port pre-kernelspec)))))
+    (apply #'make-ein:$notebook
+           :url-or-port url-or-port
+           :kernelspec kernelspec
+           :notebook-path notebook-path
+           args)))
 
 ;;; Destructor
 
@@ -328,8 +336,9 @@ will be updated with kernel's cwd."
                (pm-select-buffer (pm-innermost-span))
                (pop-to-buffer (pm-span-buffer (pm-innermost-span))))
            (pop-to-buffer (ein:notebook-buffer notebook*)))))
-     (when (null (plist-member (ein:$notebook-metadata notebook*)
-                               :kernelspec))
+     (when (and (not noninteractive)
+                (null (plist-member (ein:$notebook-metadata notebook*)
+                               :kernelspec)))
        (ein:aif (ein:$notebook-kernelspec notebook*)
            (progn
              (setf (ein:$notebook-metadata notebook*)
@@ -409,7 +418,12 @@ where `created' indicates a new notebook or an existing one.
       ;; Start websocket only after worksheet is rendered
       ;; because ein:notification-bind-events only gets called after worksheet's
       ;; buffer local notification widget is instantiated
-      (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
+      (ein:kernel-retrieve-session (ein:$notebook-kernel notebook) nil
+                                   (apply-partially (lambda (callback0* name* kernel)
+                                                      (funcall callback0*)
+                                                      (ein:log 'info "Notebook %s is ready" name*))
+                                                    callback0
+                                                    (ein:$notebook-notebook-name notebook)))
       (setf (ein:$notebook-kernelinfo notebook)
             (ein:kernelinfo-new (ein:$notebook-kernel notebook)
                                 (cons #'ein:notebook-buffer-list notebook)
@@ -418,10 +432,7 @@ where `created' indicates a new notebook or an existing one.
       (ein:notebook--check-nbformat (ein:$content-raw-content content))
       (setf (ein:$notebook-q-checkpoints notebook) q-checkpoints)
       (ein:notebook-enable-autosaves notebook)
-      (ein:gc-complete-operation)
-      (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-name notebook))
-      (when callback0
-        (funcall callback0)))))
+      (ein:gc-complete-operation))))
 
 (defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
   (ein:aif (plist-get content-metadata :kernelspec)
@@ -530,18 +541,19 @@ notebook buffer."
 
 (defsubst ein:notebook-toggle-latex-fragment ()
   (interactive)
-  (if (featurep 'px)
-      (let ((outline-regexp "$a")
-            (kill-buffer-hook nil)) ;; outline-regexp never matches to avoid headline
-        (cl-letf (((symbol-function 'px-remove) #'ignore))
-          (if ein:%notebook-latex-p%
-              (progn
-                (ein:worksheet-render (ein:worksheet--get-ws-or-error))
-                (setq ein:%notebook-latex-p% nil))
-            (px-preview)
-            (setq ein:%notebook-latex-p% t))))
-    (ein:display-warning "px package not found")))
-
+  (cond (ein:polymode (ein:display-warning "ein:notebook-toggle-latex-fragment: delegate to markdown-mode"))
+        ((featurep 'px)
+         (let ((outline-regexp "$a")
+               (kill-buffer-hook nil)) ;; outline-regexp never matches to avoid headline
+           (cl-letf (((symbol-function 'px-remove) #'ignore))
+             (if ein:%notebook-latex-p%
+                 (progn
+                   (ein:worksheet-render (ein:worksheet--get-ws-or-error))
+                   (setq ein:%notebook-latex-p% nil))
+               (px-preview)
+               (setq ein:%notebook-latex-p% t)))))
+        (t (ein:display-warning "px package not found"))))
+
 ;;; Kernel related things
 
 (defun ein:kernelspec-for-nb-metadata (kernelspec)
@@ -897,10 +909,11 @@ NAME is any non-empty string that does not contain '/' or '\\'."
                       (ein:$notebook-notebook-path ein:%notebook%))))
   (unless (and (string-match "\\.ipynb" path) (= (match-end 0) (length path)))
     (setq path (format "%s.ipynb" path)))
-  (let ((content (ein:content-from-notebook ein:%notebook%)))
-    (ein:log 'verbose "Renaming notebook %s" (ein:notebook-url ein:%notebook%))
+  (let* ((notebook (ein:notebook--get-nb-or-error))
+         (content (ein:content-from-notebook notebook)))
+    (ein:log 'verbose "Renaming notebook %s to '%s'" (ein:notebook-url notebook) path)
     (ein:content-rename content path #'ein:notebook-rename-success
-                        (list ein:%notebook% content))))
+                        (list notebook content))))
 
 (defun ein:notebook-save-to-command (path)
   "Make a copy of the notebook and save it to a new path specified by NAME.
@@ -926,6 +939,11 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (mapc #'ein:worksheet-set-buffer-name
         (append (ein:$notebook-worksheets notebook)
                 (ein:$notebook-scratchsheets notebook)))
+  (ein:and-let* ((kernel (ein:$notebook-kernel notebook)))
+    (ein:session-rename (ein:$kernel-url-or-port kernel)
+                        (ein:$kernel-session-id kernel)
+                        (ein:$content-path content))
+    (setf (ein:$kernel-path kernel) (ein:$content-path content)))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
 (defmacro ein:notebook-avoid-recursion (&rest body)
@@ -960,7 +978,8 @@ NAME is any non-empty string that does not contain '/' or '\\'.
 (defun ein:notebook-ask-save (notebook callback0)
   (unless callback0
     (setq callback0 #'ignore))
-  (if (ein:notebook-modified-p notebook)
+  (if (and (ein:notebook-modified-p notebook)
+           (not (ob-ein-anonymous-p (ein:$notebook-notebook-path notebook))))
       (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
           (lexical-let ((success-positive 0))
             (add-function :before callback0 (lambda () (setq success-positive 1)))

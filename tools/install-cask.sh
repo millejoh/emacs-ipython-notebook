@@ -16,13 +16,6 @@ cask_upgrade_cask_or_reset() {
 }
 
 cask_install_or_reset() {
-    if [ $(cask eval "(princ emacs-major-version)") -gt "25" ]; then
-        echo "!!!! ALERT WORKAROUND !!!!"
-        set -x
-        grep -v "org-plus-contrib" ./Cask > ./Cask.tmp
-        mv ./Cask.tmp ./Cask
-        set +x
-    fi
     cask install </dev/null
     cask update </dev/null
     # travis cache

@@ -16,4 +16,10 @@ if [ "x$TRAVIS_OS_NAME" = "xlinux" ] ; then
     fi
     R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com')"
     R -e "IRkernel::installspec()"
+elif [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
+    brew update
+    brew list r &>/dev/null || brew install r
+    R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com')"
+    R -e "IRkernel::installspec()"
 fi
+R --version

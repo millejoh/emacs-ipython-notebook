@@ -3,6 +3,9 @@
 (require 'espuds)
 (require 'ert)
 
+(with-eval-after-load "python"
+  (setq python-indent-guess-indent-offset-verbose nil))
+
 (let* ((support-path (f-dirname load-file-name))
        (root-path (f-parent (f-parent support-path))))
   (add-to-list 'load-path (concat root-path "/lisp"))
@@ -14,6 +17,7 @@
 (require 'ein-testing)
 (require 'ein-ipynb-mode)
 (require 'ein-contents-api)
+(require 'poly-ein)
 (require 'ob-ein)
 
 (if (member "timestamp" ecukes-include-tags)
@@ -23,14 +27,14 @@
 (unless (member "jupyterhub" ecukes-include-tags)
   (!cons "jupyterhub" ecukes-exclude-tags))
 
-(unless ein:polymode
-  (!cons "julia" ecukes-exclude-tags))
+(when (file-exists-p (concat default-directory "features/support/test-poly.el"))
+  (load-file (concat default-directory "features/support/test-poly.el")))
 
-(if (eq system-type 'darwin)
-    (!cons "switch" ecukes-exclude-tags))
-
-(if (> (string-to-number org-version) 9.1) ;; they got rid of easy templates
-    (!cons "org" ecukes-exclude-tags))
+(cond ((not ein:polymode)
+       (!cons "julia" ecukes-exclude-tags)
+       (!cons "memory" ecukes-exclude-tags))
+      ((string= (getenv "TRAVIS_OS_NAME") "linux")
+       (!cons "memory" ecukes-exclude-tags)))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
@@ -41,18 +45,18 @@
         (loop for notebook in (ein:notebook-opened-notebooks)
               for path = (ein:$notebook-notebook-path notebook)
               do (ein:notebook-kill-kernel-then-close-command notebook)
-              do (loop repeat 8
+              do (loop repeat 16
                        until (not (ein:notebook-live-p notebook))
-                       do (sleep-for 0 500)
+                       do (sleep-for 0 1000)
                        finally do (when (ein:notebook-live-p notebook)
                                     (ein:display-warning (format "cannot close %s" path))))
               do (when (or (search "Untitled" path) (search "Renamed" path))
                    (ein:notebooklist-delete-notebook path)
-                   (loop repeat 8
+                   (loop repeat 16
                          with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
                          for extant = (file-exists-p fullpath)
                          until (not extant)
-                         do (sleep-for 0 500)
+                         do (sleep-for 0 1000)
                          finally do (when extant 
                                       (ein:display-warning (format "cannot del %s" path))))))))
   (ein:aif (ein:notebook-opened-notebooks)

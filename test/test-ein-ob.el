@@ -5,7 +5,13 @@
 
 ;; Test utils
 
-;;; This is the content portion of a response fromt he content API.
+(ert-deftest ein:ob-anonymous-p ()
+  (should (ob-ein-anonymous-p ".ein-python.ipynb"))
+  (should (ob-ein-anonymous-p ".ein.ipynb"))
+  (should-not (ob-ein-anonymous-p "ein-python.ipynb"))
+  (should-not (ob-ein-anonymous-p "Untitled.ipynb")))
+
+;;; This is the content portion of a response from the content API.
 (defvar eintest:ob-src-block
   "#+BEGIN_SRC ein :session 8888/Untitled.ipynb
 import sys

@@ -6,7 +6,7 @@
       (lambda (port)
         (ein:process-refresh-processes)
         (assert (not (ein:process-url-match (ein:url port))))
-        (When (format "I type \"ein :session localhost:%s :result raw drawer\"" port))))
+        (When (format "I type \"ein :session localhost:%s :results raw drawer\"" port))))
 
 (When "^I ctrl-c-ctrl-c$"
       (lambda ()
@@ -152,11 +152,11 @@
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
-                     (found (or (seq-some (lambda (x) (and (search prefix x) x)) kslist)
-                                (error "No kernel %s among %s" prefix kslist)))
-                     (ks (ein:get-kernelspec url-or-port found)))
+              (ein:and-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
+                             (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
+                             (ks (ein:get-kernelspec url-or-port found)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
+            (should notebook)
             (let ((buf-name (format ein:notebook-buffer-name-template
                                     (ein:$notebook-url-or-port notebook)
                                     (ein:$notebook-notebook-name notebook))))
@@ -336,12 +336,13 @@
 (When "^I wait for buffer to say \"\\(.+\\)\"$"
       (lambda (bogey)
         (ein:testing-wait-until
-         (lambda () (ein:aif (s-contains? bogey (buffer-string)) it
-                      (when (with-current-buffer ein:log-all-buffer-name
-                              (search "WS closed unexpectedly" (buffer-string)))
-                        (Then "I ctrl-c-ctrl-c")
-                        (And "I clear log expr \"ein:log-all-buffer-name\""))
-                      nil))
+         (lambda ()
+           (ein:aif (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string)) it
+             (when (with-current-buffer ein:log-all-buffer-name
+                     (search "WS closed unexpectedly" (buffer-string)))
+               (And "I clear log expr \"ein:log-all-buffer-name\"")
+               (Then "I ctrl-c-ctrl-c"))
+             nil))
          nil 40000 2000)))
 
 (When "^I wait for cell to execute$"

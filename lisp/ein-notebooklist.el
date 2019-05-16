@@ -422,7 +422,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name
     (url-or-port kernelspec name &optional callback no-pop)
-  "Open new notebook and rename the notebook."
+  "Upon notebook-open, rename the notebook, then funcall CALLBACK."
   (interactive
    (let* ((url-or-port (or (ein:get-url-or-port)
                            (ein:default-url-or-port)))
@@ -467,12 +467,6 @@ This function is called via `ein:notebook-after-rename-hook'."
                                              &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-delete-notebook--complete %s" resp-string)
   (when callback (funcall callback)))
-
-;; Because MinRK wants me to suffer (not really, I love MinRK)...
-(defun ein:get-actual-path (path)
-  (ein:aif (cl-position ?/ path :from-end t)
-      (substring path 0 it)
-    ""))
 
 (defun generate-breadcrumbs (path)
   "Given notebooklist path, generate alist of breadcrumps of form (name . path)."
@@ -650,10 +644,6 @@ This function is called via `ein:notebook-after-rename-hook'."
           for name = (plist-get note :name)
           for path = (plist-get note :path)
           for last-modified = (plist-get note :last_modified)
-          ;; (cond ((= 2 api-version)
-          ;;        (plist-get note :path))
-          ;;       ((= 3 api-version)
-          ;;        (ein:get-actual-path (plist-get note :path))))
           for type = (plist-get note :type)
           for opened-notebook-maybe = (ein:notebook-get-opened-notebook url-or-port path)
           do (widget-insert " ")
