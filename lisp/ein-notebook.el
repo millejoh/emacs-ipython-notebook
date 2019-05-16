@@ -680,8 +680,7 @@ This is equivalent to do ``C-c`` in the console program."
        (ein:worksheet-reinstall-undo-hooks ws)
        (condition-case err
            (ein:aif (ein:$notebook-kernelspec notebook)
-                    (ein:ml-lang-setup it)
-                    (error "ein:notebook--worksheet-render: No kernelspec found"))
+                    (ein:ml-lang-setup it))
          (error (ein:log 'error (error-message-string err))
                 (setq multilang-failed t))))
      (unless multilang-failed
