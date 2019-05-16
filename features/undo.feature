@@ -46,6 +46,7 @@ Scenario: Collapse doesn't break undo
   And I press "C-<up>"
   And I press "C-c C-e"
   And I press "C-/"
+  And I dump buffer
   Then the cursor should be at point "77"
   And I undo again
   Then the cursor should be at point "55"
