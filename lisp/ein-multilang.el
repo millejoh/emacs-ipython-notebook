@@ -162,7 +162,10 @@ This function may raise an error."
       (set-keymap-parent ein:notebook-multilang-mode-map ess-r-mode-map))))
 
 (defun ein:ml-lang-setup (kernelspec)
-  (funcall (intern (concat "ein:ml-lang-setup-" (ein:$kernelspec-language kernelspec)))))
+  (let ((setup-func (intern (concat "ein:ml-lang-setup-" (ein:$kernelspec-language kernelspec)))))
+    (if (fboundp setup-func)
+        (funcall setup-func)
+      (error "ein:ml-lang-setup: kernelspec language '%s' unsupported" (ein:$kernelspec-language kernelspec)))))
 
 ;; (defun ein:ml-lang-setup-markdown ()
 ;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."

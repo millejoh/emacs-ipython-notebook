@@ -50,6 +50,9 @@ TYPE can be 'body, nil."
                             ((ein:markdowncell-p cell) "markdown")
                             (t "fundamental"))))
                     ((not (equal mode (ein:oref-safe cm :mode)))))
+       (when (eq mode 'poly-fallback-mode)
+         (ein:display-warning
+          (format "pm:get-span: no major mode for kernelspec language '%s'" lang)))
        (setq result-cm
              (loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
                    when (equal mode (ein:oref-safe ocm :mode))
