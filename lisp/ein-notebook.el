@@ -403,22 +403,25 @@ where `created' indicates a new notebook or an existing one.
     (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
     (ein:notebook-install-kernel notebook)
     (ein:notebook-from-json notebook (ein:$content-raw-content content))
-    ;; Start websocket only after worksheet is rendered
-    ;; because ein:notification-bind-events only gets called after worksheet's
-    ;; buffer local notification widget is instantiated
-    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
-    (setf (ein:$notebook-kernelinfo notebook)
-          (ein:kernelinfo-new (ein:$notebook-kernel notebook)
-                              (cons #'ein:notebook-buffer-list notebook)
-                              (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
-    (ein:notebook-put-opened-notebook notebook)
-    (ein:notebook--check-nbformat (ein:$content-raw-content content))
-    (setf (ein:$notebook-q-checkpoints notebook) q-checkpoints)
-    (ein:notebook-enable-autosaves notebook)
-    (ein:gc-complete-operation)
-    (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-name notebook)))
-  (when callback0
-    (funcall callback0)))
+    (if (not (with-current-buffer (ein:notebook-buffer notebook)
+               (ein:get-notebook)))
+        (error "ein:notebook-open--callback: notebook instantiation failed")
+      ;; Start websocket only after worksheet is rendered
+      ;; because ein:notification-bind-events only gets called after worksheet's
+      ;; buffer local notification widget is instantiated
+      (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
+      (setf (ein:$notebook-kernelinfo notebook)
+            (ein:kernelinfo-new (ein:$notebook-kernel notebook)
+                                (cons #'ein:notebook-buffer-list notebook)
+                                (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
+      (ein:notebook-put-opened-notebook notebook)
+      (ein:notebook--check-nbformat (ein:$content-raw-content content))
+      (setf (ein:$notebook-q-checkpoints notebook) q-checkpoints)
+      (ein:notebook-enable-autosaves notebook)
+      (ein:gc-complete-operation)
+      (ein:log 'info "Notebook %s is ready" (ein:$notebook-notebook-name notebook))
+      (when callback0
+        (funcall callback0)))))
 
 (defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
   (ein:aif (plist-get content-metadata :kernelspec)
@@ -666,22 +669,28 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook--worksheet-render (notebook ws)
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
-    (if ein:polymode
-        (poly-ein-mode)
-      ;; Changing major mode here is super dangerous as it
-      ;; kill-all-local-variables.
-      ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
-      ;; to variables assigned up to this point, but we ought not rely on it
-      (funcall (ein:notebook-choose-mode))
-      (ein:worksheet-reinstall-undo-hooks ws)
-      (ein:aif (ein:$notebook-kernelspec notebook)
-          (ein:ml-lang-setup it)))
-    (ein:notebook-mode)
-    (ein:notebook--notification-setup notebook)
-    (ein:notebook-setup-kill-buffer-hook)
-    (setq ein:%notebook% notebook)
-    (when ein:polymode
-      (poly-ein-fontify-buffer notebook))))
+    (let (multilang-failed)
+     (if ein:polymode
+         (poly-ein-mode)
+       ;; Changing major mode here is super dangerous as it
+       ;; kill-all-local-variables.
+       ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
+       ;; to variables assigned up to this point, but we ought not rely on it
+       (funcall (ein:notebook-choose-mode))
+       (ein:worksheet-reinstall-undo-hooks ws)
+       (condition-case err
+           (ein:aif (ein:$notebook-kernelspec notebook)
+                    (ein:ml-lang-setup it)
+                    (error "ein:notebook--worksheet-render: No kernelspec found"))
+         (error (ein:log 'error (error-message-string err))
+                (setq multilang-failed t))))
+     (unless multilang-failed
+       (ein:notebook-mode)
+       (ein:notebook--notification-setup notebook)
+       (ein:notebook-setup-kill-buffer-hook)
+       (setq ein:%notebook% notebook)
+       (when ein:polymode
+         (poly-ein-fontify-buffer notebook))))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
