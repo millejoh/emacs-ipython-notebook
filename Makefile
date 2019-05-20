@@ -13,7 +13,7 @@ endif
 
 .DEFAULT_GOAL := test-compile
 
-README.rst: README.in.rst
+README.rst: README.in.rst lisp/ein.el
 	cask eval "(progn \
 	             (add-to-list 'load-path \"./lisp\") \
 	             (load \"ein-notebook\") \

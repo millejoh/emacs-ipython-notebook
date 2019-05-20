@@ -352,6 +352,19 @@ global setting.  For global setting and more information, see
        :error (apply-partially #'ein:content-rename-error (ein:$content-path content)))
     (ein:content-legacy-rename content new-path callback cbargs)))
 
+(defun ein:session-rename (url-or-port session-id new-path)
+  (ein:query-singleton-ajax
+   (list 'session-rename session-id new-path)
+   (ein:url url-or-port "api/sessions" session-id)
+   :type "PATCH"
+   :data (json-encode `((path . ,new-path)))
+   :complete #'ein:session-rename--complete))
+
+(defun* ein:session-rename--complete (&key data response symbol-status
+                                      &allow-other-keys
+                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:session-rename--complete %s" resp-string))
+
 (defun* update-content-path (content callback cbargs &key data &allow-other-keys)
   (setf (ein:$content-path content) (plist-get data :path)
         (ein:$content-name content) (plist-get data :name)

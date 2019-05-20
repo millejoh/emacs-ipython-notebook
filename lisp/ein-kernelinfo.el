@@ -70,7 +70,6 @@ in these buffer will be synced with the kernel's cwd.")
 
 (defun ein:kernelinfo-update-all (kerinfo)
   "Update KERINFO slots by triggering all update functions."
-  (ein:log 'debug "EIN:KERNELINFO-UPDATE-ALL")
   (ein:log 'debug "(ein:kernel-live-p kernel) = %S"
            (ein:kernel-live-p (slot-value kerinfo 'kernel)))
   (ein:kernelinfo-update-ccwd kerinfo)

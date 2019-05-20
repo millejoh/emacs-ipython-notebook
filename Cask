@@ -12,7 +12,7 @@
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")
- (depends-on "org-plus-contrib") ;; see https://github.com/cask/cask/issues/119
+ ;; (depends-on "org-plus-contrib") ;; see https://github.com/cask/cask/issues/119
  (depends-on "mocker")
  (depends-on "skewer-mode")
  (depends-on "deferred")
@@ -21,6 +21,8 @@
  (depends-on "smartrep")
  (depends-on "polymode")
  (depends-on "markdown-mode")
+ (depends-on "julia-mode")
+ (depends-on "ess")
  (depends-on "px")
  (depends-on "f")
  (depends-on "s"))

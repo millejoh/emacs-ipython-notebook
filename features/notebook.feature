@@ -161,3 +161,4 @@ Scenario: Smoke test julia
   When I type "isapprox(Base.MathConstants.e ^ (pi * im), -1)"
   And I wait for cell to execute
   Then I should see "true"
+  And I dump buffer

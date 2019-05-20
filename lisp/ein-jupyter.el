@@ -173,7 +173,8 @@ the log of the running jupyter server."
                                        *ein:last-jupyter-command*
                                        *ein:last-jupyter-directory*
                                        (if (numberp port)
-                                           `("--port" ,(format "%s" port))))))
+                                           `("--port" ,(format "%s" port)
+                                             "--port-retries" "0")))))
     (when (eql system-type 'windows-nt)
       (accept-process-output proc (/ ein:jupyter-server-run-timeout 1000)))
     (loop repeat 30
