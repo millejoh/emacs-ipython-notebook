@@ -31,6 +31,8 @@ Scenario: Collapse doesn't break undo
   Given new python notebook
   When I type "from time import sleep"
   And I press "RET"
+  And I wait for cell to execute
+  And I dump buffer
   And I press "C-c C-b"
   And I type "1 + 1"
   And I press "RET"
@@ -44,6 +46,7 @@ Scenario: Collapse doesn't break undo
   And I press "C-n"
   And I type "9"
   And I press "C-<up>"
+  And I dump buffer
   And I press "C-c C-e"
   And I press "C-/"
   And I dump buffer

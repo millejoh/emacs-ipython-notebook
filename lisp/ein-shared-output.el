@@ -42,7 +42,8 @@
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
    (popup :initarg :popup :initform nil :type boolean)
-   (callback :initarg :callback :initform #'ignore :type function))
+   (callback :initarg :callback :initform #'ignore :type function)
+   (callback-called :initarg :callback-called :initform nil :type boolean))
   "A singleton cell to show output from non-notebook buffers.")
 
 (defclass ein:shared-output ()
@@ -84,7 +85,9 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (pop-to-buffer (ein:shared-output-create-buffer)))
   (cl-call-next-method)
   (ein:aif (ein:oref-safe cell 'callback)
-      (funcall it cell)))
+      (progn
+        (funcall it cell)
+        (setf (slot-value cell 'callback-called) t))))
 
 (cl-defmethod ein:cell--handle-execute-reply ((cell ein:shared-output-cell)
                                               content _metadata)
@@ -92,13 +95,18 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     "ein:cell--handle-execute-reply (cell ein:shared-output-cell): %s"
     content)
   (cl-call-next-method)
-  (when (ein:oref-safe cell 'callback)
+  (ein:aif (ein:oref-safe cell 'callback)
     ;; clear the way for waiting block in `ob-ein--execute-async'
-    ;; but only after 2 seconds to get handle-output stragglers
+    ;; but only after 2 seconds to allow for handle-output stragglers
     ;; TODO avoid this hack
-    (run-at-time 2 nil (lambda ()
-                         (ein:log 'debug "Clearing callback shared output cell")
-                         (setf (slot-value cell 'callback) #'ignore)))))
+      (progn
+        (unless (ein:oref-safe cell 'callback-called)
+          (funcall it cell)
+          (setf (slot-value cell 'callback-called) t))
+        (run-at-time 2 nil (lambda ()
+                             (ein:log 'debug "Clearing callback shared output cell")
+                             (setf (slot-value cell 'callback) #'ignore)
+                             (setf (slot-value cell 'callback-called) nil))))))
 
 
 ;;; Main
