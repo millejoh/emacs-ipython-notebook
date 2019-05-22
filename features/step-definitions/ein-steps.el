@@ -333,16 +333,18 @@
 (When "^I dump buffer"
       (lambda () (message "%s" (buffer-string))))
 
-(When "^I wait for buffer to say \"\\(.+\\)\"$"
-      (lambda (bogey)
+(When "^I wait for buffer to\\( not\\)? say \"\\(.+\\)\"$"
+      (lambda (negate bogey)
         (ein:testing-wait-until
          (lambda ()
-           (ein:aif (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string)) it
-             (when (with-current-buffer ein:log-all-buffer-name
-                     (search "WS closed unexpectedly" (buffer-string)))
-               (And "I clear log expr \"ein:log-all-buffer-name\"")
-               (Then "I ctrl-c-ctrl-c"))
-             nil))
+           (let* ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
+             (ein:aif (if negate (not says) says)
+                 it
+               (when (with-current-buffer ein:log-all-buffer-name
+                       (search "WS closed unexpectedly" (buffer-string)))
+                 (And "I clear log expr \"ein:log-all-buffer-name\"")
+                 (Then "I ctrl-c-ctrl-c"))
+               nil)))
          nil 40000 2000)))
 
 (When "^I wait for cell to execute$"

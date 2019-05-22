@@ -156,7 +156,10 @@ Based on ob-ipython--configure-kernel."
   (let* ((buffer (current-buffer))
          (processed-params (org-babel-process-params params))
          (result-params (cdr (assq :result-params params)))
-         (session (format "%s" (cdr (assoc :session processed-params))))
+         (session (or (ein:aand (cdr (assoc :session processed-params))
+                                (unless (string= "none" it)
+                                  (format "%s" it)))
+                      ein:url-localhost))
          (lang (nth 0 (org-babel-get-src-block-info)))
          (kernelspec (or (cdr (assoc :kernelspec processed-params))
                          (ein:aif (cdr (assoc lang org-src-lang-modes))
@@ -314,5 +317,14 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
 
 (loop for (lang . mode) in ob-ein-languages
       do (ob-ein--babelize-lang lang mode))
+
+;;;###autoload
+(if (featurep 'org)
+  (let* ((orig (get 'org-babel-load-languages 'custom-type))
+         (orig-cdr (cdr orig))
+         (choices (plist-get orig-cdr :key-type)))
+    (push '(const :tag "Ein" ein) (nthcdr 1 choices))
+    (put 'org-babel-load-languages 'custom-type
+         (cons (car orig) (plist-put orig-cdr :key-type choices)))))
 
 (provide 'ob-ein)

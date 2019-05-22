@@ -22,8 +22,29 @@ Scenario: R and Julia in the same org file
   And I dump buffer
 
 @org
-Scenario: ein-python can be python2 or python3
+Scenario: no session defaults to localhost, and no output shouldn't leave [....]
   Given I stop the server
+  When I open temp file "ecukes.org"
+  And I call "org-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :results raw drawer"
+  And I press "RET"
+  And I type "(1 + 5 ** 0.5) / 2"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to say "1.618"
+  And I should not see "[....]"
+  And I press "M->"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :session localhost :results raw drawer"
+  And I press "RET"
+  And I type "foo = 5"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to not say "[....]"
+
+@org
+Scenario: ein-python can be python2 or python3
   When I open temp file "ecukes.org"
   And I call "org-mode"
   And I type "<s"
