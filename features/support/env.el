@@ -2,6 +2,7 @@
 (require 'f)
 (require 'espuds)
 (require 'ert)
+(require 'evil)
 
 (with-eval-after-load "python"
   (setq python-indent-guess-indent-offset-verbose nil))
@@ -29,6 +30,9 @@
 
 (when (file-exists-p (concat default-directory "features/support/test-poly.el"))
   (load-file (concat default-directory "features/support/test-poly.el")))
+
+(when ein:polymode
+  (!cons "evil" ecukes-exclude-tags))
 
 (cond ((not ein:polymode)
        (!cons "julia" ecukes-exclude-tags)
