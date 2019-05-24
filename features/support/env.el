@@ -2,7 +2,7 @@
 (require 'f)
 (require 'espuds)
 (require 'ert)
-(require 'evil)
+(require 'undo-tree)
 
 (with-eval-after-load "python"
   (setq python-indent-guess-indent-offset-verbose nil))

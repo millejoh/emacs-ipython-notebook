@@ -164,8 +164,7 @@ Scenario: Smoke test julia
   And I dump buffer
 
 @evil
-Scenario: Test the undo-tree-incompatible-logic
+Scenario: Test the undo-tree-incompatible logic
   Given new python notebook
-  And I call "evil-mode"
+  And I call "turn-on-undo-tree-mode"
   Then the value of "undo-tree-mode" is nil
-  And I call "evil-mode"
