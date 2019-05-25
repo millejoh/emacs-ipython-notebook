@@ -361,7 +361,7 @@ will be updated with kernel's cwd."
 
 ;;;###autoload
 (defun ein:notebook-jump-to-opened-notebook (notebook)
-  "Switch to the buffer of an open notebook."
+  "List all opened notebook buffers and switch to one that the user selects."
   (interactive
    (list  (completing-read "Jump to notebook:" (ein:notebook-opened-buffer-names) nil t)))
   (switch-to-buffer notebook))

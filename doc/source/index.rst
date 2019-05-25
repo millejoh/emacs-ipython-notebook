@@ -571,7 +571,7 @@ Misc
 .. el:variable:: ein:filename-translations
 .. el:function:: ein:tramp-create-filename-translator
 .. el:variable:: ein:query-timeout
-
+.. el:function:: ein:notebook-jump-to-opened-notebook
 
 Gotchas and caveats
 -------------------
