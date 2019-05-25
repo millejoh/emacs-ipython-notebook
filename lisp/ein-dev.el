@@ -69,6 +69,7 @@
   (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
         unless (or (equal f "ein-pkg.el")
                    (equal f "ein-autoloads.el")
+                   (equal f "ein-smartrep.el")
                    (funcall ignore-p f))
         do (require (intern (file-name-sans-extension f)) nil t))
   ;; For `widget-button-press':
