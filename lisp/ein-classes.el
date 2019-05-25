@@ -218,7 +218,8 @@
   Resources, if any, used by the kernel.
 
 `ein:$kernelspec-spec' : plist
-  How to start the kernel from the command line. Not used by ein (yet).
+  How the outside world defines kernelspec:
+  https://ipython.org/ipython-doc/dev/development/kernels.html#kernelspecs
 "
   name
   display-name

@@ -337,13 +337,13 @@ will be updated with kernel's cwd."
                (pop-to-buffer (pm-span-buffer (pm-innermost-span))))
            (pop-to-buffer (ein:notebook-buffer notebook*)))))
      (when (and (not noninteractive)
-                (null (plist-member (ein:$notebook-metadata notebook*)
-                               :kernelspec)))
+                (null (plist-member (ein:$notebook-metadata notebook*) :kernelspec)))
        (ein:aif (ein:$notebook-kernelspec notebook*)
            (progn
              (setf (ein:$notebook-metadata notebook*)
                    (plist-put (ein:$notebook-metadata notebook*)
-                              :kernelspec (ein:kernelspec-for-nb-metadata it)))
+                              :kernelspec (ein:notebook--spec-insert-name
+                                           (ein:$kernelspec-name it) (ein:$kernelspec-spec it))))
              (ein:notebook-save-notebook notebook*))))
      (when callback*
        (funcall callback* notebook* created))
@@ -556,11 +556,6 @@ notebook buffer."
 
 ;;; Kernel related things
 
-(defun ein:kernelspec-for-nb-metadata (kernelspec)
-  (let ((display-name (plist-get (ein:$kernelspec-spec kernelspec) :display_name)))
-    `((:name . ,(ein:$kernelspec-name kernelspec))
-      (:display_name . ,(format "%s" display-name)))))
-
 (defun ein:list-available-kernels (url-or-port)
   (let ((kernelspecs (ein:need-kernelspecs url-or-port)))
     (if kernelspecs
@@ -586,7 +581,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
     (setf (ein:$notebook-kernelspec notebook) kernelspec)
     (setf (ein:$notebook-metadata notebook)
           (plist-put (ein:$notebook-metadata notebook)
-                     :kernelspec kernelspec))
+                     :kernelspec (ein:notebook--spec-insert-name
+                                  (ein:$kernelspec-name kernelspec) (ein:$kernelspec-spec kernelspec))))
     (ein:notebook-save-notebook notebook #'ein:notebook-kill-kernel-then-close-command
                                 (list notebook))
     (loop repeat 10
@@ -819,6 +815,12 @@ This is equivalent to do ``C-c`` in the console program."
       (metadata . ,(ein:$notebook-metadata notebook))
       )))
 
+(defsubst ein:notebook--spec-insert-name (name spec)
+  "Add kernel NAME, e.g., 'python2', to the kernelspec member of ipynb metadata."
+  (if (plist-member spec :name)
+      spec
+    (plist-put spec :name name)))
+
 (defun ein:write-nbformat4-worksheets (notebook)
   (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
@@ -827,7 +829,8 @@ This is equivalent to do ``C-c`` in the console program."
     (ein:aif (ein:$notebook-kernelspec notebook)
         (setf (ein:$notebook-metadata notebook)
               (plist-put (ein:$notebook-metadata notebook)
-                         :kernelspec (ein:kernelspec-for-nb-metadata it))))
+                         :kernelspec (ein:notebook--spec-insert-name
+                                      (ein:$kernelspec-name it) (ein:$kernelspec-spec it)))))
     `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
