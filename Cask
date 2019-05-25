@@ -22,6 +22,7 @@
  (depends-on "polymode")
  (depends-on "markdown-mode")
  (depends-on "julia-mode")
+ (depends-on "undo-tree")
  (depends-on "ess")
  (depends-on "px")
  (depends-on "f")

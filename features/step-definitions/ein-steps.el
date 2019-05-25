@@ -432,6 +432,10 @@
       (lambda (variable value)
         (fset (intern variable) (function value))))
 
+(When "^the value of \"\\(.+\\)\" is \\(.+\\)$"
+      (lambda (variable value)
+        (should (equal (symbol-value (intern variable)) (symbol-value (intern value))))))
+
 (When "^I get into notebook mode \"\\(.+\\)\" \"\\(.+\\)\"$"
       (lambda (notebook-dir file-path)
         (When "I stop the server")

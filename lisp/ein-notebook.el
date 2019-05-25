@@ -1784,8 +1784,14 @@ the first argument and CBARGS as the rest of arguments."
   "Add \"notebook destructor\" to `kill-buffer-hook'."
   (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback nil t))
 
-(if (boundp 'undo-tree-incompatible-major-modes)
-      (nconc undo-tree-incompatible-major-modes (list (ein:notebook-choose-mode))))
+(lexical-let* ((the-mode (ein:notebook-choose-mode))
+               (incompatible-func (lambda ()
+                                    (when (boundp 'undo-tree-incompatible-major-modes)
+                                      (nconc undo-tree-incompatible-major-modes
+                                             (list the-mode))))))
+  (unless (funcall incompatible-func)
+    (with-eval-after-load 'undo-tree
+      (funcall incompatible-func))))
 
 (provide 'ein-notebook)
 
