@@ -30,3 +30,4 @@ _static
 .ecukes*
 dist
 .*ein*.ipynb
+.Rhistory
