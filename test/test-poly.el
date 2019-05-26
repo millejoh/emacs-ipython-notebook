@@ -1,1 +1,2 @@
-(setq ein:polymode t)
+(custom-set-variables
+  '(ein:polymode t))
