@@ -19,7 +19,114 @@
 (defcustom ein:polymode nil
   "Turn off hacky major mode emulations, turn on polymode."
   :type 'boolean
+  :initialize #'custom-initialize-default
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when value
+           (poly-ein--decorate-functions)))
   :group 'ein)
+
+(defun poly-ein--decorate-functions ()
+  "Affect global defintions of ppss and jit-lock rather intrusively."
+  (add-function
+   :before-until (symbol-function 'pm-select-buffer)
+   (lambda (span &optional visibly)
+     (prog1 poly-ein-mode
+       (when poly-ein-mode
+         (let ((src-buf (current-buffer))
+               (dest-buf (pm-span-buffer span)))
+           ;; (font-lock-flush)
+           (poly-ein--set-buffer src-buf dest-buf visibly))))))
+
+  (add-function
+   :override (symbol-function 'poly-lock-mode)
+   (symbol-function (default-value 'font-lock-function)))
+
+  (add-function
+   :before-until (symbol-function 'syntax-propertize)
+   (lambda (pos)
+     (prog1 poly-ein-mode
+       (when (and poly-ein-mode (< syntax-propertize--done pos))
+         (save-excursion
+           (with-silent-modifications
+             (let ((parse-sexp-lookup-properties t)
+                   (start (point-min))
+                   (end (point-max)))
+               ;; (dolist (fun syntax-propertize-extend-region-functions)
+               ;;   (ein:and-let* ((new (funcall fun start end)))
+               ;;     (setq start (min start (car new)))
+               ;;     (setq end (max end (cdr new)))))
+               (setq syntax-propertize--done end)
+               (remove-text-properties start end
+                                       '(syntax-table nil syntax-multiline nil))
+               ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
+               (when syntax-propertize-function
+                 (let ((syntax-propertize--done most-positive-fixnum))
+                   (funcall syntax-propertize-function start end))))))))))
+
+  (add-function
+   :around (symbol-function 'syntax-propertize)
+   (apply-partially #'poly-ein--narrow-to-inner #'1-))
+
+  (add-function
+   :around (symbol-function 'syntax-ppss)
+   (apply-partially #'poly-ein--narrow-to-inner #'1-))
+
+  (add-function
+   :around (symbol-function 'jit-lock-mode)
+   (lambda (f &rest args)
+     (cl-letf (((symbol-function 'buffer-base-buffer) #'ignore)) (apply f args))))
+
+  ;; :before-until before :filter-args (reversed order when executed)
+
+  (add-function :before-until (symbol-function 'jit-lock-refontify)
+                #'poly-ein--unrelated-span)
+
+  (add-function :before-until (symbol-function 'jit-lock-fontify-now)
+                #'poly-ein--unrelated-span)
+
+  (add-function :filter-args (symbol-function 'jit-lock-refontify)
+                #'poly-ein--span-start-end)
+
+  (add-function :filter-args (symbol-function 'jit-lock-fontify-now)
+                #'poly-ein--span-start-end)
+
+  (add-function :filter-args (symbol-function 'font-lock-flush)
+                #'poly-ein--span-start-end)
+
+  (add-function :filter-args (symbol-function 'jit-lock-after-change)
+                #'poly-ein--span-start-end)
+
+  (add-function
+   :before-until (symbol-function 'syntax-propertize)
+   (lambda (pos)
+     (prog1 poly-ein-mode
+       (when (and poly-ein-mode (< syntax-propertize--done pos))
+         (save-excursion
+           (with-silent-modifications
+             (let ((parse-sexp-lookup-properties t)
+                   (start (point-min))
+                   (end (point-max)))
+               ;; (dolist (fun syntax-propertize-extend-region-functions)
+               ;;   (ein:and-let* ((new (funcall fun start end)))
+               ;;     (setq start (min start (car new)))
+               ;;     (setq end (max end (cdr new)))))
+               (setq syntax-propertize--done end)
+               (remove-text-properties start end
+                                       '(syntax-table nil syntax-multiline nil))
+               ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
+               (when syntax-propertize-function
+                 (let ((syntax-propertize--done most-positive-fixnum))
+                  (funcall syntax-propertize-function start end))))))))))
+
+  (if (fboundp 'markdown-unfontify-region-wiki-links)
+      (fset 'markdown-unfontify-region-wiki-links #'ignore)
+    (with-eval-after-load "markdown-mode"
+      (fset 'markdown-unfontify-region-wiki-links #'ignore)))
+
+  (add-function :before-until
+                (symbol-function 'pm--synchronize-points)
+                (lambda (&rest args) poly-ein-mode)))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
   ()
@@ -195,20 +302,6 @@ TYPE can be 'body, nil."
         (pm--run-hooks pm/polymode :switch-buffer-functions src-buf dest-buf)
         (pm--run-hooks pm/chunkmode :switch-buffer-functions src-buf dest-buf)))))
 
-(add-function
- :before-until (symbol-function 'pm-select-buffer)
- (lambda (span &optional visibly)
-   (prog1 poly-ein-mode
-     (when poly-ein-mode
-       (let ((src-buf (current-buffer))
-             (dest-buf (pm-span-buffer span)))
-         ;; (font-lock-flush)
-         (poly-ein--set-buffer src-buf dest-buf visibly))))))
-
-(add-function
- :override (symbol-function 'poly-lock-mode)
- (symbol-function (default-value 'font-lock-function)))
-
 (defun poly-ein--narrow-to-inner (modifier f &rest args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
       (apply f args)
@@ -219,41 +312,6 @@ TYPE can be 'body, nil."
                         (point)))))
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))
-
-(add-function
- :before-until (symbol-function 'syntax-propertize)
- (lambda (pos)
-   (prog1 poly-ein-mode
-     (when (and poly-ein-mode (< syntax-propertize--done pos))
-       (save-excursion
-         (with-silent-modifications
-           (let ((parse-sexp-lookup-properties t)
-                 (start (point-min))
-                 (end (point-max)))
-             ;; (dolist (fun syntax-propertize-extend-region-functions)
-             ;;   (ein:and-let* ((new (funcall fun start end)))
-             ;;     (setq start (min start (car new)))
-             ;;     (setq end (max end (cdr new)))))
-             (setq syntax-propertize--done end)
-             (remove-text-properties start end
-                                     '(syntax-table nil syntax-multiline nil))
-             ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
-             (when syntax-propertize-function
-               (let ((syntax-propertize--done most-positive-fixnum))
-                 (funcall syntax-propertize-function start end))))))))))
-
-(add-function
- :around (symbol-function 'syntax-propertize)
- (apply-partially #'poly-ein--narrow-to-inner #'1-))
-
-(add-function
- :around (symbol-function 'syntax-ppss)
- (apply-partially #'poly-ein--narrow-to-inner #'1-))
-
-(add-function
- :around (symbol-function 'jit-lock-mode)
- (lambda (f &rest args)
-   (cl-letf (((symbol-function 'buffer-base-buffer) #'ignore)) (apply f args))))
 
 (defsubst poly-ein--span-start-end (args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
@@ -271,32 +329,6 @@ TYPE can be 'body, nil."
            (not (eq major-mode
                     (eieio-oref (nth 3 (pm-innermost-span (or beg (point)))) :mode))))))
 
-;; :before-until before :filter-args (reversed order when executed)
-
-(add-function :before-until (symbol-function 'jit-lock-refontify)
-              #'poly-ein--unrelated-span)
-
-(add-function :before-until (symbol-function 'jit-lock-fontify-now)
-              #'poly-ein--unrelated-span)
-
-(add-function :filter-args (symbol-function 'jit-lock-refontify)
-              #'poly-ein--span-start-end)
-
-(add-function :filter-args (symbol-function 'jit-lock-fontify-now)
-              #'poly-ein--span-start-end)
-
-(add-function :filter-args (symbol-function 'font-lock-flush)
-              #'poly-ein--span-start-end)
-
-(add-function :filter-args (symbol-function 'jit-lock-after-change)
-              #'poly-ein--span-start-end)
-
 (make-variable-buffer-local 'parse-sexp-lookup-properties)
-(with-eval-after-load "markdown-mode"
-  (fset 'markdown-unfontify-region-wiki-links #'ignore))
-
-(add-function :before-until
-              (symbol-function 'pm--synchronize-points)
-              (lambda (&rest args) poly-ein-mode))
 
 (provide 'poly-ein)
