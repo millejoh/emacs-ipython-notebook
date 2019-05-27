@@ -178,6 +178,12 @@ the source is in git repository) or elpa version."
    :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
    :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
 
+(defun ein:normalize-kernelspec-language (name)
+  "Normalize the kernelspec language string"
+  (if (stringp name)
+      (replace-regexp-in-string "[ ]" "-" (downcase name))
+    name))
+
 (defun* ein:query-kernelspecs--success (url-or-port callback
                                        &key data symbol-status response
                                        &allow-other-keys)
@@ -191,8 +197,9 @@ the source is in git repository) or elpa version."
                                                                   :display-name (plist-get (plist-get info :spec)
                                                                                            :display_name)
                                                                   :resources (plist-get info :resources)
-                                                                  :language (plist-get (plist-get info :spec)
-                                                                                       :language)
+                                                                  :language (ein:normalize-kernelspec-language
+                                                                             (plist-get (plist-get info :spec)
+                                                                                        :language))
                                                                   :spec (plist-get info :spec)))
                                  ks))))))
   (when callback (funcall callback)))
