@@ -41,9 +41,9 @@ autoloads:
 clean:
 	cask clean-elc
 	rm -rf test/test-install
-	rm -rf log/*websocket*
-	rm features/Untitled*.ipynb
-	rm test/Untitled*.ipynb
+	rm -f log/*websocket*
+	rm -f features/Untitled*.ipynb
+	rm -f test/Untitled*.ipynb
 
 .PHONY: dist-clean
 dist-clean: clean
