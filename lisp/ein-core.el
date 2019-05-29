@@ -181,7 +181,7 @@ the source is in git repository) or elpa version."
 (defun ein:normalize-kernelspec-language (name)
   "Normalize the kernelspec language string"
   (if (stringp name)
-      (replace-regexp-in-string "[ ]" "-" (downcase name))
+      (replace-regexp-in-string "[ ]" "-" name)
     name))
 
 (defun* ein:query-kernelspecs--success (url-or-port callback
