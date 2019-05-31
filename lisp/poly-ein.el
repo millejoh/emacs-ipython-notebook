@@ -1,33 +1,32 @@
-(add-to-list 'features 'poly-lock) ;; skirt poly-lock
 (require 'polymode)
 (require 'ein-cell)
 (require 'jit-lock)
 
-(defmacro poly-ein-base (&rest body)
-  "Copy the undo accounting to the base buffer and run BODY in it."
-  `(let ((base-buffer (pm-base-buffer))
-         (derived-buffer (current-buffer))
-         (pm-allow-post-command-hook nil)
-         (pm-initialization-in-progress t))
-     (poly-ein--set-buffer derived-buffer base-buffer)
-     (condition-case err
-         (prog1 (progn ,@body)
-           (poly-ein--set-buffer base-buffer derived-buffer))
-       (error (message "%s" (error-message-string err))
-              (poly-ein--set-buffer base-buffer derived-buffer)))))
+(declare-function polymode-inhibit-during-initialization "polymode-core")
 
 (defcustom ein:polymode nil
-  "Turn off hacky major mode emulations, turn on polymode."
+  "Turn off hacky major mode emulations, turn on polymode.  Emacs must be restarted!"
   :type 'boolean
-  :initialize #'custom-initialize-default
   :set (lambda (symbol value)
          (set-default symbol value)
          (when value
-           (poly-ein--decorate-functions)))
+           (with-eval-after-load 'poly-ein
+             (poly-ein--decorate-functions))))
   :group 'ein)
 
 (defun poly-ein--decorate-functions ()
-  "Affect global defintions of ppss and jit-lock rather intrusively."
+  "Affect global definitions of ppss and jit-lock rather intrusively."
+
+  (advice-remove 'jit-lock-mode #'poly-lock-no-jit-lock-in-polymode-buffers)
+  (advice-remove 'font-lock-fontify-region #'polymode-inhibit-during-initialization)
+  (advice-remove 'font-lock-fontify-buffer #'polymode-inhibit-during-initialization)
+  (advice-remove 'font-lock-ensure #'polymode-inhibit-during-initialization)
+
+  ;; https://github.com/millejoh/emacs-ipython-notebook/issues/537
+  ;; alternatively, filter-args on ad-should-compile but then we'd have to
+  ;; match on function name
+  (custom-set-default 'ad-default-compilation-action 'never)
+
   (add-function
    :before-until (symbol-function 'pm-select-buffer)
    (lambda (span &optional visibly)
@@ -127,6 +126,19 @@
   (add-function :before-until
                 (symbol-function 'pm--synchronize-points)
                 (lambda (&rest args) poly-ein-mode)))
+
+(defmacro poly-ein-base (&rest body)
+  "Copy the undo accounting to the base buffer and run BODY in it."
+  `(let ((base-buffer (pm-base-buffer))
+         (derived-buffer (current-buffer))
+         (pm-allow-post-command-hook nil)
+         (pm-initialization-in-progress t))
+     (poly-ein--set-buffer derived-buffer base-buffer)
+     (condition-case err
+         (prog1 (progn ,@body)
+           (poly-ein--set-buffer base-buffer derived-buffer))
+       (error (message "%s" (error-message-string err))
+              (poly-ein--set-buffer base-buffer derived-buffer)))))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
   ()

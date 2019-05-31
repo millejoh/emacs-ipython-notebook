@@ -1,0 +1,10 @@
+(require 'ert)
+(require 'poly-ein)
+(require 'byte-compile)
+
+(ert-deftest ein:should-not-compile-advised ()
+  (should (ad-should-compile 'syntax-ppss nil))
+  (should (ad-should-compile 'syntax-propertize nil))
+  (poly-ein--decorate-functions)
+  (should-not (ad-should-compile 'syntax-ppss nil))
+  (should-not (ad-should-compile 'syntax-propertize nil)))
