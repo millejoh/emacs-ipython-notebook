@@ -478,7 +478,7 @@ CONTENT and METADATA are given by `complete_reply' message.
 http://ipython.org/ipython-doc/dev/development/messaging.html#complete
 "
   (condition-case err
-      (let* ((content (if (< (ein:$kernel-api-version kernel) 5)
+      (let* ((content (if (< (ein:$kernel-api-version kernel) 4)
                           (list
                            ;; :text ""
                            :line line
