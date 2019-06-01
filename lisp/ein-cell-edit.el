@@ -36,6 +36,7 @@
 (defvar ein:src--ws nil)
 (defvar ein:src--allow-write-back t)
 (defvar ein:src--overlay nil)
+(defvar ein:src--saved-window-config nil)
 
 (defvar ein:edit-cell-mode-map
   (let ((map (make-sparse-keymap)))
@@ -148,7 +149,10 @@ original notebook cell, unless being called via
       (ein:edit-cell-save))
     (kill-buffer edit-buffer)
     (switch-to-buffer-other-window (ein:worksheet--get-buffer ws))
-    (ein:cell-goto cell)))
+    (ein:cell-goto cell)
+    (when ein:src--saved-window-config
+      (set-window-configuration ein:src--saved-window-config)
+      (setq ein:src--saved-window-config nil))))
 
 (defun ein:edit-cell-abort ()
   "Abort editing the current cell, contents will revert to
@@ -212,6 +216,7 @@ END."
 appropriate language major mode. Functionality is very similar to
 `org-edit-special'."
   (interactive)
+  (setq ein:src--saved-window-config (current-window-configuration))
   (let* ((cell (or (ein:worksheet-get-current-cell)
                    (error "Must be called from inside an EIN worksheet cell.")))
          (nb (ein:notebook--get-nb-or-error))
