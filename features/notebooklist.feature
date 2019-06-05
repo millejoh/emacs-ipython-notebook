@@ -99,6 +99,17 @@ Scenario: Bad curl invocation produces sensible error message
 Scenario: jupyter not found
   And I start bad jupyter path
 
+@jupyter-notebook
+Scenario: Someone uses jupyter-notebook
+  Given I customize "ein:jupyter-default-server-command" to "jupyter-notebook"
+  And I set "ein:jupyter-server-use-subcommand" to eval "nil"
+  Given I start and login to the server configured "\n"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "[warn]"
+  And I should not see "[error]"
+  And I customize "ein:jupyter-default-server-command" to "jupyter"
+  And I set "ein:jupyter-server-use-subcommand" to "notebook"
+
 @login
 Scenario: With token server
   Given I start and login to the server configured "\n"

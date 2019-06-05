@@ -57,6 +57,23 @@ the notebook directory, you can set it here for future calls to
 (defvar *ein:last-jupyter-command* nil)
 (defvar *ein:last-jupyter-directory* nil)
 
+(defcustom ein:jupyter-default-server-command "jupyter"
+  "The default command to start a jupyter notebook server.
+
+Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use-subcommand' to nil.
+"
+  :group 'ein
+  :type '(file)
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (setq *ein:last-jupyter-command* nil)))
+
+(defcustom ein:jupyter-server-use-subcommand "notebook"
+  "Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") need to `Omit'."
+  :group 'ein
+  :type '(choice (string :tag "Subcommand" "notebook")
+                 (const :tag "Omit" nil)))
+
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session"
   (get-buffer-process (get-buffer ein:jupyter-server-buffer-name)))
@@ -64,10 +81,10 @@ the notebook directory, you can set it here for future calls to
 (defun ein:jupyter-server--run (buf cmd dir &optional args)
   (when ein:debug
     (add-to-list 'ein:jupyter-server-args "--debug"))
-  (let* ((vargs (append (if dir
-                            `("notebook"
-                              ,(format "--notebook-dir=%s"
-                                       (convert-standard-filename dir))))
+  (unless (stringp dir)
+    (error "ein:jupyter-server--run: notebook directory required"))
+  (let* ((vargs (append (ein:aif ein:jupyter-server-use-subcommand (list it))
+                        (list (format "--notebook-dir=%s" (convert-standard-filename dir)))
                         args
                         ein:jupyter-server-args))
          (proc (apply #'start-process
