@@ -408,6 +408,10 @@
         (let ((member-p (member value (symbol-value (intern variable)))))
           (if negate (should-not member-p) (should member-p)))))
 
+(When "^I customize \"\\(.+\\)\" to \"\\(.+\\)\"$"
+      (lambda (variable value)
+        (custom-set-variables `(,(intern variable) ,value t))))
+
 (When "^I set \"\\(.+\\)\" to \"\\(.+\\)\"$"
       (lambda (variable value)
         (set (intern variable) value)))

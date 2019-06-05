@@ -61,14 +61,6 @@ Notebook server."
                  (const :tag "First value of `ein:url-or-port'" nil))
   :group 'ein)
 
-(defcustom ein:jupyter-default-server-command "jupyter"
-  "The default command to start a jupyter notebook server.
-
-It is used when the `ein:jupyter-server-start' command is
-interactively called."
-  :group 'ein
-  :type '(file))
-
 (defcustom ein:filename-translations nil
   "Convert file paths between Emacs and Python process.
 
