@@ -267,6 +267,11 @@ Note that the below work best with current (> v4.3.1) versions of jupyter.
 .. el:function:: ein:run                
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
+.. el:variable:: ein:jupyter-default-server-command
+.. el:variable:: ein:jupyter-server-use-subcommand
+.. el:variable:: ein:jupyter-default-notebook-directory
+.. el:variable:: ein:jupyter-server-args
+.. el:variable:: ein:jupyter-server-buffer-name
 
 Notebook list
 ^^^^^^^^^^^^^
@@ -290,8 +295,8 @@ port or URL of the IPython notebook server.
 Notebook
 ^^^^^^^^
 
-The following keybinds are available in notebook buffers. Modified notebooks are
-saved automatically with a frequency dependenant on the setting of
+The following keybindings are available in notebook buffers. Modified notebooks
+are saved automatically with a frequency dependenant on the setting of
 `ein:notebook-autosave-frequency`. If `ein:notebook-create-checkpoint-on-save`
 is True than a checkpoint will also be generated in the Jupyter server every
 time the notebook is saved. A notebook can be returned to a previous checkpoint
@@ -310,6 +315,17 @@ created via `ein:notebook-create-checkpoint`.
 .. el:function:: ein:notebook-restore-to-checkpoint
 .. el:function:: ein:notebook-enable-autosaves
 .. el:function:: ein:notebook-disable-autosaves
+
+Polymode in the Notebook
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+EIN now provides proper multi-major mode support in notebook buffers using
+polymode_. To use simply set :el:symbol:`ein:polymode` to ``t`` and restart
+emacs.
+
+.. el:variable:: ein:polymode
+
+.. _polymode: https://polymode.github.io
 
 Advanced Editing
 ^^^^^^^^^^^^^^^^
@@ -498,8 +514,6 @@ Subpackages
 ^^^^^^^^^^^
 
 .. el:variable:: ein:completion-backend
-.. el:variable:: ein:use-auto-complete-superpack
-.. el:variable:: ein:ac-max-cache
 .. el:variable:: ein:use-smartrep
 .. el:variable:: ein:load-dev
 
@@ -514,6 +528,7 @@ Notebook
 ^^^^^^^^
 
 .. el:variable:: ein:worksheet-enable-undo
+.. el:variable:: ein:polymode
 .. el:variable:: ein:notebook-modes
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
@@ -547,23 +562,6 @@ Connect
 .. el:variable:: ein:connect-aotoexec-lighter
 .. el:variable:: ein:connect-default-notebook
 .. el:function:: ein:connect-to-default-notebook
-
-Jedi.el
-"""""""
-
-.. el:function:: ein:jedi-setup
-
-MuMaMo
-^^^^^^
-
-.. el:variable:: ein:mumamo-codecell-mode
-.. el:variable:: ein:mumamo-textcell-mode
-.. el:variable:: ein:mumamo-htmlcell-mode
-.. el:variable:: ein:mumamo-markdowncell-mode
-.. el:variable:: ein:mumamo-rawcell-mode
-.. el:variable:: ein:mumamo-headingcell-mode
-.. el:variable:: ein:mumamo-fallback-mode
-.. el:variable:: ein:use-mumamo-indent-line-function-workaround
 
 Misc
 ^^^^
@@ -706,6 +704,8 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+.. include:: Changelog/v0_16_0.rst
 
 .. include:: Changelog/v0_15_0.txt
 
