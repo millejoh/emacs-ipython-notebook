@@ -1,0 +1,1100 @@
+#+TITLE: The Emacs IPython Notebook Design Manual
+#+STARTUP: indent
+#+TYP_TODO: TODAY WEEK LATER
+
+* Overview
+** [ANN] The Continued Existence of the Emacs IPython Notebook
+
+After the recent, exciting announcement of the eminent [[https://conferences.oreilly.com/jupyter/jup-ny][JupyterCon]], I was
+somewhat saddened to see no mention of the EIN, or the Emacs IPython Notebook,
+as an available client to the Jupyter notebook server. Drama queen that I am, I
+quickly wrote a note to Fernando, who patiently and kindly explained that not
+many were aware that this project still existed and that perhaps an announcement
+or note to the main Jupyter list might be warranted. Hence the following, brief
+history. I also promise not to be a drama queen.
+
+Some of you may remember, from back when the Jupyter project was still known as
+the [[http://ipython.org/ipython-doc/rel-0.12/interactive/htmlnotebook.html][IPython notebook]], a talented and prolific coder of the name Takafumi
+Arakaki, or tkf, who created an alternative client to the notebook server's
+default web browser interface.
+
+This client, which he called the Emacs IPython Notebook (which you can still
+find his project on [[https://github.com/tkf/emacs-ipython-notebook][github]]), or EIN, provided a complete ipython notebook
+experience in the venerable Emacs editor. Not only was EIN nearly [[https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots][feature
+complete]] when compared to the browser interface it also provided some useful
+features for the Python programmer, like allowing one to [[https://github.com/tkf/emacs-ipython-notebook/wiki/Screenshots#connected-buffer][connect]] Python buffers
+to a notebook and using jedi for autocompletion in the notebook buffer.
+
+Around March/April of 2014, just as IPython was advancing towards 1.0 and making
+big changes in the notebook/contents API and the kernel communication protocol,
+tkf mysteriously stopped pushing commits to his github repository.
+
+I did not know tkf other than from a couple brief conversations. I sincerely
+hope tkf's story has a happy end (he does appear to still push the occasional
+[[https://github.com/tkf/comparatist][commit]]); he is clearly a talented programmer and without him this impressive
+piece of software would not exist.
+
+This is the point where yours truly enters the story. I had discovered the
+IPython notebook the previous year and had found it an exteremly useful for
+analyzing the performance of catalytic process units in the refining industry
+and working with Python in general, but being a long-time Emacs user I had
+somewhat bounced of the web interface. Discovering EIN was a godsend, and it
+quickly became a mainstay in my set of analytic tools.
+
+Unfortunately the changes in going to v1.0 of the ipython notebook broke EIN,
+and with tkf apparently out of the picture there did not seem much hope in EIN
+staying compatible. Considering that I am a father of two with a full-time job
+that has absolutely nothing to do with programming (and yet I am a long-time
+Emacs user - it's complicated, don't ask), I can only describe what happened
+next as an act of complete insanity: I decided to fork tkf's code, dig in and
+try to keep up with the changes in ipython.
+
+Truthfully, no one was more surprised than I when I was actually able to keep
+ein working with versions 1.0 and, soon after, 2.0 of IPython. In fact that
+compatibility, in theory, is still in the code. One, again in theory, should be
+able to fire up a 1.x or 2.x version of the IPython notebook and connect to it
+using my fork of EIN. I say in theory, though, as I haven't touched that part of
+the code in some time and it undoubtedly has suffered some bit rot in the
+intervening years.
+
+The rest of the story is less interesting. Eventually I managed to convince
+github and MELPA to treat my repository as the official version of ein. There
+was some short-lived talk of renaming my fork to 'zwei', but the consensus was
+that things were confusing enough with the change in ownership and to keep the
+name as ein.
+
+Currently one can download ein through either [[http://melpa.org/#/ein][MELPA]] or [[https://github.com/dimitri/el-get][el-get]], and someone has
+even been kind enough to create a spacemacs [[http://spacemacs.org/layers/+lang/ipython-notebook/README.html][layer]] with convenient VIM
+keybindings for the heathens.
+
+At the moment EIN supports the recent incarnations of Jupyter, v4.3.1, token
+authentication, _xsrf cookies and all. By the time you read this I may even have
+pushed some commits that allow one to start and automatically log in to a
+jupyter notebook server all from Emacs without having to drop into the terminal.
+
+In all, EIN continues to be a viable alternative to the web browser client. It
+is not 100% feature complete, though, as it notably does not support widgets and
+quite possibly never will.
+
+I haven't kept close track of who is using EIN, but it has 341 stars on github
+and 28,175 downloads from MELPA. I know EIN is being used in at least a couple
+businesses and from what I have heard it tends to be more popular among those
+with a programming background - scientists and engineers tend to prefer the web
+client which is not surprising since Emacs is not so much a text editor as it is
+a Way of Life.
+
+I encourage anyone who is interested in trying out ein to install it via MELPA
+or from the spacemacs ipython-notebook layer. There is [[http://millejoh.github.io/emacs-ipython-notebook/][documentation]], but it is
+not perfect and I cannot guarantee it is 100% correct. Do not hesitate to open
+an [[https://github.com/millejoh/emacs-ipython-notebook/issues][issue]] on github if you run into troubles, this is a hobby project but I do my
+best to support it.
+
+If you have made it this far then my sincere thanks for staying patient through
+my ramblings. As a parting thought I want to express my sincere thanks to
+Takafumi Arakaki, wherever he may be, and to the [[http://jupyter.org/about.html][Jupyter]] team for their
+fantastic work in creating this amazing piece of software.
+
+* Reference
+** [[https://cask.readthedocs.io/en/latest/index.html][Cask]]
+** Learning Git
+https://help.github.com/articles/about-pull-requests/
+https://yangsu.github.io/pull-request-tutorial/
+
+** Testing
+ert.
+
+[[https://github.com/ecukes/ecukes][ecukes]].
+
+Travis token: 2yP9mWPstlPi9kUoK9DIKw 2yP9mWPstlPi9kUoK9DIKw
+
+* Design
+** Version update checklist:
+
+- ein.el
+- ein-pkg.el
+- ein-core.el
+- doc/source/conf.py
+
+** Notebook Security
+Life gets more complicated with jupyter notebook [[https://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/][v4.3.1]], though the intentions
+are purely altruistic. The notebook server now requires a ~[[http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection][xsrf]]~ token via
+cookies to validate requests.
+
+If I interpret the documentation correctly, a successful login should set a
+_xsrf cookie, which then needs to be included in the header with all additional
+REST queries.
+
+What is supposed to happen when EIN connects to a token-enabled notebook server.
+
+If we are using the curl backend for request:
+
+Once a user succesfully authenticates against a running jupyter server via
+either ~ein:notebooklist-login~ curl will store two cookies in the
+~curl-cookie-jar~ file. The location of this file is set by the variable
+~[[help:request-storage-directory][request-storage-directory]]~. One cookie is for the token authentication, and the
+other is the xsrf token. [[*Example curl cookie jar file][Below]] is an example of cookies that were set after
+authenticating against a jupyter notebook server running on my personal aws
+instance. On subsequent calls to the content API request/curl will automatically
+supply the correct cookies. The websocket package uses the ~[[info:url#Top][url]]~ package to set
+cookies, and so will not know about the authentication and ~xsrf~ tokens unless
+EIN does some extra work. EIN does this in the ~[[file:c:/Users/mille/Dropbox/Projects/emacs-ipython-notebook/lisp/ein-websocket.el::(defun ein:websocket--prepare-cookies (url)][ein:websocket--prepare-cookies]]~
+function. The function does some extra work to only copy over cookies pertaining
+to the host the websocket is connecting on.
+
+
+*** Example curl cookie jar file
+
+ec2-13-58-41-203.us-east-2.compute.amazonaws.com	FALSE	/	FALSE	0	_xsrf	2|164f26da|390fef85a22a21f913024720d16e0328|1535314712
+#HttpOnly_ec2-13-58-41-203.us-east-2.compute.amazonaws.com	FALSE	/	TRUE	1539117935	username-ec2-13-58-41-203-us-east-2-compute-amazonaws-com-8888	"2|1:0|10:1536525935|62:username-ec2-13-58-41-203-us-east-2-compute-amazonaws-com-8888|44:NmMwYzg5NDA2MDBkNDVjNzk1MmY3ZGEwMzg0ZDUwNTA=|b975a41e86cea678fd2b97be9e447254bdb109e7e04e8f72f74fe6a151812c4d"
+
+** Notebook Format
+
+Version 4.0 [[http://nbformat.readthedocs.org/en/latest/][documented]].
+
+Earlier versions might be documented less formally on the wiki. Can
+also look at the IPython source in the json files.
+
+** Notebook Buffer
+
+Notebook information is stored as a [[file:lisp/ein-notebook.el::ein:$notebook][struct]]. Always associated with a buffer,
+[[file:lisp/ein-notebook.el::ein:notebook-buffer][ein:notebook-buffer]] is used to find buffer associated with a notebook.
+
+Notebook does not hold cells, that is delegated to instances of the [[file:emacs-ipython-notebook/lisp/ein-worksheet.el::ein:worksheet][worksheet]]
+class. Instances are stored as a list in the ~ein:$notebook-worksheets~ slot.
+
+Opened notebooks are kept in the ~ein:notebook--opened-map~ hash
+table. Keys are cons cells of ~url-or-port~ and ~path~.
+
+There are a number of helper functions for returning the struct for an opened notebook:
+
+ - ~[[file:lisp/ein-notebook.el::(defun ein:notebook-get-opened-notebook (url-or-port path)][ein:notebook-get-opened-notebook]]~ ::
+ - ~[[file:lisp/ein-notebook.el::(defun ein:notebook-get-opened-buffer (url-or-port path)][ein:notebook-get-opened-buffer]]~ ::
+
+** Notebooklist Buffer
+** Cell Execution
+Entry point is usually
+~[[file:~/Dropbox/Projects/emacs-ipython-notebook/lisp/ein-worksheet.el::(defun ein:worksheet-execute-cell (ws cell)][ein:worksheet-execute-cell-and-goto-next]]~,
+but the fun doesn't really start until we get to ~ein:cell-execute~.
+
+The cell [[file:~/Dropbox/Projects/emacs-ipython-notebook/lisp/ein-classes.el::(defclass%20ein:basecell%20()][class]] (if it is a codecell) will know the kernel it is associated with,
+and the actual code gets run via ~ein:kernel-execute~. The callbacks are set via
+~ein:cell-make-callbacks~, which make sure the cell output is updated
+appropriate after the kernel finishes executing the code.
+
+
+*** Patching to automatically detect hy code
+
+We could subclass ein:codecell and make an ein:hy-codecell class. Then we could have a
+specialized ein:cell-execute-internal which run a pytools helper that parses and
+evaluates the hy code.
+
+** Kernel communication
+
+The [[https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging][messaging protocol]].
+
+** Contents API
+
+Documented at the IPython Github [[https://github.com/ipython/ipython/wiki/IPEP-27%253A-Contents-Service][wiki.]]
+
+There is also [[http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml][another]] great online resource for session and kernel
+REST API.
+
+** Connecting to a running Kernel
+Entry point is ~[[file:lisp/ein-notebook.el::ein:notebook-start-kernel][ein:notebook-start-kernel]]~ which is called from
+~ein:notebook-request-open-callback~ after successful call to the notebook
+server requesting the contents of a given notebook.
+
+~[[file:lisp/ein-kernel.el::ein:kernel-start][ein:kernel-start]]~ starts/gets a session with a running kernel using the REST API.
+
+On a [[file:lisp/ein-kernel.el::ein:kernel--kernel-s][successful]] return ein [[file:lisp/ein-websocket.el::ein:websocket][creates]] a websocket channel (channels for
+IPython 2.x) via a call to ~websocket-open~ in the [[https://github.com/ahyatt/emacs-websocket][emacs-websocket]]
+package. The URL request is of the form:
+
+#+BEGIN_QUOTE
+ws://{server_address}:{port}/api/kernels/{kernel id from previous REST query}/channels?session_id={session id}
+#+END_QUOTE
+
+** How a Worksheet is Displayed
+EIN relies heavily on EIEIO and EWOC.
+
+EWOC information is stored as part of the ~[[file:emacs-ipython-notebook/lisp/ein-cell.el::(defclass ein:basecell ()][ein:basecell]]~ class. Presumably there
+are cells for input and output (when input is code) nodes???
+
+EWOC PP eventually calls ~[[file:lisp/ein-cell.el::ein:cell-append-mime-type][ein:cell-append-mime-type]]~ for output. Latex is
+considered text, but should be able to convert to image using dvitopng,
+imagemagick, other?
+
+** Jupyterhub Integration
+
+REST API [[http://jupyterhub.readthedocs.io/en/latest/api/index.html][documentation]] (and in [[http://petstore.swagger.io/?url%3Dhttps://raw.githubusercontent.com/jupyterhub/jupyterhub/master/docs/rest-api.yml#!/default][swagger]]).
+
+There is a login request (http[s]://{url}/hub/login). But it doesn't seem to
+work so well unless you are in a browser.
+
+Jupyterhub requires authentication using username/password, as opposed to just
+providing a secret when logging into ipython 3.x and earlier.
+
+On logging in a cookie of form "jupyter-hub-token-<username>" is generated and
+propogated with all calls to server. Emacs request should automatically handle
+this.
+
+Also looks like the content REST API has been modified so that queries are of the
+form: /user/<username>/<command>.
+
+*** [[https://jupyterhub.readthedocs.io/en/latest/howitworks.html][How Jupyterhub works]]
+
+Steps:
+
+1. +Log in at the hub via ~/hub/login~+. Get a token from the authenticator by
+   POST'ing to ~[[https://jupyterhub.readthedocs.io/en/latest/_static/rest-api/index.html#path--authorizations-token][/authorizations/token]]~. The authenticator returns an API token if
+   succesful. Doesn't work with OAuth.
+2. Logging in sets two cookies, one for ~/hub~ and other for ~/user/[username]~
+   with encrypted token. (Also for ~/authorizations/token~?)
+3. Access the user's single instance jupyter via ~/user/[username]~. This will
+   return a [[https://jupyterhub.readthedocs.io/en/latest/_static/rest-api/index.html#/definitions/User][user]] json object that has the address of the user's notebook server.
+
+To use the REST API need to have an [[https://jupyterhub.readthedocs.io/en/latest/rest.html][API token]]?
+
+*** Sample Code
+#+BEGIN_SRC ein :session 8888/JupyterHub.ipynb :results drawer
+  import requests
+
+  api_login = 'http://192.168.0.13:8000/hub/login'
+  user = 'millejoh'
+  password = 'number10ox'
+
+  r = requests.post(api_login,
+                    data={
+                        'username':user,
+                        'password':password
+                    }
+  )
+
+  r.raise_for_status()
+  r
+#+END_SRC
+
+#+RESULTS:
+
+
+Per the documentation you need to supply an authorization token with requests to
+server:
+
+#+BEGIN_SRC ein :session 8888/Untitled.ipynb
+  import requests
+
+  api_url = 'http://192.168.0.13:8000/hub/api'
+  token = ''
+
+  r = requests.get(api_url + '/users',
+                   headers={
+                       'Authorization': 'token %s' % token,
+                   }
+  )
+
+  r.raise_for_status()
+  users = r.json()
+  users
+#+END_SRC
+
+#+RESULTS:
+
+* Enhancements/Fixes
+
+** Refactor Kernel Communication
+
+New module to start kernel session and handle communication built off deferred.
+
+** Seamless Jupyterhub and ssh support
+For jupyterhub need to support its multiple authentication methods.
+
+For ssh need to figure out how to set cookies when tunneling.
+
+See [[https://elpa.gnu.org/packages/oauth2.html][emacs-oauth2]].
+
+** Integrate with eldoc
+
+Hook is through buffer local variable ~eldoc-documentation-function~, which is a
+function of no variables that returns the docstring for the object at point.
+
+** Inspector
+The way it works:
+
+ 1. Get the object at point, which will be a string representing a python object.
+ 2. Send that string via the kernel to python code that does some introspection
+    and returns a json representation of the object.
+ 3. Create a buffer and prettily display the data returned by the kernel.
+
+The way that pycharm does it is that each variable has it's own line with the format:
+
+#+BEGIN_CENTER
+~/variable name/ = {/type/} /value/~
+#+END_CENTER
+
+If the object is made up of many items- like a module, list, class- then you can
+expand the object and see its individual elements. Hence why we are so
+interested in a easy to use folding overlay system thingy.
+
+Spyder has a [[https://pythonhosted.org/spyder/variableexplorer.html][variable explorer]] and its UI is a modal dialog that displays a
+table of information.
+
+The active console variables of Pycharm is neat, we should borrow and steal.
+
+*** LATER Prototype Folding Overlay
+Maybe first adapt abstract display [[info:elisp#Abstract%20Display%20Example][example]] to current inspector display code?
+
+Or adapt magit [[file:c:/Users/mille/OneDrive/Documents/GitHub/magit/lisp/magit-section.el::(defgroup%20magit-section%20nil][sections]].
+
+Use the [[info:elisp#Abstract%20Display][abstract display]] and [[info:elisp#Overlays][overlays]] for displaying, managing the buffer?
+
+Should take some time to understand how magit manages its buffers. Magic seems to happen
+in ~[[magit-insert-section][magit-insert-section]]~.
+
+Magit's sections are interesting, but I do not think I am smart enough to use them. I really would like to avoid
+reinventing the wheel, but maybe I can get by just reinventing the spokes.
+
+#+BEGIN_SRC elisp
+  (require 'cl-lib)
+  (require 'dash)
+
+  (cl-defstruct $section
+    type content parent children)
+
+  (defun section:new ()
+
+    )
+#+END_SRC
+
+#+RESULTS:
+: section:new
+
+*** Introspection
+For inspecting, think of something like in [[https://common-lisp.net/project/slime/doc/html/Inspector.html#Inspector][SLIME]]. No good pictures there, but
+this [[http://malisper.me/2015/07/14/debugging-lisp-part-2-inspecting/][blog]] does a bit better.
+
+Python has facilities for [[https://docs.python.org/3/library/inspect.html][introspection]]. There is also the [[https://docs.python.org/3/library/pyclbr.html#module-pyclbr][pyclbr]], a module for
+implementing a class browser. Jedi has excellent facilities for static analysis
+of code.
+
+IPython wraps the python inspector with ~IPython.core.oinspect~ module.
+
+First let's create a few inspectable objects:
+#+NAME: cee67d1f-dc69-41e8-a109-a3fb78e2990b
+#+BEGIN_SRC ein :session 8888/Brain/Inspector.ipynb
+  import numpy as np
+
+  num = 1.0
+  lst = [0,1,2,3]
+  hash = {'a':0, 'b':1, 'c':2}
+
+  def fn(a,b):
+      return a+b
+
+  class Hello(object):
+      def __init__(self):
+          self.num = 1.0
+          self.lst = [0,1,2,3]
+          self.hash = {'a':0, 'b':1, 'c':2}
+
+      def fn(self, a, b):
+          return a+b
+
+  def fn2(a, b):
+      return Hello().fn(a,b)
+#+END_SRC
+
+#+RESULTS: cee67d1f-dc69-41e8-a109-a3fb78e2990b
+: ---------------------------------------------------------------------------
+ModuleNotFoundError                       Traceback (most recent call last)
+<ipython-input-1-021d92874cd5> in <module>
+----> 1 import numpy as np
+      2
+      3 num = 1.0
+      4 lst = [0,1,2,3]
+      5 hash = {'a':0, 'b':1, 'c':2}
+
+ModuleNotFoundError: No module named 'numpy'
+
+
+#+RESULTS:
+#+begin_example
+---------------------------------------------------------------------------
+ModuleNotFoundError                       Traceback (most recent call last)
+<ipython-input-2-021d92874cd5> in <module>()
+----> 1 import numpy as np
+      2
+      3 num = 1.0
+      4 lst = [0,1,2,3]
+      5 hash = {'a':0, 'b':1, 'c':2}
+
+ModuleNotFoundError: No module named 'numpy'
+#+end_example
+
+Now let's inspect:
+
+#+BEGIN_SRC ein :session 8888/emacs-ipython-notebook/Inspector.ipynb
+  import inspect
+
+  hello = Hello()
+
+  sig = inspect.signature(fn)
+  dir(sig)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+<ipython-input-1-e64a6dd81e45> in <module>()
+      1 import inspect
+      2
+----> 3 hello = Hello()
+      4
+      5 sig = inspect.signature(fn)
+
+NameError: name 'Hello' is not defined
+#+end_example
+
+Tactic is to wrap information returned by the inspect module.
+
+#+BEGIN_SRC elisp :session t
+  (defclass ein:iobject ()
+    ((name :accessor ein:iobject-name :documentation "String representation can be evaluated in python to generate the object being inspected.")
+     (kernel :accessor ein:iobject-kernel :documentation "Kernel where the object exists."))
+    :documentation "Class to hold information returned by Python `inspect` module for a Python object identified in the `name` slot.")
+#+END_SRC
+
+#+RESULTS:
+: ein:iobject
+
+Is it time to use deferred for kernel execute queries?
+
+#+BEGIN_SRC elisp :session t
+  (ein:kernel-execute (ein:iobject-kernel))
+
+  ein:iobject
+#+END_SRC
+
+*** Mockup for inspector
+
+**** Classes
+<Result of obj.__repr__() here> <--- Hyperlink to source definition?
+-------------------------------
+Class: <class of?>
+Module defined in?
+-------------------------------
+Collapsable documentation?
+-------------------------------
+
+All slots:
+
+[set] slot_name = slot_value
+[set] slot2_name = slot2_value
+
+**** Functions/Callables
+**** Generator
+**** Coroutine
+**** Builtin
+**** Module
+*** Variable watchlist
+
+** Pymacs w/ein-kernel as a backend
+
+Not sure if pymacs still works, but wouldn't it be cool to have Pymacs
+have the ability to interact with Jupyter kernels?
+
+What we want is to translate Python datastructures to lisp and vice versa. Not
+sure what the wire protocol is for pymacs, but for ein the intermediary is JSON.
+
+Do this like in 
+
+** A Tramp backend for EIN
+*** Finding files for remote session ([[https://github.com/millejoh/emacs-ipython-notebook/issues/263][#263]])
+sam-s suggests using tramp.
+*** Make notebooks more file-like?
+
+Start by setting ~[[help:set-visited-file-name][set-visitied-file-name]]~, but what about notebooks from remote
+servers? This is dangerous as it could result in the buffer accidentally getting
+written to disk using Emacs, bypassing conversion into JSON and irreparably
+corrupting the notebook.
+
+Make EIN buffer/notebook names "[[info:elisp#Magic%20File%20Names][magic]]"?
+
+Is is it possible to define new type of [[info:emacs#Remote%20Files][remote]] files? For jupyter have something
+like ~/ein:HOST:FILENAME~. Sounds possible by configuring ~[[help:tramp-methods][tramp-methods]]~. NO!
+Won't work as TRAMP calls out to external processes.
+** Integrating other Emacs python tools
+*** Integrate with [[https://github.com/donkirkby/live-py-plugin][live-py-plugin]]
+*** Refactoring support?
+Via [[https://github.com/python-rope/rope/blob/master/docs/library.rst][rope]]?
+** Proper command history
+[[http://jupyter-client.readthedocs.io/en/latest/messaging.html#history][Documentation]] for the jupyter protocol.
+
+EIN's interface is through [[file:emacs-ipython-notebook/lisp/ein-worksheet.el::(defun%20ein:worksheet-previous-input-history%20(ws%20cell%20index)][ein:worksheet-previous-input-history]].
+
+Looks like EIN is using history protocol supplied by kernel, but I don't fully
+understand difference betwee 'range', 'tail' and 'search' access types.
+
+** Run dynamic javascript
+
+The development [[ipynb:(:url-or-port%208888%20:name%20"emacs-ipython-notebook/Embedding%20Altair%20Graphs.ipynb")][notebook]].
+
+Emacs is not a web browser, hence does not know how to execute javascript.
+
+Maybe we can get around this using [[https://github.com/skeeto/skewer-mode][skewer-mode]] or [[http://js-comint-el.sourceforge.net/][js-comint.el]].
+
+Skewer-mode uses JS client provided by a web browser, while js-comint depends on
+nodejs (you understand this difference, right? Right?).
+
+Skewer mode seems to work for basic javascript evaluation, and according to
+comments in [[https://github.com/millejoh/emacs-ipython-notebook/issues/65#issuecomment-322084969][github]] it might be possible to get things like bokeh graphs working.
+
+Another thought is to get python to do this for us. The packages [[][naked]] (an
+unfortunate name given my corporate firewall) and [[https://github.com/doloopwhile/PyExecJs][PyExecJs]].
+
+What does the html for a notebook cell output look like?
+
+#+BEGIN_SRC html
+  <div class="widget-area" style="display: none;">
+    <div class="prompt"><button class="close">×</button></div>
+    <div class="widget-subarea jp-Output-result"></div>
+  </div>
+
+  <div class="output_wrapper">
+    <div class="out_prompt_overlay prompt" title="click to scroll output; double click to hide" style=""></div>
+    <div class="output" style="">
+      <div class="output_area">
+        <div class="prompt output_prompt"><bdi>Out</bdi>[3]:</div>
+        <div class="output_subarea output_text output_result"><pre>&lt;tf.Tensor 'MatMul:0' shape=(1, 1) dtype=float32&gt;</pre>
+        </div>
+      </div>
+    </div>
+    <div class="btn btn-default output_collapsed" title="click to expand output" style="display: none;">. . .</div>
+  </div>
+#+END_SRC
+*** Embedding [[https://github.com/ellisonbg/altair][Altair]] plots
+
+First get [[*Run dynamic javascript][dynamic javascript]] working...
+
+Relevant [[https://github.com/vega/ipyvega/issues/31][issue]], [[https://github.com/vega/ipyvega/pull/32][pull request]] and [[https://github.com/ellisonbg/ipyvega/blob/be19059068557c44cbdcbcf5ad509c3312b25763/src/index.js][code]].
+
+Appears the code has capability of returning javascript and png output. When
+calling from ein all that gets returned is javascript, which
+`ein:cell-append-mime-type` chokes on.
+
+Somehow, when running [[https://nbconvert.readthedocs.io/en/latest/][nbconvert]], the javascript gets turned into a png. How to trigger
+that when normally executing cells?
+*** XWidget Support/Interactive Widgets
+
+For the most part this is a non-starter since in Jupyter this is built on web
+and javascript, but maybe with emacs 25's coming integration with [[https://www.emacswiki.org/emacs/EmacsXWidgets][xwidgets]] there
+is hope?
+
+**** What Does ipywidgets.interact() return?
+
+A call to `ipywidgets.interact()` creates a [[http://jupyter-client.readthedocs.org/en/latest/messaging.html#custom-messages][custom communications channel]]
+with the jupyter server.
+
+1. What are message types (msg_type) comm_msg and comm_open for?
+
+   These are received when calling interact().
+
+***** Websocket data for comm_open
+#+BEGIN_SRC
+[WS] Received: {"msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "content": {"execution_state": "busy"}, "channel": "iopub", "metadata": {}, "msg_type": "status", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "56821eaa-cc32-4a34-bac3-8468ea08b7a0", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "status"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "content": {"execution_count": 3, "code": "interact(f, x=10)"}, "channel": "iopub", "metadata": {}, "msg_type": "execute_input", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "95f88fb5-2e4b-45b5-b78b-79d9274d392a", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_input"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "content": {"data": {"width": "", "_model_name": "BoxModel", "font_size": "", "children": [], "overflow_x": "", "padding": "", "font_style": "", "_dom_classes": ["widget-interact"], "box_style": "", "height": "", "_view_module": "", "margin": "", "color": null, "msg_throttle": 3, "border_color": null, "font_family": "", "_view_name": "BoxView", "_model_module": null, "version": 0, "overflow_y": "", "background_color": null, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "237329515cca473985d6fa52ec0c93a1", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "ef75371f-9047-46de-8eda-2c8697e2b60b", "date": "2016-03-24T07:24:50.910702", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
+
+***** Websocket data for comm_msg
+#+BEGIN_SRC emacs-lisp
+[WS] Received: {"msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "content": {"data": {"description": "", "orientation": "horizontal", "continuous_update": true, "_model_name": "WidgetModel", "font_size": "", "step": 1, "background_color": null, "padding": "", "slider_color": null, "height": "", "_view_module": "", "margin": "", "color": null, "width": "", "font_family": "", "border_color": null, "_dom_classes": [], "min": -10, "_range": false, "disabled": false, "_model_module": null, "_view_name": "IntSliderView", "max": 30, "version": 0, "font_style": "", "msg_throttle": 3, "value": 10, "readout": true, "font_weight": "", "_css": [], "border_width": "", "visible": true, "border_style": "", "border_radius": ""}, "target_name": "ipython.widget", "comm_id": "c1059008e6d046209c9d63de036c1aff", "target_module": null}, "channel": "iopub", "metadata": {}, "msg_type": "comm_open", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fe357d60-e83a-49ac-821f-7d99cdf20b8a", "date": "2016-03-24T07:24:50.948495", "version": "5.0", "msg_type": "comm_open"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "content": {"data": {"buffers": [], "state": {"description": "x"}, "method": "update"}, "comm_id": "c1059008e6d046209c9d63de036c1aff"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "30514644-45e1-45c7-a5db-42c9ee22e9ec", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "content": {"data": {"buffers": [], "state": {"children": ["IPY_MODEL_c1059008e6d046209c9d63de036c1aff"]}, "method": "update"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "fc005b54-774c-4920-860f-cec08cb5b5ba", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "content": {"data": {"method": "display"}, "comm_id": "237329515cca473985d6fa52ec0c93a1"}, "channel": "iopub", "metadata": {}, "msg_type": "comm_msg", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "65240518-737e-4614-8ad1-7d9fcfc567bd", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "comm_msg"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}} {"msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "content": {"wait": true}, "channel": "iopub", "metadata": {}, "msg_type": "clear_output", "buffers": [], "header": {"username": "username", "session": "eb518e76-61af-4bff-9fb0-49fb78883056", "msg_id": "6b0b41e2-5af0-4690-9902-9e73a61cf0e3", "date": "2016-03-24T07:24:50.964124", "version": "5.0", "msg_type": "clear_output"}, "parent_header": {"username": "username", "session": "5b01e727-3ce9-416f-bb67-f9400b719e33", "msg_id": "6dd8ea4c-325a-4938-8ad9-d68e2e4dbb0b", "date": "2016-03-24T07:24:50.879558", "version": "5.0", "msg_type": "execute_request"}}
+#+END_SRC
+** Inline latex
+See issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/88][#88]].
+
+*** For Further Investigation
+
+- [[https://github.com/zk-phi/magic-latex-buffer][magic-latex-buffer.el]]
+- [[https://www.gnu.org/software/auctex/preview-latex.html][preview-latex.el]]
+- Another [[https://github.com/aaptel/preview-latex/][preview-latex]] package (based on org-latex-preview).
+
+*** Inline using org-latex-preview
+
+[[http://orgmode.org/manual/Previewing-LaTeX-fragments.html#Previewing-LaTeX-fragments][Documentation]] for this facility in org.
+
+Does it work here?
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+Some inline Latex math $a^2=b$.
+
+Yes, but nedd MiKTeX installed if on windows.
+
+If org-latex-preview is working then [[https://github.com/aaptel/preview-latex][p]]x will also work, though the code for
+~[[file:~/.emacs.d/elpa/px-20141006.548/px.el::(defun px--create-preview (at)][px--create-preview]]~ needs to be patched as the signature for `org-format-latex`
+has changed.
+
+*** Using magic-latex-buffer
+Per the [[https://github.com/zk-phi/magic-latex-buffer][documentation]] all you need to do to configure is to add a hook:
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'latex-mode-hook 'magic-latex-buffer)
+#+END_SRC
+
+#+RESULTS:
+
+Or manually activate by calling ~M-x magic-latex-buffer~.
+
+Use variable ~ein:notebook-first-open-hook~ to enable?
+
+This works, at least for viewing, but the images that get inserted confuse ein
+when saving a notebook and generate errors in Jupter. Can be worked around by
+disabling ~magic-latex-buffer~ before saving. One hack is to advise
+~ein:notebook-save-notebook-command~?
+
+#+BEGIN_SRC emacs-lisp
+  (defvar ein:magic-latex-enabled-p nil)
+
+  (defun ein:disable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Disabling magic-latex.")
+      (magic-latex-buffer -1)))
+
+  (defun ein:enable-magic-latex-maybe (&rest args)
+    (when ein:magic-latex-enabled-p
+      (ein:log 'debug "Enabling magic-latex.")
+      (magic-latex-buffer t)))
+
+  (advice-add #'ein:notebook-save-notebook :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:notebook-save-notebook :after #'ein:enable-magic-latex-maybe)
+
+  (advice-add #'ein:cell-execute-internal :before #'ein:disable-magic-latex-maybe)
+  (advice-add #'ein:cell-execute-internal :after #'ein:enable-magic-latex-maybe)
+
+#+END_SRC
+** The Return of Worksheets
+
+tkf/ein and IPython 2.x allowed for multiple worksheets within an individual
+notebook. This feature was removed in 3.0 since multiple worksheets do not make
+much sense in the context of a tabbed web browser interface. EIN's legacy code
+still supports worksheets, though at the moment that information is lost upon
+saving a notebook.
+
+Having multiple worksheet support makes some sense for ein; below is thinking on
+how to reimplement this feature.
+
+IPython nbformat 4 specifies a [[http://ipython.org/ipython-doc/3/notebook/nbformat.html#metadata][metadata]] key which can be used to store general
+information. Cell metadad has a tag key which is a "A list of string tags on the
+cell. Commas are not allowed in a tag."
+
+Best place to set the tag key is when generating [[content]] for saving a notebook.
+** Outside Wish and Bug List
+*** Wishlist
+
+- [X] switch kernel (4 hours)
+
+- [X] getting a true Python mode when editing code in cells, without messing up the
+  other formatting (8 hours)
+
+- [X] Auto-saving and checkpoints (4 hours)
+
+- [X] Save a copy of the notebook (1 hour)
+
+- [ ] If one cuts and pastes read-only text into a cell it can’t be edited
+
+- [ ] A full undo history
+
+- [ ] Command history / autocomplete like one gets in regular ipython
+
+- [ ] Image resizing
+
+- [X] Better debug support (maybe via [[https://github.com/realgud/realgud][realgud]]?)
+
+*** Bugs
+
+- [X] emacs ipython notebook fails to follow redirects properly - This is mainly
+  due to the fact that it holds on the original site name internally.
+
+- [X] cookie expiration for long running notebooks - On long running notebooks
+  tornado's default cookie expiration is 30 days. After the cookie expires emacs
+  will continue to attempt autosave, but the notebook will not save. The
+  workaround is to run ein:notebooklist-open to generate a new GET request
+  against /login to get another cookie.
+** Implemented/Archived
+*** Tracebacks in ob-ein blocks
+Error/traceback information should be communicated when executing ein blocks
+from org buffers.
+*** Issue #126: Support checkpoints/autosave
+Per the REST [[http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml][api]] this is supported via /contents/path/checkpoints. GET to
+retrieve checkpoints for notebook, POST to create one. Current
+FileContentsManager implementation only keeps one checkpoint at a time.
+
+Work this as a [[info:elisp#Timers][timer]] that runs after user customizable period of time.
+
+#+BEGIN_SRC elisp
+  (setq ein:force-sync t)
+  (setq content (ein:content-query-contents "Untitled.ipynb" 8888))
+  (ein:content-query-checkpoints content)
+  (list (ein:$content-path content)
+        (ein:$content-checkpoints content))
+
+#+END_SRC
+
+#+RESULTS:
+| Untitled.ipynb | ((:id checkpoint :last_modified 2016-10-19T18:35:39.391740+00:00)) |
+
+Create a checkpoint:
+
+#+BEGIN_SRC elisp
+  (ein:content-create-checkpoint content)
+  (ein:$content-checkpoints content)
+#+END_SRC
+
+#+RESULTS:
+| :id | checkpoint | :last_modified | 2016-10-19T18:35:39.391740+00:00 |
+
+
+Delete a checkpoint:
+
+#+BEGIN_SRC elisp
+  (ein:content-delete-checkpoint content "checkpoint")
+  (ein:content-query-checkpoints content)
+  (ein:$content-checkpoints content)
+#+END_SRC
+
+#+RESULTS:
+*** Edit cells ala ~org-edit-src-code~
+#+BEGIN_SRC python
+#+END_SRC
+
+anaconda-mode breaks unless the following change is made:
+#+BEGIN_SRC elisp
+  (defun anaconda-mode-jsonrpc-request-data (command)
+    "Prepare buffer data for COMMAND call."
+    `((jsonrpc . "2.0")
+      (id . 1)
+      (method . ,command)
+      (params . ((source . ,(buffer-substring-no-properties (point-min) (point-max)))
+                 (line . ,(line-number-at-pos (point)))
+                 (column . ,(- (point) (line-beginning-position)))
+                 (path . ,(if (buffer-file-name)
+                              (progn
+                                (if (pythonic-remote-p)
+                                    (and
+                                     (tramp-tramp-file-p (buffer-file-name))
+                                     (equal (tramp-file-name-host
+                                             (tramp-dissect-file-name
+                                              (pythonic-tramp-connection)))
+                                            (tramp-file-name-host
+                                             (tramp-dissect-file-name
+                                              (buffer-file-name))))
+                                     (pythonic-file-name (buffer-file-name)))
+                                  (buffer-file-name)))
+                            "")))))) ;; So simple, but so necessary.
+#+END_SRC
+*** Org Babel Support
+Should be doable through ~[[file:emacs-ipython-notebook/lisp/ein-shared-output.el::(defun ein:shared-output-eval-string (code &optional popup verbose kernel][ein:shared-output-eval-string]]~.
+
+Need to specify session and/or a kernel. Kernel will be via the :kernelspec
+argument. In case of :session the argument is path (including url or port) for
+notebook to use for executing code. In case just a kernel ein will generate a
+notebook using the value of the ~~ variable.
+
+To get result can call ~ein:get-cell-at-point--shared-output~?. For sure needs
+to be done as a callback. Questionable how to insert output into results
+
+**** Test blocks
+
+#+BEGIN_SRC ein :session 8888/Untitled.ipynb
+  import sys
+
+  a = 14500
+  b = a+1000
+  sys.version
+#+END_SRC
+
+#+RESULTS:
+| '3.5.2 | Anaconda 4.2.0 (64-bit) | (default, Jul  5 2016, 11:41:13) [MSC v.1900 64 bit (AMD64)]' |
+
+
+#+BEGIN_SRC ein :session 8888/Untitled.ipynb
+  a
+#+END_SRC
+
+#+RESULTS:
+| 14500 |
+
+#+BEGIN_SRC ein :session 8888
+  a
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC ein :session 8888/Untitled.ipynb :file C:/Temp/img.png :kernelspec conda-env-anaconda-py
+  import sys
+  from scipy.spatial import Voronoi, voronoi_plot_2d, KDTree
+
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+
+  %matplotlib inline
+
+  points = np.array([[0., 0.], [0., 1.], [0., 2.], [1., 0.], [1., 1.], [1., 2.],
+                     [2., 0.], [2., 1.], [2., 2.]])
+
+  plt.plot(points[:,0], points[:,1], 'ko')
+  plt.show()
+#+END_SRC
+
+#+RESULTS:
+[[file:C:/Temp/img.png]]
+*** Imenu/Speedbar Cooperation
+Seems to be a couple ways of doing this:
+
+ 1. Configuring ~[[http://emacswiki.org/emacs/ImenuMode#toc12][imenu-generic-expression]]~ regex's.
+
+ 2. Redefining imenu-create-index ala python.el.
+
+(2) seems to be the more elegant solution.
+
+EIN currently has minimal support for imenu through
+~[[file:lisp/ein-worksheet.el::ein:worksheet-imenu-create-index][ein:worksheet-imenu-create-index]]~, but all it does is look for
+headings. Somehow this fails to work with speedbar and also does not handle
+indexing Python code (i.e. variables, function, classes, etc.).
+
+To get the speedbar working we will need to define a minor mode per the
+following [[http://www.gnu.org/software/emacs/manual/html_node/speedbar/Minor-Display-Modes.html#Minor-Display-Modes][instructions]].
+
+For /name/~-speedbar-menu-items~ can I just use ~imenu-generic-expression~?
+
+Maybe the way to do this is for each ~[[file:lisp/ein-cell.el::ein:codecell][codecell]]~ create a temp buffer with the text
+of that cell and call ~ein:imenu-create-index~.
+
+#+BEGIN_SRC elisp
+  (let ((text (ein:cell-get-text cell)))
+    (with-temp-buffer
+      (insert text)
+      (ein:imenu-create-index)))
+#+END_SRC
+
+Still will need way to map temp buffer positions to actual positions in the
+notebook buffer (~ein:cell-input-pos-min~ and ~ein:cell-input-pos-max~)
+*** Access password protected notebooks (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/57][#57]])
+This is what I have found out so far:
+
+You can authenticate with the IPython/Jupyter notebook server using
+ein:notebooklist-login. After calling this a cookie is generated (very easy to
+see if you are using curl as the backend for emacs-request) and you can then use
+the REST API to list and get notebook data.
+
+Once authenticated REST calls to get notebook json data and create sessions work
+fine. After EIN starts a session one can see the kernel is running from the web
+interface. The problem starts when ein tries to open a websocket connection to
+the kernel. The notebook server generates a 403 forbidden response. I think
+because emacs-websocket doesn't know anything about the security cookie
+generated during the curl request.
+
+Not sure if that makes sense, but for the moment that is my theory on what's
+happening. Somehow we need to provide the security cookie with the websocket
+connect request.
+
+<2015-06-09 Tue> SOLVED(?) - issue is that emacs-websocket needs to provide more
+info with the connection header:
+
+1. Specify the port along with the url.
+2. Pass along a security cookie.
+*** Jump to notebook code in traceback (issue [[https://github.com/millejoh/emacs-ipython-notebook/issues/42][#42]])
+
+What needs to be done:
+
+1. Carry notebook reference in the ~[[file:lisp/ein-traceback.el::ein:traceback][ein:traceback]]~ structure.
+2. Look for ~<ipython-input-3-05c9758a9c21> in <module>()~. The number 3 means
+   input #3 in the notebook.
+3. Find cell based on input number. Can iterate through list of cells () and look for matching
+   ~input-prompt-number~.
+4. Call ~ein:cell-goto~ on that cell. May need to swap buffers first.
+*** MuMaMo or Polymode or mmm-mode
+
+For better support of Python editing either of these may be the way to go. EIN
+already supports MuMaMo, but the project is no longer maintained. I could
+incorporate it into ein-mumamo. Unfortunately it seems MuMaMo is broken under
+emacs 25.1. Not sure where it is breaking, but something is causing redisplay
+function to error out due to too many args (600+)
+
+Other option is to support [[https://github.com/vspinu/polymode][Polymode]], which uses indirect buffers, which may or
+may not be a good solution for ein notebooks (why did I write this - JMM
+<2016-10-05 Wed>?). I think this is what nxhtml is doing...
+
+The problem with Polymode is that it seems to depend on regex's to determine
+start and end of chunks and to support this in EIN I would have to make
+adjustments to how the buffer is displayed.
+
+One thought would be to do away with the cell's metaphor and make things more
+freeform - more like an org-mode buffer?
+
+**** Using org-edit-src-code
+
+Check the [[help:org-edit-src-code][documentation]] and read the [[file:c:/Users/millejoh/emacs25/share/emacs/25.1/lisp/org/org-src.el::(defun%20org-edit-src-code%20(&optional%20context%20code%20edit-buffer-name)][source]].
+
+**** Understanding Polymode
+
+Inner modes are defined as pm-hbtchunkmode objects. Need to specify regex's for
+head and tail, but appears that these can be functions of one argument ~(lambda
+(ahead) )~. See ~[[file:~/.emacs.d/elpa/polymode-20160805.448/polymode-methods.el::(defun pm--span-at-point (head-matcher tail-matcher &optional pos)][pm--span-at-point]]~. If ahead is -1 search backwords, otherwise
+search forwards. Return is (cons BEG END) where BEG and END mark span of head or
+tail.
+
+Default behavior for polymode is to call re-search-forward or
+re-search-backward. These functions set point and return position at beginning
+of regex. Setting point is not necessary for polymode to work, I think.
+
+polymode may not work well since it uses indirect buffers. This seems to cause
+problems with ein's ewoc data structures.
+
+**** Understanding [[info:mmm#Top][mmm-mode]]
+
+Does not appear to use indirect buffers, so may work better.
+
+*** Support %load ([[https://github.com/millejoh/emacs-ipython-notebook/issues/104][#104]])
+
+Support was already there, just needed to get the source name right in the code.
+
+*** Better debug interface
+
+Something like what Inferior Python mode [[file:c:/emacs26/share/emacs/26.0.50/lisp/progmodes/python.el.gz::;;;%20PDB%20Track%20integration][implements]].
+
+Could we make [[file:emacs-ipython-notebook/lisp/ein-ipdb.el::(define-derived-mode%20ein:ipdb-mode%20comint-mode%20"EIN:IPDB"][ipdb]] buffer mode derive from [[file:c:/emacs26/share/emacs/26.0.50/lisp/progmodes/python.el.gz::(define-derived-mode%20inferior-python-mode%20comint-mode%20"Inferior%20Python"][inferior-python-mode]]?
+
+*** Support other python and text files
+Allow ein to open, edit and save python and other text files. This will likely
+involve similar tactics as required for notebook/buffer integration [[*Make notebooks more file-like?][enhancment]].
+*** Integrate with [[http://docs.hylang.org/en/master/index.html][hy]]
+Initial support in v0.14!
+
+We can get read-eval via [[http://docs.hylang.org/en/master/language/interop.html][this]]. Just need to wrap kernel calls with some
+appropriate python code?
+
+Need to have two 'types' of python notebooks, however. Difference between
+notebooks will be a flag in the header metadata. That way EIN will know when to
+call the right wrapping function.
+
+Doing autocomplete may also be possible, but will need to figure out how to
+mangle and unmangle on the fly. Trick will be dealing with modules, as the
+[[http://docs.hylang.org/en/master/language/interop.html#using-python-from-hy][syntax]] in hy is not as simple and EIN will have to do more to determine context.
+
+Also look into a [[https://github.com/dsblank/simple_kernel][custom kernel]] that implement's hy read-eval-print.
+
+
+Running hy code from python appears to be a two-step process:
+
+#+BEGIN_SRC python
+  import hy
+  import hy.cmdline
+
+  def hy_read_eval(string):
+      hy.cmdline.hy_eval(hy.read_str(string)
+#+END_SRC
+*** Fixing Tests
+Testing is beyond broken at this point. I barely understand the code, async is
+causing far too much instability and travis never works. I think it is time to
+completely redo testing, i.e. throw out all the existing code and start anew.
+
+First is to take advantage of modern testing tools in Emacs
+**** Emacs Testing Frameworks
+
+There is the venerable [[https://www.emacswiki.org/emacs/ErtTestLibrary][ERT]].
+
+For working with asyn frameworks: [[https://github.com/rejeep/ert-async.el][ert-async]].
+
+Mocking: [[https://github.com/rejeep/el-mock.el][el-mock]].
+
+Thens there is [[http://cask.readthedocs.io/en/latest/][Cask]] + [[https://github.com/rejeep/ert-runner.el][ert-runner]]. [[https://github.com/tonini/overseer.el][Overseer]] lets you use ert-runner. from within emacs
+
+[[https://en.wikipedia.org/wiki/Integration_testing][Integration testing]] using [[https://github.com/ecukes/ecukes][ecukes]]. There is a lot to learn with this one, though.
+*** Asynchronous org-babel
+As inspiration should look at [[https://github.com/khinsen/ob-ipython-async/blob/master/ob-ipython-async.el][@khinsen's]] implementation
+for ob-ipython.
+
+Implemented in v0.14!
+
+* Tests
+
+This is a [[ipynb:(:url-or-port%20"http://localhost:8888"%20:name%20"emacs-ipython-notebook/The%20Emacs%20IPython%20Notebook.ipynb")][link]] to an ein notebook.
+
+#+BEGIN_SRC elisp :session
+  (setq str0 "8888/Untitled.ipynb")
+  (setq str1 "8888/Path/Untitled.ipynb")
+#+END_SRC
+
+#+RESULTS:
+: 8888/Path/Untitled.ipynb
+
+#+BEGIN_SRC elisp :session
+(ein:trim-left str0 "\/")
+#+END_SRC
+
+#+RESULTS:
+: 8888/Untitled.ipynb
+
+#+NAME: 29cc91f8-fcad-4afa-9dc7-e2bbb9821870
+#+BEGIN_SRC ein :session http://localhost:8888/Untitled.ipynb
+  import sys
+  import time
+
+  time.sleep(10)
+  print("Hello dood!")
+
+#+END_SRC
+
+#+RESULTS: 29cc91f8-fcad-4afa-9dc7-e2bbb9821870
+: Hello dood!
+
+#+NAME: 87f665e5-0314-4491-9666-edf15604aa21
+#+BEGIN_SRC ein :session http://localhost:8888/Untitled.ipynb
+  1+4
+#+END_SRC
+
+#+RESULTS: 87f665e5-0314-4491-9666-edf15604aa21
+: 5
+
+#+NAME: d934f2ea-e2fe-4a8f-9db0-c0496dbfc013
+#+BEGIN_SRC ein :session http://localhost:8888/Untitled.ipynb :results output drawer
+  1/0
+#+END_SRC
+
+#+RESULTS: d934f2ea-e2fe-4a8f-9db0-c0496dbfc013
+:RESULTS:
+---------------------------------------------------------------------------
+ZeroDivisionError                         Traceback (most recent call last)
+<ipython-input-3-9e1622b385b6> in <module>()
+----> 1 1/0
+
+ZeroDivisionError: division by zero
+
+:END:
+
+#+NAME: 26e1891a-abaf-4a6b-831e-59d73fcf5170
+#+BEGIN_SRC ein :session http://localhost:8888/Untitled.ipynb :results output drawer
+  import matplotlib.pyplot as plt
+  import numpy as np
+
+  %matplotlib inline
+  x = np.linspace(0, 1, 100)
+  y = np.random.rand(100,1)
+  plt.plot(x,y)
+  x
+
+#+END_SRC
+
+
+#+NAME: 36a8b735-8e7d-4503-addc-57165c651d7d
+#+BEGIN_SRC ein :session http://localhost:8888/Untitled.ipynb :results output
+  from sympy import *
+
+  init_printing()
+  x = symbols('x')
+  x
+
+#+END_SRC
