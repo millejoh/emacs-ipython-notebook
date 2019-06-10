@@ -72,7 +72,7 @@ Enable `polymode`_ via::
 
    M-x customize-group RET ein
    Toggle Ein:Polymode
-  
+
 ob-ein
 ======
 

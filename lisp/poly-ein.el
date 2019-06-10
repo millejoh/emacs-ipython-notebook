@@ -10,9 +10,36 @@
   :set (lambda (symbol value)
          (set-default symbol value)
          (when value
-           (with-eval-after-load 'poly-ein
-             (poly-ein--decorate-functions))))
+           (if (featurep 'poly-ein)
+               (poly-ein--decorate-functions)
+             (with-eval-after-load 'poly-ein
+               (poly-ein--decorate-functions)))))
   :group 'ein)
+
+(defmacro poly-ein--remove-hook (label functions)
+  "Remove any hooks saying LABEL from FUNCTIONS"
+  `(mapc (lambda (x) (when (search ,label (symbol-name x))
+                       (remove-hook (quote ,functions) x t)))
+         ,functions))
+
+(defsubst poly-ein--neuter-markdown-mode ()
+  "Consolidate fragility here."
+  (when (eq major-mode 'markdown-mode)
+    (poly-ein--remove-hook "markdown" after-change-functions)
+    (poly-ein--remove-hook "markdown" jit-lock-after-change-extend-region-functions)
+    (poly-ein--remove-hook "markdown" window-configuration-change-hook)
+    (poly-ein--remove-hook "markdown" syntax-propertize-extend-region-functions)))
+
+(defun poly-ein--narrow-to-inner (modifier f &rest args)
+  (if (or pm-initialization-in-progress (not poly-ein-mode))
+      (apply f args)
+    (save-restriction
+      (widen)
+      (let ((range (pm-innermost-range
+                    (or (when (car args) (max (point-min) (funcall modifier (car args))))
+                        (point)))))
+        (narrow-to-region (car range) (cdr range))
+        (apply f args)))))
 
 (defun poly-ein--decorate-functions ()
   "Affect global definitions of ppss and jit-lock rather intrusively."
@@ -21,6 +48,8 @@
   (advice-remove 'font-lock-fontify-region #'polymode-inhibit-during-initialization)
   (advice-remove 'font-lock-fontify-buffer #'polymode-inhibit-during-initialization)
   (advice-remove 'font-lock-ensure #'polymode-inhibit-during-initialization)
+
+  (add-hook 'after-change-major-mode-hook #'poly-ein--neuter-markdown-mode t)
 
   ;; https://github.com/millejoh/emacs-ipython-notebook/issues/537
   ;; alternatively, filter-args on ad-should-compile but then we'd have to
@@ -37,9 +66,8 @@
            ;; (font-lock-flush)
            (poly-ein--set-buffer src-buf dest-buf visibly))))))
 
-  (add-function
-   :override (symbol-function 'poly-lock-mode)
-   (symbol-function (default-value 'font-lock-function)))
+  (fmakunbound 'poly-lock-mode)
+  (defalias 'poly-lock-mode (symbol-function (default-value 'font-lock-function)))
 
   (add-function
    :before-until (symbol-function 'syntax-propertize)
@@ -72,8 +100,17 @@
    (apply-partially #'poly-ein--narrow-to-inner #'1-))
 
   (add-function
+   :around (symbol-function 'pm--mode-setup)
+   (lambda (f &rest args)
+     ;; global-font-lock-mode will call an after-change-mode-hook
+     ;; that calls font-lock-initial-fontify, which fontifies the entire buffer!
+     (cl-letf (((symbol-function 'global-font-lock-mode-enable-in-buffers) #'ignore))
+       (apply f args))))
+
+  (add-function
    :around (symbol-function 'jit-lock-mode)
    (lambda (f &rest args)
+     ;; Override jit-lock.el.gz deliberately skipping indirect buffers
      (cl-letf (((symbol-function 'buffer-base-buffer) #'ignore)) (apply f args))))
 
   ;; :before-until before :filter-args (reversed order when executed)
@@ -95,28 +132,6 @@
 
   (add-function :filter-args (symbol-function 'jit-lock-after-change)
                 #'poly-ein--span-start-end)
-
-  (add-function
-   :before-until (symbol-function 'syntax-propertize)
-   (lambda (pos)
-     (prog1 poly-ein-mode
-       (when (and poly-ein-mode (< syntax-propertize--done pos))
-         (save-excursion
-           (with-silent-modifications
-             (let ((parse-sexp-lookup-properties t)
-                   (start (point-min))
-                   (end (point-max)))
-               ;; (dolist (fun syntax-propertize-extend-region-functions)
-               ;;   (ein:and-let* ((new (funcall fun start end)))
-               ;;     (setq start (min start (car new)))
-               ;;     (setq end (max end (cdr new)))))
-               (setq syntax-propertize--done end)
-               (remove-text-properties start end
-                                       '(syntax-table nil syntax-multiline nil))
-               ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
-               (when syntax-propertize-function
-                 (let ((syntax-propertize--done most-positive-fixnum))
-                  (funcall syntax-propertize-function start end))))))))))
 
   (if (fboundp 'markdown-unfontify-region-wiki-links)
       (fset 'markdown-unfontify-region-wiki-links #'ignore)
@@ -201,17 +216,15 @@ TYPE can be 'body, nil."
                                 (point-max)))))))
      (append span (list result-cm)))))
 
-(defun poly-ein-fontify-buffer (notebook)
+(defun poly-ein-fontify-buffer (buffer)
   "Called from `ein:notebook--worksheet-render'"
-  (with-current-buffer (ein:notebook-buffer notebook)
+  (with-current-buffer buffer
     (save-excursion
       (pm-map-over-spans
        (lambda (span)
-         (condition-case err
-             (let ((syntax-propertize--done (point-min)))
-               (jit-lock-function (nth 1 span)))
-           (error (ein:log 'warn "ein:notebook--worksheet-render: %s"
-                           (error-message-string err)))))))))
+         (with-current-buffer (pm-span-buffer span)
+           (cl-assert (eq font-lock-function 'poly-lock-mode))
+           (jit-lock-function (nth 1 span))))))))
 
 (defun poly-ein--relative-to-input (pos cell)
   "Return -1 if POS before input, 1 if after input, 0 if within"
@@ -314,17 +327,6 @@ TYPE can be 'body, nil."
         (pm--run-hooks pm/polymode :switch-buffer-functions src-buf dest-buf)
         (pm--run-hooks pm/chunkmode :switch-buffer-functions src-buf dest-buf)))))
 
-(defun poly-ein--narrow-to-inner (modifier f &rest args)
-  (if (or pm-initialization-in-progress (not poly-ein-mode))
-      (apply f args)
-    (save-restriction
-      (widen)
-      (let ((range (pm-innermost-range
-                    (or (when (car args) (max (point-min) (funcall modifier (car args))))
-                        (point)))))
-        (narrow-to-region (car range) (cdr range))
-        (apply f args)))))
-
 (defsubst poly-ein--span-start-end (args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
       args
@@ -338,8 +340,10 @@ TYPE can be 'body, nil."
 (defsubst poly-ein--unrelated-span (&optional beg end)
   (or pm-initialization-in-progress
       (and poly-ein-mode
-           (not (eq major-mode
-                    (eieio-oref (nth 3 (pm-innermost-span (or beg (point)))) :mode))))))
+           (let* ((span (pm-innermost-span (or beg (point))))
+                  (span-mode (eieio-oref (nth 3 span) :mode)))
+             ;; only fontify type 'body (the other type is nil)
+             (or (null (nth 0 span)) (not (eq major-mode span-mode)))))))
 
 (make-variable-buffer-local 'parse-sexp-lookup-properties)
 

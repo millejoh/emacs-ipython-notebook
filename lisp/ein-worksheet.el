@@ -970,7 +970,9 @@ It is set in `ein:notebook-multilang-mode'."
         ;; (as opposed to ein:worksheet-insert-cell)
         (setq clone (ein:worksheet-insert-clone ws cell pivot-cell (if up "above" "below")))
         (ein:cell-goto clone)
-        (oset ws :dirty t))
+        (oset ws :dirty t)
+        (when pm/polymode
+          (poly-ein-fontify-buffer (ein:worksheet--get-buffer ein:%worksheet%))))
     (message "No %s cell" (if up "previous" "next"))))
 
 (defun ein:worksheet-move-cell-up (ws cell)

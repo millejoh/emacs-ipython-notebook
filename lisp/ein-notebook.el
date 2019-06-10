@@ -685,26 +685,26 @@ This is equivalent to do ``C-c`` in the console program."
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
     (let (multilang-failed)
-     (if ein:polymode
-         (poly-ein-mode)
-       ;; Changing major mode here is super dangerous as it
-       ;; kill-all-local-variables.
-       ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
-       ;; to variables assigned up to this point, but we ought not rely on it
-       (funcall (ein:notebook-choose-mode))
-       (ein:worksheet-reinstall-undo-hooks ws)
-       (condition-case err
-           (ein:aif (ein:$notebook-kernelspec notebook)
-                    (ein:ml-lang-setup it))
-         (error (ein:log 'error (error-message-string err))
-                (setq multilang-failed t))))
-     (unless multilang-failed
-       (ein:notebook-mode)
-       (ein:notebook--notification-setup notebook)
-       (ein:notebook-setup-kill-buffer-hook)
-       (setq ein:%notebook% notebook)
-       (when ein:polymode
-         (poly-ein-fontify-buffer notebook))))))
+      (if ein:polymode
+          (poly-ein-mode)
+        ;; Changing major mode here is super dangerous as it
+        ;; kill-all-local-variables.
+        ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
+        ;; to variables assigned up to this point, but we ought not rely on it
+        (funcall (ein:notebook-choose-mode))
+        (ein:worksheet-reinstall-undo-hooks ws)
+        (condition-case err
+            (ein:aif (ein:$notebook-kernelspec notebook)
+                (ein:ml-lang-setup it))
+          (error (ein:log 'error (error-message-string err))
+                 (setq multilang-failed t))))
+      (unless multilang-failed
+        (ein:notebook-mode)
+        (ein:notebook--notification-setup notebook)
+        (ein:notebook-setup-kill-buffer-hook)
+        (setq ein:%notebook% notebook)
+        (when ein:polymode
+          (poly-ein-fontify-buffer (ein:notebook-buffer notebook)))))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
