@@ -9,8 +9,7 @@ WORKDIR=${HOME}/local
 . tools/retry.sh
 
 if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
-    brew update
-    brew list pyenv-virtualenv || brew install pyenv-virtualenv
+    brew list pyenv-virtualenv &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv-virtualenv
 
     case "${TOXENV}" in
         py27)

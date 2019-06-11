@@ -17,7 +17,7 @@ if [ "x$TRAVIS_OS_NAME" = "xlinux" ] ; then
     julia -e 'import Pkg; Pkg.add("IJulia")'
 elif [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
     brew update
-    brew cask list julia &>/dev/null || brew cask install julia
+    brew cask list julia &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew cask install julia
     julia --version
     julia -e 'import Pkg; Pkg.add("IJulia")'
 fi

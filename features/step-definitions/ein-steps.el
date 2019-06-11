@@ -476,3 +476,10 @@
 (When "I evaluate the python code \"\\(.+\\)\"$"
       (lambda (code-str)
         (ein:shared-output-eval-string nil code-str nil)))
+
+(When "^text property at point includes \"\\(.+\\)\"$"
+      (lambda (properties)
+        (should-not
+         (mapcan (lambda (prop)
+                   (not (get-text-property (point) (intern prop))))
+                 (split-string properties ",")))))
