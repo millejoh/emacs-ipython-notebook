@@ -235,12 +235,11 @@ Usage
    unnecessary!
 
 2. If you have token or password authentication enabled then you will need to
-   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
+   call ``M-x ein:login`` and enter the appropriate password.
+   Assuming authentication works the :ref:`notebooklist
+   <notebook-list-commands>` buffer will automatically open.
 
-3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open the
-   :ref:`notebook list <notebook-list-commands>` buffer.
-
-4. In the notebook list buffer, you can open notebooks by selecting the
+3. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
@@ -405,8 +404,34 @@ Misc
 
 .. Is it better to remove el:package from eldomain??
 
-Org-mode Integration
---------------------
+Org-mode Integration (ob-ein)
+-----------------------------
+
+Configuration:
+
+::
+
+   M-x customize-group RET org-babel
+   Org Babel Load Languages:
+     Insert (ein . t)
+     For example, '((emacs-lisp . t) (ein . t))
+
+Snippet:
+
+.. code:: python
+
+   #BEGIN_SRC *language* :session localhost :results raw drawer
+     import numpy, math, matplotlib.pyplot as plt
+     %matplotlib inline
+     x = numpy.linspace(0, 2*math.pi)
+     plt.plot(x, numpy.sin(x))
+   #+END_SRC
+
+*Language* can be ``ein-python``, ``ein-r``, or ``ein-julia``. **The relevant** `jupyter kernel`_ **must be installed before use**. Additional languages can be
+ configured via::
+
+   M-x customize-group RET ein
+   Ob Ein Languages
 
 The format for the `:session` header argument is
 `{url-or-port}/{path-to-notebook}`. Just specifying `{url-or-port}` executes
@@ -414,14 +439,15 @@ your source block in a single anonymous notebook (this effects an ipython repl
 in org). You should also specify `:results raw drawer` for proper rendering
 inside the org buffer. For example:
 
+
 .. code:: python
 
-   #+BEGIN_SRC ein :session localhost :results raw drawer
-   import sys
+   #+BEGIN_SRC ein-python :session localhost :results raw drawer
+     import sys
 
-   a = 14500
-   b = a+1000
-   sys.version
+     a = 14500
+     b = a+1000
+     sys.version
    #+END_SRC
 
 If your code block generates an image, like from an matplotlib plot, ein will
@@ -433,13 +459,13 @@ argument as in the example below:
 .. code:: python
 
    #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
-   import matplotlib.pyplot as plt
-   import numpy as np
+     import matplotlib.pyplot as plt
+     import numpy as np
 
-   %matplotlib inline
-   x = np.linspace(0, 1, 100)
-   y = np.random.rand(100,1)
-   plt.plot(x,y)
+     %matplotlib inline
+     x = np.linspace(0, 1, 100)
+     y = np.random.rand(100,1)
+     plt.plot(x,y)
    #+END_SRC
 
 To get proper syntax highlighting for non-Python kernels, use the function
@@ -452,10 +478,10 @@ language. For example, to get proper syntax highlighting for an R kernel, first 
 
 Then org SRC blocks with language "ein-R" will use R syntax highlighting:
 
-.. code:: python
+.. code:: R
 
    #BEGIN_SRC ein-R :session localhost :results raw drawer :image output.png
-   plot(1:10, 1:10)
+     plot(1:10, 1:10)
    #+END_SRC
 
 You can also link to an IPython notebook from org-mode_ files.
@@ -475,6 +501,12 @@ You can also link to an IPython notebook from org-mode_ files.
 
 .. [#org-store-link] See `1.3 Activation
    <http://orgmode.org/manual/Activation.html>`_ in org-mode manual.
+
+.. _polymode: https://github.com/polymode/polymode
+.. _ob-ipython: https://github.com/gregsexton/ob-ipython
+.. _scimax: https://github.com/jkitchin/scimax
+.. _ob-ein details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 Customization
 ^^^^^^^^^^^^^
