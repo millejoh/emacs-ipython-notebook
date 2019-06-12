@@ -235,12 +235,11 @@ Usage
    unnecessary!
 
 2. If you have token or password authentication enabled then you will need to
-   call ``M-x ein:notebooklist-login`` and enter the appropriate password.
+   call ``M-x ein:login`` and enter the appropriate password.
+   Assuming authentication works the :ref:`notebooklist
+   <notebook-list-commands>` buffer will automatically open.
 
-3. Hit ``M-x ein:notebooklist-open`` to open notebook list. This will open the
-   :ref:`notebook list <notebook-list-commands>` buffer.
-
-4. In the notebook list buffer, you can open notebooks by selecting the
+3. In the notebook list buffer, you can open notebooks by selecting the
    ``[Open]`` buttons.  See the :ref:`notebook <notebook-commands>` section for
    operations and commands available in the notebook buffer.
 
@@ -267,6 +266,11 @@ Note that the below work best with current (> v4.3.1) versions of jupyter.
 .. el:function:: ein:run                
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
+.. el:variable:: ein:jupyter-default-server-command
+.. el:variable:: ein:jupyter-server-use-subcommand
+.. el:variable:: ein:jupyter-default-notebook-directory
+.. el:variable:: ein:jupyter-server-args
+.. el:variable:: ein:jupyter-server-buffer-name
 
 Notebook list
 ^^^^^^^^^^^^^
@@ -290,8 +294,8 @@ port or URL of the IPython notebook server.
 Notebook
 ^^^^^^^^
 
-The following keybinds are available in notebook buffers. Modified notebooks are
-saved automatically with a frequency dependenant on the setting of
+The following keybindings are available in notebook buffers. Modified notebooks
+are saved automatically with a frequency dependenant on the setting of
 `ein:notebook-autosave-frequency`. If `ein:notebook-create-checkpoint-on-save`
 is True than a checkpoint will also be generated in the Jupyter server every
 time the notebook is saved. A notebook can be returned to a previous checkpoint
@@ -305,12 +309,22 @@ created via `ein:notebook-create-checkpoint`.
 .. el:function:: ein:worksheet-execute-all-cell
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
-.. el:function:: ein:notebook-kill-all-buffers
 .. el:function:: ein:iexec-mode
 .. el:function:: ein:notebook-create-checkpoint
 .. el:function:: ein:notebook-restore-to-checkpoint
 .. el:function:: ein:notebook-enable-autosaves
 .. el:function:: ein:notebook-disable-autosaves
+
+Polymode in the Notebook
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+EIN now provides proper multi-major mode support in notebook buffers using
+polymode_. To use simply set :el:symbol:`ein:polymode` to ``t`` and restart
+emacs.
+
+.. el:variable:: ein:polymode
+
+.. _polymode: https://polymode.github.io
 
 Advanced Editing
 ^^^^^^^^^^^^^^^^
@@ -390,8 +404,34 @@ Misc
 
 .. Is it better to remove el:package from eldomain??
 
-Org-mode Integration
---------------------
+Org-mode Integration (ob-ein)
+-----------------------------
+
+Configuration:
+
+::
+
+   M-x customize-group RET org-babel
+   Org Babel Load Languages:
+     Insert (ein . t)
+     For example, '((emacs-lisp . t) (ein . t))
+
+Snippet:
+
+.. code:: python
+
+   #BEGIN_SRC *language* :session localhost :results raw drawer
+     import numpy, math, matplotlib.pyplot as plt
+     %matplotlib inline
+     x = numpy.linspace(0, 2*math.pi)
+     plt.plot(x, numpy.sin(x))
+   #+END_SRC
+
+*Language* can be ``ein-python``, ``ein-r``, or ``ein-julia``. **The relevant** `jupyter kernel`_ **must be installed before use**. Additional languages can be
+ configured via::
+
+   M-x customize-group RET ein
+   Ob Ein Languages
 
 The format for the `:session` header argument is
 `{url-or-port}/{path-to-notebook}`. Just specifying `{url-or-port}` executes
@@ -399,14 +439,15 @@ your source block in a single anonymous notebook (this effects an ipython repl
 in org). You should also specify `:results raw drawer` for proper rendering
 inside the org buffer. For example:
 
+
 .. code:: python
 
-   #+BEGIN_SRC ein :session localhost :results raw drawer
-   import sys
+   #+BEGIN_SRC ein-python :session localhost :results raw drawer
+     import sys
 
-   a = 14500
-   b = a+1000
-   sys.version
+     a = 14500
+     b = a+1000
+     sys.version
    #+END_SRC
 
 If your code block generates an image, like from an matplotlib plot, ein will
@@ -418,13 +459,13 @@ argument as in the example below:
 .. code:: python
 
    #BEGIN_SRC ein :session localhost :results raw drawer :image output.png
-   import matplotlib.pyplot as plt
-   import numpy as np
+     import matplotlib.pyplot as plt
+     import numpy as np
 
-   %matplotlib inline
-   x = np.linspace(0, 1, 100)
-   y = np.random.rand(100,1)
-   plt.plot(x,y)
+     %matplotlib inline
+     x = np.linspace(0, 1, 100)
+     y = np.random.rand(100,1)
+     plt.plot(x,y)
    #+END_SRC
 
 To get proper syntax highlighting for non-Python kernels, use the function
@@ -437,10 +478,10 @@ language. For example, to get proper syntax highlighting for an R kernel, first 
 
 Then org SRC blocks with language "ein-R" will use R syntax highlighting:
 
-.. code:: python
+.. code:: R
 
    #BEGIN_SRC ein-R :session localhost :results raw drawer :image output.png
-   plot(1:10, 1:10)
+     plot(1:10, 1:10)
    #+END_SRC
 
 You can also link to an IPython notebook from org-mode_ files.
@@ -460,6 +501,12 @@ You can also link to an IPython notebook from org-mode_ files.
 
 .. [#org-store-link] See `1.3 Activation
    <http://orgmode.org/manual/Activation.html>`_ in org-mode manual.
+
+.. _polymode: https://github.com/polymode/polymode
+.. _ob-ipython: https://github.com/gregsexton/ob-ipython
+.. _scimax: https://github.com/jkitchin/scimax
+.. _ob-ein details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
+.. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 Customization
 ^^^^^^^^^^^^^
@@ -499,8 +546,6 @@ Subpackages
 ^^^^^^^^^^^
 
 .. el:variable:: ein:completion-backend
-.. el:variable:: ein:use-auto-complete-superpack
-.. el:variable:: ein:ac-max-cache
 .. el:variable:: ein:use-smartrep
 .. el:variable:: ein:load-dev
 
@@ -515,8 +560,8 @@ Notebook
 ^^^^^^^^
 
 .. el:variable:: ein:worksheet-enable-undo
+.. el:variable:: ein:polymode
 .. el:variable:: ein:notebook-modes
-.. el:variable:: ein:notebook-kill-buffer-ask
 .. el:variable:: ein:notebook-querty-timeout-open
 .. el:variable:: ein:notebook-querty-timeout-save
 .. el:variable:: ein:cell-traceback-level
@@ -529,7 +574,6 @@ Notebook
 .. el:variable:: ein:helm-kernel-history-search-auto-pattern
 .. el:variable:: ein:output-type-preference
 .. el:variable:: ein:shr-env
-.. el:variable:: ein:worksheet-show-slide-data
 .. el:variable:: ein:notebook-autosave-frequency
 .. el:variable:: ein:notebook-create-checkpoint-on-save
 
@@ -551,30 +595,13 @@ Connect
 .. el:variable:: ein:connect-default-notebook
 .. el:function:: ein:connect-to-default-notebook
 
-Jedi.el
-"""""""
-
-.. el:function:: ein:jedi-setup
-
-MuMaMo
-^^^^^^
-
-.. el:variable:: ein:mumamo-codecell-mode
-.. el:variable:: ein:mumamo-textcell-mode
-.. el:variable:: ein:mumamo-htmlcell-mode
-.. el:variable:: ein:mumamo-markdowncell-mode
-.. el:variable:: ein:mumamo-rawcell-mode
-.. el:variable:: ein:mumamo-headingcell-mode
-.. el:variable:: ein:mumamo-fallback-mode
-.. el:variable:: ein:use-mumamo-indent-line-function-workaround
-
 Misc
 ^^^^
 
 .. el:variable:: ein:filename-translations
 .. el:function:: ein:tramp-create-filename-translator
 .. el:variable:: ein:query-timeout
-
+.. el:function:: ein:notebook-jump-to-opened-notebook
 
 Gotchas and caveats
 -------------------
@@ -709,6 +736,8 @@ everything the log buffer.  You can reset the patch and log level with
 
 Change Log
 ==========
+
+.. include:: Changelog/v0_16_0.rst
 
 .. include:: Changelog/v0_15_0.txt
 
