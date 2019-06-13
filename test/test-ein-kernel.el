@@ -16,7 +16,7 @@
                  (desired-url "http://127.0.0.1:8888/api/sessions/KERNEL-ID")
                  (dummy-response (make-request-response))
                  got-url)
-    (setq (ein:$notebook-kernel notebook) kernel)
+    (setf (ein:$notebook-kernel notebook) kernel)
     (cl-letf (((symbol-function 'request) 
                (lambda (url &rest ignore) (setq got-url url) dummy-response))
               ((symbol-function 'set-process-query-on-exit-flag) #'ignore)
