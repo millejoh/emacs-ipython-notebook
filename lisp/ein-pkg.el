@@ -1,5 +1,5 @@
 (define-package "ein"
-  "0.16.0"
+  "0.16.1"
   "Emacs IPython Notebook"
   '((emacs "25")
     (websocket "1.7")
