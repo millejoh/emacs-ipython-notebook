@@ -263,7 +263,7 @@ running server and automatically log you in.
 Note that the below work best with current (> v4.3.1) versions of jupyter.
 
 .. el:function:: ein:jupyter-server-start
-.. el:function:: ein:run                
+.. el:function:: ein:run
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
 .. el:variable:: ein:jupyter-default-server-command
@@ -737,6 +737,8 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+.. include:: Changelog/v0_16_1.rst
+
 .. include:: Changelog/v0_16_0.rst
 
 .. include:: Changelog/v0_15_0.txt
@@ -744,7 +746,7 @@ Change Log
 .. include:: Changelog/v0_14_1.txt
 
 .. include:: Changelog/v0_14_0.txt
-   
+
 .. include:: Changelog/v0_13_1.txt
 
 .. include:: Changelog/v0_13_0.txt
@@ -824,12 +826,12 @@ v0.7.1
 
 * Fix bug saving images in v4 notebook format.
 * Be more graceful handling errors during content saves.
-  
+
 v0.7
 ----
 
 * Support logging in to password protected jupyter servers.
-  
+
 v0.6
 ----
 

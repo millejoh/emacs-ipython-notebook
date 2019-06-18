@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.16.0 documentation</title>
+    <title>The Emacs IPython Notebook &#8212; Emacs IPython Notebook 0.16.1 documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -28,7 +28,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.16.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.16.1 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -91,6 +91,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a><ul>
+<li><a class="reference internal" href="#v0-16-1">v0.16.1</a></li>
 <li><a class="reference internal" href="#v0-16-0">v0.16.0</a></li>
 <li><a class="reference internal" href="#v0-15-0">v0.15.0</a></li>
 <li><a class="reference internal" href="#v0-14-1">v0.14.1</a></li>
@@ -236,7 +237,7 @@ this feature.</p></li>
 <li><p><a class="reference external" href="https://github.com/skeeto/skewer-mode">skewer-mode</a> &gt;= 1.6.2:
 Skewer mode gives EIN the ability to execute dynamic javascript in the
 note book.</p></li>
-<li><p>(optional) <a href="#id28"><span class="problematic" id="id29">Jupyterhub_</span></a> 0.8 or higher:
+<li><p>(optional) <a href="#id29"><span class="problematic" id="id30">Jupyterhub_</span></a> 0.8 or higher:
 EIN supports logging in to Jupyterhub servers using PAM authentication,
 though this only works with v0.8, which currently is the development version
 of Jupyterhub.</p></li>
@@ -321,7 +322,7 @@ don’t use that optional package.</p>
 </div>
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
-<p>Here is the minimal configuration.  See <a href="#id30"><span class="problematic" id="id31">customization_</span></a> for more details.</p>
+<p>Here is the minimal configuration.  See <a href="#id31"><span class="problematic" id="id32">customization_</span></a> for more details.</p>
 <div class="highlight-cl notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-notebook</span><span class="p">)</span>
 <span class="p">(</span><span class="nb">require</span> <span class="ss">&#39;ein-subpackages</span><span class="p">)</span>
@@ -1046,6 +1047,10 @@ deletion.  Use kill to play on the safe side.</p>
 <dd><p>Instant cell execution minor mode.
 Code cell at point will be automatically executed after any
 change in its input area.</p>
+<p>If called interactively, enable Ein:Iexec mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is ‘toggle’; disable the mode otherwise.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1078,7 +1083,7 @@ be prompted on which one to use.</p>
 <div class="section" id="polymode-in-the-notebook">
 <h3>Polymode in the Notebook<a class="headerlink" href="#polymode-in-the-notebook" title="Permalink to this headline">¶</a></h3>
 <p>EIN now provides proper multi-major mode support in notebook buffers using
-<a href="#id32"><span class="problematic" id="id33">polymode_</span></a>. To use simply set <a class="reference internal" href="#ein:polymode" title="ein:polymode"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:polymode</span></code></a> to <code class="docutils literal notranslate"><span class="pre">t</span></code> and restart
+<a href="#id33"><span class="problematic" id="id34">polymode_</span></a>. To use simply set <a class="reference internal" href="#ein:polymode" title="ein:polymode"><code class="xref el el-symbol docutils literal notranslate"><span class="pre">ein:polymode</span></code></a> to <code class="docutils literal notranslate"><span class="pre">t</span></code> and restart
 emacs.</p>
 <dl class="variable">
 <dt id="ein:polymode">
@@ -2182,6 +2187,10 @@ everything the log buffer.  You can reset the patch and log level with
 </div>
 <div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-16-1">
+<span id="changelog-0-16-1"></span><h2>v0.16.1<a class="headerlink" href="#v0-16-1" title="Permalink to this headline">¶</a></h2>
+<p>Hotfix for issue <a class="reference external" href="https://github.com/millejoh/emacs-ipython-notebook/issue/559">559</a> .</p>
+</div>
 <div class="section" id="v0-16-0">
 <span id="changelog-0-16-0"></span><h2>v0.16.0<a class="headerlink" href="#v0-16-0" title="Permalink to this headline">¶</a></h2>
 <p>Support for auto-complete as a completion backend in ein is now deprecated and
@@ -2202,7 +2211,7 @@ to run into him in your travels.</p>
 <p>Many, many fixes and improvements. See PR’s 294-481.</p>
 <p>Some quality of life improvements for the company completion backend. The code
 should be more robust, sort of supports jedi, and works when in a connected
-buffer. And, if you set <a href="#id19"><span class="problematic" id="id20">`</span></a>ein:use-company-annotations’ to <a href="#id21"><span class="problematic" id="id22">`</span></a>t’ you will get
+buffer. And, if you set <a href="#id20"><span class="problematic" id="id21">`</span></a>ein:use-company-annotations’ to <a href="#id22"><span class="problematic" id="id23">`</span></a>t’ you will get
 annotation in the matches list, though there may be an initial performance hit
 as ein builds a cache of of function definitions.</p>
 <p>Support for older Jupyter notebook server (&lt; 4) and the even older IPython
@@ -2562,7 +2571,7 @@ See COPYING for details.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.16.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Emacs IPython Notebook 0.16.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
