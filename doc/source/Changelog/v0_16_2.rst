@@ -5,8 +5,8 @@
 v0.16.2
 -------
 
-Revert changes in v0.16.1 now that websocket is working again. If ein is
-mysterious losing connections to a running kernel be sure your `websocket`_
-installation is at least v0.11.1.
+Bugfixes for polymode support. Revert changes in v0.16.1 now that websocket is
+working again. If ein is mysterious losing connections to a running kernel be
+sure your `websocket`_ installation is at least v0.11.1.
 
 .. _websocket: https://github.com/ahyatt/emacs-websocket
