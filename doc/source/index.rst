@@ -737,6 +737,8 @@ everything the log buffer.  You can reset the patch and log level with
 Change Log
 ==========
 
+.. include:: Changelog/v0_16_2.rst
+
 .. include:: Changelog/v0_16_1.rst
 
 .. include:: Changelog/v0_16_0.rst
