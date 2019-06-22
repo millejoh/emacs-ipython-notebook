@@ -99,10 +99,10 @@ global setting.  For global setting and more information, see
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
 (defun* ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown data &allow-other-keys)
-  (let ((status-code (request-response-status-code response)))
+  (let ((status-code (request-response-status-code response))) ; may be nil!
     (case status-code
       (404 (ein:log 'error "ein:content-query-contents--error %s %s"
-                    (request-response-status-code response) (plist-get data :message))
+                    status-code (plist-get data :message))
            (when errback (funcall errback url-or-port status-code)))
       (t (if (< iteration (if noninteractive 6 3))
              (progn
@@ -113,7 +113,7 @@ global setting.  For global setting and more information, see
                   (format "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s"
                           (concat (file-name-as-directory url-or-port) path)
                           symbol-status (cdr error-thrown))))
-             (if (and (= status-code 403) noninteractive)
+             (if (and (eql status-code 403) noninteractive)
                  (progn
                    (ein:log 'info notice)
                    (when callback
@@ -134,7 +134,7 @@ global setting.  For global setting and more information, see
       (setq content (ein:new-content url-or-port path data)))
     (ein:aif response
         (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
-    (when callback 
+    (when callback
       (funcall callback content))))
 
 (defun ein:fix-legacy-content-data (data)
@@ -226,7 +226,7 @@ global setting.  For global setting and more information, see
                                         with result
                                         until (>= (length result) ein:content-query-max-branch)
                                         if (string= "directory" (plist-get item :type))
-                                          collect (ein:new-content url-or-port path item) 
+                                          collect (ein:new-content url-or-port path item)
                                             into result
                                         end
                                         finally return result)))
@@ -272,7 +272,7 @@ global setting.  For global setting and more information, see
                                         url-or-port*
                                         ""
                                         callback* sessions 0)
-                       (lambda (&rest ignore) 
+                       (lambda (&rest ignore)
                          (when callback* (funcall callback* nil)))))
                     url-or-port callback)
    callback))
