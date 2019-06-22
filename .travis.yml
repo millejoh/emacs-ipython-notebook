@@ -51,7 +51,7 @@ install:
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
     fi
-  - pip install jupyter ipython\<=$IPYTHON
+  - pip install jupyter ipython\<=$IPYTHON jedi\<=0.13.3
   - pip install numpy
   - pip install matplotlib
   - |
