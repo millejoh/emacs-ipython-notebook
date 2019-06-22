@@ -5,7 +5,10 @@
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
 (defcustom ein:polymode nil
-  "Turn off hacky major mode emulations, turn on polymode.  Emacs must be restarted!"
+  "When enabled ein will use polymode to provide multi-major mode
+support in a notebook buffer, otherwise ein's custom and outdated
+multi-major mode support will be used. Emacs must be restarted
+after changing this setting!"
   :type 'boolean
   :set (lambda (symbol value)
          (set-default symbol value)

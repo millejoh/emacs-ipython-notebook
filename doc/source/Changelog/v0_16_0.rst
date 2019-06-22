@@ -1,0 +1,27 @@
+
+
+.. _changelog_0_16_0:
+
+
+v0.16.0
+-------
+
+Support for auto-complete as a completion backend in ein is now deprecated and
+will eventually disappear completely. For code completion use either
+company-mode by setting :el:symbol:`ein:completion-backend` to
+:el:symbol:`ein:use-company-backend` or enable polymode (see
+:el:symbol:`ein:polymode`) to enable completion via whatever native support you
+have configured for ``python-mode``.
+
+Support for polymode is much improved and sometime in the next release or two
+it will become the default mode of interaction in notebook buffers.
+
+As always, numerous bug fixes and pull requests. 32 PR's this time around, see
+PR's `483`_ - `553`_. You will also notice the majority of these are from the prolific
+`@dickmao`_, so be sure to buy him a cup of his favorite libation should you happen
+to run into him in your travels.
+
+.. _483: https://github.com/millejoh/emacs-ipython-notebook/pull/483
+.. _553: https://github.com/millejoh/emacs-ipython-notebook/pull/553
+.. _@dickmao: https://github.com/dickmao/
+

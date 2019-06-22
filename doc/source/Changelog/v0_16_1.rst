@@ -1,0 +1,11 @@
+
+.. _changelog_0_16_1:
+
+
+v0.16.1
+-------
+
+Hotfix for issue `559`_ .
+
+
+.. _559: https://github.com/millejoh/emacs-ipython-notebook/issue/559

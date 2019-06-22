@@ -23,6 +23,7 @@ along with ein_inspector.py.  If not, see <http://www.gnu.org/licenses/>.
 import json
 import inspect
 
+
 def generate_inspector_data(obj_str, globals, locals):
     odata = {'name': obj_str}
     try:

@@ -28,8 +28,8 @@
 (require 'ein-dev)
 
 (defcustom ein:jupyter-server-buffer-name "*ein:jupyter-server*"
-  "The name of the buffer to run a jupyter notebook server
-  session in."
+  "The name of the buffer for the jupyter notebook server
+session."
   :group 'ein
   :type 'string)
 
