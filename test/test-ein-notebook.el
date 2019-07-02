@@ -902,6 +902,14 @@ defined."
           (should (equal (assoc-default 'source (elt cells 0) #'eq) text)))
       (should (zerop (length cells))))))
 
+(ert-deftest ein:notebook-saves-latin ()
+  (with-current-buffer (ein:testing-notebook-make-new)
+    (let ((latin "«utf-8 cannot handle these»"))
+      ;; Edit notebook.
+      (ein:cell-goto (ein:get-cell-at-point))
+      (insert latin)
+      (should (ein:notebook-save-notebook (ein:get-notebook))))))
+
 (ert-deftest ein:notebook-to-json-after-closing-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
