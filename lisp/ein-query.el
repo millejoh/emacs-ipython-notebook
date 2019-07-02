@@ -88,6 +88,7 @@ aborts).  Instead you will see Race! in debug messages.
                                 (append (plist-get settings :headers)
                                         (list (cons "X-XSRFTOKEN" xsrf)))))
       (setf (gethash host ein:query-xsrf-cache) xsrf))
+    (setq settings (plist-put settings :encoding 'binary))
     settings))
 
 (defcustom ein:max-simultaneous-queries 100
