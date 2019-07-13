@@ -111,6 +111,10 @@ install:
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
+  - cask install
+  - cask clean-elc
+  - cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
+  - cask exec ecukes --reporter magnars
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
