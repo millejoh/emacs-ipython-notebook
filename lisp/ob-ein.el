@@ -319,29 +319,32 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
 (defun ob-ein--edit-ctrl-c-ctrl-c ()
   "C-c C-c mapping in ein:connect-mode-map."
   (interactive)
-  (org-edit-src-save)
-  (when (boundp 'org-src--beg-marker)
-    (let* ((beg org-src--beg-marker)
-           (buf (marker-buffer beg)))
-      (with-current-buffer buf
-        (save-excursion
-          (goto-char beg)
-          (org-ctrl-c-ctrl-c))))))
+  (if (not (org-src-edit-buffer-p))
+      (ein:connect-run-buffer)
+    (org-edit-src-save)
+    (when (boundp 'org-src--beg-marker)
+      (let* ((beg org-src--beg-marker)
+             (buf (marker-buffer beg)))
+        (with-current-buffer buf
+          (save-excursion
+            (goto-char beg)
+            (org-ctrl-c-ctrl-c)))))))
 
+(defvar ob-ein-babel-edit-polymode-ignore t)
 
 (defun org-babel-edit-prep:ein (babel-info)
-  (if ein:polymode
+  (if (and ein:polymode (not ob-ein-babel-edit-polymode-ignore))
       (progn
         (use-local-map (copy-keymap python-mode-map))
         (local-set-key "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))
     (let* ((buffer (current-buffer))
-           (processed-params (org-babel-process-params babel-info))
-           (session (or (ein:aand (cdr (assoc :session processed-params))
+           (processed-parameters (nth 2 babel-info))
+           (session (or (ein:aand (cdr (assoc :session processed-parameters))
                                   (unless (string= "none" it)
                                     (format "%s" it)))
                         ein:url-localhost))
-           (lang (nth 0 (org-babel-get-src-block-info)))
-           (kernelspec (or (cdr (assoc :kernelspec processed-params))
+           (lang "ein-python")
+           (kernelspec (or (cdr (assoc :kernelspec processed-parameters))
                            (ein:aif (cdr (assoc lang org-src-lang-modes))
                                (cons 'language (format "%s" it))
                              (error "ob-ein--execute-body: %s not among %s"
@@ -351,8 +354,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
        kernelspec
        (lambda (notebook)
          (ein:connect-buffer-to-notebook notebook buffer t)
-         (use-local-map (copy-keymap ein:connect-mode-map))
-         (local-set-key "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))))))
+         (define-key ein:connect-mode-map "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))))))
 
 (defun org-babel-edit-prep:ein-python (babel-info)
   (org-babel-edit-prep:ein babel-info))
