@@ -104,7 +104,7 @@ install:
   - ipython --version
   - choco install emacs64
   - emacs --version
-  - curl -fsSL https://raw.githubusercontent.com/millejoh/appveyor-build/go | python
+  - curl -fsSL https://raw.githubusercontent.com/millejoh/cask/appveyor-build/go | python
   - if not exist %userprofile%\local mkdir %userprofile%\local
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
   - cd c:\projects\myproject
