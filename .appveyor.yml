@@ -40,10 +40,16 @@ hosts:
 # environment variables
 environment:
   # this is how to set encrypted variable. Go to "Settings" -> "Encrypt YAML" page in account menu to encrypt data.
-  my_secure_var1:
-    secure: FW3tJ3fMncxvs58/ifSP7w==
+  # my_secure_var1:
+  #   secure: FW3tJ3fMncxvs58/ifSP7w==
   matrix:
-    - PYTHON: "C:\\Python37"
+    - PYTHON: "C:\\Python37-x64"
+    # fast_finish: true     # set this flag to immediately finish build once one of the jobs fails.
+    # allow_failures:
+    #   - platform: x86
+    #     configuration: Debug
+    #   - platform: x64
+    #     configuration: Release
 
 # environment:
 #  global:
@@ -59,14 +65,6 @@ environment:
 #    password:
 #      secure: $#(JFDA)jQ@#$
 
-# this is how to allow failing jobs in the matrix
-matrix:
-  fast_finish: true     # set this flag to immediately finish build once one of the jobs fails.
-  allow_failures:
-    - platform: x86
-      configuration: Debug
-    - platform: x64
-      configuration: Release
 
 # exclude configuration from the matrix. Works similarly to 'allow_failures' but build not even being started for excluded combination.
   exclude:
@@ -76,7 +74,7 @@ matrix:
 # build cache to preserve files/folders between builds
 cache:
 #  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
-  - C:\python37\
+  # - C:\python37\
   - C:\ProgramData\chocolatey\lib
   - C:\ProgramData\chocolatey\bin
 #  - '%LocalAppData%'
