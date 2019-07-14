@@ -104,17 +104,16 @@ install:
   - ipython --version
   - choco install emacs64
   - emacs --version
-  - curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
+  - curl -fsSL https://raw.githubusercontent.com/millejoh/appveyor-build/go | python
   - if not exist %userprofile%\local mkdir %userprofile%\local
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
   - cd c:\projects\myproject
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - cask install
+  - cask install --debug
   - cask clean-elc
-  - cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
-  - cask exec ecukes --reporter magnars
+  - cask exec ert-runner -L ./lisp -L ./test -l test/testein-loader.el
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
