@@ -42,6 +42,8 @@ environment:
   # this is how to set encrypted variable. Go to "Settings" -> "Encrypt YAML" page in account menu to encrypt data.
   my_secure_var1:
     secure: FW3tJ3fMncxvs58/ifSP7w==
+  matrix:
+    - PYTHON: "C:\\Python37"
 
 # environment:
 #  global:
@@ -74,7 +76,7 @@ matrix:
 # build cache to preserve files/folders between builds
 cache:
 #  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
-  - C:\python27\
+  - C:\python37\
   - C:\ProgramData\chocolatey\lib
   - C:\ProgramData\chocolatey\bin
 #  - '%LocalAppData%'
@@ -107,13 +109,9 @@ install:
   - curl -fsSL https://raw.githubusercontent.com/millejoh/cask/appveyor-build/go | python
   - if not exist %userprofile%\local mkdir %userprofile%\local
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
-  - cd c:\projects\myproject
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - cask install --debug
-  - cask clean-elc
-  - cask exec ert-runner -L ./lisp -L ./test -l test/testein-loader.el
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
@@ -214,6 +212,11 @@ build: off
 #test_script:
 #  - cd c:\projects\myproject
 #  - make quick
+test_script:
+  - cd c:\projects\myproject
+  - cask install --debug
+  - cask clean-elc
+  - cask exec ert-runner -L ./lisp -L ./test -l test/testein-loader.el
 
 # scripts to run after tests
 #after_test:
