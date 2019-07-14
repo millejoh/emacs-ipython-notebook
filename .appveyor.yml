@@ -50,6 +50,9 @@ environment:
     #     configuration: Debug
     #   - platform: x64
     #     configuration: Release
+    # exclude:
+    #   - platform: x86
+    #     configuration: Debug
 
 # environment:
 #  global:
@@ -67,9 +70,6 @@ environment:
 
 
 # exclude configuration from the matrix. Works similarly to 'allow_failures' but build not even being started for excluded combination.
-  exclude:
-    - platform: x86
-      configuration: Debug
 
 # build cache to preserve files/folders between builds
 cache:
