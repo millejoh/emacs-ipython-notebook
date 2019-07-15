@@ -99,17 +99,19 @@ cache:
 # scripts that run after cloning repository
 install:
   # to run script as a PowerShell command prepend it with ps:
+  - if not exist %userprofile%\local mkdir %userprofile%\local
+  - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
+  - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
+  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
+  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
   - python -m pip install jupyter
   - jupyter kernelspec list
   - ipython --version
   - choco install emacs64
   - emacs --version
   - curl -fsSL https://raw.githubusercontent.com/millejoh/cask/appveyor-build/go | python
-  - if not exist %userprofile%\local mkdir %userprofile%\local
-  - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
-  - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
-  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
-  - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
+  - cd c:\projects\myproject
+  - cask install --debug
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
