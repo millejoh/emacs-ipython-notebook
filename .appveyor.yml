@@ -93,8 +93,8 @@ install:
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - %PYTHON%\\python -m pip install jupyter
-  - %PYTHON%\\python -m pip install invoke
+  - %PYTHON%\\python.exe -m pip install jupyter
+  - %PYTHON%\\python.exe -m pip install invoke
   - jupyter kernelspec list
   - ipython --version
   - choco install emacs64
