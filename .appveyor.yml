@@ -39,20 +39,9 @@ hosts:
 
 # environment variables
 environment:
-  # this is how to set encrypted variable. Go to "Settings" -> "Encrypt YAML" page in account menu to encrypt data.
-  # my_secure_var1:
-  #   secure: FW3tJ3fMncxvs58/ifSP7w==
+  fast_finish: true
   matrix:
     - PYTHON: "C:\\Python37-x64"
-    # fast_finish: true     # set this flag to immediately finish build once one of the jobs fails.
-    # allow_failures:
-    #   - platform: x86
-    #     configuration: Debug
-    #   - platform: x64
-    #     configuration: Release
-    # exclude:
-    #   - platform: x86
-    #     configuration: Debug
 
 # environment:
 #  global:
@@ -104,8 +93,8 @@ install:
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - python -m pip install jupyter
-  - python -m pip install invoke
+  - %PYTHON%\\python -m pip install jupyter
+  - %PYTHON%\\python -m pip install invoke
   - jupyter kernelspec list
   - ipython --version
   - choco install emacs64
