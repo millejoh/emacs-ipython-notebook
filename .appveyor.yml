@@ -94,7 +94,8 @@ install:
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
   - "%PYTHON%\\python.exe -m pip install --upgrade pip"
-  - "%PYTHON%\\python.exe -m pip install jupyter jedi <= 0.13.3"
+  - "%PYTHON%\\python.exe -m pip install jedi<=0.13.3"
+  - "%PYTHON%\\python.exe -m pip install jupyter"
   - "%PYTHON%\\python.exe -m pip install numpy"
   - "%PYTHON%\\python.exe -m pip install matplotlib"
   - "%PYTHON%\\python.exe -m pip install invoke"
