@@ -93,15 +93,18 @@ install:
   - set PATH=%PATH%;%userprofile%\.cask\bin;\msys64\usr\bin;%PYTHON%\Scripts
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - "%PYTHON%\\python.exe -m pip install jupyter"
+  - "%PYTHON%\\python.exe -m pip install jupyter jedi\<=0.13.3"
+  - "%PYTHON%\\python.exe -m pip install numpy"
+  - "%PYTHON%\\python.exe -m pip install matplotlib"
   - "%PYTHON%\\python.exe -m pip install invoke"
   - jupyter kernelspec list
   - ipython --version
+  - curl --version
   - choco install emacs64
   - emacs --version
   - curl -fsSL https://raw.githubusercontent.com/millejoh/cask/appveyor-build/go | python
   - cd c:\projects\myproject
-  - invoke install
+  - invoke test-compile
   - invoke test-unit
   - invoke test-int
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
