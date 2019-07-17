@@ -112,6 +112,8 @@ install:
   - curl -fsSL https://raw.githubusercontent.com/millejoh/cask/appveyor-build/go | python
   - cd c:\projects\myproject
   - cask install --debug
+  - cask clean-elc
+  - cask exec ert-runner -L ./lisp -L ./test -l test/testein-loader.el
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
