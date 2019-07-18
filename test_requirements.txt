@@ -1,0 +1,6 @@
+jedi <= 0.13.3
+jupyter
+ipython
+numpy
+matplotlib
+invoke
