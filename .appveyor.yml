@@ -105,6 +105,7 @@ install:
   - invoke test-compile
   - invoke test-unit
   - invoke test-int
+  - bash -lc "cd /c/projects/myproject ; make test"
 #  - bash -lc "cd /c/projects/myproject ; bash tools/install-cask.sh"
 #  - choco install gnuwin32-make.portable
 
