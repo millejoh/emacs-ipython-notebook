@@ -36,7 +36,7 @@ clone_depth: 5                      # clone entire repository history if not def
 environment:
   PYTHON: C:\Python37-x64
   MINICONDA: C:\Miniconda3-x64
-  PATH: %userprofile%\.cask\bin;C:\msys64\usr\bin;%PYTHON%\Scripts;%PATH%
+  PATH:  '%userprofile%\.cask\bin;C:\msys64\usr\bin;%PYTHON%\Scripts;%PATH%'
 
 matrix:
   fast_finish: true
