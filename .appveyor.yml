@@ -82,7 +82,7 @@ build_script:
 
 test_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - ps: $env:PATH = "$(cask exec-path');$env:PATH"
+  - ps: $env:PATH = "$('cask exec-path');$env:PATH"
   - ps: $env:EMACSLOADPATH = ('cask load-path')
   - invoke test-unit
   - invoke test-int

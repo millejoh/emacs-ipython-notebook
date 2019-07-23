@@ -330,7 +330,11 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
             (goto-char beg)
             (org-ctrl-c-ctrl-c)))))))
 
-(defvar ob-ein-babel-edit-polymode-ignore t)
+(defcustom ob-ein-babel-edit-polymode-ignore nil
+  "When true override default python mode key mapping for `\C-c\C-c' while inside a babel edit buffer.
+Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute the code block being edited."
+  :group 'ein
+  :type '(boolean))
 
 (defun org-babel-edit-prep:ein (babel-info)
   (if (and ein:polymode (not ob-ein-babel-edit-polymode-ignore))
