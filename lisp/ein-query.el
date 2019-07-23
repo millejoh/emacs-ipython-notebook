@@ -84,7 +84,6 @@ aborts).  Instead you will see Race! in debug messages.
          (xsrf (or (cdr (assoc-string "_xsrf" cookies))
                    (gethash host ein:query-xsrf-cache))))
     (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Found xsrf: %s" xsrf)
-    (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Cookies for host %s are:\n   %s" host cookies)
     (setq settings (plist-put settings :headers
                               (append (plist-get settings :headers)
                                       (list (cons "User-Agent" "Mozilla/4.0")))))
@@ -93,6 +92,7 @@ aborts).  Instead you will see Race! in debug messages.
                                 (append (plist-get settings :headers)
                                         (list (cons "X-XSRFTOKEN" xsrf)))))
       (setf (gethash host ein:query-xsrf-cache) xsrf))
+    (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Header settings %s" (plist-get settings :headers))
     (setq settings (plist-put settings :encoding 'binary))
     settings))
 
