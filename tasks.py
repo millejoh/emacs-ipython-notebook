@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -53,11 +54,26 @@ def test_poly(c):
 
 
 @task
-def test_int(c):
-    c.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el")
-    c.run("cask exec ecukes --reporter magnars")
+def test_int(c, curl_path=None):
+    current_path = os.environ['PATH']
+    execpath = c.run("cask exec-path")
+    loadpath = c.run("cask load-path")
+    updated_env = {'PATH': '{};{};{}'.format(curl_path, execpath.stdout, current_path),
+                   'EMACSLOADPATH': '{}'.format(loadpath.stdout)}
+    c.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el",
+          env=updated_env)
+    c.run("cask exec ecukes --reporter magnars", env=updated_env)
 
 
 @task
 def test_unit(c):
     c.run("cask exec ert-runner -L ./lisp -L ./test -l test/testein-loader.el")
+
+@task
+def check_var(c):
+    var = c.run("cask exec-path")
+    print("The cask exec path is = {}".format(var.stdout))
+
+@task
+def windowed_testfunc(c):
+    c.run("cask exec ert-runner --win -L ./lisp -L ./test -l test/testfunc.el test/test-func.el")
