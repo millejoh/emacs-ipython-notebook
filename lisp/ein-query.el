@@ -83,6 +83,9 @@ aborts).  Instead you will see Race! in debug messages.
          (cookies (request-cookie-alist host "/" securep))
          (xsrf (or (cdr (assoc-string "_xsrf" cookies))
                    (gethash host ein:query-xsrf-cache))))
+    (setq settings (plist-put settings :headers
+                              (append (plist-get settings :headers)
+                                      (list (cons "User-Agent" "Mozilla/4.0")))))
     (when xsrf
       (setq settings (plist-put settings :headers
                                 (append (plist-get settings :headers)
@@ -102,7 +105,7 @@ variable to a reasonable value you can avoid this situation."
 
 (defsubst ein:query-enforce-curl ()
   (when (not (eq request-backend 'curl))
-    (ein:display-warning 
+    (ein:display-warning
      (format "request-backend: %s unsupported" request-backend))
     (if (executable-find "curl")
         (setq request-backend 'curl)
