@@ -89,3 +89,8 @@ test_script:
   - invoke test-unit
   - invoke test-int
   # - bash -lc "cd /c/projects/myproject ; make test"
+
+# Uncomment the following if you need to connect to build after it finishes to
+# troubleshoot any issues.
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
