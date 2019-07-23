@@ -239,7 +239,7 @@ appropriate language major mode. Functionality is very similar to
     (if raw-cell-p
         (funcall ein:raw-cell-default-edit-mode)
       (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
-	(julia (julia-mode))
+        (julia (julia-mode))
         (python (python-mode))
         (R (R-mode))))))
 
