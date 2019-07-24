@@ -86,13 +86,13 @@ aborts).  Instead you will see Race! in debug messages.
     (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Found xsrf: %s" xsrf)
     (setq settings (plist-put settings :headers
                               (append (plist-get settings :headers)
-                                      (list (cons "User-Agent" "Mozilla/4.0")))))
+                                      (list (cons "User-Agent" "Mozilla/5.0")))))
     (when xsrf
       (setq settings (plist-put settings :headers
                                 (append (plist-get settings :headers)
                                         (list (cons "X-XSRFTOKEN" xsrf)))))
       (setf (gethash host ein:query-xsrf-cache) xsrf))
-    (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Header settings %s" (plist-get settings :headers))
+    (ein:log 'info "EIN:QUERY-PREPARE-HEADER: Header settings %S" (plist-get settings :headers))
     (setq settings (plist-put settings :encoding 'binary))
     settings))
 

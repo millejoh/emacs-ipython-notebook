@@ -24,11 +24,6 @@
   (setq python-indent-guess-indent-offset-verbose nil))
 (ein:dev-start-debug)
 (ein:jupyter-server-start *ein:testing-jupyter-server-command* *ein:testing-jupyter-server-directory*)
-(let ((curl-command (request--curl-command "127.0.0.1:8888/api")))
-  (with-temp-buffer
-    (ein:log 'info "ERT Using curl command: %s." curl-command)
-    (call-process (first curl-command) nil t nil "--version")
-    (ein:log 'info "ERT Using curl version: %s." (buffer-string))))
 (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 15000 1000)
 (defvar *ein:testing-port* (car (ein:jupyter-server-conn-info)))
 (fset 'y-or-n-p (lambda (prompt) nil))
