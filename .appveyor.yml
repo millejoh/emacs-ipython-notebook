@@ -60,6 +60,7 @@ install:
   # - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
   - set PATH=%userprofile%\.cask\bin;C:\msys64\usr\bin;%PYTHON%\Scripts;%PATH%
   - "%PYTHON%\\python.exe -m pip install --upgrade pip"
+  - "%PYTHON%\\python.exe -m pip install pathlib2"
   - "%PYTHON%\\python.exe -m pip install -r test_requirements.txt"
   - jupyter kernelspec list
   - ipython --version
