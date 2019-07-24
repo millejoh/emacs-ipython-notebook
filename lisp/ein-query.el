@@ -86,6 +86,9 @@ aborts).  Instead you will see Race! in debug messages.
     (ein:log 'debug "EIN:QUERY-PREPARE-HEADER: Found xsrf: %s" xsrf)
     (setq settings (plist-put settings :headers
                               (append (plist-get settings :headers)
+                                      (list (cons "Content-Type" "application/json")))))
+    (setq settings (plist-put settings :headers
+                              (append (plist-get settings :headers)
                                       (list (cons "User-Agent" "Mozilla/5.0")))))
     (when xsrf
       (setq settings (plist-put settings :headers
