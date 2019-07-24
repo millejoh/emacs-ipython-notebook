@@ -35,7 +35,7 @@ clone_depth: 5                      # clone entire repository history if not def
 
 # environment variables
 environment:
-  PYTHON: C:\Python37-x64
+  PYTHON: C:\Python27
   MINICONDA: C:\Miniconda3-x64
   APPVEYOR_RDP_PASSWORD: ein_t3st1ing_admin
 
@@ -92,5 +92,5 @@ test_script:
 
 # Uncomment the following if you need to connect to build after it finishes to
 # troubleshoot any issues.
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# on_finish:
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
