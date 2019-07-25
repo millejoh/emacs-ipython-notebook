@@ -1,4 +1,4 @@
-;;; ein-query.el --- jQuery like interface on to of url-retrieve
+;;; ein-query.el --- jQuery like interface on to of url-retrieve -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -104,7 +104,19 @@ variable to a reasonable value you can avoid this situation."
   :group 'ein
   :type 'integer)
 
+(let ((checked-curl-version nil))
+  (defun ein:warn-on-curl-version ()
+    (let ((curl (executable-find request-curl)))
+      (unless checked-curl-version
+        (setq checked-curl-version t)
+        (with-temp-buffer
+          (call-process curl nil t nil "--version")
+          (goto-char (point-min))
+          (when (search-forward "mingw32" nil t)
+            (warn "The current version of curl (%s) may not work with ein. We recommend you install the latest, official version from the curl website: https://curl.haxx.se" (buffer-string))))))))
+
 (defsubst ein:query-enforce-curl ()
+  (ein:warn-on-curl-version)
   (when (not (eq request-backend 'curl))
     (ein:display-warning
      (format "request-backend: %s unsupported" request-backend))
