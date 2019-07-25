@@ -58,7 +58,7 @@ install:
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
   # - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
   - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs
-  - set PATH=C:\ProgramData\chocolatey\lib\curl\tools;%userprofile%\.cask\bin;C:\msys64\usr\bin;%PYTHON%\Scripts;%PATH%
+  - set PATH=C:\ProgramData\chocolatey\bin;%userprofile%\.cask\bin;C:\msys64\usr\bin;%PYTHON%\Scripts;%PATH%
   - "%PYTHON%\\python.exe -m pip install --upgrade pip"
   - "%PYTHON%\\python.exe -m pip install pathlib2"
   - "%PYTHON%\\python.exe -m pip install -r test_requirements.txt"
