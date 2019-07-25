@@ -53,7 +53,7 @@ cache:
 
 # scripts that run after cloning repository
 install:
-  # to run script as a PowerShell command prepend it with ps:
+  - choco install curl
   # - if not exist %userprofile%\local mkdir %userprofile%\local
   - if not exist %userprofile%\.emacs.d mkdir %userprofile%\.emacs.d
   # - copy C:\projects\myproject\tools\appveyor.init.el %userprofile%\.emacs.d\init.el
@@ -93,5 +93,5 @@ test_script:
 
 # Uncomment the following if you need to connect to build after it finishes to
 # troubleshoot any issues.
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# on_finish:
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
