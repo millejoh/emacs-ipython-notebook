@@ -69,8 +69,6 @@ def test_int(c, curl_path=None):
     else:
         updated_env = {'PATH': '{};{}'.format(execpath.stdout, current_path),
                        'EMACSLOADPATH': '{}'.format(loadpath.stdout)}
-    import pdb
-    pdb.set_trace()
     c.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el",
           env=updated_env)
     c.run("cask exec ecukes --reporter magnars", env=updated_env)
