@@ -28,10 +28,61 @@ def generate_cask_env(ctx, curl_path):
     return cask_env
 
 
+def prepare_ecukes_args(with_doc, with_file, verbose, quiet, help, debug,
+                        tags, script, no_win, win, reporter, timeout,
+                        patterns, anti_patterns, only_failing,
+                        error_log):
+    sarg = ""
+    if with_doc:
+        sarg += " --with-doc"
+    if with_file:
+        sarg += " --with-file"
+    if verbose:
+        sarg += " --verbose"
+    if quiet:
+        sarg += " --quiet"
+    if help:
+        sarg += " --help"
+    if debug:
+        sarg += " --debug"
+    if tags:
+        sarg += f" --tags {tags}"
+    if script:
+        sarg += " --script"
+    if no_win:
+        sarg += " --no-win"
+    if win:
+        sarg += " --win"
+    if reporter:
+        sarg += f" --reporter {reporter}"
+    if timeout:
+        sarg += f" --timeout {timeout}"
+    if patterns:
+        sarg += f" --patterns {patterns}"
+    if anti_patterns:
+        sarg += f" --anti-patterns {anti_patterns}"
+    if only_failing:
+        sarg += " --only-failing"
+    if error_log:
+        sarg += f" --error-log {error_log}"
+    return sarg.strip()
+
 @task
-def ecukes(ctx, curl_path=None, reporter="magnars"):
+def ecukes(ctx, curl_path=None, with_doc=False, with_file=False, verbose=False,
+           quiet=False, help=False, debug=False, script=False,
+           no_win=False, win=False, reporter="magnars", timeout=None,
+           patterns=None, anti_patterns=None, tags=None, only_failing=False,
+           error_log=None):
+    # import pdb
+    # pdb.set_trace()
     cask_env = generate_cask_env(ctx, curl_path)
-    cask_env["ECUKES_ARGS"] = f"--reporter {reporter}"
+    cask_env["ECUKES_ARGS"] = prepare_ecukes_args(with_doc, with_file, verbose,
+                                                  quiet, help, debug, tags,
+                                                  script, no_win, win,
+                                                  reporter, timeout, patterns,
+                                                  anti_patterns, only_failing,
+                                                  error_log)
+    #f"--reporter {reporter} --tags ~@julia,~@ir,~@memory,~@switch"
     ecukes_bindir = find_file(os.getcwd(), "ecukes")
     ecukes_cli = ecukes_bindir.parent.parent.joinpath("ecukes-cli.el")
     ctx.run("emacs --script {} -Q".format(ecukes_cli), env=cask_env)
