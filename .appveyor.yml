@@ -88,7 +88,7 @@ test_script:
   # - ps: $env:PATH = "$(cask exec-path);$env:PATH"
   # - ps: $env:EMACSLOADPATH = $(cask load-path)
   - invoke test-unit
-  - invoke test-int
+  # - invoke test-int
   # - bash -lc "cd /c/projects/myproject ; make test"
 
 # Uncomment the following if you need to connect to build after it finishes to

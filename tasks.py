@@ -85,7 +85,12 @@ def ecukes(ctx, curl_path=None, with_doc=False, with_file=False, verbose=False,
     #f"--reporter {reporter} --tags ~@julia,~@ir,~@memory,~@switch"
     ecukes_bindir = find_file(os.getcwd(), "ecukes")
     ecukes_cli = ecukes_bindir.parent.parent.joinpath("ecukes-cli.el")
-    ctx.run("emacs --script {} -Q".format(ecukes_cli), env=cask_env)
+    if win:
+        ctx.run("emacs --load {} -Q".format(ecukes_cli), env=cask_env)
+    elif no_win:
+        ctx.run("emacs -nw --load {} -Q".format(ecukes_cli), env=cask_env)
+    else:
+        ctx.run("emacs --script {} -Q".format(ecukes_cli), env=cask_env)
 
 
 @task
@@ -142,7 +147,7 @@ def test_int(ctx, curl_path=None):
     updated_env = generate_cask_env(ctx, curl_path)
     ctx.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el",
             env=updated_env)
-    ecukes(ctx, curl_path=curl_path, reporter="magnars")
+    #ecukes(ctx, curl_path=curl_path, reporter="magnars")
 
 
 @task
