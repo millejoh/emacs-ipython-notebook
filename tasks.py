@@ -134,20 +134,24 @@ def test_jupyterhub(c):
 
 
 @task
-def test_poly(c):
-    c.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el")
+def test_poly(ctx, curl_path):
+    updated_env = generate_cask_env(ctx, curl_path)
+    ctx.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el", env=updated_env)
     shutil.copy('test/test-poly.el', 'features/support/test-poly.el')
-    c.run("cask exec ecukes --report magnars")
+    ecukes(ctx, curl_path=curl_path, reporter="magnars")
     Path('features/support/test-poly.el').unlink()
 
 
+@task
+def test_func(ctx, curl_path=None):
+    updated_env = generate_cask_env(ctx, curl_path)
+    ctx.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el",
+            env=updated_env)
 
 @task
 def test_int(ctx, curl_path=None):
     updated_env = generate_cask_env(ctx, curl_path)
-    ctx.run("cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el",
-            env=updated_env)
-    #ecukes(ctx, curl_path=curl_path, reporter="magnars")
+    ecukes(ctx, curl_path=curl_path, reporter="magnars")
 
 
 @task
