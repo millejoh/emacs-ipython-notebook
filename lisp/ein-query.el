@@ -1,4 +1,4 @@
-;;; ein-query.el --- jQuery like interface on to of url-retrieve
+;;; ein-query.el --- jQuery like interface on to of url-retrieve -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -83,6 +83,10 @@ aborts).  Instead you will see Race! in debug messages.
          (cookies (request-cookie-alist host "/" securep))
          (xsrf (or (cdr (assoc-string "_xsrf" cookies))
                    (gethash host ein:query-xsrf-cache))))
+    (ein:log 'debug "EIN:QUERY-PREPARE-HEADER: Found xsrf: %s" xsrf)
+    (setq settings (plist-put settings :headers
+                              (append (plist-get settings :headers)
+                                      (list (cons "User-Agent" "Mozilla/5.0")))))
     (when xsrf
       (setq settings (plist-put settings :headers
                                 (append (plist-get settings :headers)
@@ -100,9 +104,21 @@ variable to a reasonable value you can avoid this situation."
   :group 'ein
   :type 'integer)
 
+(let ((checked-curl-version nil))
+  (defun ein:warn-on-curl-version ()
+    (let ((curl (executable-find request-curl)))
+      (unless checked-curl-version
+        (setq checked-curl-version t)
+        (with-temp-buffer
+          (call-process curl nil t nil "--version")
+          (goto-char (point-min))
+          (when (search-forward "mingw32" nil t)
+            (warn "The current version of curl (%s) may not work with ein. We recommend you install the latest, official version from the curl website: https://curl.haxx.se" (buffer-string))))))))
+
 (defsubst ein:query-enforce-curl ()
+  (ein:warn-on-curl-version)
   (when (not (eq request-backend 'curl))
-    (ein:display-warning 
+    (ein:display-warning
      (format "request-backend: %s unsupported" request-backend))
     (if (executable-find "curl")
         (setq request-backend 'curl)

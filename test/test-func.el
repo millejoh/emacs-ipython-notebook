@@ -233,7 +233,7 @@ See the definition of `create-image' for how it works."
                         with orphans = (seq-filter #'orphans-find
                                                    (list-system-processes))
                         until (and (null orphans) (ein:jupyter-server-process))
-                        do (sleep-for 0 1000) 
+                        do (sleep-for 0 1000)
                            (setq orphans (seq-filter #'orphans-find (list-system-processes)))
                         finally return orphans))))
   (ein:log 'verbose "ERT TESTING-JUPYTER-STOP-SERVER end"))

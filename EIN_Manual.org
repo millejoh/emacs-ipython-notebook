@@ -117,8 +117,9 @@ Travis token: 2yP9mWPstlPi9kUoK9DIKw 2yP9mWPstlPi9kUoK9DIKw
 
 ** Notebook Security
 Life gets more complicated with jupyter notebook [[https://blog.jupyter.org/2016/12/21/jupyter-notebook-4-3-1/][v4.3.1]], though the intentions
-are purely altruistic. The notebook server now requires a ~[[http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection][xsrf]]~ token via
-cookies to validate requests.
+are purely altruistic. The notebook server now requires a
+~[[http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection][xsrf]]~
+token via cookies to validate requests.
 
 If I interpret the documentation correctly, a successful login should set a
 _xsrf cookie, which then needs to be included in the header with all additional
@@ -131,13 +132,16 @@ If we are using the curl backend for request:
 Once a user succesfully authenticates against a running jupyter server via
 either ~ein:notebooklist-login~ curl will store two cookies in the
 ~curl-cookie-jar~ file. The location of this file is set by the variable
-~[[help:request-storage-directory][request-storage-directory]]~. One cookie is for the token authentication, and the
-other is the xsrf token. [[*Example curl cookie jar file][Below]] is an example of cookies that were set after
-authenticating against a jupyter notebook server running on my personal aws
-instance. On subsequent calls to the content API request/curl will automatically
-supply the correct cookies. The websocket package uses the ~[[info:url#Top][url]]~ package to set
-cookies, and so will not know about the authentication and ~xsrf~ tokens unless
-EIN does some extra work. EIN does this in the ~[[file:c:/Users/mille/Dropbox/Projects/emacs-ipython-notebook/lisp/ein-websocket.el::(defun ein:websocket--prepare-cookies (url)][ein:websocket--prepare-cookies]]~
+~[[help:request-storage-directory][request-storage-directory]]~. One cookie is
+for the token authentication, and the other is the xsrf token. [[*Example curl cookie jar file][Below]] is an
+example of cookies that were set after authenticating against a jupyter notebook
+server running on my personal aws instance. On subsequent calls to the content
+API request/curl will automatically supply the correct cookies. The websocket
+package uses the ~[[info:url#Top][url]]~ package to set cookies, and so will not
+know about the authentication and ~xsrf~ tokens unless EIN does some extra work.
+EIN does this in the
+~[[file:c:/Users/mille/Dropbox/Projects/emacs-ipython-notebook/lisp/ein-websocket.el::(defun
+ein:websocket--prepare-cookies (url)][ein:websocket--prepare-cookies]]~
 function. The function does some extra work to only copy over cookies pertaining
 to the host the websocket is connecting on.
 
@@ -350,8 +354,9 @@ Use the [[info:elisp#Abstract%20Display][abstract display]] and [[info:elisp#Ove
 Should take some time to understand how magit manages its buffers. Magic seems to happen
 in ~[[magit-insert-section][magit-insert-section]]~.
 
-Magit's sections are interesting, but I do not think I am smart enough to use them. I really would like to avoid
-reinventing the wheel, but maybe I can get by just reinventing the spokes.
+Magit's sections are interesting, but I do not think I am smart enough to use
+them. I really would like to avoid reinventing the wheel, but maybe I can get by
+just reinventing the spokes.
 
 #+BEGIN_SRC elisp
   (require 'cl-lib)
@@ -506,7 +511,7 @@ have the ability to interact with Jupyter kernels?
 What we want is to translate Python datastructures to lisp and vice versa. Not
 sure what the wire protocol is for pymacs, but for ein the intermediary is JSON.
 
-Do this like in 
+Do this like in
 
 ** A Tramp backend for EIN
 *** Finding files for remote session ([[https://github.com/millejoh/emacs-ipython-notebook/issues/263][#263]])

@@ -43,11 +43,12 @@
   :type '(repeat (cons string function))
   :group 'ein)
 
-(defmacro ein:smartrep-config (map)
-  `(smartrep-define-key
-    ,map
-    "C-c"
-    ein:smartrep-notebook-mode-alist))
+(when (fboundp 'smartrep-define-key)
+  (defmacro ein:smartrep-config (map)
+    `(smartrep-define-key
+      ,map
+      "C-c"
+      ein:smartrep-notebook-mode-alist)))
 
 (provide 'ein-smartrep)
 

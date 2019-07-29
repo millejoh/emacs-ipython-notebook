@@ -385,6 +385,7 @@ This function is called via `ein:notebook-after-rename-hook'."
      url
      :type "POST"
      :data (json-encode '((:type . "notebook")))
+     :headers (list (cons "Content-Type" "application/json"))
      :parser #'ein:json-read
      :error (apply-partially #'ein:notebooklist-new-notebook-error
                              url-or-port kernelspec path callback no-pop retry)

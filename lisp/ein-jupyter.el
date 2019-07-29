@@ -133,7 +133,7 @@ Once login handshake provides the new URL-OR-PORT, we set various state as perta
 our singleton jupyter server process here."
 
   ;; Would have used `add-function' if it didn't produce gv-ref warnings.
-  (set-process-sentinel 
+  (set-process-sentinel
    proc
    (apply-partially (lambda (url-or-port* sentinel proc* event)
                       (ein:aif sentinel (funcall it proc* event))
@@ -168,7 +168,7 @@ the log of the running jupyter server."
                                 (read-file-name "Server command: " default-directory nil nil
                                                 default-command)
                               default-command)))
-          (notebook-directory 
+          (notebook-directory
            (read-directory-name "Notebook directory: "
                                 (or *ein:last-jupyter-directory*
                                     ein:jupyter-default-notebook-directory))))
@@ -216,32 +216,51 @@ the log of the running jupyter server."
 ;;;###autoload
 (defalias 'ein:stop 'ein:jupyter-server-stop)
 
+(defun ein:shutdown-server (url-or-port)
+  (ein:query-singleton-ajax
+   (list 'content-query-sessions url-or-port)
+   (ein:url url-or-port "api/shutdown")
+   :type "POST"
+   :timeout ein:content-query-timeout
+   :sync t))
+
+(cl-defun ein:shutdown-server-success (url-or-port &rest -ignore-)
+  (ein:log 'info "Notebook server on %s succesfully shut down." url-or-port))
+
+(cl-defun ein:shutdown-server-error (&key symbol-status response &allow-other-keys)
+  (ein:display-warning (format "Signal to shut down server failed with status %s" symbol-status)))
+
+
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   (interactive)
-  (ein:and-let* ((proc (ein:jupyter-server-process))
+  (ein:and-let* ((url-or-port (first (ein:jupyter-server-conn-info)))
                  (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
     (loop repeat 10
           do (ein:query-running-process-table)
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
+    (ein:shutdown-server url-or-port)
+    (sleep-for 2.0)
+    (let ((proc (ein:jupyter-server-process)))
+      (when (and proc (not (eql (process-status proc) 'exit)))
+        (ein:display-warning (format "Notebook server (%s) did not exit cleanly." url-or-port))))
     ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
-    (if (eql system-type 'windows-nt)
-        (delete-process proc)
-      (lexical-let* ((proc proc)
-                     (pid (process-id proc)))
-        (ein:log 'verbose "Signaled %s with pid %s" proc pid)
-        (signal-process pid 15)
-        (run-at-time 2 nil (lambda ()
-                             (ein:log 'verbose "Resignaled %s with pid %s" proc pid)
-                             (signal-process pid 15)))))
+    ;; (if (eql system-type 'windows-nt)
+    ;;     (delete-process proc)
+    ;;   (lexical-let* ((proc proc)
+    ;;                  (pid (process-id proc)))
+    ;;     (ein:log 'verbose "Signaled %s with pid %s" proc pid)
+    ;;     (signal-process pid 15)
+    ;;     (run-at-time 2 nil (lambda ()
+    ;;                          (ein:log 'verbose "Resignaled %s with pid %s" proc pid)
+    ;;                          (signal-process pid 15)))))
 
     (ein:log 'info "Stopped Jupyter notebook server.")
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
-    (multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
-      (ein:notebooklist-list-remove url-or-port))
+    (ein:notebooklist-list-remove url-or-port)
 
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name

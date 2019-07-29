@@ -27,4 +27,3 @@
 (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 15000 1000)
 (defvar *ein:testing-port* (car (ein:jupyter-server-conn-info)))
 (fset 'y-or-n-p (lambda (prompt) nil))
-      
