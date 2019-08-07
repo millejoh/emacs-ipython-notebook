@@ -117,12 +117,13 @@ variable to a reasonable value you can avoid this situation."
 
 (defsubst ein:query-enforce-curl ()
   (ein:warn-on-curl-version)
-  (when (not (eq request-backend 'curl))
+  (unless (eq request-backend 'curl)
     (ein:display-warning
      (format "request-backend: %s unsupported" request-backend))
-    (if (executable-find "curl")
+    (if (executable-find request-curl)
         (setq request-backend 'curl)
-      (ein:display-warning "The 'curl' program was not found"))))
+      (ein:display-warning
+       (format "The %s program was not found" request-curl) :error))))
 
 (defun* ein:query-singleton-ajax (key url &rest settings
                                       &key
