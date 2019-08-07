@@ -241,10 +241,6 @@ the log of the running jupyter server."
           do (sleep-for 0 1000)
           finally (if (not proc)
                       (ein:log 'info "ein:jupyter-server-stop: success")
-                    (ein:display-warning
-                     (format
-                      "ein:jupyter-server-stop: failed with status=%s"
-                      (process-status proc)))
                     (if (eql system-type 'windows-nt)
                         (delete-process proc)
                       (lexical-let ((pid (process-id proc))
