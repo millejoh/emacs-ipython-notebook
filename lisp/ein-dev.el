@@ -113,11 +113,11 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
            (ein:log-level-int-to-name ein:log-message-level)))
 
 ;;;###autoload
-(defun ein:dev-start-debug (&optional ws-callback)
+(defun ein:dev-start-debug ()
   "Enable EIN debugging support.
 When the prefix argument is given, debugging support for websocket
 callback (`websocket-callback-debug-on-error') is enabled."
-  (interactive "P")
+  (interactive)
   (setq debug-on-error t)
 ;; only use these with deferred:sync!  they cause strange failures otherwise!
 ;;  (setq deferred:debug-on-signal t)
@@ -135,8 +135,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
                       (request-log 'debug "%s unreadable" curl-trace)))))
   (setq request-message-level (quote verbose))
   (setq websocket-debug t)
-  (when ws-callback
-    (setq websocket-callback-debug-on-error t))
+  (setq websocket-callback-debug-on-error t)
   (setq ein:debug t)
   (ein:log-set-level 'debug)
   (ein:log-set-message-level 'verbose)
@@ -161,28 +160,31 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (ein:dev-show-debug-setting))
 
 (defun ein:dev-pop-to-debug-channels ()
-  "Open notebok communication channels websocket log buffer."
+  "Open notebook communication channels websocket log buffer."
   (interactive)
-  (pop-to-buffer
-   (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-websocket
-                        (ein:$notebook-kernel ein:%notebook%))))))
+  (-when-let* ((kernel (ein:get-kernel--notebook))
+               (websocket (ein:$kernel-websocket kernel)))
+    (pop-to-buffer
+     (websocket-get-debug-buffer-create
+      (ein:$websocket-ws websocket)))))
 
 (defun ein:dev-pop-to-debug-shell ()
-  "Open shell channel websocket log buffer."
+  "Legacy diagnostic for shell channel that got folded into ein:$kernel-websocket."
   (interactive)
-  (pop-to-buffer
-   (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-shell-channel
-                        (ein:$notebook-kernel ein:%notebook%))))))
+  (-when-let* ((kernel (ein:get-kernel--notebook))
+               (channel (ein:$kernel-shell-channel kernel)))
+    (pop-to-buffer
+     (websocket-get-debug-buffer-create
+      (ein:$websocket-ws channel)))))
 
 (defun ein:dev-pop-to-debug-iopub ()
-  "Open iopub channel websocket log buffer."
+  "Legacy diagnostic for iopub channel that got folded into ein:$kernel-websocket."
   (interactive)
-  (pop-to-buffer
-   (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-iopub-channel
-                        (ein:$notebook-kernel ein:%notebook%))))))
+  (-when-let* ((kernel (ein:get-kernel--notebook))
+               (channel (ein:$kernel-shell-channel kernel)))
+    (pop-to-buffer
+     (websocket-get-debug-buffer-create
+      (ein:$websocket-ws channel)))))
 
 (defun ein:dev-notebook-plain-mode ()
   "Use `ein:notebook-plain-mode'."
@@ -337,14 +339,16 @@ Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
 (defun ein:debug-notebook-to-json-buffer ()
   "Create a new buffer with the json representation of the current notebook."
   (interactive)
-  (let ((content-data (ein:notebook-to-json ein:%notebook%))
-        (bufname (format "*notebook-json:%s" (ein:$notebook-notebook-name ein:%notebook%))))
-    (with-current-buffer (get-buffer-create bufname)
-      (barf-if-buffer-read-only)
-      (erase-buffer)
-      (save-excursion
-        (insert (json-encode content-data))
-        (json-pretty-print (point-min) (point-max))))))
+  (when-let ((notebook (ein:get-notebook)))
+    (let ((content-data (ein:notebook-to-json notebook))
+          (bufname (format "*notebook-json:%s" (ein:$notebook-notebook-name notebook))))
+      (with-current-buffer (get-buffer-create bufname)
+        (barf-if-buffer-read-only)
+        (erase-buffer)
+        (save-excursion
+          (insert (json-encode content-data))
+          (json-pretty-print (point-min) (point-max))))
+      (pop-to-buffer bufname))))
 
 (provide 'ein-dev)
 
