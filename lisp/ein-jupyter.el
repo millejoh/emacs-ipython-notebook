@@ -218,18 +218,11 @@ the log of the running jupyter server."
 
 (defun ein:shutdown-server (url-or-port)
   (ein:query-singleton-ajax
-   (list 'content-query-sessions url-or-port)
+   (list 'shutdown-server url-or-port)
    (ein:url url-or-port "api/shutdown")
    :type "POST"
-   :timeout ein:content-query-timeout
+   :timeout 10 ;; content-query-timeout and query-timeout default nil
    :sync t))
-
-(cl-defun ein:shutdown-server-success (url-or-port &rest -ignore-)
-  (ein:log 'info "Notebook server on %s succesfully shut down." url-or-port))
-
-(cl-defun ein:shutdown-server-error (&key symbol-status response &allow-other-keys)
-  (ein:display-warning (format "Signal to shut down server failed with status %s" symbol-status)))
-
 
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
@@ -242,28 +235,29 @@ the log of the running jupyter server."
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
     (ein:shutdown-server url-or-port)
-    (sleep-for 2.0)
-    (let ((proc (ein:jupyter-server-process)))
-      (when (and proc (not (eql (process-status proc) 'exit)))
-        (ein:display-warning (format "Notebook server (%s) did not exit cleanly." url-or-port))))
-    ;; Both (quit-process) and (delete-process) leaked child kernels, so signal
-    ;; (if (eql system-type 'windows-nt)
-    ;;     (delete-process proc)
-    ;;   (lexical-let* ((proc proc)
-    ;;                  (pid (process-id proc)))
-    ;;     (ein:log 'verbose "Signaled %s with pid %s" proc pid)
-    ;;     (signal-process pid 15)
-    ;;     (run-at-time 2 nil (lambda ()
-    ;;                          (ein:log 'verbose "Resignaled %s with pid %s" proc pid)
-    ;;                          (signal-process pid 15)))))
-
-    (ein:log 'info "Stopped Jupyter notebook server.")
+    (loop repeat 10
+          for proc = (ein:jupyter-server-process)
+          until (not proc)
+          do (sleep-for 0 1000)
+          finally (if (not proc)
+                      (ein:log 'info "ein:jupyter-server-stop: success")
+                    (if (eql system-type 'windows-nt)
+                        (delete-process proc)
+                      (lexical-let ((pid (process-id proc))
+                                    (proc proc))
+                        (ein:log 'info "Signaled %s with pid %s" proc pid)
+                        (signal-process pid 15)
+                        (run-at-time 2 nil
+                                     (lambda ()
+                                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
+                                       (signal-process pid 15)))))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)
-
+    (kill-buffer (ein:notebooklist-get-buffer url-or-port))
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name
-        (write-region (point-min) (point-max) log)))))
+        (write-region (point-min) (point-max) log)))
+))
 
 (provide 'ein-jupyter)
