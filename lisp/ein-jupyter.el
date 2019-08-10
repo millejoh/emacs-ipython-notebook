@@ -221,7 +221,7 @@ the log of the running jupyter server."
    (list 'shutdown-server url-or-port)
    (ein:url url-or-port "api/shutdown")
    :type "POST"
-   :timeout 10 ;; content-query-timeout and query-timeout default nil
+   :timeout 3 ;; content-query-timeout and query-timeout default nil
    :sync t))
 
 ;;;###autoload
@@ -235,7 +235,7 @@ the log of the running jupyter server."
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
     (ein:shutdown-server url-or-port)
-    (loop repeat 10
+    (loop repeat 3
           for proc = (ein:jupyter-server-process)
           until (not proc)
           do (sleep-for 0 1000)

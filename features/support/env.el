@@ -45,24 +45,25 @@
 (defun ein:testing-after-scenario ()
   (ein:testing-flush-queries)
   (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
-    (if ein:%notebooklist%
-        (loop for notebook in (ein:notebook-opened-notebooks)
-              for path = (ein:$notebook-notebook-path notebook)
-              do (ein:notebook-kill-kernel-then-close-command notebook)
-              do (loop repeat 16
-                       until (not (ein:notebook-live-p notebook))
-                       do (sleep-for 0 1000)
-                       finally do (when (ein:notebook-live-p notebook)
-                                    (ein:display-warning (format "cannot close %s" path))))
-              do (when (or (search "Untitled" path) (search "Renamed" path))
-                   (ein:notebooklist-delete-notebook path)
-                   (loop repeat 16
-                         with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
-                         for extant = (file-exists-p fullpath)
-                         until (not extant)
-                         do (sleep-for 0 1000)
-                         finally do (when extant 
-                                      (ein:display-warning (format "cannot del %s" path))))))))
+    (loop for notebook in (ein:notebook-opened-notebooks)
+          for path = (ein:$notebook-notebook-path notebook)
+          do (ein:notebook-kill-kernel-then-close-command notebook)
+          do (loop repeat 16
+                   until (not (ein:notebook-live-p notebook))
+                   do (sleep-for 0 1000)
+                   finally do (when (ein:notebook-live-p notebook)
+                                (ein:display-warning (format "cannot close %s" path))))
+          do (when (or (ob-ein-anonymous-p path)
+                       (search "Untitled" path)
+                       (search "Renamed" path))
+               (ein:notebooklist-delete-notebook path)
+               (loop repeat 16
+                     with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
+                     for extant = (file-exists-p fullpath)
+                     until (not extant)
+                     do (sleep-for 0 1000)
+                     finally do (when extant
+                                  (ein:display-warning (format "cannot del %s" path)))))))
   (ein:aif (ein:notebook-opened-notebooks)
       (loop for nb in it
             for path = (ein:$notebook-notebook-path nb)

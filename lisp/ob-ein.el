@@ -42,6 +42,11 @@
 (defvar *ob-ein-sentinel* "[....]"
   "Placeholder string replaced after async cell execution")
 
+(defcustom ob-ein-timeout-seconds 600
+  "Maximum seconds to wait for block to finish (for synchronous operations)."
+  :type 'integer
+  :group 'ein)
+
 (defcustom ob-ein-languages
   '(("ein" . python)
     ("ein-python" . python)
@@ -180,8 +185,33 @@ Based on ob-ipython--configure-kernel."
                      processed-params
                      result-params
                      name))))
-    (ob-ein--initiate-session session kernelspec callback))
-  *ob-ein-sentinel*)
+    (save-excursion
+      (cl-assert (not (stringp (org-babel-goto-named-src-block name))))
+      (org-babel-insert-result *ob-ein-sentinel* result-params))
+    (ob-ein--initiate-session session kernelspec callback)
+    (if (ein:eval-if-bound 'org-current-export-file)
+        (save-excursion
+          (loop with interval = 2000
+                with pending = t
+                repeat (/ (* ob-ein-timeout-seconds 1000) interval)
+                do (progn
+                     (org-babel-goto-named-result name)
+                     (forward-line 1)
+                     (setq pending (re-search-forward
+                                    (regexp-quote *ob-ein-sentinel*)
+                                    (org-babel-result-end) t)))
+                until (not pending)
+                do (sleep-for 0 interval)
+                finally return
+                (if pending
+                    (progn
+                      (ein:log 'error "ob-ein--execute-body: %s timed out" name)
+                      "")
+                  (ob-ein--process-outputs
+                   (ein:oref-safe (ein:shared-output-get-cell) 'outputs)
+                   processed-params))))
+      (org-babel-remove-result)
+      *ob-ein-sentinel*)))
 
 (defsubst ob-ein--execute-async-callback (buffer params result-params name)
   "Callback of 1-arity (the shared output cell) to update org buffer when
@@ -198,11 +228,11 @@ Based on ob-ipython--configure-kernel."
                (org-babel-result-cond result-params*
                  raw (org-babel-import-elisp-from-file tmp-file '(16)))))
             (info (org-babel-get-src-block-info 'light)))
-       (ein:log 'debug "ob-ein--execute-async-callback %s %s" name* result)
+       (ein:log 'debug "ob-ein--execute-async-callback %s \"%s\" %s" name* result buffer*)
        (save-excursion
          (save-restriction
            (with-current-buffer buffer*
-             (when (not (stringp (org-babel-goto-named-src-block name*)))
+             (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
                (when info ;; kill #+RESULTS: (no-name)
                  (setf (nth 4 info) nil)
                  (org-babel-remove-result info))
@@ -226,6 +256,7 @@ one at a time.  Further, we do not order the queued up blocks!"
                      (ob-ein--execute-async-callback buffer params
                                                      result-params name)))
                 (setf (slot-value cell 'callback) callback))
+            ;; still pending previous callback
             (deferred:nextc (deferred:wait 1200) self)))))
     (deferred:nextc it
       (lambda (_x)
