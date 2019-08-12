@@ -144,7 +144,7 @@ This function may raise an error."
   (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
 
 (defun ein:ml-lang-setup-clojure ()
-  "A naive combination of the python and R setups with things from clojure-mode.el"
+  "Minimally different than the the python setup"
   (setq-local mode-name "EIN[Clj]")
   (setq-local comment-start "; ")
   (setq-local comment-start-skip  ";+\\s-*")
