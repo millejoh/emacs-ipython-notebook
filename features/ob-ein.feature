@@ -148,3 +148,27 @@ Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   And I ctrl-c-ctrl-c
   And I dump buffer
   And I wait for buffer to say "file:ein-image"
+
+@export
+Scenario: Test ob-exp captures code and results.
+  When I open temp file "ecukes.org"
+  And I call "org-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :results scalar :exports both"
+  And I press "C-n"
+  And I type "ratio = (1 + 5 ** 0.5) / 2"
+  And I press "RET"
+  And I type "ratio"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to say "1.618"
+  And I press "M->"
+  And I press "RET"
+  And I press "RET"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :results scalar :exports both"
+  And I press "RET"
+  And I type "ratio"
+  And I dump buffer
+  And I call "org-latex-export-to-latex"

@@ -162,11 +162,6 @@ Called from ewoc pretty printer via `ein:cell-pp'."
 Create a cell if the buffer has none."
   (slot-value (ein:shared-output-get-or-create) 'cell))
 
-(defun ein:shared-output-get-kernel ()
-  (let ((cell (ein:shared-output-get-cell)))
-    (when (slot-boundp cell :kernel)
-      (slot-value cell 'kernel))))
-
 ;;;###autoload
 (defun ein:shared-output-pop-to-buffer ()
   "Open shared output buffer."
