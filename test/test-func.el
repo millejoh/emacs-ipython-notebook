@@ -142,33 +142,33 @@ See the definition of `create-image' for how it works."
     (ein:testing-wait-until
      (lambda () (ein:aand (ein:$notebook-kernel notebook)
                           (ein:kernel-live-p it))))
-    (with-current-buffer (ein:notebook-buffer notebook)
-      (call-interactively #'ein:worksheet-insert-cell-below)
-      ;; Use IPython.core.display rather than IPython.display to
-      ;; test it with older (< 0.13) IPython.
-      (insert (concat "from IPython.core.display import SVG\n"
-                      (format "SVG(data=\"\"\"%s\"\"\")"
-                              ein:testing-example-svg)))
-      (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
-        ;; It seems in this case, watching `:running' does not work
-        ;; well sometimes.  Probably "output reply" (iopub) comes
-        ;; before "execute reply" in this case.
-        (ein:testing-wait-until (lambda () (slot-value cell 'outputs)))
-        ;; This cell has only one input
-        (should (= (length (oref cell :outputs)) 1))
-        ;; This output is a SVG image
-        (let ((out (nth 0 (oref cell :outputs))))
-          (should (equal (plist-get out :output_type) "execute_result"))
-          (should (plist-get out :svg))))
-      ;; Check the actual output in the buffer:
-      (save-excursion
-        (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
-        (should (= (forward-line) 0))
-        (if (image-type-available-p 'svg)
+    (if (image-type-available-p 'svg)
+        (with-current-buffer (ein:notebook-buffer notebook)
+          (call-interactively #'ein:worksheet-insert-cell-below)
+          ;; Use IPython.core.display rather than IPython.display to
+          ;; test it with older (< 0.13) IPython.
+          (insert (concat "from IPython.core.display import SVG\n"
+                          (format "SVG(data=\"\"\"%s\"\"\")"
+                                  ein:testing-example-svg)))
+          (let ((cell (call-interactively #'ein:worksheet-execute-cell)))
+            ;; It seems in this case, watching `:running' does not work
+            ;; well sometimes.  Probably "output reply" (iopub) comes
+            ;; before "execute reply" in this case.
+            (ein:testing-wait-until (lambda () (slot-value cell 'outputs)))
+            ;; This cell has only one input
+            (should (= (length (oref cell :outputs)) 1))
+            ;; This output is a SVG image
+            (let ((out (nth 0 (oref cell :outputs))))
+              (should (equal (plist-get out :output_type) "execute_result"))
+              (should (plist-get out :svg))))
+          ;; Check the actual output in the buffer:
+          (save-excursion
+            (should (search-forward-regexp "Out \\[[0-9]+\\]" nil t))
+            (should (= (forward-line) 0))
             (let ((image (get-text-property (point) 'display)))
-              (should (eq (ein:testing-image-type image) 'svg)))
-          (ein:log 'info
-            "Skipping image check as SVG image type is not available."))))))
+              (should (eq (ein:testing-image-type image) 'svg)))))
+      (ein:log 'info
+          "Skipping image check as SVG image type is not available."))))
 
 (ert-deftest 13-notebook-execute-current-cell-stream ()
   (let ((notebook (ein:testing-get-untitled0-or-create *ein:testing-port*)))

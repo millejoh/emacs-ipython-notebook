@@ -43,31 +43,31 @@ Alternatively, ob-ein_.
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
 .. _MELPA: http://melpa.org/#/
 
-It doesn't work
----------------
-
+Bugs in EIN
+===========
 EIN is tested on GNU Emacs versions
 .. CI VERSION (see Makefile)
 and later.  We presently do not recommend the `spacemacs layer`_.
 
-You may also try to self-diagnose:
+**Please file issues using** ``M-x ein:dev-bug-report-template``.
+
+You may also try to self-diagnose.
 
 First invoke ``M-x ein:dev-start-debug``.  Then reproduce the error.
 
-High level diagnostics appear in ``M-x ein:log-pop-to-all-buffer``.
+General logging ``M-x ein:log-pop-to-all-buffer``.
 
-Low level diagnostics appear in ``M-x ein:log-pop-to-request-buffer``.
+Notebook server ``M-x ein:log-pop-to-request-buffer``.
 
-If you cannot resolve the problem, file an issue using ``M-x ein:dev-bug-report-template``.
+Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-channels``.
 
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _auto-complete: https://github.com/auto-complete/auto-complete
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 
-I want to use Elpy, ESS, LSP, julia-mode
+I want to use Elpy, ESS, julia-mode
 ========================================
-
 Enable `polymode`_ via::
 
    M-x customize-group RET ein
@@ -75,7 +75,6 @@ Enable `polymode`_ via::
 
 ob-ein
 ======
-
 Configuration:
 
 ::
@@ -111,7 +110,6 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 
 Connected Buffers
 =================
-
 Use ``M-x ein:connect-to-notebook`` to submit code from an arbitrary buffer to a running jupyter kernel.  See `connected buffer details`_.
 
 .. _connected buffer details: http://millejoh.github.io/emacs-ipython-notebook/#connected-buffer
@@ -134,6 +132,5 @@ Links
 
 License
 =======
-
 Emacs IPython Notebook is licensed under GPL v3.
 See COPYING for details.
