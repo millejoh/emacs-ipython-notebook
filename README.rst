@@ -50,8 +50,8 @@ Alternatively, ob-ein_.
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
 .. _MELPA: http://melpa.org/#/
 
-Bugs in EIN
-===========
+Reporting bugs
+--------------
 EIN is tested on GNU Emacs versions
 25.1
 and later.  We presently do not recommend the `spacemacs layer`_.
