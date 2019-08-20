@@ -21,6 +21,7 @@
  (depends-on "smartrep")
  (depends-on "polymode")
  (depends-on "markdown-mode")
+ (depends-on "clojure-mode")
  (depends-on "julia-mode")
  (depends-on "undo-tree")
  (depends-on "ess")

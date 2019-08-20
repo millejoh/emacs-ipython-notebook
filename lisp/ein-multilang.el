@@ -145,16 +145,17 @@ This function may raise an error."
 
 (defun ein:ml-lang-setup-clojure ()
   "Minimally different than the the python setup"
-  (setq-local mode-name "EIN[Clj]")
-  (setq-local comment-start "; ")
-  (setq-local comment-start-skip  ";+\\s-*")
-  (setq-local parse-sexp-lookup-properties t)
-  (setq-local indent-line-function
-              (apply-partially #'ein:ml-indent-line-function #'clojure-indent-line))
-  (setq-local indent-region-function
-              (apply-partially #'ein:ml-indent-region #'clojure-indent-region))
-  (set-syntax-table clojure-mode-syntax-table)
-  (set-keymap-parent ein:notebook-multilang-mode-map clojure-mode-map))
+  (when (featurep 'clojure-mode)
+    (setq-local mode-name "EIN[Clj]")
+    (setq-local comment-start "; ")
+    (setq-local comment-start-skip  ";+\\s-*")
+    (setq-local parse-sexp-lookup-properties t)
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'clojure-indent-line))
+    (setq-local indent-region-function
+                (apply-partially #'ein:ml-indent-region #'clojure-indent-region))
+    (set-syntax-table clojure-mode-syntax-table)
+    (set-keymap-parent ein:notebook-multilang-mode-map clojure-mode-map)))
 
 (defun ein:ml-lang-setup-R ()
   (when (and (featurep 'ess-r-mode) (featurep 'ess-custom))
