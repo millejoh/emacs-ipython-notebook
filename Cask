@@ -1,6 +1,5 @@
 (source gnu)
 (source melpa)
-(source org)
 
 (package-descriptor "lisp/ein-pkg.el")
 (files "lisp/*.el" "lisp/*.py")

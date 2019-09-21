@@ -55,8 +55,7 @@ dist-clean: clean
 test-compile: clean autoloads
 #	TODO When we are ready to properly compile, replace the disaster here
 #	with (setq byte-compile-error-on-warn t) --dickmao
-	cask eval "(let ((gnutls-algorithm-priority \"NORMAL:-VERS-TLS1.3\")) \
-	               (cask-cli/install))" || cask install
+	cask install
 	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
 	cask clean-elc
 

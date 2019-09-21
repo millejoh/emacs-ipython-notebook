@@ -233,7 +233,7 @@ first candidate when the `ac-menu' pops up."
    Adding `ac-sources' to them makes it impossible to different
    `ac-sources' between chunks, which is good for EIN but may not
    for other package."
-  (and ein:notebook-mode
+  (and (ein:eval-if-bound 'ein:notebook-mode)
        (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
        (ein:ac-setup)))
