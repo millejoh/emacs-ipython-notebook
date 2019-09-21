@@ -72,6 +72,22 @@
 
 (Setup
  (ein:dev-start-debug)
+ (setq ein:notebooklist-default-kernel
+       (loop with cand = ""
+             for (k . spec) in
+             (alist-get
+              'kernelspecs
+              (let ((json-object-type 'alist))
+                (json-read-from-string
+                 (shell-command-to-string
+                  (format "%s kernelspec list --json"
+                          ein:jupyter-default-server-command)))))
+             if (let ((lang (alist-get 'language (alist-get 'spec spec))))
+                  (and (string= "python" lang)
+                       (string> (symbol-name k) cand)))
+             do (setq cand (symbol-name k))
+             end
+             finally return (intern cand)))
  (setq ein:notebook-autosave-frequency 0)
  (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))

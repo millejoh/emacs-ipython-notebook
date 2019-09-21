@@ -216,7 +216,7 @@ the log of the running jupyter server."
 ;;;###autoload
 (defalias 'ein:stop 'ein:jupyter-server-stop)
 
-(defun ein:shutdown-server (url-or-port)
+(defun ein:undocumented-shutdown (url-or-port)
   (ein:query-singleton-ajax
    (list 'shutdown-server url-or-port)
    (ein:url url-or-port "api/shutdown")
@@ -234,30 +234,25 @@ the log of the running jupyter server."
           do (ein:query-running-process-table)
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
-    (ein:shutdown-server url-or-port)
-    (loop repeat 3
-          for proc = (ein:jupyter-server-process)
-          until (not proc)
-          do (sleep-for 0 1000)
-          finally (if (not proc)
-                      (ein:log 'info "ein:jupyter-server-stop: success")
-                    (if (eql system-type 'windows-nt)
-                        (delete-process proc)
-                      (lexical-let ((pid (process-id proc))
-                                    (proc proc))
-                        (ein:log 'info "Signaled %s with pid %s" proc pid)
-                        (signal-process pid 15)
-                        (run-at-time 2 nil
-                                     (lambda ()
-                                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                                       (signal-process pid 15)))))))
+    (if (eq system-type 'windows-nt)
+        (progn
+          (ein:undocumented-shutdown url-or-port)
+          (ein:aif (ein:jupyter-server-process)
+              (delete-process it)))
+      (lexical-let* ((proc (ein:jupyter-server-process))
+                     (pid (process-id proc)))
+        (ein:log 'info "Signaled %s with pid %s" proc pid)
+        (signal-process pid 15)
+        (run-at-time 2 nil
+                     (lambda ()
+                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
+                       (signal-process pid 15)))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)
     (kill-buffer (ein:notebooklist-get-buffer url-or-port))
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name
-        (write-region (point-min) (point-max) log)))
-))
+        (write-region (point-min) (point-max) log)))))
 
 (provide 'ein-jupyter)

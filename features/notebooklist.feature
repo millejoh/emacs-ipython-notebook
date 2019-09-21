@@ -6,6 +6,11 @@ Scenario: Breadcrumbs
   And I click on "Home"
   Then I should see "support"
 
+@kernel
+Scenario: Default kernel
+  And I am in notebooklist buffer
+  Then I should see "(*) Python"
+
 Scenario: New Notebook
   Given I am in notebooklist buffer
   When I clear log expr "ein:log-all-buffer-name"
@@ -30,7 +35,7 @@ Scenario: Stop after closing notebook
   And I keep clicking "Resync" until "Stop"
   And I click on "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
-  Then I should see "Deleted session" 
+  Then I should see "Deleted session"
   And I am in notebooklist buffer
   And I go to word "Untitled"
   And I go to beginning of line
