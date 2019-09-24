@@ -4,6 +4,7 @@ language: python
 addons:
   apt:
     packages:
+    - gnutls-bin
     - libgnutls-dev
     - sharutils
     - nodejs
@@ -35,7 +36,7 @@ matrix:
       env: EVM_EMACS=emacs-26.3-travis IPYTHON=6.5.0
     - dist: xenial
       python: 3.7
-      env: EVM_EMACS=emacs-26.3-travis IPYTHON=7.8.0
+      env: EVM_EMACS=emacs-git-snapshot-travis IPYTHON=7.8.0
     - os: osx
       language: generic
       env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 TOXENV=py27
