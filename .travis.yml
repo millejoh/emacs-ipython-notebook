@@ -31,11 +31,11 @@ matrix:
       python: 2.7
       env: EVM_EMACS=emacs-25.1-travis IPYTHON=5.8.0
     - dist: trusty
-      python: 3.5
-      env: EVM_EMACS=emacs-26.1-travis IPYTHON=6.5.0
-    - dist: trusty
       python: 3.6
-      env: EVM_EMACS=emacs-26.2-travis IPYTHON=7.5.0
+      env: EVM_EMACS=emacs-26.2-travis IPYTHON=6.5.0
+    - dist: trusty
+      python: 3.7
+      env: EVM_EMACS=emacs-26.3-travis IPYTHON=7.8.0
     - os: osx
       language: generic
       env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 TOXENV=py27
