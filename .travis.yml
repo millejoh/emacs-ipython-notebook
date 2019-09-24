@@ -31,9 +31,9 @@ matrix:
     - os: linux
       python: 2.7
       env: EVM_EMACS=emacs-25.1-travis IPYTHON=5.8.0
-    - dist: trusty
+    - dist: xenial
       python: 3.6
-      env: EVM_EMACS=emacs-26.3-travis IPYTHON=6.5.0
+      env: EVM_EMACS=emacs-25.3-travis IPYTHON=6.5.0
     - dist: xenial
       python: 3.7
       env: EVM_EMACS=emacs-26.3-travis-linux-xenial IPYTHON=7.8.0
