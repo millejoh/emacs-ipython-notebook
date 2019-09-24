@@ -4,7 +4,7 @@ language: python
 addons:
   apt:
     packages:
-    - gnutls-bin
+    - gnutls-dev
     - sharutils
     - nodejs
     - gfortran
