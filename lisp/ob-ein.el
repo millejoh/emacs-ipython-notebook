@@ -34,16 +34,10 @@
 ;; Uses code from https://github.com/gregsexton/ob-ipython (MIT License)
 
 ;;; Code:
-(require 'ob)
+(require 'org-element)
 (require 'ein-utils)
-
-(declare-function org-element-property "org-element")
-(declare-function org-element-context "org-element")
-(declare-function ein:notebooklist-new-notebook-with-name "ein-notebooklist")
-(declare-function ein:notebooklist-login "ein-notebooklist")
-(declare-function ein:process-url-or-port "ein-process")
-(declare-function ein:process-url-match "ein-process")
-(declare-function ein:process-refresh-processes "ein-process")
+(require 'ein-notebooklist)
+(require 'ein-process)
 
 (defvar *ob-ein-sentinel* "[....]"
   "Placeholder string replaced after async cell execution")
@@ -413,5 +407,3 @@ Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute 
          (cons (car orig) (plist-put orig-cdr :key-type choices)))))
 
 (provide 'ob-ein)
-
-;;; ob-ein.el ends here

@@ -69,7 +69,10 @@ install:
   - ${PY} -m pip install${INSTALL_USER} matplotlib\<=3.0.2
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
-  - hash -r
+  - |
+    if [ "x$TRAVIS_OS_NAME" != "xosx" ]; then
+      hash -r
+    fi
   - jupyter kernelspec list
   - curl --version
   - ipython --version

@@ -252,11 +252,13 @@ TYPE can be 'body, nil."
   (setq jit-lock-context-unfontify-pos nil)
   (if (eq type 'host)
       (setq syntax-propertize-function nil)
-    (setq syntax-propertize-function pm--syntax-propertize-function-original)
-    (add-function :before-until (local 'syntax-propertize-function)
-                  #'poly-ein--unrelated-span)
-    (add-function :filter-args (local 'syntax-propertize-function)
-                  #'poly-ein--span-start-end)))
+    (ein:aif pm--syntax-propertize-function-original
+        (progn
+          (setq syntax-propertize-function it)
+          (add-function :before-until (local 'syntax-propertize-function)
+                        #'poly-ein--unrelated-span)
+          (add-function :filter-args (local 'syntax-propertize-function)
+                        #'poly-ein--span-start-end)))))
 
 (defun poly-ein-init-input-cell (_type)
   (mapc (lambda (f) (add-to-list 'after-change-functions f))
