@@ -37,42 +37,32 @@ env:
 matrix:
   include:
     - os: linux
-      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python INSTALL_USER=" --user"
+      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
     - os: linux
-      env: EMACS_CI=emacs-26-2 IPYTHON=6.5.0 PY=python3 INSTALL_USER=" --user"
+      env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: linux
-      env: EMACS_CI=emacs-26-3 IPYTHON=7.5.0 PY=python3 INSTALL_USER=" --user"
+      env: EMACS_CI=emacs-26-2 IPYTHON=7.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python TOXENV=py27 INSTALL_USER=""
+      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
 
 install:
-  - ${PY} -m pip install${INSTALL_USER} --upgrade pip
-  - ${PY} -m pip install${INSTALL_USER} wheel
   - sh tools/install-virtualenv.sh
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
-    else
-      ${PY} -m pip install${INSTALL_USER} jupyterhub ;
-      sudo /usr/bin/npm install -g configurable-http-proxy ;
-      ${PY} -m pip install${INSTALL_USER} jupyterhub-dummyauthenticator ;
     fi
-  - ${PY} -m pip install${INSTALL_USER} jupyter ipython\<=$IPYTHON jedi\<=0.13.3
-  - ${PY} -m pip install${INSTALL_USER} ipykernel
+  - ${PIP} --upgrade pip
+  - ${PIP} wheel
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\<=0.13.3 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
   - ${PY} -m ipykernel install --user
-  - ${PY} -m pip install${INSTALL_USER} numpy\<=1.16.0
-  - ${PY} -m pip install${INSTALL_USER} matplotlib\<=3.0.2
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
-  - |
-    if [ "x$TRAVIS_OS_NAME" != "xosx" ]; then
-      hash -r
-    fi
+  - hash -r
   - jupyter kernelspec list
   - curl --version
   - ipython --version
@@ -93,6 +83,9 @@ script:
   - make test-install
   - |
     if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
+      ${PIP} jupyterhub ;
+      sudo /usr/bin/npm install -g configurable-http-proxy ;
+      ${PIP} jupyterhub-dummyauthenticator ;
       make test-jupyterhub
     fi
   - rm -rf $HOME/.matplotlib $HOME/.cache/fontconfig
