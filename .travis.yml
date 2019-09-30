@@ -1,5 +1,5 @@
 sudo: false
-language: python
+language: nix
 
 addons:
   apt:
@@ -8,9 +8,18 @@ addons:
     - sharutils
     - nodejs
     - gfortran
+    - python-minimal
+    - python-setuptools
+    - python-pip
+    - python3-minimal
+    - python3-pip
+    - python3-setuptools
+    - gnupg2
+    - dirmngr
 
 cache:
   directories:
+  - $HOME/nix.store
   - $HOME/local
   - $HOME/.cask
   - $HOME/node_modules
@@ -28,53 +37,45 @@ env:
 matrix:
   include:
     - os: linux
-      python: 2.7
-      env: EVM_EMACS=emacs-25.1-travis IPYTHON=5.8.0
-    - dist: trusty
-      python: 3.5
-      env: EVM_EMACS=emacs-26.1-travis IPYTHON=6.5.0
-    - dist: trusty
-      python: 3.6
-      env: EVM_EMACS=emacs-26.2-travis IPYTHON=7.5.0
+      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
+    - os: linux
+      env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
+    - os: linux
+      env: EMACS_CI=emacs-26-2 IPYTHON=7.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 TOXENV=py27
+      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
 
   allow_failures:
-    - env: EVM_EMACS=emacs-snapshot
+    - env: EMACS_CI=emacs-snapshot
 
 install:
-  - cp -pr $HOME/.cask .
   - sh tools/install-virtualenv.sh
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
     fi
-  - pip install jupyter ipython\<=$IPYTHON jedi\<=0.13.3
-  - pip install numpy
-  - pip install matplotlib
-  - |
-    if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
-      pip install jupyterhub ;
-      npm install -g configurable-http-proxy ;
-      pip install jupyterhub-dummyauthenticator ;
-    fi
+  - ${PIP} --upgrade pip
+  - ${PIP} wheel
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\<=0.13.3 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
+  - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
+  - hash -r
   - jupyter kernelspec list
   - curl --version
   - ipython --version
 
 before_script:
-  - sh tools/install-evm.sh
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
+      sh tools/install-evm.sh
       evm config path $HOME/.evm
+      evm install $EVM_EMACS --use --skip
     else
-      evm config path /tmp
+      bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
     fi
-  - evm install $EVM_EMACS --use --skip
   - emacs --version
   - sh tools/install-cask.sh
 
@@ -82,6 +83,9 @@ script:
   - make test-install
   - |
     if [[ "x$TRAVIS_PYTHON_VERSION" == x3* ]]; then
+      ${PIP} jupyterhub ;
+      sudo /usr/bin/npm install -g configurable-http-proxy ;
+      ${PIP} jupyterhub-dummyauthenticator ;
       make test-jupyterhub
     fi
   - rm -rf $HOME/.matplotlib $HOME/.cache/fontconfig

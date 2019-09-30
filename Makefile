@@ -1,3 +1,4 @@
+EMACS ?= $(shell which emacs)
 SRC=$(shell cask files)
 PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
@@ -35,7 +36,7 @@ README.rst: README.in.rst lisp/ein.el
 
 .PHONY: autoloads
 autoloads:
-	emacs -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
+	$(EMACS) -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
 
 .PHONY: clean
 clean:
@@ -62,7 +63,7 @@ test-compile: clean autoloads
 quick: test-compile test-unit
 
 .PHONY: test-jupyterhub
-test-jupyterhub:
+test-jupyterhub: test-compile
 # jupyterhub slightly temperamental with json-readtable-error
 # seems to be affecting ob-ipython too but probably my bug.. just need to find it
 	-cask exec ecukes --tags @jupyterhub --reporter magnars
@@ -95,7 +96,7 @@ test-install:
 	cd test/test-install/package-build-$(PKBUILD) ; make -s loaddefs
 	mkdir -p test/test-install/recipes
 	cd test/test-install/recipes ; curl -sLOk https://raw.githubusercontent.com/melpa/melpa/master/recipes/ein
-	! ( emacs -Q --batch -L test/test-install/package-build-$(PKBUILD) \
+	! ( $(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
 	--eval "(require 'package-build)" \
 	--eval "(require 'subr-x)" \
 	--eval "(package-initialize)" \
@@ -120,7 +121,7 @@ dist:
 
 .PHONY: install
 install: dist
-	emacs -Q --batch --eval "(package-initialize)" \
+	$(EMACS) -Q --batch --eval "(package-initialize)" \
 	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
 	  --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"

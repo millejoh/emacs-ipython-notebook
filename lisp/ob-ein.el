@@ -34,10 +34,28 @@
 ;; Uses code from https://github.com/gregsexton/ob-ipython (MIT License)
 
 ;;; Code:
-(require 'org-element)
+(require 'ob)
 (require 'ein-utils)
-(require 'ein-notebooklist)
-(require 'ein-process)
+
+(autoload 'org-element-property "org-element")
+(autoload 'org-element-context "org-element")
+(autoload 'ein:notebooklist-new-notebook-with-name "ein-notebooklist")
+(autoload 'ein:notebooklist-login "ein-notebooklist")
+(autoload 'ein:notebook-get-opened-notebook "ein-notebook")
+(autoload 'ein:notebook-url "ein-notebook")
+(autoload 'ein:notebook-open "ein-notebook")
+(autoload 'ein:notebook-close "ein-notebook")
+(autoload 'ein:process-url-or-port "ein-process")
+(autoload 'ein:process-url-match "ein-process")
+(autoload 'ein:process-refresh-processes "ein-process")
+(autoload 'ein:jupyter-server-conn-info "ein-jupyter")
+(autoload 'ein:jupyter-server-start "ein-jupyter")
+(autoload 'ein:connect-buffer-to-notebook "ein-connect")
+(autoload 'ein:connect-run-buffer "ein-connect")
+(autoload 'ein:shared-output-get-cell "ein-shared-output")
+(autoload 'ein:shared-output-eval-string "ein-shared-output")
+(autoload 'ein:kernel-live-p "ein-kernel")
+(autoload 'ein:query-singleton-ajax "ein:query")
 
 (defvar *ob-ein-sentinel* "[....]"
   "Placeholder string replaced after async cell execution")
@@ -337,7 +355,8 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
            (ein:aif (ein:process-url-match nbpath)
                (ein:notebooklist-login (ein:process-url-or-port it) callback-login)
              (ein:jupyter-server-start
-              (executable-find ein:jupyter-default-server-command)
+              (executable-find (or (ein:eval-if-bound 'ein:jupyter-default-server-command)
+                                   "jupyter"))
               (read-directory-name "Notebook directory: " default-directory)
               nil
               callback-login
@@ -362,7 +381,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
             (org-ctrl-c-ctrl-c)))))))
 
 (defcustom ob-ein-babel-edit-polymode-ignore nil
-  "When true override default python mode key mapping for `\C-c\C-c' while inside a babel edit buffer.
+  "When false override default python mode key mapping for `\C-c\C-c' while inside a babel edit buffer.
 Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute the code block being edited."
   :group 'ein
   :type '(boolean))
