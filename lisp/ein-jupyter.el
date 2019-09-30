@@ -74,6 +74,27 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
   :type '(choice (string :tag "Subcommand" "notebook")
                  (const :tag "Omit" nil)))
 
+(defcustom ein:jupyter-default-kernel 'first-alphabetically
+  "With which of ${XDG_DATA_HOME}/jupyter/kernels to create new notebooks."
+  :group 'ein
+  :type (append
+         '(choice (other :tag "First alphabetically" first-alphabetically))
+         (condition-case err
+             (mapcar
+              (lambda (x) `(const :tag ,(cdr x) ,(car x)))
+              (loop
+               for (k . spec) in
+               (alist-get
+                'kernelspecs
+                (let ((json-object-type 'alist))
+                  (json-read-from-string
+                   (shell-command-to-string
+                    (format "%s kernelspec list --json"
+                            ein:jupyter-default-server-command)))))
+               collect `(,k . ,(alist-get 'display_name (alist-get 'spec spec)))))
+           (error (ein:log 'warn "ein:jupyter-default-kernel: %s" err)
+                  '((string :tag "Ask"))))))
+
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session"
   (get-buffer-process (get-buffer ein:jupyter-server-buffer-name)))
