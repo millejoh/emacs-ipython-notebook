@@ -60,7 +60,7 @@ test-compile: clean autoloads
 	cask clean-elc
 
 .PHONY: quick
-quick: test-compile test-unit
+quick: test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile
@@ -85,6 +85,10 @@ test-int:
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
+
+.PHONY: test-ob-ein-recurse
+test-ob-ein-recurse:
+	cask eval "(progn (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
 
 .PHONY: test-install
 test-install:
