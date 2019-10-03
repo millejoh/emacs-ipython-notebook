@@ -57,7 +57,6 @@ install:
       pyenv activate $TOXENV ;
     fi
   - ${PIP} --upgrade pip
-  - ${PIP} wheel
   - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\<=0.13.3 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
   - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh

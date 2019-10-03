@@ -72,7 +72,7 @@
 
 (Setup
  (ein:dev-start-debug)
- (setq ein:notebooklist-default-kernel
+ (setq ein:jupyter-default-kernel
        (loop with cand = ""
              for (k . spec) in
              (alist-get
