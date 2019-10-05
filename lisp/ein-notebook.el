@@ -1699,6 +1699,7 @@ watch the fireworks!"
        (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
        (auto-complete-mode))
       (ein:use-company-backend
+       (add-to-list 'company-backends 'ein:company-backend)
        (ein:notebook--define-key ein:notebook-mode-map "." nil)
        (company-mode)))
     (ein:aif ein:helm-kernel-history-search-key
