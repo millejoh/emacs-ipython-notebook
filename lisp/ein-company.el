@@ -62,7 +62,7 @@
     (let ((nix (- cursor_end cursor_start))
           prefixed-matches)
       (dolist (match matches)
-        (setq prefixed-matches 
+        (setq prefixed-matches
               (nconc prefixed-matches (list (concat prefix (substring match nix))))))
       (ein:completions--build-oinfo-cache prefixed-matches)
       (funcall fetcher prefixed-matches))))
@@ -75,7 +75,7 @@
     (prefix (and (eq ein:completion-backend 'ein:use-company-backend)
                  (or (ein:worksheet-at-codecell-p) ein:connect-mode)
                  (ein:get-kernel)
-                 (ein:object-at-point)))
+                 (ein:object-prefix-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
                       (plist-get it :definition))))

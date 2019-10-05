@@ -79,7 +79,7 @@
    `ein:completer-finish-completing-ac'.  When it is specified,
    it overrides `ac-expand-on-auto-complete' when calling
    `auto-complete'."
-  (interactive (list (ein:get-kernel) 
+  (interactive (list (ein:get-kernel)
                      (list :complete_reply
                            (cons #'ein:completer-finish-completing '(:expand nil)))
                      #'ignore))
@@ -91,6 +91,10 @@
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
+
+(defun ein:dev-clear-oinfo-cache (kernel)
+  (interactive (list (ein:get-kernel)))
+  (ein:completions--reset-oinfo-cache kernel))
 
 (defun ein:completions-get-cached (partial oinfo-cache)
   (loop for candidate being the hash-keys of oinfo-cache
@@ -128,8 +132,10 @@
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)
-               (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
-                     (ein:json-read-from-string it))))
+               (let ((oinfo (ein:json-read-from-string it)))
+                 (unless (string= (plist-get oinfo :string_form) "None")
+                   (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
+                         oinfo)))))
           (("error" "pyerr")
            (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
                     (plist-get content :traceback)))))
