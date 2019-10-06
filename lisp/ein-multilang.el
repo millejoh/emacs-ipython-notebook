@@ -34,6 +34,7 @@
 (require 'python)
 (require 'ess-r-mode nil t)
 (require 'ess-custom nil t)
+(require 'julia-mode nil t)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
@@ -141,6 +142,18 @@ This function may raise an error."
               (apply-partially #'ein:ml-indent-region #'python-indent-region))
   (set-syntax-table python-mode-syntax-table)
   (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
+
+(defun ein:ml-lang-setup-julia ()
+  (when (featurep 'julia-mode)
+    (setq-local mode-name "EIN[julia]")
+    (setq-local comment-start "# ")
+    (setq-local comment-start-skip  "#+\\s-*")
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'julia-indent-line))
+    (when (boundp 'julia-mode-syntax-table)
+      (set-syntax-table julia-mode-syntax-table))
+    (when (boundp 'julia-mode-map)
+      (set-keymap-parent ein:notebook-multilang-mode-map julia-mode-map))))
 
 (defun ein:ml-lang-setup-R ()
   (when (and (featurep 'ess-r-mode) (featurep 'ess-custom))
