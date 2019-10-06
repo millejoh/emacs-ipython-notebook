@@ -13,8 +13,9 @@ Scenario: Company completion in a python buffer
   And I type "itertools."
   And I call "company-complete"
   And I wait for completions "itertools.chain"
-  And I press "C-a"
-  And I press "C-k"
+  And I press "C-g"
+  And I press "RET"
+  And I press "RET"
   And I clear websocket log
   And I type "itertool"
   And I call "company-complete"
@@ -58,4 +59,3 @@ Scenario: Connect buffer to a running notebook
   And I evaluate the python code "test01()"
   And I switch to buffer like "*ein:shared-output*"
   And I wait for buffer to say "'hello'"
-
