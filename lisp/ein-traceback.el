@@ -26,13 +26,14 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ewoc)
 (require 'ansi-color)
 
 (require 'ein-core)
 (require 'ein-shared-output)
+
+(declare-function ein:notebook-buffer "ein-notebook" (notebook))
 
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)
@@ -103,7 +104,7 @@
     (list beg end)))
 
 (cl-defmethod ein:tb-file-path-at-point ((traceback ein:traceback))
-  (destructuring-bind (beg end)
+  (cl-destructuring-bind (beg end)
       (ein:tb-range-of-node-at-point traceback)
     (let* ((file-tail
             (if (>= emacs-major-version 24)
@@ -117,7 +118,7 @@
         file))))
 
 (cl-defmethod ein:tb-file-lineno-at-point ((traceback ein:traceback))
-  (destructuring-bind (beg end)
+  (cl-destructuring-bind (beg end)
       (ein:tb-range-of-node-at-point traceback)
     (when (save-excursion
             (goto-char beg)
@@ -131,7 +132,7 @@
     (if (string-match "<ipython-input-\\([0-9]+\\)-.*" file)
         (let* ((cellnum (string-to-number (match-string 1 file)))
                (nb (slot-value traceback 'notebook))
-               (ws (first (ein:$notebook-worksheets nb)))
+               (ws (car (ein:$notebook-worksheets nb)))
                (cells (ein:worksheet-get-cells ws))
                (it (cl-find cellnum cells :key #'(lambda (x)
                                                 (if (same-class-p x 'ein:codecell)
@@ -148,7 +149,7 @@
          (t (ein:tb-jtsap--remote url-or-port file lineno select)))))))
 
 (defun ein:tb-jtsap--local (file lineno select)
-  (assert (file-exists-p file) nil "File %s does not exist." file)
+  (cl-assert (file-exists-p file) nil "File %s does not exist." file)
   (let ((buf (find-file-noselect file))
         (scroll (lambda ()
                   (goto-char (point-min))

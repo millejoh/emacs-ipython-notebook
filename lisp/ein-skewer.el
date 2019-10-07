@@ -89,8 +89,8 @@
                                    "html"
                                  "eval")))
           (cl-loop until result
-                   do (accept-process-output nil 0.01)
-                   finally (return result)))))
+            do (accept-process-output nil 0.01)
+            finally (return result)))))
     (deferred:nextc it
       (lambda (result)
         (ein:update-javascript-output cell json result)))))

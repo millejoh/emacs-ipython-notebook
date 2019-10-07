@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 ;; for `ein:pytools-pandas-to-ses'
 (declare-function ses-yank-tsf "ses")
 (declare-function ses-command-hook "ses")
@@ -92,7 +90,7 @@ working."
                 (plist-get content :text))))))))
 
 (defun ein:pytools-get-notebook-dir (packed)
-  (multiple-value-bind (kernel notebook) packed
+  (cl-multiple-value-bind (kernel notebook) packed
     (ein:kernel-execute
      kernel
      (format "print(__import__('os').getcwd(),end='')")
@@ -179,7 +177,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
 
 (defun ein:pytools-jump-to-source-1 (packed msg-type content -metadata-not-used-)
   (ein:log 'debug "msg-type[[%s]] content[[%s]]" msg-type content)
-  (destructuring-bind (kernel object other-window notebook) packed
+  (cl-destructuring-bind (kernel object other-window notebook) packed
     (ein:log 'debug "object[[%s]] other-window[[%s]]" object other-window)
     (ein:case-equal msg-type
       (("stream" "display_data")
@@ -187,7 +185,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
            (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                (ein:log 'info
                  "Jumping to the source of %s...Not found" object)
-             (destructuring-bind (filename &optional lineno &rest ignore)
+             (cl-destructuring-bind (filename &optional lineno &rest ignore)
                  (split-string it "\n")
                (setq lineno (string-to-number lineno)
                      filename (ein:kernel-filename-from-python kernel filename))
@@ -241,14 +239,14 @@ is defined."
      (list kernel object callback)))))
 
 (defun ein:pytools-finish-find-source (packed msg-type content -ignored-)
-  (destructuring-bind (kernel object callback) packed
+  (cl-destructuring-bind (kernel object callback) packed
     (if (or (string= msg-type "stream")
             (string= msg-type "display_data"))
         (ein:aif (or (plist-get content :text) (plist-get content :data))
             (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                 (ein:log 'info
                   "Source of %s not found" object)
-              (destructuring-bind (filename &optional lineno &rest ignore)
+              (cl-destructuring-bind (filename &optional lineno &rest ignore)
                   (split-string it "\n")
                 (if callback
                     (funcall callback
@@ -271,8 +269,8 @@ selecting it."
           (call-interactively #'xref-find-definitions)))
     (let ((kernel (ein:get-kernel))
           (object (ein:object-at-point)))
-      (assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
-      (assert object nil "Object at point not found.")
+      (cl-assert (ein:kernel-live-p kernel) nil "Kernel is not ready.")
+      (cl-assert object nil "Object at point not found.")
       (ein:pytools-jump-to-source kernel object other-window
                                   (when ein:propagate-connect
                                     (ein:get-notebook))))))
@@ -318,8 +316,8 @@ You can explicitly specify the object by selecting it.
   (let ((object (ein:object-at-point)))
     (when ask
       (setq object (read-from-minibuffer "class or object: " object)))
-    (assert (and object (not (equal object "")))
-            nil "Object at point not found.")
+    (cl-assert (and object (not (equal object "")))
+               nil "Object at point not found.")
     (ein:shared-output-eval-string (ein:get-kernel) (format "%%hierarchy %s" object) t)))
 
 (defun ein:pytools-pandas-to-ses (dataframe)
@@ -380,10 +378,10 @@ Currently EIN/IPython supports exporting to the following formats:
                                             "python"
                                             "rst"
                                             "slides"))))
-  (let* ((nb (first (ein:notebook-opened-notebooks
-                     #'(lambda (nb)
-                         (equal (buffer-name (ein:notebook-buffer nb))
-                                buffer)))))
+  (let* ((nb (car (ein:notebook-opened-notebooks
+                   #'(lambda (nb)
+                       (equal (buffer-name (ein:notebook-buffer nb))
+                              buffer)))))
          (json (json-encode (ein:notebook-to-json nb)))
          (name (format "*ein %s export: %s*" format (ein:$notebook-notebook-name nb)))
          (buffer (get-buffer-create name)))

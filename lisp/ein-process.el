@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-core)
 (require 'ein-jupyter)
 (require 'ein-file)
@@ -83,7 +81,7 @@
   :type 'string
   :group 'ein)
 
-(defstruct ein:$process
+(cl-defstruct ein:$process
   "Hold process variables.
 
 `ein:$process-pid' : integer
@@ -111,48 +109,48 @@
 (defun ein:process-suitable-notebook-dir (filename)
   "Return the uppermost parent dir of DIR that contains ipynb files."
   (let ((fn (expand-file-name filename)))
-    (loop with directory = (directory-file-name
-                            (if (file-regular-p fn)
-                                (file-name-directory (directory-file-name fn))
-                              fn))
-          with suitable = directory
-          until (string= (file-name-nondirectory directory) "")
-          do (if (directory-files directory nil "\\.ipynb$")
-                 (setq suitable directory))
-          (setq directory (directory-file-name (file-name-directory directory)))
-          finally return suitable)))
+    (cl-loop with directory = (directory-file-name
+                               (if (file-regular-p fn)
+                                   (file-name-directory (directory-file-name fn))
+                                 fn))
+      with suitable = directory
+      until (string= (file-name-nondirectory directory) "")
+      do (if (directory-files directory nil "\\.ipynb$")
+             (setq suitable directory))
+        (setq directory (directory-file-name (file-name-directory directory)))
+      finally return suitable)))
 
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
-  (loop for line in (condition-case err
-                        (process-lines ein:jupyter-default-server-command
-                                       "notebook" "list" "--json")
-                      ;; often there is no local jupyter installation
-                      (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
-        do (destructuring-bind
-               (&key pid url notebook_dir &allow-other-keys)
-               (ein:json-read-from-string line)
-             (puthash (directory-file-name notebook_dir)
-                      (make-ein:$process :pid pid
-                                         :url (ein:url url)
-                                         :dir (directory-file-name notebook_dir))
-                      ein:%processes%))))
+  (cl-loop for line in (condition-case err
+                           (process-lines ein:jupyter-default-server-command
+                                          "notebook" "list" "--json")
+                         ;; often there is no local jupyter installation
+                         (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
+    do (cl-destructuring-bind
+             (&key pid url notebook_dir &allow-other-keys)
+           (ein:json-read-from-string line)
+         (puthash (directory-file-name notebook_dir)
+                  (make-ein:$process :pid pid
+                                     :url (ein:url url)
+                                     :dir (directory-file-name notebook_dir))
+                  ein:%processes%))))
 
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
-  (loop for dir in (hash-table-keys ein:%processes%)
-        when (search dir filename)
-        return (gethash dir ein:%processes%)))
+  (cl-loop for dir in (hash-table-keys ein:%processes%)
+    when (cl-search dir filename)
+    return (gethash dir ein:%processes%)))
 
 (defun ein:process-url-match (url-or-port)
   "Return ein:process whose url matches URL-OR-PORT."
-  (loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
-        for proc in (ein:process-processes)
-        for parsed-url-proc = (url-generic-parse-url (ein:process-url-or-port proc))
-        when (and (string= (url-host parsed-url-or-port) (url-host parsed-url-proc))
-                  (= (url-port parsed-url-or-port) (url-port parsed-url-proc)))
-        return proc))
+  (cl-loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
+    for proc in (ein:process-processes)
+    for parsed-url-proc = (url-generic-parse-url (ein:process-url-or-port proc))
+    when (and (string= (url-host parsed-url-or-port) (url-host parsed-url-proc))
+              (= (url-port parsed-url-or-port) (url-port parsed-url-proc)))
+    return proc))
 
 (defsubst ein:process-url-or-port (proc)
   "Naively construct url-or-port from ein:process PROC's port and ip fields"
@@ -160,7 +158,7 @@
 
 (defsubst ein:process-path (proc filename)
   "Construct path by eliding PROC's dir from filename"
-  (subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
+  (cl-subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
 (defun ein:process-open-notebook* (filename callback)
   "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
@@ -178,7 +176,7 @@
             (ein:notebooklist-login url-or-port callback2)))
       (let* ((nbdir (read-directory-name "Notebook directory: "
                                          (ein:process-suitable-notebook-dir filename)))
-             (path (subseq filename (length (file-name-as-directory nbdir))))
+             (path (cl-subseq filename (length (file-name-as-directory nbdir))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
                                            (ein:notebook-open url-or-port
@@ -192,7 +190,7 @@
    current buffer as the only one argument."
   (interactive)
   (unless filename (setq filename buffer-file-name))
-  (assert filename nil "Not visiting a file")
+  (cl-assert filename nil "Not visiting a file")
   (let ((callback2 (apply-partially (lambda (buffer buffer-callback* notebook created
                                                     &rest args)
                                       (when (buffer-live-p buffer)

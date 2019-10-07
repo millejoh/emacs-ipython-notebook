@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)
@@ -191,15 +190,15 @@ This function may raise an error."
   "Parent modes for `ein:notebook-multilang-mode' to register in yasnippet.")
 
 (defun ein:ml-setup-yasnippet ()
-  (loop for define-parents in '(yas/define-parents
-                                yas--define-parents)
-        when (fboundp define-parents)
-        do (ignore-errors
-             ;; `let' is for workaround the bug in yasnippet
-             (let ((mode-sym 'ein:notebook-multilang-mode))
-               (funcall define-parents
-                        mode-sym
-                        ein:ml-yasnippet-parents)))))
+  (cl-loop for define-parents in '(yas/define-parents
+                                   yas--define-parents)
+    when (fboundp define-parents)
+    do (ignore-errors
+         ;; `let' is for workaround the bug in yasnippet
+         (let ((mode-sym 'ein:notebook-multilang-mode))
+           (funcall define-parents
+                    mode-sym
+                    ein:ml-yasnippet-parents)))))
 
 (eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 

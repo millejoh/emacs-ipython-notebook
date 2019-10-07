@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ein-core)
 
 
@@ -56,10 +55,10 @@
   (setq ein:log-message-level (ein:log-level-name-to-int level)))
 
 (defun ein:log-level-int-to-name (int)
-  (loop for (n . i) in ein:log-level-def
-        when (>= int i)
-        return n
-        finally 'error))
+  (cl-loop for (n . i) in ein:log-level-def
+    when (>= int i)
+    return n
+    finally 'error))
 
 (defun ein:log-level-name-to-int (name)
   (cdr (assq name ein:log-level-def)))
@@ -119,4 +118,3 @@ Otherwise, return result of last form in BODY."
 (provide 'ein-log)
 
 ;;; ein-log.el ends here
- 

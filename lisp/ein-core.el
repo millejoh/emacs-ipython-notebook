@@ -1,4 +1,4 @@
-;;; ein-core.el --- EIN core
+;;; ein-core.el --- EIN core   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 ;; Optional dependency on tramp:
 (declare-function tramp-make-tramp-file-name "tramp")
 (declare-function tramp-file-name-localname "tramp")
@@ -36,6 +34,9 @@
 
 (require 'ein)  ; get autoloaded functions into namespace
 (require 'ein-utils)
+
+(defvar ein:force-sync) ; defcustom in ein-contents-api which requires this file
+(defvar ein:content-query-timeout) ; likewise
 
 (defgroup ein nil
   "IPython notebook client in Emacs"
@@ -176,9 +177,8 @@ the source is in git repository) or elpa version."
       (replace-regexp-in-string "[ ]" "-" name)
     name))
 
-(defun* ein:query-kernelspecs--success (url-or-port callback
-                                       &key data symbol-status response
-                                       &allow-other-keys)
+(cl-defun ein:query-kernelspecs--success (url-or-port callback
+                                          &key data _symbol-status _response &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))
         (specs (ein:plist-iter (plist-get data :kernelspecs))))
     (setf (gethash url-or-port *ein:kernelspecs*)
@@ -196,9 +196,8 @@ the source is in git repository) or elpa version."
                                  ks))))))
   (when callback (funcall callback)))
 
-(defun* ein:query-kernelspecs--error (url-or-port callback iteration
-                                                  &key response error-thrown
-                                                  &allow-other-keys)
+(cl-defun ein:query-kernelspecs--error (url-or-port callback iteration
+                                        &key response error-thrown &allow-other-keys)
   (if (< iteration 3)
       (progn
         (ein:log 'verbose "Retry kernelspecs #%s in response to %s" iteration (request-response-status-code response))
@@ -207,9 +206,8 @@ the source is in git repository) or elpa version."
              "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when callback (funcall callback))))
 
-(defun* ein:query-kernelspecs--complete (url-or-port &key data response
-                                                     &allow-other-keys
-                                                     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:query-kernelspecs--complete (_url-or-port &key data response &allow-other-keys
+                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
 (defsubst ein:notebook-version-numeric (url-or-port)
@@ -230,14 +228,13 @@ the source is in git repository) or elpa version."
    :sync ein:force-sync
    :complete (apply-partially #'ein:query-notebook-version--complete url-or-port callback)))
 
-(defun* ein:query-notebook-version--complete (url-or-port callback
-                                             &key data response
-                                             &allow-other-keys
-                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:query-notebook-version--complete (url-or-port callback
+                                                &key data response &allow-other-keys
+                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
   (ein:aif (plist-get data :version)
       (setf (gethash url-or-port *ein:notebook-version*) it)
-    (case (request-response-status-code response)
+    (cl-case (request-response-status-code response)
       (404 (ein:log 'warn "notebook version api not implemented")
            (setf (gethash url-or-port *ein:notebook-version*) "2.0.0"))
       (t (ein:log 'warn "notebook version currently unknowable"))))
@@ -296,13 +293,13 @@ the host named MY-HOSTNAME.
 
 Adapted from `slime-create-filename-translator'."
   (require 'tramp)
-  (lexical-let ((remote-host remote-host)
-                (username (or username (user-login-name))))
+  (let ((remote-host remote-host)
+        (username (or username (user-login-name))))
     (list (lambda (emacs-filename)
             (tramp-file-name-localname
              (tramp-dissect-file-name emacs-filename)))
           (lambda (python-filename)
-             (ein:make-tramp-file-name username remote-host python-filename)))))
+            (ein:make-tramp-file-name username remote-host python-filename)))))
 
 
 
@@ -322,9 +319,9 @@ as `defgeneric' in EIEIO, but it takes no argument.  Actual
 implementation is chosen based on context (buffer, point, etc.).
 This helps writing generic commands which requires same object
 but can operate in different contexts."
-  (loop for func in func-list
-        if (and (functionp func) (funcall func))
-        return it))
+  (cl-loop for func in func-list
+    if (and (functionp func) (funcall func))
+    return it))
 
 (defun ein:get-url-or-port ()
   (ein:generic-getter '(ein:get-url-or-port--notebooklist

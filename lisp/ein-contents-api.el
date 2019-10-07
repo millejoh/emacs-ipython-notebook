@@ -1,4 +1,4 @@
-;;; ein-contents-api.el --- Interface to Jupyter's Contents API
+;;; ein-contents-api.el --- Interface to Jupyter's Contents API   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015 - John Miller
 
@@ -30,7 +30,6 @@
 
 ;;; Code:
 
-(require 'cl)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-utils)
@@ -92,15 +91,16 @@ global setting.  For global setting and more information, see
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
    :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)))
 
-(defun* ein:content-query-contents--complete (url-or-port path
-                                                          &key data symbol-status response
-                                                          &allow-other-keys
-                                                          &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:content-query-contents--complete (url-or-port path
+                                                &key data symbol-status response
+                                                &allow-other-keys
+                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
-(defun* ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown data &allow-other-keys)
+(cl-defun ein:content-query-contents--error (url-or-port path callback errback iteration
+                                             &key symbol-status response error-thrown data &allow-other-keys)
   (let ((status-code (request-response-status-code response))) ; may be nil!
-    (case status-code
+    (cl-case status-code
       (404 (ein:log 'error "ein:content-query-contents--error %s %s"
                     status-code (plist-get data :message))
            (when errback (funcall errback url-or-port status-code)))
@@ -125,9 +125,8 @@ global setting.  For global setting and more information, see
 ;; TODO: This is one place to check for redirects - update the url slot if so.
 ;; Will need to pass the response object and check either request-response-history
 ;; or request-response-url.
-(defun* ein:content-query-contents--success (url-or-port path callback
-                                                         &key data symbol-status response
-                                                         &allow-other-keys)
+(cl-defun ein:content-query-contents--success (url-or-port path callback
+                                               &key data symbol-status response &allow-other-keys)
   (let (content)
     (if (< (ein:notebook-version-numeric url-or-port) 3)
         (setq content (ein:new-content-legacy url-or-port path data))
@@ -139,9 +138,9 @@ global setting.  For global setting and more information, see
 
 (defun ein:fix-legacy-content-data (data)
   (if (listp (car data))
-      (loop for item in data
-            collecting
-            (ein:fix-legacy-content-data item))
+      (cl-loop for item in data
+        collecting
+          (ein:fix-legacy-content-data item))
     (if (string= (plist-get data :path) "")
         (plist-put data :path (plist-get data :name))
       (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
@@ -217,44 +216,44 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-query-hierarchy* (url-or-port path callback sessions depth content)
   "Returns list (tree) of content objects.  CALLBACK accepts tree."
-  (lexical-let* ((url-or-port url-or-port)
-                 (path path)
-                 (callback callback)
-                 (items (ein:$content-raw-content content))
-                 (directories (if (< depth ein:content-query-max-depth)
-                                  (loop for item in items
-                                        with result
-                                        until (>= (length result) ein:content-query-max-branch)
-                                        if (string= "directory" (plist-get item :type))
-                                          collect (ein:new-content url-or-port path item)
-                                            into result
-                                        end
-                                        finally return result)))
-                 (others (loop for item in items
-                               with c0
-                               if (not (string= "directory" (plist-get item :type)))
-                               do (setf c0 (ein:new-content url-or-port path item))
-                                  (setf (ein:$content-session-p c0)
-                                        (gethash (ein:$content-path c0) sessions))
-                               and collect c0
-                               end)))
+  (let ((url-or-port url-or-port)
+        (path path)
+        (callback callback)
+        (items (ein:$content-raw-content content))
+        (directories (if (< depth ein:content-query-max-depth)
+                         (cl-loop for item in items
+                           with result
+                           until (>= (length result) ein:content-query-max-branch)
+                           if (string= "directory" (plist-get item :type))
+                           collect (ein:new-content url-or-port path item)
+                           into result
+                           end
+                           finally return result)))
+        (others (cl-loop for item in items
+                  with c0
+                  if (not (string= "directory" (plist-get item :type)))
+                  do (setf c0 (ein:new-content url-or-port path item)
+                           (ein:$content-session-p c0)
+                           (gethash (ein:$content-path c0) sessions))
+                  and collect c0
+                  end)))
     (deferred:$
       (apply #'deferred:parallel
-             (loop for c0 in directories
-                   collect
-                   (lexical-let ((c0 c0)
-                                 (d0 (deferred:new #'identity)))
-                     (ein:content-query-contents
-                      url-or-port
-                      (ein:$content-path c0)
-                      (apply-partially #'ein:content-query-hierarchy*
-                                       url-or-port
-                                       (ein:$content-path c0)
-                                       (lambda (tree)
-                                         (deferred:callback-post d0 (cons c0 tree)))
-                                       sessions (1+ depth))
-                      (lambda (&rest ignore) (deferred:callback-post d0 (cons c0 nil))))
-                     d0)))
+             (cl-loop for c0 in directories
+               collect
+                 (let ((c0 c0)
+                       (d0 (deferred:new #'identity)))
+                   (ein:content-query-contents
+                    url-or-port
+                    (ein:$content-path c0)
+                    (apply-partially #'ein:content-query-hierarchy*
+                                     url-or-port
+                                     (ein:$content-path c0)
+                                     (lambda (tree)
+                                       (deferred:callback-post d0 (cons c0 tree)))
+                                     sessions (1+ depth))
+                    (lambda (&rest ignore) (deferred:callback-post d0 (cons c0 nil))))
+                   d0)))
       (deferred:nextc it
         (lambda (tree)
           (let ((result (append others tree)))
@@ -303,12 +302,12 @@ global setting.  For global setting and more information, see
        :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs))
     (ein:content-save-legacy content callback cbargs)))
 
-(defun* ein:content-save-success (callback cbargs &key status response &allow-other-keys)
+(cl-defun ein:content-save-success (callback cbargs &key status response &allow-other-keys)
   ;;(ein:log 'verbose "Saving content successful with status %s" status)
   (when callback
     (apply callback cbargs)))
 
-(defun* ein:content-save-error (url errcb errcbargs &key response data &allow-other-keys)
+(cl-defun ein:content-save-error (url errcb errcbargs &key response data &allow-other-keys)
   (ein:log 'error
     "Content save %s failed %s %s."
     url (request-response-error-thrown response) (plist-get data :message))
@@ -332,7 +331,7 @@ global setting.  For global setting and more information, see
      :success (apply-partially #'update-content-path-legacy content callback cbargs)
      :error (apply-partially #'ein:content-rename-error new-path))))
 
-(defun* update-content-path-legacy (content callback cbargs &key data &allow-other-keys)
+(cl-defun update-content-path-legacy (content callback cbargs &key data &allow-other-keys)
   (setf (ein:$content-path content) (ein:trim-left (format "%s/%s" (plist-get data :path) (plist-get data :name))
                                                    "/")
         (ein:$content-name content) (plist-get data :name)
@@ -360,19 +359,19 @@ global setting.  For global setting and more information, see
    :data (json-encode `((path . ,new-path)))
    :complete #'ein:session-rename--complete))
 
-(defun* ein:session-rename--complete (&key data response symbol-status
-                                      &allow-other-keys
-                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:session-rename--complete (&key data response symbol-status
+                                        &allow-other-keys
+                                        &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:session-rename--complete %s" resp-string))
 
-(defun* update-content-path (content callback cbargs &key data &allow-other-keys)
+(cl-defun update-content-path (content callback cbargs &key data &allow-other-keys)
   (setf (ein:$content-path content) (plist-get data :path)
         (ein:$content-name content) (plist-get data :name)
         (ein:$content-last-modified content) (plist-get data :last_modified))
   (when callback
     (apply callback cbargs)))
 
-(defun* ein:content-rename-error (path &key response data &allow-other-keys)
+(cl-defun ein:content-rename-error (path &key response data &allow-other-keys)
   (ein:log 'error
     "Renaming content %s failed %s %s."
     path (request-response-error-thrown response) (plist-get data :message)))
@@ -398,7 +397,7 @@ global setting.  For global setting and more information, see
    :error (apply-partially #'ein:content-query-sessions--error url-or-port callback errback iteration)
    :sync ein:force-sync))
 
-(defun* ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
+(cl-defun ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
                        (if (< (ein:notebook-version-numeric url-or-port) 3)
                            (if (string= (plist-get nb-json :path) "")
@@ -410,9 +409,8 @@ global setting.  For global setting and more information, see
         (setf (gethash (read-name (plist-get s :notebook)) session-hash)
               (cons (plist-get s :id) (plist-get s :kernel)))))))
 
-(defun* ein:content-query-sessions--error (url-or-port callback errback iteration
-                                                       &key response error-thrown
-                                                       &allow-other-keys)
+(cl-defun ein:content-query-sessions--error (url-or-port callback errback iteration
+                                             &key response error-thrown &allow-other-keys)
   (if (< iteration (if noninteractive 6 3))
       (progn
         (ein:log 'verbose "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
@@ -421,10 +419,9 @@ global setting.  For global setting and more information, see
     (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when errback (funcall errback nil))))
 
-(defun* ein:content-query-sessions--complete (url-or-port callback
-                                                          &key data response
-                                                          &allow-other-keys
-                                                          &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:content-query-sessions--complete (url-or-port callback
+                                                &key data response &allow-other-keys
+                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-sessions--complete %s" resp-string))
 
 
@@ -481,14 +478,14 @@ global setting.  For global setting and more information, see
                 (apply callback cbargs))
      :error (apply-partially #'ein:content-query-checkpoints-error content))))
 
-(defun* ein:content-query-checkpoints-success (content cb cbargs &key data status response &allow-other-keys)
+(cl-defun ein:content-query-checkpoints-success (content cb cbargs &key data status response &allow-other-keys)
   (unless (listp (car data))
     (setq data (list data)))
   (setf (ein:$content-checkpoints content) data)
   (when cb
     (apply cb content cbargs)))
 
-(defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
+(cl-defun ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
   (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
 
 
@@ -512,7 +509,7 @@ and content format (one of json, text, or base64)."
 
 
 (defun ein:content-upload (path uploaded-file-path &optional url-or-port)
-  (multiple-value-bind (name type format contents) (ein:get-local-file uploaded-file-path)
+  (cl-multiple-value-bind (name type format contents) (ein:get-local-file uploaded-file-path)
     (let* ((content (make-ein:$content :url-or-port (or url-or-port (ein:default-url-or-port))
                                        :name name
                                        :path (concat path "/" name)
@@ -530,7 +527,7 @@ and content format (one of json, text, or base64)."
        :headers '(("Content-Type" . "application/json"))
        :timeout ein:content-query-timeout
        :data (json-encode data)
-       :success (lexical-let ((uploaded-file-path uploaded-file-path))
+       :success (let ((uploaded-file-path uploaded-file-path))
                   #'(lambda (&rest -ignore-) (message "File %s succesfully uploaded." uploaded-file-path)))
        :error (apply-partially #'ein:content-upload-error uploaded-file-path)))))
 

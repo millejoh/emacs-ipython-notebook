@@ -28,8 +28,6 @@
 
 (declare-function ac-cursor-on-diable-face-p "auto-complete")
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
@@ -97,9 +95,9 @@
   (ein:completions--reset-oinfo-cache kernel))
 
 (defun ein:completions-get-cached (partial oinfo-cache)
-  (loop for candidate being the hash-keys of oinfo-cache
-        when (string-prefix-p partial candidate)
-        collect candidate))
+  (cl-loop for candidate being the hash-keys of oinfo-cache
+    when (string-prefix-p partial candidate)
+    collect candidate))
 
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
@@ -128,7 +126,7 @@
 
 (defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err
-      (destructuring-bind (msg-type content _) output
+      (cl-destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)

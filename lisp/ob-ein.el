@@ -115,33 +115,33 @@
       (base64-decode-region (point-min) (point-max)))))
 
 (defun ob-ein--return-mime-type (json file)
-  (loop
-   for key in ein:output-types-text-preferred
-   for type = (intern (format ":%s" key)) ; something like `:text'
-   for value = (plist-get json type)      ; FIXME: optimize
-   when (plist-member json type)
-   return
-   (case key
-     ((svg image/svg)
-      (let ((file (or file (ob-ein--inline-image-info value))))
-        (ob-ein--write-base64-image value file)
-        (format "[[file:%s]]" file)))
-     ((png image/png jpeg image/jpeg)
-      (let ((file (or file (ob-ein--inline-image-info value))))
-        (ob-ein--write-base64-image value file)
-        (format "[[file:%s]]" file)))
-     (t (plist-get json type)))))
+  (cl-loop
+    for key in ein:output-types-text-preferred
+    for type = (intern (format ":%s" key)) ; something like `:text'
+    for value = (plist-get json type)      ; FIXME: optimize
+    when (plist-member json type)
+    return
+      (cl-case key
+        ((svg image/svg)
+         (let ((file (or file (ob-ein--inline-image-info value))))
+           (ob-ein--write-base64-image value file)
+           (format "[[file:%s]]" file)))
+        ((png image/png jpeg image/jpeg)
+         (let ((file (or file (ob-ein--inline-image-info value))))
+           (ob-ein--write-base64-image value file)
+           (format "[[file:%s]]" file)))
+        (t (plist-get json type)))))
 
 (defun ob-ein--process-outputs (outputs params)
   (let ((file (cdr (assoc :image params))))
     (ein:join-str "\n"
-                  (loop for o in outputs
-                        collecting (ob-ein--return-mime-type o file)))))
+                  (cl-loop for o in outputs
+                    collecting (ob-ein--return-mime-type o file)))))
 
 
 (defun ob-ein--get-name-create (src-block-info)
   "Get the name of a src block or add a uuid as the name."
-  (if-let ((name (fifth src-block-info)))
+  (if-let ((name (cl-fifth src-block-info)))
       name
     (save-excursion
       (let ((el (org-element-context))
@@ -209,25 +209,25 @@ Based on ob-ipython--configure-kernel."
     (ob-ein--initiate-session session kernelspec callback)
     (if (ein:eval-if-bound 'org-current-export-file)
         (save-excursion
-          (loop with interval = 2000
-                with pending = t
-                repeat (/ (* ob-ein-timeout-seconds 1000) interval)
-                do (progn
-                     (org-babel-goto-named-result name)
-                     (forward-line 1)
-                     (setq pending (re-search-forward
-                                    (regexp-quote *ob-ein-sentinel*)
-                                    (org-babel-result-end) t)))
-                until (not pending)
-                do (sleep-for 0 interval)
-                finally return
-                (if pending
-                    (progn
-                      (ein:log 'error "ob-ein--execute-body: %s timed out" name)
-                      "")
-                  (ob-ein--process-outputs
-                   (ein:oref-safe (ein:shared-output-get-cell) 'outputs)
-                   processed-params))))
+          (cl-loop with interval = 2000
+            with pending = t
+            repeat (/ (* ob-ein-timeout-seconds 1000) interval)
+            do (progn
+                 (org-babel-goto-named-result name)
+                 (forward-line 1)
+                 (setq pending (re-search-forward
+                                (regexp-quote *ob-ein-sentinel*)
+                                (org-babel-result-end) t)))
+            until (not pending)
+            do (sleep-for 0 interval)
+            finally return
+              (if pending
+                  (progn
+                    (ein:log 'error "ob-ein--execute-body: %s timed out" name)
+                    "")
+                (ob-ein--process-outputs
+                 (ein:oref-safe (ein:shared-output-get-cell) 'outputs)
+                 processed-params))))
       (org-babel-remove-result)
       *ob-ein-sentinel*)))
 
@@ -258,7 +258,7 @@ Based on ob-ipython--configure-kernel."
                (org-babel-insert-result
                 result
                 (cdr (assoc :result-params
-                            (third (org-babel-get-src-block-info)))))
+                            (cl-third (org-babel-get-src-block-info)))))
                (org-redisplay-inline-images)))))))
    buffer params result-params name))
 
@@ -281,7 +281,7 @@ one at a time.  Further, we do not order the queued up blocks!"
         (ein:shared-output-eval-string kernel body nil)))))
 
 (defun ob-ein--parse-session (session)
-  (multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
+  (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
     (let ((tokens (split-string session "/"))
           (parsed-url (url-generic-parse-url session)))
       (cond ((null (url-host parsed-url))
@@ -311,16 +311,16 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                         (substring nbpath 0 (- (length slash-path)))))
          (notebook (ein:notebook-get-opened-notebook url-or-port path))
          (callback-nbopen (lambda (nb _created)
-                            (loop repeat 50
-                                  for live-p = (ein:kernel-live-p (ein:$notebook-kernel nb))
-                                  until live-p
-                                  do (sleep-for 0 300)
-                                  finally
-                                  do (if (not live-p)
-                                         (ein:log 'error
-                                           "Kernel for %s failed to launch"
-                                           (ein:$notebook-notebook-name nb))
-                                       (funcall callback nb)))))
+                            (cl-loop repeat 50
+                              for live-p = (ein:kernel-live-p (ein:$notebook-kernel nb))
+                              until live-p
+                              do (sleep-for 0 300)
+                              finally
+                              do (if (not live-p)
+                                     (ein:log 'error
+                                              "Kernel for %s failed to launch"
+                                              (ein:$notebook-notebook-name nb))
+                                   (funcall callback nb)))))
          (errback-nbopen (lambda (url-or-port status-code)
                            (if (eq status-code 404)
                                (ein:notebooklist-new-notebook-with-name
@@ -342,13 +342,13 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
               (list 'ob-ein--initiate-session (ein:url url-or-port path))
               (ein:notebook-url notebook)
               :type "DELETE"))
-           (loop repeat 8
-                 for extant = (file-exists-p path)
-                 until (not extant)
-                 do (sleep-for 0 500)
-                 finally do (if extant
-                                (ein:display-warning (format "cannot del %s" path))
-                              (ob-ein--initiate-session session kernelspec callback))))
+           (cl-loop repeat 8
+             for extant = (file-exists-p path)
+             until (not extant)
+             do (sleep-for 0 500)
+             finally do (if extant
+                            (ein:display-warning (format "cannot del %s" path))
+                          (ob-ein--initiate-session session kernelspec callback))))
           (notebook (funcall callback notebook))
           ((string= (url-host parsed-url) ein:url-localhost)
            (ein:process-refresh-processes)
@@ -413,8 +413,8 @@ Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute 
 (defun org-babel-edit-prep:ein-python (babel-info)
   (org-babel-edit-prep:ein babel-info))
 
-(loop for (lang . mode) in ob-ein-languages
-      do (ob-ein--babelize-lang lang mode))
+(cl-loop for (lang . mode) in ob-ein-languages
+  do (ob-ein--babelize-lang lang mode))
 
 ;;;###autoload
 (if (featurep 'org)

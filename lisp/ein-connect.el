@@ -1,4 +1,4 @@
-;;; ein-connect.el --- Connect external buffers to IPython
+;;; ein-connect.el --- Connect external buffers to IPython   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -49,7 +49,7 @@ of OPTION:
   no   : Do not save buffer."
   (if (not (buffer-modified-p))
       t
-    (case option
+    (cl-case option
       (ask (when (y-or-n-p "Save buffer? ")
              (save-buffer)
              t))
@@ -172,10 +172,10 @@ notebooks."
 (defun ein:connect-to-notebook (nbpath &optional buffer no-reconnection)
   "Connect any buffer to notebook and its kernel."
   (interactive (list (ein:notebooklist-ask-path "notebook")))
-  (multiple-value-bind (url-or-port path) (ein:notebooklist-parse-nbpath nbpath)
+  (cl-multiple-value-bind (url-or-port path) (ein:notebooklist-parse-nbpath nbpath)
     (ein:notebook-open url-or-port path nil
-                       (apply-partially 
-                        (lambda (buffer* no-reconnection* notebook created)
+                       (apply-partially
+                        (lambda (buffer* no-reconnection* notebook _created)
                           (ein:connect-buffer-to-notebook notebook buffer* no-reconnection*))
                         (or buffer (current-buffer)) no-reconnection))))
 
@@ -217,7 +217,7 @@ notebooks."
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (lexical-let ((b (current-buffer)))
+  (let ((b (current-buffer)))
     (deferred:$
       (deferred:next
         (lambda ()
@@ -307,11 +307,11 @@ See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
 ;;; Auto-execution
 
 (defun ein:connect-assert-connected ()
-  (assert (ein:connect-p ein:%connect%) nil
-          "Current buffer (%s) is not connected to IPython notebook."
-          (buffer-name))
-  (assert (ein:notebook-live-p (slot-value ein:%connect% 'notebook)) nil
-          "Connected notebook is not live (probably already closed)."))
+  (cl-assert (ein:connect-p ein:%connect%) nil
+             "Current buffer (%s) is not connected to IPython notebook."
+             (buffer-name))
+  (cl-assert (ein:notebook-live-p (slot-value ein:%connect% 'notebook)) nil
+             "Connected notebook is not live (probably already closed)."))
 
 (defun ein:connect-execute-autoexec-cells ()
   "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
@@ -398,7 +398,7 @@ notebook."
   :lighter (:eval (ein:connect-mode-get-lighter))
   :keymap ein:connect-mode-map
   :group 'ein
-  (case ein:completion-backend
+  (cl-case ein:completion-backend
     (ein:use-ac-backend
      (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))

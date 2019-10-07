@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'request)
 (require 'url)
 
@@ -125,10 +124,8 @@ variable to a reasonable value you can avoid this situation."
       (ein:display-warning
        (format "The %s program was not found" request-curl) :error))))
 
-(defun* ein:query-singleton-ajax (key url &rest settings
-                                      &key
-                                      (timeout ein:query-timeout)
-                                      &allow-other-keys)
+(cl-defun ein:query-singleton-ajax (key url &rest settings
+                                    &key (timeout ein:query-timeout) &allow-other-keys)
   "Do not cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
@@ -136,12 +133,12 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
   (with-local-quit
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (loop do (ein:query-running-process-table)
-          for running = (hash-table-count ein:query-running-process-table)
-          until (< running ein:max-simultaneous-queries)
-          do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
-                      running)
-          do (sleep-for 3))
+    (cl-loop do (ein:query-running-process-table)
+      for running = (hash-table-count ein:query-running-process-table)
+      until (< running ein:max-simultaneous-queries)
+      do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
+                  running)
+      do (sleep-for 3))
     (ein:aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           (ein:log 'debug "Race! %s %s" key (request-response-data it))))

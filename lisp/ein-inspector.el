@@ -40,7 +40,7 @@
                              (list kernel object)))))
 
 (defun ein:prepare-inspector (packed _msg-type content _metadata)
-  (destructuring-bind (_kernel oname)
+  (cl-destructuring-bind (_kernel oname)
       packed
     (ein:aif (or (plist-get content :text) (plist-get content :data))
         (let ((oinfo (ein:json-read-from-string it)))
@@ -89,11 +89,11 @@
     (let ((inhibit-read-only t))
       (erase-buffer))
     (remove-overlays)
-    (lexical-let* ((type (plist-get oinfo :type))
-                   (repr (plist-get oinfo :repr))
-                   (sfile (plist-get oinfo :source_file))
-                   (slines (last (plist-get oinfo :source_lines)))
-                   (info-str (format "%s = {%s} %s" name type repr)))
+    (let* ((type (plist-get oinfo :type))
+           (repr (plist-get oinfo :repr))
+           (sfile (plist-get oinfo :source_file))
+           (slines (last (plist-get oinfo :source_lines)))
+           (info-str (format "%s = {%s} %s" name type repr)))
       (if sfile
           (widget-create 'link
                          :notify
