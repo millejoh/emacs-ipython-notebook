@@ -149,10 +149,9 @@ The result is unspecified if there isn't a symbol under the point."
   "Similar to `ein:object-at-point', but instead of returning the entire object
 only returns the string up to the current point. For example, given pd.Series, if the
 cursor is at the S then 'pd.S' will be returned."
-  (if (ein:object-at-point)
-      (let* ((obj (ein:object-at-point))
-             (delta (- (point) (ein:object-start-pos))))
-        (substring obj 0 delta))))
+  (ein:and-let* ((obj (ein:object-at-point))
+                 (delta (- (point) (ein:object-start-pos))))
+    (substring obj 0 delta)))
 
 (defun ein:object-at-point ()
   "Return dotty.words.at.point.

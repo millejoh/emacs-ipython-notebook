@@ -32,13 +32,11 @@
 (require 'ein-worksheet)
 (require 'ein-multilang-fontify)
 (require 'python)
-(require 'ess-r-mode nil t)
-(require 'ess-custom nil t)
-(require 'julia-mode nil t)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
 (declare-function ess-setq-vars-local "ess-utils")
+(declare-function julia-indent-line "julia-mode")
 
 (defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -144,6 +142,7 @@ This function may raise an error."
   (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
 
 (defun ein:ml-lang-setup-julia ()
+  (require 'julia-mode nil t)
   (when (featurep 'julia-mode)
     (setq-local mode-name "EIN[julia]")
     (setq-local comment-start "# ")
@@ -156,6 +155,8 @@ This function may raise an error."
       (set-keymap-parent ein:notebook-multilang-mode-map julia-mode-map))))
 
 (defun ein:ml-lang-setup-R ()
+  (require 'ess-r-mode nil t)
+  (require 'ess-custom nil t)
   (when (and (featurep 'ess-r-mode) (featurep 'ess-custom))
     (setq-local mode-name "EIN[R]")
     (when (boundp 'ess-r-customize-alist)

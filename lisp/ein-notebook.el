@@ -1699,9 +1699,11 @@ watch the fireworks!"
        (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
        (auto-complete-mode))
       (ein:use-company-backend
-       (add-to-list 'company-backends 'ein:company-backend)
-       (ein:notebook--define-key ein:notebook-mode-map "." nil)
-       (company-mode)))
+       (if (not (boundp 'company-backends))
+           (error "ein:connect-mode: company unsupported")
+         (cl-assert (member 'ein:company-backend company-backends))
+         (ein:notebook--define-key ein:notebook-mode-map "." nil)
+         (company-mode))))
     (ein:aif ein:helm-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
     (ein:aif ein:anything-kernel-history-search-key

@@ -174,7 +174,7 @@ notebooks."
   (interactive (list (ein:notebooklist-ask-path "notebook")))
   (multiple-value-bind (url-or-port path) (ein:notebooklist-parse-nbpath nbpath)
     (ein:notebook-open url-or-port path nil
-                       (apply-partially 
+                       (apply-partially
                         (lambda (buffer* no-reconnection* notebook created)
                           (ein:connect-buffer-to-notebook notebook buffer* no-reconnection*))
                         (or buffer (current-buffer)) no-reconnection))))
@@ -403,8 +403,10 @@ notebook."
      (define-key ein:connect-mode-map "." 'ein:ac-dot-complete)
      (auto-complete-mode))
     (ein:use-company-backend
-     (add-to-list 'company-backends #'ein:company-backend)
-     (company-mode))))
+     (if (not (boundp 'company-backends))
+         (error "ein:connect-mode: company unsupported")
+       (cl-assert (member 'ein:company-backend company-backends))
+       (company-mode)))))
 
 (put 'ein:connect-mode 'permanent-local t)
 
