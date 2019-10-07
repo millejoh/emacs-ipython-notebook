@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'auto-complete)
 
 (require 'ein-core)
@@ -71,10 +70,10 @@ When this option is enabled, cached omni completion is available."
   "Return matched candidates in CHUNK-LIST."
   (let* ((start (ein:ac-chunk-beginning)))
     (when start
-      (loop with prefix = (buffer-substring start (point))
-            for cc in chunk-list
-            when (string-prefix-p prefix cc)
-            collect cc))))
+      (cl-loop with prefix = (buffer-substring start (point))
+        for cc in chunk-list
+        when (string-prefix-p prefix cc)
+        collect cc))))
 
 
 ;;; AC Source
@@ -107,7 +106,7 @@ When this option is enabled, cached omni completion is available."
 (defun ein:ac-request-in-background ()
   (cl-ecase ein:completion-backend
     (ein:use-ac-backend (ein:aif (ein:get-kernel)
-                            (ein:completer-complete 
+                            (ein:completer-complete
                              it
                              (list :complete_reply
                                    (cons (lambda (_ content __)
@@ -131,7 +130,7 @@ Call this function before calling `auto-complete'."
   (when matches
     (setq ein:ac-direct-matches matches)))  ; let-binding won't work
 
-(defun* ein:completer-finish-completing-ac
+(cl-defun ein:completer-finish-completing-ac
     (matched-text
      matches
      &key (expand ac-expand-on-auto-complete)

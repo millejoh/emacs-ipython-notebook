@@ -38,6 +38,8 @@
 (defvar ein:src--overlay nil)
 (defvar ein:src--saved-window-config nil)
 
+(declare-function ein:notebook--get-nb-or-error "ein-notebook" ())
+
 (defvar ein:edit-cell-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c'" 'ein:edit-cell-exit)
@@ -238,7 +240,7 @@ appropriate language major mode. Functionality is very similar to
         (t (funcall ein:raw-cell-default-edit-mode)))
     (if raw-cell-p
         (funcall ein:raw-cell-default-edit-mode)
-      (case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
+      (cl-case (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook))
         (julia (julia-mode))
         (python (python-mode))
         (R (R-mode))))))

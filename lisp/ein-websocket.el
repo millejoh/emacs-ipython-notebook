@@ -1,4 +1,4 @@
-;;; ein-websocket.el --- Wrapper of websocket.el
+;;; ein-websocket.el --- Wrapper of websocket.el   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'websocket)
 (require 'ein-core)
 (require 'ein-classes)
@@ -33,7 +32,7 @@
 (require 'request)
 
 ;; Fix issues reading cookies in request when using curl backend
-(defun fix-request-netscape-cookie-parse (next-method)
+(defun fix-request-netscape-cookie-parse (_next-method)
   "Parse Netscape/Mozilla cookie format."
   (goto-char (point-min))
   (let ((tsv-re (concat "^\\="
@@ -65,9 +64,9 @@
   (url-cookie-store (car c) (cdr c) nil host-port url-filename securep))
 
 (defun ein:maybe-get-jhconn-user (url)
-  (let ((paths (rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
-    (if (string= (first paths) "user")
-        (format "/%s/%s/" (first paths) (second paths))
+  (let ((paths (cl-rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
+    (if (string= (car paths) "user")
+        (format "/%s/%s/" (car paths) (cadr paths))
       "")))
 
 ;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
@@ -75,25 +74,24 @@
   "Websocket gets its cookies using the url-cookie API, so we need to copy over
  any cookies that are made and stored during the contents API calls via
  emacs-request."
-  (lexical-let*
-      ((parsed-url (url-generic-parse-url url))
-       (host-port (if (url-port-if-non-default parsed-url)
-                      (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
-                    (url-host parsed-url)))
-       (securep (string-match "^wss://" url))
-       (read-cookies-func (lambda (path)
-                            (request-cookie-alist
-                             (url-host parsed-url) path securep)))
-       (cookies (loop repeat 4
-                      for cand = (mapcan read-cookies-func
-                                         `("/" "/hub/"
-                                           ,(ein:maybe-get-jhconn-user url)))
-                      until (cl-some (lambda (x) (string= "_xsrf" (car x))) cand)
-                      do (ein:log 'info
-                           "ein:websocket--prepare-cookies: no _xsrf among %s, retrying."
-                           cand)
-                      do (sleep-for 0 300)
-                      finally return cand)))
+  (let* ((parsed-url (url-generic-parse-url url))
+         (host-port (if (url-port-if-non-default parsed-url)
+                        (format "%s:%s" (url-host parsed-url) (url-port parsed-url))
+                      (url-host parsed-url)))
+         (securep (string-match "^wss://" url))
+         (read-cookies-func (lambda (path)
+                              (request-cookie-alist
+                               (url-host parsed-url) path securep)))
+         (cookies (cl-loop repeat 4
+                    for cand = (mapcan read-cookies-func
+                                       `("/" "/hub/"
+                                             ,(ein:maybe-get-jhconn-user url)))
+                    until (cl-some (lambda (x) (string= "_xsrf" (car x))) cand)
+                    do (ein:log 'info
+                         "ein:websocket--prepare-cookies: no _xsrf among %s, retrying."
+                         cand)
+                    do (sleep-for 0 300)
+                    finally return cand)))
     (dolist (c cookies)
       (ein:websocket-store-cookie c host-port
                                   (car (url-path-and-query parsed-url)) securep))))

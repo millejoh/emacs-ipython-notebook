@@ -1,4 +1,4 @@
-;;; ein-utils.el --- Utility module
+;;; ein-utils.el --- Utility module   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'cc-mode)
 (require 'json)
 (require 's)
@@ -204,16 +203,15 @@ at point, i.e. any word before then \"(\", if it is present."
 (defvar ein:url-localhost "127.0.0.1")
 
 (defsubst ein:glom-paths (&rest paths)
-  (loop with result = ""
-        for p in paths
-        if (not (zerop (length p)))
-          do (setq result (concat result (ein:trim-left (directory-file-name p) "/") "/"))
-        end
-        finally return (directory-file-name result)))
+  (cl-loop with result = ""
+    for p in paths
+    if (not (zerop (length p)))
+    do (setq result (concat result (ein:trim-left (directory-file-name p) "/") "/"))
+    end
+    finally return (directory-file-name result)))
 
 (defun ein:url (url-or-port &rest paths)
-  (if (null url-or-port)
-      nil
+  (when url-or-port
     (if (or (integerp url-or-port)
             (and (stringp url-or-port) (string-match "^[0-9]+$" url-or-port)))
         (setq url-or-port (format "http://localhost:%s" url-or-port)))
@@ -356,17 +354,17 @@ number of lines is less than `nlines' then just return the string."
   (let* ((lines (split-string string "\n"))
          (indent
           (let ((lens
-                 (loop for line in lines
-                       for stripped = (ein:trim-left line)
-                       unless (equal stripped "")
-                       collect (- (length line) (length stripped)))))
+                 (cl-loop for line in lines
+                   for stripped = (ein:trim-left line)
+                   unless (equal stripped "")
+                   collect (- (length line) (length stripped)))))
             (if lens (apply #'min lens) 0)))
          (trimmed
-          (loop for line in lines
-                if (> (length line) indent)
-                collect (ein:trim-right (substring line indent))
-                else
-                collect line)))
+          (cl-loop for line in lines
+            if (> (length line) indent)
+            collect (ein:trim-right (substring line indent))
+            else
+            collect line)))
     (ein:join-str "\n" trimmed)))
 
 (defun ein:join-str (sep strings)
@@ -414,7 +412,7 @@ Adapted from twittering-mode.el's `case-string'."
                            (min mincol (current-column))
                          (current-column))))
         (unless (= (forward-line 1) 0)
-          (return-from ein:find-leftmot-column mincol)))
+          (cl-return-from ein:find-leftmot-column mincol)))
       mincol)))
 
 
@@ -429,12 +427,12 @@ Adapted from twittering-mode.el's `case-string'."
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."
   ;; FIXME: this is not needed.  See: `ein:plist-exclude'.
-  (loop for p in plist
-        for i from 0
-        for key-p = (= (% i 2) 0)
-        with key = nil
-        if key-p do (setq key p)
-        else collect `(,key . ,p)))
+  (cl-loop for p in plist
+    for i from 0
+    for key-p = (= (% i 2) 0)
+    with key = nil
+    if key-p do (setq key p)
+    else collect `(,key . ,p)))
 
 (defun ein:plist-exclude (plist keys)
   "Exclude entries specified by KEYS in PLIST.
@@ -442,9 +440,9 @@ Adapted from twittering-mode.el's `case-string'."
 Example::
 
     (ein:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
-  (loop for (k v) on plist by 'cddr
-        unless (memq k keys)
-        nconc (list k v)))
+  (cl-loop for (k v) on plist by 'cddr
+    unless (memq k keys)
+    nconc (list k v)))
 
 (defun ein:clip-list (list first last)
   "Return elements in region of the LIST specified by FIRST and LAST element.
@@ -452,68 +450,68 @@ Example::
 Example::
 
     (ein:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
-  (loop for elem in list
-        with clipped
-        with in-region-p = nil
-        when (eq elem first)
-        do (setq in-region-p t)
-        when in-region-p
-        do (push elem clipped)
-        when (eq elem last)
-        return (reverse clipped)))
+  (cl-loop for elem in list
+    with clipped
+    with in-region-p = nil
+    when (eq elem first)
+    do (setq in-region-p t)
+    when in-region-p
+    do (push elem clipped)
+    when (eq elem last)
+    return (reverse clipped)))
 
-(defun* ein:list-insert-after (list pivot new &key (test #'eq))
+(cl-defun ein:list-insert-after (list pivot new &key (test #'eq))
   "Insert NEW after PIVOT in LIST destructively.
 Note: do not rely on that `ein:list-insert-after' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
-  (loop for rest on list
-        when (funcall test (car rest) pivot)
-        return (progn (push new (cdr rest)) list)
-        finally do (error "PIVOT %S is not in LIST %S" pivot list)))
+  (cl-loop for rest on list
+    when (funcall test (car rest) pivot)
+    return (progn (push new (cdr rest)) list)
+    finally do (error "PIVOT %S is not in LIST %S" pivot list)))
 
-(defun* ein:list-insert-before (list pivot new &key (test #'eq))
+(cl-defun ein:list-insert-before (list pivot new &key (test #'eq))
   "Insert NEW before PIVOT in LIST destructively.
 Note: do not rely on that `ein:list-insert-before' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
   (if (and list (funcall test (car list) pivot))
       (cons new list)
-    (loop for rest on list
-          when (funcall test (cadr rest) pivot)
-          return (progn (push new (cdr rest)) list)
-          finally do (error "PIVOT %S is not in LIST %S" pivot list))))
+    (cl-loop for rest on list
+      when (funcall test (cadr rest) pivot)
+      return (progn (push new (cdr rest)) list)
+      finally do (error "PIVOT %S is not in LIST %S" pivot list))))
 
-(defun* ein:list-move-left (list elem &key (test #'eq))
+(cl-defun ein:list-move-left (list elem &key (test #'eq))
   "Move ELEM in LIST left.  TEST is used to compare elements"
-  (macrolet ((== (a b) `(funcall test ,a ,b)))
+  (cl-macrolet ((== (a b) `(funcall test ,a ,b)))
     (cond
      ((== (car list) elem)
       (append (cdr list) (list (car list))))
      (t
-      (loop for rest on list
-            when (== (cadr rest) elem)
-            return (let ((prev (car rest)))
-                     (setf (car rest) elem)
-                     (setf (cadr rest) prev)
-                     list)
-            finally do (error "ELEM %S is not in LIST %S" elem list))))))
+      (cl-loop for rest on list
+        when (== (cadr rest) elem)
+        return (let ((prev (car rest)))
+                 (setf (car rest) elem)
+                 (setf (cadr rest) prev)
+                 list)
+        finally do (error "ELEM %S is not in LIST %S" elem list))))))
 
-(defun* ein:list-move-right (list elem &key (test #'eq))
+(cl-defun ein:list-move-right (list elem &key (test #'eq))
   "Move ELEM in LIST right.  TEST is used to compare elements"
-  (loop with first = t
-        for rest on list
-        when (funcall test (car rest) elem)
-        return (if (cdr rest)
-                   (let ((next (cadr rest)))
-                     (setf (car rest) next)
-                     (setf (cadr rest) elem)
-                     list)
-                 (if first
-                     list
-                   (setcdr rest-1 nil)
-                   (cons elem list)))
-        finally do (error "ELEM %S is not in LIST %S" elem list)
-        for rest-1 = rest
-        do (setq first nil)))
+  (cl-loop with first = t
+    for rest on list
+    when (funcall test (car rest) elem)
+    return (if (cdr rest)
+               (let ((next (cadr rest)))
+                 (setf (car rest) next)
+                 (setf (cadr rest) elem)
+                 list)
+             (if first
+                 list
+               (setcdr rest-1 nil)
+               (cons elem list)))
+    finally do (error "ELEM %S is not in LIST %S" elem list)
+    for rest-1 = rest
+    do (setq first nil)))
 
 (defun ein:get-value (obj)
   "Get value from obj if it is a variable or function."
@@ -554,15 +552,15 @@ FUNC is called as (apply FUNC ARG ARGS)."
 (defun ein:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
 NOTE: This function creates new list."
-  (loop for l in list
-        for i from 0
-        when (not (memq i indices))
-        collect l))
+  (cl-loop for l in list
+    for i from 0
+    when (not (memq i indices))
+    collect l))
 
 (defun ein:ask-choice-char (prompt choices)
   "Show PROMPT and read one of acceptable key specified as CHOICES."
-  (let ((char-list (loop for i from 0 below (length choices)
-                         collect (elt choices i)))
+  (let ((char-list (cl-loop for i from 0 below (length choices)
+                     collect (elt choices i)))
         (answer 'recenter))
     (while
         (let ((key
@@ -593,12 +591,12 @@ PREDARGS is argument list for the PREDICATE function.
 Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
   (ein:log 'debug "WAIT-UNTIL start")
   (unless timeout-seconds (setq timeout-seconds 5))
-  (unless (loop repeat (/ timeout-seconds 0.05)
-                when (apply predicate predargs)
-                return t
-                ;; borrowed from `deferred:sync!':
-                do (sit-for 0.05)
-                do (sleep-for 0.05))
+  (unless (cl-loop repeat (/ timeout-seconds 0.05)
+            when (apply predicate predargs)
+            return t
+            ;; borrowed from `deferred:sync!':
+            do (sit-for 0.05)
+            do (sleep-for 0.05))
     (warn "Timeout"))
   (ein:log 'debug "WAIT-UNTIL end"))
 
@@ -614,9 +612,11 @@ otherwise it should be a function, which is called on `time'."
 ;;; Emacs utilities
 (defmacro ein:message-whir (mesg &rest body)
   "Display MESG with a modest animation until ASYNC-CALL completes."
-  `(lexical-let* (done-p
-                  (done-callback (lambda (&rest ignore) (setf done-p t)))
-                  (errback (lambda (&rest ignore) (setf done-p 'error))))
+  `(let* (done-p
+          (done-callback (lambda (&rest _ignore) (setf done-p t)))
+          (errback (lambda (&rest _ignore) (setf done-p 'error))))
+     (ignore done-callback)
+     (ignore errback)
      (ein:message-whir-subr ,mesg (lambda () done-p))
      ,@body))
 
@@ -624,21 +624,21 @@ otherwise it should be a function, which is called on `time'."
   "Display MESG with a modest animation until done-p returns t.
 
 DONEBACK returns t or 'error when calling process is done, and nil if not done."
-  (lexical-let* ((mesg mesg)
-                 (doneback doneback)
-                 (count -1))
-    (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
+  (let* ((mesg mesg)
+         (doneback doneback)
+         (count -1))
+    (message "%s%s" mesg (make-string (1+ (% (cl-incf count) 3)) ?.))
     ;; https://github.com/kiwanami/emacs-deferred/issues/28
     ;; "complicated timings of macro expansion lexical-let, deferred:lambda"
     ;; using deferred:loop instead
     (deferred:$
-      (deferred:loop (loop for i from 1 below 30 by 1 collect i)
+      (deferred:loop (cl-loop for i from 1 below 30 by 1 collect i)
         (lambda ()
           (deferred:$
             (deferred:next
               (lambda ()
                 (ein:aif (funcall doneback) it
-                  (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
+                  (message "%s%s" mesg (make-string (1+ (% (cl-incf count) 3)) ?.))
                   (sleep-for 0 365)))))))
       (deferred:nextc it
         (lambda (status)
@@ -680,7 +680,7 @@ Use `ein:log' for debugging and logging."
 
 (defun ein:generate-menu (list-name-callback)
   (mapcar (lambda (name-callback)
-            (destructuring-bind (name callback &rest args) name-callback
+            (cl-destructuring-bind (name callback &rest args) name-callback
               `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
           list-name-callback))
 
@@ -689,7 +689,7 @@ Use `ein:log' for debugging and logging."
   :type 'boolean
   :group 'ein)
 
-(lexical-let ((current-gc-cons-threshold gc-cons-threshold))
+(let ((current-gc-cons-threshold gc-cons-threshold))
   (defun ein:gc-prepare-operation ()
     (ein:log 'debug "[GC-PREPARE-OPERATION] Setting cons threshold to %s." (* current-gc-cons-threshold 10000) )
     (when ein:enable-gc-adjust

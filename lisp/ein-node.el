@@ -25,13 +25,12 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ewoc)
 
 (require 'ein-core)
 
 
-(defstruct ein:$node
+(cl-defstruct ein:$node
   path                                  ; list of path
   data                                  ; actual data
   class                                 ; list
@@ -52,15 +51,15 @@
   (memq class (ein:$node-class node)))
 
 (defun ein:node-filter (ewoc-node-list &rest args)
-  (loop for (key . class) in (ein:plist-iter args)
-        do (setq ewoc-node-list
-                 (loop for ewoc-node in ewoc-node-list
-                       for node = (ewoc-data ewoc-node)
-                       when (case key
-                              (:is (ein:node-has-class node class))
-                              (:not (not (ein:node-has-class node class)))
-                              (t (error "%s is not supported" key)))
-                       collect ewoc-node)))
+  (cl-loop for (key . class) in (ein:plist-iter args)
+    do (setq ewoc-node-list
+             (cl-loop for ewoc-node in ewoc-node-list
+               for node = (ewoc-data ewoc-node)
+               when (cl-case key
+                      (:is (ein:node-has-class node class))
+                      (:not (not (ein:node-has-class node class)))
+                      (t (error "%s is not supported" key)))
+               collect ewoc-node)))
   ewoc-node-list)
 
 (provide 'ein-node)

@@ -33,7 +33,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ansi-color)
 (require 'comint)
 (require 'ein-core)
@@ -198,7 +197,7 @@ a number will limit the number of lines in a cell output."
   (condition-case-unless-debug err
       (let* ((img (apply #'create-image args)))
         (if ein:slice-image
-            (destructuring-bind (&optional rows cols)
+            (cl-destructuring-bind (&optional rows cols)
                 (when (listp ein:slice-image) ein:slice-image)
               (insert-sliced-image img "." nil (or rows 20) cols))
           (insert-image img ".")))
@@ -277,7 +276,7 @@ a number will limit the number of lines in a cell output."
 (cl-defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
-    (loop for k in '(read-only ewoc)
+    (cl-loop for k in '(read-only ewoc)
       do (setf (slot-value new k) (slot-value cell k)))
     ;; copy input
     (setf (slot-value new 'input) (if (ein:cell-active-p cell)
@@ -310,16 +309,15 @@ a number will limit the number of lines in a cell output."
   "Convert CELL to TYPE and redraw corresponding ewoc nodes."
   (let ((new (ein:cell-convert cell type)))
     ;; copy element attribute
-    (loop for k in (slot-value new 'element-names)
-          with old-element = (slot-value cell 'element)
-          do (progn
-               (setf (slot-value new 'element)
-                     (plist-put (slot-value new 'element) k
-                                (plist-get old-element k)))))
+    (cl-loop for k in (slot-value new 'element-names)
+      with old-element = (slot-value cell 'element)
+      do (setf (slot-value new 'element)
+               (plist-put (slot-value new 'element) k
+                          (plist-get old-element k))))
     ;; setting ewoc nodes
-    (loop for en in (ein:cell-all-element cell)
-          for node = (ewoc-data en)
-          do (setf (ein:$node-data node) new))
+    (cl-loop for en in (ein:cell-all-element cell)
+      for node = (ewoc-data en)
+      do (setf (ein:$node-data node) new))
     (let ((inhibit-read-only t)
           (buffer-undo-list t))         ; disable undo recording
       ;; delete ewoc nodes that is not copied
@@ -327,25 +325,25 @@ a number will limit the number of lines in a cell output."
        #'ewoc-delete (slot-value new 'ewoc)
        (apply
         #'append
-        (loop for name in (slot-value cell 'element-names)
-              unless (memq name (slot-value new 'element-names))
-              collect (let ((ens (ein:cell-element-get cell name)))
-                        (if (listp ens) ens (list ens))))))
+        (cl-loop for name in (slot-value cell 'element-names)
+          unless (memq name (slot-value new 'element-names))
+          collect (let ((ens (ein:cell-element-get cell name)))
+                    (if (listp ens) ens (list ens))))))
       ;; draw ewoc node
-      (loop with ewoc = (slot-value new 'ewoc)
-            for en in (ein:cell-all-element new)
-            do (ewoc-invalidate ewoc en)))
+      (cl-loop with ewoc = (slot-value new 'ewoc)
+        for en in (ein:cell-all-element new)
+        do (ewoc-invalidate ewoc en)))
     new))
 
 (cl-defmethod ein:cell-change-level ((cell ein:headingcell) level)
-  (assert (integerp level))
+  (cl-assert (integerp level))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))         ; disable undo recording
     (setf (slot-value cell 'level) level)
     ;; draw ewoc node
-    (loop with ewoc = (slot-value cell 'ewoc)
-          for en in (ein:cell-all-element cell)
-          do (ewoc-invalidate ewoc en))))
+    (cl-loop with ewoc = (slot-value cell 'ewoc)
+      for en in (ein:cell-all-element cell)
+      do (ewoc-invalidate ewoc en))))
 
 
 ;;; Getter/setter
@@ -368,9 +366,9 @@ a number will limit the number of lines in a cell output."
   (let ((element (slot-value cell 'element)))
     (if index
         (progn
-          (assert (eql prop :output))
+          (cl-assert (eql prop :output))
           (nth index (plist-get element prop)))
-      (case prop
+      (cl-case prop
         (:after-input
          (ein:aif (nth 0 (plist-get element :output))
              it
@@ -386,7 +384,7 @@ a number will limit the number of lines in a cell output."
 
 (cl-defmethod ein:cell-element-get ((cell ein:textcell) prop &rest args)
   (let ((element (slot-value cell 'element)))
-    (case prop
+    (cl-case prop
       (:after-input (plist-get element :footer))
       (:before-input (plist-get element :prompt))
       (t (cl-call-next-method)))))
@@ -421,8 +419,8 @@ Return language name as a string or `nil' when not defined.
     (list
      :prompt (funcall make-node 'prompt)
      :input  (funcall make-node 'input)
-     :output (loop for i from 0 below num-outputs
-                   collect (funcall make-node 'output i))
+     :output (cl-loop for i from 0 below num-outputs
+               collect (funcall make-node 'output i))
      :footer (funcall make-node 'footer))))
 
 (cl-defmethod ein:cell-enter-last ((cell ein:basecell))
@@ -467,7 +465,7 @@ Return language name as a string or `nil' when not defined.
     other-cell))
 
 (defun ein:cell-pp (path data)
-  (case (car path)
+  (cl-case (car path)
     (prompt (ein:cell-insert-prompt data))
     (input  (ein:cell-insert-input data))
     (output (ein:cell-insert-output (cadr path) data))
@@ -713,7 +711,7 @@ PROP is a name of cell element.  Default is `:input'.
   (unless relpos (setq relpos 0))
   (unless prop (setq prop :input))
   (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop))
-  (let ((offset (case prop
+  (let ((offset (cl-case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
                   (t 0))))
@@ -729,7 +727,7 @@ PROP is a name of cell element.  Default is `:input'.
   (unless prop (setq prop :input))
   (let ((goal-column nil))
     (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop)))
-  (let ((offset (case prop
+  (let ((offset (cl-case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
                   (t 0))))
@@ -752,7 +750,7 @@ If END is non-`nil', return the location of next element."
   (unless elm (setq elm :prompt))
   (let ((element (slot-value cell 'element)))
     (when end
-      (setq elm (case elm
+      (setq elm (cl-case elm
                   (:prompt :input)
                   (:input :after-input)
                   (:output :after-output)))
@@ -761,7 +759,7 @@ If END is non-`nil', return the location of next element."
         (setq elm :prompt)))
     (if cell
         (ewoc-location (ein:cell-element-get cell elm))
-      (assert end)
+      (cl-assert end)
       (point-max))))
 
 (cl-defmethod ein:cell-buffer ((cell ein:basecell))
@@ -843,7 +841,7 @@ If END is non-`nil', return the location of next element."
     (when (or
            (null old-tb)
            (null new-tb)
-           (not (equalp new-tb old-tb)))
+           (not (cl-equalp new-tb old-tb)))
       (ein:cell-actually-append-output cell json dynamic))
     (setf (slot-value cell 'traceback) new-tb)))
 
@@ -977,35 +975,35 @@ prettified text thus be used instead of HTML type."
 (defun ein:cell-append-mime-type (json dynamic)
   (when (plist-get json :data)
     (setq json (plist-get json :data))) ;; For nbformat v4 support.
-  (loop
-   for key in (cond
-               ((functionp ein:output-type-preference)
-                (funcall ein:output-type-preference json))
-               (t ein:output-type-preference))
-   for type = (intern (format ":%s" key)) ; something like `:text'
-   for value = (plist-get json type)      ; FIXME: optimize
-   when (plist-member json type)
-   return
-   (case key
-     ;; NOTE: Normally `javascript' and `html' will not be inserted as
-     ;; they come out after `text'.  Maybe it is better to inform user
-     ;; when one of them is inserted.
-     ((javascript text/javascript)
-      (when dynamic
-        (ein:log 'info (concat "ein:cell-append-mime-type does not support "
-                               "dynamic javascript. got: %s") value))
-      (ein:insert-read-only (plist-get json type)))
-     (emacs-lisp
-      (when dynamic
-        (ein:cell-safe-read-eval-insert (plist-get json type))))
-     ((html text/html)
-      (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
-     ((latex text/latex text text/plain)
-      (ein:insert-read-only (plist-get json type)))
-     ((svg image/svg+xml)
-      (ein:insert-image value (ein:fix-mime-type key) t))
-     ((png image/png jpeg image/jpeg)
-      (ein:insert-image (base64-decode-string value) (ein:fix-mime-type key) t)))))
+  (cl-loop
+    for key in (cond
+                 ((functionp ein:output-type-preference)
+                  (funcall ein:output-type-preference json))
+                 (t ein:output-type-preference))
+    for type = (intern (format ":%s" key)) ; something like `:text'
+    for value = (plist-get json type)      ; FIXME: optimize
+    when (plist-member json type)
+    return
+      (cl-case key
+        ;; NOTE: Normally `javascript' and `html' will not be inserted as
+        ;; they come out after `text'.  Maybe it is better to inform user
+        ;; when one of them is inserted.
+        ((javascript text/javascript)
+         (when dynamic
+           (ein:log 'info (concat "ein:cell-append-mime-type does not support "
+                                  "dynamic javascript. got: %s") value))
+         (ein:insert-read-only (plist-get json type)))
+        (emacs-lisp
+         (when dynamic
+           (ein:cell-safe-read-eval-insert (plist-get json type))))
+        ((html text/html)
+         (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
+        ((latex text/latex text text/plain)
+         (ein:insert-read-only (plist-get json type)))
+        ((svg image/svg+xml)
+         (ein:insert-image value (ein:fix-mime-type key) t))
+        ((png image/png jpeg image/jpeg)
+         (ein:insert-image (base64-decode-string value) (ein:fix-mime-type key) t)))))
 
 (defun ein:cell-append-text (data &rest properties)
   ;; escape ANSI in plaintext:
@@ -1066,54 +1064,54 @@ prettified text thus be used instead of HTML type."
               (plist-put output :metadata (make-hash-table)))
           (setq renamed-outputs
                 (append renamed-outputs
-                        (list (let ((ocopy (copy-list output))
+                        (list (let ((ocopy (cl-copy-list output))
                                     (new-output '()))
-                                (loop while ocopy
-                                      do (let ((prop (pop ocopy))
-                                               (value (pop ocopy)))
-                                           (ein:log 'debug "Checking property %s for output type '%s'"
-                                                    prop otype)
-                                           (cond
-                                            ((equal prop :stream) (progn (push value new-output)
-                                                                         (push :name new-output)))
+                                (cl-loop while ocopy
+                                  do (let ((prop (pop ocopy))
+                                           (value (pop ocopy)))
+                                       (ein:log 'debug "Checking property %s for output type '%s'"
+                                                prop otype)
+                                       (cond
+                                         ((equal prop :stream) (progn (push value new-output)
+                                                                      (push :name new-output)))
 
-                                            ((and (or (equal otype "display_data")
-                                                      (equal otype "execute_result"))
-                                                  (ein:output-property-p prop))
-                                             (let ((new-prop (cdr (ein:output-property-p prop))))
-                                               (if (plist-member new-output :data)
-                                                   (setq new-output (plist-put new-output :data
-                                                                               (append (plist-get new-output :data)
-                                                                                       (list new-prop (list value))
-                                                                                       )))
-                                                 (push (list new-prop (list value)) new-output)
-                                                 (push :data new-output))
-                                               ))
+                                         ((and (or (equal otype "display_data")
+                                                   (equal otype "execute_result"))
+                                               (ein:output-property-p prop))
+                                          (let ((new-prop (cdr (ein:output-property-p prop))))
+                                            (if (plist-member new-output :data)
+                                                (setq new-output (plist-put new-output :data
+                                                                            (append (plist-get new-output :data)
+                                                                                    (list new-prop (list value))
+                                                                                    )))
+                                              (push (list new-prop (list value)) new-output)
+                                              (push :data new-output))
+                                            ))
 
-                                            ((and (equal otype "display_data")
-                                                  (equal prop :text))
-                                             (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
+                                         ((and (equal otype "display_data")
+                                               (equal prop :text))
+                                          (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
 
-                                            ;; ((and (equal otype "execute_result")
-                                            ;;       (ein:output-property-p prop)
-                                            ;;       ;; (or (equal prop :text)
-                                            ;;       ;;     (equal prop :html)
-                                            ;;       ;;     (equal prop :latex))
-                                            ;;       )
-                                            ;;  (ein:log 'debug "Fixing execute_result (%s?)." otype)
-                                            ;;  (let ((new-prop (cdr (ein:output-property-p prop))))
-                                            ;;    (push (list new-prop (list value)) new-output)
-                                            ;;    (push :data new-output)))
+                                         ;; ((and (equal otype "execute_result")
+                                         ;;       (ein:output-property-p prop)
+                                         ;;       ;; (or (equal prop :text)
+                                         ;;       ;;     (equal prop :html)
+                                         ;;       ;;     (equal prop :latex))
+                                         ;;       )
+                                         ;;  (ein:log 'debug "Fixing execute_result (%s?)." otype)
+                                         ;;  (let ((new-prop (cdr (ein:output-property-p prop))))
+                                         ;;    (push (list new-prop (list value)) new-output)
+                                         ;;    (push :data new-output)))
 
 
-                                            ((and (equal otype "execute_result")
-                                                  (equal prop :prompt_number))
-                                             (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
-                                             (push value new-output)
-                                             (push :execution_count new-output))
+                                         ((and (equal otype "execute_result")
+                                               (equal prop :prompt_number))
+                                          (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
+                                          (push value new-output)
+                                          (push :execution_count new-output))
 
-                                            (t (progn (push value new-output) (push prop new-output)))))
-                                      finally return new-output))))
+                                         (t (progn (push value new-output) (push prop new-output)))))
+                                  finally return new-output))))
                 ))))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
@@ -1245,17 +1243,17 @@ prettified text thus be used instead of HTML type."
 
 
 (defun ein:output-area-convert-mime-types (json data)
-  (loop for (prop . mime) in '((:text       . :text/plain)
-                               (:html       . :text/html)
-                               (:svg        . :image/svg+xml)
-                               (:png        . :image/png)
-                               (:jpeg       . :image/jpeg)
-                               (:latex      . :text/latex)
-                               (:json       . :application/json)
-                               (:javascript . :application/javascript)
-                               (:emacs-lisp . :application/emacs-lisp))
-        when (plist-member data mime)
-        do (plist-put json prop (plist-get data mime)))
+  (cl-loop for (prop . mime) in '((:text       . :text/plain)
+                                  (:html       . :text/html)
+                                  (:svg        . :image/svg+xml)
+                                  (:png        . :image/png)
+                                  (:jpeg       . :image/jpeg)
+                                  (:latex      . :text/latex)
+                                  (:json       . :application/json)
+                                  (:javascript . :application/javascript)
+                                  (:emacs-lisp . :application/emacs-lisp))
+    when (plist-member data mime)
+    do (plist-put json prop (plist-get data mime)))
   json)
 
 
@@ -1274,23 +1272,23 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
-  (loop for out in (slot-value cell 'outputs)
-        when (or (plist-member out :svg)
-                 (plist-member out :image/svg+xml)
-                 (plist-member out :png)
-                 (plist-member out :image/png)
-                 (plist-member out :jpeg)
-                 (plist-member out :image/jpeg))
-        return t))
+  (cl-loop for out in (slot-value cell 'outputs)
+    when (or (plist-member out :svg)
+             (plist-member out :image/svg+xml)
+             (plist-member out :png)
+             (plist-member out :image/png)
+             (plist-member out :jpeg)
+             (plist-member out :image/jpeg))
+    return t))
 
 (cl-defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
   nil)
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
-  (loop for out in (slot-value cell 'outputs)
-        when (and (plist-get out :traceback)
-                  (member (plist-get out :output_type) '("pyerr" "error")))
-        return (plist-get out :traceback)))
+  (cl-loop for out in (slot-value cell 'outputs)
+    when (and (plist-get out :traceback)
+              (member (plist-get out :output_type) '("pyerr" "error")))
+    return (plist-get out :traceback)))
 
 (provide 'ein-cell)
 

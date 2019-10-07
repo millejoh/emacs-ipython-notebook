@@ -36,14 +36,14 @@
 
 (defvar *ein:jupyterhub-connections* (make-hash-table :test #'equal))
 
-(defstruct ein:$jh-conn
+(cl-defstruct ein:$jh-conn
   "Data representing a connection to a jupyterhub server."
   url-or-port
   version
   user
   token)
 
-(defstruct ein:$jh-user
+(cl-defstruct ein:$jh-user
   "A jupyterhub user, per https://jupyterhub.readthedocs.io/en/latest/_static/rest-api/index.html#/definitions/User"
   name
   admin
@@ -77,7 +77,7 @@
       (ein:websocket-store-cookie c host-port
                                   (car (url-path-and-query parsed-url)) securep))))
 
-(defun* ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
+(cl-defun ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
   (deferred:callback-post dobj (list conn response)))
 
 (defmacro ein:jupyterhub--add-header (header)
@@ -201,8 +201,8 @@
   "Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater.  CALLBACK takes two arguments, the resulting buffer and the singleuser url-or-port"
   (interactive (let ((url-or-port (ein:notebooklist-ask-url-or-port))
                      (pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
-                 (loop for (user pw) on pam-plist by (function cddr)
-                       return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
+                 (cl-loop for (user pw) on pam-plist by (function cddr)
+                   return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
   (ein:jupyterhub--query-version url-or-port callback username password))
 
 (provide 'ein-jupyterhub)
