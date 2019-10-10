@@ -193,8 +193,8 @@ the log of the running jupyter server."
            (read-directory-name "Notebook directory: "
                                 (or *ein:last-jupyter-directory*
                                     ein:jupyter-default-notebook-directory))))
-     (list server-cmd-path notebook-directory nil (lambda (buffer _url-or-port)
-                                                    (pop-to-buffer buffer)))))
+     (list server-cmd-path notebook-directory nil #'(lambda (buffer _url-or-port)
+                                                      (pop-to-buffer buffer)))))
   (unless (and (stringp server-cmd-path)
                (file-exists-p server-cmd-path)
                (file-executable-p server-cmd-path))
@@ -225,7 +225,7 @@ the log of the running jupyter server."
     (when (and (not no-login-p) (ein:jupyter-server-process))
       (unless login-callback
         (setq login-callback #'ignore))
-      (add-function :after login-callback
+      (add-function :after (var login-callback)
                     (apply-partially (lambda (proc* _buffer url-or-port)
                                        (ein:set-process-sentinel proc* url-or-port))
                                      proc))

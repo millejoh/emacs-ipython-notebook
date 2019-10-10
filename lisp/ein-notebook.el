@@ -401,7 +401,7 @@ where `created' indicates a new notebook or an existing one.
         (when (or (not pending-p)
                   (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
           (setf (gethash pending-key *ein:notebook--pending-query*) t)
-          (add-function :before errback pending-clear)
+          (add-function :before (var errback) pending-clear)
           (ein:content-query-contents url-or-port path
                                       (apply-partially #'ein:notebook-open--callback
                                                        notebook callback0 (not no-pop))
@@ -988,7 +988,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
            (not (ob-ein-anonymous-p (ein:$notebook-notebook-path notebook))))
       (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
           (let ((success-positive 0))
-            (add-function :before callback0 (lambda () (setq success-positive 1)))
+            (add-function :before (var callback0) (lambda () (setq success-positive 1)))
             (ein:notebook-save-notebook notebook callback0 nil
                                         (lambda () (setq success-positive -1)))
             (cl-loop repeat 10
@@ -1007,7 +1007,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
          (callback0 (apply-partially #'ein:notebook-kill-notebook-buffers notebook)))
     (when callback
-      (add-function :after callback0
+      (add-function :after (var callback0)
                     (apply #'apply-partially callback cbargs)))
     (ein:notebook-ask-save notebook callback0)))
 
@@ -1023,7 +1023,7 @@ as usual."
                     notebook)))
     (if (ein:kernel-live-p kernel)
         (ein:message-whir "Ending session"
-                          (add-function :before callback1 done-callback)
+                          (add-function :before (var callback1) done-callback)
                           (ein:kernel-delete-session kernel callback1))
       (funcall callback1 nil))))
 
