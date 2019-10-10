@@ -432,7 +432,7 @@ This function is called via `ein:notebook-after-rename-hook'."
      (list url-or-port kernelspec name)))
   (unless callback
     (setq callback #'ignore))
-  (add-function :before callback
+  (add-function :before (var callback)
                 (apply-partially
                  (lambda (name* notebook _created)
                    (with-current-buffer (ein:notebook-buffer notebook)
