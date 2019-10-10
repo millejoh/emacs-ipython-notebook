@@ -222,13 +222,11 @@ global setting.  For global setting and more information, see
          (items (ein:$content-raw-content content))
          (directories (if (< depth ein:content-query-max-depth)
                           (cl-loop for item in items
-                                   with result
+                                   with result = nil
                                    until (>= (length result) ein:content-query-max-branch)
-                                   if (string= "directory" (plist-get item :type))
-                                   collect (ein:new-content url-or-port path item)
-                                   into result
-                                   end
-                                   finally return result)))
+                                   do (if (string= "directory" (plist-get item :type))
+                                          (setf result (append result (list (ein:new-content url-or-port path item)))))
+                                   finally return result ) ))
          (others (cl-loop for item in items
                           with c0
                           if (not (string= "directory" (plist-get item :type)))
@@ -240,20 +238,20 @@ global setting.  For global setting and more information, see
     (deferred:$
       (apply #'deferred:parallel
              (cl-loop for c0 in directories
-               collect
-                 (let ((c0 c0)
-                       (d0 (deferred:new #'identity)))
-                   (ein:content-query-contents
-                    url-or-port
-                    (ein:$content-path c0)
-                    (apply-partially #'ein:content-query-hierarchy*
-                                     url-or-port
-                                     (ein:$content-path c0)
-                                     (lambda (tree)
-                                       (deferred:callback-post d0 (cons c0 tree)))
-                                     sessions (1+ depth))
-                    (lambda (&rest _ignore) (deferred:callback-post d0 (cons c0 nil))))
-                   d0)))
+                      collect
+                      (let ((c0 c0)
+                            (d0 (deferred:new #'identity)))
+                        (ein:content-query-contents
+                         url-or-port
+                         (ein:$content-path c0)
+                         (apply-partially #'ein:content-query-hierarchy*
+                                          url-or-port
+                                          (ein:$content-path c0)
+                                          (lambda (tree)
+                                            (deferred:callback-post d0 (cons c0 tree)))
+                                          sessions (1+ depth))
+                         (lambda (&rest _ignore) (deferred:callback-post d0 (cons c0 nil))))
+                        d0)))
       (deferred:nextc it
         (lambda (tree)
           (let ((result (append others tree)))
