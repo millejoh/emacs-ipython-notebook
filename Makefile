@@ -99,7 +99,7 @@ test-install:
 	--eval "(require 'package-build)" \
 	--eval "(require 'subr-x)" \
 	--eval "(package-initialize)" \
-	--eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
+	--eval "(add-to-list 'package-archives '(\"melpa-stable\" . \"http://stable.melpa.org/packages/\"))" \
 	--eval "(package-refresh-contents)" \
 	--eval "(setq rcp (package-recipe-lookup \"ein\"))" \
 	--eval "(unless (file-exists-p package-build-archive-dir) \
@@ -121,6 +121,6 @@ dist:
 .PHONY: install
 install: dist
 	emacs -Q --batch --eval "(package-initialize)" \
-	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
+	  --eval "(add-to-list 'package-archives '(\"melpa-stable\" . \"http://stable.melpa.org/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
 	  --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"

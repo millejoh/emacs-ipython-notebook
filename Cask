@@ -1,5 +1,5 @@
 (source gnu)
-(source melpa)
+(source melpa-stable)
 (source org)
 
 (package-descriptor "lisp/ein-pkg.el")
