@@ -77,6 +77,7 @@
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
 
 (declare-function ein:smartrep-config "ein-smartrep")
+(declare-function px-preview "px")
 
 (defcustom ein:use-smartrep nil
   "Set to `t' to use preset smartrep configuration.
