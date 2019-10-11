@@ -21,9 +21,9 @@
  (depends-on "smartrep" "1.0.0")
  (depends-on "polymode" "0.2")
  (depends-on "markdown-mode" "2.3")
- ;; (depends-on "julia-mode")
+ (depends-on "julia-mode") ;; See https://github.com/JuliaEditorSupport/julia-emacs/issues/46
  (depends-on "undo-tree" "0.6.5")
  (depends-on "ess" "18.10.2")
- ;; (depends-on "px")
+ ;; (depends-on "px") ;; Not in melpa stable
  (depends-on "f" "0.20.0")
  (depends-on "s" "1.12.0"))
