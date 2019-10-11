@@ -1,7 +1,6 @@
 (source gnu)
 (source melpa-stable)
 (source melpa)
-(source elpa)
 (source org)
 
 (package-descriptor "lisp/ein-pkg.el")
