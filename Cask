@@ -1,6 +1,7 @@
 (source gnu)
 (source melpa-stable)
 (source melpa)
+(source elpa)
 (source org)
 
 (package-descriptor "lisp/ein-pkg.el")
@@ -23,7 +24,7 @@
  (depends-on "polymode" "0.2")
  (depends-on "markdown-mode" "2.3")
  (depends-on "julia-mode") ;; See https://github.com/JuliaEditorSupport/julia-emacs/issues/46
- (depends-on "undo-tree" "0.6.5")
+ (depends-on "undo-tree") ;; Specifying a version breaks emacs 25 environment.
  (depends-on "ess" "18.10.2")
  ;; (depends-on "px") ;; Not in melpa stable
  (depends-on "f" "0.20.0")
