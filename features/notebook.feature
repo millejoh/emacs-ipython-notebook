@@ -168,3 +168,9 @@ Scenario: Test the undo-tree-incompatible logic
   Given new python notebook
   And I call "turn-on-undo-tree-mode"
   Then the value of "undo-tree-mode" is nil
+
+@case-fold-search-regression
+Scenario: Check for regression on case-fold-search (issue #600)
+  Given case sensitive checked notebook
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "websocket-invalid-header"
