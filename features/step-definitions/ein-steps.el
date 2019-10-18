@@ -163,6 +163,11 @@
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
 
+(When "^case sensitive checked notebook$"
+      (lambda ()
+        (let ((case-fold-search nil))
+          (Then "new python notebook"))))
+
 (When "^I kill buffer and reopen$"
       (lambda ()
         (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
