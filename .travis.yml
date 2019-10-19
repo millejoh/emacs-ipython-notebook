@@ -37,7 +37,7 @@ env:
 matrix:
   include:
     - os: linux
-      env: EMACS_CI=emacs-25-3 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
+      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
     - os: linux
       env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: linux
@@ -88,4 +88,4 @@ script:
       make test-jupyterhub
     fi
   - rm -rf $HOME/.matplotlib $HOME/.cache/fontconfig
-  - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | dos2unix | sed '/^begin 644/,/^end/!d' | uudecode" ) && false)
+  - make test || ( ( zip -q - log/{testein,testfunc,ecukes}.* 2>/dev/null | uuencode log.zip ) && ( printf "To diagnose, travis logs -i | sed '/^begin 664/,/^end/!d' | uudecode" ) && false)
