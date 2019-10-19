@@ -2,7 +2,7 @@
   "0.16.2"
   "Emacs IPython Notebook"
   '((emacs "25")
-    (websocket "20190620.338")
+    (websocket "20191017.30")
     (auto-complete "1.4.0")
     (request "20190621.1622")
     (deferred "0.5")
