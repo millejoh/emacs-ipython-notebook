@@ -173,6 +173,7 @@ This function adds NBLIST to `ein:notebooklist-map'."
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
+(defvar ein:jupyter-default-server-command)
 (defun ein:crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
   (ein:aif (cl-loop for line in (condition-case err
@@ -537,6 +538,7 @@ This function is called via `ein:notebook-after-rename-hook'."
    "Open In Browser")
   (widget-insert "\n"))
 
+(defvar ein:jupyter-default-kernel)
 (defun render-header* (url-or-port &rest _args)
   "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
