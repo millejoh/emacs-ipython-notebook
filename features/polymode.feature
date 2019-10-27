@@ -40,6 +40,7 @@ Scenario: moving cells requires refontification
 @poly-complete
 Scenario: completion in polymode notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+  Given jedi completion environment
   Given new python notebook
   And I type "import itertools"
   And I press "RET"
