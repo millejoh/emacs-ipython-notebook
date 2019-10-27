@@ -425,6 +425,10 @@
       (lambda (variable value)
         (set (intern variable) (eval (car (read-from-string value))))))
 
+(When "^I eval \"\\(.+\\)\"$"
+      (lambda (expr)
+        (eval (car (read-from-string expr)))))
+
 (When "^I connect to default notebook"
       (lambda ()
         (ein:connect-to-notebook-buffer (car (ein:notebook-opened-buffer-names
@@ -488,3 +492,10 @@
          (mapcan (lambda (prop)
                    (not (get-text-property (point) (intern prop))))
                  (split-string properties ",")))))
+
+(When "^jedi completions should contain \"\\(.+\\)\"$"
+      (lambda (str)
+        (let ((completions (jedi:ac-direct-matches)))
+          (should (some #'(lambda (x)
+                            (string= x str))
+                        completions)))))

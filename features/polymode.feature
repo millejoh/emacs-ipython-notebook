@@ -36,3 +36,14 @@ Scenario: moving cells requires refontification
   And I press "M-<up>"
   And I press "C-<down>"
   And I go to word "Header"
+
+@poly
+Scenario: completion in polymode notebook
+  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+  Given new python notebook
+  And I type "import itertools"
+  And I press "RET"
+  And I type "itertools.chai"
+  And I call "jedi:complete"
+  And I wait for the smoke to clear
+  Then jedi completions should contain "chain"

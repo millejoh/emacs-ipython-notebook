@@ -7,6 +7,7 @@
 (development
  (depends-on "websocket")
  (depends-on "request")
+ (depends-on "jedi")
  (depends-on "dash")
  (depends-on "ert-runner")
  (depends-on "ecukes")
