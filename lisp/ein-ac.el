@@ -85,18 +85,7 @@ When this option is enabled, cached omni completion is available."
 (defun ein:ac-direct-get-matches ()
  (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
 
-(ac-define-source ein-direct
-  '((candidates . ein:ac-direct-get-matches)
-    (requires . 0)
-    (prefix . ein:ac-chunk-beginning)
-    (symbol . "s")))
 
-(ac-define-source ein-async
-  '((candidates . ein:ac-direct-get-matches)
-    (requires . 0)
-    (prefix . ein:ac-chunk-beginning)
-    (init . ein:ac-request-in-background)
-    (symbol . "c")))
 
 (define-obsolete-function-alias 'ac-complete-ein-cached 'ac-complete-ein-async
   "0.2.1")
@@ -246,7 +235,22 @@ Specifying non-`nil' to SUPERPACK enables richer auto-completion
   (when superpack
     (ein:ac-superpack)))
 
-(ein:ac-config ein:use-auto-complete-superpack)
+(defun ein:ac-install-backend ()
+  (ac-define-source ein-direct
+    '((candidates . ein:ac-direct-get-matches)
+      (requires . 0)
+      (prefix . ein:ac-chunk-beginning)
+      (symbol . "s")))
+
+  (ac-define-source ein-async
+    '((candidates . ein:ac-direct-get-matches)
+      (requires . 0)
+      (prefix . ein:ac-chunk-beginning)
+      (init . ein:ac-request-in-background)
+      (symbol . "c")))
+
+  (ein:ac-config ein:use-auto-complete-superpack))
+
 (provide 'ein-ac)
 
 ;;; ein-ac.el ends here

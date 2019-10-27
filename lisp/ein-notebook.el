@@ -1692,6 +1692,7 @@ watch the fireworks!"
   (when ein:notebook-mode
     (cl-case ein:completion-backend
       (ein:use-ac-backend
+       (ein:ac-install-backend)
        (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
        (auto-complete-mode))
       (ein:use-company-backend
