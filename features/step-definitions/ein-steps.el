@@ -499,3 +499,10 @@
           (should (some #'(lambda (x)
                             (string= x str))
                         completions)))))
+
+(When "^jedi completion environment$"
+      (lambda ()
+        (require 'jedi)
+        (jedi:install-server)
+        (add-hook 'python-mode-hook 'jedi:setup)
+        (setq jedi:complete-on-dot t)))
