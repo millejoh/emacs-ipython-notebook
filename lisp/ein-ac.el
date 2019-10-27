@@ -104,7 +104,7 @@ When this option is enabled, cached omni completion is available."
   "0.2.1")
 
 (defun ein:ac-request-in-background ()
-  (cl-ecase ein:completion-backend
+  (cl-case ein:completion-backend
     (ein:use-ac-backend (ein:aif (ein:get-kernel)
                             (ein:completer-complete
                              it
