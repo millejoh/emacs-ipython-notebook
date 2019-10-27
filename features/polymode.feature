@@ -37,7 +37,7 @@ Scenario: moving cells requires refontification
   And I press "C-<down>"
   And I go to word "Header"
 
-@poly
+@poly-complete
 Scenario: completion in polymode notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
   Given new python notebook
