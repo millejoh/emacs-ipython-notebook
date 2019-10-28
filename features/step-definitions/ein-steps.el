@@ -503,6 +503,6 @@
 (When "^jedi completion environment$"
       (lambda ()
         (require 'jedi)
-        (jedi:install-server)
+        (jedi:install-server-block)
         (add-hook 'python-mode-hook 'jedi:setup)
         (setq jedi:complete-on-dot t)))
