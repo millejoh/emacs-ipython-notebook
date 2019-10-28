@@ -285,7 +285,7 @@
 (When "^I wait for the smoke to clear"
       (lambda ()
         (ein:testing-flush-queries)
-        (And "I wait 2 seconds"))) ;; eldoc-documentation-function not flushing
+        (And "I wait 10 seconds"))) ;; eldoc-documentation-function not flushing
 
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (go stop)
