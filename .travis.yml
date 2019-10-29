@@ -55,9 +55,10 @@ install:
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
+      pip install virtualenv ;
     fi
   - ${PIP} --upgrade pip
-  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2 epc
   - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh
   - sh tools/install-julia.sh

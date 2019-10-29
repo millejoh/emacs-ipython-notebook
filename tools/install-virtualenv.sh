@@ -20,5 +20,12 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
             pyenv install -s 3.5.2
             pyenv virtualenv -f 3.5.2 py35
             ;;
+        py36)
+            pyenv install -s 3.6.9
+            pyenv virtualenv -f 3.6.9 py36
+            ;;
+        py37)
+            pyenv install -s 3.7.5
+            pyenv virtualenv -f 3.7.5 py37
     esac
 fi
