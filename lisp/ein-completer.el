@@ -81,10 +81,23 @@
                      (list :complete_reply
                            (cons #'ein:completer-finish-completing '(:expand nil)))
                      #'ignore))
-  (ein:kernel-complete kernel
-                       (thing-at-point 'line)
-                       (current-column)
-                       callbacks errback))
+  (multiple-value-bind (code pos) (ein:get-completion-context (ein:$kernel-api-version kernel))
+    (ein:log 'debug (format "EIN:COMPLETER-COMPLETE Code block: %s at position :%s" code pos))
+    (ein:kernel-complete kernel
+                         code ;; (thing-at-point 'line)
+                         pos ;; (current-column)
+                         callbacks errback)))
+
+(defun ein:get-completion-context (api-version)
+  (cond ((< api-version 5)
+         (values (thing-at-point 'line) (current-column)))
+        ((and (ein:get-kernel) (ein:get-cell-at-point))
+         (let* ((cell (ein:get-cell-at-point))
+                (code (ein:cell-get-text cell))
+                (beg (ein:cell-input-pos-min cell)))
+           (values code (- (point) beg))))
+        ((ein:get-kernel)
+         (values (buffer-string) (1- (point))))))
 
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)
