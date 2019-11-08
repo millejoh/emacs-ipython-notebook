@@ -7,8 +7,8 @@
 .. COMMENTARY (see Makefile)
 
 .. |build-status|
-   image:: https://secure.travis-ci.org/millejoh/emacs-ipython-notebook.png?branch=master
-   :target: http://travis-ci.org/millejoh/emacs-ipython-notebook
+   image:: https://secure.travis-ci.org/dickmao/emacs-ipython-notebook.png?branch=master
+   :target: http://travis-ci.org/dickmao/emacs-ipython-notebook
    :alt: Build Status
 .. |melpa-dev|
    image:: http://melpa.milkbox.net/packages/ein-badge.svg
@@ -105,14 +105,7 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _polymode: https://github.com/polymode/polymode
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython
 .. _scimax: https://github.com/jkitchin/scimax
-.. _ob-ein details: http://millejoh.github.io/emacs-ipython-notebook/#org-mode-integration
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
-
-Connected Buffers
-=================
-Use ``M-x ein:connect-to-notebook`` to submit code from an arbitrary buffer to a running jupyter kernel.  See `connected buffer details`_.
-
-.. _connected buffer details: http://millejoh.github.io/emacs-ipython-notebook/#connected-buffer
 
 Keymap (C-h m)
 ==============
@@ -120,15 +113,6 @@ Keymap (C-h m)
 ::
 
 .. KEYS NOTEBOOK (see Makefile)
-
-Links
-=====
-* `Complete documentation <http://millejoh.github.io/emacs-ipython-notebook/>`_
-
-* `Wiki <https://github.com/millejoh/emacs-ipython-notebook/wiki>`_
-
-  + `Screenshots <https://github.com/millejoh/emacs-ipython-notebook/wiki/Screenshots>`_
-  + `Tips <https://github.com/millejoh/emacs-ipython-notebook/wiki/Tips>`_
 
 License
 =======
