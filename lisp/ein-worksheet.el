@@ -1056,12 +1056,13 @@ Do not clear input prompts when the prefix argument is given."
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-when-ready (slot-value ws 'kernel)
                          (apply-partially
-                          (lambda (ws* cell* kernel)
-                            (let ((buffer-undo-list t))
-                              (ein:cell-execute cell*)
-                              (oset ws* :dirty t))
-                            (ein:worksheet--unshift-undo-list cell*))
-                          ws cell))
+                          (lambda (ws* cell* buffer* kernel)
+                            (with-current-buffer buffer*
+                              (let ((buffer-undo-list t))
+                                (ein:cell-execute cell*)
+                                (oset ws* :dirty t))
+                              (ein:worksheet--unshift-undo-list cell*)))
+                          ws cell (current-buffer)))
   cell)
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
