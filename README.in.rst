@@ -1,5 +1,5 @@
 ========================================================================
- EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
+ EIN -- Emacs IPython Notebook |build-status|
 ========================================================================
 
   --- or **E**\ IN **I**\ s not only for pytho\ **N**\ .
@@ -26,7 +26,7 @@
 
 Install
 =======
-Install from MELPA_ (recommended) or ``make install`` from github source.
+Clone this repo and ``make install``.  You will need Cask.
 
 Usage
 =====
