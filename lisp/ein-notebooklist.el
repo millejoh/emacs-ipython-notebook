@@ -574,8 +574,8 @@ This function is called via `ein:notebook-after-rename-hook'."
                 (ein:get-kernelspec
                  url-or-port
                  (if (stringp ein:jupyter-default-kernel)
-                     (intern ein:jupyter-default-kernel)
-                   ein:jupyter-default-kernel)))))
+                     ein:jupyter-default-kernel
+                   (symbol-name ein:jupyter-default-kernel))))))
       (widget-create
        'link
        :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
