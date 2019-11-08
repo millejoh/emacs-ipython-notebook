@@ -526,7 +526,9 @@ This function is called via `ein:notebook-after-rename-hook'."
    'link
    :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
                                    (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                   nil))
+                                   (unless (eq ein:jupyter-default-kernel
+                                               'first-alphabetically)
+                                     ein:jupyter-default-kernel)))
    "New Notebook")
   (widget-insert " ")
   (widget-create
@@ -565,8 +567,15 @@ This function is called via `ein:notebook-after-rename-hook'."
 
     (lexical-let* ((url-or-port url-or-port)
                    (kernels (ein:list-available-kernels url-or-port)))
-      (if (null ein:%notebooklist-new-kernel%)
-          (setq ein:%notebooklist-new-kernel% (ein:get-kernelspec url-or-port (caar kernels))))
+      (unless ein:%notebooklist-new-kernel%
+        (setq ein:%notebooklist-new-kernel%
+              (if (eq ein:jupyter-default-kernel 'first-alphabetically)
+                  (ein:get-kernelspec url-or-port (caar kernels))
+                (ein:get-kernelspec
+                 url-or-port
+                 (if (stringp ein:jupyter-default-kernel)
+                     (intern ein:jupyter-default-kernel)
+                   ein:jupyter-default-kernel)))))
       (widget-create
        'link
        :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
@@ -586,13 +595,20 @@ This function is called via `ein:notebook-after-rename-hook'."
        "Open In Browser")
 
       (widget-insert "\n\nCreate New Notebooks Using Kernel:\n")
-      (let* ((radio-widget (widget-create 'radio-button-choice
-                                          :value (and ein:%notebooklist-new-kernel% (ein:$kernelspec-name ein:%notebooklist-new-kernel%))
-                                          :notify (lambda (widget &rest ignore)
-                                                    (setq ein:%notebooklist-new-kernel%
-                                                          (ein:get-kernelspec url-or-port (widget-value widget)))
-                                                    (message "New notebooks will be started using the %s kernel."
-                                                             (ein:$kernelspec-display-name ein:%notebooklist-new-kernel%))))))
+      (let ((radio-widget
+             (widget-create
+              'radio-button-choice
+              :value (and ein:%notebooklist-new-kernel%
+                          (ein:$kernelspec-name
+                           ein:%notebooklist-new-kernel%))
+              :notify (lambda (widget &rest _args)
+                        (setq ein:%notebooklist-new-kernel%
+                              (ein:get-kernelspec
+                               url-or-port
+                               (widget-value widget)))
+                        (message "New notebooks started with %s kernel"
+                                 (ein:$kernelspec-display-name
+                                  ein:%notebooklist-new-kernel%))))))
         (if (null kernels)
             (widget-insert "\n  No kernels found.")
           (dolist (k kernels)
