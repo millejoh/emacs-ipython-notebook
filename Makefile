@@ -69,9 +69,9 @@ test-jupyterhub: test-compile
 	-cask exec ecukes --tags @jupyterhub --reporter magnars
 
 .PHONY: test
-test: quick test-int test-poly
+test: quick test-int
 
-.PHONY: test-poly
+.PHONY: test-unpoly
 test-poly:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
 	cp test/test-poly.el features/support/test-poly.el
@@ -79,12 +79,12 @@ test-poly:
 
 .PHONY: test-int
 test-int:
-	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
 	cask exec ecukes --reporter magnars
 
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
+	cask exec ert-runner -L ./lisp -L ./test test/test-uncompiled.el
 
 .PHONY: test-ob-ein-recurse
 test-ob-ein-recurse:

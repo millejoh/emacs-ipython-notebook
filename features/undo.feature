@@ -23,7 +23,7 @@ Scenario: Kill yank doesn't break undo
   And I press "C-<down>"
   And I press "C-c C-y"
   And I press "C-/"
-  Then the cursor should be at point "74"
+  Then the cursor should be at point "75"
 
 @undo
 Scenario: Collapse doesn't break undo
@@ -52,7 +52,7 @@ Scenario: Collapse doesn't break undo
   And I dump buffer
   Then the cursor should be at point "77"
   And I undo again
-  Then the cursor should be at point "55"
+  Then the cursor should be at point "53"
 
 @undo
 Scenario: Test the conflagrative commands
@@ -108,7 +108,7 @@ Scenario: Clear output doesn't break undo
   And I press "C-/"
   Then the cursor should be at point "74"
   And I undo again
-  Then the cursor should be at point "55"
+  Then the cursor should be at point "53"
 
 @undo
 Scenario: Moving cells doesn't break undo
@@ -221,7 +221,7 @@ Scenario: Undo needs to at least work for reopened notebooks
   And I undo again
   And I undo again
   And I undo again
-  Then the cursor should be at point "125"
+  Then the cursor should be at point "124"
 
 @undo
 Scenario: Toggling between markdown and codecell does not break undo
@@ -291,7 +291,7 @@ Scenario: Undo (kind of) needs to work when someone explicitly requires ein-time
   And I undo again
   And I undo again
   And I undo again
-  Then the cursor should be at point "125"
+  Then the cursor should be at point "124"
 
 @timestamp
 Scenario: Kill yank doesn't break undo

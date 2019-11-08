@@ -27,6 +27,7 @@
 
 (eval-when-compile (require 'cl))
 (declare-function rst-shift-region "rst")
+(declare-function markdown-mode "markdown-mode")
 
 (require 'ein-notebook)
 (require 'ein-subpackages)
@@ -49,8 +50,7 @@
   (let* ((dir (or dir ein:source-dir))
          (regex (or regex ".+"))
          (files (-remove #'(lambda (x)
-                             (or (string-match-p "ein-pkg\\.el" x)
-                                 (string-match-p "ein-smartrep\\.el" x)))
+                             (string-match-p "ein-pkg\\.el" x))
                          (and
                           (file-accessible-directory-p dir)
                           (directory-files dir 'full regex)))))
@@ -69,7 +69,6 @@
   (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
         unless (or (equal f "ein-pkg.el")
                    (equal f "ein-autoloads.el")
-                   (equal f "ein-smartrep.el")
                    (funcall ignore-p f))
         do (require (intern (file-name-sans-extension f)) nil t))
   ;; For `widget-button-press':
@@ -125,7 +124,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq request-log-level (quote debug))
   (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
     (nconc request-curl-options `("--trace-ascii" ,curl-trace))
-    (add-function :after 
+    (add-function :after
                   (symbol-function 'request--curl-callback)
                   (lambda (&rest args)
                     (if (file-readable-p curl-trace)

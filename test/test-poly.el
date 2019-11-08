@@ -1,2 +1,2 @@
 (custom-set-variables
-  '(ein:polymode t))
+  '(ein:polymode nil))

@@ -1,5 +1,10 @@
+(custom-set-variables '(company-frontends nil)
+                      '(python-indent-guess-indent-offset-verbose nil)
+                      '(ein:polymode nil))
+
+(require 'ein-dev)
+(require 'ein-testing)
 (require 'ert)
-(require 'poly-ein)
 (require 'byte-compile)
 
 (ert-deftest ein:should-not-compile-advised ()

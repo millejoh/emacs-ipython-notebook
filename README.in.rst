@@ -62,7 +62,6 @@ Notebook server ``M-x ein:log-pop-to-request-buffer``.
 Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-channels``.
 
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
-.. _auto-complete: https://github.com/auto-complete/auto-complete
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 

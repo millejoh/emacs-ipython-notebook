@@ -63,9 +63,6 @@
     :file      : Either :text or :base64
     :notebook  : :json.
 
-`ein:$content-checkpoints'
-  Names auto-saved checkpoints for content. Stored as a list
-  of (<id> . <last_modified>) pairs.
 "
   url-or-port
   notebook-version
@@ -78,11 +75,7 @@
   mimetype
   raw-content
   format
-  session-p
-  checkpoints)
-
-
-
+  session-p)
 ;;; Websockets
 
 (defstruct ein:$websocket
@@ -148,13 +141,6 @@
 
 `ein:$notebook-api-version' : integer
    Major version of the IPython notebook server we are talking to.
-
-`ein:$notebook-checkpoints'
-  Names auto-saved checkpoints for content. Stored as a list
-  of (<id> . <last_modified>) pairs.
-
-`ein:$notebook-q-checkpoints'
-  Whether to checkpoint on save.  Overrides ein:notebook-create-checkpoint-on-save
 "
   url-or-port
   notebook-id ;; In IPython-2.0 this is "[:path]/[:name].ipynb"
@@ -171,10 +157,7 @@
   events
   worksheets
   scratchsheets
-  api-version
-  autosave-timer
-  checkpoints
-  q-checkpoints)
+  api-version)
 
 
 
@@ -306,11 +289,6 @@ This cell is executed when the connected buffer is saved,
 provided that (1) this flag is `t' and (2) corresponding
 auto-execution mode flag in the connected buffer is `t'.")))
 
-;; Use this cell to execute hy code in notebook running a Python kernel.
-(defclass ein:hy-codecell (ein:codecell)
-  ((cell-type :initarg :cell-type :initform "hy-code"))
-  "Codecell that supports executing hy code from within a Python kernel.")
-
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
    (element-names :initform (:prompt :input :footer :slidetype))))
@@ -366,9 +344,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
      "NotebookStatus"
      :s2m
      '((notebook_saving.Notebook       . "Saving Notebook...")
-       (notebook_create_checkpoint.Notebook . "Creating Checkpoint...")
        (notebook_saved.Notebook        . "Notebook is saved")
-       (notebook_checkpoint_created.Notebook . "Checkpoint created.")
        (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
     :type ein:notification-status)
    (kernel

@@ -666,7 +666,6 @@ Use `ein:log' for debugging and logging."
 
 (defun ein:get-docstring (function)
   "Return docstring of FUNCTION."
-  ;; Borrowed from `ac-symbol-documentation'.
   (with-temp-buffer
     ;; import help-xref-following
     (require 'help-mode)

@@ -427,71 +427,6 @@ global setting.  For global setting and more information, see
                                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-sessions--complete %s" resp-string))
 
-
-;;; Checkpoints
-
-
-(defun ein:content-query-checkpoints (content &optional callback cbargs)
-  (let* ((url (ein:content-url content "checkpoints")))
-    (ein:query-singleton-ajax
-     (list 'content-query-checkpoints url)
-     url
-     :type "GET"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     :sync ein:force-sync
-     :success (apply-partially #'ein:content-query-checkpoints-success content callback cbargs)
-     :error (apply-partially #'ein:content-query-checkpoints-error content))))
-
-(defun ein:content-create-checkpoint (content &optional callback cbargs)
-  (let* ((url (ein:content-url content "checkpoints")))
-    (ein:query-singleton-ajax
-     (list 'content-query-checkpoints url)
-     url
-     :type "POST"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     :sync ein:force-sync
-     :success (apply-partially #'ein:content-query-checkpoints-success content callback cbargs)
-     :error (apply-partially #'ein:content-query-checkpoints-error content))))
-
-(defun ein:content-restore-checkpoint (content checkpoint-id &optional callback cbargs)
-  (let* ((url (ein:content-url content "checkpoints" checkpoint-id)))
-    (ein:query-singleton-ajax
-     (list 'content-query-checkpoints url)
-     url
-     :type "POST"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     :sync ein:force-sync
-     :success (when callback
-                (apply callback cbargs))
-     :error (apply-partially #'ein:content-query-checkpoints-error content))))
-
-(defun ein:content-delete-checkpoint (content checkpoint-id &optional callback cbargs)
-  (let* ((url (ein:content-url content "checkpoints" checkpoint-id)))
-    (ein:query-singleton-ajax
-     (list 'content-query-checkpoints url)
-     url
-     :type "DELETE"
-     :timeout ein:content-query-timeout
-     :parser #'ein:json-read
-     :sync ein:force-sync
-     :success (when callback
-                (apply callback cbargs))
-     :error (apply-partially #'ein:content-query-checkpoints-error content))))
-
-(defun* ein:content-query-checkpoints-success (content cb cbargs &key data status response &allow-other-keys)
-  (unless (listp (car data))
-    (setq data (list data)))
-  (setf (ein:$content-checkpoints content) data)
-  (when cb
-    (apply cb content cbargs)))
-
-(defun* ein:content-query-checkpoints-error (content &key symbol-status response &allow-other-keys)
-  (ein:log 'error "Content checkpoint operation failed with status %s (%s)." symbol-status response))
-
-
 ;;; Uploads
 
 

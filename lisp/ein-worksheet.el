@@ -795,7 +795,7 @@ directly."
 Prompt will appear in the minibuffer.
 
 When used in as a Lisp function, TYPE (string) should be chose
-from \"code\", \"hy-code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
+from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
 an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
@@ -808,7 +808,6 @@ an integer used only when the TYPE is \"heading\"."
                 (format "Cell type [%s]: " choices) choices))
           (type (case key
                   (?c "code")
-                  (?h "hy-code")
                   (?m "markdown")
                   (?r "raw")
                   (t "heading")))
@@ -1172,13 +1171,6 @@ in the history."
 
 (defun ein:get-kernel--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%) (slot-value ein:%worksheet% 'kernel)))
-
-;; in edit-cell-mode, worksheet is bound as src--ws
-;; used by ein:get-kernel as a last option so completion, tooltips
-;; work in edit-cell-mode
-(defun ein:get-kernel--worksheet-in-edit-cell ()
-  "Get kernel when in edit-cell-mode."
-  (when (ein:worksheet-p ein:src--ws) (slot-value ein:src--ws 'kernel)))
 
 (defun ein:get-cell-at-point--worksheet ()
   (ein:worksheet-get-current-cell :noerror t))

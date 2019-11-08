@@ -4,7 +4,7 @@
 
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
-(defcustom ein:polymode nil
+(defcustom ein:polymode t
   "When enabled ein will use polymode to provide multi-major mode
 support in a notebook buffer, otherwise ein's custom and outdated
 multi-major mode support will be used. Emacs must be restarted
@@ -181,15 +181,14 @@ TYPE can be 'body, nil."
                        (error (message "%s: defaulting language to python"
                                        (error-message-string err))
                               "python")))
-                    (mode
-                     (pm-get-mode-symbol-from-name
-                      (cond ((ein:codecell-p cell) lang)
-                            ((ein:markdowncell-p cell) "markdown")
-                            (t "fundamental"))))
+                    (what (cond ((ein:codecell-p cell) lang)
+                                ((ein:markdowncell-p cell) "markdown")
+                                (t "fundamental")))
+                    (mode (pm-get-mode-symbol-from-name what))
                     ((not (equal mode (ein:oref-safe cm :mode)))))
        (when (eq mode 'poly-fallback-mode)
          (ein:display-warning
-          (format "pm:get-span: no major mode for kernelspec language '%s'" lang)))
+          (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
        (setq result-cm
              (loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
                    when (equal mode (ein:oref-safe ocm :mode))
