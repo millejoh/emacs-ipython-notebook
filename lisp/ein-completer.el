@@ -92,10 +92,6 @@
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
-(defun ein:dev-clear-oinfo-cache (kernel)
-  (interactive (list (ein:get-kernel)))
-  (ein:completions--reset-oinfo-cache kernel))
-
 (defun ein:completions-get-cached (partial oinfo-cache)
   (loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)

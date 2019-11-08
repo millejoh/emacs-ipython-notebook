@@ -72,6 +72,8 @@
 
 (Setup
  (ein:dev-start-debug)
+ (cl-assert (boundp 'company-frontends))
+ (custom-set-variables '(company-frontends nil))
  (setq ein:jupyter-default-kernel
        (loop with cand = ""
              for (k . spec) in

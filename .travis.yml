@@ -37,14 +37,13 @@ env:
 matrix:
   include:
     - os: linux
-      env: EMACS_CI=emacs-25-3 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
+      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
     - os: linux
       env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: linux
-      env: EMACS_CI=emacs-26-3 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install --user"
+      env: EMACS_CI=emacs-26-3 IPYTHON=7.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
-      language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
+      env: EMACS_CI=emacs-25-2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
@@ -67,14 +66,7 @@ install:
   - ipython --version
 
 before_script:
-  - |
-    if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
-      sh tools/install-evm.sh
-      evm config path $HOME/.evm
-      evm install $EVM_EMACS --use --skip
-    else
-      bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
-    fi
+  - bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
   - emacs --version
   - sh tools/install-cask.sh
 

@@ -1,8 +1,7 @@
 @bread
 Scenario: Breadcrumbs
   Given I am in notebooklist buffer
-  When I click on dir "step-definitions"
-  Then I should see "ein-steps"
+  When I click on dir "step-definitions" until "ein-steps"
   And I click on "Home"
   Then I should see "support"
 

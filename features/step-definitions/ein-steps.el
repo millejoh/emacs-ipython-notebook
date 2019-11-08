@@ -313,6 +313,18 @@
           (loop until (not (equal was (widget-at)))
                 do (sleep-for 0 500)))))
 
+(When "^I click on dir \"\\(.+\\)\" until \"\\(.+\\)\"$"
+      (lambda (dir stop)
+        (loop repeat 10
+              until (search stop (buffer-string))
+              do (When (format "I go to word \"%s\"" dir))
+              do (re-search-backward "Dir" nil t)
+              do (let ((was (widget-at)))
+                   (When "I press \"RET\"")
+                   (loop until (not (equal was (widget-at)))
+                         do (sleep-for 0 500)))
+              finally do (should (search stop (buffer-string))))))
+
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
         (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)

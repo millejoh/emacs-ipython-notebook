@@ -13,9 +13,8 @@ Scenario: Company completion in a python buffer
   And I type "itertools."
   And I call "company-complete"
   And I wait for completions "itertools.chain"
-  And I press "C-g"
-  And I press "RET"
-  And I press "RET"
+  And I press "C-a"
+  And I press "C-k"
   And I clear websocket log
   And I type "itertool"
   And I call "company-complete"
