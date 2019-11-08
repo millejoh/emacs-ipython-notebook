@@ -213,8 +213,6 @@ the log of the running jupyter server."
                                        (if (numberp port)
                                            `("--port" ,(format "%s" port)
                                              "--port-retries" "0")))))
-    (when (eql system-type 'windows-nt)
-      (accept-process-output proc (/ ein:jupyter-server-run-timeout 1000)))
     (loop repeat 30
           until (car (ein:jupyter-server-conn-info ein:jupyter-server-buffer-name))
           do (sleep-for 0 500)
@@ -255,19 +253,14 @@ the log of the running jupyter server."
           do (ein:query-running-process-table)
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))
-    (if (eq system-type 'windows-nt)
-        (progn
-          (ein:undocumented-shutdown url-or-port)
-          (ein:aif (ein:jupyter-server-process)
-              (delete-process it)))
-      (lexical-let* ((proc (ein:jupyter-server-process))
-                     (pid (process-id proc)))
-        (ein:log 'info "Signaled %s with pid %s" proc pid)
-        (signal-process pid 15)
-        (run-at-time 2 nil
-                     (lambda ()
-                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                       (signal-process pid 15)))))
+    (lexical-let* ((proc (ein:jupyter-server-process))
+                   (pid (process-id proc)))
+      (ein:log 'info "Signaled %s with pid %s" proc pid)
+      (signal-process pid 15)
+      (run-at-time 2 nil
+                   (lambda ()
+                     (ein:log 'info "Resignaled %s with pid %s" proc pid)
+                     (signal-process pid 15))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)

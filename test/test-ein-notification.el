@@ -57,8 +57,6 @@
           '(notebook_saved.Notebook
             notebook_saving.Notebook
             notebook_save_failed.Notebook
-            notebook_create_checkpoint.Notebook
-            notebook_checkpoint_created.Notebook
             execution_count.Kernel
             status_idle.Kernel
             status_busy.Kernel

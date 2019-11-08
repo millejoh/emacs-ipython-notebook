@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-(declare-function ac-cursor-on-diable-face-p "auto-complete")
-
 (eval-when-compile (require 'cl))
 
 (require 'ein-core)
@@ -35,7 +33,6 @@
 (require 'ein-subpackages)
 (require 'ein-kernel)
 (require 'ein-pytools)
-(require 'ein-ac)
 (require 'dash)
 
 (make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
@@ -43,7 +40,6 @@
 (defun ein:completer-choose ()
   (cond
    ((eq ein:completion-backend 'ein:use-none-backend) #'ignore)
-   ((ein:eval-if-bound 'auto-complete-mode) #'ein:completer-finish-completing-ac)
    (t #'ein:completer-finish-completing-default)))
 
 (defun ein:completer-beginning (matched-text)
@@ -73,12 +69,7 @@
       (insert word))))
 
 (defun ein:completer-complete (kernel callbacks errback)
-  "Start completion for the code at point.
-
-   EXPAND keyword argument is supported by
-   `ein:completer-finish-completing-ac'.  When it is specified,
-   it overrides `ac-expand-on-auto-complete' when calling
-   `auto-complete'."
+  "Start completion for the code at point."
   (interactive (list (ein:get-kernel)
                      (list :complete_reply
                            (cons #'ein:completer-finish-completing '(:expand nil)))
@@ -97,16 +88,9 @@
         when (string-prefix-p partial candidate)
         collect candidate))
 
-(defun ein:completions--get-oinfo (obj)
+(defun ein:completions--get-oinfo (_obj)
   (let ((d (deferred:new #'identity))
-        (kernel (ein:get-kernel)))
-    (if (ein:kernel-live-p kernel)
-        (ein:kernel-execute
-         kernel
-         (format "__ein_print_object_info_for(__ein_maybe_undefined_object(r\"%s\", locals()))" obj)
-         (list
-          :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
-      (deferred:callback-post d "kernel not live"))
+        (_kernel (ein:get-kernel)))
     d))
 
 (defun ein:completions--build-oinfo-cache (objs)
@@ -141,16 +125,6 @@
      (let (eval-expression-print-length eval-expression-print-level)
        (prin1 output #'external-debugging-output))
      (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
-
-;;; Support for Eldoc
-
-(defun ein:completer--get-eldoc-signature ()
-  (ein:and-let* ((func (ein:function-at-point))
-                 (kernel (ein:get-kernel)))
-    (ein:aif (gethash func (ein:$kernel-oinfo-cache kernel))
-        (ein:kernel-construct-defstring it)
-      (ein:completions--build-oinfo-cache (list func))
-      nil)))
 
 (provide 'ein-completer)
 

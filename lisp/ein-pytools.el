@@ -56,9 +56,6 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
   (push (cons #'ein:pytools-load-safely kernel)
         (ein:$kernel-after-start-hook kernel)))
 
-(defun ein:pytools-wrap-hy-code (code)
-  (format "__import__('hy').eval(__import__('hy').read_str('''%s'''))" code))
-
 (defun ein:pytools-load-safely (kernel)
   (with-temp-buffer
     (let ((pytools-file (format "%s/%s" ein:source-dir "ein_remote_safe.py")))

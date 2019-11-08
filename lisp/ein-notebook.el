@@ -34,7 +34,6 @@
 
 
 (eval-when-compile (require 'cl))
-(eval-when-compile (require 'auto-complete))
 
 (require 'ewoc)
 (require 'mumamo nil t)
@@ -50,7 +49,6 @@
 (require 'ein-kernel)
 (require 'ein-kernelinfo)
 (require 'ein-cell)
-(require 'ein-cell-edit)
 (require 'ein-cell-output)
 (require 'ein-worksheet)
 (require 'ein-iexec)
@@ -65,7 +63,6 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
-(require 'ein-inspector)
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
 (require 'ein-multilang)
@@ -73,51 +70,6 @@
 (require 'poly-ein)
 
 ;;; Configuration
-
-(make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.2.0")
-
-(declare-function ein:smartrep-config "ein-smartrep")
-
-(defcustom ein:use-smartrep nil
-  "Set to `t' to use preset smartrep configuration.
-
-.. warning:: When used with MuMaMo (see `ein:notebook-modes'),
-   keyboard macro which manipulates cell (add, remove, move,
-   etc.) may start infinite loop (you need to stop it with
-   ``C-g``).  Please be careful using this option if you are a
-   heavy keyboard macro user.  Using keyboard macro for other
-   commands is fine.
-
-.. (Comment) I guess this infinite loop happens because the three
-   modules (kmacro.el, mumamo.el and smartrep.el) touches to
-   `unread-command-events' in somehow inconsistent ways."
-  :type 'boolean
-  :group 'ein)
-
-(defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
-  "A map: (URL-OR-PORT . PATH) => t/nil")
-
-(defcustom ein:notebook-autosave-frequency 300
-  "Sets the frequency (in seconds) at which the notebook is
-automatically saved, per IPEP15. Set to 0 to disable this feature.
-
-Autosaves are automatically enabled when a notebook is opened,
-but can be controlled manually via `ein:notebook-enable-autosave'
-and `ein:notebook-disable-autosave'.
-
-If you wish to change the autosave frequency for the current
-notebook call `ein:notebook-update-autosave-freqency'.
-
-"
-  :type 'number
-  :group 'ein)
-
-(defcustom ein:notebook-create-checkpoint-on-save t
-  "If non-nil a checkpoint will be created every time the
-notebook is saved. Otherwise checkpoints must be created manually
-via `ein:notebook-create-checkpoint'."
-  :type 'boolean
-  :group 'ein)
 
 (defcustom ein:notebook-discard-output-on-save 'no
   "Configure if the output part of the cell should be saved or not.
@@ -140,6 +92,16 @@ a function
                  (const :tag "Yes" 'yes)
                  )
   :group 'ein)
+(make-obsolete-variable 'ein:use-smartrep nil "0.17.0")
+
+(defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
+  "A map: (URL-OR-PORT . PATH) => t/nil")
+
+(make-obsolete-variable 'ein:notebook-autosave-frequency nil "0.17.0")
+
+(make-obsolete-variable 'ein:notebook-create-checkpoint-on-save nil "0.17.0")
+
+(make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.17.0")
 
 (defun ein:notebook-cell-has-image-output-p (-ignore- cell)
   (ein:cell-has-image-ouput-p cell))
@@ -405,11 +367,11 @@ where `created' indicates a new notebook or an existing one.
           (add-function :before errback pending-clear)
           (ein:content-query-contents url-or-port path
                                       (apply-partially #'ein:notebook-open--callback
-                                                       notebook callback0 (not no-pop))
+                                                       notebook callback0)
                                       errback))))
     notebook))
 
-(defun ein:notebook-open--callback (notebook callback0 q-checkpoints content)
+(defun ein:notebook-open--callback (notebook callback0 content)
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
   (let ((notebook-path (ein:$notebook-notebook-path notebook)))
     (ein:gc-prepare-operation)
@@ -433,12 +395,9 @@ where `created' indicates a new notebook or an existing one.
                                                     (ein:$notebook-notebook-name notebook)))
       (setf (ein:$notebook-kernelinfo notebook)
             (ein:kernelinfo-new (ein:$notebook-kernel notebook)
-                                (cons #'ein:notebook-buffer-list notebook)
-                                (symbol-name (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)))))
+                                (cons #'ein:notebook-buffer-list notebook)))
       (ein:notebook-put-opened-notebook notebook)
       (ein:notebook--check-nbformat (ein:$content-raw-content content))
-      (setf (ein:$notebook-q-checkpoints notebook) q-checkpoints)
-      (ein:notebook-enable-autosaves notebook)
       (ein:gc-complete-operation))))
 
 (defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
@@ -477,56 +436,6 @@ of minor mode."
 
 
 ;;; Initialization.
-
-(defun ein:notebook-enable-autosaves (notebook)
-  "Enable automatic, periodic saving for notebook."
-  (interactive
-   (list (or (ein:get-notebook)
-             (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ein:completing-read
-                                             "Notebook: " it nil t)
-                         (ein:get-notebook))))))
-  (when (and (ein:$notebook-q-checkpoints notebook)
-             (> ein:notebook-autosave-frequency 0))
-      (setf (ein:$notebook-autosave-timer notebook)
-            (run-at-time ein:notebook-autosave-frequency
-                         ein:notebook-autosave-frequency
-                         #'ein:notebook-maybe-save-notebook
-                         notebook))
-      (ein:log 'verbose "Enabling autosaves for %s with frequency %s seconds."
-               (ein:$notebook-notebook-name notebook)
-               ein:notebook-autosave-frequency)))
-
-(defun ein:notebook-disable-autosaves (notebook)
-  "Disable automatic, periodic saving for current notebook."
-  (interactive
-   (list (or (ein:get-notebook)
-             (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ein:completing-read
-                                             "Notebook: " it nil t)
-                         (ein:get-notebook))))))
-  (if (and notebook (ein:$notebook-autosave-timer notebook))
-      (progn
-        (ein:log 'verbose "Disabling auto checkpoints for notebook %s" (ein:$notebook-notebook-name notebook))
-        (cancel-timer (ein:$notebook-autosave-timer notebook)))))
-
-(defun ein:notebook-update-autosave-frequency (new-frequency notebook)
-  "Change the autosaves frequency for the current notebook, or
-for a notebook selected by the user if not currently inside a
-notebook buffer."
-  (interactive
-   (list (read-number "New autosaves frequency (0 to disable): ")
-         (or (ein:get-notebook)
-             (ein:aand (ein:notebook-opened-buffer-names)
-                       (with-current-buffer (ein:completing-read
-                                             "Notebook: " it nil t)
-                         (ein:get-notebook))))))
-  (if notebook
-      (progn
-        (setq ein:notebook-autosave-frequency new-frequency)
-        (ein:notebook-disable-autosaves notebook)
-        (ein:notebook-enable-autosaves notebook))
-    (message "Open notebook first")))
 
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
@@ -607,9 +516,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
                                  base-url
                                  (ein:$notebook-events notebook)
                                  (ein:$notebook-api-version notebook))))
-    (setf (ein:$notebook-kernel notebook) kernel)
-    (when (eq (ein:get-mode-for-kernel (ein:$notebook-kernelspec notebook)) 'python)
-      (ein:pytools-setup-hooks kernel notebook))))
+    (setf (ein:$notebook-kernel notebook) kernel)))
 
 (defun ein:notebook-reconnect-session-command ()
    "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists."
@@ -627,14 +534,6 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (define-obsolete-function-alias
   'ein:notebook-request-tool-tip-or-help-command
   'ein:pytools-request-tooltip-or-help "0.1.2")
-
-(defun ein:notebook-ac-dot-complete ()
-  "Insert dot and request completion."
-  (interactive)
-  (if (and (ein:get-notebook)
-           (ein:codecell-p (ein:get-cell-at-point)))
-      (call-interactively #'ein:ac-dot-complete)
-    (insert ".")))
 
 (defun ein:notebook-kernel-interrupt-command ()
   "Interrupt the kernel.
@@ -888,8 +787,6 @@ This is equivalent to do ``C-c`` in the console program."
         (ein:$notebook-worksheets notebook))
   (ein:events-trigger (ein:$notebook-events notebook)
                       'notebook_saved.Notebook)
-  (when ein:notebook-create-checkpoint-on-save
-    (ein:notebook-create-checkpoint notebook))
   (when callback
     (apply callback cbargs)))
 
@@ -1041,48 +938,6 @@ notebook worksheets."
                      :type "notebook"
                      :notebook-version (ein:$notebook-api-version notebook)))
 
-(defun ein:notebook-create-checkpoint (notebook)
-  "Create checkpoint for current notebook based on most recent save."
-  (interactive (list (ein:get-notebook)))
-  (if (ein:$notebook-q-checkpoints notebook)
-      (ein:content-create-checkpoint
-       (ein:fast-content-from-notebook notebook)
-       (lexical-let ((notebook notebook))
-         #'(lambda (content)
-             (ein:log 'verbose "Checkpoint %s for %s generated."
-                      (plist-get (first (ein:$content-checkpoints content)) :id)
-                      (ein:$notebook-notebook-name notebook))
-             (setf (ein:$notebook-checkpoints notebook)
-                   (ein:$content-checkpoints content)))))))
-
-(defun ein:notebook-list-checkpoint-ids (notebook)
-  (unless (ein:$notebook-checkpoints notebook)
-    (ein:content-query-checkpoints (ein:fast-content-from-notebook notebook)
-                                   (lexical-let ((notebook notebook))
-                                     #'(lambda (content)
-                                         (setf (ein:$notebook-checkpoints notebook)
-                                               (ein:$content-checkpoints content)))))
-    (sleep-for 0.5))
-  (loop for cp in (ein:$notebook-checkpoints notebook)
-        collecting (plist-get cp :last_modified)))
-
-(defun ein:notebook-restore-to-checkpoint (notebook checkpoint)
-  "Restore notebook to previous checkpoint saved on the Jupyter
-server. Note that if there are multiple checkpoints the user will
-be prompted on which one to use."
-  (interactive
-   (let* ((notebook (ein:get-notebook))
-          (checkpoint (ein:completing-read
-                       "Select checkpoint: "
-                       (ein:notebook-list-checkpoint-ids notebook))))
-     (list notebook checkpoint)))
-  (ein:content-restore-checkpoint (ein:fast-content-from-notebook notebook)
-                                  checkpoint)
-  (ein:notebook-close notebook)
-  (ein:notebook-open (ein:$notebook-url-or-port notebook)
-                     (ein:$notebook-notebook-path notebook)))
-
-
 ;;; Worksheet
 
 (defmacro ein:notebook--worksheet-render-new (notebook type)
@@ -1466,10 +1321,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
-(with-eval-after-load "ein-smartrep"
-  (ein:smartrep-config ein:notebook-mode-map))
-
-
 (defmacro ein:notebook--define-key (keymap key defn)
   "Ideally we could override just the keymap binding with a (string . wrapped) cons pair (as opposed to messing with the DEFN itself), but then describe-minor-mode unhelpfully shows ?? for the keymap commands."
   `(progn
@@ -1480,8 +1331,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
      (define-key ,keymap ,key ,defn)))
 
 (let ((map ein:notebook-mode-map))
-  (ein:notebook--define-key map "\C-ci" 'ein:inspect-object)
-  (ein:notebook--define-key map "\C-c'" 'ein:edit-cell-contents)
   (ein:notebook--define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
   (ein:notebook--define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
   (ein:notebook--define-key map (kbd "<M-S-return>")
@@ -1582,8 +1431,7 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
             )))
       ("Cell/Code"
        ,@(ein:generate-menu
-          '(("Edit cell contents in dedicated buffer" ein:edit-cell-contents)
-            ("Execute cell" ein:worksheet-execute-cell
+          '(("Execute cell" ein:worksheet-execute-cell
              :active (ein:worksheet-at-codecell-p))
             ("Execute cell and go to next"
              ein:worksheet-execute-cell-and-goto-next
@@ -1694,28 +1542,12 @@ watch the fireworks!"
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
   (when ein:notebook-mode
-    (case ein:completion-backend
-      (ein:use-ac-backend
-       (ein:notebook--define-key ein:notebook-mode-map "." 'ein:notebook-ac-dot-complete)
-       (auto-complete-mode))
-      (ein:use-company-backend
-       (if (not (boundp 'company-backends))
-           (error "ein:connect-mode: company unsupported")
-         (cl-assert (member 'ein:company-backend company-backends))
-         (ein:notebook--define-key ein:notebook-mode-map "." nil)
-         (company-mode))))
     (ein:aif ein:helm-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
     (ein:aif ein:anything-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
-    (when (and (featurep 'eldoc) ein:enable-eldoc-support)
-        (add-function :before-until (local 'eldoc-documentation-function)
-                      #'ein:completer--get-eldoc-signature)
-        (eldoc-mode))
-    (ein:worksheet-imenu-setup)
-    (when ein:use-smartrep
-      (require 'ein-smartrep))))
+    (ein:worksheet-imenu-setup)))
 
 ;; To avoid MuMaMo to discard `ein:notebook-mode', make it
 ;; permanent local.
@@ -1790,7 +1622,6 @@ the first argument and CBARGS as the rest of arguments."
   ;; nor `ein:notebook-close' updates ein:notebook--opened-map
   (ein:log 'debug "ein:notebook-kill-buffer-callback called")
   (when (ein:$notebook-p ein:%notebook%)
-    (ein:notebook-disable-autosaves ein:%notebook%)
     (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
 
 (defun ein:notebook-setup-kill-buffer-hook ()

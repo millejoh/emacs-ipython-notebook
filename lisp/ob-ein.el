@@ -70,8 +70,7 @@
     ("ein-python" . python)
     ("ein-R" . R)
     ("ein-r" . R)
-    ("ein-julia" . julia)
-    ("ein-hy" . hy))
+    ("ein-julia" . julia))
   "ob-ein has knowledge of these (ein-LANG . LANG-MODE) pairs."
   :type '(repeat (cons string symbol))
   :group 'ein)
@@ -162,8 +161,7 @@ Based on ob-ipython--configure-kernel."
   (fset (intern (concat "org-babel-execute:" lang-name))
         `(lambda (body params)
            (require (quote ,(intern (format "ob-%s" lang-mode))) nil t)
-           (if (boundp 'python-indent-guess-indent-offset-verbose)
-               (setq python-indent-guess-indent-offset-verbose nil))
+           (custom-set-variables '(python-indent-guess-indent-offset-verbose nil))
            (let* ((parser
                    (quote
                     ,(intern
@@ -365,53 +363,6 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                 (cond ((= port avoid) nil)
                       (t (url-port parsed-url)))))))
           (t (ein:notebooklist-login url-or-port callback-login)))))
-
-(defun ob-ein--edit-ctrl-c-ctrl-c ()
-  "C-c C-c mapping in ein:connect-mode-map."
-  (interactive)
-  (if (not (org-src-edit-buffer-p))
-      (ein:connect-run-buffer)
-    (org-edit-src-save)
-    (when (boundp 'org-src--beg-marker)
-      (let* ((beg org-src--beg-marker)
-             (buf (marker-buffer beg)))
-        (with-current-buffer buf
-          (save-excursion
-            (goto-char beg)
-            (org-ctrl-c-ctrl-c)))))))
-
-(defcustom ob-ein-babel-edit-polymode-ignore nil
-  "When false override default python mode key mapping for `\C-c\C-c' while inside a babel edit buffer.
-Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute the code block being edited."
-  :group 'ein
-  :type '(boolean))
-
-(defun org-babel-edit-prep:ein (babel-info)
-  (if (and ein:polymode (not ob-ein-babel-edit-polymode-ignore))
-      (progn
-        (use-local-map (copy-keymap python-mode-map))
-        (local-set-key "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))
-    (let* ((buffer (current-buffer))
-           (processed-parameters (nth 2 babel-info))
-           (session (or (ein:aand (cdr (assoc :session processed-parameters))
-                                  (unless (string= "none" it)
-                                    (format "%s" it)))
-                        ein:url-localhost))
-           (lang "ein-python")
-           (kernelspec (or (cdr (assoc :kernelspec processed-parameters))
-                           (ein:aif (cdr (assoc lang org-src-lang-modes))
-                               (cons 'language (format "%s" it))
-                             (error "ob-ein--execute-body: %s not among %s"
-                                    lang (mapcar #'car org-src-lang-modes))))))
-      (ob-ein--initiate-session
-       session
-       kernelspec
-       (lambda (notebook)
-         (ein:connect-buffer-to-notebook notebook buffer t)
-         (define-key ein:connect-mode-map "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))))))
-
-(defun org-babel-edit-prep:ein-python (babel-info)
-  (org-babel-edit-prep:ein babel-info))
 
 (loop for (lang . mode) in ob-ein-languages
       do (ob-ein--babelize-lang lang mode))

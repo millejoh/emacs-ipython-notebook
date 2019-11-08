@@ -42,8 +42,6 @@
 (require 'ein-node)
 (require 'ein-kernel)
 (require 'ein-output-area)
-(require 'ein-skewer)
-(require 'ein-hy)
 
 
 ;;; Faces
@@ -122,12 +120,7 @@
 
 ;;; Customization
 
-(defcustom ein:enable-dynamic-javascript nil
-    "[EXPERIMENTAL] When non-nil enable support in ein for
-executing dynamic javascript. This feature requires installation
-of the skewer package."
-    :type 'boolean
-    :group 'ein)
+(make-obsolete-variable 'ein:enable-dynamic-javascript nil "0.17.0")
 
 (defcustom ein:cell-traceback-level 1
   "Number of traceback stack to show.
@@ -210,7 +203,6 @@ a number will limit the number of lines in a cell output."
 (defun ein:cell-class-from-type (type)
   (ein:case-equal type
     (("code") 'ein:codecell)
-    (("hy-code") 'ein:hy-codecell)
     (("text") 'ein:textcell)
     (("html") 'ein:htmlcell)
     (("markdown") 'ein:markdowncell)
@@ -229,13 +221,7 @@ a number will limit the number of lines in a cell output."
   (apply (ein:cell-class-from-type type) args))
 
 (defun ein:cell--determine-cell-type (json-data)
-  (let ((base-type (plist-get json-data :cell_type))
-        (metadata (plist-get json-data :metadata)))
-    (if (and (string-equal base-type "code")
-             (plist-get :metadata :ein.hycell)
-             (not (eql (plist-get metadata :ein.hycell) :json-false)))
-        "hy-code"
-      base-type)))
+  (plist-get json-data :cell_type))
 
 (defun ein:cell-from-json (data &rest args)
   (let ((cell (ein:cell-init (apply #'ein:cell-from-type
@@ -921,13 +907,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (if (and (or (plist-get json :javascript)
-               (plist-get json :html))
-           (slot-value cell 'dynamic) ein:enable-dynamic-javascript)
-      (ein:execute-javascript cell json)
-    (progn
-      (ein:cell-append-mime-type json (slot-value cell 'dynamic))
-      (ein:insert-read-only "\n"))))
+  (ein:cell-append-mime-type json (slot-value cell 'dynamic))
+  (ein:insert-read-only "\n"))
 
 (defcustom ein:output-type-preference
   (if (and (fboundp 'shr-insert-document)
@@ -1052,9 +1033,6 @@ prettified text thus be used instead of HTML type."
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    (setq metadata (plist-put metadata :ein.hycell (if (ein:hy-codecell-p cell)
-                                                       t
-                                                     json-false)))
     (setq metadata (plist-put metadata :slideshow ss-table))
     (unless discard-output
       (dolist (output outputs)

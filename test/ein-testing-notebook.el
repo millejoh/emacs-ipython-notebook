@@ -49,10 +49,10 @@
               (ein:kernel-new 8888 "" nil  "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
-        ; matryoshka: new-content makes a ein:$content using CONTENT as template 
+        ; matryoshka: new-content makes a ein:$content using CONTENT as template
         ; populating its raw_content field with DATA's content field
         (ein:notebook-open--callback
-         notebook nil nil
+         notebook nil
          (ein:new-content (ein:$notebook-url-or-port notebook)
                           (ein:$notebook-notebook-path notebook) data))
         (ein:notebook-buffer notebook)))))
@@ -85,8 +85,8 @@
   "Make new notebook.  One empty cell will be inserted
 automatically if CELLS is nil."
   (ein:testing-notebook-from-json
-   (json-encode (ein:testing-notebook-make-data 
-                 (or name ein:testing-notebook-dummy-name) 
+   (json-encode (ein:testing-notebook-make-data
+                 (or name ein:testing-notebook-dummy-name)
                  (or path name ein:testing-notebook-dummy-name)
                  cells))))
 
@@ -112,7 +112,7 @@ The new cell is bound to a variable `cell'."
 LIST-OUTPUTS is a list of list of strings (pyout text).  Number
 of LIST-OUTPUTS equals to the number cells to be contained in the
 notebook."
-  (ein:testing-notebook-make-new 
+  (ein:testing-notebook-make-new
    ein:testing-notebook-dummy-name nil
    (mapcar (lambda (outputs)
              (ein:testing-codecell-data

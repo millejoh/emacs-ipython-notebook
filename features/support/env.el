@@ -3,9 +3,10 @@
 (require 'espuds)
 (require 'ert)
 (require 'undo-tree)
-
-(with-eval-after-load "python"
-  (setq python-indent-guess-indent-offset-verbose nil))
+(require 'python)
+(require 'julia-mode)
+(require 'ess-r-mode)
+(require 'markdown-mode)
 
 (let* ((support-path (f-dirname load-file-name))
        (root-path (f-parent (f-parent support-path))))
@@ -73,7 +74,8 @@
 (Setup
  (ein:dev-start-debug)
  (cl-assert (boundp 'company-frontends))
- (custom-set-variables '(company-frontends nil))
+ (custom-set-variables '(company-frontends nil)
+                       '(python-indent-guess-indent-offset-verbose nil))
  (setq ein:jupyter-default-kernel
        (loop with cand = ""
              for (k . spec) in
@@ -90,8 +92,6 @@
              do (setq cand (symbol-name k))
              end
              finally return (intern cand)))
- (setq ein:notebook-autosave-frequency 0)
- (setq ein:notebook-create-checkpoint-on-save nil)
  (setq ein:testing-dump-file-log (concat default-directory "log/ecukes.log"))
  (setq ein:testing-dump-file-messages (concat default-directory "log/ecukes.messages"))
  (setq ein:testing-dump-file-server (concat default-directory  "log/ecukes.server"))

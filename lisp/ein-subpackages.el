@@ -31,13 +31,9 @@
   "EIN defaults to your individual company-mode or auto-complete-mode configuration.  Change this setting to gather completions from the jupyter server::
 
  * ein:use-none-backend: local completions only (configured outside EIN)
- * ein:use-company-backend: company-style remote completions (elpy takes precedence)
- * ein:use-ac-backend: deprecated auto-complete remote completions
 "
   :type '(choice
-          (const ein:use-none-backend)
-          (const ein:use-company-backend)
-          (const ein:use-ac-backend))
+          (const ein:use-none-backend))
   :group 'ein)
 
 (provide 'ein-subpackages)

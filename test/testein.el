@@ -1,3 +1,7 @@
+(custom-set-variables '(company-frontends nil)
+                      '(python-indent-guess-indent-offset-verbose nil))
+
+(require 'python)
 (require 'ein-dev)
 (require 'ein-testing)
 

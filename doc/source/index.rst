@@ -100,9 +100,6 @@ Requirements
 * `request-deferred.el`_ >= 0.2
 * `dash`_ >= 2.13
 * `s`_ >= 1.11
-* `auto-complete.el`_ >= 1.4:
-  You need to configure subpackage ``ein-ac`` to enable
-  this feature.
 * `skewer-mode`_ >= 1.6.2:
   Skewer mode gives EIN the ability to execute dynamic javascript in the
   note book.

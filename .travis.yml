@@ -39,8 +39,6 @@ matrix:
     - os: linux
       env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
     - os: linux
-      env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
-    - os: linux
       env: EMACS_CI=emacs-26-3 IPYTHON=7.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       env: EMACS_CI=emacs-25-2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
@@ -56,7 +54,7 @@ install:
       pyenv activate $TOXENV ;
     fi
   - ${PIP} --upgrade pip
-  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
   - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh
   - sh tools/install-julia.sh

@@ -121,7 +121,7 @@ Keymap (C-h m)
 
    key             binding
    ---             -------
-   
+
    C-c		Prefix Command
    C-x		Prefix Command
    ESC		Prefix Command
@@ -131,16 +131,16 @@ Keymap (C-h m)
    <M-S-return>	ein:worksheet-execute-cell-and-insert-below
    <M-down>	ein:worksheet-move-cell-down
    <M-up>		ein:worksheet-move-cell-up
-   
+
    C-x C-s		ein:notebook-save-notebook-command
    C-x C-w		ein:notebook-rename-command
-   
+
    M-RET		ein:worksheet-execute-cell-and-goto-next
    M-,		ein:pytools-jump-back-command
    M-.		ein:pytools-jump-to-source-command
    M-n		ein:worksheet-next-input-history
    M-p		ein:worksheet-previous-input-history
-   
+
    C-c C-a		ein:worksheet-insert-cell-above
    C-c C-b		ein:worksheet-insert-cell-below
    C-c C-c		ein:worksheet-execute-cell
@@ -166,7 +166,6 @@ Keymap (C-h m)
    C-c C-z		ein:notebook-kernel-interrupt-command
    C-c ESC		Prefix Command
    C-c !		ein:worksheet-rename-sheet
-   C-c '		ein:edit-cell-contents
    C-c +		ein:notebook-worksheet-insert-next
    C-c -		ein:notebook-worksheet-delete
    C-c 1		ein:notebook-worksheet-open-1th
@@ -179,7 +178,6 @@ Keymap (C-h m)
    C-c 8		ein:notebook-worksheet-open-8th
    C-c 9		ein:notebook-worksheet-open-last
    C-c S		ein:worksheet-toggle-slide-type
-   C-c i		ein:inspect-object
    C-c {		ein:notebook-worksheet-open-prev-or-last
    C-c }		ein:notebook-worksheet-open-next-or-first
    C-c C-S-l	ein:worksheet-clear-all-output
@@ -192,10 +190,10 @@ Keymap (C-h m)
    C-c C-;		ein:shared-output-show-code-cell-at-point
    C-c <down>	ein:worksheet-move-cell-down
    C-c <up>	ein:worksheet-move-cell-up
-   
+
    C-c C-x C-l	ein:notebook-toggle-latex-fragment
    C-c C-x C-r	ein:notebook-restart-session-command
-   
+
    C-c M-+		ein:notebook-worksheet-insert-prev
    C-c M-w		ein:worksheet-copy-cell
    C-c M-{		ein:notebook-worksheet-move-prev
