@@ -838,20 +838,21 @@ If END is non-`nil', return the location of next element."
   ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
         (append (slot-value cell 'outputs) (list json)))
-  ;; enter last output element
-  (let* ((inhibit-read-only t)
-         (buffer-undo-list t)           ; disable undo recording
-         (ewoc (slot-value cell 'ewoc))
-         (index (1- (ein:cell-num-outputs cell)))
-         (path `(cell output ,index))
-         (class (ein:cell-output-json-to-class json))
-         (data (ein:node-new path cell class))
-         (last-node (ein:cell-element-get cell :last-output))
-         (ewoc-node (ewoc-enter-after ewoc last-node data))
-         (element (slot-value cell 'element)))
-    (plist-put element :output
-               (append (plist-get element :output) (list ewoc-node)))
-    (ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
+
+  (with-current-buffer (ewoc-buffer (slot-value cell 'ewoc))
+    (let* ((inhibit-read-only t)
+           (buffer-undo-list t)           ; disable undo recording
+           (ewoc (slot-value cell 'ewoc))
+           (index (1- (ein:cell-num-outputs cell)))
+           (path `(cell output ,index))
+           (class (ein:cell-output-json-to-class json))
+           (data (ein:node-new path cell class))
+           (last-node (ein:cell-element-get cell :last-output))
+           (ewoc-node (ewoc-enter-after ewoc last-node data))
+           (element (slot-value cell 'element)))
+      (plist-put element :output
+                 (append (plist-get element :output) (list ewoc-node)))
+      (ewoc-invalidate ewoc (ein:cell-element-get cell :footer)))))
 
 (cl-defmethod ein:cell-append-pyout ((cell ein:codecell) json)
   "Insert pyout type output in the buffer.

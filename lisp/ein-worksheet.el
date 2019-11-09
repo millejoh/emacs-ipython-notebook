@@ -1056,8 +1056,8 @@ Do not clear input prompts when the prefix argument is given."
                       :cell-p #'ein:codecell-p)))
   (ein:kernel-when-ready (slot-value ws 'kernel)
                          (apply-partially
-                          (lambda (ws* cell* buffer* kernel)
-                            (with-current-buffer buffer*
+                          (lambda (ws* cell* buffer kernel)
+                            (with-current-buffer buffer
                               (let ((buffer-undo-list t))
                                 (ein:cell-execute cell*)
                                 (oset ws* :dirty t))
@@ -1272,14 +1272,14 @@ function."
   (ein:with-live-buffer (ein:worksheet-buffer ws)
     (ein:kernel-when-ready
      (slot-value ws 'kernel)
-
      (apply-partially
-      (lambda (ws kernel)
-        (let ((buffer-undo-list t))
-          (mapc #'ein:cell-execute
-                (seq-filter #'ein:cell-autoexec-p
-                            (ein:worksheet-get-cells ws)))))
-      ws))))
+      (lambda (ws buffer kernel)
+        (with-current-buffer buffer
+          (let ((buffer-undo-list t))
+            (mapc #'ein:cell-execute
+                  (seq-filter #'ein:cell-autoexec-p
+                              (ein:worksheet-get-cells ws))))))
+      ws (current-buffer)))))
 
 
 ;;; Imenu
