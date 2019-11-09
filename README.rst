@@ -14,8 +14,8 @@ EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
 
 .. |build-status|
-   image:: https://secure.travis-ci.org/dickmao/emacs-ipython-notebook.png?branch=master
-   :target: http://travis-ci.org/dickmao/emacs-ipython-notebook
+   image:: https://secure.travis-ci.com/dickmao/emacs-ipython-notebook.png?branch=master
+   :target: http://travis-ci.com/dickmao/emacs-ipython-notebook
    :alt: Build Status
 .. |melpa-dev|
    image:: http://melpa.milkbox.net/packages/ein-badge.svg
@@ -69,7 +69,6 @@ Notebook server ``M-x ein:log-pop-to-request-buffer``.
 Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-channels``.
 
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
-.. _auto-complete: https://github.com/auto-complete/auto-complete
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 
@@ -121,7 +120,7 @@ Keymap (C-h m)
 
    key             binding
    ---             -------
-
+   
    C-c		Prefix Command
    C-x		Prefix Command
    ESC		Prefix Command
@@ -131,16 +130,16 @@ Keymap (C-h m)
    <M-S-return>	ein:worksheet-execute-cell-and-insert-below
    <M-down>	ein:worksheet-move-cell-down
    <M-up>		ein:worksheet-move-cell-up
-
+   
    C-x C-s		ein:notebook-save-notebook-command
    C-x C-w		ein:notebook-rename-command
-
+   
    M-RET		ein:worksheet-execute-cell-and-goto-next
    M-,		ein:pytools-jump-back-command
    M-.		ein:pytools-jump-to-source-command
    M-n		ein:worksheet-next-input-history
    M-p		ein:worksheet-previous-input-history
-
+   
    C-c C-a		ein:worksheet-insert-cell-above
    C-c C-b		ein:worksheet-insert-cell-below
    C-c C-c		ein:worksheet-execute-cell
@@ -190,10 +189,10 @@ Keymap (C-h m)
    C-c C-;		ein:shared-output-show-code-cell-at-point
    C-c <down>	ein:worksheet-move-cell-down
    C-c <up>	ein:worksheet-move-cell-up
-
+   
    C-c C-x C-l	ein:notebook-toggle-latex-fragment
    C-c C-x C-r	ein:notebook-restart-session-command
-
+   
    C-c M-+		ein:notebook-worksheet-insert-prev
    C-c M-w		ein:worksheet-copy-cell
    C-c M-{		ein:notebook-worksheet-move-prev
