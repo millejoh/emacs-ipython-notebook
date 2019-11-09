@@ -838,8 +838,7 @@ If END is non-`nil', return the location of next element."
   ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
         (append (slot-value cell 'outputs) (list json)))
-
-  (with-current-buffer (ewoc-buffer (slot-value cell 'ewoc))
+  (ein:with-live-buffer (ein:cell-buffer cell)
     (let* ((inhibit-read-only t)
            (buffer-undo-list t)           ; disable undo recording
            (ewoc (slot-value cell 'ewoc))
