@@ -1057,11 +1057,8 @@ Do not clear input prompts when the prefix argument is given."
   (ein:kernel-when-ready (slot-value ws 'kernel)
                          (apply-partially
                           (lambda (ws* cell* kernel)
-                            (ein:with-live-buffer (ein:cell-buffer cell*)
-                              (let ((buffer-undo-list t))
-                                (ein:cell-execute cell*)
-                                (oset ws* :dirty t)))
-                            ;; unshift-undo calls ein:with-live-buffer
+                            (ein:cell-execute cell*)
+                            (oset ws* :dirty t)
                             (ein:worksheet--unshift-undo-list cell*))
                           ws cell))
   cell)

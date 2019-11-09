@@ -113,7 +113,8 @@ Usage::
 "
   (let ((dom (ein:xml-parse-html-string html-string))
         (start (point))
-        end)
+        end
+        (buffer-undo-list t))
     (ein:insert-html--fix-urls dom)
     (ein:shr-insert-document dom)
     (setq end (point))
