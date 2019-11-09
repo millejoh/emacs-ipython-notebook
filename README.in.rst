@@ -7,8 +7,8 @@
 .. COMMENTARY (see Makefile)
 
 .. |build-status|
-   image:: https://secure.travis-ci.org/dickmao/emacs-ipython-notebook.png?branch=master
-   :target: http://travis-ci.org/dickmao/emacs-ipython-notebook
+   image:: https://secure.travis-ci.com/dickmao/emacs-ipython-notebook.png?branch=master
+   :target: http://travis-ci.com/dickmao/emacs-ipython-notebook
    :alt: Build Status
 .. |melpa-dev|
    image:: http://melpa.milkbox.net/packages/ein-badge.svg
