@@ -22,9 +22,7 @@
 (require 'poly-ein)
 (require 'ob-ein)
 
-(if (member "timestamp" ecukes-include-tags)
-    (require 'ein-timestamp)
-  (!cons "timestamp" ecukes-exclude-tags))
+(!cons "timestamp" ecukes-exclude-tags)
 
 (unless (member "jupyterhub" ecukes-include-tags)
   (!cons "jupyterhub" ecukes-exclude-tags))

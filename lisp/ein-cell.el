@@ -43,7 +43,47 @@
 (require 'ein-kernel)
 (require 'ein-output-area)
 
-
+(defun ein:cell--ewoc-delete (ewoc &rest nodes)
+  "Delete NODES from EWOC."
+  (ewoc--set-buffer-bind-dll-let* ewoc
+      ((L nil) (R nil) (last (ewoc--last-node ewoc)))
+    (dolist (node nodes)
+      (let ((inhibit-read-only t)
+            (buffer-undo-list t))
+        ;; If we are about to delete the node pointed at by last-node,
+        ;; set last-node to nil.
+        (when (eq last node)
+          (setf last nil (ewoc--last-node ewoc) nil))
+        (delete-region (ewoc--node-start-marker node)
+                       (ewoc--node-start-marker (ewoc--node-next dll node)))
+        (set-marker (ewoc--node-start-marker node) nil)
+        (setf L (ewoc--node-left  node)
+              R (ewoc--node-right node)
+              ;; Link neighbors to each other.
+              (ewoc--node-right L) R
+              (ewoc--node-left  R) L
+              ;; Forget neighbors.
+              (ewoc--node-left  node) nil
+              (ewoc--node-right node) nil)))))
+
+(defun ein:cell--ewoc-invalidate (ewoc &rest nodes)
+  "Call EWOC's pretty-printer for each element in NODES.
+Delete current text first, thus effecting a \"refresh\"."
+  (ewoc--set-buffer-bind-dll-let* ewoc
+      ((pp (ewoc--pretty-printer ewoc)))
+    (save-excursion
+      (dolist (node nodes)
+        (let ((inhibit-read-only t)
+              (buffer-undo-list t)
+              (m (ewoc--node-start-marker node))
+              (R (ewoc--node-right node)))
+          ;; First, remove the string from the buffer:
+          (delete-region m (ewoc--node-start-marker R))
+          ;; Calculate and insert the string.
+          (goto-char m)
+          (funcall pp (ewoc--node-data node))
+          (ewoc--adjust m (point) R dll))))))
+
 ;;; Faces
 
 (defface ein:cell-input-prompt
@@ -189,7 +229,8 @@ a number will limit the number of lines in a cell output."
 (defun ein:insert-image (&rest args)
   ;; Try to insert the image, otherwise emit a warning message and proceed.
   (condition-case-unless-debug err
-      (let* ((img (apply #'create-image args)))
+      (let* ((img (apply #'create-image args))
+             (buffer-undo-list t))
         (if ein:slice-image
             (destructuring-bind (&optional rows cols)
                 (when (listp ein:slice-image) ein:slice-image)
@@ -320,7 +361,7 @@ a number will limit the number of lines in a cell output."
       ;; draw ewoc node
       (loop with ewoc = (slot-value new 'ewoc)
             for en in (ein:cell-all-element new)
-            do (ewoc-invalidate ewoc en)))
+            do (ein:cell--ewoc-invalidate ewoc en)))
     new))
 
 (cl-defmethod ein:cell-change-level ((cell ein:headingcell) level)
@@ -331,7 +372,7 @@ a number will limit the number of lines in a cell output."
     ;; draw ewoc node
     (loop with ewoc = (slot-value cell 'ewoc)
           for en in (ein:cell-all-element cell)
-          do (ewoc-invalidate ewoc en))))
+          do (ein:cell--ewoc-invalidate ewoc en))))
 
 
 ;;; Getter/setter
@@ -646,7 +687,7 @@ Return language name as a string or `nil' when not defined.
     (setf (slot-value cell 'collapsed) collapsed)
     (let ((inhibit-read-only t)
           (buffer-undo-list t))
-      (apply #'ewoc-invalidate
+      (apply #'ein:cell--ewoc-invalidate
              (slot-value cell 'ewoc)
              (append (ein:cell-element-get cell :output)
                      (list (ein:cell-element-get cell :footer)))))))
@@ -664,7 +705,7 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-invalidate-prompt ((cell ein:codecell))
   (let ((inhibit-read-only t)
         (buffer-undo-list t))           ; disable undo recording
-    (ewoc-invalidate (slot-value cell 'ewoc)
+    (ein:cell--ewoc-invalidate (slot-value cell 'ewoc)
                      (ein:cell-element-get cell :prompt))))
 
 (cl-defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
@@ -769,9 +810,7 @@ If END is non-`nil', return the location of next element."
     (if (and stdout stderr other)
         (progn
           ;; clear all
-          (let ((inhibit-read-only t)
-                (buffer-undo-list t))   ; disable undo recording
-            (apply #'ewoc-delete ewoc output-nodes))
+          (apply #'ein:cell--ewoc-delete ewoc output-nodes)
           (plist-put (slot-value cell 'element) :output nil)
           (setf (slot-value cell 'outputs) nil))
       (let* ((ewoc-node-list
@@ -786,9 +825,7 @@ If END is non-`nil', return the location of next element."
               (mapcar (lambda (n) (last (ein:$node-path (ewoc-data n))))
                       ewoc-node-list)))
         ;; remove from buffer
-        (let ((inhibit-read-only t)
-              (buffer-undo-list t))   ; disable undo recording
-          (apply #'ewoc-delete ewoc ewoc-node-list))
+        (apply #'ein:cell--ewoc-delete ewoc ewoc-node-list)
         ;; remove from `:element'
         (let* ((element (slot-value cell 'element))
                (old-output (plist-get element :output))
@@ -800,8 +837,7 @@ If END is non-`nil', return the location of next element."
     ;; Footer may have extra (possibly colored) newline due to the
     ;; last output type.  So invalidate it here.
     ;; See `ein:cell-insert-footer' (for codecell).
-    (let ((buffer-undo-list t))   ; disable undo recording
-      (ewoc-invalidate ewoc (ein:cell-element-get cell :footer)))))
+    (ein:cell--ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
 (defun ein:cell-output-json-to-class (json)
   (ein:case-equal (plist-get json :output_type)
@@ -838,20 +874,19 @@ If END is non-`nil', return the location of next element."
   ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
         (append (slot-value cell 'outputs) (list json)))
-  (ein:with-live-buffer (ein:cell-buffer cell)
-    (let* ((inhibit-read-only t)
-           (buffer-undo-list t)           ; disable undo recording
-           (ewoc (slot-value cell 'ewoc))
-           (index (1- (ein:cell-num-outputs cell)))
-           (path `(cell output ,index))
-           (class (ein:cell-output-json-to-class json))
-           (data (ein:node-new path cell class))
-           (last-node (ein:cell-element-get cell :last-output))
-           (ewoc-node (ewoc-enter-after ewoc last-node data))
-           (element (slot-value cell 'element)))
-      (plist-put element :output
-                 (append (plist-get element :output) (list ewoc-node)))
-      (ewoc-invalidate ewoc (ein:cell-element-get cell :footer)))))
+  (let* ((inhibit-read-only t)
+         (buffer-undo-list t)
+         (ewoc (slot-value cell 'ewoc))
+         (index (1- (ein:cell-num-outputs cell)))
+         (path `(cell output ,index))
+         (class (ein:cell-output-json-to-class json))
+         (data (ein:node-new path cell class))
+         (last-node (ein:cell-element-get cell :last-output))
+         (ewoc-node (ewoc-enter-after ewoc last-node data))
+         (element (slot-value cell 'element)))
+    (plist-put element :output
+               (append (plist-get element :output) (list ewoc-node)))
+    (ein:cell--ewoc-invalidate ewoc (ein:cell-element-get cell :footer))))
 
 (cl-defmethod ein:cell-append-pyout ((cell ein:codecell) json)
   "Insert pyout type output in the buffer.

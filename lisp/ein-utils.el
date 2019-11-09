@@ -316,9 +316,10 @@ See: http://api.jquery.com/jQuery.ajax/"
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 
 (defun ein:insert-read-only (string &rest properties)
-  (insert (apply #'ein:propertize-read-only
-                 (ein:maybe-truncate-string-lines string ein:truncate-long-cell-output)
-                 properties)))
+  (let ((buffer-undo-list t))
+    (insert (apply #'ein:propertize-read-only
+                   (ein:maybe-truncate-string-lines string ein:truncate-long-cell-output)
+                   properties))))
 
 
 ;;; String manipulation
