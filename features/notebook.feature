@@ -53,6 +53,23 @@ Scenario: company completion
   Given new python notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
 
+@complete
+Scenario: company completion without execution
+  Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
+  Given I kill all websocket buffers
+  Given new python notebook
+  And I type "import itertools"
+  And I press "RET"
+  And I type "itertool"
+  And I call "company-complete"
+  Then I should see "itertools"
+  And I type ".chai"
+  And I call "company-complete"
+  Then I should see "itertools.chain"
+  Given I set "ein:completion-backend" to eval "(quote ein:use-ac-backend)"
+  Given new python notebook
+  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+
 @rename
 Scenario: rename notebook
   Given new python notebook
