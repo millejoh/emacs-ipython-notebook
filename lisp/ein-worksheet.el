@@ -1082,11 +1082,39 @@ cell bellow."
                      (ein:worksheet-get-current-cell)))
   (ein:worksheet-execute-cell-and-goto-next ws cell t))
 
-(defun ein:worksheet-execute-all-cell (ws)
+;;; TODO add version number here before creating a new release
+(define-obsolete-function-alias
+  'ein:worksheet-execute-all-cell
+  'ein:worksheet-execute-all-cells)
+
+(defun ein:worksheet-execute-all-cells (ws)
   "Execute all cells in the current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (mapc #'ein:cell-execute
-        (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+  (cl-loop for c in (ein:worksheet-get-cells ws)
+	   when (ein:codecell-p c)
+	   do (ein:cell-execute c)))
+
+(defun ein:worksheet-execute-all-cells-above (ws)
+  "Execute all cells above the current cell (exclusively) in the
+current worksheet buffer."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
+	   for c in (ein:worksheet-get-cells ws)
+	   until (equal (ein:cell-id c) curr-cell-id)
+	   when (ein:codecell-p c)
+	   do (ein:cell-execute c)))
+
+(defun ein:worksheet-execute-all-cells-below (ws)
+  "Execute all cells below the current cell (inclusively) in the
+current worksheet buffer."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
+	   and curr-cell-reached?
+	   for c in (ein:worksheet-get-cells ws)
+	   when (and (not curr-cell-reached?) (equal (ein:cell-id c) curr-cell-id))
+	   do (setq curr-cell-reached? t)
+	   when (and curr-cell-reached? (ein:codecell-p c))
+	   do (ein:cell-execute c)))
 
 (defun ein:worksheet-insert-last-input-history (ws cell index)
   "Insert INDEX-th previous history into CELL in worksheet WS."

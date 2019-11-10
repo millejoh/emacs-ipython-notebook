@@ -306,7 +306,9 @@ created via `ein:notebook-create-checkpoint`.
    :replace: s/C-c TAB/C-c C-i/
              s/C-c RET/C-c C-m/
 
-.. el:function:: ein:worksheet-execute-all-cell
+.. el:function:: ein:worksheet-execute-all-cells
+.. el:function:: ein:worksheet-execute-all-cells-above
+.. el:function:: ein:worksheet-execute-all-cells-below
 .. el:function:: ein:worksheet-delete-cell
 .. el:function:: ein:junk-rename
 .. el:function:: ein:iexec-mode
