@@ -66,7 +66,7 @@ quick: test-compile test-ob-ein-recurse test-unit
 test-jupyterhub: test-compile
 # jupyterhub slightly temperamental with json-readtable-error
 # seems to be affecting ob-ipython too but probably my bug.. just need to find it
-	-cask exec ecukes --tags @jupyterhub --reporter magnars
+	-cask exec ecukes --tags @jupyterhub,~@complete-ipy7 --reporter magnars
 
 .PHONY: test
 test: quick test-int test-poly
@@ -75,7 +75,7 @@ test: quick test-int test-poly
 test-poly:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
 	cp test/test-poly.el features/support/test-poly.el
-	cask exec ecukes --reporter magnars ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
+	cask exec ecukes --reporter magnars --tags ~@complete-ipy7 ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
 
 .PHONY: test-int
 test-int:
