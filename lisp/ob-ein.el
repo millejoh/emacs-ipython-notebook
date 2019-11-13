@@ -39,6 +39,8 @@
 
 (autoload 'org-element-property "org-element")
 (autoload 'org-element-context "org-element")
+(autoload 'org-id-new "org-id")
+(autoload 'org-redisplay-inline-images "org")
 (autoload 'ein:notebooklist-new-notebook-with-name "ein-notebooklist")
 (autoload 'ein:notebooklist-login "ein-notebooklist")
 (autoload 'ein:notebook-get-opened-notebook "ein-notebook")

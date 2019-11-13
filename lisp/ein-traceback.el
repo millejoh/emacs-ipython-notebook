@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ewoc)
 (require 'ansi-color)

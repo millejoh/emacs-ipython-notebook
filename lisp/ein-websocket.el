@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'websocket)
 (require 'ein-core)
 (require 'ein-classes)
@@ -85,13 +84,13 @@
                             (request-cookie-alist
                              (url-host parsed-url) path securep)))
        (cookies (loop repeat 4
-                      for cand = (mapcan read-cookies-func
-                                         `("/" "/hub/"
-                                           ,(ein:maybe-get-jhconn-user url)))
+                      for cand = (cl-mapcan read-cookies-func
+                                            `("/" "/hub/"
+                                              ,(ein:maybe-get-jhconn-user url)))
                       until (cl-some (lambda (x) (string= "_xsrf" (car x))) cand)
                       do (ein:log 'info
-                           "ein:websocket--prepare-cookies: no _xsrf among %s, retrying."
-                           cand)
+                                  "ein:websocket--prepare-cookies: no _xsrf among %s, retrying."
+                                  cand)
                       do (sleep-for 0 300)
                       finally return cand)))
     (dolist (c cookies)

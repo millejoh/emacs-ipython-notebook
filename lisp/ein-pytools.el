@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 ;; for `ein:pytools-pandas-to-ses'
 (declare-function ses-yank-tsf "ses")
 (declare-function ses-command-hook "ses")

@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'cc-mode)
 (require 'json)
 (require 's)
@@ -462,7 +461,7 @@ Example::
         when (eq elem last)
         return (reverse clipped)))
 
-(defun* ein:list-insert-after (list pivot new &key (test #'eq))
+(cl-defun ein:list-insert-after (list pivot new &key (test #'eq))
   "Insert NEW after PIVOT in LIST destructively.
 Note: do not rely on that `ein:list-insert-after' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
@@ -471,7 +470,7 @@ Elements are compared using the function TEST (default: `eq')."
         return (progn (push new (cdr rest)) list)
         finally do (error "PIVOT %S is not in LIST %S" pivot list)))
 
-(defun* ein:list-insert-before (list pivot new &key (test #'eq))
+(cl-defun ein:list-insert-before (list pivot new &key (test #'eq))
   "Insert NEW before PIVOT in LIST destructively.
 Note: do not rely on that `ein:list-insert-before' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
@@ -482,7 +481,7 @@ Elements are compared using the function TEST (default: `eq')."
           return (progn (push new (cdr rest)) list)
           finally do (error "PIVOT %S is not in LIST %S" pivot list))))
 
-(defun* ein:list-move-left (list elem &key (test #'eq))
+(cl-defun ein:list-move-left (list elem &key (test #'eq))
   "Move ELEM in LIST left.  TEST is used to compare elements"
   (macrolet ((== (a b) `(funcall test ,a ,b)))
     (cond
@@ -497,7 +496,7 @@ Elements are compared using the function TEST (default: `eq')."
                      list)
             finally do (error "ELEM %S is not in LIST %S" elem list))))))
 
-(defun* ein:list-move-right (list elem &key (test #'eq))
+(cl-defun ein:list-move-right (list elem &key (test #'eq))
   "Move ELEM in LIST right.  TEST is used to compare elements"
   (loop with first = t
         for rest on list

@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 ;; Optional dependency on tramp:
 (declare-function tramp-make-tramp-file-name "tramp")
 (declare-function tramp-file-name-localname "tramp")
@@ -176,7 +174,7 @@ the source is in git repository) or elpa version."
       (replace-regexp-in-string "[ ]" "-" name)
     name))
 
-(defun* ein:query-kernelspecs--success (url-or-port callback
+(cl-defun ein:query-kernelspecs--success (url-or-port callback
                                        &key data symbol-status response
                                        &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))
@@ -196,7 +194,7 @@ the source is in git repository) or elpa version."
                                  ks))))))
   (when callback (funcall callback)))
 
-(defun* ein:query-kernelspecs--error (url-or-port callback iteration
+(cl-defun ein:query-kernelspecs--error (url-or-port callback iteration
                                                   &key response error-thrown
                                                   &allow-other-keys)
   (if (< iteration 3)
@@ -207,9 +205,9 @@ the source is in git repository) or elpa version."
              "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when callback (funcall callback))))
 
-(defun* ein:query-kernelspecs--complete (url-or-port &key data response
-                                                     &allow-other-keys
-                                                     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:query-kernelspecs--complete (url-or-port &key data response
+                                                       &allow-other-keys
+                                                       &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
 (defsubst ein:notebook-version-numeric (url-or-port)
@@ -230,10 +228,10 @@ the source is in git repository) or elpa version."
    :sync ein:force-sync
    :complete (apply-partially #'ein:query-notebook-version--complete url-or-port callback)))
 
-(defun* ein:query-notebook-version--complete (url-or-port callback
-                                             &key data response
-                                             &allow-other-keys
-                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:query-notebook-version--complete (url-or-port callback
+                                                &key data response
+                                                &allow-other-keys
+                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
   (ein:aif (plist-get data :version)
       (setf (gethash url-or-port *ein:notebook-version*) it)
@@ -263,14 +261,14 @@ the source is in git repository) or elpa version."
     filename))
 
 (defun ein:make-tramp-file-name (username remote-host python-filename)
-  "Old (with multi-hops) tramp compatibility function.
-Adapted from `slime-make-tramp-file-name'."
-  (if (boundp 'tramp-multi-methods)
-      (tramp-make-tramp-file-name nil nil
+  (if (>= emacs-major-version 26)
+      (tramp-make-tramp-file-name "ssh"
                                   username
+                                  nil
                                   remote-host
+                                  nil
                                   python-filename)
-    (tramp-make-tramp-file-name nil
+    (tramp-make-tramp-file-name "ssh"
                                 username
                                 remote-host
                                 python-filename)))
@@ -375,8 +373,8 @@ but can operate in different contexts."
   (interactive)
   (ein:clean-compiled-files)
   (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
-         (errors (mapcan (lambda (f) (unless (byte-compile-file f) (list f)))
-                         files)))
+         (errors (cl-mapcan (lambda (f) (unless (byte-compile-file f) (list f)))
+                            files)))
     (ein:aif errors
         (error "Got %s errors while compiling these files: %s"
                (length errors)

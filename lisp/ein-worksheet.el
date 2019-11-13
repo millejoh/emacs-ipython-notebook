@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ewoc)
 
@@ -77,7 +76,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
           (let ((cell-id (ein:aif (ein:worksheet-get-current-cell :noerror t)
                              (ein:worksheet--unique-enough-cell-id it) nil)))
             (let ((ein:log-print-level 5))
-              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (subseq buffer-undo-list 0 fill) fill))
+              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (cl-subseq buffer-undo-list 0 fill) fill))
             (setq ein:%which-cell%
                   (nconc (make-list fill cell-id) ein:%which-cell%))))))))
 
@@ -147,12 +146,12 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                     (cons m (cdr u))) u)))
            ((and (consp u) (null (car u))
                  (numberp (car (last u))) (numberp (cdr (last u))))
-            (append (subseq u 0 3)
+            (append (cl-subseq u 0 3)
                     (cons (+ ,distance (car (last u)))
                           (+ ,distance (cdr (last u))))))
            ((and (consp u) (eq (car u) 'apply)
                  (numberp (nth 2 u)) (numberp (nth 3 u)))
-            (append (subseq u 0 2)
+            (append (cl-subseq u 0 2)
                     (list (+ ,distance (nth 2 u)))
                     (list (+ ,distance (nth 3 u)))
                     (nthcdr 4 u)))
@@ -224,7 +223,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (ein:worksheet--jigger-undo-list
          (cons (ein:worksheet--unique-enough-cell-id old-cell)
                (ein:worksheet--unique-enough-cell-id cell)))
-        (dolist (uc (mapcar* 'cons buffer-undo-list ein:%which-cell%))
+        (dolist (uc (cl-mapcar #'cons buffer-undo-list ein:%which-cell%))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -263,7 +262,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         ;; Deletion of a less recent undo affects a more recent undo (arrow of time)
         ;; Since buffer-undo-list is ordered most to least recent, we must
         ;; reverse.
-        (dolist (uc (nreverse (mapcar* 'cons buffer-undo-list ein:%which-cell%)))
+        (dolist (uc (nreverse (cl-mapcar #'cons buffer-undo-list ein:%which-cell%)))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -280,7 +279,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (setq buffer-undo-list (nreverse lst))
         (setq ein:%which-cell% (nreverse wc))
         (ein:worksheet--jigger-undo-list)
-        (remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
+        (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
 
 
 ;;; Class and variable
@@ -559,8 +558,8 @@ worksheet WS is reopened.
       (setq ewoc-node (ewoc-next (slot-value ein:%worksheet% 'ewoc) ewoc-node)))
     ewoc-node))
 
-(defun* ein:worksheet-get-current-cell (&key pos noerror
-                                             (cell-p #'ein:basecell-child-p))
+(cl-defun ein:worksheet-get-current-cell (&key pos noerror
+                                               (cell-p #'ein:basecell-child-p))
   "Return a cell at POS.  If POS is not given, it is assumed be the
 current cursor position.  When the current buffer is not worksheet
 buffer or there is no cell in the current buffer, return `nil'."
@@ -579,7 +578,7 @@ buffer or there is no cell in the current buffer, return `nil'."
                  (ein:worksheet-get-current-cell :pos beg)
                  (ein:worksheet-get-current-cell :pos end)))
 
-(defun* ein:worksheet-get-cells-in-region-or-at-point
+(cl-defun ein:worksheet-get-cells-in-region-or-at-point
     (&key noerror (cell-p #'ein:basecell-child-p))
   (or (seq-filter cell-p
                   (if (region-active-p)
@@ -772,24 +771,6 @@ directly."
       (when focus (ein:cell-goto new relpos))
       (ein:worksheet--unshift-undo-list new nil cell))))
 
-(defun ein:worksheet-toggle-slide-type (ws cell &optional focus)
-  "Toggle the slide metadata of the cell at point. Available slide settings are:
- [slide, subslide, fragment, skip, notes, - (none)]."
-  (interactive (list (ein:worksheet--get-ws-or-error)
-                     (ein:worksheet-get-current-cell)
-                     t))
-  (let ((new-slide-type (ein:case-equal (slot-value cell 'slidetype)
-                          (("-") "slide")
-                          (("slide") "subslide")
-                          (("subslide") "fragment")
-                          (("fragment") "skip")
-                          (("skip") "notes")
-                          (("notes") "-"))))
-    (oset cell :slidetype new-slide-type))
-  (ein:cell-invalidate-prompt cell)
-  (ein:worksheet--unshift-undo-list cell)
-  (when focus (ein:cell-goto cell)))
-
 (defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
   "Change the cell type of the current cell.
 Prompt will appear in the minibuffer.
@@ -878,7 +859,7 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
-(defun* ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
+(cl-defun ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
   "Return a cell containing the next input node after EWOC-NODE.
 When UP is non-`nil', do the same for the *previous* input node.
 When NTH is specified, return NTH cell.  Note that this function is
@@ -1035,15 +1016,15 @@ Do not clear input prompts when the prefix argument is given."
   "Report kernel status."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (let ((kernel (slot-value ws 'kernel)))
-    (message "%s" (mapcan (lambda (slot)
-                            (let ((channel (funcall slot kernel)))
-                              (and channel
-                                   (list (cons slot
-                                               (websocket-ready-state
-                                                (ein:$websocket-ws channel)))))))
-                          '(ein:$kernel-websocket
-                            ein:$kernel-shell-channel
-                            ein:$kernel-iopub-channel)))))
+    (message "%s" (cl-mapcan (lambda (slot)
+                               (let ((channel (funcall slot kernel)))
+                                 (and channel
+                                      (list (cons slot
+                                                  (websocket-ready-state
+                                                   (ein:$websocket-ws channel)))))))
+                             '(ein:$kernel-websocket
+                               ein:$kernel-shell-channel
+                               ein:$kernel-iopub-channel)))))
 
 (cl-defmethod ein:worksheet-set-kernel ((ws ein:worksheet))
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))

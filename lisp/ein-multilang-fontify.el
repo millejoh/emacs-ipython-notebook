@@ -58,7 +58,7 @@ Modified version of `org-src-get-lang-mode'."
             (delete-region (point-min) (point-max))
             (insert string)
             (unless (eq major-mode lang-mode) (funcall lang-mode))
-            (font-lock-fontify-buffer)
+            (font-lock-ensure)
             (setq pos (point-min))
             (loop for next = (next-single-property-change pos 'face nil (point-max))
                   do (put-text-property

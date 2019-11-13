@@ -1,4 +1,3 @@
-(eval-when-compile (require 'cl))
 (require 'f)
 (require 'espuds)
 (require 'ert)

@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'request)
 (require 'url)
 
@@ -125,10 +124,9 @@ variable to a reasonable value you can avoid this situation."
       (ein:display-warning
        (format "The %s program was not found" request-curl) :error))))
 
-(defun* ein:query-singleton-ajax (key url &rest settings
-                                      &key
-                                      (timeout ein:query-timeout)
-                                      &allow-other-keys)
+(cl-defun ein:query-singleton-ajax (key url &rest settings
+                                    &key (timeout ein:query-timeout)
+                                    &allow-other-keys)
   "Do not cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."

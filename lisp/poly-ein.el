@@ -21,7 +21,7 @@ after changing this setting!"
 
 (defmacro poly-ein--remove-hook (label functions)
   "Remove any hooks saying LABEL from FUNCTIONS"
-  `(mapc (lambda (x) (when (search ,label (symbol-name x))
+  `(mapc (lambda (x) (when (cl-search ,label (symbol-name x))
                        (remove-hook (quote ,functions) x t)))
          ,functions))
 
@@ -185,13 +185,13 @@ TYPE can be 'body, nil."
                                 ((ein:markdowncell-p cell) "markdown")
                                 (t "fundamental")))
                     (mode (pm-get-mode-symbol-from-name what))
-                    ((not (equal mode (ein:oref-safe cm :mode)))))
+                    ((not (equal mode (ein:oref-safe cm 'mode)))))
        (when (eq mode 'poly-fallback-mode)
          (ein:display-warning
           (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
        (setq result-cm
              (loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
-                   when (equal mode (ein:oref-safe ocm :mode))
+                   when (equal mode (ein:oref-safe ocm 'mode))
                    return ocm
                    finally return (let ((new-mode (clone cm :mode mode)))
                                     (object-add-to-list pm/polymode '-auto-innermodes
@@ -345,7 +345,7 @@ TYPE can be 'body, nil."
   (or pm-initialization-in-progress
       (and poly-ein-mode
            (let* ((span (pm-innermost-span (or beg (point))))
-                  (span-mode (eieio-oref (nth 3 span) :mode)))
+                  (span-mode (eieio-oref (nth 3 span) 'mode)))
              ;; only fontify type 'body (the other type is nil)
              (or (null (nth 0 span)) (not (eq major-mode span-mode)))))))
 

@@ -19,6 +19,5 @@
  (depends-on "julia-mode")
  (depends-on "undo-tree")
  (depends-on "ess")
- (depends-on "px")
  (depends-on "f")
  (depends-on "s"))

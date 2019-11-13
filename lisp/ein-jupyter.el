@@ -127,7 +127,7 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
             (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
                                 nil "") ;; important if we start-stop-start
             (when (re-search-forward "\\([[:alnum:]]+\\) is\\( now\\)? running" nil t)
-              (let ((hub-p (search "jupyterhub" (downcase (match-string 1)))))
+              (let ((hub-p (cl-search "jupyterhub" (downcase (match-string 1)))))
                 (when (re-search-forward "\\(https?://[^:]*:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t)
                   (let ((raw-url (match-string 1))
                         (token (or (match-string 2) (and (not hub-p) ""))))

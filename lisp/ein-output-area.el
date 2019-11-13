@@ -26,13 +26,9 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'xml)
-
 (require 'ein-core)
 
-
-
 ;;; XML/HTML utils
 
 (defun ein:xml-parse-html-string (html-string)
