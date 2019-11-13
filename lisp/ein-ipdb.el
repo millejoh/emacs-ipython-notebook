@@ -36,6 +36,16 @@
   kernel
   current-payload)
 
+(defun ein:ipbd ()
+  "Convenience function that will launch the ipython debugger,
+assuming there is an active kernel associated with the current
+buffer. For more information see the %debug magic documentation
+in ipython."
+  (interactive)
+  (ein:shared-output-eval-string (ein:get-kernel)
+                                 "%debug"
+                                 nil))
+
 (defun ein:find-or-create-ipdb-session (kernel &optional buffer)
   (ein:aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
       it
