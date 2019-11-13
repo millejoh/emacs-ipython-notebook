@@ -865,7 +865,7 @@ If END is non-`nil', return the location of next element."
     (when (or
            (null old-tb)
            (null new-tb)
-           (not (equalp new-tb old-tb)))
+           (not (cl-equalp new-tb old-tb)))
       (ein:cell-actually-append-output cell json dynamic))
     (setf (slot-value cell 'traceback) new-tb)))
 
@@ -1079,7 +1079,7 @@ prettified text thus be used instead of HTML type."
               (plist-put output :metadata (make-hash-table)))
           (setq renamed-outputs
                 (append renamed-outputs
-                        (list (let ((ocopy (copy-list output))
+                        (list (let ((ocopy (cl-copy-list output))
                                     (new-output '()))
                                 (loop while ocopy
                                       do (let ((prop (pop ocopy))

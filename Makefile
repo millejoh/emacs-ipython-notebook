@@ -8,8 +8,10 @@ endif
 ifeq ($(TRAVIS_PULL_REQUEST_BRANCH),)
 TRAVIS_PULL_REQUEST_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 endif
+ifeq ($(TRAVIS),true)
 ifeq ($(TRAVIS_PULL_REQUEST_SHA),)
 TRAVIS_PULL_REQUEST_SHA := $(shell if git show-ref --quiet --verify origin/$(TRAVIS_PULL_REQUEST_BRANCH) ; then git rev-parse origin/$(TRAVIS_PULL_REQUEST_BRANCH) ; fi))
+endif
 endif
 
 .DEFAULT_GOAL := test-compile
@@ -53,11 +55,9 @@ dist-clean: clean
 
 .PHONY: test-compile
 test-compile: clean autoloads
-#	TODO When we are ready to properly compile, replace the disaster here
-#	with (setq byte-compile-error-on-warn t) --dickmao
 	cask install
-	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
-	cask clean-elc
+	! (cask eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; cask clean-elc && exit $$ret)
+#	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
 
 .PHONY: quick
 quick: test-compile test-ob-ein-recurse test-unit

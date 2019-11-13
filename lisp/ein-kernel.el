@@ -121,7 +121,7 @@
   (ein:log 'debug "ein:kernel-session-p--complete %s" resp-string))
 
 (defun* ein:kernel-session-p--error (kernel callback iteration &key error-thrown symbol-status data &allow-other-keys)
-  (if (ein:aand (plist-get data :message) (search "not found" it))
+  (if (ein:aand (plist-get data :message) (cl-search "not found" it))
       (when callback (funcall callback kernel nil))
     (let* ((max-tries 3)
            (tries-left (1- (- max-tries iteration))))

@@ -746,7 +746,7 @@ Notebook list data is passed via the buffer local variable
 (defun ein:notebooklist-parse-nbpath (nbpath)
   "Return `(,url-or-port ,path) from URL-OR-PORT/PATH"
   (loop for url-or-port in (ein:notebooklist-keys)
-        if (search url-or-port nbpath :end2 (length url-or-port))
+        if (cl-search url-or-port nbpath :end2 (length url-or-port))
         return (list (substring nbpath 0 (length url-or-port))
                      (substring nbpath (1+ (length url-or-port))))
         end

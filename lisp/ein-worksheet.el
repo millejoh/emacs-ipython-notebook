@@ -77,7 +77,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
           (let ((cell-id (ein:aif (ein:worksheet-get-current-cell :noerror t)
                              (ein:worksheet--unique-enough-cell-id it) nil)))
             (let ((ein:log-print-level 5))
-              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (subseq buffer-undo-list 0 fill) fill))
+              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (cl-subseq buffer-undo-list 0 fill) fill))
             (setq ein:%which-cell%
                   (nconc (make-list fill cell-id) ein:%which-cell%))))))))
 
@@ -147,12 +147,12 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                     (cons m (cdr u))) u)))
            ((and (consp u) (null (car u))
                  (numberp (car (last u))) (numberp (cdr (last u))))
-            (append (subseq u 0 3)
+            (append (cl-subseq u 0 3)
                     (cons (+ ,distance (car (last u)))
                           (+ ,distance (cdr (last u))))))
            ((and (consp u) (eq (car u) 'apply)
                  (numberp (nth 2 u)) (numberp (nth 3 u)))
-            (append (subseq u 0 2)
+            (append (cl-subseq u 0 2)
                     (list (+ ,distance (nth 2 u)))
                     (list (+ ,distance (nth 3 u)))
                     (nthcdr 4 u)))
@@ -224,7 +224,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (ein:worksheet--jigger-undo-list
          (cons (ein:worksheet--unique-enough-cell-id old-cell)
                (ein:worksheet--unique-enough-cell-id cell)))
-        (dolist (uc (mapcar* 'cons buffer-undo-list ein:%which-cell%))
+        (dolist (uc (cl-mapcar #'cons buffer-undo-list ein:%which-cell%))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -263,7 +263,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         ;; Deletion of a less recent undo affects a more recent undo (arrow of time)
         ;; Since buffer-undo-list is ordered most to least recent, we must
         ;; reverse.
-        (dolist (uc (nreverse (mapcar* 'cons buffer-undo-list ein:%which-cell%)))
+        (dolist (uc (nreverse (cl-mapcar #'cons buffer-undo-list ein:%which-cell%)))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -280,7 +280,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (setq buffer-undo-list (nreverse lst))
         (setq ein:%which-cell% (nreverse wc))
         (ein:worksheet--jigger-undo-list)
-        (remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
+        (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
 
 
 ;;; Class and variable

@@ -30,7 +30,6 @@
 
 ;;; Code:
 
-(require 'cl)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-utils)
@@ -320,8 +319,8 @@ global setting.  For global setting and more information, see
 
 
 (defun ein:content-legacy-rename (content new-path callback cbargs)
-  (let ((path (substring new-path 0 (or (position ?/ new-path :from-end t) 0)))
-        (name (substring new-path (or (position ?/ new-path :from-end t) 0))))
+  (let ((path (substring new-path 0 (or (cl-position ?/ new-path :from-end t) 0)))
+        (name (substring new-path (or (cl-position ?/ new-path :from-end t) 0))))
     (ein:query-singleton-ajax
      (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
      (ein:content-url content)

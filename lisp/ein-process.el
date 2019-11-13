@@ -142,7 +142,7 @@
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
   (loop for dir in (hash-table-keys ein:%processes%)
-        when (search dir filename)
+        when (cl-search dir filename)
         return (gethash dir ein:%processes%)))
 
 (defun ein:process-url-match (url-or-port)
@@ -160,7 +160,7 @@
 
 (defsubst ein:process-path (proc filename)
   "Construct path by eliding PROC's dir from filename"
-  (subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
+  (cl-subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
 (defun ein:process-open-notebook* (filename callback)
   "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
@@ -178,7 +178,7 @@
             (ein:notebooklist-login url-or-port callback2)))
       (let* ((nbdir (read-directory-name "Notebook directory: "
                                          (ein:process-suitable-notebook-dir filename)))
-             (path (subseq filename (length (file-name-as-directory nbdir))))
+             (path (cl-subseq filename (length (file-name-as-directory nbdir))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
                                            (ein:notebook-open url-or-port

@@ -855,8 +855,8 @@ NAME is any non-empty string that does not contain '/' or '\\'.
 
 (defmacro ein:notebook-avoid-recursion (&rest body)
   `(let ((kill-buffer-query-functions
-          (remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
-                     kill-buffer-query-functions)))
+          (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
+                        kill-buffer-query-functions)))
      ,@body))
 
 (defun ein:notebook-kill-notebook-buffers (notebook)
