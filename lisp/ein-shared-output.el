@@ -30,7 +30,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'eieio)
 
 (require 'ein-cell)
@@ -223,7 +222,6 @@ shared output buffer.  You can open the buffer by the command
      (lambda (ready-kernel)
        (apply #'ein:cell-execute cell ready-kernel (ein:trim-indent code) popup args)))))
 
-
 ;;; Generic getter
 
 (defun ein:get-url-or-port--shared-output ()

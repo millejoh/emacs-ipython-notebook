@@ -35,6 +35,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 (provide 'ein)
 
 ;;; Old commentary:

@@ -25,9 +25,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ein-core)
-
 
 (defvar ein:log-all-buffer-name "*ein:log-all*")
 
@@ -119,4 +117,3 @@ Otherwise, return result of last form in BODY."
 (provide 'ein-log)
 
 ;;; ein-log.el ends here
- 

@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'widget)
 (require 'cus-edit)
 
@@ -332,9 +331,8 @@ automatically be called during calls to `ein:notebooklist-open`."
           (funcall callback (current-buffer) url-or-port)))
       (current-buffer))))
 
-(defun* ein:notebooklist-open-error (url-or-port path
-                                     &key error-thrown
-                                     &allow-other-keys)
+(cl-defun ein:notebooklist-open-error (url-or-port path
+                                       &key error-thrown &allow-other-keys)
   (ein:log 'error
     "ein:notebooklist-open-error %s: ERROR %s DATA %s" (concat (file-name-as-directory url-or-port) path) (car error-thrown) (cdr error-thrown)))
 
@@ -389,14 +387,13 @@ This function is called via `ein:notebook-after-rename-hook'."
      :success (apply-partially #'ein:notebooklist-new-notebook-success
                                url-or-port kernelspec path callback no-pop))))
 
-(defun* ein:notebooklist-new-notebook-success (url-or-port
-                                               kernelspec
-                                               path
-                                               callback
-                                               no-pop
-                                               &key
-                                               data
-                                               &allow-other-keys)
+(cl-defun ein:notebooklist-new-notebook-success (url-or-port
+                                                 kernelspec
+                                                 path
+                                                 callback
+                                                 no-pop
+                                                 &key data
+                                                 &allow-other-keys)
   (let ((nbname (plist-get data :name))
         (nbpath (plist-get data :path)))
     (when (< (ein:notebook-version-numeric url-or-port) 3)
@@ -406,7 +403,7 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:notebook-open url-or-port nbpath kernelspec callback nil no-pop)
     (ein:notebooklist-open* url-or-port path nil t)))
 
-(defun* ein:notebooklist-new-notebook-error
+(cl-defun ein:notebooklist-new-notebook-error
     (url-or-port kernelspec path callback no-pop retry
                  &key symbol-status error-thrown &allow-other-keys)
   (let ((notice (format "ein:notebooklist-new-notebook-error: %s %s"
@@ -459,10 +456,11 @@ This function is called via `ein:notebook-after-rename-hook'."
      :type "DELETE"
      :complete (apply-partially #'ein:notebooklist-delete-notebook--complete (ein:url url-or-port path) callback))))
 
-(defun* ein:notebooklist-delete-notebook--complete (url callback
-                                             &key data response symbol-status
-                                             &allow-other-keys
-                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:notebooklist-delete-notebook--complete
+    (url callback
+     &key data response symbol-status
+     &allow-other-keys
+     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-delete-notebook--complete %s" resp-string)
   (when callback (funcall callback)))
 
@@ -475,7 +473,7 @@ This function is called via `ein:notebook-after-rename-hook'."
       (setf current-path (concat current-path "/" p)
             pairs (append pairs (list (cons p current-path)))))))
 
-(defun* ein:nblist--sort-group (group by-param order)
+(cl-defun ein:nblist--sort-group (group by-param order)
   (sort group #'(lambda (x y)
                   (cond ((eql order :ascending)
                          (string-lessp (plist-get x by-param)
@@ -657,13 +655,11 @@ This function is called via `ein:notebook-after-rename-hook'."
                      "Dir")
                     (widget-insert " : " name)
                     (widget-insert "\n"))
+          end
           if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
           do (progn (widget-create
                      'link
-                     :notify (lexical-let ((url-or-port url-or-port)
-                                           (path path))
-                               (lambda (&rest ignore)
-                                 (ein:file-open url-or-port path)))
+                     :notify (apply-partially #'ein:file-open url-or-port path)
                      "Open")
                     (widget-insert " ------ ")
                     (widget-create
@@ -674,6 +670,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                      "Delete")
                     (widget-insert " : " (ein:format-nbitem-data name last-modified))
                     (widget-insert "\n"))
+          end
           if (string= type "notebook")
           do (progn (widget-create
                      'link
@@ -702,7 +699,8 @@ This function is called via `ein:notebook-after-rename-hook'."
                                   path)))
                      "Delete")
                     (widget-insert " : " (ein:format-nbitem-data name last-modified))
-                    (widget-insert "\n")))))
+                    (widget-insert "\n"))
+          end)))
 
 (defun ein:notebooklist-render (nb-version &optional restore-point)
   "Render notebook list widget.
@@ -862,16 +860,16 @@ and the url-or-port argument of ein:notebooklist-open*."
            (request-response--raw-header response))
   (funcall errback))
 
-(defun* ein:notebooklist-login--complete (url-or-port &key data response
-                                                      &allow-other-keys
-                                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:notebooklist-login--complete (url-or-port
+                                            &key data response
+                                            &allow-other-keys
+                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-login--complete %s" resp-string))
 
-(defun* ein:notebooklist-login--success (url-or-port callback errback token iteration
-                                                     &key data response error-thrown
-                                                     &allow-other-keys
-                                                     &aux
-                                                     (response-status (request-response-status-code response)))
+(cl-defun ein:notebooklist-login--success (url-or-port callback errback token iteration
+                                           &key data response error-thrown
+                                           &allow-other-keys
+                                           &aux (response-status (request-response-status-code response)))
   (cond ((plist-get data :bad-page)
          (if (>= iteration 0)
              (ein:notebooklist-login--error-1 url-or-port error-thrown response errback)
@@ -885,15 +883,11 @@ and the url-or-port argument of ein:notebooklist-open*."
              (ein:jupyterhub-connect url-or-port user pw callback))))
         (t (ein:notebooklist-login--success-1 url-or-port callback errback))))
 
-(defun* ein:notebooklist-login--error
-    (url-or-port token callback errback iteration &key
-                 data
-                 symbol-status
-                 response
-                 error-thrown
-                 &allow-other-keys
-                 &aux
-                 (response-status (request-response-status-code response)))
+(cl-defun ein:notebooklist-login--error
+    (url-or-port token callback errback iteration
+     &key data symbol-status response error-thrown
+     &allow-other-keys
+     &aux (response-status (request-response-status-code response)))
   (cond ((and response-status (< iteration 0))
          (setq token (read-passwd (format "Password for %s: " url-or-port)))
          (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status))

@@ -25,11 +25,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ewoc)
-
 (require 'ein-core)
-
 
 (defstruct ein:$node
   path                                  ; list of path

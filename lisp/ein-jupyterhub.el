@@ -77,7 +77,7 @@
       (ein:websocket-store-cookie c host-port
                                   (car (url-path-and-query parsed-url)) securep))))
 
-(defun* ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
+(cl-defun ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
   (deferred:callback-post dobj (list conn response)))
 
 (defmacro ein:jupyterhub--add-header (header)

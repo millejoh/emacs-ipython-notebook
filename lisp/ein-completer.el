@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
@@ -67,17 +65,6 @@
     (when word
       (delete-region beg end)
       (insert word))))
-
-(defun ein:completer-complete (kernel callbacks errback)
-  "Start completion for the code at point."
-  (interactive (list (ein:get-kernel)
-                     (list :complete_reply
-                           (cons #'ein:completer-finish-completing '(:expand nil)))
-                     #'ignore))
-  (ein:kernel-complete kernel
-                       (thing-at-point 'line)
-                       (current-column)
-                       callbacks errback))
 
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)

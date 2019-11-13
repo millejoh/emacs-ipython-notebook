@@ -253,7 +253,6 @@
    (outputs :initarg :outputs :initform nil :type list)
    (metadata :initarg :metadata :initform nil :type list :accessor ein:cell-metadata) ;; For nbformat >= 4
    (events :initarg :events :type ein:events)
-   (slidetype :initarg :slidetype :initform "-" :type string)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string
             :accessor ein:cell-id))
   "Notebook cell base class")
@@ -262,7 +261,7 @@
   ((traceback :initform nil :initarg :traceback :type list)
    (cell-type :initarg :cell-type :initform "code")
    (kernel :initarg :kernel :type ein:$kernel :accessor ein:cell-kernel)
-   (element-names :initform (:prompt :input :output :footer :slidetype))
+   (element-names :initform (:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
                         :documentation "\
 Integer or \"*\" (running state).
@@ -291,7 +290,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
-   (element-names :initform (:prompt :input :footer :slidetype))))
+   (element-names :initform (:prompt :input :footer))))
 
 (defclass ein:htmlcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "html")))

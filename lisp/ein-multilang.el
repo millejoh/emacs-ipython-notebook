@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)

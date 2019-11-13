@@ -88,7 +88,7 @@ test-unit:
 
 .PHONY: test-ob-ein-recurse
 test-ob-ein-recurse:
-	cask eval "(progn (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
+	cask eval "(progn (require 'cl) (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
 
 .PHONY: test-install
 test-install:

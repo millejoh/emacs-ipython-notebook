@@ -33,12 +33,8 @@
 ;;; Code:
 
 
-(eval-when-compile (require 'cl))
-
 (require 'ewoc)
-(require 'mumamo nil t)
 (require 'company nil t)
-(require 'px nil t)
 (require 'eldoc nil t)
 (require 'ein-core)
 (require 'ein-classes)
@@ -174,9 +170,6 @@ Current buffer for these functions is set to the notebook buffer.")
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
-
-(ein:deflocal ein:%notebook-latex-p% nil
-  "Is latex preview toggled")
 
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
@@ -329,7 +322,8 @@ will be updated with kernel's cwd."
   (switch-to-buffer notebook))
 
 ;;;###autoload
-(defun ein:notebook-open (url-or-port path &optional kernelspec callback errback no-pop)
+(defun ein:notebook-open (url-or-port path
+                          &optional kernelspec callback errback no-pop)
   "Returns notebook at URL-OR-PORT/PATH.
 
 Note that notebook sends for its contents and won't have them right away.
@@ -338,8 +332,7 @@ After the notebook is opened, CALLBACK is called as::
 
   \(funcall CALLBACK notebook created)
 
-where `created' indicates a new notebook or an existing one.
-"
+where `created' indicates a new notebook or an existing one."
   (interactive
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "notebook")))
   (unless errback (setq errback #'ignore))
@@ -455,21 +448,6 @@ of minor mode."
   'ein:notebook-show-in-shared-output
   'ein:shared-output-show-code-cell-at-point "0.1.2")
 
-(defsubst ein:notebook-toggle-latex-fragment ()
-  (interactive)
-  (cond (ein:polymode (ein:display-warning "ein:notebook-toggle-latex-fragment: delegate to markdown-mode"))
-        ((featurep 'px)
-         (let ((outline-regexp "$a")
-               (kill-buffer-hook nil)) ;; outline-regexp never matches to avoid headline
-           (cl-letf (((symbol-function 'px-remove) #'ignore))
-             (if ein:%notebook-latex-p%
-                 (progn
-                   (ein:worksheet-render (ein:worksheet--get-ws-or-error))
-                   (setq ein:%notebook-latex-p% nil))
-               (px-preview)
-               (setq ein:%notebook-latex-p% t)))))
-        (t (ein:display-warning "px package not found"))))
-
 ;;; Kernel related things
 
 (defun ein:list-available-kernels (url-or-port)
@@ -569,8 +547,8 @@ This is equivalent to do ``C-c`` in the console program."
        (> (length name) 0)
        (not (string-match "[\\/\\\\:]" name))))
 
-(defun* ein:notebook--worksheet-new (notebook
-                                     &optional (func #'ein:worksheet-new))
+(cl-defun ein:notebook--worksheet-new (notebook
+                                       &optional (func #'ein:worksheet-new))
   (funcall func
            (ein:$notebook-nbformat notebook)
            (ein:notebook-name-getter notebook)
@@ -799,8 +777,8 @@ This is equivalent to do ``C-c`` in the console program."
 ;;    This should save the latest WS0.  To do so, WS0 at the point (2)
 ;;    must be cached in the worksheet slot `:saved-cells'.
 
-(defun* ein:notebook-save-notebook-error (notebook &key symbol-status
-                                                   &allow-other-keys)
+(cl-defun ein:notebook-save-notebook-error (notebook &key symbol-status
+                                                     &allow-other-keys)
   (if (eq symbol-status 'user-cancel)
       (ein:log 'info "Cancel saving notebook.")
     (ein:log 'info "Failed to save notebook!")
@@ -838,7 +816,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
                       (list (ein:$notebook-url-or-port ein:%notebook%)
                             path))))
 
-(defun* ein:notebook-rename-success (notebook content)
+(cl-defun ein:notebook-rename-success (notebook content)
   (ein:notebook-remove-opened-notebook notebook)
   (ein:notebook-set-notebook-name notebook (ein:$content-name content))
   (setf (ein:$notebook-notebook-path notebook) (ein:$content-path content))
@@ -1004,8 +982,7 @@ See also `ein:notebook-worksheet-open-next-or-first' and
     (when show
       (funcall show (ein:worksheet-buffer prev)))))
 
-(defun* ein:notebook-worksheet--render-maybe
-    (notebook ws &optional (adj "next"))
+(cl-defun ein:notebook-worksheet--render-maybe (notebook ws &optional (adj "next"))
   "Render worksheet WS of NOTEBOOK if it does not have buffer.
 ADJ is a adjective to describe worksheet to be rendered."
   (if (ein:worksheet-has-buffer-p ws)
@@ -1014,7 +991,7 @@ ADJ is a adjective to describe worksheet to be rendered."
     (ein:notebook--worksheet-render notebook ws)
     (ein:log 'verbose "Rendering %s worksheet... Done." adj)))
 
-(defun* ein:notebook-worksheet--open-new
+(cl-defun ein:notebook-worksheet--open-new
     (notebook new &optional (adj "next") show)
   "Open (possibly new) worksheet NEW of NOTEBOOK with SHOW function.
 ADJ is a adjective to describe worksheet to be opened.
@@ -1102,7 +1079,7 @@ See also `ein:notebook-worksheet-open-next'."
       (funcall show (ein:worksheet-buffer new)))
     new))
 
-(defun* ein:notebook-worksheet-insert-next
+(cl-defun ein:notebook-worksheet-insert-next
     (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet after this worksheet and open it.
 See also `ein:notebook-worksheet-insert-prev'.
@@ -1116,7 +1093,7 @@ See also `ein:notebook-worksheet-insert-prev'.
   (ein:notebook-worksheet-insert-new notebook ws render show
                                      #'ein:list-insert-after))
 
-(defun* ein:notebook-worksheet-insert-prev
+(cl-defun ein:notebook-worksheet-insert-prev
     (notebook ws &optional (render t) (show #'switch-to-buffer))
   "Insert a new worksheet before this worksheet and open it.
 See also `ein:notebook-worksheet-insert-next'."
@@ -1156,16 +1133,14 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
   (setf (ein:$notebook-worksheets notebook)
         (ein:list-move-right (ein:$notebook-worksheets notebook) ws)))
 
-(defun* ein:notebook-worksheet-index
-    (&optional (notebook ein:%notebook%)
-               (ws ein:%worksheet%))
+(cl-defun ein:notebook-worksheet-index
+    (&optional (notebook ein:%notebook%) (ws ein:%worksheet%))
   "Return an index of the worksheet WS in NOTEBOOK."
   (loop for i from 0
         for ith-ws in (ein:$notebook-worksheets notebook)
         when (eq ith-ws ws)
         return i))
 
-
 ;;; Scratch sheet
 
 (defun ein:notebook-scratchsheet-render-new (notebook)
@@ -1278,35 +1253,8 @@ associated with current buffer (if any)."
 
 (defcustom ein:notebook-modes
   '(ein:notebook-multilang-mode)
-  "Notebook modes to use \(in order of preference).
-
-When the notebook is opened, mode in this value is checked one by one
-and the first usable mode is used.
-
-Available modes:
-
-* `ein:notebook-multilang-mode'
-* `ein:notebook-mumamo-mode'
-* `ein:notebook-python-mode'
-* `ein:notebook-plain-mode'
-
-Examples:
-
-Use MuMaMo if it is installed.  Otherwise, use plain mode.
-This is the old default setting::
-
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-plain-mode))
-
-Avoid using MuMaMo even when it is installed::
-
-  (setq ein:notebook-modes '(ein:notebook-plain-mode))
-
-Use simple `python-mode' based notebook mode when MuMaMo is not installed::
-
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode ein:notebook-python-mode))
-"
+  "Obsolete."
   :type '(repeat (choice (const :tag "Multi-lang" ein:notebook-multilang-mode)
-                         (const :tag "MuMaMo" ein:notebook-mumamo-mode)
                          (const :tag "Only Python" ein:notebook-python-mode)
                          (const :tag "Plain" ein:notebook-plain-mode)))
   :group 'ein)
@@ -1322,84 +1270,84 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (defmacro ein:notebook--define-key (keymap key defn)
-  "Ideally we could override just the keymap binding with a (string . wrapped) cons pair (as opposed to messing with the DEFN itself), but then describe-minor-mode unhelpfully shows ?? for the keymap commands."
-  `(progn
-     (when (functionp ,defn)
-       (add-function :around (symbol-function ,defn)
-                     (lambda (f &rest args)
-                       (poly-ein-base (apply f args)))))
-     (define-key ,keymap ,key ,defn)))
+  "Ideally we could override just the keymap binding with a (string . wrapped) cons pair (as opposed to messing with the DEFN itself), but then describe-minor-mode unhelpfully shows ?? for the keymap commands.
+
+Tried add-function: the &rest from :around is an emacs-25 compilation issue."
+  (let ((km (intern (concat (symbol-name defn) "-km"))))
+    `(if (functionp (quote ,defn))
+         (progn
+           (fset (quote ,km) (lambda () (interactive)
+                               (poly-ein-base (call-interactively (function ,defn)))))
+           (define-key ,keymap ,key (quote ,km)))
+       (define-key ,keymap ,key (quote ,defn)))))
 
 (let ((map ein:notebook-mode-map))
-  (ein:notebook--define-key map "\C-c\C-c" 'ein:worksheet-execute-cell)
-  (ein:notebook--define-key map (kbd "M-RET") 'ein:worksheet-execute-cell-and-goto-next)
+  (ein:notebook--define-key map "\C-c\C-c" ein:worksheet-execute-cell)
+  (ein:notebook--define-key map (kbd "M-RET") ein:worksheet-execute-cell-and-goto-next)
   (ein:notebook--define-key map (kbd "<M-S-return>")
-    'ein:worksheet-execute-cell-and-insert-below)
-  (ein:notebook--define-key map (kbd "C-c C-'") 'ein:worksheet-turn-on-autoexec)
-  (ein:notebook--define-key map "\C-c\C-e" 'ein:worksheet-toggle-output)
-  (ein:notebook--define-key map "\C-c\C-v" 'ein:worksheet-set-output-visibility-all)
-  (ein:notebook--define-key map "\C-c\C-l" 'ein:worksheet-clear-output)
-  (ein:notebook--define-key map (kbd "C-c C-S-l") 'ein:worksheet-clear-all-output)
-  (ein:notebook--define-key map (kbd "C-c C-;") 'ein:shared-output-show-code-cell-at-point)
-  (ein:notebook--define-key map "\C-c\C-k" 'ein:worksheet-kill-cell)
-  (ein:notebook--define-key map "\C-c\M-w" 'ein:worksheet-copy-cell)
-  (ein:notebook--define-key map "\C-c\C-w" 'ein:worksheet-copy-cell)
-  (ein:notebook--define-key map "\C-c\C-y" 'ein:worksheet-yank-cell)
-  (ein:notebook--define-key map "\C-c\C-a" 'ein:worksheet-insert-cell-above)
-  (ein:notebook--define-key map "\C-c\C-b" 'ein:worksheet-insert-cell-below)
-  (ein:notebook--define-key map "\C-c\C-t" 'ein:worksheet-toggle-cell-type)
-  (ein:notebook--define-key map "\C-cS" 'ein:worksheet-toggle-slide-type)
-  (ein:notebook--define-key map "\C-c\C-u" 'ein:worksheet-change-cell-type)
-  (ein:notebook--define-key map "\C-c\C-s" 'ein:worksheet-split-cell-at-point)
-  (ein:notebook--define-key map "\C-c\C-m" 'ein:worksheet-merge-cell)
-  (ein:notebook--define-key map "\C-c\C-n" 'ein:worksheet-goto-next-input)
-  (ein:notebook--define-key map "\C-c\C-p" 'ein:worksheet-goto-prev-input)
-  (ein:notebook--define-key map (kbd "C-<up>") 'ein:worksheet-goto-prev-input)
-  (ein:notebook--define-key map (kbd "C-<down>") 'ein:worksheet-goto-next-input)
-  (ein:notebook--define-key map (kbd "C-c <up>") 'ein:worksheet-move-cell-up)
-  (ein:notebook--define-key map (kbd "C-c <down>") 'ein:worksheet-move-cell-down)
-  (ein:notebook--define-key map (kbd "M-<up>") 'ein:worksheet-move-cell-up)
-  (ein:notebook--define-key map (kbd "M-<down>") 'ein:worksheet-move-cell-down)
-  (ein:notebook--define-key map "\C-c\C-h" 'ein:pytools-request-tooltip-or-help)
-  (ein:notebook--define-key map "\C-c\C-i" 'ein:completer-complete)
-  (ein:notebook--define-key map (kbd "C-c C-$") 'ein:tb-show)
+    ein:worksheet-execute-cell-and-insert-below)
+  (ein:notebook--define-key map (kbd "C-c C-'") ein:worksheet-turn-on-autoexec)
+  (ein:notebook--define-key map "\C-c\C-e" ein:worksheet-toggle-output)
+  (ein:notebook--define-key map "\C-c\C-v" ein:worksheet-set-output-visibility-all)
+  (ein:notebook--define-key map "\C-c\C-l" ein:worksheet-clear-output)
+  (ein:notebook--define-key map (kbd "C-c C-S-l") ein:worksheet-clear-all-output)
+  (ein:notebook--define-key map (kbd "C-c C-;") ein:shared-output-show-code-cell-at-point)
+  (ein:notebook--define-key map "\C-c\C-k" ein:worksheet-kill-cell)
+  (ein:notebook--define-key map "\C-c\M-w" ein:worksheet-copy-cell)
+  (ein:notebook--define-key map "\C-c\C-w" ein:worksheet-copy-cell)
+  (ein:notebook--define-key map "\C-c\C-y" ein:worksheet-yank-cell)
+  (ein:notebook--define-key map "\C-c\C-a" ein:worksheet-insert-cell-above)
+  (ein:notebook--define-key map "\C-c\C-b" ein:worksheet-insert-cell-below)
+  (ein:notebook--define-key map "\C-c\C-t" ein:worksheet-toggle-cell-type)
+  (ein:notebook--define-key map "\C-c\C-u" ein:worksheet-change-cell-type)
+  (ein:notebook--define-key map "\C-c\C-s" ein:worksheet-split-cell-at-point)
+  (ein:notebook--define-key map "\C-c\C-m" ein:worksheet-merge-cell)
+  (ein:notebook--define-key map "\C-c\C-n" ein:worksheet-goto-next-input)
+  (ein:notebook--define-key map "\C-c\C-p" ein:worksheet-goto-prev-input)
+  (ein:notebook--define-key map (kbd "C-<up>") ein:worksheet-goto-prev-input)
+  (ein:notebook--define-key map (kbd "C-<down>") ein:worksheet-goto-next-input)
+  (ein:notebook--define-key map (kbd "C-c <up>") ein:worksheet-move-cell-up)
+  (ein:notebook--define-key map (kbd "C-c <down>") ein:worksheet-move-cell-down)
+  (ein:notebook--define-key map (kbd "M-<up>") ein:worksheet-move-cell-up)
+  (ein:notebook--define-key map (kbd "M-<down>") ein:worksheet-move-cell-down)
+  (ein:notebook--define-key map "\C-c\C-h" ein:pytools-request-tooltip-or-help)
+  (ein:notebook--define-key map (kbd "C-c C-$") ein:tb-show)
   (ein:notebook--define-key map "\C-c\C-x" nil)
-  (ein:notebook--define-key map "\C-c\C-x\C-l" 'ein:notebook-toggle-latex-fragment)
-  (ein:notebook--define-key map "\C-c\C-x\C-r" 'ein:notebook-restart-session-command)
-  (ein:notebook--define-key map "\C-c\C-r" 'ein:notebook-reconnect-session-command)
-  (ein:notebook--define-key map "\C-c\C-z" 'ein:notebook-kernel-interrupt-command)
-  (ein:notebook--define-key map "\C-c\C-q" 'ein:notebook-kill-kernel-then-close-command)
-  (ein:notebook--define-key map (kbd "C-c C-#") 'ein:notebook-close)
-  (ein:notebook--define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (ein:notebook--define-key map "\C-c\C-f" 'ein:file-open)
-  (ein:notebook--define-key map "\C-c\C-o" 'ein:notebook-open)
-  (ein:notebook--define-key map "\C-x\C-s" 'ein:notebook-save-notebook-command)
-  (ein:notebook--define-key map "\C-x\C-w" 'ein:notebook-rename-command)
+  (ein:notebook--define-key map "\C-c\C-x\C-r" ein:notebook-restart-session-command)
+  (ein:notebook--define-key map "\C-c\C-r" ein:notebook-reconnect-session-command)
+  (ein:notebook--define-key map "\C-c\C-z" ein:notebook-kernel-interrupt-command)
+  (ein:notebook--define-key map "\C-c\C-q" ein:notebook-kill-kernel-then-close-command)
+  (ein:notebook--define-key map (kbd "C-c C-#") ein:notebook-close)
+  (ein:notebook--define-key map (kbd "C-:") ein:shared-output-eval-string)
+  (ein:notebook--define-key map "\C-c\C-f" ein:file-open)
+  (ein:notebook--define-key map "\C-c\C-o" ein:notebook-open)
+  (ein:notebook--define-key map "\C-x\C-s" ein:notebook-save-notebook-command)
+  (ein:notebook--define-key map "\C-x\C-w" ein:notebook-rename-command)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
-  (ein:notebook--define-key map "\M-p"          'ein:worksheet-previous-input-history)
-  (ein:notebook--define-key map "\M-n"          'ein:worksheet-next-input-history)
-  (ein:notebook--define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
+  (ein:notebook--define-key map "\M-p"          ein:worksheet-previous-input-history)
+  (ein:notebook--define-key map "\M-n"          ein:worksheet-next-input-history)
+  (ein:notebook--define-key map (kbd "C-c C-/") ein:notebook-scratchsheet-open)
   ;; Worksheets
-  (ein:notebook--define-key map (kbd "C-c !")     'ein:worksheet-rename-sheet)
-  (ein:notebook--define-key map (kbd "C-c {")     'ein:notebook-worksheet-open-prev-or-last)
-  (ein:notebook--define-key map (kbd "C-c }")     'ein:notebook-worksheet-open-next-or-first)
-  (ein:notebook--define-key map (kbd "C-c M-{")   'ein:notebook-worksheet-move-prev)
-  (ein:notebook--define-key map (kbd "C-c M-}")   'ein:notebook-worksheet-move-next)
-  (ein:notebook--define-key map (kbd "C-c +")     'ein:notebook-worksheet-insert-next)
-  (ein:notebook--define-key map (kbd "C-c M-+")   'ein:notebook-worksheet-insert-prev)
-  (ein:notebook--define-key map (kbd "C-c -")     'ein:notebook-worksheet-delete)
-  (ein:notebook--define-key map "\C-c1" 'ein:notebook-worksheet-open-1th)
-  (ein:notebook--define-key map "\C-c2" 'ein:notebook-worksheet-open-2th)
-  (ein:notebook--define-key map "\C-c3" 'ein:notebook-worksheet-open-3th)
-  (ein:notebook--define-key map "\C-c4" 'ein:notebook-worksheet-open-4th)
-  (ein:notebook--define-key map "\C-c5" 'ein:notebook-worksheet-open-5th)
-  (ein:notebook--define-key map "\C-c6" 'ein:notebook-worksheet-open-6th)
-  (ein:notebook--define-key map "\C-c7" 'ein:notebook-worksheet-open-7th)
-  (ein:notebook--define-key map "\C-c8" 'ein:notebook-worksheet-open-8th)
-  (ein:notebook--define-key map "\C-c9" 'ein:notebook-worksheet-open-last)
+  (ein:notebook--define-key map (kbd "C-c !")     ein:worksheet-rename-sheet)
+  (ein:notebook--define-key map (kbd "C-c {")     ein:notebook-worksheet-open-prev-or-last)
+  (ein:notebook--define-key map (kbd "C-c }")     ein:notebook-worksheet-open-next-or-first)
+  (ein:notebook--define-key map (kbd "C-c M-{")   ein:notebook-worksheet-move-prev)
+  (ein:notebook--define-key map (kbd "C-c M-}")   ein:notebook-worksheet-move-next)
+  (ein:notebook--define-key map (kbd "C-c +")     ein:notebook-worksheet-insert-next)
+  (ein:notebook--define-key map (kbd "C-c M-+")   ein:notebook-worksheet-insert-prev)
+  (ein:notebook--define-key map (kbd "C-c -")     ein:notebook-worksheet-delete)
+  (ein:notebook--define-key map "\C-c1" ein:notebook-worksheet-open-1th)
+  (ein:notebook--define-key map "\C-c2" ein:notebook-worksheet-open-2th)
+  (ein:notebook--define-key map "\C-c3" ein:notebook-worksheet-open-3th)
+  (ein:notebook--define-key map "\C-c4" ein:notebook-worksheet-open-4th)
+  (ein:notebook--define-key map "\C-c5" ein:notebook-worksheet-open-5th)
+  (ein:notebook--define-key map "\C-c6" ein:notebook-worksheet-open-6th)
+  (ein:notebook--define-key map "\C-c7" ein:notebook-worksheet-open-7th)
+  (ein:notebook--define-key map "\C-c8" ein:notebook-worksheet-open-8th)
+  (ein:notebook--define-key map "\C-c9" ein:notebook-worksheet-open-last)
   ;; Menu
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
@@ -1419,7 +1367,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
             ("Insert cell above" ein:worksheet-insert-cell-above)
             ("Insert cell below" ein:worksheet-insert-cell-below)
             ("Toggle cell type" ein:worksheet-toggle-cell-type)
-            ("Toggle slide type" ein:worksheet-toggle-slide-type)
             ("Change cell type" ein:worksheet-change-cell-type)
             ("Split cell at point" ein:worksheet-split-cell-at-point)
             ("Merge cell" ein:worksheet-merge-cell)
@@ -1463,8 +1410,6 @@ Use simple `python-mode' based notebook mode when MuMaMo is not installed::
        ,@(ein:generate-menu
           '(("Show object help"
              ein:pytools-request-tooltip-or-help)
-            ("Complete code" ein:completer-complete
-             :active (ein:worksheet-at-codecell-p))
             ("Jump to definition" ein:pytools-jump-to-source-command)
             ("Go back to the previous jump point"
              ein:pytools-jump-back-command)
@@ -1543,9 +1488,9 @@ watch the fireworks!"
 
   (when ein:notebook-mode
     (ein:aif ein:helm-kernel-history-search-key
-        (ein:notebook--define-key ein:notebook-mode-map it 'helm-ein-kernel-history))
+        (ein:notebook--define-key ein:notebook-mode-map it helm-ein-kernel-history))
     (ein:aif ein:anything-kernel-history-search-key
-        (ein:notebook--define-key ein:notebook-mode-map it 'anything-ein-kernel-history))
+        (ein:notebook--define-key ein:notebook-mode-map it anything-ein-kernel-history))
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
     (ein:worksheet-imenu-setup)))
 

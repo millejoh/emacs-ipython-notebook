@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-core)
 (require 'ein-jupyter)
 (require 'ein-file)

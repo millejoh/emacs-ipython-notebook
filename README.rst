@@ -124,79 +124,76 @@ Keymap (C-h m)
    C-c		Prefix Command
    C-x		Prefix Command
    ESC		Prefix Command
-   C-:		ein:shared-output-eval-string
-   <C-down>	ein:worksheet-goto-next-input
-   <C-up>		ein:worksheet-goto-prev-input
-   <M-S-return>	ein:worksheet-execute-cell-and-insert-below
-   <M-down>	ein:worksheet-move-cell-down
-   <M-up>		ein:worksheet-move-cell-up
+   C-:		ein:shared-output-eval-string-km
+   <C-down>	ein:worksheet-goto-next-input-km
+   <C-up>		ein:worksheet-goto-prev-input-km
+   <M-S-return>	ein:worksheet-execute-cell-and-insert-below-km
+   <M-down>	ein:worksheet-move-cell-down-km
+   <M-up>		ein:worksheet-move-cell-up-km
    
-   C-x C-s		ein:notebook-save-notebook-command
-   C-x C-w		ein:notebook-rename-command
+   C-x C-s		ein:notebook-save-notebook-command-km
+   C-x C-w		ein:notebook-rename-command-km
    
-   M-RET		ein:worksheet-execute-cell-and-goto-next
+   M-RET		ein:worksheet-execute-cell-and-goto-next-km
    M-,		ein:pytools-jump-back-command
    M-.		ein:pytools-jump-to-source-command
-   M-n		ein:worksheet-next-input-history
-   M-p		ein:worksheet-previous-input-history
+   M-n		ein:worksheet-next-input-history-km
+   M-p		ein:worksheet-previous-input-history-km
    
-   C-c C-a		ein:worksheet-insert-cell-above
-   C-c C-b		ein:worksheet-insert-cell-below
-   C-c C-c		ein:worksheet-execute-cell
-   C-c C-e		ein:worksheet-toggle-output
-   C-c C-f		ein:file-open
-   C-c C-h		ein:pytools-request-tooltip-or-help
-   C-c TAB		ein:completer-complete
-   C-c C-k		ein:worksheet-kill-cell
-   C-c C-l		ein:worksheet-clear-output
-   C-c RET		ein:worksheet-merge-cell
-   C-c C-n		ein:worksheet-goto-next-input
-   C-c C-o		ein:notebook-open
-   C-c C-p		ein:worksheet-goto-prev-input
-   C-c C-q		ein:notebook-kill-kernel-then-close-command
-   C-c C-r		ein:notebook-reconnect-session-command
-   C-c C-s		ein:worksheet-split-cell-at-point
-   C-c C-t		ein:worksheet-toggle-cell-type
-   C-c C-u		ein:worksheet-change-cell-type
-   C-c C-v		ein:worksheet-set-output-visibility-all
-   C-c C-w		ein:worksheet-copy-cell
+   C-c C-a		ein:worksheet-insert-cell-above-km
+   C-c C-b		ein:worksheet-insert-cell-below-km
+   C-c C-c		ein:worksheet-execute-cell-km
+   C-c C-e		ein:worksheet-toggle-output-km
+   C-c C-f		ein:file-open-km
+   C-c C-h		ein:pytools-request-tooltip-or-help-km
+   C-c C-k		ein:worksheet-kill-cell-km
+   C-c C-l		ein:worksheet-clear-output-km
+   C-c RET		ein:worksheet-merge-cell-km
+   C-c C-n		ein:worksheet-goto-next-input-km
+   C-c C-o		ein:notebook-open-km
+   C-c C-p		ein:worksheet-goto-prev-input-km
+   C-c C-q		ein:notebook-kill-kernel-then-close-command-km
+   C-c C-r		ein:notebook-reconnect-session-command-km
+   C-c C-s		ein:worksheet-split-cell-at-point-km
+   C-c C-t		ein:worksheet-toggle-cell-type-km
+   C-c C-u		ein:worksheet-change-cell-type-km
+   C-c C-v		ein:worksheet-set-output-visibility-all-km
+   C-c C-w		ein:worksheet-copy-cell-km
    C-c C-x		Prefix Command
-   C-c C-y		ein:worksheet-yank-cell
-   C-c C-z		ein:notebook-kernel-interrupt-command
+   C-c C-y		ein:worksheet-yank-cell-km
+   C-c C-z		ein:notebook-kernel-interrupt-command-km
    C-c ESC		Prefix Command
-   C-c !		ein:worksheet-rename-sheet
-   C-c +		ein:notebook-worksheet-insert-next
-   C-c -		ein:notebook-worksheet-delete
-   C-c 1		ein:notebook-worksheet-open-1th
-   C-c 2		ein:notebook-worksheet-open-2th
-   C-c 3		ein:notebook-worksheet-open-3th
-   C-c 4		ein:notebook-worksheet-open-4th
-   C-c 5		ein:notebook-worksheet-open-5th
-   C-c 6		ein:notebook-worksheet-open-6th
-   C-c 7		ein:notebook-worksheet-open-7th
-   C-c 8		ein:notebook-worksheet-open-8th
-   C-c 9		ein:notebook-worksheet-open-last
-   C-c S		ein:worksheet-toggle-slide-type
-   C-c {		ein:notebook-worksheet-open-prev-or-last
-   C-c }		ein:notebook-worksheet-open-next-or-first
-   C-c C-S-l	ein:worksheet-clear-all-output
-   C-c C-#		ein:notebook-close
-   C-c C-$		ein:tb-show
-   C-c C-'		ein:worksheet-turn-on-autoexec
+   C-c !		ein:worksheet-rename-sheet-km
+   C-c +		ein:notebook-worksheet-insert-next-km
+   C-c -		ein:notebook-worksheet-delete-km
+   C-c 1		ein:notebook-worksheet-open-1th-km
+   C-c 2		ein:notebook-worksheet-open-2th-km
+   C-c 3		ein:notebook-worksheet-open-3th-km
+   C-c 4		ein:notebook-worksheet-open-4th-km
+   C-c 5		ein:notebook-worksheet-open-5th-km
+   C-c 6		ein:notebook-worksheet-open-6th-km
+   C-c 7		ein:notebook-worksheet-open-7th-km
+   C-c 8		ein:notebook-worksheet-open-8th-km
+   C-c 9		ein:notebook-worksheet-open-last-km
+   C-c {		ein:notebook-worksheet-open-prev-or-last-km
+   C-c }		ein:notebook-worksheet-open-next-or-first-km
+   C-c C-S-l	ein:worksheet-clear-all-output-km
+   C-c C-#		ein:notebook-close-km
+   C-c C-$		ein:tb-show-km
+   C-c C-'		ein:worksheet-turn-on-autoexec-km
    C-c C-,		ein:pytools-jump-back-command
    C-c C-.		ein:pytools-jump-to-source-command
-   C-c C-/		ein:notebook-scratchsheet-open
-   C-c C-;		ein:shared-output-show-code-cell-at-point
-   C-c <down>	ein:worksheet-move-cell-down
-   C-c <up>	ein:worksheet-move-cell-up
+   C-c C-/		ein:notebook-scratchsheet-open-km
+   C-c C-;		ein:shared-output-show-code-cell-at-point-km
+   C-c <down>	ein:worksheet-move-cell-down-km
+   C-c <up>	ein:worksheet-move-cell-up-km
    
-   C-c C-x C-l	ein:notebook-toggle-latex-fragment
-   C-c C-x C-r	ein:notebook-restart-session-command
+   C-c C-x C-r	ein:notebook-restart-session-command-km
    
-   C-c M-+		ein:notebook-worksheet-insert-prev
-   C-c M-w		ein:worksheet-copy-cell
-   C-c M-{		ein:notebook-worksheet-move-prev
-   C-c M-}		ein:notebook-worksheet-move-next
+   C-c M-+		ein:notebook-worksheet-insert-prev-km
+   C-c M-w		ein:worksheet-copy-cell-km
+   C-c M-{		ein:notebook-worksheet-move-prev-km
+   C-c M-}		ein:notebook-worksheet-move-next-km
 
 License
 =======

@@ -28,7 +28,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ansi-color)
 
 (require 'ein-core)
@@ -100,7 +99,7 @@
    :content content
    :parent_header (make-hash-table)))
 
-(defun* ein:kernel-session-p (kernel callback &optional iteration)
+(cl-defun ein:kernel-session-p (kernel callback &optional iteration)
   "Don't make any changes on the server side.  CALLBACK with arity 2, kernel and a boolean whether session exists on server."
   (unless iteration
     (setq iteration 0))
@@ -115,12 +114,15 @@
      :success (apply-partially #'ein:kernel-session-p--success kernel session-id callback)
      :error (apply-partially #'ein:kernel-session-p--error kernel callback iteration))))
 
-(defun* ein:kernel-session-p--complete (session-id &key data response
-                                                   &allow-other-keys
-                                                   &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:kernel-session-p--complete (session-id
+                                          &key data response
+                                          &allow-other-keys
+                                          &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-session-p--complete %s" resp-string))
 
-(defun* ein:kernel-session-p--error (kernel callback iteration &key error-thrown symbol-status data &allow-other-keys)
+(cl-defun ein:kernel-session-p--error (kernel callback iteration
+                                       &key error-thrown symbol-status data
+                                       &allow-other-keys)
   (if (ein:aand (plist-get data :message) (cl-search "not found" it))
       (when callback (funcall callback kernel nil))
     (let* ((max-tries 3)
@@ -130,13 +132,14 @@
       (if (> tries-left 0)
           (ein:kernel-session-p kernel callback (1+ iteration))))))
 
-(defun* ein:kernel-session-p--success (kernel session-id callback &key data &allow-other-keys)
+(cl-defun ein:kernel-session-p--success (kernel session-id callback
+                                         &key data &allow-other-keys)
   (let ((session-p (equal (plist-get data :id) session-id)))
     (ein:log 'verbose "ein:kernel-session-p--success: session-id=%s session-p=%s"
              session-id session-p)
     (when callback (funcall callback kernel session-p))))
 
-(defun* ein:kernel-restart-session (kernel)
+(cl-defun ein:kernel-restart-session (kernel)
   "Server side delete of KERNEL session and subsequent restart with all new state"
   (ein:kernel-delete-session
    kernel
@@ -147,7 +150,7 @@
                                     (ein:events-trigger (ein:$kernel-events kernel)
                                                         'status_restarted.Kernel))))))
 
-(defun* ein:kernel-retrieve-session (kernel &optional iteration callback)
+(cl-defun ein:kernel-retrieve-session (kernel &optional iteration callback)
   "Formerly ein:kernel-start, but that was misnomer because 1. the server really starts a session (and an accompanying kernel), and 2. it may not even start a session if one exists for the same path.
 
 If 'picking up from where we last left off', that is, we restart emacs and reconnect to same server, jupyter will hand us back the original, still running session.
@@ -188,12 +191,16 @@ CALLBACK of arity 1, the kernel.
        :success (apply-partially #'ein:kernel-retrieve-session--success kernel callback)
        :error (apply-partially #'ein:kernel-retrieve-session--error kernel iteration callback)))))
 
-(defun* ein:kernel-retrieve-session--complete (kernel callback &key data response
-                                           &allow-other-keys
-                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:kernel-retrieve-session--complete
+    (kernel callback
+     &key data response
+     &allow-other-keys
+     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-retrieve-session--complete %s" resp-string))
 
-(defun* ein:kernel-retrieve-session--error (kernel iteration callback &key error-thrown symbol-status &allow-other-keys)
+(cl-defun ein:kernel-retrieve-session--error
+    (kernel iteration callback
+     &key error-thrown symbol-status &allow-other-keys)
   (let* ((max-tries 3)
          (tries-left (1- (- max-tries iteration))))
     (ein:log 'verbose "ein:kernel-retrieve-session--error [%s], %s tries left"
@@ -202,7 +209,7 @@ CALLBACK of arity 1, the kernel.
     (if (> tries-left 0)
         (ein:kernel-retrieve-session kernel (1+ iteration) callback))))
 
-(defun* ein:kernel-retrieve-session--success (kernel callback &key data &allow-other-keys)
+(cl-defun ein:kernel-retrieve-session--success (kernel callback &key data &allow-other-keys)
   (let ((session-id (plist-get data :id)))
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))
@@ -372,13 +379,13 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
       (ein:websocket-send-shell-channel kernel msg)
       (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks))))
 
-(defun* ein:kernel-execute (kernel code &optional callbacks
-                                   &key
-                                   (silent t)
-                                   (store-history t)
-                                   (user-expressions (make-hash-table))
-                                   (allow-stdin t)
-                                   (stop-on-error nil))
+(cl-defun ein:kernel-execute (kernel code &optional callbacks
+                              &key
+                              (silent t)
+                              (store-history t)
+                              (user-expressions (make-hash-table))
+                              (allow-stdin t)
+                              (stop-on-error nil))
   "Execute CODE on KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -496,17 +503,17 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#complete
              (ein:display-warning (error-message-string err) :error)))))
 
 
-(defun* ein:kernel-history-request (kernel callbacks
-                                           &key
-                                           (output nil)
-                                           (raw t)
-                                           (hist-access-type "tail")
-                                           session
-                                           start
-                                           stop
-                                           (n 10)
-                                           pattern
-                                           unique)
+(cl-defun ein:kernel-history-request (kernel callbacks
+                                      &key
+                                      (output nil)
+                                      (raw t)
+                                      (hist-access-type "tail")
+                                      session
+                                      start
+                                      stop
+                                      (n 10)
+                                      pattern
+                                      unique)
   "Request execution history to KERNEL.
 
 When calling this method pass a CALLBACKS structure of the form:
@@ -645,19 +652,21 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
      :error (apply-partially #'ein:kernel-delete-session--error session-id callback)
      :success (apply-partially #'ein:kernel-delete-session--success session-id callback))))
 
-(defun* ein:kernel-delete-session--error (session-id callback
-                                             &key response error-thrown
-                                             &allow-other-keys)
+(cl-defun ein:kernel-delete-session--error (session-id callback
+                                            &key response error-thrown
+                                            &allow-other-keys)
   (ein:log 'error "ein:kernel-delete-session--error %s: ERROR %s DATA %s"
            session-id (car error-thrown) (cdr error-thrown)))
 
-(defun* ein:kernel-delete-session--success (session-id callback &key data symbol-status response
-                                               &allow-other-keys)
+(cl-defun ein:kernel-delete-session--success (session-id callback
+                                              &key data symbol-status response
+                                              &allow-other-keys)
   (ein:log 'verbose "ein:kernel-delete-session--success: %s deleted" session-id))
 
-(defun* ein:kernel-delete-session--complete (kernel session-id callback &key data response
-                                            &allow-other-keys
-                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:kernel-delete-session--complete (kernel session-id callback
+                                               &key data response
+                                               &allow-other-keys
+                                               &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
   (when callback (funcall callback kernel)))
@@ -824,7 +833,7 @@ as a string and the rest of the argument is the optional ARGS."
                                  (apply func it args)))))
                        (cons func args)))))
 
-(defun* ein:kernel-history-request-synchronously
+(cl-defun ein:kernel-history-request-synchronously
     (kernel &rest args &key (timeout 0.5) (tick-time 0.05) &allow-other-keys)
   "Send the history request and wait TIMEOUT seconds.
 Return a list (CONTENT METADATA).

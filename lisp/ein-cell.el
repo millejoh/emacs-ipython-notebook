@@ -33,7 +33,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ansi-color)
 (require 'comint)
 (require 'ein-core)
@@ -252,12 +251,6 @@ a number will limit the number of lines in a cell output."
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
-(defun ein:get-slide-show (cell)
-  (let ((slide-type (slot-value cell 'slidetype))
-        (ss-table (make-hash-table)))
-    (setf (gethash 'slide_type ss-table) slide-type)
-    ss-table))
-
 (defun ein:cell-from-type (type &rest args)
   (apply (ein:cell-class-from-type type) args))
 
@@ -269,10 +262,7 @@ a number will limit the number of lines in a cell output."
                                     (ein:cell--determine-cell-type data) args)
                              data)))
     (when (plist-get data :metadata)
-      (ein:oset-if-empty cell 'metadata (plist-get data :metadata))
-      (ein:aif (plist-get (slot-value cell 'metadata) :slideshow)
-          (let ((slide-type (nth 0 (cdr it))))
-            (setf (slot-value cell 'slidetype) slide-type))))
+      (ein:oset-if-empty cell 'metadata (plist-get data :metadata)))
     cell))
 
 (cl-defmethod ein:cell-init ((cell ein:codecell) data)
@@ -310,8 +300,6 @@ a number will limit the number of lines in a cell output."
     (setf (slot-value new 'input) (if (ein:cell-active-p cell)
                                       (ein:cell-get-text cell)
                                     (slot-value cell 'input)))
-    ;; copy slidetype
-    (setf (slot-value new 'slidetype) (slot-value cell 'slidetype))
     ;; copy output when the new cell has it
     (when (memq :output (slot-value new 'element-names))
       (setf (slot-value new 'outputs) (mapcar 'identity (slot-value cell 'outputs))))
@@ -500,10 +488,6 @@ Return language name as a string or `nil' when not defined.
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer data))))
 
-(defun ein:maybe-show-slideshow-data (cell)
-  (unless (equal (slot-value cell 'slidetype) "-")
-    (format " - Slide [%s]:" (slot-value cell 'slidetype))))
-
 (cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
@@ -511,22 +495,17 @@ Return language name as a string or `nil' when not defined.
   (ein:insert-read-only
    (concat
     (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
-    (ein:maybe-show-slideshow-data cell)
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
-   (concat
-    (format "%s:" (slot-value cell 'cell-type))
-    (ein:maybe-show-slideshow-data cell))
+   (format "%s:" (slot-value cell 'cell-type))
    'font-lock-face 'ein:cell-input-prompt))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:headingcell))
   (ein:insert-read-only
-   (concat
-    (format "h%s:" (slot-value cell 'level))
-    (ein:maybe-show-slideshow-data cell))
+   (format "h%s:" (slot-value cell 'level))
    'font-lock-face 'ein:cell-input-prompt))
 
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
@@ -1058,8 +1037,7 @@ prettified text thus be used instead of HTML type."
   (assoc maybe-property ein:output-type-map))
 
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
-  (let* ((ss-table (ein:get-slide-show cell))
-         (metadata (slot-value cell 'metadata))
+  (let* ((metadata (slot-value cell 'metadata))
          (outputs (if discard-output []
                     (slot-value cell 'outputs)))
          (renamed-outputs '())
@@ -1068,7 +1046,6 @@ prettified text thus be used instead of HTML type."
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    (setq metadata (plist-put metadata :slideshow ss-table))
     (unless discard-output
       (dolist (output outputs)
         (let ((otype (plist-get output :output_type)))
@@ -1142,20 +1119,16 @@ prettified text thus be used instead of HTML type."
     (source    . ,(ein:cell-get-text cell))))
 
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
-  (let ((metadata (slot-value cell 'metadata))
-        (ss-table (ein:get-slide-show cell)))
+  (let ((metadata (slot-value cell 'metadata)))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    (setq metadata (plist-put metadata :slideshow ss-table))
     `((cell_type . ,(slot-value cell 'cell-type))
       (source    . ,(ein:cell-get-text cell))
       (metadata . ,metadata))))
 
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
   (let ((metadata (slot-value cell 'metadata))
-        (ss-table (ein:get-slide-show cell))
         (header (make-string (slot-value cell 'level) ?#)))
     (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    (setq metadata (plist-put metadata :slideshow ss-table))
     `((cell_type . "markdown")
       (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
       (metadata . ,metadata))))

@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (declare-function rst-shift-region "rst")
 (declare-function markdown-mode "markdown-mode")
 
@@ -65,7 +64,7 @@
   (load "ein-notebook")  ; ... but make sure it will be defined first.
   (ein:load-files "^ein-.*\\.el$"))
 
-(defun* ein:dev-require-all (&key (ignore-p #'ignore))
+(cl-defun ein:dev-require-all (&key (ignore-p #'ignore))
   (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
         unless (or (equal f "ein-pkg.el")
                    (equal f "ein-autoloads.el")
@@ -194,11 +193,6 @@ callback (`websocket-callback-debug-on-error') is enabled."
   "Use `ein:notebook-python-mode'."
   (interactive)
   (setq ein:notebook-modes '(ein:notebook-python-mode)))
-
-(defun ein:dev-notebook-mumamo-mode ()
-  "Use `ein:notebook-mumamo-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode)))
 
 (defun ein:dev-notebook-multilang-mode ()
   "Use `ein:notebook-multilang-mode'."
