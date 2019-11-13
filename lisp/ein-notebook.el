@@ -546,6 +546,7 @@ notebook buffer."
   'ein:shared-output-show-code-cell-at-point "0.1.2")
 
 (eval-when-compile (defvar outline-regexp))
+(declare-function px-preview "px" ())
 (defsubst ein:notebook-toggle-latex-fragment ()
   (interactive)
   (cond (ein:polymode (ein:display-warning "ein:notebook-toggle-latex-fragment: delegate to markdown-mode"))
@@ -620,8 +621,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
    "Delete session on server side.  Start new session."
   (interactive)
   (ein:aif ein:%notebook%
-           (if (y-or-n-p "Are you sure? ")
-               (ein:kernel-restart-session (ein:$notebook-kernel it)))
+      (when (y-or-n-p "Are you sure you want to restart this session? ")
+        (ein:kernel-restart-session (ein:$notebook-kernel it)))
     (message "Not in notebook buffer!")))
 
 (define-obsolete-function-alias
@@ -1272,10 +1273,9 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
   (interactive (list (ein:notebook--get-nb-or-error)
                      (ein:worksheet--get-ws-or-error)
                      t))
-  (when confirm
-    (unless (y-or-n-p
-             "Really remove this worksheet? There is no undo.")
-      (error "Quit deleting the current worksheet.")))
+  (when (and confirm
+             (not (y-or-n-p "Really remove this worksheet? There is no undo.")))
+    (error "Quit deleting the current worksheet."))
   (setf (ein:$notebook-worksheets notebook)
         (delq ws (ein:$notebook-worksheets notebook)))
   (setf (ein:$notebook-dirty notebook) t)
