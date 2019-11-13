@@ -2,8 +2,6 @@
  EIN -- Emacs IPython Notebook |build-status|
 ========================================================================
 
-  --- or **E**\ IN **I**\ s not only for pytho\ **N**\ .
-
 .. COMMENTARY (see Makefile)
 
 .. |build-status|
@@ -26,7 +24,7 @@
 
 Install
 =======
-Clone this repo and ``make install``.  You will need Cask.
+Clone this repo and ``make install``.  You will need `Cask`_.
 
 Usage
 =====
@@ -47,7 +45,7 @@ Reporting bugs
 --------------
 EIN is tested on GNU Emacs versions
 .. CI VERSION (see Makefile)
-and later.  We presently do not recommend the `spacemacs layer`_.
+and later.
 
 **Please file issues using** ``M-x ein:dev-bug-report-template``.
 
@@ -64,13 +62,6 @@ Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-c
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
-
-I want to use Elpy, ESS, julia-mode
-========================================
-Enable `polymode`_ via::
-
-   M-x customize-group RET ein
-   Toggle Ein:Polymode
 
 ob-ein
 ======
