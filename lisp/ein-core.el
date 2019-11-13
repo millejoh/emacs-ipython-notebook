@@ -263,14 +263,14 @@ the source is in git repository) or elpa version."
     filename))
 
 (defun ein:make-tramp-file-name (username remote-host python-filename)
-  "Old (with multi-hops) tramp compatibility function.
-Adapted from `slime-make-tramp-file-name'."
-  (if (boundp 'tramp-multi-methods)
-      (tramp-make-tramp-file-name nil nil
+  (if (>= emacs-major-version 26)
+      (tramp-make-tramp-file-name "ssh"
                                   username
+                                  nil
                                   remote-host
+                                  nil
                                   python-filename)
-    (tramp-make-tramp-file-name nil
+    (tramp-make-tramp-file-name "ssh"
                                 username
                                 remote-host
                                 python-filename)))

@@ -1,6 +1,7 @@
 (eval-when-compile (require 'cl))
 (require 'ert)
 
+(require 'tramp)
 (require 'ein-core)
 
 ;; Generic getter
@@ -18,17 +19,9 @@
 (eintest:generic-getter-should-return-nil ein:get-traceback-data)
 
 
-
 ;;; File name translation
-
-;; Requiring `tramp' during (inside of) tests yields error from
-;; MuMaMo.  Although I don't understand the reason, requiring it
-;; before running tests workarounds this problem.
-(require 'tramp)
-
 (ert-deftest ein:filename-translations-from-to-tramp ()
   ;; I really don't understand this https://github.com/magit/with-editor/issues/29
-  :expected-result (if (>= emacs-major-version 26) :failed :passed)
   (loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
         with filename = "/file/name"
@@ -40,10 +33,9 @@
                    filename))))
 
 (ert-deftest ein:filename-translations-to-from-tramp ()
-  :expected-result (if (>= emacs-major-version 26) :failed :passed)
   (loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
-        with filename = "/USER@HOST:/filename"
+        with filename = "/ssh:USER@HOST:/filename"
         for port in '(8888)
         do (should
             (equal (ein:filename-from-python
@@ -51,13 +43,12 @@
                    filename))))
 
 (ert-deftest ein:filename-to-python-tramp ()
-  :expected-result (if (>= emacs-major-version 26) :failed :passed)
   (let* ((port 8888)
          (ein:filename-translations
           `((,port . ,(ein:tramp-create-filename-translator "DUMMY")))))
     (loop with python-filename = "/file/name"
           for emacs-filename in '("/scpc:HOST:/file/name"
-                                  "/USER@HOST:/file/name")
+                                  "/ssh:USER@HOST:/file/name")
           do (should
               (equal (ein:filename-to-python port emacs-filename)
                      python-filename)))
@@ -65,11 +56,10 @@
     (should-error (ein:filename-to-python port "/file/name"))))
 
 (ert-deftest ein:filename-from-python-tramp ()
-  :expected-result (if (>= emacs-major-version 26) :failed :passed)
   (loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
         with python-filename = "/file/name"
-        for emacs-filename in '("/USER@HOST:/file/name" "/file/name")
+        for emacs-filename in '("/ssh:USER@HOST:/file/name" "/file/name")
         for port in '(8888 7777)
         do (should
             (equal (ein:filename-from-python port python-filename)
