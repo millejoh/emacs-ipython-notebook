@@ -14,7 +14,7 @@ EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
 
 .. |build-status|
-   image:: https://travis-ci.com/dickmao/emacs-ipython-notebook.svg?branch=master
+   image:: https://travis-ci.com/dickmao/emacs-ipython-notebook.svg?branch=dev
    :target: http://travis-ci.com/dickmao/emacs-ipython-notebook
    :alt: Build Status
 .. |melpa-dev|
