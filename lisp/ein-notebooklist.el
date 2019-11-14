@@ -681,7 +681,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                  'link
                  :notify (let ((_path path))
                            (lambda (&rest _ignore)
-                             (message "[EIN]: NBlist delete file command. Implement me!")))
+                             (ein:file-delete url-or-port path)))
                  "Delete")
                 (widget-insert " : " (ein:format-nbitem-data name last-modified))
                 (widget-insert "\n"))
