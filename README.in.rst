@@ -5,7 +5,7 @@
 .. COMMENTARY (see Makefile)
 
 .. |build-status|
-   image:: https://travis-ci.com/dickmao/emacs-ipython-notebook.svg?branch=dev
+   image:: https://travis-ci.com/dickmao/emacs-ipython-notebook.svg?branch=master
    :target: http://travis-ci.com/dickmao/emacs-ipython-notebook
    :alt: Build Status
 .. |melpa-dev|
