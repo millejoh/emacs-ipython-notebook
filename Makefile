@@ -99,7 +99,7 @@ test-install:
 	cd test/test-install/package-build-$(PKBUILD) ; make -s loaddefs
 	mkdir -p test/test-install/recipes
 	cd test/test-install/recipes ; curl -sLOk https://raw.githubusercontent.com/melpa/melpa/master/recipes/ein
-	! ( $(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
+	$(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
 	--eval "(require 'package-build)" \
 	--eval "(require 'subr-x)" \
 	--eval "(package-initialize)" \
@@ -115,7 +115,8 @@ test-install:
 	           (oset rcp :branch my-branch) \
 	           (oset rcp :commit my-commit))" \
 	--eval "(package-build--package rcp (prog1 (package-build--checkout rcp) (sleep-for 0 2300)))" \
-	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | egrep -a "Error: " )
+	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | tee /tmp/test-install.out
+	! ( egrep -a "Error: " /tmp/test-install.out )
 
 .PHONY: dist
 dist:
