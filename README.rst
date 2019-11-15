@@ -53,7 +53,7 @@ Alternatively, ob-ein_.
 Reporting bugs
 --------------
 EIN is tested on GNU Emacs versions
-25
+emacs-25-2
 and later.
 
 **Please file issues using** ``M-x ein:dev-bug-report-template``.
