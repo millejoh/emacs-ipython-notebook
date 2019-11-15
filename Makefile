@@ -44,7 +44,7 @@ autoloads:
 clean:
 	cask clean-elc
 	rm -rf test/test-install
-	rm -f log/*websocket*
+	rm -rf log
 	rm -f features/Untitled*.ipynb
 	rm -f test/Untitled*.ipynb
 
@@ -57,7 +57,6 @@ dist-clean: clean
 test-compile: clean autoloads
 	cask install
 	! (cask eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; cask clean-elc && exit $$ret)
-#	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
 
 .PHONY: quick
 quick: test-compile test-ob-ein-recurse test-unit

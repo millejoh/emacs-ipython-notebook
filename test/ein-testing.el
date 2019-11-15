@@ -45,9 +45,11 @@
 
 (defun ein:testing-save-buffer (buffer-or-name file-name)
   (when (and buffer-or-name (get-buffer buffer-or-name) file-name)
-    (with-current-buffer buffer-or-name
-      (let ((coding-system-for-write 'raw-text))
-        (write-region (point-min) (point-max) file-name)))))
+    (let ((dir (file-name-directory file-name)))
+      (make-directory dir t)
+      (with-current-buffer buffer-or-name
+        (let ((coding-system-for-write 'raw-text))
+          (write-region (point-min) (point-max) file-name))))))
 
 (defun ein:testing-dump-logs ()
   (ein:testing-save-buffer "*Messages*" ein:testing-dump-file-messages)
