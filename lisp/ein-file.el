@@ -40,6 +40,22 @@
    (ein:notebooklist-parse-nbpath (ein:notebooklist-ask-path "file")))
   (ein:content-query-contents url-or-port path #'ein:file-open-finish nil))
 
+(defun ein:file-delete (url-or-port path)
+  (ein:query-singleton-ajax
+   (list 'file-delete url-or-port path)
+   (ein:content-url* url-or-port path)
+   :type "DELETE"
+   :timeout ein:content-query-timeout
+   :parser #'ein:json-read
+   :sync ein:force-sync
+   :success (lexical-let ((path path))
+              #'(lambda (&rest ignore) (ein:notebooklist-reload)
+                  (message "Successful deleted file: %s" path)))
+   :error (lexical-let ((path path))
+            #'(lambda (&rest ignore) (ein:notebooklist-reload)
+                (message "Delete file %s failed." path)))
+  ))
+
 (defun ein:file-open-finish (content)
   (with-current-buffer (get-buffer-create (ein:file-buffer-name (ein:$content-url-or-port content)
                                                                 (ein:$content-path content)))
@@ -65,4 +81,3 @@
     t))
 
 (provide 'ein-file)
-
