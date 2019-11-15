@@ -114,7 +114,9 @@ test-install:
 	           (oset rcp :repo my-repo) \
 	           (oset rcp :branch my-branch) \
 	           (oset rcp :commit my-commit))" \
-	--eval "(package-build--package rcp (prog1 (package-build--checkout rcp) (sleep-for 0 2300)))" \
+	--eval "(let ((version (package-build--checkout rcp))) \
+	           (delete-directory (expand-file-name (concat \"ein-\" version) package-user-dir) t) \
+	           (package-build--package rcp version))" \
 	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | tee /tmp/test-install.out
 	! ( egrep -a "Error: " /tmp/test-install.out )
 
