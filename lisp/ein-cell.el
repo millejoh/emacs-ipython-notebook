@@ -887,7 +887,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
               (level ein:cell-traceback-level))
           (if (and level (> (- (length tb) 2) level))
               (cons (substitute-command-keys
-                     "\nTruncated Traceback (Use \\[ein:tb-show] to view full TB):")
+                     "\nTruncated Traceback (Use \\[ein:tb-show-km] to view full TB):")
                     (last tb (1+ level)))
             tb)))
   (ein:insert-read-only "\n"))

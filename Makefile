@@ -23,7 +23,7 @@ README.rst: README.in.rst lisp/ein.el
 	             (describe-minor-mode \"ein:notebook-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
 	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
-	sed "/CI VERSION/c"`grep -o 'emacs-[0-9][.0-9]*' .travis.yml | sort -n | head -1 | grep -o '[.0-9]*'` README.rst0 > README.rst1
+	sed "/CI VERSION/c"`grep -o 'emacs-[0-9][.0-9-]*' .travis.yml | sort -n | head -1` README.rst0 > README.rst1
 	grep ';;' lisp/ein.el \
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
@@ -44,7 +44,7 @@ autoloads:
 clean:
 	cask clean-elc
 	rm -rf test/test-install
-	rm -f log/*websocket*
+	rm -rf log
 	rm -f features/Untitled*.ipynb
 	rm -f test/Untitled*.ipynb
 
@@ -57,7 +57,6 @@ dist-clean: clean
 test-compile: clean autoloads
 	cask install
 	! (cask eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; cask clean-elc && exit $$ret)
-#	! ( cask build 2>&1 | awk '{if (/^ /) { gsub(/^ +/, " ", $$0); printf "%s", $$0 } else { printf "\n%s", $$0 }}' | egrep -a "not known|Error|free variable|error for|Use of gv-ref|multiple times|Unused|but requires" )
 
 .PHONY: quick
 quick: test-compile test-ob-ein-recurse test-unit
@@ -100,7 +99,7 @@ test-install:
 	cd test/test-install/package-build-$(PKBUILD) ; make -s loaddefs
 	mkdir -p test/test-install/recipes
 	cd test/test-install/recipes ; curl -sLOk https://raw.githubusercontent.com/melpa/melpa/master/recipes/ein
-	! ( $(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
+	$(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
 	--eval "(require 'package-build)" \
 	--eval "(require 'subr-x)" \
 	--eval "(package-initialize)" \
@@ -115,8 +114,11 @@ test-install:
 	           (oset rcp :repo my-repo) \
 	           (oset rcp :branch my-branch) \
 	           (oset rcp :commit my-commit))" \
-	--eval "(package-build--package rcp (package-build--checkout rcp))" \
-	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | egrep -a "Error: " )
+	--eval "(let ((version (package-build--checkout rcp))) \
+	           (delete-directory (expand-file-name (concat \"ein-\" version) package-user-dir) t) \
+	           (package-build--package rcp version))" \
+	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | tee /tmp/test-install.out
+	! ( egrep -a "Error: " /tmp/test-install.out )
 
 .PHONY: dist
 dist:
