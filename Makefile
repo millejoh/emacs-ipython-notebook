@@ -114,7 +114,7 @@ test-install:
 	           (oset rcp :repo my-repo) \
 	           (oset rcp :branch my-branch) \
 	           (oset rcp :commit my-commit))" \
-	--eval "(package-build--package rcp (package-build--checkout rcp))" \
+	--eval "(package-build--package rcp (prog1 (package-build--checkout rcp) (sleep-for 0 3000))" \
 	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | egrep -a "Error: " )
 
 .PHONY: dist
