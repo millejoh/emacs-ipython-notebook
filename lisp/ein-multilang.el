@@ -33,6 +33,7 @@
 (require 'python)
 (require 'ess-r-mode nil t)
 (require 'ess-custom nil t)
+(require 'clojure-mode nil t)
 (require 'julia-mode nil t)
 
 (declare-function ess-indent-line "ess")
@@ -141,6 +142,20 @@ This function may raise an error."
               (apply-partially #'ein:ml-indent-region #'python-indent-region))
   (set-syntax-table python-mode-syntax-table)
   (set-keymap-parent ein:notebook-multilang-mode-map python-mode-map))
+
+(defun ein:ml-lang-setup-clojure ()
+  "Minimally different than the the python setup"
+  (when (featurep 'clojure-mode)
+    (setq-local mode-name "EIN[Clj]")
+    (setq-local comment-start "; ")
+    (setq-local comment-start-skip  ";+\\s-*")
+    (setq-local parse-sexp-lookup-properties t)
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'clojure-indent-line))
+    (setq-local indent-region-function
+                (apply-partially #'ein:ml-indent-region #'clojure-indent-region))
+    (set-syntax-table clojure-mode-syntax-table)
+    (set-keymap-parent ein:notebook-multilang-mode-map clojure-mode-map)))
 
 (defun ein:ml-lang-setup-julia ()
   (when (featurep 'julia-mode)
