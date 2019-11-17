@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (eval-when-compile (defvar markdown-mode-map))
 
 (require 'ein-worksheet)
@@ -35,6 +34,7 @@
 (require 'ess-r-mode nil t)
 (require 'ess-custom nil t)
 (require 'clojure-mode nil t)
+(require 'julia-mode nil t)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
@@ -157,6 +157,18 @@ This function may raise an error."
     (set-syntax-table clojure-mode-syntax-table)
     (set-keymap-parent ein:notebook-multilang-mode-map clojure-mode-map)))
 
+(defun ein:ml-lang-setup-julia ()
+  (when (featurep 'julia-mode)
+    (setq-local mode-name "EIN[julia]")
+    (setq-local comment-start "# ")
+    (setq-local comment-start-skip  "#+\\s-*")
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'julia-indent-line))
+    (when (boundp 'julia-mode-syntax-table)
+      (set-syntax-table julia-mode-syntax-table))
+    (when (boundp 'julia-mode-map)
+      (set-keymap-parent ein:notebook-multilang-mode-map julia-mode-map))))
+
 (defun ein:ml-lang-setup-R ()
   (when (and (featurep 'ess-r-mode) (featurep 'ess-custom))
     (setq-local mode-name "EIN[R]")
@@ -193,15 +205,15 @@ This function may raise an error."
   "Parent modes for `ein:notebook-multilang-mode' to register in yasnippet.")
 
 (defun ein:ml-setup-yasnippet ()
-  (loop for define-parents in '(yas/define-parents
-                                yas--define-parents)
-        when (fboundp define-parents)
-        do (ignore-errors
-             ;; `let' is for workaround the bug in yasnippet
-             (let ((mode-sym 'ein:notebook-multilang-mode))
-               (funcall define-parents
-                        mode-sym
-                        ein:ml-yasnippet-parents)))))
+  (cl-loop for define-parents in '(yas/define-parents
+                                   yas--define-parents)
+    when (fboundp define-parents)
+    do (ignore-errors
+         ;; `let' is for workaround the bug in yasnippet
+         (let ((mode-sym 'ein:notebook-multilang-mode))
+           (funcall define-parents
+                    mode-sym
+                    ein:ml-yasnippet-parents)))))
 
 (eval-after-load "yasnippet" '(ein:ml-setup-yasnippet))
 

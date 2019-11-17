@@ -1,4 +1,4 @@
-;;; ein-dev.el --- Development tools
+;;; ein-dev.el --- Development tools   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (declare-function rst-shift-region "rst")
 
 (require 'ein-notebook)
@@ -65,13 +64,13 @@
   (load "ein-notebook")  ; ... but make sure it will be defined first.
   (ein:load-files "^ein-.*\\.el$"))
 
-(defun* ein:dev-require-all (&key (ignore-p #'ignore))
-  (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
-        unless (or (equal f "ein-pkg.el")
-                   (equal f "ein-autoloads.el")
-                   (equal f "ein-smartrep.el")
-                   (funcall ignore-p f))
-        do (require (intern (file-name-sans-extension f)) nil t))
+(cl-defun ein:dev-require-all (&key (ignore-p #'ignore))
+  (cl-loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
+    unless (or (equal f "ein-pkg.el")
+               (equal f "ein-autoloads.el")
+               (equal f "ein-smartrep.el")
+               (funcall ignore-p f))
+    do (require (intern (file-name-sans-extension f)) nil t))
   ;; For `widget-button-press':
   (require 'wid-edit nil t))
 
@@ -123,11 +122,11 @@ callback (`websocket-callback-debug-on-error') is enabled."
 ;;  (setq deferred:debug-on-signal t)
 ;;  (setq deferred:debug t)
   (setq request-log-level (quote debug))
-  (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
+  (let ((curl-trace (concat temporary-file-directory "curl-trace")))
     (nconc request-curl-options `("--trace-ascii" ,curl-trace))
-    (add-function :after 
+    (add-function :after
                   (symbol-function 'request--curl-callback)
-                  (lambda (&rest args)
+                  (lambda (&rest _args)
                     (if (file-readable-p curl-trace)
                         (with-temp-buffer
                           (insert-file-contents curl-trace)
@@ -208,9 +207,9 @@ callback (`websocket-callback-debug-on-error') is enabled."
 
 (defun ein:dev-sys-info--lib (name)
   (let* ((libsym (intern-soft name))
-         (version-var (loop for fmt in '("%s-version" "%s:version")
-                            if (intern-soft (format fmt name))
-                            return it))
+         (version-var (cl-loop for fmt in '("%s-version" "%s:version")
+                        if (intern-soft (format fmt name))
+                        return it))
          (version (symbol-value version-var)))
     (list :name name
           :path (ein:aand (locate-library name) (abbreviate-file-name it))
@@ -219,9 +218,9 @@ callback (`websocket-callback-debug-on-error') is enabled."
           :version version)))
 
 (defun ein:dev-dump-vars (names)
-  (loop for var in names
-        collect (intern (format ":%s" var))
-        collect (symbol-value (intern (format "ein:%s" var)))))
+  (cl-loop for var in names
+    collect (intern (format ":%s" var))
+    collect (symbol-value (intern (format "ein:%s" var)))))
 
 (defun ein:dev-stdout-program (command args)
   "Safely call COMMAND with ARGS and return its stdout."
@@ -232,10 +231,10 @@ callback (`websocket-callback-debug-on-error') is enabled."
               (buffer-string))))
 
 (defsubst ein:dev-packages ()
-  (lexical-let (result)
+  (let (result)
     (cl-letf (((symbol-function 'define-package)
                (lambda (&rest args)
-                 (setq result (mapcar (lambda (x) (symbol-name (first x))) (nth 3 args))))))
+                 (setq result (mapcar (lambda (x) (symbol-name (car x))) (nth 3 args))))))
       (load "ein-pkg")
       result)))
 

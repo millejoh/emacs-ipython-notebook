@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'auto-complete)
 
 (require 'ein-core)
@@ -71,10 +70,10 @@ When this option is enabled, cached omni completion is available."
   "Return matched candidates in CHUNK-LIST."
   (let* ((start (ein:ac-chunk-beginning)))
     (when start
-      (loop with prefix = (buffer-substring start (point))
-            for cc in chunk-list
-            when (string-prefix-p prefix cc)
-            collect cc))))
+      (cl-loop with prefix = (buffer-substring start (point))
+        for cc in chunk-list
+        when (string-prefix-p prefix cc)
+        collect cc))))
 
 
 ;;; AC Source
@@ -86,18 +85,7 @@ When this option is enabled, cached omni completion is available."
 (defun ein:ac-direct-get-matches ()
  (ein:ac-chunk-candidates-from-list ein:ac-direct-matches))
 
-(ac-define-source ein-direct
-  '((candidates . ein:ac-direct-get-matches)
-    (requires . 0)
-    (prefix . ein:ac-chunk-beginning)
-    (symbol . "s")))
 
-(ac-define-source ein-async
-  '((candidates . ein:ac-direct-get-matches)
-    (requires . 0)
-    (prefix . ein:ac-chunk-beginning)
-    (init . ein:ac-request-in-background)
-    (symbol . "c")))
 
 (define-obsolete-function-alias 'ac-complete-ein-cached 'ac-complete-ein-async
   "0.2.1")
@@ -105,9 +93,9 @@ When this option is enabled, cached omni completion is available."
   "0.2.1")
 
 (defun ein:ac-request-in-background ()
-  (cl-ecase ein:completion-backend
+  (cl-case ein:completion-backend
     (ein:use-ac-backend (ein:aif (ein:get-kernel)
-                            (ein:completer-complete 
+                            (ein:completer-complete
                              it
                              (list :complete_reply
                                    (cons (lambda (_ content __)
@@ -131,7 +119,7 @@ Call this function before calling `auto-complete'."
   (when matches
     (setq ein:ac-direct-matches matches)))  ; let-binding won't work
 
-(defun* ein:completer-finish-completing-ac
+(cl-defun ein:completer-finish-completing-ac
     (matched-text
      matches
      &key (expand ac-expand-on-auto-complete)
@@ -233,7 +221,7 @@ first candidate when the `ac-menu' pops up."
    Adding `ac-sources' to them makes it impossible to different
    `ac-sources' between chunks, which is good for EIN but may not
    for other package."
-  (and ein:notebook-mode
+  (and (ein:eval-if-bound 'ein:notebook-mode)
        (ein:eval-if-bound 'ein:notebook-mumamo-mode)
        (eql major-mode ein:mumamo-codecell-mode)
        (ein:ac-setup)))
@@ -247,7 +235,22 @@ Specifying non-`nil' to SUPERPACK enables richer auto-completion
   (when superpack
     (ein:ac-superpack)))
 
-(ein:ac-config ein:use-auto-complete-superpack)
+(defun ein:ac-install-backend ()
+  (ac-define-source ein-direct
+    '((candidates . ein:ac-direct-get-matches)
+      (requires . 0)
+      (prefix . ein:ac-chunk-beginning)
+      (symbol . "s")))
+
+  (ac-define-source ein-async
+    '((candidates . ein:ac-direct-get-matches)
+      (requires . 0)
+      (prefix . ein:ac-chunk-beginning)
+      (init . ein:ac-request-in-background)
+      (symbol . "c")))
+
+  (ein:ac-config ein:use-auto-complete-superpack))
+
 (provide 'ein-ac)
 
 ;;; ein-ac.el ends here

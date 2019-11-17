@@ -23,7 +23,6 @@
 
 ;;; Code:
 
-(require 'cl)
 (require 'ein-classes)
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:hy-codecell))

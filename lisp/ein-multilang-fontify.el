@@ -60,14 +60,14 @@ Modified version of `org-src-get-lang-mode'."
             (unless (eq major-mode lang-mode) (funcall lang-mode))
             (font-lock-fontify-buffer)
             (setq pos (point-min))
-            (loop for next = (next-single-property-change pos 'face nil (point-max))
-                  do (put-text-property
-                      ;; `font-lock-face' property is used instead of `font'.
-                      ;; This is the only difference from org-src.
-                      (+ start (1- pos)) (+ start next) 'font-lock-face
-                      (get-text-property pos 'face) orig-buffer)
-                  do (setq pos next)
-                  until (eq pos (point-max))))
+            (cl-loop for next = (next-single-property-change pos 'face nil (point-max))
+              do (put-text-property
+                  ;; `font-lock-face' property is used instead of `font'.
+                  ;; This is the only difference from org-src.
+                  (+ start (1- pos)) (+ start next) 'font-lock-face
+                  (get-text-property pos 'face) orig-buffer)
+              do (setq pos next)
+              until (eq pos (point-max))))
           (add-text-properties
            start end
            '(font-lock-fontified t fontified t font-lock-multiline t))

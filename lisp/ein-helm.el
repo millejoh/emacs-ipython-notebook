@@ -25,8 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (declare-function anything-other-buffer "anything")
 (declare-function helm-other-buffer "helm")
 

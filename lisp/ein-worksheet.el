@@ -26,13 +26,13 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'eieio)
 (require 'ewoc)
 
 (require 'ein-core)
 (require 'ein-utils)
 (require 'ein-cell)
+(require 'ein-cell-edit)        ; for `ein:src--ws'
 (require 'ein-kill-ring)
 (require 'poly-ein)
 
@@ -77,7 +77,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
           (let ((cell-id (ein:aif (ein:worksheet-get-current-cell :noerror t)
                              (ein:worksheet--unique-enough-cell-id it) nil)))
             (let ((ein:log-print-level 5))
-              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (subseq buffer-undo-list 0 fill) fill))
+              (ein:log 'debug "which-cell (%s . %s) %s %S fill=%s" change-beg change-end cell-id (cl-subseq buffer-undo-list 0 fill) fill))
             (setq ein:%which-cell%
                   (nconc (make-list fill cell-id) ein:%which-cell%))))))))
 
@@ -97,11 +97,11 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
             (ein:worksheet--element-start cell :footer))))))
 
 (defsubst ein:worksheet--saved-input-length (cell)
-  (or (fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
+  (or (cl-fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
 
 (defsubst ein:worksheet--prompt-length (cell &optional cached)
   (if cached
-      (or (first (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
+      (or (car (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     ;; 1+ for newline
     (1+ (- (ein:worksheet--element-start cell :input)
            (ein:worksheet--element-start cell :prompt)))))
@@ -109,7 +109,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 (defsubst ein:worksheet--output-length (cell &optional cached)
   (if cached
       ;; 1 for when cell un-executed, there is still a newline
-      (or (second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
+      (or (cadr (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
     (if (string= (slot-value cell 'cell-type) "code")
       (- (ein:worksheet--next-cell-start cell)
          (ein:worksheet--element-start cell :output))
@@ -117,7 +117,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 (defsubst ein:worksheet--total-length (cell &optional cached)
   (if cached
-      (or (third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
+      (or (cl-third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     (- (ein:worksheet--next-cell-start cell)
        (ein:worksheet--element-start cell :prompt))))
 
@@ -147,12 +147,12 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                     (cons m (cdr u))) u)))
            ((and (consp u) (null (car u))
                  (numberp (car (last u))) (numberp (cdr (last u))))
-            (append (subseq u 0 3)
+            (append (cl-subseq u 0 3)
                     (cons (+ ,distance (car (last u)))
                           (+ ,distance (cdr (last u))))))
            ((and (consp u) (eq (car u) 'apply)
                  (numberp (nth 2 u)) (numberp (nth 3 u)))
-            (append (subseq u 0 2)
+            (append (cl-subseq u 0 2)
                     (list (+ ,distance (nth 2 u)))
                     (list (+ ,distance (nth 3 u)))
                     (nthcdr 4 u)))
@@ -224,7 +224,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (ein:worksheet--jigger-undo-list
          (cons (ein:worksheet--unique-enough-cell-id old-cell)
                (ein:worksheet--unique-enough-cell-id cell)))
-        (dolist (uc (mapcar* 'cons buffer-undo-list ein:%which-cell%))
+        (dolist (uc (cl-mapcar 'cons buffer-undo-list ein:%which-cell%))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -263,7 +263,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         ;; Deletion of a less recent undo affects a more recent undo (arrow of time)
         ;; Since buffer-undo-list is ordered most to least recent, we must
         ;; reverse.
-        (dolist (uc (nreverse (mapcar* 'cons buffer-undo-list ein:%which-cell%)))
+        (dolist (uc (nreverse (cl-mapcar 'cons buffer-undo-list ein:%which-cell%)))
           (let ((u (car uc))
                 (cell-id (or (cdr uc) "")))
             (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
@@ -280,7 +280,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
         (setq buffer-undo-list (nreverse lst))
         (setq ein:%which-cell% (nreverse wc))
         (ein:worksheet--jigger-undo-list)
-        (remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
+        (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
 
 
 ;;; Class and variable
@@ -317,7 +317,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
 
 (defun ein:worksheet--set-next-input (-ignore- data)
-  (destructuring-bind (&key cell text) data
+  (cl-destructuring-bind (&key cell text) data
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:and-let* ((ws ein:%worksheet%)
                      (new-cell
@@ -327,7 +327,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 (defun ein:worksheet--set-dirty (-ignore- data)
   "Set dirty flag of worksheet in which CELL in DATA locates."
-  (destructuring-bind (&key value cell) data
+  (cl-destructuring-bind (&key value cell) data
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
@@ -344,7 +344,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   "Set worksheet name.
 
 \(fn ws name)"
-  (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
+  (cl-assert (stringp name) nil "NAME must be a string.  Got: %S" name)
   (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
 
 (cl-defmethod ein:worksheet-full-name ((ws ein:worksheet))
@@ -443,14 +443,14 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 (defun ein:worksheet-pp (ewoc-data)
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
-    (case (car path)
+    (cl-case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
 
 
 ;;; Persistance and loading
 
 (cl-defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
-  (destructuring-bind (&key cells metadata &allow-other-keys) data
+  (cl-destructuring-bind (&key cells metadata &allow-other-keys) data
     (setf (slot-value ws 'metadata) metadata)
     (setf (slot-value ws 'saved-cells)
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
@@ -559,8 +559,7 @@ worksheet WS is reopened.
       (setq ewoc-node (ewoc-next (slot-value ein:%worksheet% 'ewoc) ewoc-node)))
     ewoc-node))
 
-(defun* ein:worksheet-get-current-cell (&key pos noerror
-                                             (cell-p #'ein:basecell-child-p))
+(cl-defun ein:worksheet-get-current-cell (&key pos noerror (cell-p #'ein:basecell-child-p))
   "Return a cell at POS.  If POS is not given, it is assumed be the
 current cursor position.  When the current buffer is not worksheet
 buffer or there is no cell in the current buffer, return `nil'."
@@ -579,7 +578,7 @@ buffer or there is no cell in the current buffer, return `nil'."
                  (ein:worksheet-get-current-cell :pos beg)
                  (ein:worksheet-get-current-cell :pos end)))
 
-(defun* ein:worksheet-get-cells-in-region-or-at-point
+(cl-defun ein:worksheet-get-cells-in-region-or-at-point
     (&key noerror (cell-p #'ein:basecell-child-p))
   (or (seq-filter cell-p
                   (if (region-active-p)
@@ -668,19 +667,19 @@ Prefixes are act same as the normal `yank' command."
                              (t (1- arg))))))
   (let* ((cell (ein:worksheet-get-current-cell :noerror t)) ; can be nil
          (killed (ein:current-kill n)))
-    (loop for c in killed
-          with last = cell
-          do (setq last (ein:worksheet-insert-clone ws c last "below"))
-          finally (ein:cell-goto last))))
+    (cl-loop for c in killed
+      with last = cell
+      do (setq last (ein:worksheet-insert-clone ws c last "below"))
+      finally (ein:cell-goto last))))
 
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
-    (loop for k in (slot-value cell 'element-names)
-          do (setq result
-                   (plist-put result k
-                              (let* ((en-or-list (ein:cell-element-get cell k))
-                                     (en (if (listp en-or-list) (nth 0 en-or-list) en-or-list)))
-                                (if en (marker-position (ewoc-location en)))))))
+    (cl-loop for k in (slot-value cell 'element-names)
+      do (setq result
+               (plist-put result k
+                          (let* ((en-or-list (ein:cell-element-get cell k))
+                                 (en (if (listp en-or-list) (nth 0 en-or-list) en-or-list)))
+                            (if en (marker-position (ewoc-location en)))))))
     result))
 
 (defun ein:worksheet-maybe-new-cell (ws type-or-cell)
@@ -751,7 +750,7 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (slot-value ws 'nbformat)
+  (let ((type (cl-case (slot-value ws 'nbformat)
                 (2 (ein:case-equal (slot-value cell 'cell-type)
                      (("code") "markdown")
                      (("markdown") "code")))
@@ -800,13 +799,13 @@ an integer used only when the TYPE is \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
-          (choices (case (slot-value ws 'nbformat)
+          (choices (cl-case (slot-value ws 'nbformat)
                      (2 "cm")
                      (3 "cmr123456")
                      (4 "chmr123456")))
           (key (ein:ask-choice-char
                 (format "Cell type [%s]: " choices) choices))
-          (type (case key
+          (type (cl-case key
                   (?c "code")
                   (?h "hy-code")
                   (?m "markdown")
@@ -869,7 +868,7 @@ If prefix is given, merge current cell into next cell."
   (when cell
     (let* ((next-cell (ein:cell-next cell))
            (head (ein:cell-get-text cell)))
-      (assert next-cell nil "No cell to merge.")
+      (cl-assert next-cell nil "No cell to merge.")
       (ein:worksheet-delete-cell ws cell)
       (save-excursion
         (goto-char (ein:cell-input-pos-min next-cell))
@@ -879,7 +878,7 @@ If prefix is given, merge current cell into next cell."
 
 ;;; Cell selection.
 
-(defun* ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
+(cl-defun ein:worksheet-next-input-cell (ewoc-node &optional up (nth 1))
   "Return a cell containing the next input node after EWOC-NODE.
 When UP is non-`nil', do the same for the *previous* input node.
 When NTH is specified, return NTH cell.  Note that this function is
@@ -889,12 +888,12 @@ When NTH is specified, return NTH cell.  Note that this function is
       (setq nth (* nth -1))
       (setq up (not up)))
     (let ((cell (ein:worksheet-next-input-cell-1 ewoc-node up)))
-      (loop repeat (1- nth)
-            with next = (if up #'ein:cell-prev #'ein:cell-next)
-            if (funcall next cell)
-            do (setq cell it)
-            else
-            return nil)
+      (cl-loop repeat (1- nth)
+        with next = (if up #'ein:cell-prev #'ein:cell-next)
+        if (funcall next cell)
+        do (setq cell it)
+        else
+        return nil)
       cell)))
 
 (defun ein:worksheet-next-input-cell-1 (ewoc-node &optional up)
@@ -1083,11 +1082,39 @@ cell bellow."
                      (ein:worksheet-get-current-cell)))
   (ein:worksheet-execute-cell-and-goto-next ws cell t))
 
-(defun ein:worksheet-execute-all-cell (ws)
+;;; TODO add version number here before creating a new release
+(define-obsolete-function-alias
+  'ein:worksheet-execute-all-cell
+  'ein:worksheet-execute-all-cells)
+
+(defun ein:worksheet-execute-all-cells (ws)
   "Execute all cells in the current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (mapc #'ein:cell-execute
-        (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
+  (cl-loop for c in (ein:worksheet-get-cells ws)
+	   when (ein:codecell-p c)
+	   do (ein:cell-execute c)))
+
+(defun ein:worksheet-execute-all-cells-above (ws)
+  "Execute all cells above the current cell (exclusively) in the
+current worksheet buffer."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
+	   for c in (ein:worksheet-get-cells ws)
+	   until (equal (ein:cell-id c) curr-cell-id)
+	   when (ein:codecell-p c)
+	   do (ein:cell-execute c)))
+
+(defun ein:worksheet-execute-all-cells-below (ws)
+  "Execute all cells below the current cell (inclusively) in the
+current worksheet buffer."
+  (interactive (list (ein:worksheet--get-ws-or-error)))
+  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
+	   and curr-cell-reached?
+	   for c in (ein:worksheet-get-cells ws)
+	   when (and (not curr-cell-reached?) (equal (ein:cell-id c) curr-cell-id))
+	   do (setq curr-cell-reached? t)
+	   when (and curr-cell-reached? (ein:codecell-p c))
+	   do (ein:cell-execute c)))
 
 (defun ein:worksheet-insert-last-input-history (ws cell index)
   "Insert INDEX-th previous history into CELL in worksheet WS."
@@ -1097,7 +1124,7 @@ cell bellow."
     :history_reply
     (cons
      (lambda (cell content -metadata-not-used-)
-       (destructuring-bind (session line-number input)
+       (cl-destructuring-bind (session line-number input)
            (car (plist-get content :history))
          (if (eq (ein:worksheet-get-current-cell) cell)
              (ein:cell-set-text cell input)
@@ -1215,9 +1242,9 @@ in the history."
 
 (defun ein:worksheet--cells-before-cell (ws cell)
   (let ((cells (ein:worksheet-get-cells ws)))
-    (loop for c in cells
-          collecting c
-          until (eql (ein:cell-id c) (ein:cell-id cell)))))
+    (cl-loop for c in cells
+      collecting c
+      until (eql (ein:cell-id c) (ein:cell-id cell)))))
 
 (defun ein:worksheet--cells-after-cell (ws cell)
   (let ((cells (ein:worksheet-get-cells ws))
@@ -1225,10 +1252,10 @@ in the history."
     (seq-drop cells prior-cells)))
 
 (defun ein:worksheet-first-executing-cell (cells)
-  (loop for c in cells
-        when (and (ein:codecell-p c)
-                  (slot-value c 'running))
-        return c))
+  (cl-loop for c in cells
+    when (and (ein:codecell-p c)
+              (slot-value c 'running))
+    return c))
 
 (defun ein:worksheet-jump-to-first-executing-cell ()
   "Move the point to the first executing cell in the current worksheet."
@@ -1295,13 +1322,13 @@ function."
   "`imenu-create-index-function' for notebook buffer."
   ;; As Imenu does not provide the way to represent level *and*
   ;; position, use #'s to do that.
-  (loop for cell in (when (ein:worksheet-p ein:%worksheet%)
-                      (seq-filter #'ein:headingcell-p
-                                  (ein:worksheet-get-cells ein:%worksheet%)))
-        for sharps = (loop repeat (slot-value cell 'level) collect "#")
-        for text = (ein:cell-get-text cell)
-        for name = (ein:join-str "" (append sharps (list " " text)))
-        collect (cons name (ein:cell-input-pos-min cell))))
+  (cl-loop for cell in (when (ein:worksheet-p ein:%worksheet%)
+                         (seq-filter #'ein:headingcell-p
+                                     (ein:worksheet-get-cells ein:%worksheet%)))
+    for sharps = (cl-loop repeat (slot-value cell 'level) collect "#")
+    for text = (ein:cell-get-text cell)
+    for name = (ein:join-str "" (append sharps (list " " text)))
+    collect (cons name (ein:cell-input-pos-min cell))))
 
 (defun ein:worksheet-imenu-setup ()
   "Called via notebook mode hooks."

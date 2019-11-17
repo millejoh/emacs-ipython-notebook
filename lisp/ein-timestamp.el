@@ -55,8 +55,8 @@ See `ein:format-time-string'."
   (if (slot-value cell 'running)
       (ein:insert-read-only "Execution pending\n\n")
     (if-let ((etime (plist-get (ein:cell-metadata cell) :execute-time)))
-        (let ((start-time (date-to-time (first etime)))
-              (end-time (date-to-time (second etime))))
+        (let ((start-time (date-to-time (car etime)))
+              (end-time (date-to-time (cadr etime))))
           (ein:insert-read-only
            (format "Last executed %s in %ss\n\n"
                    (ein:format-time-string ein:timestamp-format start-time)

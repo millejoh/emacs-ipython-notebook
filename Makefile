@@ -1,3 +1,4 @@
+EMACS ?= $(shell which emacs)
 SRC=$(shell cask files)
 PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
@@ -35,7 +36,7 @@ README.rst: README.in.rst lisp/ein.el
 
 .PHONY: autoloads
 autoloads:
-	emacs -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
+	$(EMACS) -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
 
 .PHONY: clean
 clean:
@@ -59,13 +60,13 @@ test-compile: clean autoloads
 	cask clean-elc
 
 .PHONY: quick
-quick: test-compile test-unit
+quick: test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
-test-jupyterhub:
+test-jupyterhub: test-compile
 # jupyterhub slightly temperamental with json-readtable-error
 # seems to be affecting ob-ipython too but probably my bug.. just need to find it
-	-cask exec ecukes --tags @jupyterhub --reporter magnars
+	-cask exec ecukes --tags @jupyterhub,~@complete-ipy7 --reporter magnars
 
 .PHONY: test
 test: quick test-int test-poly
@@ -74,16 +75,20 @@ test: quick test-int test-poly
 test-poly:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
 	cp test/test-poly.el features/support/test-poly.el
-	cask exec ecukes --reporter magnars ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
+	cask exec ecukes --reporter magnars --tags ~@complete-ipy7 ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
 
 .PHONY: test-int
 test-int:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
-	cask exec ecukes --reporter magnars
+	cask exec ecukes --reporter magnars --tags ~@poly-complete,~@complete-ipy7
 
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
+
+.PHONY: test-ob-ein-recurse
+test-ob-ein-recurse:
+	cask eval "(progn (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
 
 .PHONY: test-install
 test-install:
@@ -95,7 +100,7 @@ test-install:
 	cd test/test-install/package-build-$(PKBUILD) ; make -s loaddefs
 	mkdir -p test/test-install/recipes
 	cd test/test-install/recipes ; curl -sLOk https://raw.githubusercontent.com/melpa/melpa/master/recipes/ein
-	! ( emacs -Q --batch -L test/test-install/package-build-$(PKBUILD) \
+	! ( $(EMACS) -Q --batch -L test/test-install/package-build-$(PKBUILD) \
 	--eval "(require 'package-build)" \
 	--eval "(require 'subr-x)" \
 	--eval "(package-initialize)" \
@@ -120,7 +125,7 @@ dist:
 
 .PHONY: install
 install: dist
-	emacs -Q --batch --eval "(package-initialize)" \
+	$(EMACS) -Q --batch --eval "(package-initialize)" \
 	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
 	  --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"

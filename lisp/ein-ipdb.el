@@ -30,11 +30,21 @@
 (defvar ein:ipdb-buffer-active-kernel nil)
 (defvar ein:ipdb-buffer-prompt nil)
 
-(defstruct ein:$ipdb-session
+(cl-defstruct ein:$ipdb-session
   buffer
   notebook-buffer
   kernel
   current-payload)
+
+(defun ein:ipbd ()
+  "Convenience function that will launch the ipython debugger,
+assuming there is an active kernel associated with the current
+buffer. For more information see the %debug magic documentation
+in ipython."
+  (interactive)
+  (ein:shared-output-eval-string (ein:get-kernel)
+                                 "%debug"
+                                 nil))
 
 (defun ein:find-or-create-ipdb-session (kernel &optional buffer)
   (ein:aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
@@ -104,7 +114,7 @@
       (remhash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))))
 
 (defun ein:ipdb--handle-iopub-reply (kernel packet)
-  (destructuring-bind
+  (cl-destructuring-bind
       (&key content metadata parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let ((msg-type (plist-get header :msg_type)))
@@ -128,7 +138,7 @@
 
 (defun ein:ipdb-input-sender (proc input)
   (with-current-buffer (process-buffer proc)
-    (assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
+    (cl-assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
     (let* ((session (gethash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))
            (buffer-read-only nil)
            (kernel (ein:$ipdb-session-kernel session))

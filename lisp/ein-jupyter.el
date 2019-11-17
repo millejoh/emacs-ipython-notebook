@@ -1,4 +1,4 @@
-;;; ein-jupyter.el --- Manage the jupyter notebook server
+;;; ein-jupyter.el --- Manage the jupyter notebook server   -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2017 John M. Miller
 
@@ -74,6 +74,27 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
   :type '(choice (string :tag "Subcommand" "notebook")
                  (const :tag "Omit" nil)))
 
+(defcustom ein:jupyter-default-kernel 'first-alphabetically
+  "With which of ${XDG_DATA_HOME}/jupyter/kernels to create new notebooks."
+  :group 'ein
+  :type (append
+         '(choice (other :tag "First alphabetically" first-alphabetically))
+         (condition-case err
+             (mapcar
+              (lambda (x) `(const :tag ,(cdr x) ,(car x)))
+              (cl-loop
+                for (k . spec) in
+                  (alist-get
+                   'kernelspecs
+                   (let ((json-object-type 'alist))
+                     (json-read-from-string
+                      (shell-command-to-string
+                       (format "%s kernelspec list --json"
+                               ein:jupyter-default-server-command)))))
+                collect `(,k . ,(alist-get 'display_name (alist-get 'spec spec)))))
+           (error (ein:log 'warn "ein:jupyter-default-kernel: %s" err)
+                  '((string :tag "Ask"))))))
+
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session"
   (get-buffer-process (get-buffer ein:jupyter-server-buffer-name)))
@@ -106,7 +127,7 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
             (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
                                 nil "") ;; important if we start-stop-start
             (when (re-search-forward "\\([[:alnum:]]+\\) is\\( now\\)? running" nil t)
-              (let ((hub-p (search "jupyterhub" (downcase (match-string 1)))))
+              (let ((hub-p (cl-search "jupyterhub" (downcase (match-string 1)))))
                 (when (re-search-forward "\\(https?://[^:]*:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t)
                   (let ((raw-url (match-string 1))
                         (token (or (match-string 2) (and (not hub-p) ""))))
@@ -123,7 +144,7 @@ call to `ein:notebooklist-login' and once authenticated open the notebooklist bu
 via a call to `ein:notebooklist-open'."
   (interactive)
   (when (ein:jupyter-server-process)
-    (multiple-value-bind (url-or-port password) (ein:jupyter-server-conn-info)
+    (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
       (ein:notebooklist-login url-or-port callback))))
 
 (defsubst ein:set-process-sentinel (proc url-or-port)
@@ -142,7 +163,7 @@ our singleton jupyter server process here."
 
 ;;;###autoload
 (defun ein:jupyter-server-start (server-cmd-path notebook-directory
-                                                 &optional no-login-p login-callback port)
+                                 &optional no-login-p login-callback port)
   "Start SERVER-CMD_PATH with `--notebook-dir' NOTEBOOK-DIRECTORY.  Login after connection established unless NO-LOGIN-P is set.  LOGIN-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--finish, and the url-or-port argument of ein:notebooklist-open*.
 
 This command opens an asynchronous process running the jupyter
@@ -172,8 +193,8 @@ the log of the running jupyter server."
            (read-directory-name "Notebook directory: "
                                 (or *ein:last-jupyter-directory*
                                     ein:jupyter-default-notebook-directory))))
-     (list server-cmd-path notebook-directory nil (lambda (buffer url-or-port)
-                                                    (pop-to-buffer buffer)))))
+     (list server-cmd-path notebook-directory nil #'(lambda (buffer _url-or-port)
+                                                      (pop-to-buffer buffer)))))
   (unless (and (stringp server-cmd-path)
                (file-exists-p server-cmd-path)
                (file-executable-p server-cmd-path))
@@ -194,18 +215,18 @@ the log of the running jupyter server."
                                              "--port-retries" "0")))))
     (when (eql system-type 'windows-nt)
       (accept-process-output proc (/ ein:jupyter-server-run-timeout 1000)))
-    (loop repeat 30
-          until (car (ein:jupyter-server-conn-info ein:jupyter-server-buffer-name))
-          do (sleep-for 0 500)
-          finally do
-          (unless (car (ein:jupyter-server-conn-info ein:jupyter-server-buffer-name))
-            (ein:log 'warn "Jupyter server failed to start, cancelling operation")
-            (ein:jupyter-server-stop t)))
+    (cl-loop repeat 30
+      until (car (ein:jupyter-server-conn-info ein:jupyter-server-buffer-name))
+      do (sleep-for 0 500)
+      finally do
+        (unless (car (ein:jupyter-server-conn-info ein:jupyter-server-buffer-name))
+          (ein:log 'warn "Jupyter server failed to start, cancelling operation")
+          (ein:jupyter-server-stop t)))
     (when (and (not no-login-p) (ein:jupyter-server-process))
       (unless login-callback
         (setq login-callback #'ignore))
-      (add-function :after login-callback
-                    (apply-partially (lambda (proc* buffer url-or-port)
+      (add-function :after (var login-callback)
+                    (apply-partially (lambda (proc* _buffer url-or-port)
                                        (ein:set-process-sentinel proc* url-or-port))
                                      proc))
       (ein:jupyter-server-login-and-open login-callback))))
@@ -216,7 +237,7 @@ the log of the running jupyter server."
 ;;;###autoload
 (defalias 'ein:stop 'ein:jupyter-server-stop)
 
-(defun ein:shutdown-server (url-or-port)
+(defun ein:undocumented-shutdown (url-or-port)
   (ein:query-singleton-ajax
    (list 'shutdown-server url-or-port)
    (ein:url url-or-port "api/shutdown")
@@ -227,37 +248,32 @@ the log of the running jupyter server."
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   (interactive)
-  (ein:and-let* ((url-or-port (first (ein:jupyter-server-conn-info)))
-                 (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
+  (ein:and-let* ((url-or-port (car (ein:jupyter-server-conn-info)))
+                 (ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
-    (loop repeat 10
-          do (ein:query-running-process-table)
-          until (zerop (hash-table-count ein:query-running-process-table))
-          do (sleep-for 0 500))
-    (ein:shutdown-server url-or-port)
-    (loop repeat 3
-          for proc = (ein:jupyter-server-process)
-          until (not proc)
-          do (sleep-for 0 1000)
-          finally (if (not proc)
-                      (ein:log 'info "ein:jupyter-server-stop: success")
-                    (if (eql system-type 'windows-nt)
-                        (delete-process proc)
-                      (lexical-let ((pid (process-id proc))
-                                    (proc proc))
-                        (ein:log 'info "Signaled %s with pid %s" proc pid)
-                        (signal-process pid 15)
-                        (run-at-time 2 nil
-                                     (lambda ()
-                                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                                       (signal-process pid 15)))))))
+    (cl-loop repeat 10
+      do (ein:query-running-process-table)
+      until (zerop (hash-table-count ein:query-running-process-table))
+      do (sleep-for 0 500))
+    (if (eq system-type 'windows-nt)
+        (progn
+          (ein:undocumented-shutdown url-or-port)
+          (ein:aif (ein:jupyter-server-process)
+              (delete-process it)))
+      (let* ((proc (ein:jupyter-server-process))
+             (pid (process-id proc)))
+        (ein:log 'info "Signaled %s with pid %s" proc pid)
+        (signal-process pid 15)
+        (run-at-time 2 nil
+                     (lambda ()
+                       (ein:log 'info "Resignaled %s with pid %s" proc pid)
+                       (signal-process pid 15)))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)
     (kill-buffer (ein:notebooklist-get-buffer url-or-port))
     (when log
       (with-current-buffer ein:jupyter-server-buffer-name
-        (write-region (point-min) (point-max) log)))
-))
+        (write-region (point-min) (point-max) log)))))
 
 (provide 'ein-jupyter)

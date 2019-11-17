@@ -1,6 +1,5 @@
 (source gnu)
 (source melpa)
-(source org)
 
 (package-descriptor "lisp/ein-pkg.el")
 (files "lisp/*.el" "lisp/*.py")
@@ -8,6 +7,7 @@
 (development
  (depends-on "websocket")
  (depends-on "request")
+ (depends-on "jedi")
  (depends-on "dash")
  (depends-on "ert-runner")
  (depends-on "ecukes")

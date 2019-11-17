@@ -36,14 +36,14 @@
 
 (defvar *ein:jupyterhub-connections* (make-hash-table :test #'equal))
 
-(defstruct ein:$jh-conn
+(cl-defstruct ein:$jh-conn
   "Data representing a connection to a jupyterhub server."
   url-or-port
   version
   user
   token)
 
-(defstruct ein:$jh-user
+(cl-defstruct ein:$jh-user
   "A jupyterhub user, per https://jupyterhub.readthedocs.io/en/latest/_static/rest-api/index.html#/definitions/User"
   name
   admin
@@ -77,7 +77,7 @@
       (ein:websocket-store-cookie c host-port
                                   (car (url-path-and-query parsed-url)) securep))))
 
-(defun* ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
+(cl-defun ein:jupyterhub--login-complete (dobj conn &key response &allow-other-keys)
   (deferred:callback-post dobj (list conn response)))
 
 (defmacro ein:jupyterhub--add-header (header)
@@ -110,6 +110,17 @@
               (apply ,cb (request-response-data (plist-get args :response)) ,cbargs))
             my-settings)))
 
+(defsubst ein:jupyterhub--query-login (callback username password conn)
+  (ein:jupyterhub-query
+   (ein:$jh-conn-url-or-port conn)
+   (ein:url (ein:$jh-conn-url-or-port conn) "hub/login")
+   #'ein:jupyterhub--receive-login
+   `(,callback ,username ,password ,conn)
+   ;; :type "POST" ;; no type here else redirect will use POST
+   :parser #'ignore
+   :data `(("username" . ,username)
+           ("password" . ,password))))
+
 (defun ein:jupyterhub--receive-version (data url-or-port callback username password)
   (let ((conn (make-ein:$jh-conn
                :url-or-port url-or-port
@@ -134,16 +145,35 @@
        (ein:jupyterhub-user-path (ein:$jh-conn-url-or-port conn))
        nil nil callback))))
 
+(defsubst ein:jupyterhub--query-user (callback username password conn iteration)
+  (ein:jupyterhub-query
+   (ein:$jh-conn-url-or-port conn)
+   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn) "users" username)
+   #'ein:jupyterhub--receive-user
+   `(,callback ,username ,password ,conn ,iteration)
+   :type "GET"
+   :parser #'ein:json-read))
+
 (defun ein:jupyterhub--receive-login (_data callback username password conn)
   (ein:jupyterhub--store-cookies conn)
   (ein:jupyterhub--query-user callback username password conn 0))
 
+(defun ein:jupyterhub--receive-server (_data callback username password conn)
+  (ein:jupyterhub--query-user callback username password conn 1))
+
+(defsubst ein:jupyterhub--query-server (callback username password conn)
+  (ein:jupyterhub-query
+   (ein:$jh-conn-url-or-port conn)
+   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn)
+                            "users" username "server")
+   #'ein:jupyterhub--receive-server
+   `(,callback ,username ,password ,conn)
+   :type "POST"
+   :parser #'ein:json-read))
+
 (defun ein:jupyterhub--receive-token (data callback username password conn)
   (setf (ein:$jh-conn-token conn) (plist-get data :token))
   (ein:jupyterhub--query-server callback username password conn))
-
-(defun ein:jupyterhub--receive-server (_data callback username password conn)
-  (ein:jupyterhub--query-user callback username password conn 1))
 
 (defun ein:jupyterhub--query-token (callback username password conn)
   (ein:jupyterhub-query
@@ -156,36 +186,6 @@
    :data (json-encode `((:username . ,username)
                         (:password . ,password)))
    :parser #'ein:json-read))
-
-(defsubst ein:jupyterhub--query-server (callback username password conn)
-  (ein:jupyterhub-query
-   (ein:$jh-conn-url-or-port conn)
-   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn)
-                            "users" username "server")
-   #'ein:jupyterhub--receive-server
-   `(,callback ,username ,password ,conn)
-   :type "POST"
-   :parser #'ein:json-read))
-
-(defsubst ein:jupyterhub--query-user (callback username password conn iteration)
-  (ein:jupyterhub-query
-   (ein:$jh-conn-url-or-port conn)
-   (ein:jupyterhub-api-path (ein:$jh-conn-url-or-port conn) "users" username)
-   #'ein:jupyterhub--receive-user
-   `(,callback ,username ,password ,conn ,iteration)
-   :type "GET"
-   :parser #'ein:json-read))
-
-(defsubst ein:jupyterhub--query-login (callback username password conn)
-  (ein:jupyterhub-query
-   (ein:$jh-conn-url-or-port conn)
-   (ein:url (ein:$jh-conn-url-or-port conn) "hub/login")
-   #'ein:jupyterhub--receive-login
-   `(,callback ,username ,password ,conn)
-   ;; :type "POST" ;; no type here else redirect will use POST
-   :parser #'ignore
-   :data `(("username" . ,username)
-           ("password" . ,password))))
 
 (defsubst ein:jupyterhub--query-version (url-or-port callback username password)
   (ein:jupyterhub-query
@@ -201,8 +201,8 @@
   "Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater.  CALLBACK takes two arguments, the resulting buffer and the singleuser url-or-port"
   (interactive (let ((url-or-port (ein:notebooklist-ask-url-or-port))
                      (pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
-                 (loop for (user pw) on pam-plist by (function cddr)
-                       return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
+                 (cl-loop for (user pw) on pam-plist by (function cddr)
+                   return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
   (ein:jupyterhub--query-version url-or-port callback username password))
 
 (provide 'ein-jupyterhub)

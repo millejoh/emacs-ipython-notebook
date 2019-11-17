@@ -28,8 +28,6 @@
 
 (declare-function ac-cursor-on-diable-face-p "auto-complete")
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-core)
 (require 'ein-log)
 (require 'ein-subpackages)
@@ -79,23 +77,40 @@
    `ein:completer-finish-completing-ac'.  When it is specified,
    it overrides `ac-expand-on-auto-complete' when calling
    `auto-complete'."
-  (interactive (list (ein:get-kernel) 
+  (interactive (list (ein:get-kernel)
                      (list :complete_reply
                            (cons #'ein:completer-finish-completing '(:expand nil)))
                      #'ignore))
-  (ein:kernel-complete kernel
-                       (thing-at-point 'line)
-                       (current-column)
-                       callbacks errback))
+  (multiple-value-bind (code pos) (ein:get-completion-context (ein:$kernel-api-version kernel))
+    (ein:log 'debug (format "EIN:COMPLETER-COMPLETE Code block: %s at position :%s" code pos))
+    (ein:kernel-complete kernel
+                         code ;; (thing-at-point 'line)
+                         pos ;; (current-column)
+                         callbacks errback)))
+
+(defun ein:get-completion-context (api-version)
+  (cond ((< api-version 5)
+         (values (thing-at-point 'line) (current-column)))
+        ((and (ein:get-kernel) (ein:get-cell-at-point))
+         (let* ((cell (ein:get-cell-at-point))
+                (code (ein:cell-get-text cell))
+                (beg (ein:cell-input-pos-min cell)))
+           (values code (- (point) beg))))
+        ((ein:get-kernel)
+         (values (buffer-string) (1- (point))))))
 
 ;;; Retrieving Python Object Info
 (defun ein:completions--reset-oinfo-cache (kernel)
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
+(defun ein:dev-clear-oinfo-cache (kernel)
+  (interactive (list (ein:get-kernel)))
+  (ein:completions--reset-oinfo-cache kernel))
+
 (defun ein:completions-get-cached (partial oinfo-cache)
-  (loop for candidate being the hash-keys of oinfo-cache
-        when (string-prefix-p partial candidate)
-        collect candidate))
+  (cl-loop for candidate being the hash-keys of oinfo-cache
+    when (string-prefix-p partial candidate)
+    collect candidate))
 
 (defun ein:completions--get-oinfo (obj)
   (let ((d (deferred:new #'identity))
@@ -124,12 +139,14 @@
 
 (defun ein:completions--prepare-oinfo (output obj kernel)
   (condition-case err
-      (destructuring-bind (msg-type content _) output
+      (cl-destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)
-               (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
-                     (ein:json-read-from-string it))))
+               (let ((oinfo (ein:json-read-from-string it)))
+                 (unless (string= (plist-get oinfo :string_form) "None")
+                   (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
+                         oinfo)))))
           (("error" "pyerr")
            (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
                     (plist-get content :traceback)))))

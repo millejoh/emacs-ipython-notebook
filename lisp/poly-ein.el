@@ -21,7 +21,7 @@ after changing this setting!"
 
 (defmacro poly-ein--remove-hook (label functions)
   "Remove any hooks saying LABEL from FUNCTIONS"
-  `(mapc (lambda (x) (when (search ,label (symbol-name x))
+  `(mapc (lambda (x) (when (cl-search ,label (symbol-name x))
                        (remove-hook (quote ,functions) x t)))
          ,functions))
 
@@ -191,13 +191,13 @@ TYPE can be 'body, nil."
          (ein:display-warning
           (format "pm:get-span: no major mode for kernelspec language '%s'" lang)))
        (setq result-cm
-             (loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
-                   when (equal mode (ein:oref-safe ocm :mode))
-                   return ocm
-                   finally return (let ((new-mode (clone cm :mode mode)))
-                                    (object-add-to-list pm/polymode '-auto-innermodes
+             (cl-loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
+               when (equal mode (ein:oref-safe ocm :mode))
+               return ocm
+               finally return (let ((new-mode (clone cm :mode mode)))
+                                (object-add-to-list pm/polymode '-auto-innermodes
                                                     new-mode)
-                                    new-mode))))
+                                new-mode))))
      ;; Span is a zebra pattern of "body" (within input cell) and "nil"
      ;; (outside input cell).  Decide boundaries of span and return it.
      (let ((rel (poly-ein--relative-to-input pos cell)))
@@ -252,11 +252,13 @@ TYPE can be 'body, nil."
   (setq jit-lock-context-unfontify-pos nil)
   (if (eq type 'host)
       (setq syntax-propertize-function nil)
-    (setq syntax-propertize-function pm--syntax-propertize-function-original)
-    (add-function :before-until (local 'syntax-propertize-function)
-                  #'poly-ein--unrelated-span)
-    (add-function :filter-args (local 'syntax-propertize-function)
-                  #'poly-ein--span-start-end)))
+    (ein:aif pm--syntax-propertize-function-original
+        (progn
+          (setq syntax-propertize-function it)
+          (add-function :before-until (local 'syntax-propertize-function)
+                        #'poly-ein--unrelated-span)
+          (add-function :filter-args (local 'syntax-propertize-function)
+                        #'poly-ein--span-start-end)))))
 
 (defun poly-ein-init-input-cell (_type)
   (mapc (lambda (f) (add-to-list 'after-change-functions f))
@@ -333,8 +335,8 @@ TYPE can be 'body, nil."
 (defsubst poly-ein--span-start-end (args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
       args
-    (let* ((span-start (first args))
-           (span-end (second args))
+    (let* ((span-start (car args))
+           (span-end (cadr args))
            (range (pm-innermost-range (or span-start (point)))))
       (setq span-start (max (or span-start (car range)) (car range)))
       (setq span-end (min (or span-end (cdr range)) (cdr range)))

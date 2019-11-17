@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'deferred)
 (require 'ein-completer)
 (require 'company nil t)
@@ -55,14 +54,14 @@
           (ein:completions--prepare-matches prefix fetcher replies))))))
 
 (defun ein:completions--prepare-matches (prefix fetcher replies)
-  (destructuring-bind
+  (cl-destructuring-bind
       ((&key matches cursor_start cursor_end &allow-other-keys) ; :complete_reply
        _metadata)
       replies
     (let ((nix (- cursor_end cursor_start))
           prefixed-matches)
       (dolist (match matches)
-        (setq prefixed-matches 
+        (setq prefixed-matches
               (nconc prefixed-matches (list (concat prefix (substring match nix))))))
       (ein:completions--build-oinfo-cache prefixed-matches)
       (funcall fetcher prefixed-matches))))
@@ -75,7 +74,7 @@
     (prefix (and (eq ein:completion-backend 'ein:use-company-backend)
                  (or (ein:worksheet-at-codecell-p) ein:connect-mode)
                  (ein:get-kernel)
-                 (ein:object-at-point)))
+                 (ein:object-prefix-at-point)))
     (annotation (let ((kernel (ein:get-kernel)))
                   (ein:aif (gethash arg (ein:$kernel-oinfo-cache kernel))
                       (plist-get it :definition))))
@@ -93,7 +92,7 @@
        (ein:aif cached it
          (unless (ein:company--punctuation-check (thing-at-point 'line)
                                                  (current-column))
-           (case ein:completion-backend
+           (cl-case ein:completion-backend
              (t
               (cons :async
                     (lambda (cb)
@@ -101,7 +100,7 @@
 
 (defun ein:company--punctuation-check (thing col)
   (or (string-match "[[:nonascii:]]" thing)
-      (let ((query (ein:trim-right (subseq thing 0 col) "[\n]")))
+      (let ((query (ein:trim-right (cl-subseq thing 0 col) "[\n]")))
         (string-match "[]()\",[{}'=: ]$" query (- col 2)))))
 
 

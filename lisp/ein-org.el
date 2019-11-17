@@ -32,11 +32,8 @@
 ;; FIXME: Separate org-unrelated cores from the following code and
 ;; expose them as API in ein-link.el.
 
-(defun* ein:org-goto-link (notebook created
-                                    &key
-                                    worksheet-index
-                                    search
-                                    &allow-other-keys)
+(cl-defun ein:org-goto-link (notebook created
+                             &key worksheet-index search &allow-other-keys)
   (if created
       (ein:log 'info "Linked notebook did not exist.  Created a new one.")
     (if worksheet-index
@@ -53,7 +50,7 @@
 This function is to be used for FOLLOW function of
 `org-add-link-type'."
   (let ((link (read link-path)))
-    (destructuring-bind (&key url-or-port name &allow-other-keys)
+    (cl-destructuring-bind (&key url-or-port name &allow-other-keys)
         link
       (ein:notebook-open url-or-port name))))
 

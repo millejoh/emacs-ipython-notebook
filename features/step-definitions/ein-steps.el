@@ -163,6 +163,11 @@
               (switch-to-buffer buf-name)
               (Then "I should be in buffer \"%s\"" buf-name))))))
 
+(When "^case sensitive checked notebook$"
+      (lambda ()
+        (let ((case-fold-search nil))
+          (Then "new python notebook"))))
+
 (When "^I kill buffer and reopen$"
       (lambda ()
         (let ((name (ein:$notebook-notebook-name ein:%notebook%)))
@@ -280,7 +285,7 @@
 (When "^I wait for the smoke to clear"
       (lambda ()
         (ein:testing-flush-queries)
-        (And "I wait 1 second"))) ;; eldoc-documentation-function not flushing
+        (And "I wait 10 seconds"))) ;; eldoc-documentation-function not flushing
 
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (go stop)
@@ -420,6 +425,10 @@
       (lambda (variable value)
         (set (intern variable) (eval (car (read-from-string value))))))
 
+(When "^I eval \"\\(.+\\)\"$"
+      (lambda (expr)
+        (eval (car (read-from-string expr)))))
+
 (When "^I connect to default notebook"
       (lambda ()
         (ein:connect-to-notebook-buffer (car (ein:notebook-opened-buffer-names
@@ -483,3 +492,17 @@
          (mapcan (lambda (prop)
                    (not (get-text-property (point) (intern prop))))
                  (split-string properties ",")))))
+
+(When "^jedi completions should contain \"\\(.+\\)\"$"
+      (lambda (str)
+        (let ((completions (jedi:ac-direct-matches)))
+          (should (some #'(lambda (x)
+                            (string= x str))
+                        completions)))))
+
+(When "^jedi completion environment$"
+      (lambda ()
+        (require 'jedi)
+        (jedi:install-server-block)
+        (add-hook 'python-mode-hook 'jedi:setup)
+        (setq jedi:complete-on-dot t)))
