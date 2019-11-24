@@ -269,9 +269,9 @@ a number will limit the number of lines in a cell output."
   (ein:oset-if-empty cell 'outputs (plist-get data :outputs))
   (ein:oset-if-empty cell 'input (or (plist-get data :input)
                                      (plist-get data :source)))
-  (ein:aif (plist-get data :prompt_number)
+  (aif (plist-get data :prompt_number)
       (ein:oset-if-empty cell 'input-prompt-number it)
-    (ein:aif (plist-get data :execution_count)
+    (aif (plist-get data :execution_count)
         (ein:oset-if-empty cell 'input-prompt-number it)))
   (ein:oset-if-empty cell 'collapsed
                      (let ((v (or (plist-get data :collapsed)
@@ -281,13 +281,13 @@ a number will limit the number of lines in a cell output."
   cell)
 
 (cl-defmethod ein:cell-init ((cell ein:textcell) data)
-  (ein:aif (plist-get data :source)
+  (aif (plist-get data :source)
       (setf (slot-value cell 'input) it))
   cell)
 
 (cl-defmethod ein:cell-init ((cell ein:headingcell) data) ;; FIXME: Was :after method
   (cl-call-next-method)
-  (ein:aif (plist-get data :level)
+  (aif (plist-get data :level)
       (setf (slot-value cell 'level) it))
   cell)
 
@@ -387,14 +387,14 @@ a number will limit the number of lines in a cell output."
           (nth index (plist-get element prop)))
       (case prop
         (:after-input
-         (ein:aif (nth 0 (plist-get element :output))
+         (aif (nth 0 (plist-get element :output))
              it
            (plist-get element :footer)))
         (:after-output (plist-get element :footer))
         (:before-input (plist-get element :prompt))
         (:before-output (plist-get element :input))
         (:last-output
-         (ein:aif (plist-get element :output)
+         (aif (plist-get element :output)
              (car (last it))
            (plist-get element :input)))
         (t (cl-call-next-method))))))
@@ -965,7 +965,7 @@ prettified text thus be used instead of HTML type."
     ein:output-types-html-preferred))
 
 (defun ein:fix-mime-type (type)
-  (ein:aif (assoc type ein:mime-type-map)
+  (aif (assoc type ein:mime-type-map)
       (cdr it)
     type))
 
@@ -1021,7 +1021,7 @@ prettified text thus be used instead of HTML type."
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
-    ,@(ein:aif (ein:oref-safe cell 'input-prompt-number)
+    ,@(aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
     (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
     (language . "python")
@@ -1041,7 +1041,7 @@ prettified text thus be used instead of HTML type."
          (outputs (if discard-output []
                     (slot-value cell 'outputs)))
          (renamed-outputs '())
-         (execute-count (ein:aif (ein:oref-safe cell 'input-prompt-number)
+         (execute-count (aif (ein:oref-safe cell 'input-prompt-number)
                             (and (numberp it) it))))
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
@@ -1139,16 +1139,16 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
-  (ein:aif (ewoc-next (slot-value cell 'ewoc)
-                      (ein:cell-element-get cell :footer))
+  (aif (ewoc-next (slot-value cell 'ewoc)
+                  (ein:cell-element-get cell :footer))
       (let ((cell (ein:$node-data (ewoc-data it))))
         (when (cl-typep cell 'ein:basecell)
           cell))))
 
 (cl-defmethod ein:cell-prev ((cell ein:basecell))
   "Return previous cell of the given CELL or nil if CELL is the first one."
-  (ein:aif (ewoc-prev (slot-value cell 'ewoc)
-                      (ein:cell-element-get cell :prompt))
+  (aif (ewoc-prev (slot-value cell 'ewoc)
+                  (ein:cell-element-get cell :prompt))
       (let ((cell (ein:$node-data (ewoc-data it))))
         (when (cl-typep cell 'ein:basecell)
           cell))))

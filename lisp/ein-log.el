@@ -106,7 +106,7 @@ Otherwise, return result of last form in BODY."
 
 (defun ein:log-pop-to-request-buffer ()
   (interactive)
-  (ein:aif (get-buffer request-log-buffer-name)
+  (aif (get-buffer request-log-buffer-name)
       (pop-to-buffer it)
     (message "No buffer named \"%s\"" request-log-buffer-name)))
 

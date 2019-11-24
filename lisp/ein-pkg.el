@@ -3,6 +3,7 @@
   "Emacs IPython Notebook"
   '((emacs "25")
     (websocket "20190620.338")
+    (anaphora "20180618")
     (request "20190621.1622")
     (deferred "0.5")
     (polymode "20190426.1729")

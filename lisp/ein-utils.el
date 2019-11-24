@@ -41,13 +41,6 @@ while maintaining the undo list for the current buffer."
   `(let ((buffer-undo-list t))
      ,@body))
 
-(defmacro ein:aif (test-form then-form &rest else-forms)
-  "Anaphoric IF.  Adapted from `e2wm:aif'."
-  (declare (debug (form form &rest form)))
-  `(let ((it ,test-form))
-     (if it ,then-form ,@else-forms)))
-(put 'ein:aif 'lisp-indent-function 2)
-
 (defmacro ein:aand (test &rest rest)
   "Anaphoric AND.  Adapted from `e2wm:aand'."
   (declare (debug (form &rest form)))
@@ -167,7 +160,7 @@ before previous opening parenthesis."
                 "\\s-\\|\n\\|\\.")
     (save-excursion
       (with-syntax-table ein:dotty-syntax-table
-        (ein:aif (thing-at-point 'symbol)
+        (aif (thing-at-point 'symbol)
             it
           (unless (looking-at "(")
             (search-backward "(" (point-at-bol) t))
@@ -636,7 +629,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
           (deferred:$
             (deferred:next
               (lambda ()
-                (ein:aif (funcall doneback) it
+                (aif (funcall doneback) it
                   (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
                   (sleep-for 0 365)))))))
       (deferred:nextc it

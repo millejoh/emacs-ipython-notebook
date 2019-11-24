@@ -34,6 +34,7 @@
 
 (require 'ein)  ; get autoloaded functions into namespace
 (require 'ein-utils)
+(require 'anaphora)
 
 (defgroup ein nil
   "IPython notebook client in Emacs"
@@ -137,19 +138,23 @@ the source is in git repository) or elpa version."
 (defvar *ein:kernelspecs* (make-hash-table :test #'equal)
   "url-or-port to kernelspecs")
 
-(defun ein:get-kernelspec (url-or-port name)
+(defun ein:get-kernelspec (url-or-port name &optional lang)
   (let* ((kernelspecs (ein:need-kernelspecs url-or-port))
          (name (if (stringp name)
                    (intern (format ":%s" name))
                  name))
-         (ks (plist-get kernelspecs name)))
-    (if (stringp ks)
-        (ein:get-kernelspec url-or-port ks)
-      ks)))
+         (ks (or (plist-get kernelspecs name)
+                 (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+                       if (string= (ein:$kernelspec-language spec) lang)
+                       return spec
+                       end))))
+    (cond ((stringp ks)
+           (ein:get-kernelspec url-or-port ks))
+          (t ks))))
 
 (defun ein:need-kernelspecs (url-or-port)
   "Callers assume ein:query-kernelspecs succeeded.  If not, nil."
-  (ein:aif (gethash url-or-port *ein:kernelspecs*) it
+  (aif (gethash url-or-port *ein:kernelspecs*) it
     (ein:log 'warn "No recorded kernelspecs for %s" url-or-port)
     nil))
 
@@ -215,7 +220,7 @@ the source is in git repository) or elpa version."
 
 (defun ein:need-notebook-version (url-or-port)
   "Callers assume ein:query-notebook-version succeeded.  If not, we hardcode a guess."
-  (ein:aif (gethash url-or-port *ein:notebook-version*) it
+  (aif (gethash url-or-port *ein:notebook-version*) it
     (ein:log 'warn "No recorded notebook version for %s" url-or-port)
     "5.7.0"))
 
@@ -233,7 +238,7 @@ the source is in git repository) or elpa version."
                                                 &allow-other-keys
                                                 &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
-  (ein:aif (plist-get data :version)
+  (aif (plist-get data :version)
       (setf (gethash url-or-port *ein:notebook-version*) it)
     (case (request-response-status-code response)
       (404 (ein:log 'warn "notebook version api not implemented")
@@ -251,12 +256,12 @@ the source is in git repository) or elpa version."
   (ein:choose-setting 'ein:filename-translations url-or-port))
 
 (defun ein:filename-to-python (url-or-port filename)
-  (ein:aif (car (ein:filename-translations-get url-or-port))
+  (aif (car (ein:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
 
 (defun ein:filename-from-python (url-or-port filename)
-  (ein:aif (cadr (ein:filename-translations-get url-or-port))
+  (aif (cadr (ein:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
 
@@ -375,7 +380,7 @@ but can operate in different contexts."
   (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
          (errors (cl-mapcan (lambda (f) (unless (byte-compile-file f) (list f)))
                             files)))
-    (ein:aif errors
+    (aif errors
         (error "Got %s errors while compiling these files: %s"
                (length errors)
                (ein:join-str " " (mapcar #'file-name-nondirectory it))))

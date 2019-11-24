@@ -199,7 +199,7 @@ insert-prev insert-next move-prev move-next)"
                    'help-echo "Click (mouse-1) to insert a new tab."
                    'mouse-face 'highlight
                    'face 'ein:notification-tab-normal)
-       (propertize (ein:aif (and ein:%notebook% (ein:$notebook-kernelspec ein:%notebook%))
+       (propertize (aif (and ein:%notebook% (ein:$notebook-kernelspec ein:%notebook%))
                        (format "|%s|" (ein:$kernelspec-name it))
                      "|unknown: please click and select a kernel|")
                    'keymap ein:header-line-switch-kernel-map

@@ -49,8 +49,8 @@ If the previous execution timer is not fired yet, cancel the timer."
 BEG and END."
   (and (ein:codecell-p cell)
        this-command
-       (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
-       (ein:aif (ein:cell-input-pos-max cell) (>= it end))))
+       (aif (ein:cell-input-pos-min cell) (<= it beg))
+       (aif (ein:cell-input-pos-max cell) (>= it end))))
 
 (defun ein:iexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."

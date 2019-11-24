@@ -124,8 +124,11 @@
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
   (loop for line in (condition-case err
-                        (process-lines ein:jupyter-default-server-command
-                                       "notebook" "list" "--json")
+                        (apply #'process-lines
+                               ein:jupyter-server-command
+                               (append (aif ein:jupyter-server-use-subcommand
+                                           (list it))
+                                       '("list" "--json")))
                       ;; often there is no local jupyter installation
                       (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
         do (destructuring-bind
@@ -182,7 +185,8 @@
                                            (ein:notebook-open url-or-port
                                                               path* nil callback*))
                                          path callback)))
-        (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) nbdir nil callback2)))))
+        (ein:jupyter-server-start (executable-find ein:jupyter-server-command)
+                                  nbdir nil callback2)))))
 
 (defun ein:process-open-notebook (&optional filename buffer-callback)
   "When FILENAME is unspecified the variable `buffer-file-name'

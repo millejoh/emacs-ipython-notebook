@@ -318,7 +318,7 @@ See https://github.com/ipython/ipython/pull/3307"
   "Close websocket connection to running kernel, but do not
 delete the kernel on the server side"
   (ein:events-trigger (ein:$kernel-events kernel) 'status_disconnected.Kernel)
-  (ein:aif (ein:$kernel-websocket kernel)
+  (aif (ein:$kernel-websocket kernel)
       (progn (ein:websocket-close it)
              (setf (ein:$kernel-websocket kernel) nil))))
 
@@ -715,13 +715,13 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
       (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type=%s msg_id=%s"
                msg-type msg-id)
       (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
-      (ein:aif cb (ein:funcall-packed it content metadata))
-      (ein:aif (plist-get content :payload)
+      (aif cb (ein:funcall-packed it content metadata))
+      (aif (plist-get content :payload)
           (ein:kernel--handle-payload kernel callbacks it))
       (let ((events (ein:$kernel-events kernel)))
         (ein:case-equal msg-type
           (("execute_reply")
-           (ein:aif (plist-get content :execution_count)
+           (aif (plist-get content :execution_count)
                ;; It can be `nil' for silent execution
                (ein:events-trigger events 'execution_count.Kernel it))))))))
 
@@ -763,7 +763,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
             (ein:log 'verbose "Not processing msg_type=%s msg_id=%s" msg-type msg-id)
           (ein:case-equal msg-type
             (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-             (ein:aif (plist-get callbacks :output)
+             (aif (plist-get callbacks :output)
                  (ein:funcall-packed it msg-type content metadata)))
             (("status")
              (ein:case-equal (plist-get content :execution_state)
@@ -776,7 +776,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
             (("data_pub")
              (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
             (("clear_output")
-             (ein:aif (plist-get callbacks :clear_output)
+             (aif (plist-get callbacks :clear_output)
                  (ein:funcall-packed it content metadata)))))))))
 
 ;;; Utility functions
@@ -829,7 +829,7 @@ as a string and the rest of the argument is the optional ARGS."
                          (let ((func (car packed))
                                (args (cdr packed)))
                            (when (equal msg-type "stream")
-                             (ein:aif (plist-get content :text)
+                             (aif (plist-get content :text)
                                  (apply func it args)))))
                        (cons func args)))))
 

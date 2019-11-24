@@ -172,27 +172,33 @@ This function adds NBLIST to `ein:notebooklist-map'."
 
 (defun ein:crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (ein:aif (loop for line in (condition-case err
-                                 (process-lines ein:jupyter-default-server-command
-                                                "notebook" "list" "--json")
-                               ;; often there is no local jupyter installation
-                               (error (ein:log 'info "ein:crib-token: %s" err) nil))
-                 with token0
-                 with password0
-                 when (destructuring-bind
-                          (&key password url token &allow-other-keys)
-                          (ein:json-read-from-string line)
-                        (prog1 (equal (ein:url url) url-or-port)
-                          (setq password0 password) ;; t or :json-false
-                          (setq token0 token)))
-                 return (list password0 token0))
+  (aif (loop for line in (condition-case err
+                             (apply #'process-lines
+                                    ein:jupyter-server-command
+                                    (append (aif ein:jupyter-server-use-subcommand
+                                                (list it))
+                                            '("list" "--json")))
+                           ;; often there is no local jupyter installation
+                           (error (ein:log 'info "ein:crib-token: %s" err) nil))
+             with token0
+             with password0
+             when (destructuring-bind
+                      (&key password url token &allow-other-keys)
+                      (ein:json-read-from-string line)
+                    (prog1 (equal (ein:url url) url-or-port)
+                      (setq password0 password) ;; t or :json-false
+                      (setq token0 token)))
+             return (list password0 token0))
       it (list nil nil)))
 
 (defun ein:crib-running-servers ()
   "Shell out to jupyter for running servers."
   (loop for line in (condition-case err
-                        (process-lines ein:jupyter-default-server-command
-                                       "notebook" "list" "--json")
+                        (apply #'process-lines
+                               ein:jupyter-server-command
+                               (append (aif ein:jupyter-server-use-subcommand
+                                           (list it))
+                                       '("list" "--json")))
                       (error (ein:log 'info "ein:crib-running-servers: %s" err)
                              nil))
         collecting (destructuring-bind
@@ -210,9 +216,9 @@ This function adds NBLIST to `ein:notebooklist-map'."
             (t nil)))))
 
 (defun ein:notebooklist-ask-url-or-port ()
-  (let* ((default (ein:url (ein:aif (ein:get-notebook)
+  (let* ((default (ein:url (aif (ein:get-notebook)
                                (ein:$notebook-url-or-port it)
-                             (ein:aif ein:%notebooklist%
+                             (aif ein:%notebooklist%
                                  (ein:$notebooklist-url-or-port it)
                                (ein:default-url-or-port)))))
          (url-or-port-list

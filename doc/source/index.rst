@@ -267,7 +267,6 @@ Note that the below work best with current (> v4.3.1) versions of jupyter.
 .. el:variable:: ein:jupyter-server-use-subcommand
 .. el:variable:: ein:jupyter-default-notebook-directory
 .. el:variable:: ein:jupyter-server-args
-.. el:variable:: ein:jupyter-server-buffer-name
 
 Notebook list
 ^^^^^^^^^^^^^

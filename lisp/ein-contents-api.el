@@ -131,7 +131,7 @@ global setting.  For global setting and more information, see
     (if (< (ein:notebook-version-numeric url-or-port) 3)
         (setq content (ein:new-content-legacy url-or-port path data))
       (setq content (ein:new-content url-or-port path data)))
-    (ein:aif response
+    (aif response
         (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
     (when callback
       (funcall callback content))))
@@ -174,7 +174,7 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-need-hierarchy (url-or-port)
   "Callers assume ein:content-query-hierarchy succeeded.  If not, nil."
-  (ein:aif (gethash url-or-port *ein:content-hierarchy*) it
+  (aif (gethash url-or-port *ein:content-hierarchy*) it
     (ein:log 'warn "No recorded content hierarchy for %s" url-or-port)
     nil))
 

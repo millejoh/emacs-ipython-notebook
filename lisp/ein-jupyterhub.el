@@ -33,6 +33,7 @@
 (require 'ein-query)
 (require 'ein-websocket)
 (require 'ein-notebooklist)
+(require 'anaphora)
 
 (defvar *ein:jupyterhub-connections* (make-hash-table :test #'equal))
 
@@ -54,7 +55,7 @@
 
 (defsubst ein:jupyterhub-user-path (url-or-port &rest paths)
   "Goes from URL-OR-PORT/PATHS to URL-OR-PORT/user/someone/PATHS"
-  (let ((user-base (ein:aif (gethash url-or-port *ein:jupyterhub-connections*)
+  (let ((user-base (aif (gethash url-or-port *ein:jupyterhub-connections*)
                        (ein:$jh-user-server (ein:$jh-conn-user it)))))
     (apply #'ein:url url-or-port user-base paths)))
 
@@ -90,7 +91,7 @@
      (ein:and-let* ((conn (gethash ,conn-key *ein:jupyterhub-connections*)))
        (ein:jupyterhub--add-header
         (cons "Referer" (ein:url (ein:$jh-conn-url-or-port conn) "hub/login")))
-       (ein:aif (ein:$jh-conn-token conn)
+       (aif (ein:$jh-conn-token conn)
            (ein:jupyterhub--add-header
             (cons "Authorization" (format "token %s" it)))))
      (apply #'ein:query-singleton-ajax

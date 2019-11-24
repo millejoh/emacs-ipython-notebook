@@ -27,6 +27,7 @@
 
 (require 'ein-log)
 (require 'request)
+(require 'anaphora)
 
 (defmacro ein:setq-if-not (sym val)
   `(unless ,sym (setq ,sym ,val)))
@@ -38,7 +39,7 @@
   "File to save the ``*Messages*`` buffer.")
 
 (defvar ein:testing-dump-file-server nil
-  "File to save `ein:jupyter-server-buffer-name`.")
+  "File to save `*ein:jupyter-server-buffer-name*`.")
 
 (defvar ein:testing-dump-file-request nil
   "File to save `request-log-buffer-name`.")
@@ -99,7 +100,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
   "Wait until PREDICATE function returns non-`nil'.
   PREDARGS is argument list for the PREDICATE function.
   MS is milliseconds to wait.  INTERVAL is polling interval in milliseconds."
-  (let* ((int (ein:aif interval it (ein:aif ms (max 300 (/ ms 10)) 300)))
+  (let* ((int (aif interval it (aif ms (max 300 (/ ms 10)) 300)))
          (count (max 1 (if ms (truncate (/ ms int)) 25))))
     (unless (or (loop repeat count
                        when (apply predicate predargs)

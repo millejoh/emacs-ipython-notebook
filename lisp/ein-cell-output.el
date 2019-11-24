@@ -49,7 +49,7 @@
     (traceback . ,(plist-get output :traceback))))
 
 (defun ein:cell-execute-result-output-to-json (output)
-  (let ((data (ein:aif (plist-get output :text)
+  (let ((data (aif (plist-get output :text)
 		  `("text/plain" . ,it)
 		(plist-get output :data))))
     `((output_type . "execute_result")
@@ -76,4 +76,3 @@
         collect (list (cdr prop) (plist-get output-plist (cdr prop)))))
 
 (provide 'ein-cell-output)
-

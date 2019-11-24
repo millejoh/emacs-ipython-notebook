@@ -74,9 +74,9 @@ construct CONTENT and RESULT."
                  for content = (append
                                 (when pcallsig (list pcallsig callsig))
                                 (when pdoc (list pdoc docstring)))
-                 for result = (ein:aif (append
-                                        (when pcallsig (list callsig))
-                                        (when pdoc (list docstring)))
+                 for result = (aif (append
+                                    (when pcallsig (list callsig))
+                                    (when pdoc (list docstring)))
                                   (ein:join-str "\n" it))
                  do (funcall test content result))))
 

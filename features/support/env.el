@@ -62,7 +62,7 @@
                      do (sleep-for 0 1000)
                      finally do (when extant
                                   (ein:display-warning (format "cannot del %s" path)))))))
-  (ein:aif (ein:notebook-opened-notebooks)
+  (aif (ein:notebook-opened-notebooks)
       (loop for nb in it
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
@@ -72,6 +72,7 @@
  (ein:dev-start-debug)
  (cl-assert (boundp 'company-frontends))
  (custom-set-variables '(company-frontends nil)
+                       '(ein:jupyter-use-docker-stacks nil)
                        '(python-indent-guess-indent-offset-verbose nil))
  (setq ein:jupyter-default-kernel
        (loop with cand = ""

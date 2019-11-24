@@ -173,7 +173,7 @@ TYPE can be 'body, nil."
          (span `(nil ,(point-min) ,(point-min)))
          (cell (ein:worksheet-get-current-cell :pos pos :noerror nil)))
      ;; Change :mode if necessary
-     (ein:and-let* ((lang
+     (-when-let* ((lang
                      (condition-case err
                          (ein:$kernelspec-language
                           (ein:$notebook-kernelspec
@@ -185,7 +185,7 @@ TYPE can be 'body, nil."
                                 ((ein:markdowncell-p cell) "markdown")
                                 (t "fundamental")))
                     (mode (pm-get-mode-symbol-from-name what))
-                    ((not (equal mode (ein:oref-safe cm 'mode)))))
+                    (_ (not (equal mode (ein:oref-safe cm 'mode)))))
        (when (eq mode 'poly-fallback-mode)
          (ein:display-warning
           (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
@@ -251,7 +251,7 @@ TYPE can be 'body, nil."
   (setq jit-lock-context-unfontify-pos nil)
   (if (eq type 'host)
       (setq syntax-propertize-function nil)
-    (ein:aif pm--syntax-propertize-function-original
+    (aif pm--syntax-propertize-function-original
         (progn
           (setq syntax-propertize-function it)
           (add-function :before-until (local 'syntax-propertize-function)

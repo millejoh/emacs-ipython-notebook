@@ -293,7 +293,7 @@ will be updated with kernel's cwd."
            (pop-to-buffer (ein:notebook-buffer notebook*)))))
      (when (and (not noninteractive)
                 (null (plist-member (ein:$notebook-metadata notebook*) :kernelspec)))
-       (ein:aif (ein:$notebook-kernelspec notebook*)
+       (aif (ein:$notebook-kernelspec notebook*)
            (progn
              (setf (ein:$notebook-metadata notebook*)
                    (plist-put (ein:$notebook-metadata notebook*)
@@ -343,7 +343,7 @@ where `created' indicates a new notebook or an existing one."
                                                     *ein:notebook--pending-query*))
                                          pending-key))
          (existing (ein:notebook-get-opened-notebook url-or-port path))
-         (notebook (ein:aif existing it
+         (notebook (aif existing it
                      (ein:notebook-new url-or-port path kernelspec)))
          (callback0 (ein:notebook-open--decorate-callback notebook existing pending-clear
                                                           callback no-pop)))
@@ -371,7 +371,7 @@ where `created' indicates a new notebook or an existing one."
     (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
           (ein:$notebook-notebook-name notebook) (ein:$content-name content))
     (ein:notebook-bind-events notebook (ein:events-new))
-    (ein:notebook-maybe-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
+    (ein:notebook-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
     (ein:notebook-install-kernel notebook)
     (ein:notebook-from-json notebook (ein:$content-raw-content content))
     (if (not (with-current-buffer (ein:notebook-buffer notebook)
@@ -393,11 +393,12 @@ where `created' indicates a new notebook or an existing one."
       (ein:notebook--check-nbformat (ein:$content-raw-content content))
       (ein:gc-complete-operation))))
 
-(defun ein:notebook-maybe-set-kernelspec (notebook content-metadata)
-  (ein:aif (plist-get content-metadata :kernelspec)
-      (let ((kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
-                                            (plist-get it :name))))
-        (setf (ein:$notebook-kernelspec notebook) kernelspec))))
+(defun ein:notebook-set-kernelspec (notebook content-metadata)
+  (-when-let* ((ks-plist (plist-get content-metadata :kernelspec))
+               (kernelspec (ein:get-kernelspec (ein:$notebook-url-or-port notebook)
+                                               (plist-get ks-plist :name)
+                                               (plist-get ks-plist :language))))
+    (setf (ein:$notebook-kernelspec notebook) kernelspec)))
 
 
 (defun ein:notebook--different-number (n1 n2)
@@ -451,12 +452,11 @@ of minor mode."
 ;;; Kernel related things
 
 (defun ein:list-available-kernels (url-or-port)
-  (let ((kernelspecs (ein:need-kernelspecs url-or-port)))
-    (if kernelspecs
-        (sort (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
-                    collecting (cons (ein:$kernelspec-name spec)
-                                     (ein:$kernelspec-display-name spec)))
-              (lambda (c1 c2) (string< (cdr c1) (cdr c2)))))))
+  (when-let ((kernelspecs (ein:need-kernelspecs url-or-port)))
+    (sort (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+                collecting (cons (ein:$kernelspec-name spec)
+                                 (ein:$kernelspec-display-name spec)))
+          (lambda (c1 c2) (string< (cdr c1) (cdr c2))))))
 
 (defun ein:notebook-switch-kernel (notebook kernel-name)
   "Change the kernel for a running notebook. If not called from a
@@ -468,7 +468,9 @@ notebook buffer then the user will be prompted to select an opened notebook."
                          (ein:notebook-opened-buffer-names))))
           (kernel-name (ein:completing-read
                         "Select kernel: "
-                        (ein:list-available-kernels (ein:$notebook-url-or-port notebook)))))
+                        (cl-mapcar
+                         #'car
+                         (ein:list-available-kernels (ein:$notebook-url-or-port notebook))))))
      (list notebook kernel-name)))
   (let* ((kernelspec (ein:get-kernelspec
                       (ein:$notebook-url-or-port notebook) kernel-name)))
@@ -504,9 +506,9 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-restart-session-command ()
    "Delete session on server side.  Start new session."
   (interactive)
-  (ein:aif ein:%notebook%
-           (if (y-or-n-p "Are you sure? ")
-               (ein:kernel-restart-session (ein:$notebook-kernel it)))
+  (aif ein:%notebook%
+      (if (y-or-n-p "Are you sure? ")
+          (ein:kernel-restart-session (ein:$notebook-kernel it)))
     (message "Not in notebook buffer!")))
 
 (define-obsolete-function-alias
@@ -571,7 +573,7 @@ This is equivalent to do ``C-c`` in the console program."
         (funcall (ein:notebook-choose-mode))
         (ein:worksheet-reinstall-undo-hooks ws)
         (condition-case err
-            (ein:aif (ein:$notebook-kernelspec notebook)
+            (aif (ein:$notebook-kernelspec notebook)
                 (ein:ml-lang-setup it))
           (error (ein:log 'error (error-message-string err))
                  (setq multilang-failed t))))
@@ -685,7 +687,7 @@ This is equivalent to do ``C-c`` in the console program."
           (setf (gethash 'name metadata) (ein:$notebook-notebook-name notebook))
         (plist-put metadata
                    :name (ein:$notebook-notebook-name notebook)))
-      (ein:aif (ein:$notebook-nbformat-minor notebook)
+      (aif (ein:$notebook-nbformat-minor notebook)
           ;; Do not set nbformat when it is not given from server.
           (push `(nbformat_minor . ,it) data))
       (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
@@ -710,12 +712,12 @@ This is equivalent to do ``C-c`` in the console program."
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
     ;; should be in notebook constructor, not here
-    (ein:aif (ein:$notebook-kernelspec notebook)
+    (aif (ein:$notebook-kernelspec notebook)
         (setf (ein:$notebook-metadata notebook)
               (plist-put (ein:$notebook-metadata notebook)
                          :kernelspec (ein:notebook--spec-insert-name
                                       (ein:$kernelspec-name it) (ein:$kernelspec-spec it)))))
-    `((metadata . ,(ein:aif (ein:$notebook-metadata notebook)
+    `((metadata . ,(aif (ein:$notebook-metadata notebook)
                        it
                      (make-hash-table)))
       (cells . ,(apply #'vector all-cells)))))
@@ -849,7 +851,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
        (ein:notebook-tidy-opened-notebooks notebook)))))
 
 (defsubst ein:notebook-kill-buffer-query ()
-  (ein:aif (ein:get-notebook--notebook)
+  (aif (ein:get-notebook--notebook)
       (let ((buf (or (buffer-base-buffer (current-buffer))
                      (current-buffer))))
         (ein:notebook-ask-save it (apply-partially
@@ -1487,9 +1489,9 @@ watch the fireworks!"
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
   (when ein:notebook-mode
-    (ein:aif ein:helm-kernel-history-search-key
+    (aif ein:helm-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it helm-ein-kernel-history))
-    (ein:aif ein:anything-kernel-history-search-key
+    (aif ein:anything-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it anything-ein-kernel-history))
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
     (ein:worksheet-imenu-setup)))
@@ -1552,7 +1554,7 @@ the first argument and CBARGS as the rest of arguments."
 
 (defun ein:notebook-close-notebooks (&optional blithely)
   "Used in `ein:jupyter-server-stop' and `kill-emacs-query-functions' hook."
-  (ein:aif (ein:notebook-opened-notebooks)
+  (aif (ein:notebook-opened-notebooks)
       (if (and (cl-notevery #'identity (mapcar #'ein:notebook-close it))
                (not blithely))
           (y-or-n-p "Some notebooks could not be saved.  Exit anyway?")

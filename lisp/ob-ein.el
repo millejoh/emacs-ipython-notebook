@@ -36,6 +36,7 @@
 ;;; Code:
 (require 'ob)
 (require 'ein-utils)
+(require 'anaphora)
 
 (autoload 'org-element-property "org-element")
 (autoload 'org-element-context "org-element")
@@ -91,7 +92,7 @@
 (defcustom ob-ein-inline-image-directory "ein-images"
   "Store ob-ein images here."
   :group 'ein
-  :type '(directory))
+  :type 'directory)
 
 (defcustom ob-ein-default-header-args:ein nil
   "No documentation."
@@ -186,7 +187,7 @@ Based on ob-ipython--configure-kernel."
                       ein:url-localhost))
          (lang (nth 0 (org-babel-get-src-block-info)))
          (kernelspec (or (cdr (assoc :kernelspec processed-params))
-                         (ein:aif (cdr (assoc lang org-src-lang-modes))
+                         (aif (cdr (assoc lang org-src-lang-modes))
                              (cons 'language (format "%s" it))
                            (error "ob-ein--execute-body: %s not among %s"
                                   lang (mapcar #'car org-src-lang-modes)))))
@@ -236,7 +237,7 @@ Based on ob-ipython--configure-kernel."
 `ein:shared-output-eval-string' completes."
   (apply-partially
    (lambda (buffer* params* result-params* name* cell)
-     (let* ((raw (ein:aif (ein:oref-safe cell 'traceback)
+     (let* ((raw (aif (ein:oref-safe cell 'traceback)
                      (ansi-color-apply (ein:join-str "\n" it))
                    (ob-ein--process-outputs
                     (ein:oref-safe cell 'outputs) params*)))
@@ -352,7 +353,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
           (notebook (funcall callback notebook))
           ((string= (url-host parsed-url) ein:url-localhost)
            (ein:process-refresh-processes)
-           (ein:aif (ein:process-url-match nbpath)
+           (aif (ein:process-url-match nbpath)
                (ein:notebooklist-login (ein:process-url-or-port it) callback-login)
              (ein:jupyter-server-start
               (executable-find (or (ein:eval-if-bound 'ein:jupyter-default-server-command)

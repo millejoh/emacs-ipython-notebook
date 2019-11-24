@@ -178,7 +178,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
     (ein:log 'debug "object[[%s]] other-window[[%s]]" object other-window)
     (ein:case-equal msg-type
       (("stream" "display_data")
-       (ein:aif (or (plist-get content :text) (plist-get content :data))
+       (aif (or (plist-get content :text) (plist-get content :data))
            (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                (ein:log 'info
                  "Jumping to the source of %s...Not found" object)
@@ -239,7 +239,7 @@ is defined."
   (destructuring-bind (kernel object callback) packed
     (if (or (string= msg-type "stream")
             (string= msg-type "display_data"))
-        (ein:aif (or (plist-get content :text) (plist-get content :data))
+        (aif (or (plist-get content :text) (plist-get content :data))
             (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                 (ein:log 'info
                   "Source of %s not found" object)
@@ -282,7 +282,7 @@ given, open the last point in the other window."
     (when (ein:aand (car ein:pytools-jump-stack)
                     (equal (point) (marker-position it)))
       (setq ein:pytools-jump-stack (cdr ein:pytools-jump-stack)))
-    (ein:aif (car ein:pytools-jump-stack)
+    (aif (car ein:pytools-jump-stack)
         (ein:goto-marker it other-window)
       (ein:log 'info "Nothing on stack."))))
 

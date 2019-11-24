@@ -152,9 +152,9 @@
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (ein:and-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
-                             (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
-                             (ks (ein:get-kernelspec url-or-port found)))
+              (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
+                           (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
+                           (ks (ein:get-kernelspec url-or-port found)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (should notebook)
             (let ((buf-name (format ein:notebook-buffer-name-template
@@ -175,10 +175,10 @@
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
         (loop repeat 10
-              with buffer = (get-buffer ein:jupyter-server-buffer-name)
+              with buffer = (get-buffer *ein:jupyter-server-buffer-name*)
               until (null (get-buffer-process buffer))
               do (sleep-for 0 1000)
-              finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
+              finally do (aif (get-buffer-process buffer) (delete-process it)))
         (condition-case err
             (ein:testing-wait-until (lambda ()
                                       (null (ein:notebooklist-keys)))
@@ -187,7 +187,7 @@
                  (clrhash ein:notebooklist-map)))
         (unless final-p
           (When "I clear log expr \"ein:log-all-buffer-name\"")
-          (When "I clear log expr \"ein:jupyter-server-buffer-name\""))))
+          (When "I clear log expr \"*ein:jupyter-server-buffer-name*\""))))
 
 (When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
       (lambda (config)
@@ -349,8 +349,8 @@
       (lambda (negate bogey)
         (ein:testing-wait-until
          (lambda ()
-           (let* ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
-             (ein:aif (if negate (not says) says)
+           (let ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
+             (aif (if negate (not says) says)
                  it
                (when (with-current-buffer ein:log-all-buffer-name
                        (search "WS closed unexpectedly" (buffer-string)))

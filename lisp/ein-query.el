@@ -140,7 +140,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
           do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
                       running)
           do (sleep-for 3))
-    (ein:aif (gethash key ein:query-running-process-table)
+    (aif (gethash key ein:query-running-process-table)
         (unless (request-response-done-p it)
           (ein:log 'debug "Race! %s %s" key (request-response-data it))))
     (let ((response (apply #'request (url-encode-url url)

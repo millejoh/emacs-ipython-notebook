@@ -5,6 +5,7 @@
 (files "lisp/*.el" "lisp/*.py")
 
 (development
+ (depends-on "anaphora")
  (depends-on "websocket")
  (depends-on "request")
  (depends-on "dash")
