@@ -53,7 +53,7 @@ Scenario: company completion
   Given new python notebook
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
 
-@complete-ipy7
+@complete @skip-travis
 Scenario: company completion without execution
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
   Given I kill all websocket buffers

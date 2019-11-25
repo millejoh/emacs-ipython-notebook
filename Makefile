@@ -75,12 +75,12 @@ test: quick test-int test-poly
 test-poly:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
 	cp test/test-poly.el features/support/test-poly.el
-	cask exec ecukes --reporter magnars --tags ~@complete-ipy7 ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
+	cask exec ecukes --reporter magnars --tags ~@skip-travis; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
 
 .PHONY: test-int
 test-int:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-func.el
-	cask exec ecukes --reporter magnars --tags ~@poly-complete,~@complete-ipy7
+	cask exec ecukes --reporter magnars --tags ~@poly-complete,~@skip-travis
 
 .PHONY: test-unit
 test-unit:

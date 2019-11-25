@@ -112,6 +112,43 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I wait for buffer to say "3.1415"
   And I should not see "[....]"
 
+@org @complete
+Scenario: Completion in an anonymous source block
+  Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
+  Given I stop the server
+  When I open temp file "complete.org"
+  And I call "org-mode"
+  And I call "company-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein-python :kernelspec python3 :results raw drawer"
+  And I press "RET"
+  And I type "import itertools"
+  And I press "RET"
+  And I ctrl-c-ctrl-c
+  And I wait 5 seconds
+  And I should not see "[....]"
+  And I press "C-c '"
+  And I press "RET"
+  And I type "itertools.chai"
+  And I call "company-complete"
+  Then I should see "itertools.chain"
+
+@org
+Scenario Anonymous blocks with a kernelspec
+  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
+  Given I stop the server
+  When I open temp file "path.org"
+  And I call "org-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein-python :kernelspec python3 :results raw drawer"
+  And I press "RET"
+  And I type "(1 + 5 ** 0.5) / 2"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to say "1.618"
+  And I should not see "[....]"
+
 @org
 Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
