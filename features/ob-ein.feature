@@ -118,7 +118,6 @@ Scenario: Completion in an anonymous source block
   Given I stop the server
   When I open temp file "complete.org"
   And I call "org-mode"
-  And I call "company-mode"
   And I type "<s"
   And I press "TAB"
   And I type "ein-python :kernelspec python3 :results raw drawer"
@@ -129,6 +128,7 @@ Scenario: Completion in an anonymous source block
   And I wait 5 seconds
   And I should not see "[....]"
   And I press "C-c '"
+  And I call "company-mode"
   And I press "RET"
   And I type "itertools.chai"
   And I call "company-complete"
