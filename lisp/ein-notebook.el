@@ -1783,6 +1783,10 @@ the first argument and CBARGS as the rest of arguments."
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 
+;;;###autoload
+(defalias 'ein:exit 'ein:quit)
+
+;;;###autoload
 (defun ein:quit (&optional force)
   "Close all notebooks and servers."
   (interactive "P")
