@@ -1787,7 +1787,8 @@ the first argument and CBARGS as the rest of arguments."
   "Close all notebooks and servers."
   (interactive "P")
   (ein:notebook-close-notebooks force)
-  (ein:jupyter-server-stop force)) ; autoloaded
+  (when (featurep 'ein-jupyter)
+    (ein:jupyter-server-stop force))) ; autoloaded
 
 
 (defun ein:notebook-kill-buffer-callback ()
