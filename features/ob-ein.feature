@@ -115,6 +115,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
 @org @complete
 Scenario: Completion in an anonymous source block
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
+  Given I eval "(global-company-mode +1)"
   Given I stop the server
   When I open temp file "complete.org"
   And I call "org-mode"
@@ -128,7 +129,6 @@ Scenario: Completion in an anonymous source block
   And I wait 5 seconds
   And I should not see "[....]"
   And I press "C-c '"
-  And I call "company-mode"
   And I press "RET"
   And I type "itertools.chai"
   And I call "company-complete"
