@@ -1783,6 +1783,18 @@ the first argument and CBARGS as the rest of arguments."
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 
+;;;###autoload
+(defalias 'ein:exit 'ein:quit)
+
+;;;###autoload
+(defun ein:quit (&optional force)
+  "Close all notebooks and servers."
+  (interactive "P")
+  (ein:notebook-close-notebooks force)
+  (when (featurep 'ein-jupyter)
+    (ein:jupyter-server-stop force))) ; autoloaded
+
+
 (defun ein:notebook-kill-buffer-callback ()
   "Call notebook destructor.  This function is called via `kill-buffer-hook'."
   ;; TODO - it remains a bug that neither `ein:notebook-kill-buffer-callback'
