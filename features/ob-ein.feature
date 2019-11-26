@@ -112,7 +112,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I wait for buffer to say "3.1415"
   And I should not see "[....]"
 
-@org @complete
+@org @complete @skip-travis
 Scenario: Completion in an anonymous source block
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
   Given I eval "(global-company-mode +1)"

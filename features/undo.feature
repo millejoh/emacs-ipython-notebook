@@ -23,7 +23,7 @@ Scenario: Kill yank doesn't break undo
   And I press "C-<down>"
   And I press "C-c C-y"
   And I press "C-/"
-  Then the cursor should be at point "75"
+  Then the cursor should be at point "74"
 
 @undo
 Scenario: Collapse doesn't break undo
