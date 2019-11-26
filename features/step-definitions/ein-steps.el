@@ -210,7 +210,7 @@
         (When "I stop the server")
         (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
         (let ((ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py")))
-          (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command)
+          (ein:jupyter-server-start (executable-find ein:jupyter-server-command)
                                     ein:testing-jupyter-server-root (not login)))
         (if login
             (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
@@ -394,16 +394,18 @@
 (When "^I start bad jupyter path$"
       (lambda ()
         (condition-case err
-            (let* ((*ein:last-jupyter-command* "not-jupyter")
-                   (ein:jupyter-default-server-command *ein:last-jupyter-command*))
+            (let ((ein:jupyter-server-command "not-jupyter"))
               (cl-letf (((symbol-function 'read-file-name)
-                         (lambda (&rest args) ein:jupyter-default-server-command))
+                         (lambda (&rest args) ein:jupyter-server-command))
+                        ((symbol-function 'read-string)
+                         (lambda (&rest args)
+                           (error "%s" (car args))))
                         ((symbol-function 'read-directory-name)
                          (lambda (&rest args) ein:jupyter-default-notebook-directory)))
                 (call-interactively #'ein:jupyter-server-start))
               ;; should err before getting here
               (should-not t))
-          (error (should (search "not-jupyter not found" (error-message-string err)))))))
+          (error (should (search "Server command:" (error-message-string err)))))))
 
 (When "^I create a directory \"\\(.+\\)\" with depth \\([0-9]+\\) and width \\([0-9]+\\)$"
       (lambda (dir depth width)

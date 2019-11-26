@@ -72,8 +72,8 @@
  (ein:dev-start-debug)
  (cl-assert (boundp 'company-frontends))
  (custom-set-variables '(company-frontends nil)
-                       '(ein:jupyter-use-docker-stacks nil)
-                       '(python-indent-guess-indent-offset-verbose nil))
+                       '(python-indent-guess-indent-offset-verbose nil)
+                       '(ein:jupyter-use-containers nil))
  (setq ein:jupyter-default-kernel
        (loop with cand = ""
              for (k . spec) in
@@ -83,7 +83,7 @@
                 (json-read-from-string
                  (shell-command-to-string
                   (format "%s kernelspec list --json"
-                          ein:jupyter-default-server-command)))))
+                          ein:jupyter-server-command)))))
              if (let ((lang (alist-get 'language (alist-get 'spec spec))))
                   (and (string= "python" lang)
                        (string> (symbol-name k) cand)))

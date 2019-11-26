@@ -179,7 +179,12 @@
             (ein:notebooklist-login url-or-port callback2)))
       (let* ((nbdir (read-directory-name "Notebook directory: "
                                          (ein:process-suitable-notebook-dir filename)))
-             (path (cl-subseq filename (length (file-name-as-directory nbdir))))
+             (path
+              (concat (if ein:jupyter-use-containers
+                          (file-name-as-directory
+                           (file-name-base ein:jupyter-docker-mount-point))
+                        "")
+                      (cl-subseq filename (length (file-name-as-directory nbdir)))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
                                            (ein:notebook-open url-or-port
@@ -190,8 +195,7 @@
 
 (defun ein:process-open-notebook (&optional filename buffer-callback)
   "When FILENAME is unspecified the variable `buffer-file-name'
-   is used instead.  BUFFER-CALLBACK is called after opening notebook with the
-   current buffer as the only one argument."
+is used instead.  BUFFER-CALLBACK is called after notebook opened."
   (interactive)
   (unless filename (setq filename buffer-file-name))
   (assert filename nil "Not visiting a file")
@@ -205,8 +209,8 @@
 (defun ein:process-find-file-callback ()
   "A callback function for `find-file-hook' to open notebook."
   (interactive)
-  (ein:and-let* ((filename buffer-file-name)
-                 ((string-match-p "\\.ipynb$" filename)))
+  (when-let* ((filename buffer-file-name)
+              (match-p (string-match-p "\\.ipynb$" filename)))
     (ein:process-open-notebook filename #'kill-buffer-if-not-modified)))
 
 (provide 'ein-process)

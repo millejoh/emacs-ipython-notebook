@@ -40,9 +40,8 @@ Optionally append ':tag', e.g., ':latest' in the customary way."
   :group 'ein
   :type 'string)
 
-(defcustom ein:jupyter-docker-home-directory "/home/jovyan/work"
-  "Directory in docker image where to mount `ein:jupyter-default-notebook-directory'.
-Defaults to home directory of 'jupyter docker stacks' on hub.docker.com."
+(defcustom ein:jupyter-docker-mount-point "/home/jovyan/ipynb"
+  "Directory in docker image where to mount `ein:jupyter-default-notebook-directory'."
   :group 'ein
   :type 'string)
 
@@ -119,7 +118,7 @@ with the call to the jupyter notebook."
                        (split-string
                         (format "run --network host -v %s:%s %s %s"
                                 dir
-                                ein:jupyter-docker-home-directory
+                                ein:jupyter-docker-mount-point
                                 ein:jupyter-docker-additional-switches
                                 ein:jupyter-docker-image)))
                       (t
@@ -129,7 +128,7 @@ with the call to the jupyter notebook."
                                args
                                (let ((copy ein:jupyter-server-args))
                                  (when ein:debug
-                                   (add-to-list copy "--debug"))
+                                   (add-to-list 'copy "--debug"))
                                  copy)))))
          (proc (apply #'start-process
                       *ein:jupyter-server-process-name* buf cmd vargs)))
