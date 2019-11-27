@@ -296,11 +296,11 @@ one at a time.  Further, we do not order the queued up blocks!"
                  candidate)))
             (t (ein:url session))))))
 
-(defun ob-ein--initiate-session (session kernelspec callback)
+(defun ob-ein--initiate-session (session kernelspec callback &optional babel-info)
   "Retrieve notebook based on SESSION path and KERNELSPEC, starting jupyter instance
 if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
   (let* ((nbpath (ob-ein--parse-session session))
-         (info (org-babel-get-src-block-info))
+         (info (or (org-babel-get-src-block-info) babel-info))
          (anonymous-path (format ob-ein-anonymous-path (nth 0 info)))
          (parsed-url (url-generic-parse-url nbpath))
          (slash-path (car (url-path-and-query parsed-url)))
@@ -397,7 +397,7 @@ Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute 
                                   (unless (string= "none" it)
                                     (format "%s" it)))
                         ein:url-localhost))
-           (lang "ein-python")
+           (lang (car babel-info))
            (kernelspec (or (cdr (assoc :kernelspec processed-parameters))
                            (ein:aif (cdr (assoc lang org-src-lang-modes))
                                (cons 'language (format "%s" it))
@@ -408,7 +408,8 @@ Instead the binding will be to `ob-ein--edit-ctrl-c-ctrl-c', which will execute 
        kernelspec
        (lambda (notebook)
          (ein:connect-buffer-to-notebook notebook buffer t)
-         (define-key ein:connect-mode-map "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))))))
+         (define-key ein:connect-mode-map "\C-c\C-c" 'ob-ein--edit-ctrl-c-ctrl-c))
+       babel-info))))
 
 (defun org-babel-edit-prep:ein-python (babel-info)
   (org-babel-edit-prep:ein babel-info))
