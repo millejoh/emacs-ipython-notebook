@@ -425,7 +425,7 @@
       (lambda (variable value)
         (set (intern variable) (eval (car (read-from-string value))))))
 
-(When "^I eval \"\\(.+\\)\"$"
+(When "^I eval \\(.+\\)$"
       (lambda (expr)
         (eval (car (read-from-string expr)))))
 

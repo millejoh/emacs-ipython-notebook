@@ -31,6 +31,7 @@
 
 (require 'ein-kernel)
 (require 'ein-notebook)
+(require 'ein-shared-output)
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.
@@ -410,8 +411,39 @@ Currently EIN/IPython supports exporting to the following formats:
   "Set the default figure size for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
   (interactive "nWidth: \nnHeight: ")
   (ein:shared-output-eval-string (ein:get-kernel)
-                                 (format "__ein_set_figure_size(%s,%s)" width height)
+                                 (format "__ein_set_figure_size('[%s, %s]')" width height)
                                  nil))
+
+(defun ein:pytools-set-figure-dpi (dpi)
+  "Set the default figure dpi for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
+  (interactive "nFigure DPI: ")
+  (ein:shared-output-eval-string (ein:get-kernel)
+                                 (format "__ein_set_figure_dpi('%s')" dpi)
+                                 nil))
+
+(defun ein:pytools-set-matplotlib-parameter (param value)
+  "Generically set any matplotlib parameter exposed in the matplotlib.pyplot.rcParams variable. Value is evaluated as a Python expression, so be careful of side effects."
+  (interactive
+   (list (completing-read "Parameter: " (ein:pytools--get-matplotlib-params) nil t)
+         (read-string "Value: " nil)))
+  (let* ((split (cl-position ?. param))
+         (family (cl-subseq param 0 split))
+         (setting (cl-subseq param (1+ split))))
+    (ein:shared-output-eval-string (ein:get-kernel)
+                                   (format "__ein_set_matplotlib_param('%s', '%s', '%s')" family setting value)
+                                   nil)))
+
+(defun ein:pytools--get-matplotlib-params ()
+  (ein:shared-output-eval-string (ein:get-kernel)
+                                 (format "__ein_get_matplotlib_params()")
+                                 nil)
+  (with-current-buffer (ein:shared-output-create-buffer)
+    (ein:wait-until #'(lambda ()
+                       (slot-value (slot-value *ein:shared-output* :cell) :outputs))
+                    nil
+                    5.0)
+    (let ((outputs (first (slot-value (slot-value *ein:shared-output* :cell) :outputs))))
+      (ein:json-read-from-string (plist-get outputs :text)))))
 
 (provide 'ein-pytools)
 

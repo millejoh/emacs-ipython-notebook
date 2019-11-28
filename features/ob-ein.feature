@@ -115,7 +115,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
 @org @complete @skip-travis
 Scenario: Completion in an anonymous source block
   Given I set "ein:completion-backend" to eval "(quote ein:use-company-backend)"
-  Given I eval "(global-company-mode +1)"
+  Given I eval (global-company-mode +1)
   Given I stop the server
   When I open temp file "complete.org"
   And I call "org-mode"
