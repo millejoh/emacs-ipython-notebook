@@ -445,6 +445,23 @@ Currently EIN/IPython supports exporting to the following formats:
     (let ((outputs (first (slot-value (slot-value *ein:shared-output* :cell) :outputs))))
       (ein:json-read-from-string (plist-get outputs :text)))))
 
+(defun ein:pytools--estimate-screen-dpi ()
+  (let* ((pixel-width (display-pixel-width))
+         (pixel-height (display-pixel-height))
+         (in-width (/ (display-mm-width) 25.4))
+         (in-height (/ (display-mm-height) 25.4)))
+    (values (/ pixel-width in-width) (/ pixel-height in-height))))
+
+(defun ein:pytools-matplotlib-api-correction ()
+  "Estimate the screen dpi and set the matplotlib rc parameter 'figure.dpi' to that value. Call this command *after* importing matplotlib into your notebook, else this setting will be overwritten after the first call to `import matplotlib' Further testing is needed to see how well this works on high resolution displays."
+  (interactive)
+  (multiple-value-bind (dpi-w dpi-h) (ein:pytools--estimate-screen-dpi)
+    (let ((dpi (/ (+ dpi-w dpi-h) 2.0)))
+      (ein:log 'info "Setting matplotlib scaling to: %s dpi" dpi)
+      (ein:pytools-set-figure-dpi dpi))))
+
+
+
 (provide 'ein-pytools)
 
 ;;; ein-pytools.el ends here
