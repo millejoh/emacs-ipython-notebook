@@ -20,6 +20,14 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+__ein_pytools_version = "1.0.0"
+
+try:
+    from matplotlib import rc as __ein_rc
+    from matplotlib import rcParams as __ein_rcParams
+    __ein_matplotlib_available = True
+except ImportError:
+    __ein_matplotlib_available = False
 
 def __ein_export_nb(nb_json, format):
     import IPython.nbconvert as nbconvert
@@ -61,12 +69,31 @@ try:
 except ImportError:
     __ein_find_edit_target = __ein_find_edit_target_012
 
-def __ein_set_figure_size(*dim):
-    try:
-        from matplotlib.pyplot import rcParams
-        rcParams['figure.figsize'] = dim
-    except:
+
+def __ein_set_matplotlib_param(family, setting, value):
+    settings = {}
+    if __ein_matplotlib_available:
+        settings[setting] = eval(value)
+        __ein_rc(family, **settings)
+    else:
         raise RuntimeError("Matplotlib not installed in this instance of python!")
+
+
+def __ein_set_figure_size(dim):
+    __ein_set_matplotlib_param('figure', 'figsize', dim)
+
+
+def __ein_set_figure_dpi(dpi):
+    __ein_set_matplotlib_param('figure', 'dpi', dpi)
+
+
+def __ein_get_matplotlib_params():
+    if __ein_matplotlib_available:
+        import json
+        print(json.dumps([k for k in __ein_rcParams.keys()]))
+    else:
+        raise RuntimeError("Matplotlib not installed in this instance of python!")
+
 
 def __ein_find_source(name):
     """Given an object as string, `name`, print its place in source code."""
