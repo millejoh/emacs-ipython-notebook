@@ -20,7 +20,7 @@ along with ein.py.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-__ein_pytools_version = "1.0.0"
+__ein_pytools_version = "1.1.0"
 
 try:
     from matplotlib import rc as __ein_rc
@@ -116,6 +116,16 @@ def __ein_run_docstring_examples(obj, verbose=True):
     return doctest.run_docstring_examples(obj, globs, verbose=verbose)
 
 
+def __ein_generate_oinfo_data(ostrings, locals=None):
+    import json
+
+    defined_objects = [__ein_maybe_undefined_object(obj, locals) for obj in ostrings
+                       if __ein_maybe_undefined_object(obj, locals) is not None]
+    odata = [__ein_object_info_for(obj) for obj in defined_objects]
+
+    print (json.dumps(odata))
+    return odata
+
 def __ein_maybe_undefined_object(obj, locals=None):
     try:
         return eval(obj, None, locals)
@@ -124,16 +134,15 @@ def __ein_maybe_undefined_object(obj, locals=None):
     except SyntaxError:
         return None
 
-def __ein_print_object_info_for(obj):
+def __ein_object_info_for(obj):
     import IPython.core.oinspect
-    import json
 
     inspector = IPython.core.oinspect.Inspector()
 
     try:
-        print(json.dumps(inspector.info(obj)))
+        return inspector.info(obj)
     except Exception:
-        print(json.dumps(inspector.info(None)))
+        return inspector.info(None)
 
 def __ein_eval_hy_string(obj):
     try:

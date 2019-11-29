@@ -109,44 +109,53 @@
 
 (defun ein:completions-get-cached (partial oinfo-cache)
   (cl-loop for candidate being the hash-keys of oinfo-cache
-    when (string-prefix-p partial candidate)
-    collect candidate))
+           when (string-prefix-p partial candidate)
+           collect candidate))
 
-(defun ein:completions--get-oinfo (obj)
+(defun ein:completions--get-oinfo (objs)
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
     (if (ein:kernel-live-p kernel)
         (ein:kernel-execute
          kernel
-         (format "__ein_print_object_info_for(__ein_maybe_undefined_object(r\"%s\", locals()))" obj)
+         (format "__ein_generate_oinfo_data(%s, locals())" objs)
          (list
           :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
       (deferred:callback-post d "kernel not live"))
     d))
 
-(defun ein:completions--build-oinfo-cache (objs)
-  (let ((kernel (ein:get-kernel)))
-    (dolist (o (-non-nil objs))
-      (deferred:$
-        (deferred:next
-          (lambda ()
-            (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
-        (deferred:nextc it
-          (lambda (output)
-            (if (stringp output)
-                (ein:display-warning output :error)
-              (ein:completions--prepare-oinfo output o kernel))))))))
+(defun ein:completions--build-oinfo-cache (objects)
+  (cl-labels ((object-string (o)
+                             (format "'%s'" (ein:trim o "\\s-\\|\n\\|\\.")))
+              (to-ostrings (objs)
+                           (s-join ", " (-map #'(lambda (x) (object-string x))
+                                              objs))))
+    (unless (> (length objects) 50)
+      (let ((kernel (ein:get-kernel))
+            (ostrings (format "[%s]" (to-ostrings (-non-nil objects)))))
+        (deferred:$
+          (deferred:next
+            (lambda ()
+              (ein:completions--get-oinfo ostrings)))
+          (deferred:nextc it
+            (lambda (output)
+              (if (stringp output)
+                  (ein:display-warning output :error)
+                (ein:completions--prepare-oinfo output objects kernel)))))))))
 
-(defun ein:completions--prepare-oinfo (output obj kernel)
+
+(defun ein:completions--prepare-oinfo (output objs kernel)
   (condition-case err
       (cl-destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
            (ein:aif (plist-get content :text)
-               (let ((oinfo (ein:json-read-from-string it)))
-                 (unless (string= (plist-get oinfo :string_form) "None")
-                   (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
-                         oinfo)))))
+               (let ((all-oinfo (ein:json-read-from-string it)))
+                 (cl-loop for oinfo in all-oinfo
+                          for obj in objs
+                          doing (unless (string= (plist-get oinfo :string_form) "None")
+                                  (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
+                                        oinfo))))))
           (("error" "pyerr")
            (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
                     (plist-get content :traceback)))))
@@ -154,8 +163,7 @@
      (ein:log 'verbose "ein:completions--prepare-oinfo: [%s]"
               (error-message-string err))
      (let (eval-expression-print-length eval-expression-print-level)
-       (prin1 output #'external-debugging-output))
-     (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
+       (prin1 output #'external-debugging-output)))))
 
 ;;; Support for Eldoc
 
