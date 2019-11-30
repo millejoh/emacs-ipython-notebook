@@ -124,24 +124,28 @@
       (deferred:callback-post d "kernel not live"))
     d))
 
+(defvar ein:oinfo-chunk-size 50)
+
 (defun ein:completions--build-oinfo-cache (objects)
   (cl-labels ((object-string (o)
                              (format "'%s'" (ein:trim o "\\s-\\|\n\\|\\.")))
               (to-ostrings (objs)
                            (s-join ", " (-map #'(lambda (x) (object-string x))
-                                              objs))))
-    (unless (> (length objects) 50)
-      (let ((kernel (ein:get-kernel))
-            (ostrings (format "[%s]" (to-ostrings (-non-nil objects)))))
-        (deferred:$
-          (deferred:next
-            (lambda ()
-              (ein:completions--get-oinfo ostrings)))
-          (deferred:nextc it
-            (lambda (output)
-              (if (stringp output)
-                  (ein:display-warning output :error)
-                (ein:completions--prepare-oinfo output objects kernel)))))))))
+                                              objs)))
+              (do-completions (ostrings kernel)
+                              (deferred:$
+                                (deferred:next
+                                  (lambda ()
+                                    (ein:completions--get-oinfo ostrings)))
+                                (deferred:nextc it
+                                  (lambda (output)
+                                    (if (stringp output)
+                                        (ein:display-warning output :error)
+                                      (ein:completions--prepare-oinfo output objects kernel)))))))
+    (if (< (length objects) ein:oinfo-chunk-size)
+        (do-completions (format "[%s]" (to-ostrings (-non-nil objects))) (ein:get-kernel))
+      (dolist (chunk (-partition-all ein:oinfo-chunk-size (-non-nil objects)))
+        (do-completions (format "[%s]" (to-ostrings chunk)) (ein:get-kernel))))))
 
 
 (defun ein:completions--prepare-oinfo (output objs kernel)
