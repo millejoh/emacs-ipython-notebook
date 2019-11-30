@@ -452,7 +452,7 @@ Currently EIN/IPython supports exporting to the following formats:
          (in-height (/ (display-mm-height) 25.4)))
     (values (/ pixel-width in-width) (/ pixel-height in-height))))
 
-(defun ein:pytools-matplotlib-api-correction ()
+(defun ein:pytools-matplotlib-dpi-correction ()
   "Estimate the screen dpi and set the matplotlib rc parameter 'figure.dpi' to that value. Call this command *after* importing matplotlib into your notebook, else this setting will be overwritten after the first call to `import matplotlib' Further testing is needed to see how well this works on high resolution displays."
   (interactive)
   (multiple-value-bind (dpi-w dpi-h) (ein:pytools--estimate-screen-dpi)
