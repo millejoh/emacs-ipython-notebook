@@ -4,7 +4,7 @@ Scenario: Check that pytools are being loaded.
   And I type "__ein_pytools_version"
   And I press "M-RET"
   And I wait for the smoke to clear
-  Then I should see "1.0.0"
+  Then I should see "1.1.0"
 
 @pytools @matplotlib
 Scenario: Setting matplotlib figure size.
