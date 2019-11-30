@@ -144,6 +144,13 @@ def __ein_object_info_for(obj):
     except Exception:
         return inspector.info(None)
 
+
+def __ein_print_object_info_for(obj):
+    import json
+
+    oinfo = __ein_object_info_for(obj)
+    print (json.dumps(oinfo))
+
 def __ein_eval_hy_string(obj):
     try:
         import hy
