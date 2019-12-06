@@ -171,7 +171,8 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   (ein:and-let* ((old-cell-id (car change-cell-id))
                  (new-cell-id (cdr change-cell-id))
                  (changed-p (not (eq old-cell-id new-cell-id))))
-    (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
+    (when changed-p
+      (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%))))
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
         (progn
@@ -187,12 +188,13 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
             (ein:display-warning msg :error)
             (error "ein:worksheet--jigger-undo-list: aborting")))
       (if (< fill 0)
-          (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
+          (setq ein:%which-cell% (nthcdr (- fill) ein:%which-cell%))
         (if (> fill 0)
             (setq ein:%which-cell%
                   (nconc (make-list fill (car ein:%which-cell%))
                          ein:%which-cell%))))))
-  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
+  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%))
+             t
              "ein:worksheet--jigger-undo-list %d != %d"
              (length buffer-undo-list) (length ein:%which-cell%)))
 
@@ -200,7 +202,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   "Adjust `buffer-undo-list' for adding CELL.  Unshift in list parlance means prepending to list."
   (unless old-cell
     (setq old-cell cell))
-  (when buffer-local-enable-undo
+  (when (and (listp buffer-undo-list) buffer-local-enable-undo)
     (ein:with-live-buffer (ein:cell-buffer cell)
       (let* ((opl (ein:worksheet--prompt-length old-cell t))
              (ool (ein:worksheet--output-length old-cell t))
