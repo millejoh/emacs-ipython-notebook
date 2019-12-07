@@ -1,3 +1,4 @@
+
 @undo
 Scenario: Undo turned off
   Given I disable "ein:worksheet-enable-undo"
@@ -353,3 +354,16 @@ Scenario: Split and merge don't break undo
   And I undo again
   And I undo again
   Then the cursor should be at point "93"
+
+@undo, @issue-630
+Scenario: Regression case for issue #630.
+  Given I enable "ein:worksheet-enable-undo"
+  Given new python notebook
+  And I type "while True:"
+  And I press "RET"
+  and I type "print(1)"
+  And I press "M-RET"
+  And I wait 2 seconds
+  And I switch to buffer like "*Messages*"
+  And I wait 2 seconds
+  Then I should not see "ein: [info] WS action"
