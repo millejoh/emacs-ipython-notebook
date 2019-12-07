@@ -166,14 +166,14 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     result))
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
-  (if (/= (length buffer-undo-list) (length ein:%which-cell%))
+  (if (/= (safe-length buffer-undo-list) (length ein:%which-cell%))
       (ein:log 'debug "jig %s to %s: %S %S" (length ein:%which-cell%) (length buffer-undo-list) buffer-undo-list ein:%which-cell%))
   (ein:and-let* ((old-cell-id (car change-cell-id))
                  (new-cell-id (cdr change-cell-id))
                  (changed-p (not (eq old-cell-id new-cell-id))))
     (when changed-p
       (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%))))
-  (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
+  (let ((fill (- (safe-length buffer-undo-list) (length ein:%which-cell%))))
     (if (> (abs fill) 1)
         (progn
           (let ((msg (format "Undo failure diagnostic %s %s | %s"
@@ -193,16 +193,16 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
             (setq ein:%which-cell%
                   (nconc (make-list fill (car ein:%which-cell%))
                          ein:%which-cell%))))))
-  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%))
+  (cl-assert (= (safe-length buffer-undo-list) (length ein:%which-cell%))
              t
              "ein:worksheet--jigger-undo-list %d != %d"
-             (length buffer-undo-list) (length ein:%which-cell%)))
+             (safe-length buffer-undo-list) (length ein:%which-cell%)))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.  Unshift in list parlance means prepending to list."
   (unless old-cell
     (setq old-cell cell))
-  (when (and (listp buffer-undo-list) buffer-local-enable-undo)
+  (when buffer-local-enable-undo
     (ein:with-live-buffer (ein:cell-buffer cell)
       (let* ((opl (ein:worksheet--prompt-length old-cell t))
              (ool (ein:worksheet--output-length old-cell t))
