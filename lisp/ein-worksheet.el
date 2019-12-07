@@ -149,6 +149,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                  (numberp (car (last u))) (numberp (cdr (last u))))
             (append (cl-subseq u 0 3)
                     (cons (+ ,distance (car (last u)))
+
                           (+ ,distance (cdr (last u))))))
            ((and (consp u) (eq (car u) 'apply)
                  (numberp (nth 2 u)) (numberp (nth 3 u)))
@@ -236,9 +237,9 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                     (ein:log 'debug "unsh adj %s %s" u cell-id)
                     (setq lst (nconc lst (list (funcall func-after-cell u)))))
                 (setq lst (nconc lst (list u)))))))
-        (cl-assert (= (length buffer-undo-list) (length lst)) t
+        (cl-assert (= (safe-length buffer-undo-list) (length lst)) t
                    "ein:worksheet--unshift-undo-list %d != %d"
-                   (length buffer-undo-list) (length lst))
+                   (safe-length buffer-undo-list) (length lst))
         (setq buffer-undo-list lst)
         (ein:worksheet--update-cell-lengths cell exogenous-input)))))
 
