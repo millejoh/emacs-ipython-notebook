@@ -363,7 +363,6 @@ Scenario: Regression case for issue #630.
   And I press "RET"
   and I type "print(1)"
   And I press "M-RET"
-  And I wait 2 seconds
   And I switch to buffer like "*Messages*"
-  And I wait 2 seconds
-  Then I should not see "ein: [info] WS action"
+  Then I should not see "ein: [info] WS action ([wrong-type-argument sequencep t])"
+  Then I should not see "ein: [info] WS action ([error ein:worksheet--unshift-undo-list"
