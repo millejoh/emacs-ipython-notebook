@@ -174,18 +174,22 @@ This function adds NBLIST to `ein:notebooklist-map'."
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
 (defvar ein:jupyter-default-server-command)
+(defun ein:jupyter-notebook-list (caller)
+  "Return list of local notebooks as JSON."
+  (condition-case err
+      (mapcar #'ein:json-read-from-string
+              (process-lines ein:jupyter-default-server-command
+                             "notebook" "list" "--json"))
+    ;; often there is no local jupyter installation
+    (error (ein:log 'info "ein:jupyter-notebook-list(%s): %s" caller err)
+           nil)))
+
 (defun ein:crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (ein:aif (cl-loop for line in (condition-case err
-                                    (process-lines ein:jupyter-default-server-command
-                                                   "notebook" "list" "--json")
-                                  ;; often there is no local jupyter installation
-                                  (error (ein:log 'info "ein:crib-token: %s" err) nil))
+  (ein:aif (cl-loop for json in (ein:jupyter-notebook-list 'ein:crib-token)
              with token0
              with password0
-             when (cl-destructuring-bind
-                        (&key password url token &allow-other-keys)
-                      (ein:json-read-from-string line)
+             when (cl-destructuring-bind (&key password url token &allow-other-keys) json
                     (prog1 (equal (ein:url url) url-or-port)
                       (setq password0 password) ;; t or :json-false
                       (setq token0 token)))
@@ -194,14 +198,9 @@ This function adds NBLIST to `ein:notebooklist-map'."
 
 (defun ein:crib-running-servers ()
   "Shell out to jupyter for running servers."
-  (cl-loop for line in (condition-case err
-                           (process-lines ein:jupyter-default-server-command
-                                          "notebook" "list" "--json")
-                         (error (ein:log 'info "ein:crib-running-servers: %s" err)
-                                nil))
-    collecting (cl-destructuring-bind
-                     (&key url &allow-other-keys)
-                   (ein:json-read-from-string line) (ein:url url))))
+  (cl-loop for json in (ein:jupyter-notebook-list 'ein:crib-running-servers)
+    collecting (cl-destructuring-bind (&key url &allow-other-keys) json
+                 (ein:url url))))
 
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password (jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."

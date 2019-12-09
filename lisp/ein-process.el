@@ -123,14 +123,8 @@
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
-  (cl-loop for line in (condition-case err
-                           (process-lines ein:jupyter-default-server-command
-                                          "notebook" "list" "--json")
-                         ;; often there is no local jupyter installation
-                         (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
-    do (cl-destructuring-bind
-             (&key pid url notebook_dir &allow-other-keys)
-           (ein:json-read-from-string line)
+  (cl-loop for json in (ein:jupyter-notebook-list 'ein:process-refresh-processes)
+    do (cl-destructuring-bind (&key pid url notebook_dir &allow-other-keys) json
          (puthash (directory-file-name notebook_dir)
                   (make-ein:$process :pid pid
                                      :url (ein:url url)
