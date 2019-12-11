@@ -157,12 +157,11 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 
 (defun ein:get-response-redirect (response)
   "Determine if the query has been redirected, and if so return then URL the request was redirected to."
-  (if (length (request-response-history response))
       (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
         (format "%s://%s:%s"
                 (url-type url)
                 (url-host url)
-                (url-port url)))))
+                (url-port url))))
 
 
 ;;; Cookie
