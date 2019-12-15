@@ -133,7 +133,7 @@ global setting.  For global setting and more information, see
       (setq content (ein:new-content url-or-port path data)))
     (if (and response
 	     (> (length (request-response-history response)) 0))
-	(setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
+	(setf (ein:$content-url-or-port content) (ein:get-response-redirect response)))
     (when callback
       (funcall callback content))))
 
