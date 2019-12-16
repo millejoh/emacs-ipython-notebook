@@ -44,7 +44,7 @@ matrix:
       env: EMACS_CI=emacs-26-3 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python PIP="pip install" TOXENV=py27
+      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
