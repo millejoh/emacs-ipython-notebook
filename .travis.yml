@@ -63,7 +63,7 @@ install:
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
   - hash -r
-  - ${PY} -m jupyter kernelspec list
+  - jupyter kernelspec list
   - curl --version
   - ipython --version
 

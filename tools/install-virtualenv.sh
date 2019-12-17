@@ -27,6 +27,9 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
         py37)
             pyenv install -s 3.7.5
             pyenv virtualenv -f 3.7.5 py37
+            pyenv rehash
+            pyenv global 3.7.5
+            pyenv version
             ;;
     esac
 fi
