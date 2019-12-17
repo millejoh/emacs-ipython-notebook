@@ -25,8 +25,8 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
             pyenv virtualenv -f 3.6.9 py36
             ;;
         py37)
-            pyenv install -s 3.7.6
-            pyenv virtualenv -f 3.7.6 py37
+            pyenv install -s 3.7.5
+            pyenv virtualenv -f 3.7.5 py37
             ;;
     esac
 fi
