@@ -10,6 +10,8 @@ WORKDIR=${HOME}/local
 
 if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
     brew list pyenv-virtualenv &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv-virtualenv
+    eval "$(pyenv init -)" ;
+    eval "$(pyenv virtualenv-init -)"
 
     case "${TOXENV}" in
         py27)
@@ -28,8 +30,6 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
             pyenv install -s 3.7.5
             pyenv virtualenv -f 3.7.5 py37
             pyenv rehash
-            pyenv global 3.7.5
-            pyenv version
             ;;
     esac
 fi

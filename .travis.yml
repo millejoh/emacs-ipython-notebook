@@ -53,7 +53,6 @@ install:
   - sh tools/install-virtualenv.sh
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
-      eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
       pip install virtualenv ;
     fi
