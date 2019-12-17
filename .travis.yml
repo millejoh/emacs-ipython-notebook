@@ -44,7 +44,7 @@ matrix:
       env: EMACS_CI=emacs-26-3 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
+      env: EVM_EMACS=emacs-25.2 IPYTHON=5.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
@@ -63,7 +63,7 @@ install:
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
   - hash -r
-  - jupyter kernelspec list
+  - ${PY} -m jupyter kernelspec list
   - curl --version
   - ipython --version
 
