@@ -44,7 +44,7 @@ matrix:
       env: EMACS_CI=emacs-26-3 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-25.2 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
+      env: EVM_EMACS=emacs-25.2 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
@@ -56,10 +56,9 @@ install:
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
       pip install virtualenv ;
-      pip install prompt-toolkit==2.0.9 ;
     fi
   - ${PIP} --upgrade pip
-  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2 epc
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 numpy\<=1.16.0 matplotlib\<=3.0.2 epc
   - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
