@@ -12,7 +12,6 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
     brew list pyenv-virtualenv &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv-virtualenv
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
-    exec "$SHELL"
 
     case "${TOXENV}" in
         py27)
