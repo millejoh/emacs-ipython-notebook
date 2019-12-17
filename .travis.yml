@@ -44,7 +44,7 @@ matrix:
       env: EMACS_CI=emacs-26-3 IPYTHON=7.8.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: osx
       language: generic
-      env: EVM_EMACS=emacs-26.1 IPYTHON=5.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
+      env: EVM_EMACS=emacs-26.3 IPYTHON=5.8.0 PY=python3 PIP="${PY} -m pip install" TOXENV=py37
 
   allow_failures:
     - env: EMACS_CI=emacs-snapshot
@@ -69,7 +69,6 @@ install:
 before_script:
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
-      brew install gpg
       sh tools/install-evm.sh
       evm config path $HOME/.evm
       evm install $EVM_EMACS --use --skip
