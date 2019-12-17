@@ -56,6 +56,7 @@ install:
       eval "$(pyenv init -)" ;
       pyenv activate $TOXENV ;
       pip install virtualenv ;
+      pip install prompt-toolkit=2.0.9 ;
     fi
   - ${PIP} --upgrade pip
   - ${PIP} wheel jupyter ipython\<=$IPYTHON jedi\>=0.15.1 ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2 epc
