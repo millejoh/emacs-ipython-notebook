@@ -69,6 +69,7 @@ install:
 before_script:
   - |
     if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
+      brew install gpg
       sh tools/install-evm.sh
       evm config path $HOME/.evm
       evm install $EVM_EMACS --use --skip
