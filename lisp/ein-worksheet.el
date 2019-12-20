@@ -1326,12 +1326,20 @@ function."
   ;; As Imenu does not provide the way to represent level *and*
   ;; position, use #'s to do that.
   (cl-loop for cell in (when (ein:worksheet-p ein:%worksheet%)
-                         (seq-filter #'ein:headingcell-p
+                         (seq-filter #'(lambda (cell) (or (ein:headingcell-p cell)
+                                                          (ein:cell--markdown-heading-p cell)))
                                      (ein:worksheet-get-cells ein:%worksheet%)))
-    for sharps = (cl-loop repeat (slot-value cell 'level) collect "#")
-    for text = (ein:cell-get-text cell)
-    for name = (ein:join-str "" (append sharps (list " " text)))
-    collect (cons name (ein:cell-input-pos-min cell))))
+           for sharps = (if (ein:headingcell-p cell)
+                            (cl-loop repeat (slot-value cell 'level) collect "#")
+                          (cl-loop repeat(progn
+                                           (string-match "^#+" (ein:cell-get-text cell))
+                                           (match-end 0))
+                                   collect "#"))
+           for text = (ein:cell-get-text cell)
+           for name = (if (ein:headingcell-p cell)
+                          (ein:join-str "" (append sharps (list " " text)))
+                        text)
+           collect (cons name (ein:cell-input-pos-min cell))))
 
 (defun ein:worksheet-imenu-setup ()
   "Called via notebook mode hooks."
