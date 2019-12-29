@@ -187,7 +187,8 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                 (when (buffer-live-p b)
                   (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
             (ein:display-warning msg :error)
-            (error "ein:worksheet--jigger-undo-list: aborting")))
+            (when ein:debug
+              (error "ein:worksheet--jigger-undo-list: aborting"))))
       (if (< fill 0)
           (setq ein:%which-cell% (nthcdr (- fill) ein:%which-cell%))
         (if (> fill 0)
