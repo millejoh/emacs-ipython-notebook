@@ -131,8 +131,9 @@ global setting.  For global setting and more information, see
     (if (< (ein:notebook-version-numeric url-or-port) 3)
         (setq content (ein:new-content-legacy url-or-port path data))
       (setq content (ein:new-content url-or-port path data)))
-    (ein:aif response
-        (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
+    (if (and response
+	     (> (length (request-response-history response)) 0))
+	(setf (ein:$content-url-or-port content) (ein:get-response-redirect response)))
     (when callback
       (funcall callback content))))
 
