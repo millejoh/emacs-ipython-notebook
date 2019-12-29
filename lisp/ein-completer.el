@@ -115,13 +115,15 @@
 (defun ein:completions--get-oinfo (objs)
   (let ((d (deferred:new #'identity))
         (kernel (ein:get-kernel)))
-    (if (ein:kernel-live-p kernel)
-        (ein:kernel-execute
-         kernel
-         (format "__ein_generate_oinfo_data(%s, locals())" objs)
-         (list
-          :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
-      (deferred:callback-post d "kernel not live"))
+    (ein:case-equal (ein:kernel-language kernel)
+      (("python")
+       (if (ein:kernel-live-p kernel)
+           (ein:kernel-execute
+            kernel
+            (format "__ein_generate_oinfo_data(%s, locals())" objs)
+            (list
+             :output `(,(lambda (d* &rest args) (deferred:callback-post d* args)) . ,d)))
+         (deferred:callback-post d "kernel not live"))))
     d))
 
 (defvar ein:oinfo-chunk-size 50)

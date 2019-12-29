@@ -168,9 +168,10 @@ previous value."
 (defun ein:get-mode-for-kernel (kernelspec)
   (if (null kernelspec)
       'python ;; FIXME
-    (ein:case-equal (ein:$kernelspec-language kernelspec)
-      (("julia" "python" "R") (intern (ein:$kernelspec-language kernelspec)))
-      (t 'python))))
+    (intern (ein:$kernelspec-language kernelspec))))
+    ;; (ein:case-equal (ein:$kernelspec-language kernelspec)
+    ;;   (("julia" "python" "R") )
+    ;;   (t 'python))))
 
 (defun ein:edit-src-continue (e)
   (interactive "e")

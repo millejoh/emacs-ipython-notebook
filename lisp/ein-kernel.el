@@ -85,6 +85,9 @@
   "Destructor for `ein:$kernel'."
   (ein:kernel-disconnect kernel))
 
+(defun ein:kernel-language (kernel)
+  "Return a string naming the language used by kernel `kernel'. Typical return values might be 'python', or 'julia', or 'R' (among others)."
+  (ein:$kernelspec-language (ein:$kernel-kernelspec kernel)))
 
 (defun ein:kernel--get-msg (kernel msg-type content)
   (list
