@@ -43,8 +43,7 @@
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
   :group 'ein
-  :type 'integer
-)
+  :type 'integer)
 
 (defcustom ein:notebooklist-render-order
   '(render-header
@@ -52,8 +51,7 @@
   "Order of notebook list sections.
 Must contain render-header, and render-directory."
   :group 'ein
-  :type 'list
-)
+  :type 'list)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
@@ -172,14 +170,10 @@ This function adds NBLIST to `ein:notebooklist-map'."
 
 (defun ein:crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (aif (loop for line in (condition-case err
-                             (apply #'process-lines
-                                    ein:jupyter-server-command
-                                    (append (aif ein:jupyter-server-use-subcommand
-                                                (list it))
-                                            '("list" "--json")))
-                           ;; often there is no local jupyter installation
-                           (error (ein:log 'info "ein:crib-token: %s" err) nil))
+  (aif (loop for line in (ein:process-lines
+                          ein:jupyter-server-command
+                          (append (aif ein:jupyter-server-use-subcommand (list it))
+                                  '("list" "--json")))
              with token0
              with password0
              when (destructuring-bind
@@ -850,6 +844,27 @@ and the url-or-port argument of ein:notebooklist-open*."
            (ein:log 'verbose "Skipping login %s" url-or-port)
            (ein:notebooklist-open* url-or-port nil nil nil callback nil))
           (t (ein:notebooklist-login--iteration url-or-port callback nil token 0 nil)))))
+
+;;;###autoload
+(defun ein:cluster-login (callback)
+  "Deal with security before main entry of ein:notebooklist-open*.
+
+CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--success
+and the url-or-port argument of ein:notebooklist-open*."
+  (interactive `(,(lambda (buffer url-or-port) (pop-to-buffer buffer))))
+  (unless callback (setq callback #'ignore))
+  (call-interactively #'ein:k8s-select-context)
+  (-if-let* ((url-or-port (ein:k8s-service-url-or-port))
+             (node (ein:k8s-get-node))
+             ((&alist 'status (&alist 'addresses)) node)
+             (address
+              (seq-some (lambda (address)
+                          (when (string= (alist-get 'type address) "InternalIP")
+                            (alist-get 'address address)))
+                        addresses)))
+      (concat address ":" (number-to-string url-or-port))
+    (error "ein:cluster-login: No jupyter node found for %s"
+           (alist-get 'name (kubernetes-state-current-context (kubernetes-state))))))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))

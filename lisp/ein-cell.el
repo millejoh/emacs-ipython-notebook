@@ -1024,9 +1024,7 @@ prettified text thus be used instead of HTML type."
     ,@(aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
     (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
-    (language . "python")
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
-
 
 (defvar ein:output-type-map
   '((:svg . :image/svg+xml) (:png . :image/png) (:jpeg . :image/jpeg)

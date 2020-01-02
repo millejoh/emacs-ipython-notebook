@@ -27,7 +27,7 @@
 (require 'ein-notebooklist)
 (require 'ein-dev)
 
-(defcustom ein:jupyter-use-containers t
+(defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
   :group 'ein
   :type 'boolean)

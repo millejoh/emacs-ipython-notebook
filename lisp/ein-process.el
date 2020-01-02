@@ -35,7 +35,6 @@
   :type 'string
   :group 'ein)
 
-
 (defcustom ein:process-lsof "lsof"
   "Executable for lsof command."
   :type 'string
@@ -119,6 +118,11 @@
                  (setq suitable directory))
           (setq directory (directory-file-name (file-name-directory directory)))
           finally return suitable)))
+
+(defun ein:process-lines (command &rest args)
+  "Shell out COMMAND ARGS... via kubectl if necessary."
+  ;; ein:cluster-login
+)
 
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"

@@ -413,7 +413,6 @@ Adapted from twittering-mode.el's `case-string'."
 ;;; Misc
 
 (defun ein:completing-read (&rest args)
-  "Wrap for emacs completing read functionality. Unless a more sophisticated completion framework has been installed (like helm or ivy), this function will default to using the slightly more sane ido completion framework. Arguments are the same as for `completing-read'."
   (if (eq completing-read-function 'completing-read-default)
       (apply #'ido-completing-read args)
     (apply completing-read-function args)))
