@@ -208,8 +208,8 @@ is used instead.  BUFFER-CALLBACK is called after notebook opened."
 (defun ein:process-find-file-callback ()
   "A callback function for `find-file-hook' to open notebook."
   (interactive)
-  (when-let* ((filename buffer-file-name)
-              (match-p (string-match-p "\\.ipynb$" filename)))
+  (-when-let* ((filename buffer-file-name)
+               (match-p (string-match-p "\\.ipynb$" filename)))
     (ein:process-open-notebook filename #'kill-buffer-if-not-modified)))
 
 (provide 'ein-process)
