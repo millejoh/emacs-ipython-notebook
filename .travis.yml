@@ -54,7 +54,7 @@ install:
       pyenv activate $TOXENV ;
     fi
   - ${PIP} --upgrade pip
-  - ${PIP} wheel jupyter ipython\<=$IPYTHON ipykernel numpy\<=1.16.0 matplotlib\<=3.0.2
+  - ${PIP} wheel jupyter ipython\<=$IPYTHON ipykernel
   - ${PY} -m ipykernel install --user
   - sh tools/install-R.sh
   - sh tools/install-julia.sh
