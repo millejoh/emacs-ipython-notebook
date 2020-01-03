@@ -1,10 +1,11 @@
 name: CI
 
 on:
-  pull-request:
+  push:
     paths-ignore:
     - '**.md'
-    - 'tools/*'
+    branches-ignore:
+    - 'master'
 
 jobs:
   build:
@@ -21,7 +22,6 @@ jobs:
             lint_ignore: 1
     env:
       EMACS_LINT_IGNORE: ${{ matrix.lint_ignore }}
-      PATH: ~/local/bin:~/local/cask/bin:~/local/R/bin:~/local/julia-1.1.0/bin:${PATH}
 
     steps:
     - uses: actions/checkout@v1
@@ -40,17 +40,13 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        key: ${{ runner.os }}-pip
 
     - uses: actions/cache@v1
       if: startsWith(runner.os, 'macOS')
       with:
         path: ~/Library/Caches/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        key: ${{ runner.os }}-pip
 
     - uses: actions/cache@v1
       with:
@@ -59,21 +55,47 @@ jobs:
 
     - uses: actions/cache@v1
       with:
+        path: ~/.emacs.d
+        key: emacs.d
+
+    - uses: actions/cache@v1
+      with:
         path: ~/.cask
         key: cask
 
+    - name: paths
+      uses: dickmao/setup-paths@master
+      with:
+        paths: local/bin:local/cask/bin:local/R/bin:local/julia-1.1.0/bin
+
+    - name: apt-get
+      if: startsWith(runner.os, 'Linux')
+      run: |
+        sudo apt-get -yq update
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base
+
     - name: dependencies
       run: |
+        mkdir -p ~/local/bin
         python -m pip install --upgrade pip
-        pip install setuptools wheel jupyter ipykernel ipython
+        pip install setuptools wheel jupyter ipykernel ipython\<=7.8.0 numpy\<=1.16.4 matplotlib\<=3.0.3
         python -m ipykernel install --user
         sh tools/install-R.sh
-        sh tools/install-julia.sh
-        hash -r
+
+    - name: julia
+      if: startsWith(runner.os, 'Linux')
+      run: sh tools/install-julia.sh
+
+    - name: versions
+      run: |
         jupyter kernelspec list
         curl --version
         ipython --version
         emacs --version
+
+    - name: gnupg
+      if: startsWith(runner.os, 'macOS')
+      run: brew list gnupg &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg
 
     - name: cask
       run: |

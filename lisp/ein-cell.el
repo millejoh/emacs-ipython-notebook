@@ -235,7 +235,9 @@ a number will limit the number of lines in a cell output."
                 (when (listp ein:slice-image) ein:slice-image)
               (insert-sliced-image img "." nil (or rows 20) cols))
           (insert-image img ".")))
-    (error (ein:log 'warn "Could not insert image: %s" err) nil)))
+    (error (ein:log 'warn "Could not insert image: %s"
+                    (error-message-string err))
+           nil)))
 
 
 ;;; Cell factory

@@ -47,7 +47,7 @@
          (ein:filename-translations
           `((,port . ,(ein:tramp-create-filename-translator "DUMMY")))))
     (cl-loop with python-filename = "/file/name"
-          for emacs-filename in '("/scpc:HOST:/file/name"
+          for emacs-filename in '("/scp:HOST:/file/name"
                                   "/ssh:USER@HOST:/file/name")
           do (should
               (equal (ein:filename-to-python port emacs-filename)
