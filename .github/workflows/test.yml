@@ -65,25 +65,25 @@ jobs:
         key: cask
 
     - name: dependencies
-      run:
-        - python -m pip install --upgrade pip
-        - pip install setuptools wheel jupyter ipykernel ipython
-        - python -m ipykernel install --user
-        - sh tools/install-R.sh
-        - sh tools/install-julia.sh
-        - hash -r
-        - jupyter kernelspec list
-        - curl --version
-        - ipython --version
-        - emacs --version
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel jupyter ipykernel ipython
+        python -m ipykernel install --user
+        sh tools/install-R.sh
+        sh tools/install-julia.sh
+        hash -r
+        jupyter kernelspec list
+        curl --version
+        ipython --version
+        emacs --version
 
     - name: cask
-      run:
-        - sh tools/install-cask.sh
-        - curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/master.zip && unzip master.zip
-        - ( cd ./kubernetes-el-master ; cask pkg-file )
-        - cask link kubernetes ./kubernetes-el-master
-        - cask link list
+      run: |
+        sh tools/install-cask.sh
+        curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/master.zip && unzip master.zip
+        ( cd ./kubernetes-el-master ; cask pkg-file )
+        cask link kubernetes ./kubernetes-el-master
+        cask link list
 
     - name: test
       run: |
