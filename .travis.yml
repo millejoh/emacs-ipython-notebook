@@ -68,6 +68,7 @@ before_script:
   - emacs --version
   - sh tools/install-cask.sh
   - curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/master.zip && unzip master.zip
+  - ( cd ./kubernetes-el-master ; cask pkg-file )
   - cask link kubernetes ./kubernetes-el-master
   - cask link list
 
