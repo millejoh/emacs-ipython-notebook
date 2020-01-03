@@ -23,6 +23,7 @@
  (depends-on "markdown-mode")
  (depends-on "clojure-mode")
  (depends-on "julia-mode")
+ (depends-on "haskell-mode")
  (depends-on "undo-tree")
  (depends-on "ess")
  (depends-on "px")

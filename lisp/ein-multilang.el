@@ -40,6 +40,7 @@
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
 (declare-function ess-setq-vars-local "ess-utils")
+(declare-function haskell-indentation-indent-line "haskell-indentation")
 
 (defun ein:ml-fontify (limit)
   "Fontify next input area comes after the current point then
@@ -194,8 +195,9 @@ This function may raise an error."
     (setq-local mode-name "EIN[haskell]")
     (setq-local comment-start "-- ")
     ;; (setq-local comment-start-skip  "--\\s-*")
-    (setq-local indent-line-function
-                (apply-partially #'ein:ml-indent-line-function #'haskell-indentation-indent-line))
+    (when (boundp 'haskell-indentation-indent-line)
+      (setq-local indent-line-function
+                  (apply-partially #'ein:ml-indent-line-function #'haskell-indentation-indent-line)))
     (when (boundp 'haskell-mode-syntax-table)
       (set-syntax-table haskell-mode-syntax-table))
     (when (boundp 'haskell-mode-map)
