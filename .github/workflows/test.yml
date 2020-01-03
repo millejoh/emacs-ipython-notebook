@@ -1,12 +1,10 @@
 name: CI
 
 on:
-  push:
+  pull-request:
     paths-ignore:
     - '**.md'
     - 'tools/*'
-    branches-ignore:
-    - 'master'
 
 jobs:
   build:
