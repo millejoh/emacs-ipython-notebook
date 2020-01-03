@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+    - '**.md'
+    - 'tools/*'
+    branches-ignore:
+    - 'master'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        emacs_version: [25.1, 26.3]
+        python-version: [3.7]
+        include:
+          - emacs_version: 24.1
+            lint_ignore: 1
+          - emacs_version: 24.2
+            lint_ignore: 1
+    env:
+      EMACS_LINT_IGNORE: ${{ matrix.lint_ignore }}
+      PATH: ~/local/bin:~/local/cask/bin:~/local/R/bin:~/local/julia-1.1.0/bin:${PATH}
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: nix
+      uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+
+    - uses: actions/cache@v1
+      if: startsWith(runner.os, 'Linux')
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - uses: actions/cache@v1
+      if: startsWith(runner.os, 'macOS')
+      with:
+        path: ~/Library/Caches/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/local
+        key: ${{ runner.os }}-local
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cask
+        key: cask
+
+    - name: dependencies
+      run:
+        - python -m pip install --upgrade pip
+        - pip install setuptools wheel jupyter ipykernel ipython
+        - python -m ipykernel install --user
+        - sh tools/install-R.sh
+        - sh tools/install-julia.sh
+        - hash -r
+        - jupyter kernelspec list
+        - curl --version
+        - ipython --version
+        - emacs --version
+
+    - name: cask
+      run:
+        - sh tools/install-cask.sh
+        - curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/master.zip && unzip master.zip
+        - ( cd ./kubernetes-el-master ; cask pkg-file )
+        - cask link kubernetes ./kubernetes-el-master
+        - cask link list
+
+    - name: test
+      run: |
+        rm -rf ~/.matplotlib ~/.cache/fontconfig
+        make test
