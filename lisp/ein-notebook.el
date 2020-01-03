@@ -179,7 +179,7 @@ Current buffer for these functions is set to the notebook buffer.")
   (let ((kernelspec
          (cond ((ein:$kernelspec-p pre-kernelspec) pre-kernelspec)
                ((consp pre-kernelspec)
-                (loop for (name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
+                (cl-loop for (name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
                       when (and (ein:$kernelspec-p ks)
                                 (string= (cdr pre-kernelspec)
                                          (cl-struct-slot-value
@@ -241,7 +241,7 @@ combo must match exactly these url/port you used format
 
 (defun ein:notebook-buffer (notebook)
   "Return first buffer in NOTEBOOK's worksheets."
-  (loop for ws in (append (ein:$notebook-worksheets notebook)
+  (cl-loop for ws in (append (ein:$notebook-worksheets notebook)
                           (ein:$notebook-scratchsheets notebook))
         if (ein:worksheet-buffer ws)
         return it))
@@ -453,7 +453,7 @@ of minor mode."
 
 (defun ein:list-available-kernels (url-or-port)
   (when-let ((kernelspecs (ein:need-kernelspecs url-or-port)))
-    (sort (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+    (sort (cl-loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
                 collecting (cons (ein:$kernelspec-name spec)
                                  (ein:$kernelspec-display-name spec)))
           (lambda (c1 c2) (string< (cdr c1) (cdr c2))))))
@@ -481,7 +481,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
                                   (ein:$kernelspec-name kernelspec) (ein:$kernelspec-spec kernelspec))))
     (ein:notebook-save-notebook notebook #'ein:notebook-kill-kernel-then-close-command
                                 (list notebook))
-    (loop repeat 10
+    (cl-loop repeat 10
           until (null (ein:$kernel-websocket (ein:$notebook-kernel notebook)))
           do (sleep-for 0 500)
           finally return (ein:notebook-open (ein:$notebook-url-or-port notebook)
@@ -708,7 +708,7 @@ This is equivalent to do ``C-c`` in the console program."
     (plist-put spec :name name)))
 
 (defun ein:write-nbformat4-worksheets (notebook)
-  (let ((all-cells (loop for ws in (ein:$notebook-worksheets notebook)
+  (let ((all-cells (cl-loop for ws in (ein:$notebook-worksheets notebook)
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
     ;; should be in notebook constructor, not here
@@ -872,7 +872,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
             (add-function :before callback0 (lambda () (setq success-positive 1)))
             (ein:notebook-save-notebook notebook callback0 nil
                                         (lambda () (setq success-positive -1)))
-            (loop repeat 10
+            (cl-loop repeat 10
                   until (not (zerop success-positive))
                   do (sleep-for 0 200)
                   finally return (> success-positive 0)))
@@ -1019,7 +1019,7 @@ given."
                      #'switch-to-buffer))
   (let ((next (if (ein:scratchsheet-p ws)
                   (car (ein:$notebook-worksheets notebook))
-                (loop with worksheets = (ein:$notebook-worksheets notebook)
+                (cl-loop with worksheets = (ein:$notebook-worksheets notebook)
                       for current in worksheets
                       for next in (cdr worksheets)
                       when (eq current ws) return next))))
@@ -1034,7 +1034,7 @@ See also `ein:notebook-worksheet-open-next'."
                      #'switch-to-buffer))
   (let ((prev (if (ein:scratchsheet-p ws)
                   (car (last (ein:$notebook-worksheets notebook)))
-                (loop for (prev current) on (ein:$notebook-worksheets notebook)
+                (cl-loop for (prev current) on (ein:$notebook-worksheets notebook)
                       when (eq current ws) return prev))))
     (ein:notebook-worksheet--open-new notebook prev "previous" show)
     prev))
@@ -1057,7 +1057,7 @@ See also `ein:notebook-worksheet-open-next'."
 
 (defmacro ein:notebook-worksheet--defun-all-open-nth (min max)
   `(progn
-     ,@(loop for n from min to max
+     ,@(cl-loop for n from min to max
              collect `(ein:notebook-worksheet--defun-open-nth ,n))))
 
 (ein:notebook-worksheet--defun-all-open-nth 1 8)
@@ -1138,7 +1138,7 @@ When used as a lisp function, delete worksheet WS from NOTEBOOk."
 (cl-defun ein:notebook-worksheet-index
     (&optional (notebook ein:%notebook%) (ws ein:%worksheet%))
   "Return an index of the worksheet WS in NOTEBOOK."
-  (loop for i from 0
+  (cl-loop for i from 0
         for ith-ws in (ein:$notebook-worksheets notebook)
         when (eq ith-ws ws)
         return i))
@@ -1246,7 +1246,7 @@ associated with current buffer (if any)."
   (and (ein:$notebook-p notebook)
        (ein:notebook-live-p notebook)
        (or (ein:$notebook-dirty notebook)
-           (loop for ws in (ein:$notebook-worksheets notebook)
+           (cl-loop for ws in (ein:$notebook-worksheets notebook)
                  when (ein:worksheet-modified-p ws)
                  return t))))
 
@@ -1265,7 +1265,7 @@ associated with current buffer (if any)."
 (defun ein:notebook-choose-mode ()
   "Return usable (defined) notebook mode."
   (autoload 'ein:notebook-multilang-mode "ein-multilang")
-  (loop for mode in ein:notebook-modes
+  (cl-loop for mode in ein:notebook-modes
         if (functionp mode)
         return mode))
 
@@ -1452,7 +1452,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
        "---"
        ,@(ein:generate-menu
           (append
-           (loop for n from 1 to 8
+           (cl-loop for n from 1 to 8
                  collect
                  (list
                   (format "Open %d-th worksheet" n)

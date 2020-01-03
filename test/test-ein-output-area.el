@@ -11,7 +11,7 @@
 
 (defmacro ein:testing-insert-html--fix-urls-deftests (args-list)
   `(progn
-     ,@(loop for i from 0
+     ,@(cl-loop for i from 0
              for args in args-list
              for test = (intern (format "ein:insert-html--fix-urls/%s" i))
              collect

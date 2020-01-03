@@ -138,7 +138,7 @@ global setting.  For global setting and more information, see
 
 (defun ein:fix-legacy-content-data (data)
   (if (listp (car data))
-      (loop for item in data
+      (cl-loop for item in data
             collecting
             (ein:fix-legacy-content-data item))
     (if (string= (plist-get data :path) "")
@@ -221,7 +221,7 @@ global setting.  For global setting and more information, see
                  (callback callback)
                  (items (ein:$content-raw-content content))
                  (directories (if (< depth ein:content-query-max-depth)
-                                  (loop for item in items
+                                  (cl-loop for item in items
                                         with result
                                         until (>= (length result) ein:content-query-max-branch)
                                         if (string= "directory" (plist-get item :type))
@@ -229,7 +229,7 @@ global setting.  For global setting and more information, see
                                         into result
                                         end
                                         finally return result)))
-                 (others (loop for item in items
+                 (others (cl-loop for item in items
                                with c0
                                if (not (string= "directory" (plist-get item :type)))
                                do (setf c0 (ein:new-content url-or-port path item))
@@ -240,7 +240,7 @@ global setting.  For global setting and more information, see
     (deferred:$
       (apply
        #'deferred:parallel
-       (loop for c0 in directories
+       (cl-loop for c0 in directories
              collect
              (lexical-let
                  ((c0 c0)

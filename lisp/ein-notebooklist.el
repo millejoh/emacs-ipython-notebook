@@ -170,37 +170,47 @@ This function adds NBLIST to `ein:notebooklist-map'."
 
 (defun ein:crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (aif (loop for line in (ein:process-lines
-                          ein:jupyter-server-command
-                          (append (aif ein:jupyter-server-use-subcommand (list it))
-                                  '("list" "--json")))
-             with token0
-             with password0
-             when (destructuring-bind
-                      (&key password url token &allow-other-keys)
-                      (ein:json-read-from-string line)
-                    (prog1 (equal (ein:url url) url-or-port)
-                      (setq password0 password) ;; t or :json-false
-                      (setq token0 token)))
-             return (list password0 token0))
+  (aif (cl-loop for line in
+                (apply #'ein:jupyter-process-lines url-or-port
+                       ein:jupyter-server-command
+                       (split-string
+                        (format "%s%s %s"
+                                (aif ein:jupyter-server-use-subcommand
+                                    (concat it " ") "")
+                                "list" "--json")))
+                with token0
+                with password0
+                when (destructuring-bind
+                         (&key password url token &allow-other-keys)
+                         (ein:json-read-from-string line)
+                       (prog1 (equal (ein:url url) url-or-port)
+                         (setq password0 password) ;; t or :json-false
+                         (setq token0 token)))
+                return (list password0 token0))
       it (list nil nil)))
 
 (defun ein:crib-running-servers ()
   "Shell out to jupyter for running servers."
-  (loop for line in (condition-case err
-                        (apply #'process-lines
-                               ein:jupyter-server-command
-                               (append (aif ein:jupyter-server-use-subcommand
-                                           (list it))
-                                       '("list" "--json")))
-                      (error (ein:log 'info "ein:crib-running-servers: %s" err)
-                             nil))
-        collecting (destructuring-bind
-                       (&key url &allow-other-keys)
-                       (ein:json-read-from-string line) (ein:url url))))
+  (cl-loop for line in
+           (nconc
+            (apply #'ein:jupyter-process-lines nil
+                   ein:jupyter-server-command
+                   (split-string
+                    (format "%s%s %s"
+                            (aif ein:jupyter-server-use-subcommand
+                                (concat it " ") "")
+                            "list" "--json")))
+            (aif (ein:k8s-service-url-or-port) (list it)))
+           collecting (destructuring-bind
+                          (&key url &allow-other-keys)
+                          (ein:json-read-from-string line) (ein:url url))))
 
 (defun ein:notebooklist-token-or-password (url-or-port)
-  "Return token or password (jupyter requires one or the other but not both) for URL-OR-PORT.  Empty string token means all authentication disabled.  Nil means don't know."
+  "Return token or password for URL-OR-PORT.
+
+Jupyter requires one or the other but not both.
+Return empty string token if all authentication disabled.
+Return nil if unclear what, if any, authentication applies."
   (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
     (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
     (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
@@ -630,7 +640,7 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
     (ein:make-sorting-widget "In Order" ein:notebooklist-sort-order)
     (widget-insert "\n")
-    (loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%)
+    (cl-loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%)
                                                     ein:notebooklist-sort-field
                                                     ein:notebooklist-sort-order)
           for name = (plist-get note :name)
@@ -732,10 +742,10 @@ Notebook list data is passed via the buffer local variable
 (defun ein:notebooklist-list-paths (&optional content-type)
   "Return all files of CONTENT-TYPE for all sessions"
   (apply #'append
-         (loop for nblist in (ein:notebooklist-list)
+         (cl-loop for nblist in (ein:notebooklist-list)
                for url-or-port = (ein:$notebooklist-url-or-port nblist)
                collect
-               (loop for content in (ein:content-need-hierarchy url-or-port)
+               (cl-loop for content in (ein:content-need-hierarchy url-or-port)
                      when (or (null content-type)
                               (string= (ein:$content-type content) content-type))
                      collect (ein:url url-or-port (ein:$content-path content))))))
@@ -743,7 +753,7 @@ Notebook list data is passed via the buffer local variable
 
 (defun ein:notebooklist-parse-nbpath (nbpath)
   "Return `(,url-or-port ,path) from URL-OR-PORT/PATH"
-  (loop for url-or-port in (ein:notebooklist-keys)
+  (cl-loop for url-or-port in (ein:notebooklist-keys)
         if (cl-search url-or-port nbpath :end2 (length url-or-port))
         return (list (substring nbpath 0 (length url-or-port))
                      (substring nbpath (1+ (length url-or-port))))
@@ -833,7 +843,7 @@ and the url-or-port argument of ein:notebooklist-open*."
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
            (domain (url-host parsed-url))
            (securep (string-match "^wss://" url-or-port)))
-      (loop for (name content) on cookie-plist by (function cddr)
+      (cl-loop for (name content) on cookie-plist by (function cddr)
             for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
             do (write-region line nil (request--curl-cookie-jar) 'append))))
 
@@ -854,15 +864,8 @@ and the url-or-port argument of ein:notebooklist-open*."
   (interactive `(,(lambda (buffer url-or-port) (pop-to-buffer buffer))))
   (unless callback (setq callback #'ignore))
   (call-interactively #'ein:k8s-select-context)
-  (-if-let* ((url-or-port (ein:k8s-service-url-or-port))
-             (node (ein:k8s-get-node))
-             ((&alist 'status (&alist 'addresses)) node)
-             (address
-              (seq-some (lambda (address)
-                          (when (string= (alist-get 'type address) "InternalIP")
-                            (alist-get 'address address)))
-                        addresses)))
-      (concat address ":" (number-to-string url-or-port))
+  (if-let ((url-or-port (ein:k8s-service-url-or-port)))
+      url-or-port
     (error "ein:cluster-login: No jupyter node found for %s"
            (alist-get 'name (kubernetes-state-current-context (kubernetes-state))))))
 
@@ -899,7 +902,7 @@ and the url-or-port argument of ein:notebooklist-open*."
         ((request-response-header response "x-jupyterhub-version")
          (let ((pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
            (destructuring-bind (user pw)
-               (loop for (user pw) on pam-plist by (function cddr)
+               (cl-loop for (user pw) on pam-plist by (function cddr)
                      return (list (symbol-name user) pw))
              (ein:jupyterhub-connect url-or-port user pw callback))))
         (t (ein:notebooklist-login--success-1 url-or-port callback errback))))

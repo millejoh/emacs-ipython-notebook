@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'ein-log)
+(require 'ein-jupyter)
 (require 'request)
 (require 'anaphora)
 
@@ -54,7 +55,7 @@
 
 (defun ein:testing-dump-logs ()
   (ein:testing-save-buffer "*Messages*" ein:testing-dump-file-messages)
-  (ein:testing-save-buffer "*ein:jupyter-server*" ein:testing-dump-file-server)
+  (ein:testing-save-buffer *ein:jupyter-server-buffer-name* ein:testing-dump-file-server)
   (mapc (lambda (b)
           (ein:and-let* ((bname (buffer-name b))
                          (prefix "kernels/")
@@ -91,7 +92,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
 }
 " 'utf-8 (concat (file-name-as-directory parent) "bar.ipynb")))
   (if (< current-depth depth)
-      (loop for w from 1 to width
+      (cl-loop for w from 1 to width
             for dir = (concat (file-name-as-directory parent) (number-to-string w))
             do (f-mkdir dir)
                (ein:testing-make-directory-level dir (1+ current-depth) width depth))))
@@ -102,7 +103,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
   MS is milliseconds to wait.  INTERVAL is polling interval in milliseconds."
   (let* ((int (aif interval it (aif ms (max 300 (/ ms 10)) 300)))
          (count (max 1 (if ms (truncate (/ ms int)) 25))))
-    (unless (or (loop repeat count
+    (unless (or (cl-loop repeat count
                        when (apply predicate predargs)
                        return t
                        do (sleep-for 0 int))

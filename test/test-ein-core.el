@@ -22,7 +22,7 @@
 ;;; File name translation
 (ert-deftest ein:filename-translations-from-to-tramp ()
   ;; I really don't understand this https://github.com/magit/with-editor/issues/29
-  (loop with ein:filename-translations =
+  (cl-loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
         with filename = "/file/name"
         for port in '(7777 8888)    ; check for the one w/o translation
@@ -33,7 +33,7 @@
                    filename))))
 
 (ert-deftest ein:filename-translations-to-from-tramp ()
-  (loop with ein:filename-translations =
+  (cl-loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
         with filename = "/ssh:USER@HOST:/filename"
         for port in '(8888)
@@ -46,7 +46,7 @@
   (let* ((port 8888)
          (ein:filename-translations
           `((,port . ,(ein:tramp-create-filename-translator "DUMMY")))))
-    (loop with python-filename = "/file/name"
+    (cl-loop with python-filename = "/file/name"
           for emacs-filename in '("/scpc:HOST:/file/name"
                                   "/ssh:USER@HOST:/file/name")
           do (should
@@ -56,7 +56,7 @@
     (should-error (ein:filename-to-python port "/file/name"))))
 
 (ert-deftest ein:filename-from-python-tramp ()
-  (loop with ein:filename-translations =
+  (cl-loop with ein:filename-translations =
         `((8888 . ,(ein:tramp-create-filename-translator "HOST" "USER")))
         with python-filename = "/file/name"
         for emacs-filename in '("/ssh:USER@HOST:/file/name" "/file/name")

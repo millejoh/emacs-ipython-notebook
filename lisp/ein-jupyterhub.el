@@ -202,7 +202,7 @@
   "Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater.  CALLBACK takes two arguments, the resulting buffer and the singleuser url-or-port"
   (interactive (let ((url-or-port (ein:notebooklist-ask-url-or-port))
                      (pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
-                 (loop for (user pw) on pam-plist by (function cddr)
+                 (cl-loop for (user pw) on pam-plist by (function cddr)
                        return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
   (ein:jupyterhub--query-version url-or-port callback username password))
 

@@ -32,7 +32,7 @@
       (lambda (kernel-name)
         (cl-letf (((symbol-function 'R-mode) #'ignore))
           (let ((notebook (ein:notebook-switch-kernel (ein:get-notebook) kernel-name)))
-            (loop repeat 10
+            (cl-loop repeat 10
                   until (ein:kernel-live-p (ein:$notebook-kernel notebook))
                   do (sleep-for 0 500)
                   finally do (should (string= "R" (ein:$kernelspec-language
@@ -174,7 +174,7 @@
         (cancel-function-timers #'ein:notebooklist-reload)
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
-        (loop repeat 10
+        (cl-loop repeat 10
               with buffer = (get-buffer *ein:jupyter-server-buffer-name*)
               until (null (get-buffer-process buffer))
               do (sleep-for 0 1000)
@@ -272,7 +272,7 @@
 
 (When "^I wait for completions \"\\(.+\\)\"$"
       (lambda (key)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))
               do (sleep-for 0 500)
               finally do (should (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))))))
@@ -284,7 +284,7 @@
 
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (go stop)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (search stop (buffer-string))
               do (And (format "I click on \"%s\"" go))
               do (sleep-for 0 1000)
@@ -301,7 +301,7 @@
           (backward-char)
           (let ((was (widget-at)))
             (When "I press \"RET\"")
-            (loop until (not (equal was (widget-at)))
+            (cl-loop until (not (equal was (widget-at)))
                   do (sleep-for 0 500))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
@@ -310,18 +310,18 @@
         (re-search-backward "Dir" nil t)
         (let ((was (widget-at)))
           (When "I press \"RET\"")
-          (loop until (not (equal was (widget-at)))
+          (cl-loop until (not (equal was (widget-at)))
                 do (sleep-for 0 500)))))
 
 (When "^I click on dir \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (dir stop)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (search stop (buffer-string))
               do (When (format "I go to word \"%s\"" dir))
               do (re-search-backward "Dir" nil t)
               do (let ((was (widget-at)))
                    (When "I press \"RET\"")
-                   (loop until (not (equal was (widget-at)))
+                   (cl-loop until (not (equal was (widget-at)))
                          do (sleep-for 0 500)))
               finally do (should (search stop (buffer-string))))))
 
@@ -329,7 +329,7 @@
       (lambda (path)
         (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (loop repeat 2
+            (cl-loop repeat 2
                   until (and notebook
                              (ein:aand (ein:$notebook-kernel notebook)
                                        (ein:kernel-live-p it)))

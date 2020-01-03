@@ -83,7 +83,7 @@
        (read-cookies-func (lambda (path)
                             (request-cookie-alist
                              (url-host parsed-url) path securep)))
-       (cookies (loop repeat 4
+       (cookies (cl-loop repeat 4
                       for cand = (cl-mapcan read-cookies-func
                                             `("/" "/hub/"
                                               ,(ein:maybe-get-jhconn-user url)))

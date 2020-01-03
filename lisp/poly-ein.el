@@ -190,7 +190,7 @@ TYPE can be 'body, nil."
          (ein:display-warning
           (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
        (setq result-cm
-             (loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
+             (cl-loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
                    when (equal mode (ein:oref-safe ocm 'mode))
                    return ocm
                    finally return (let ((new-mode (clone cm :mode mode)))

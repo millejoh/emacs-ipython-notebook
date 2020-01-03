@@ -71,7 +71,7 @@
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
 (defun ein:completions-get-cached (partial oinfo-cache)
-  (loop for candidate being the hash-keys of oinfo-cache
+  (cl-loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)
         collect candidate))
 

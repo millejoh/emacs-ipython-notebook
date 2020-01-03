@@ -7,6 +7,7 @@
 (development
  (depends-on "anaphora")
  (depends-on "websocket")
+ (depends-on "kubernetes")
  (depends-on "request")
  (depends-on "dash")
  (depends-on "ert-runner")

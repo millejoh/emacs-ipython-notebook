@@ -144,7 +144,7 @@ the source is in git repository) or elpa version."
                    (intern (format ":%s" name))
                  name))
          (ks (or (plist-get kernelspecs name)
-                 (loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+                 (cl-loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
                        if (string= (ein:$kernelspec-language spec) lang)
                        return spec
                        end))))
@@ -325,7 +325,7 @@ as `defgeneric' in EIEIO, but it takes no argument.  Actual
 implementation is chosen based on context (buffer, point, etc.).
 This helps writing generic commands which requires same object
 but can operate in different contexts."
-  (loop for func in func-list
+  (cl-loop for func in func-list
         if (and (functionp func) (funcall func))
         return it))
 

@@ -90,9 +90,7 @@
                                                      (kubernetes-state)
                                                      #'kubernetes-kubectl-config-view)))
     (-let* [((&alist 'contexts contexts 'current-context current) response)
-            (names (--map (alist-get 'name it) (append contexts nil)))
-            (state (kubernetes-state))
-            (current (alist-get 'name (kubernetes-state-current-context state)))]
+            (names (--map (alist-get 'name it) (append contexts nil)))]
       (when (member current names)
         (setq names (cons current (-remove-item current names))))
       names)))
@@ -102,47 +100,52 @@
   (-let* [(deployments (kubernetes-state-deployments (kubernetes-state)))
           ((&alist 'items items) deployments)]
     (seq-some (lambda (it)
-                (-let [(&alist 'metadata (&alist 'name name 'creationTimestamp created-time)
-                               'spec (&alist 'replicas desired)
-                               'status (&alist 'replicas current
-                                               'availableReplicas available
-                                               'updatedReplicas up-to-date))
-                       it]
+                (-let [(&alist 'metadata (&alist 'name)) it]
                   (and (string= name ein:k8s-name-deployment) it)))
               items)))
-
-(defun ein:k8s-get-service ()
-  (kubernetes-services-refresh-now)
-  (-let* [(services (kubernetes-state-services (kubernetes-state)))
-          ((&alist 'items items) services)]
-    (seq-some (lambda (it)
-                (-let [(&alist 'metadata (&alist 'name 'creationTimestamp)
-                               'spec (&alist 'selector)
-                               'status)
-                       it]
-                  (and (string= name ein:k8s-name-service) it)))
-              items)))
-
-(defun ein:k8s-service-url-or-port ()
-  (when-let ((service (ein:k8s-get-service)))
-    (-let [(&alist 'spec (&alist 'ports [(&alist 'nodePort)])) service]
-      nodePort)))
-
-(defun ein:k8s-get-node ()
-  (kubernetes-nodes-refresh-now)
-  (when-let ((pod (ein:k8s-get-pod)))
-    (-let* (((&alist 'spec (&alist 'nodeName)) pod))
-      (when-let ((node (kubernetes-state-lookup-node
-                        nodeName
-                        (kubernetes-state))))
-        (-let (((&alist 'metadata (&alist 'name)) node))
-          name)
-        node))))
 
 (defun ein:k8s-get-pod ()
   (kubernetes-pods-refresh-now)
   (when-let ((deployment (ein:k8s-get-deployment)))
     (cl-first (kubernetes-overview--pods-for-deployment (kubernetes-state)
                                                         deployment))))
+(defun ein:k8s-get-service ()
+  (kubernetes-services-refresh-now)
+  (-let* [(services (kubernetes-state-services (kubernetes-state)))
+          ((&alist 'items items) services)]
+    (seq-some (lambda (it)
+                (-let [(&alist 'metadata (&alist 'name)) it]
+                  (and (string= name ein:k8s-name-service) it)))
+              items)))
+
+(defun ein:k8s-get-node ()
+  (kubernetes-nodes-refresh-now)
+  (-when-let* ((pod (ein:k8s-get-pod))
+               ((&alist 'spec (&alist 'nodeName)) pod)
+               (node (kubernetes-state-lookup-node nodeName (kubernetes-state)))
+               ((&alist 'metadata (&alist 'name)) node))
+    node))
+
+(defsubst ein:k8s-p ()
+  (and (executable-find kubernetes-kubectl-executable)
+       (or (kubernetes-state-current-context (kubernetes-state))
+           (unless noninteractive
+             (condition-case err
+                 (ein:k8s-select-context)
+               (error (ein:log 'info "ein:k8s-p %s" (error-message-string err))
+                      nil))))))
+
+(defun ein:k8s-service-url-or-port ()
+  (-when-let* ((k8s-p (ein:k8s-p))
+               (service (ein:k8s-get-service))
+               ((&alist 'spec (&alist 'ports [(&alist 'nodePort)])) service)
+               (node (ein:k8s-get-node))
+               ((&alist 'status (&alist 'addresses)) node)
+               (host-ip
+                (seq-some (lambda (address)
+                            (when (string= (alist-get 'type address) "InternalIP")
+                              (alist-get 'address address)))
+                          addresses)))
+    (ein:url (concat host-ip ":" (number-to-string nodePort)))))
 
 (provide 'ein-k8s)

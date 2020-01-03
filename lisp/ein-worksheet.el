@@ -668,14 +668,14 @@ Prefixes are act same as the normal `yank' command."
                              (t (1- arg))))))
   (let* ((cell (ein:worksheet-get-current-cell :noerror t)) ; can be nil
          (killed (ein:current-kill n)))
-    (loop for c in killed
+    (cl-loop for c in killed
           with last = cell
           do (setq last (ein:worksheet-insert-clone ws c last "below"))
           finally (ein:cell-goto last))))
 
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
-    (loop for k in (slot-value cell 'element-names)
+    (cl-loop for k in (slot-value cell 'element-names)
           do (setq result
                    (plist-put result k
                               (let* ((en-or-list (ein:cell-element-get cell k))
@@ -870,7 +870,7 @@ When NTH is specified, return NTH cell.  Note that this function is
       (setq nth (* nth -1))
       (setq up (not up)))
     (let ((cell (ein:worksheet-next-input-cell-1 ewoc-node up)))
-      (loop repeat (1- nth)
+      (cl-loop repeat (1- nth)
             with next = (if up #'ein:cell-prev #'ein:cell-next)
             if (funcall next cell)
             do (setq cell it)
@@ -1184,7 +1184,7 @@ in the history."
 
 (defun ein:worksheet--cells-before-cell (ws cell)
   (let ((cells (ein:worksheet-get-cells ws)))
-    (loop for c in cells
+    (cl-loop for c in cells
           collecting c
           until (eql (ein:cell-id c) (ein:cell-id cell)))))
 
@@ -1194,7 +1194,7 @@ in the history."
     (seq-drop cells prior-cells)))
 
 (defun ein:worksheet-first-executing-cell (cells)
-  (loop for c in cells
+  (cl-loop for c in cells
         when (and (ein:codecell-p c)
                   (slot-value c 'running))
         return c))
@@ -1264,10 +1264,10 @@ function."
   "`imenu-create-index-function' for notebook buffer."
   ;; As Imenu does not provide the way to represent level *and*
   ;; position, use #'s to do that.
-  (loop for cell in (when (ein:worksheet-p ein:%worksheet%)
+  (cl-loop for cell in (when (ein:worksheet-p ein:%worksheet%)
                       (seq-filter #'ein:headingcell-p
                                   (ein:worksheet-get-cells ein:%worksheet%)))
-        for sharps = (loop repeat (slot-value cell 'level) collect "#")
+        for sharps = (cl-loop repeat (slot-value cell 'level) collect "#")
         for text = (ein:cell-get-text cell)
         for name = (ein:join-str "" (append sharps (list " " text)))
         collect (cons name (ein:cell-input-pos-min cell))))

@@ -26,6 +26,7 @@
 (require 'ein-core)
 (require 'ein-notebooklist)
 (require 'ein-dev)
+(require 'ein-k8s)
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -91,7 +92,7 @@ with the call to the jupyter notebook."
          (condition-case err
              (mapcar
               (lambda (x) `(const :tag ,(cdr x) ,(car x)))
-              (loop
+              (cl-loop
                for (k . spec) in
                (alist-get
                 'kernelspecs
@@ -107,6 +108,19 @@ with the call to the jupyter notebook."
 (defvar *ein:jupyter-server-process-name* "ein server")
 (defvar *ein:jupyter-server-buffer-name*
   (format "*%s*" *ein:jupyter-server-process-name*))
+
+(defun ein:jupyter-process-lines (url-or-port command &rest args)
+  "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
+  (condition-case err
+      (cond ((and url-or-port (string= url-or-port (ein:k8s-service-url-or-port)))
+             (let ((pod-name (kubernetes-state-resource-name (ein:k8s-get-pod))))
+               (apply #'process-lines kubernetes-kubectl-executable
+                      (nconc
+                       (split-string (format "exec %s -- %s" pod-name command))
+                       args))))
+            (t (apply #'process-lines command args)))
+    (error (ein:log 'info "ein:jupyter-process-lines: %s" (error-message-string err))
+           nil)))
 
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session."
@@ -241,7 +255,7 @@ server command."
                                        (if (numberp port)
                                            `("--port" ,(format "%s" port)
                                              "--port-retries" "0")))))
-    (loop repeat 30
+    (cl-loop repeat 30
           until (car (ein:jupyter-server-conn-info *ein:jupyter-server-buffer-name*))
           do (sleep-for 0 500)
           finally do
@@ -277,7 +291,7 @@ server command."
   (ein:and-let* ((url-or-port (first (ein:jupyter-server-conn-info)))
                  (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
-    (loop repeat 10
+    (cl-loop repeat 10
           do (ein:query-running-process-table)
           until (zerop (hash-table-count ein:query-running-process-table))
           do (sleep-for 0 500))

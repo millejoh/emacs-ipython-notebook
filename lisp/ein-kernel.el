@@ -726,7 +726,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                (ein:events-trigger events 'execution_count.Kernel it))))))))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
-  (loop with events = (ein:$kernel-events kernel)
+  (cl-loop with events = (ein:$kernel-events kernel)
         for p in payload
         for text = (or (plist-get p :text)
                        (plist-get (plist-get p :data)
@@ -851,7 +851,7 @@ See `ein:kernel-history-request' for other usable options."
                    (setq finished t))
                  nil))
      args)
-    (loop repeat (floor (/ timeout tick-time))
+    (cl-loop repeat (floor (/ timeout tick-time))
           do (sit-for tick-time)
           when finished
           return t

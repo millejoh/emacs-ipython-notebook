@@ -134,7 +134,7 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
   (with-local-quit
     (when timeout
       (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (loop do (ein:query-running-process-table)
+    (cl-loop do (ein:query-running-process-table)
           for running = (hash-table-count ein:query-running-process-table)
           until (< running ein:max-simultaneous-queries)
           do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"

@@ -108,7 +108,7 @@
 (defun ein:process-suitable-notebook-dir (filename)
   "Return the uppermost parent dir of DIR that contains ipynb files."
   (let ((fn (expand-file-name filename)))
-    (loop with directory = (directory-file-name
+    (cl-loop with directory = (directory-file-name
                             (if (file-regular-p fn)
                                 (file-name-directory (directory-file-name fn))
                               fn))
@@ -119,15 +119,10 @@
           (setq directory (directory-file-name (file-name-directory directory)))
           finally return suitable)))
 
-(defun ein:process-lines (command &rest args)
-  "Shell out COMMAND ARGS... via kubectl if necessary."
-  ;; ein:cluster-login
-)
-
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
-  (loop for line in (condition-case err
+  (cl-loop for line in (condition-case err
                         (apply #'process-lines
                                ein:jupyter-server-command
                                (append (aif ein:jupyter-server-use-subcommand
@@ -146,13 +141,13 @@
 
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
-  (loop for dir in (hash-table-keys ein:%processes%)
+  (cl-loop for dir in (hash-table-keys ein:%processes%)
         when (cl-search dir filename)
         return (gethash dir ein:%processes%)))
 
 (defun ein:process-url-match (url-or-port)
   "Return ein:process whose url matches URL-OR-PORT."
-  (loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
+  (cl-loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
         for proc in (ein:process-processes)
         for parsed-url-proc = (url-generic-parse-url (ein:process-url-or-port proc))
         when (and (string= (url-host parsed-url-or-port) (url-host parsed-url-proc))

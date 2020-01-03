@@ -294,7 +294,7 @@ a number will limit the number of lines in a cell output."
 (cl-defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
-    (loop for k in '(read-only ewoc)
+    (cl-loop for k in '(read-only ewoc)
       do (setf (slot-value new k) (slot-value cell k)))
     ;; copy input
     (setf (slot-value new 'input) (if (ein:cell-active-p cell)
@@ -325,14 +325,14 @@ a number will limit the number of lines in a cell output."
   "Convert CELL to TYPE and redraw corresponding ewoc nodes."
   (let ((new (ein:cell-convert cell type)))
     ;; copy element attribute
-    (loop for k in (slot-value new 'element-names)
+    (cl-loop for k in (slot-value new 'element-names)
           with old-element = (slot-value cell 'element)
           do (progn
                (setf (slot-value new 'element)
                      (plist-put (slot-value new 'element) k
                                 (plist-get old-element k)))))
     ;; setting ewoc nodes
-    (loop for en in (ein:cell-all-element cell)
+    (cl-loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
           do (setf (ein:$node-data node) new))
     (let ((inhibit-read-only t)
@@ -342,12 +342,12 @@ a number will limit the number of lines in a cell output."
        #'ewoc-delete (slot-value new 'ewoc)
        (apply
         #'append
-        (loop for name in (slot-value cell 'element-names)
+        (cl-loop for name in (slot-value cell 'element-names)
               unless (memq name (slot-value new 'element-names))
               collect (let ((ens (ein:cell-element-get cell name)))
                         (if (listp ens) ens (list ens))))))
       ;; draw ewoc node
-      (loop with ewoc = (slot-value new 'ewoc)
+      (cl-loop with ewoc = (slot-value new 'ewoc)
             for en in (ein:cell-all-element new)
             do (ein:cell--ewoc-invalidate ewoc en)))
     new))
@@ -358,7 +358,7 @@ a number will limit the number of lines in a cell output."
         (buffer-undo-list t))         ; disable undo recording
     (setf (slot-value cell 'level) level)
     ;; draw ewoc node
-    (loop with ewoc = (slot-value cell 'ewoc)
+    (cl-loop with ewoc = (slot-value cell 'ewoc)
           for en in (ein:cell-all-element cell)
           do (ein:cell--ewoc-invalidate ewoc en))))
 
@@ -421,7 +421,7 @@ Return language name as a string or `nil' when not defined.
   (fn cell)")
 
 (cl-defmethod ein:cell-language ((cell ein:codecell))
-  (ein:and-let* ((kernel (slot-value cell 'kernel))
+  (ein:and-let* ((kernel (ein:oref-safe cell 'kernel))
                  (kernelspec (ein:$kernel-kernelspec kernel)))
     (ein:$kernelspec-language kernelspec)))
 (cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
@@ -436,7 +436,7 @@ Return language name as a string or `nil' when not defined.
     (list
      :prompt (funcall make-node 'prompt)
      :input  (funcall make-node 'input)
-     :output (loop for i from 0 below num-outputs
+     :output (cl-loop for i from 0 below num-outputs
                    collect (funcall make-node 'output i))
      :footer (funcall make-node 'footer))))
 
@@ -972,7 +972,7 @@ prettified text thus be used instead of HTML type."
 (defun ein:cell-append-mime-type (json dynamic)
   (when (plist-get json :data)
     (setq json (plist-get json :data))) ;; For nbformat v4 support.
-  (loop
+  (cl-loop
    for key in (cond
                ((functionp ein:output-type-preference)
                 (funcall ein:output-type-preference json))
@@ -1024,6 +1024,7 @@ prettified text thus be used instead of HTML type."
     ,@(aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
     (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
+    (language . ,(or (ein:cell-language cell) "python"))
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
 
 (defvar ein:output-type-map
@@ -1056,7 +1057,7 @@ prettified text thus be used instead of HTML type."
                 (append renamed-outputs
                         (list (let ((ocopy (cl-copy-list output))
                                     (new-output '()))
-                                (loop while ocopy
+                                (cl-loop while ocopy
                                       do (let ((prop (pop ocopy))
                                                (value (pop ocopy)))
                                            (ein:log 'debug "Checking property %s for output type '%s'"
@@ -1229,7 +1230,7 @@ prettified text thus be used instead of HTML type."
 
 
 (defun ein:output-area-convert-mime-types (json data)
-  (loop for (prop . mime) in '((:text       . :text/plain)
+  (cl-loop for (prop . mime) in '((:text       . :text/plain)
                                (:html       . :text/html)
                                (:svg        . :image/svg+xml)
                                (:png        . :image/png)
@@ -1258,7 +1259,7 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
-  (loop for out in (slot-value cell 'outputs)
+  (cl-loop for out in (slot-value cell 'outputs)
         when (or (plist-member out :svg)
                  (plist-member out :image/svg+xml)
                  (plist-member out :png)
@@ -1271,7 +1272,7 @@ prettified text thus be used instead of HTML type."
   nil)
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
-  (loop for out in (slot-value cell 'outputs)
+  (cl-loop for out in (slot-value cell 'outputs)
         when (and (plist-get out :traceback)
                   (member (plist-get out :output_type) '("pyerr" "error")))
         return (plist-get out :traceback)))

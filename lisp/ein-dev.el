@@ -65,7 +65,7 @@
   (ein:load-files "^ein-.*\\.el$"))
 
 (cl-defun ein:dev-require-all (&key (ignore-p #'ignore))
-  (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
+  (cl-loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
         unless (or (equal f "ein-pkg.el")
                    (equal f "ein-autoloads.el")
                    (funcall ignore-p f))
@@ -201,7 +201,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
 
 (defun ein:dev-sys-info--lib (name)
   (let* ((libsym (intern-soft name))
-         (version-var (loop for fmt in '("%s-version" "%s:version")
+         (version-var (cl-loop for fmt in '("%s-version" "%s:version")
                             if (intern-soft (format fmt name))
                             return it))
          (version (symbol-value version-var)))
@@ -212,7 +212,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
           :version version)))
 
 (defun ein:dev-dump-vars (names)
-  (loop for var in names
+  (cl-loop for var in names
         collect (intern (format ":%s" var))
         collect (symbol-value (intern (format "ein:%s" var)))))
 

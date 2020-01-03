@@ -195,7 +195,7 @@ at point, i.e. any word before then \"(\", if it is present."
 (defvar ein:url-localhost "127.0.0.1")
 
 (defsubst ein:glom-paths (&rest paths)
-  (loop with result = ""
+  (cl-loop with result = ""
         for p in paths
         if (not (zerop (length p)))
           do (setq result (concat result (ein:trim-left (directory-file-name p) "/") "/"))
@@ -348,13 +348,13 @@ number of lines is less than `nlines' then just return the string."
   (let* ((lines (split-string string "\n"))
          (indent
           (let ((lens
-                 (loop for line in lines
+                 (cl-loop for line in lines
                        for stripped = (ein:trim-left line)
                        unless (equal stripped "")
                        collect (- (length line) (length stripped)))))
             (if lens (apply #'min lens) 0)))
          (trimmed
-          (loop for line in lines
+          (cl-loop for line in lines
                 if (> (length line) indent)
                 collect (ein:trim-right (substring line indent))
                 else
@@ -420,7 +420,7 @@ Adapted from twittering-mode.el's `case-string'."
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."
   ;; FIXME: this is not needed.  See: `ein:plist-exclude'.
-  (loop for p in plist
+  (cl-loop for p in plist
         for i from 0
         for key-p = (= (% i 2) 0)
         with key = nil
@@ -433,7 +433,7 @@ Adapted from twittering-mode.el's `case-string'."
 Example::
 
     (ein:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
-  (loop for (k v) on plist by 'cddr
+  (cl-loop for (k v) on plist by 'cddr
         unless (memq k keys)
         nconc (list k v)))
 
@@ -443,7 +443,7 @@ Example::
 Example::
 
     (ein:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
-  (loop for elem in list
+  (cl-loop for elem in list
         with clipped
         with in-region-p = nil
         when (eq elem first)
@@ -457,7 +457,7 @@ Example::
   "Insert NEW after PIVOT in LIST destructively.
 Note: do not rely on that `ein:list-insert-after' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
-  (loop for rest on list
+  (cl-loop for rest on list
         when (funcall test (car rest) pivot)
         return (progn (push new (cdr rest)) list)
         finally do (error "PIVOT %S is not in LIST %S" pivot list)))
@@ -468,7 +468,7 @@ Note: do not rely on that `ein:list-insert-before' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
   (if (and list (funcall test (car list) pivot))
       (cons new list)
-    (loop for rest on list
+    (cl-loop for rest on list
           when (funcall test (cadr rest) pivot)
           return (progn (push new (cdr rest)) list)
           finally do (error "PIVOT %S is not in LIST %S" pivot list))))
@@ -480,7 +480,7 @@ Elements are compared using the function TEST (default: `eq')."
      ((== (car list) elem)
       (append (cdr list) (list (car list))))
      (t
-      (loop for rest on list
+      (cl-loop for rest on list
             when (== (cadr rest) elem)
             return (let ((prev (car rest)))
                      (setf (car rest) elem)
@@ -490,7 +490,7 @@ Elements are compared using the function TEST (default: `eq')."
 
 (cl-defun ein:list-move-right (list elem &key (test #'eq))
   "Move ELEM in LIST right.  TEST is used to compare elements"
-  (loop with first = t
+  (cl-loop with first = t
         for rest on list
         when (funcall test (car rest) elem)
         return (if (cdr rest)
@@ -545,14 +545,14 @@ FUNC is called as (apply FUNC ARG ARGS)."
 (defun ein:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
 NOTE: This function creates new list."
-  (loop for l in list
+  (cl-loop for l in list
         for i from 0
         when (not (memq i indices))
         collect l))
 
 (defun ein:ask-choice-char (prompt choices)
   "Show PROMPT and read one of acceptable key specified as CHOICES."
-  (let ((char-list (loop for i from 0 below (length choices)
+  (let ((char-list (cl-loop for i from 0 below (length choices)
                          collect (elt choices i)))
         (answer 'recenter))
     (while
@@ -584,7 +584,7 @@ PREDARGS is argument list for the PREDICATE function.
 Make TIMEOUT-SECONDS larger \(default 5) to wait longer before timeout."
   (ein:log 'debug "WAIT-UNTIL start")
   (unless timeout-seconds (setq timeout-seconds 5))
-  (unless (loop repeat (/ timeout-seconds 0.05)
+  (unless (cl-loop repeat (/ timeout-seconds 0.05)
                 when (apply predicate predargs)
                 return t
                 ;; borrowed from `deferred:sync!':
@@ -623,7 +623,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
     ;; "complicated timings of macro expansion lexical-let, deferred:lambda"
     ;; using deferred:loop instead
     (deferred:$
-      (deferred:loop (loop for i from 1 below 30 by 1 collect i)
+      (deferred:loop (cl-loop for i from 1 below 30 by 1 collect i)
         (lambda ()
           (deferred:$
             (deferred:next

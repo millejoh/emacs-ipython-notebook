@@ -45,7 +45,7 @@ can be handled by the xml module."
 (defun ein:xml-tree-apply (dom operation)
   "Apply OPERATION on nodes in DOM.  Apply the same OPERATION on
 the next level children when it returns `nil'."
-  (loop for child in (xml-node-children dom)
+  (cl-loop for child in (xml-node-children dom)
         if (and (not (funcall operation child))
                 (ein:xml-node-p child))
         do (ein:xml-tree-apply child operation)))

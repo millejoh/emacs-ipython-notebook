@@ -59,7 +59,7 @@
       (data . (,data)))))
 
 (defun ein:maybe-get-output-mime-data (output)
-  (loop for type in '(:svg :png :jpeg :html :latex  :javascript :text)
+  (cl-loop for type in '(:svg :png :jpeg :html :latex  :javascript :text)
         if (plist-get output type)
         collecting (cons (ein:output-property type) (plist-get output type))))
 
@@ -71,7 +71,7 @@
       (metadata . ,(make-hash-table)))))
 
 (defun ein:find-and-make-outputs (output-plist)
-  (loop for prop in ein:output-type-map
+  (cl-loop for prop in ein:output-type-map
         when (plist-get output-plist (cdr prop))
         collect (list (cdr prop) (plist-get output-plist (cdr prop)))))
 
