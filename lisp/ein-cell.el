@@ -1015,7 +1015,7 @@ prettified text thus be used instead of HTML type."
         ((html text/html)
          (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
         ((latex text/latex text text/plain)
-         (ein:insert-read-only (plist-get json type)))
+         (ein:insert-read-only (ansi-color-apply (plist-get json type))))
         ((svg image/svg+xml)
          (ein:insert-image value (ein:fix-mime-type key) t))
         ((png image/png jpeg image/jpeg)
