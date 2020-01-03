@@ -67,6 +67,9 @@ before_script:
   - bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
   - emacs --version
   - sh tools/install-cask.sh
+  - curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/master.zip && unzip master.zip
+  - cask link kubernetes ./kubernetes-el-master
+  - cask link list
 
 script:
   - make test-install
