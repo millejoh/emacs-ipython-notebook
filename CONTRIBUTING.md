@@ -1,7 +1,5 @@
 Getting started
 ---------------
-Thank you for contributing!  EIN development will work best in a UNIX environment.
-
 Fork the repo on github.  Clone the fork to your home directory.
 
 Install cask.  Run `make dist` to ensure correct cask functionality.
