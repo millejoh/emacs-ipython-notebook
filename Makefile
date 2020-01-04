@@ -70,12 +70,6 @@ test-jupyterhub: test-compile
 .PHONY: test
 test: quick test-int
 
-.PHONY: test-unpoly
-test-poly:
-	cask exec ert-runner -L ./lisp -L ./test -l test/testfunc.el test/test-poly.el test/test-func.el
-	cp test/test-poly.el features/support/test-poly.el
-	cask exec ecukes --reporter magnars ; (ret=$$? ; rm -f features/support/test-poly.el && exit $$ret)
-
 .PHONY: test-int
 test-int:
 	cask exec ecukes --reporter magnars
@@ -83,7 +77,6 @@ test-int:
 .PHONY: test-unit
 test-unit:
 	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
-	cask exec ert-runner -L ./lisp -L ./test test/test-uncompiled.el
 
 .PHONY: test-ob-ein-recurse
 test-ob-ein-recurse:
