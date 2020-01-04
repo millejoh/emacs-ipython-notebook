@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# install julia for Travis CI
+# install julia for Actions CI
 
 set -x
 
 WORKDIR=${HOME}/local
+UNAME=$(uname -s)
 cd $WORKDIR
-if [ "x$TRAVIS_OS_NAME" = "xlinux" ] ; then
+if [ "x$UNAME" = "xLinux" ] ; then
     if [ ! -d ${WORKDIR}/julia-1.1.0 ]; then
         wget https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz
         tar zxvf julia-1.1.0-linux-x86_64.tar.gz
@@ -15,7 +16,7 @@ if [ "x$TRAVIS_OS_NAME" = "xlinux" ] ; then
     hash
     julia --version
     julia -e 'import Pkg; Pkg.add("IJulia")'
-elif [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
+elif [ "x$UNAME" = "xDarwin" ]; then
     brew update
     brew cask list julia &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew cask install julia
     julia --version

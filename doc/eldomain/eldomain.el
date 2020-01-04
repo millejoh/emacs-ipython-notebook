@@ -32,27 +32,27 @@
 (defvar eldomain-prefix nil)
 
 (defun eldomain-get-symbols (predicate)
-  (loop for x being the symbols
+  (cl-loop for x being the symbols
         with regexp = (format "^%s" eldomain-prefix)
         if (and (funcall predicate  x)
                 (string-match regexp (format "%S" x)))
         collect x))
 
 (defun eldomain-get-function-data ()
-  (loop for x in (eldomain-get-symbols #'fboundp)
+  (cl-loop for x in (eldomain-get-symbols #'fboundp)
         for name = (format "%S" x)
         for arg = (help-function-arglist x)
         for doc = (documentation x)
         collect `((name . ,name) (arg . ,arg) (doc . ,doc))))
 
 (defun eldomain-get-variable-data ()
-  (loop for x in (eldomain-get-symbols #'boundp)
+  (cl-loop for x in (eldomain-get-symbols #'boundp)
         for name = (format "%S" x)
         for doc = (documentation-property x 'variable-documentation t)
         collect `((name . ,name) (doc . ,doc))))
 
 (defun eldomain-get-face-data ()
-  (loop for x in (eldomain-get-symbols #'facep)
+  (cl-loop for x in (eldomain-get-symbols #'facep)
         for name = (format "%S" x)
         for doc = (documentation-property x 'face-documentation t)
         collect `((name . ,name) (doc . ,doc))))
@@ -82,7 +82,7 @@
     data))
 
 (defun eldomain-get-keymap-data ()
-  (loop for x in (eldomain-get-symbols
+  (cl-loop for x in (eldomain-get-symbols
                   (lambda (v) (and (boundp v) (keymapp (eval v)))))
         for name = (format "%S" x)
         for doc = (documentation-property x 'variable-documentation t)

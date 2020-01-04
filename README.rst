@@ -14,8 +14,8 @@ EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
 
 .. |build-status|
-   image:: https://travis-ci.com/dickmao/emacs-ipython-notebook.svg?branch=master
-   :target: http://travis-ci.com/dickmao/emacs-ipython-notebook
+   image:: https://github.com/dickmao/emacs-ipython-notebook/workflows/CI/badge.svg
+   :target: https://github.com/dickmao/emacs-ipython-notebook/actions
    :alt: Build Status
 .. |melpa-dev|
    image:: http://melpa.milkbox.net/packages/ein-badge.svg
@@ -53,7 +53,7 @@ Alternatively, ob-ein_.
 Reporting bugs
 --------------
 EIN is tested on GNU Emacs versions
-emacs-25-2
+25.1
 and later.
 
 **Please file issues using** ``M-x ein:dev-bug-report-template``.

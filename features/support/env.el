@@ -29,24 +29,20 @@
 (when (file-exists-p (concat default-directory "features/support/test-poly.el"))
   (load-file (concat default-directory "features/support/test-poly.el")))
 
-(when ein:polymode
-  (!cons "evil" ecukes-exclude-tags))
-
-(cond ((not ein:polymode)
-       (!cons "julia" ecukes-exclude-tags)
-       (!cons "memory" ecukes-exclude-tags))
-      ((string= (getenv "TRAVIS_OS_NAME") "linux")
-       (!cons "memory" ecukes-exclude-tags)))
+(!cons "evil" ecukes-exclude-tags)
+(!cons "memory" ecukes-exclude-tags)
+(when (eq system-type 'darwin) ;; julia bogs github actions catalina
+  (!cons "julia" ecukes-exclude-tags))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
 (defun ein:testing-after-scenario ()
   (ein:testing-flush-queries)
   (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
-    (loop for notebook in (ein:notebook-opened-notebooks)
+    (cl-loop for notebook in (ein:notebook-opened-notebooks)
           for path = (ein:$notebook-notebook-path notebook)
           do (ein:notebook-kill-kernel-then-close-command notebook)
-          do (loop repeat 16
+          do (cl-loop repeat 16
                    until (not (ein:notebook-live-p notebook))
                    do (sleep-for 0 1000)
                    finally do (when (ein:notebook-live-p notebook)
@@ -55,15 +51,15 @@
                        (search "Untitled" path)
                        (search "Renamed" path))
                (ein:notebooklist-delete-notebook path)
-               (loop repeat 16
+               (cl-loop repeat 16
                      with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
                      for extant = (file-exists-p fullpath)
                      until (not extant)
                      do (sleep-for 0 1000)
                      finally do (when extant
                                   (ein:display-warning (format "cannot del %s" path)))))))
-  (ein:aif (ein:notebook-opened-notebooks)
-      (loop for nb in it
+  (aif (ein:notebook-opened-notebooks)
+      (cl-loop for nb in it
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
             finally do (assert nil))))
@@ -72,9 +68,10 @@
  (ein:dev-start-debug)
  (cl-assert (boundp 'company-frontends))
  (custom-set-variables '(company-frontends nil)
-                       '(python-indent-guess-indent-offset-verbose nil))
+                       '(python-indent-guess-indent-offset-verbose nil)
+                       '(ein:jupyter-use-containers nil))
  (setq ein:jupyter-default-kernel
-       (loop with cand = ""
+       (cl-loop with cand = ""
              for (k . spec) in
              (alist-get
               'kernelspecs
@@ -82,7 +79,7 @@
                 (json-read-from-string
                  (shell-command-to-string
                   (format "%s kernelspec list --json"
-                          ein:jupyter-default-server-command)))))
+                          ein:jupyter-server-command)))))
              if (let ((lang (alist-get 'language (alist-get 'spec spec))))
                   (and (string= "python" lang)
                        (string> (symbol-name k) cand)))

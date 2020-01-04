@@ -60,7 +60,7 @@ Modified version of `org-src-get-lang-mode'."
             (unless (eq major-mode lang-mode) (funcall lang-mode))
             (font-lock-ensure)
             (setq pos (point-min))
-            (loop for next = (next-single-property-change pos 'face nil (point-max))
+            (cl-loop for next = (next-single-property-change pos 'face nil (point-max))
                   do (put-text-property
                       ;; `font-lock-face' property is used instead of `font'.
                       ;; This is the only difference from org-src.

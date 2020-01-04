@@ -13,8 +13,8 @@ if [ "x$TRAVIS_OS_NAME" = "xosx" ]; then
 
     case "${TOXENV}" in
         py27)
-            pyenv install -s 2.7.12
-            pyenv virtualenv -f 2.7.12 py27
+            pyenv install -s 2.7.13
+            pyenv virtualenv -f 2.7.13 py27
             ;;
         py35)
             pyenv install -s 3.5.2

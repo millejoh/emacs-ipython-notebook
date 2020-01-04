@@ -71,7 +71,7 @@
   (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
 
 (defun ein:completions-get-cached (partial oinfo-cache)
-  (loop for candidate being the hash-keys of oinfo-cache
+  (cl-loop for candidate being the hash-keys of oinfo-cache
         when (string-prefix-p partial candidate)
         collect candidate))
 
@@ -98,7 +98,7 @@
       (destructuring-bind (msg-type content _) output
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "execute_result")
-           (ein:aif (plist-get content :text)
+           (aif (plist-get content :text)
                (let ((oinfo (ein:json-read-from-string it)))
                  (unless (string= (plist-get oinfo :string_form) "None")
                    (setf (gethash obj (ein:$kernel-oinfo-cache kernel))

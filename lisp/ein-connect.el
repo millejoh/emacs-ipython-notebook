@@ -183,7 +183,7 @@ notebooks."
   "Connect any buffer to opened notebook and its kernel."
   (interactive (list (ein:completing-read "Notebook buffer to connect: "
                                       (ein:notebook-opened-buffer-names))))
-  (ein:aif (get-buffer buffer-or-name)
+  (aif (get-buffer buffer-or-name)
       (let ((notebook (buffer-local-value 'ein:%notebook% it)))
         (ein:connect-buffer-to-notebook notebook))
     (error "No buffer %s" buffer-or-name)))
@@ -230,8 +230,8 @@ inside the ``if __name__ == \"__main__\":`` block."
   "Run buffer using ``%run``.  Ask for command if the prefix ``C-u`` is given.
 Variable `ein:connect-run-command' sets the default command."
   (interactive "P")
-  (ein:aif (ein:aand (ein:get-url-or-port)
-                     (ein:filename-to-python it (buffer-file-name)))
+  (aif (ein:aand (ein:get-url-or-port)
+                 (ein:filename-to-python it (buffer-file-name)))
       (let* ((default-command (ein:connect-run-command-get))
              (command (if ask-command
                           (read-from-minibuffer "Command: " default-command)

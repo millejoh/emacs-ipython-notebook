@@ -24,7 +24,7 @@
    },
    \"nbformat\": 3,
    \"nbformat_minor\": 0,
-  
+
    \"worksheets\": [
     {
      \"cells\": [
@@ -137,7 +137,7 @@ is not found."
 
 (ert-deftest ein:notebook-from-json-all-cell-types ()
   (with-current-buffer
-      (ein:testing-notebook-make-new 
+      (ein:testing-notebook-make-new
        ein:testing-notebook-dummy-name
        nil
        (list (ein:testing-codecell-data "import numpy")
@@ -162,7 +162,7 @@ is not found."
       (should (equal (ein:cell-get-text (nth 1 cells)) "*markdown* text"))
       (should (equal (ein:cell-get-text (nth 2 cells)) "`raw` cell text"))
       (should (equal (ein:cell-get-text (nth 3 cells)) "<b>HTML</b> text"))
-      (loop for i from 4 to 9
+      (cl-loop for i from 4 to 9
             for level from 1
             for cell = (nth i cells)
             do (should (ein:headingcell-p cell))
@@ -250,10 +250,10 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
 
 (ert-deftest ein:notebook-delete-cell-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (loop repeat 3
+    (cl-loop repeat 3
           do (call-interactively #'ein:worksheet-insert-cell-above))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
-    (loop repeat 3
+    (cl-loop repeat 3
           do (call-interactively #'ein:worksheet-delete-cell))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))))
 
@@ -274,10 +274,10 @@ some text
 (ert-deftest ein:notebook-kill-cell-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
-      (loop for i from 1 to 3
+      (cl-loop for i from 1 to 3
             do (call-interactively #'ein:worksheet-kill-cell)
             do (should (equal (length ein:kill-ring) i))
             do (should (equal (ein:worksheet-ncells ein:%worksheet%) (- 3 i)))))))
@@ -285,10 +285,10 @@ some text
 (ert-deftest ein:notebook-copy-cell-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-copy-cell))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
       (should (equal (length ein:kill-ring) 3)))))
@@ -296,17 +296,17 @@ some text
 (ert-deftest ein:notebook-yank-cell-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
     (let (ein:kill-ring ein:kill-ring-yank-pointer)
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-insert-cell-above))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-kill-cell))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 0))
       (should (equal (length ein:kill-ring) 3))
-      (loop repeat 3
+      (cl-loop repeat 3
             do (call-interactively #'ein:worksheet-yank-cell))
       (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
-      (loop for cell in (ein:worksheet-get-cells ein:%worksheet%)
+      (cl-loop for cell in (ein:worksheet-get-cells ein:%worksheet%)
             do (should (ein:codecell-p cell))
             do (should (slot-boundp cell :kernel))
             do (should (slot-boundp cell :events))))))
@@ -366,10 +366,10 @@ some text
                  (should (funcall cell-p new)))
                (should (looking-back "some text"))))))
       ;; change type: code (no change) -> markdown -> raw
-      (loop for type in '("code" "markdown" "raw")
+      (cl-loop for type in '("code" "markdown" "raw")
             do (funcall check type))
       ;; change level: 1 to 6
-      (loop for level from 1 to 6
+      (cl-loop for level from 1 to 6
             do (funcall check "heading" level))
       ;; back to code
       (funcall check "code")
@@ -457,12 +457,12 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:notebook-goto-next-input-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (loop for i downfrom 2 to 0
+    (cl-loop for i downfrom 2 to 0
           do (call-interactively #'ein:worksheet-insert-cell-above)
           do (insert (format "Cell %s" i)))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
     ;; (message "%s" (buffer-string))
-    (loop for i from 0 below 2
+    (cl-loop for i from 0 below 2
           do (beginning-of-line) ; This is required, I need to check why
           do (should (looking-at (format "Cell %s" i)))
           do (call-interactively #'ein:worksheet-goto-next-input)
@@ -470,12 +470,12 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:notebook-goto-prev-input-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (loop for i from 0 below 3
+    (cl-loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-below)
           do (insert (format "Cell %s" i)))
     (should (equal (ein:worksheet-ncells ein:%worksheet%) 3))
     ;; (message "%s" (buffer-string))
-    (loop for i downfrom 2 to 1
+    (cl-loop for i downfrom 2 to 1
           do (beginning-of-line) ; This is required, I need to check why
           do (should (looking-at (format "Cell %s" i)))
           do (call-interactively #'ein:worksheet-goto-prev-input)
@@ -614,12 +614,12 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:notebook-move-cell-up-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (loop for i from 0 below 3
+    (cl-loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-below)
           do (insert (format "Cell %s" i)))
     (beginning-of-line)
     (should (looking-at "Cell 2"))
-    (loop repeat 2
+    (cl-loop repeat 2
           do (call-interactively #'ein:worksheet-move-cell-up))
     ;; (message "%s" (buffer-string))
     (beginning-of-line)
@@ -630,10 +630,10 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 
 (ert-deftest ein:notebook-move-cell-down-command-simple ()
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (loop for i from 0 below 3
+    (cl-loop for i from 0 below 3
           do (call-interactively #'ein:worksheet-insert-cell-above)
           do (insert (format "Cell %s" i)))
-    (loop repeat 2
+    (cl-loop repeat 2
           do (call-interactively #'ein:worksheet-move-cell-down))
     (beginning-of-line)
     (should (looking-at "Cell 2"))
@@ -654,7 +654,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
       (should-not (oref cell :collapsed)))))
 
 (defun ein:testing-insert-cells (list-type-or-cell &optional pivot callback)
-  (loop with ws = ein:%worksheet%
+  (cl-loop with ws = ein:%worksheet%
         with cell = pivot
         for type in list-type-or-cell
         for i from 0
@@ -665,7 +665,7 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
 (defun* ein:testing-insert-cells-with-format (num &optional
                                                   (format "Cell %s")
                                                   (type 'code))
-  (ein:testing-insert-cells (loop repeat num collect type)
+  (ein:testing-insert-cells (cl-loop repeat num collect type)
                             nil
                             (lambda (i &rest _) (insert (format format i))))
   (should (equal (ein:worksheet-ncells ein:%worksheet%) num)))
@@ -1122,7 +1122,7 @@ In [ ]:
     (let* ((text "print 'Hello World\\n' * 10")
            (next-text "something")
            (output-text
-            (apply #'concat (loop repeat 10 collect "Hello World\n")))
+            (apply #'concat (cl-loop repeat 10 collect "Hello World\n")))
            (cell (ein:worksheet-get-current-cell))
            (next-cell (ein:cell-next cell))
            (kernel (ein:$notebook-kernel ein:%notebook%))

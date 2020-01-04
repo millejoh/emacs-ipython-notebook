@@ -15,8 +15,22 @@ update_elpa_keys() {
     mkdir -p $HOME/.emacs.d/elpa/gnupg || true
     chmod 700 $HOME/.emacs.d/elpa/gnupg
     GPG=gpg
-    if which gpg2 ; then GPG=gpg2 ; fi
-    travis_retry ${GPG} --keyserver hkp://pool.sks-keyservers.net:80 --homedir $HOME/.emacs.d/elpa/gnupg --recv-keys 066DAFCB81E42C40
+    if which gpg2 ; then
+        GPG=gpg2
+    fi
+    for i in 1 2 3 ; do
+        if ${GPG} -q --homedir $HOME/.emacs.d/elpa/gnupg -k | grep 81E42C40 ; then
+            return 0
+        fi
+        if [ $i -gt 1 ] ; then
+            sleep 5
+        fi
+        ${GPG} --keyserver hkp://ipv4.pool.sks-keyservers.net --homedir $HOME/.emacs.d/elpa/gnupg --recv-keys 066DAFCB81E42C40
+    done
+    return 1
+}
+
+copy_keys() {
     mkdir -p $(cask package-directory) || true
     mkdir -p $HOME/.cask || true
     rsync -azSHe ssh $HOME/.cask $(dirname $(dirname $(dirname $(cask package-directory))))
@@ -41,9 +55,10 @@ if [ ! -d $CASKDIR ] ; then
     git clone https://github.com/cask/cask.git $CASKDIR
 fi
 
-# Install dependencies for cider as descriped in ./Cask
+# Install dependencies for cider as described in ./Cask
 # Effect is identical to "make elpa", but here we can retry
 # in the event of network failures.
 update_elpa_keys
+copy_keys
 travis_retry cask_upgrade_cask_or_reset
 travis_retry cask_install_or_reset && touch elpa-emacs

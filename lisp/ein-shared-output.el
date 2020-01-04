@@ -83,7 +83,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (when (slot-value cell 'popup)
     (pop-to-buffer (ein:shared-output-create-buffer)))
   (cl-call-next-method)
-  (ein:aif (ein:oref-safe cell 'callback)
+  (aif (ein:oref-safe cell 'callback)
       (progn
         (funcall it cell)
         (setf (slot-value cell 'callback-called) t))))
@@ -94,7 +94,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     "ein:cell--handle-execute-reply (cell ein:shared-output-cell): %s"
     content)
   (cl-call-next-method)
-  (ein:aif (ein:oref-safe cell 'callback)
+  (aif (ein:oref-safe cell 'callback)
     ;; clear the way for waiting block in `ob-ein--execute-async'
     ;; but only after 2 seconds to allow for handle-output stragglers
     ;; TODO avoid this hack

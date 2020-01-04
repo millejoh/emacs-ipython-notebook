@@ -18,12 +18,12 @@
   (should (equal (ein:url "datasci-1" "foo" "bar") "https://datasci-1/foo/bar"))
   (should (equal (ein:glom-paths "" nil "Untitled1.ipynb") "Untitled1.ipynb"))
   (should (equal (ein:glom-paths) ""))
-  (loop for url in '("http://127.0.0.1:8888" "http://localhost:8888" "http://127.0.0.1:8888/" "http://localhost:8888/" "8888" 8888)
+  (cl-loop for url in '("http://127.0.0.1:8888" "http://localhost:8888" "http://127.0.0.1:8888/" "http://localhost:8888/" "8888" 8888)
         do (should (equal (ein:url "http://localhost:8888") (ein:url url)))))
 
 (ert-deftest ein-url-slashes ()
-  (loop for a in '("a" "a/" "/a")
-        do (loop for b in '("b" "/b")
+  (cl-loop for a in '("a" "a/" "/a")
+        do (cl-loop for b in '("b" "/b")
                  do (should (equal (ein:url 8888 a b)
                                    "http://127.0.0.1:8888/a/b")))
         do (should (equal (ein:url 8888 a "b/")
@@ -99,7 +99,7 @@ def func():
 ;;; Text manipulation on buffer
 
 (ert-deftest ein:find-leftmot-column-simple-cases ()
-  (loop for (indent text) in
+  (cl-loop for (indent text) in
         '(;; No indent
           (0 "\
 def f():

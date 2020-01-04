@@ -54,7 +54,7 @@
   (setq ein:log-message-level (ein:log-level-name-to-int level)))
 
 (defun ein:log-level-int-to-name (int)
-  (loop for (n . i) in ein:log-level-def
+  (cl-loop for (n . i) in ein:log-level-def
         when (>= int i)
         return n
         finally 'error))
@@ -106,7 +106,7 @@ Otherwise, return result of last form in BODY."
 
 (defun ein:log-pop-to-request-buffer ()
   (interactive)
-  (ein:aif (get-buffer request-log-buffer-name)
+  (aif (get-buffer request-log-buffer-name)
       (pop-to-buffer it)
     (message "No buffer named \"%s\"" request-log-buffer-name)))
 

@@ -187,7 +187,7 @@ This function may raise an error."
   "Parent modes for `ein:notebook-multilang-mode' to register in yasnippet.")
 
 (defun ein:ml-setup-yasnippet ()
-  (loop for define-parents in '(yas/define-parents
+  (cl-loop for define-parents in '(yas/define-parents
                                 yas--define-parents)
         when (fboundp define-parents)
         do (ignore-errors

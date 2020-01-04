@@ -108,7 +108,7 @@ some input
         (test-display-data
          (intern (format "ein:cell-insert-output-display-data-%s" name)))
         (outputs-pyout
-         (loop for i from 1
+         (cl-loop for i from 1
                for x in outputs
                collect
                ;; ein:cell--handle-output doesn't get called
@@ -120,7 +120,7 @@ some input
         (regexp-pyout
          (ein:join-str
           ""
-          (loop for i from 1
+          (cl-loop for i from 1
                 for x in regexps
                 collect (format "Out \\[%s\\]:\n%s\n" i x))))
         (regexp-display-data

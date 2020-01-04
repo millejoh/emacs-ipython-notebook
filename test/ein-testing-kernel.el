@@ -67,18 +67,18 @@ construct CONTENT and RESULT."
   (unless pdocstring-list
     (setq pdocstring-list
           ein:testing-kernel-construct-help-string-pdocstring-list))
-  (loop with callsig = "function(a=1, b=2, c=d)"
-        with docstring = "This function does what."
-        for pcallsig in pcallsig-list
-        do (loop for pdoc in pdocstring-list
-                 for content = (append
-                                (when pcallsig (list pcallsig callsig))
-                                (when pdoc (list pdoc docstring)))
-                 for result = (ein:aif (append
-                                        (when pcallsig (list callsig))
-                                        (when pdoc (list docstring)))
-                                  (ein:join-str "\n" it))
-                 do (funcall test content result))))
+  (cl-loop with callsig = "function(a=1, b=2, c=d)"
+           with docstring = "This function does what."
+           for pcallsig in pcallsig-list
+           do (cl-loop for pdoc in pdocstring-list
+                       for content = (append
+                                      (when pcallsig (list pcallsig callsig))
+                                      (when pdoc (list pdoc docstring)))
+                       for result = (aif (append
+                                          (when pcallsig (list callsig))
+                                          (when pdoc (list docstring)))
+                                        (ein:join-str "\n" it))
+                       do (funcall test content result))))
 
 (provide 'ein-testing-kernel)
 

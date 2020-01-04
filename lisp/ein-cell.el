@@ -235,7 +235,9 @@ a number will limit the number of lines in a cell output."
                 (when (listp ein:slice-image) ein:slice-image)
               (insert-sliced-image img "." nil (or rows 20) cols))
           (insert-image img ".")))
-    (error (ein:log 'warn "Could not insert image: %s" err) nil)))
+    (error (ein:log 'warn "Could not insert image: %s"
+                    (error-message-string err))
+           nil)))
 
 
 ;;; Cell factory
@@ -269,9 +271,9 @@ a number will limit the number of lines in a cell output."
   (ein:oset-if-empty cell 'outputs (plist-get data :outputs))
   (ein:oset-if-empty cell 'input (or (plist-get data :input)
                                      (plist-get data :source)))
-  (ein:aif (plist-get data :prompt_number)
+  (aif (plist-get data :prompt_number)
       (ein:oset-if-empty cell 'input-prompt-number it)
-    (ein:aif (plist-get data :execution_count)
+    (aif (plist-get data :execution_count)
         (ein:oset-if-empty cell 'input-prompt-number it)))
   (ein:oset-if-empty cell 'collapsed
                      (let ((v (or (plist-get data :collapsed)
@@ -281,20 +283,20 @@ a number will limit the number of lines in a cell output."
   cell)
 
 (cl-defmethod ein:cell-init ((cell ein:textcell) data)
-  (ein:aif (plist-get data :source)
+  (aif (plist-get data :source)
       (setf (slot-value cell 'input) it))
   cell)
 
 (cl-defmethod ein:cell-init ((cell ein:headingcell) data) ;; FIXME: Was :after method
   (cl-call-next-method)
-  (ein:aif (plist-get data :level)
+  (aif (plist-get data :level)
       (setf (slot-value cell 'level) it))
   cell)
 
 (cl-defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
-    (loop for k in '(read-only ewoc)
+    (cl-loop for k in '(read-only ewoc)
       do (setf (slot-value new k) (slot-value cell k)))
     ;; copy input
     (setf (slot-value new 'input) (if (ein:cell-active-p cell)
@@ -325,14 +327,14 @@ a number will limit the number of lines in a cell output."
   "Convert CELL to TYPE and redraw corresponding ewoc nodes."
   (let ((new (ein:cell-convert cell type)))
     ;; copy element attribute
-    (loop for k in (slot-value new 'element-names)
+    (cl-loop for k in (slot-value new 'element-names)
           with old-element = (slot-value cell 'element)
           do (progn
                (setf (slot-value new 'element)
                      (plist-put (slot-value new 'element) k
                                 (plist-get old-element k)))))
     ;; setting ewoc nodes
-    (loop for en in (ein:cell-all-element cell)
+    (cl-loop for en in (ein:cell-all-element cell)
           for node = (ewoc-data en)
           do (setf (ein:$node-data node) new))
     (let ((inhibit-read-only t)
@@ -342,12 +344,12 @@ a number will limit the number of lines in a cell output."
        #'ewoc-delete (slot-value new 'ewoc)
        (apply
         #'append
-        (loop for name in (slot-value cell 'element-names)
+        (cl-loop for name in (slot-value cell 'element-names)
               unless (memq name (slot-value new 'element-names))
               collect (let ((ens (ein:cell-element-get cell name)))
                         (if (listp ens) ens (list ens))))))
       ;; draw ewoc node
-      (loop with ewoc = (slot-value new 'ewoc)
+      (cl-loop with ewoc = (slot-value new 'ewoc)
             for en in (ein:cell-all-element new)
             do (ein:cell--ewoc-invalidate ewoc en)))
     new))
@@ -358,7 +360,7 @@ a number will limit the number of lines in a cell output."
         (buffer-undo-list t))         ; disable undo recording
     (setf (slot-value cell 'level) level)
     ;; draw ewoc node
-    (loop with ewoc = (slot-value cell 'ewoc)
+    (cl-loop with ewoc = (slot-value cell 'ewoc)
           for en in (ein:cell-all-element cell)
           do (ein:cell--ewoc-invalidate ewoc en))))
 
@@ -387,14 +389,14 @@ a number will limit the number of lines in a cell output."
           (nth index (plist-get element prop)))
       (case prop
         (:after-input
-         (ein:aif (nth 0 (plist-get element :output))
+         (aif (nth 0 (plist-get element :output))
              it
            (plist-get element :footer)))
         (:after-output (plist-get element :footer))
         (:before-input (plist-get element :prompt))
         (:before-output (plist-get element :input))
         (:last-output
-         (ein:aif (plist-get element :output)
+         (aif (plist-get element :output)
              (car (last it))
            (plist-get element :input)))
         (t (cl-call-next-method))))))
@@ -421,7 +423,7 @@ Return language name as a string or `nil' when not defined.
   (fn cell)")
 
 (cl-defmethod ein:cell-language ((cell ein:codecell))
-  (ein:and-let* ((kernel (slot-value cell 'kernel))
+  (ein:and-let* ((kernel (ein:oref-safe cell 'kernel))
                  (kernelspec (ein:$kernel-kernelspec kernel)))
     (ein:$kernelspec-language kernelspec)))
 (cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
@@ -436,7 +438,7 @@ Return language name as a string or `nil' when not defined.
     (list
      :prompt (funcall make-node 'prompt)
      :input  (funcall make-node 'input)
-     :output (loop for i from 0 below num-outputs
+     :output (cl-loop for i from 0 below num-outputs
                    collect (funcall make-node 'output i))
      :footer (funcall make-node 'footer))))
 
@@ -965,14 +967,14 @@ prettified text thus be used instead of HTML type."
     ein:output-types-html-preferred))
 
 (defun ein:fix-mime-type (type)
-  (ein:aif (assoc type ein:mime-type-map)
+  (aif (assoc type ein:mime-type-map)
       (cdr it)
     type))
 
 (defun ein:cell-append-mime-type (json dynamic)
   (when (plist-get json :data)
     (setq json (plist-get json :data))) ;; For nbformat v4 support.
-  (loop
+  (cl-loop
    for key in (cond
                ((functionp ein:output-type-preference)
                 (funcall ein:output-type-preference json))
@@ -1021,12 +1023,11 @@ prettified text thus be used instead of HTML type."
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
-    ,@(ein:aif (ein:oref-safe cell 'input-prompt-number)
+    ,@(aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
     (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
-    (language . "python")
+    (language . ,(or (ein:cell-language cell) "python"))
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
-
 
 (defvar ein:output-type-map
   '((:svg . :image/svg+xml) (:png . :image/png) (:jpeg . :image/jpeg)
@@ -1041,7 +1042,7 @@ prettified text thus be used instead of HTML type."
          (outputs (if discard-output []
                     (slot-value cell 'outputs)))
          (renamed-outputs '())
-         (execute-count (ein:aif (ein:oref-safe cell 'input-prompt-number)
+         (execute-count (aif (ein:oref-safe cell 'input-prompt-number)
                             (and (numberp it) it))))
     (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
     (setq metadata (plist-put metadata :autoscroll json-false))
@@ -1058,7 +1059,7 @@ prettified text thus be used instead of HTML type."
                 (append renamed-outputs
                         (list (let ((ocopy (cl-copy-list output))
                                     (new-output '()))
-                                (loop while ocopy
+                                (cl-loop while ocopy
                                       do (let ((prop (pop ocopy))
                                                (value (pop ocopy)))
                                            (ein:log 'debug "Checking property %s for output type '%s'"
@@ -1139,16 +1140,16 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
-  (ein:aif (ewoc-next (slot-value cell 'ewoc)
-                      (ein:cell-element-get cell :footer))
+  (aif (ewoc-next (slot-value cell 'ewoc)
+                  (ein:cell-element-get cell :footer))
       (let ((cell (ein:$node-data (ewoc-data it))))
         (when (cl-typep cell 'ein:basecell)
           cell))))
 
 (cl-defmethod ein:cell-prev ((cell ein:basecell))
   "Return previous cell of the given CELL or nil if CELL is the first one."
-  (ein:aif (ewoc-prev (slot-value cell 'ewoc)
-                      (ein:cell-element-get cell :prompt))
+  (aif (ewoc-prev (slot-value cell 'ewoc)
+                  (ein:cell-element-get cell :prompt))
       (let ((cell (ein:$node-data (ewoc-data it))))
         (when (cl-typep cell 'ein:basecell)
           cell))))
@@ -1231,7 +1232,7 @@ prettified text thus be used instead of HTML type."
 
 
 (defun ein:output-area-convert-mime-types (json data)
-  (loop for (prop . mime) in '((:text       . :text/plain)
+  (cl-loop for (prop . mime) in '((:text       . :text/plain)
                                (:html       . :text/html)
                                (:svg        . :image/svg+xml)
                                (:png        . :image/png)
@@ -1260,7 +1261,7 @@ prettified text thus be used instead of HTML type."
 
 (cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
-  (loop for out in (slot-value cell 'outputs)
+  (cl-loop for out in (slot-value cell 'outputs)
         when (or (plist-member out :svg)
                  (plist-member out :image/svg+xml)
                  (plist-member out :png)
@@ -1273,7 +1274,7 @@ prettified text thus be used instead of HTML type."
   nil)
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
-  (loop for out in (slot-value cell 'outputs)
+  (cl-loop for out in (slot-value cell 'outputs)
         when (and (plist-get out :traceback)
                   (member (plist-get out :output_type) '("pyerr" "error")))
         return (plist-get out :traceback)))

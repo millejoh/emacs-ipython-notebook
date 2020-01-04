@@ -263,11 +263,10 @@ Note that the below work best with current (> v4.3.1) versions of jupyter.
 .. el:function:: ein:run
 .. el:function:: ein:jupyter-server-stop
 .. el:function:: ein:jupyter-server-login-and-open
-.. el:variable:: ein:jupyter-default-server-command
+.. el:variable:: ein:jupyter-server-command
 .. el:variable:: ein:jupyter-server-use-subcommand
 .. el:variable:: ein:jupyter-default-notebook-directory
 .. el:variable:: ein:jupyter-server-args
-.. el:variable:: ein:jupyter-server-buffer-name
 
 Notebook list
 ^^^^^^^^^^^^^

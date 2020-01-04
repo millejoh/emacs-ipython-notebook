@@ -66,10 +66,10 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
 just set the status (= event-type):
     (ein:notification-status-set NS EVENT-TYPE)
 where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
-  (loop for ns in (list (slot-value notification 'kernel)
+  (cl-loop for ns in (list (slot-value notification 'kernel)
                         (slot-value notification 'notebook))
         for statuses = (mapcar #'car (slot-value ns 's2m))
-        do (loop for st in statuses
+        do (cl-loop for st in statuses
                  do (ein:events-on events
                                    st   ; = event-type
                                    #'ein:notification--callback
@@ -173,7 +173,7 @@ insert-prev insert-next move-prev move-next)"
     (ein:join-str
      " "
      (append
-      (loop for i from 1
+      (cl-loop for i from 1
             for elem in list
             if (eq elem current)
             collect (propertize
@@ -199,7 +199,7 @@ insert-prev insert-next move-prev move-next)"
                    'help-echo "Click (mouse-1) to insert a new tab."
                    'mouse-face 'highlight
                    'face 'ein:notification-tab-normal)
-       (propertize (ein:aif (and ein:%notebook% (ein:$notebook-kernelspec ein:%notebook%))
+       (propertize (aif (and ein:%notebook% (ein:$notebook-kernelspec ein:%notebook%))
                        (format "|%s|" (ein:$kernelspec-name it))
                      "|unknown: please click and select a kernel|")
                    'keymap ein:header-line-switch-kernel-map
@@ -266,7 +266,7 @@ insert-prev insert-next move-prev move-next)"
 
 (defmacro ein:header-line-define-mouse-commands (&rest name-slot-list)
   `(progn
-     ,@(loop for (name slot) on name-slot-list by 'cddr
+     ,@(cl-loop for (name slot) on name-slot-list by 'cddr
              collect
              `(defun ,name (key-event)
                 ,(format "Run slot %s

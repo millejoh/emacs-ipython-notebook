@@ -35,7 +35,6 @@
   :type 'string
   :group 'ein)
 
-
 (defcustom ein:process-lsof "lsof"
   "Executable for lsof command."
   :type 'string
@@ -109,7 +108,7 @@
 (defun ein:process-suitable-notebook-dir (filename)
   "Return the uppermost parent dir of DIR that contains ipynb files."
   (let ((fn (expand-file-name filename)))
-    (loop with directory = (directory-file-name
+    (cl-loop with directory = (directory-file-name
                             (if (file-regular-p fn)
                                 (file-name-directory (directory-file-name fn))
                               fn))
@@ -123,9 +122,12 @@
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
-  (loop for line in (condition-case err
-                        (process-lines ein:jupyter-default-server-command
-                                       "notebook" "list" "--json")
+  (cl-loop for line in (condition-case err
+                        (apply #'process-lines
+                               ein:jupyter-server-command
+                               (append (aif ein:jupyter-server-use-subcommand
+                                           (list it))
+                                       '("list" "--json")))
                       ;; often there is no local jupyter installation
                       (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
         do (destructuring-bind
@@ -139,13 +141,13 @@
 
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
-  (loop for dir in (hash-table-keys ein:%processes%)
+  (cl-loop for dir in (hash-table-keys ein:%processes%)
         when (cl-search dir filename)
         return (gethash dir ein:%processes%)))
 
 (defun ein:process-url-match (url-or-port)
   "Return ein:process whose url matches URL-OR-PORT."
-  (loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
+  (cl-loop with parsed-url-or-port = (url-generic-parse-url url-or-port)
         for proc in (ein:process-processes)
         for parsed-url-proc = (url-generic-parse-url (ein:process-url-or-port proc))
         when (and (string= (url-host parsed-url-or-port) (url-host parsed-url-proc))
@@ -176,18 +178,23 @@
             (ein:notebooklist-login url-or-port callback2)))
       (let* ((nbdir (read-directory-name "Notebook directory: "
                                          (ein:process-suitable-notebook-dir filename)))
-             (path (cl-subseq filename (length (file-name-as-directory nbdir))))
+             (path
+              (concat (if ein:jupyter-use-containers
+                          (file-name-as-directory
+                           (file-name-base ein:jupyter-docker-mount-point))
+                        "")
+                      (cl-subseq filename (length (file-name-as-directory nbdir)))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
                                            (ein:notebook-open url-or-port
                                                               path* nil callback*))
                                          path callback)))
-        (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command) nbdir nil callback2)))))
+        (ein:jupyter-server-start (executable-find ein:jupyter-server-command)
+                                  nbdir nil callback2)))))
 
 (defun ein:process-open-notebook (&optional filename buffer-callback)
   "When FILENAME is unspecified the variable `buffer-file-name'
-   is used instead.  BUFFER-CALLBACK is called after opening notebook with the
-   current buffer as the only one argument."
+is used instead.  BUFFER-CALLBACK is called after notebook opened."
   (interactive)
   (unless filename (setq filename buffer-file-name))
   (assert filename nil "Not visiting a file")
@@ -201,8 +208,8 @@
 (defun ein:process-find-file-callback ()
   "A callback function for `find-file-hook' to open notebook."
   (interactive)
-  (ein:and-let* ((filename buffer-file-name)
-                 ((string-match-p "\\.ipynb$" filename)))
+  (-when-let* ((filename buffer-file-name)
+               (match-p (string-match-p "\\.ipynb$" filename)))
     (ein:process-open-notebook filename #'kill-buffer-if-not-modified)))
 
 (provide 'ein-process)

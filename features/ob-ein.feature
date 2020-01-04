@@ -114,8 +114,6 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
 
 @org
 Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
-  Given I set "ein:completion-backend" to eval "(quote ein:use-none-backend)"
-  Given I stop the server
   When I open temp file "path.org"
   And I call "org-mode"
   And I type "<s"

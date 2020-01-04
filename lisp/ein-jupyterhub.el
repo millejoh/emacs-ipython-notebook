@@ -33,6 +33,7 @@
 (require 'ein-query)
 (require 'ein-websocket)
 (require 'ein-notebooklist)
+(require 'anaphora)
 
 (defvar *ein:jupyterhub-connections* (make-hash-table :test #'equal))
 
@@ -54,7 +55,7 @@
 
 (defsubst ein:jupyterhub-user-path (url-or-port &rest paths)
   "Goes from URL-OR-PORT/PATHS to URL-OR-PORT/user/someone/PATHS"
-  (let ((user-base (ein:aif (gethash url-or-port *ein:jupyterhub-connections*)
+  (let ((user-base (aif (gethash url-or-port *ein:jupyterhub-connections*)
                        (ein:$jh-user-server (ein:$jh-conn-user it)))))
     (apply #'ein:url url-or-port user-base paths)))
 
@@ -90,7 +91,7 @@
      (ein:and-let* ((conn (gethash ,conn-key *ein:jupyterhub-connections*)))
        (ein:jupyterhub--add-header
         (cons "Referer" (ein:url (ein:$jh-conn-url-or-port conn) "hub/login")))
-       (ein:aif (ein:$jh-conn-token conn)
+       (aif (ein:$jh-conn-token conn)
            (ein:jupyterhub--add-header
             (cons "Authorization" (format "token %s" it)))))
      (apply #'ein:query-singleton-ajax
@@ -201,7 +202,7 @@
   "Log on to a jupyterhub server using PAM authentication. Requires jupyterhub version 0.8 or greater.  CALLBACK takes two arguments, the resulting buffer and the singleuser url-or-port"
   (interactive (let ((url-or-port (ein:notebooklist-ask-url-or-port))
                      (pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
-                 (loop for (user pw) on pam-plist by (function cddr)
+                 (cl-loop for (user pw) on pam-plist by (function cddr)
                        return (list url-or-port (symbol-name user) pw (lambda (buffer _url-or-port) (pop-to-buffer buffer))))))
   (ein:jupyterhub--query-version url-or-port callback username password))
 

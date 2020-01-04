@@ -206,7 +206,7 @@
     (should (equal (oref new :input) input))))
 
 (ert-deftest ein:cell-copy-text-types ()
-  (loop for cell-type in '("text" "html" "markdown" "raw" "heading")
+  (cl-loop for cell-type in '("text" "html" "markdown" "raw" "heading")
         for cell-p = (intern (format "ein:%scell-p" cell-type))
         do
         (let* ((input (ein:join-str "\n" '("first input" "second input")))

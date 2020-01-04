@@ -1,5 +1,6 @@
 (custom-set-variables '(company-frontends nil)
-                      '(python-indent-guess-indent-offset-verbose nil))
+                      '(python-indent-guess-indent-offset-verbose nil)
+                      '(ein:jupyter-use-containers nil))
 
 (require 'python)
 (require 'ein-dev)

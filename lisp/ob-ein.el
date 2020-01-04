@@ -36,6 +36,7 @@
 ;;; Code:
 (require 'ob)
 (require 'ein-utils)
+(require 'anaphora)
 
 (autoload 'org-element-property "org-element")
 (autoload 'org-element-context "org-element")
@@ -91,7 +92,7 @@
 (defcustom ob-ein-inline-image-directory "ein-images"
   "Store ob-ein images here."
   :group 'ein
-  :type '(directory))
+  :type 'directory)
 
 (defcustom ob-ein-default-header-args:ein nil
   "No documentation."
@@ -116,7 +117,7 @@
       (base64-decode-region (point-min) (point-max)))))
 
 (defun ob-ein--return-mime-type (json file)
-  (loop
+  (cl-loop
    for key in ein:output-types-text-preferred
    for type = (intern (format ":%s" key)) ; something like `:text'
    for value = (plist-get json type)      ; FIXME: optimize
@@ -136,7 +137,7 @@
 (defun ob-ein--process-outputs (outputs params)
   (let ((file (cdr (assoc :image params))))
     (ein:join-str "\n"
-                  (loop for o in outputs
+                  (cl-loop for o in outputs
                         collecting (ob-ein--return-mime-type o file)))))
 
 
@@ -186,7 +187,7 @@ Based on ob-ipython--configure-kernel."
                       ein:url-localhost))
          (lang (nth 0 (org-babel-get-src-block-info)))
          (kernelspec (or (cdr (assoc :kernelspec processed-params))
-                         (ein:aif (cdr (assoc lang org-src-lang-modes))
+                         (aif (cdr (assoc lang org-src-lang-modes))
                              (cons 'language (format "%s" it))
                            (error "ob-ein--execute-body: %s not among %s"
                                   lang (mapcar #'car org-src-lang-modes)))))
@@ -209,7 +210,7 @@ Based on ob-ipython--configure-kernel."
     (ob-ein--initiate-session session kernelspec callback)
     (if (ein:eval-if-bound 'org-current-export-file)
         (save-excursion
-          (loop with interval = 2000
+          (cl-loop with interval = 2000
                 with pending = t
                 repeat (/ (* ob-ein-timeout-seconds 1000) interval)
                 do (progn
@@ -236,7 +237,7 @@ Based on ob-ipython--configure-kernel."
 `ein:shared-output-eval-string' completes."
   (apply-partially
    (lambda (buffer* params* result-params* name* cell)
-     (let* ((raw (ein:aif (ein:oref-safe cell 'traceback)
+     (let* ((raw (aif (ein:oref-safe cell 'traceback)
                      (ansi-color-apply (ein:join-str "\n" it))
                    (ob-ein--process-outputs
                     (ein:oref-safe cell 'outputs) params*)))
@@ -311,7 +312,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                         (substring nbpath 0 (- (length slash-path)))))
          (notebook (ein:notebook-get-opened-notebook url-or-port path))
          (callback-nbopen (lambda (nb _created)
-                            (loop repeat 50
+                            (cl-loop repeat 50
                                   for live-p = (ein:kernel-live-p (ein:$notebook-kernel nb))
                                   until live-p
                                   do (sleep-for 0 300)
@@ -337,25 +338,27 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                     path (ein:$kernelspec-name (ein:$notebook-kernelspec notebook))
                     kernelspec)
            (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
-             (ein:notebook-close notebook)
-             (ein:query-singleton-ajax
-              (list 'ob-ein--initiate-session (ein:url url-or-port path))
-              (ein:notebook-url notebook)
-              :type "DELETE"))
-           (loop repeat 8
-                 for extant = (file-exists-p path)
-                 until (not extant)
-                 do (sleep-for 0 500)
-                 finally do (if extant
-                                (ein:display-warning (format "cannot del %s" path))
-                              (ob-ein--initiate-session session kernelspec callback))))
+             (ein:notebook-close notebook))
+           (ein:query-singleton-ajax
+            (list 'ob-ein--initiate-session (ein:url url-or-port path))
+            (ein:notebook-url notebook)
+            :type "DELETE")
+           (cl-loop repeat 8
+                    with fullpath = (concat (file-name-as-directory nbpath) path)
+                    for extant = (file-exists-p fullpath)
+                    until (not extant)
+                    do (sleep-for 0 500)
+                    finally do (if extant
+                                   (ein:display-warning
+                                    (format "cannot del path=%s nbpath=%s" fullpath nbpath))
+                                 (ob-ein--initiate-session session kernelspec callback))))
           (notebook (funcall callback notebook))
           ((string= (url-host parsed-url) ein:url-localhost)
            (ein:process-refresh-processes)
-           (ein:aif (ein:process-url-match nbpath)
+           (aif (ein:process-url-match nbpath)
                (ein:notebooklist-login (ein:process-url-or-port it) callback-login)
              (ein:jupyter-server-start
-              (executable-find (or (ein:eval-if-bound 'ein:jupyter-default-server-command)
+              (executable-find (or (ein:eval-if-bound 'ein:jupyter-server-command)
                                    "jupyter"))
               (read-directory-name "Notebook directory: " default-directory)
               nil
@@ -366,7 +369,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                       (t (url-port parsed-url)))))))
           (t (ein:notebooklist-login url-or-port callback-login)))))
 
-(loop for (lang . mode) in ob-ein-languages
+(cl-loop for (lang . mode) in ob-ein-languages
       do (ob-ein--babelize-lang lang mode))
 
 ;;;###autoload

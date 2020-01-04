@@ -23,7 +23,7 @@ README.rst: README.in.rst lisp/ein.el
 	             (describe-minor-mode \"ein:notebook-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
 	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
-	sed "/CI VERSION/c"`grep -o 'emacs-[0-9][.0-9-]*' .travis.yml | sort -n | head -1` README.rst0 > README.rst1
+	sed "/CI VERSION/c"`yq .jobs.build.strategy.matrix.emacs_version .github/workflows/test.yml | jq .[] | sort -n | head -1` README.rst0 > README.rst1
 	grep ';;' lisp/ein.el \
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \

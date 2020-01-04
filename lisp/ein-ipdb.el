@@ -37,7 +37,7 @@
   current-payload)
 
 (defun ein:find-or-create-ipdb-session (kernel &optional buffer)
-  (ein:aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
+  (aif (gethash (ein:$kernel-kernel-id kernel) *ein:ipdb-sessions*)
       it
     (let ((db-session (make-ein:$ipdb-session
                        :kernel kernel
@@ -120,7 +120,7 @@
                 (comint-output-filter proc ein:ipdb-buffer-prompt))
               (when ein:ipdb--received-quit-p
                 (kill-buffer)
-                (ein:aif (ein:$ipdb-session-notebook-buffer session)
+                (aif (ein:$ipdb-session-notebook-buffer session)
                     (pop-to-buffer it)))))))))
 
 

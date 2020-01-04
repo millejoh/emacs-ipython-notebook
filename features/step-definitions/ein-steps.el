@@ -32,7 +32,7 @@
       (lambda (kernel-name)
         (cl-letf (((symbol-function 'R-mode) #'ignore))
           (let ((notebook (ein:notebook-switch-kernel (ein:get-notebook) kernel-name)))
-            (loop repeat 10
+            (cl-loop repeat 10
                   until (ein:kernel-live-p (ein:$notebook-kernel notebook))
                   do (sleep-for 0 500)
                   finally do (should (string= "R" (ein:$kernelspec-language
@@ -152,9 +152,9 @@
         (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-              (ein:and-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
-                             (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
-                             (ks (ein:get-kernelspec url-or-port found)))
+              (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
+                           (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
+                           (ks (ein:get-kernelspec url-or-port found)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (should notebook)
             (let ((buf-name (format ein:notebook-buffer-name-template
@@ -174,11 +174,11 @@
         (cancel-function-timers #'ein:notebooklist-reload)
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
           (ein:jupyter-server-stop t))
-        (loop repeat 10
-              with buffer = (get-buffer ein:jupyter-server-buffer-name)
+        (cl-loop repeat 10
+              with buffer = (get-buffer *ein:jupyter-server-buffer-name*)
               until (null (get-buffer-process buffer))
               do (sleep-for 0 1000)
-              finally do (ein:aif (get-buffer-process buffer) (delete-process it)))
+              finally do (aif (get-buffer-process buffer) (delete-process it)))
         (condition-case err
             (ein:testing-wait-until (lambda ()
                                       (null (ein:notebooklist-keys)))
@@ -187,7 +187,7 @@
                  (clrhash ein:notebooklist-map)))
         (unless final-p
           (When "I clear log expr \"ein:log-all-buffer-name\"")
-          (When "I clear log expr \"ein:jupyter-server-buffer-name\""))))
+          (When "I clear log expr \"*ein:jupyter-server-buffer-name*\""))))
 
 (When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
       (lambda (config)
@@ -210,7 +210,7 @@
         (When "I stop the server")
         (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
         (let ((ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py")))
-          (ein:jupyter-server-start (executable-find ein:jupyter-default-server-command)
+          (ein:jupyter-server-start (executable-find ein:jupyter-server-command)
                                     ein:testing-jupyter-server-root (not login)))
         (if login
             (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
@@ -272,7 +272,7 @@
 
 (When "^I wait for completions \"\\(.+\\)\"$"
       (lambda (key)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))
               do (sleep-for 0 500)
               finally do (should (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))))))
@@ -284,7 +284,7 @@
 
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (go stop)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (search stop (buffer-string))
               do (And (format "I click on \"%s\"" go))
               do (sleep-for 0 1000)
@@ -301,7 +301,7 @@
           (backward-char)
           (let ((was (widget-at)))
             (When "I press \"RET\"")
-            (loop until (not (equal was (widget-at)))
+            (cl-loop until (not (equal was (widget-at)))
                   do (sleep-for 0 500))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
@@ -310,18 +310,18 @@
         (re-search-backward "Dir" nil t)
         (let ((was (widget-at)))
           (When "I press \"RET\"")
-          (loop until (not (equal was (widget-at)))
+          (cl-loop until (not (equal was (widget-at)))
                 do (sleep-for 0 500)))))
 
 (When "^I click on dir \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (dir stop)
-        (loop repeat 10
+        (cl-loop repeat 10
               until (search stop (buffer-string))
               do (When (format "I go to word \"%s\"" dir))
               do (re-search-backward "Dir" nil t)
               do (let ((was (widget-at)))
                    (When "I press \"RET\"")
-                   (loop until (not (equal was (widget-at)))
+                   (cl-loop until (not (equal was (widget-at)))
                          do (sleep-for 0 500)))
               finally do (should (search stop (buffer-string))))))
 
@@ -329,7 +329,7 @@
       (lambda (path)
         (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-            (loop repeat 2
+            (cl-loop repeat 2
                   until (and notebook
                              (ein:aand (ein:$notebook-kernel notebook)
                                        (ein:kernel-live-p it)))
@@ -349,8 +349,8 @@
       (lambda (negate bogey)
         (ein:testing-wait-until
          (lambda ()
-           (let* ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
-             (ein:aif (if negate (not says) says)
+           (let ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
+             (aif (if negate (not says) says)
                  it
                (when (with-current-buffer ein:log-all-buffer-name
                        (search "WS closed unexpectedly" (buffer-string)))
@@ -394,16 +394,18 @@
 (When "^I start bad jupyter path$"
       (lambda ()
         (condition-case err
-            (let* ((*ein:last-jupyter-command* "not-jupyter")
-                   (ein:jupyter-default-server-command *ein:last-jupyter-command*))
+            (let ((ein:jupyter-server-command "not-jupyter"))
               (cl-letf (((symbol-function 'read-file-name)
-                         (lambda (&rest args) ein:jupyter-default-server-command))
+                         (lambda (&rest args) ein:jupyter-server-command))
+                        ((symbol-function 'read-string)
+                         (lambda (&rest args)
+                           (error "%s" (car args))))
                         ((symbol-function 'read-directory-name)
                          (lambda (&rest args) ein:jupyter-default-notebook-directory)))
                 (call-interactively #'ein:jupyter-server-start))
               ;; should err before getting here
               (should-not t))
-          (error (should (search "not-jupyter not found" (error-message-string err)))))))
+          (error (should (search "Server command:" (error-message-string err)))))))
 
 (When "^I create a directory \"\\(.+\\)\" with depth \\([0-9]+\\) and width \\([0-9]+\\)$"
       (lambda (dir depth width)

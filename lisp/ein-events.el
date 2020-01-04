@@ -38,7 +38,7 @@
 (defun ein:events-trigger (events event-type &optional data)
   "Trigger EVENT-TYPE and let event handler EVENTS handle that event."
   (ein:log 'debug "Event: %S" event-type)
-  (ein:aif (gethash event-type (slot-value events 'callbacks))
+  (aif (gethash event-type (slot-value events 'callbacks))
       (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it)
     (ein:log 'info "Unknown event: %S" event-type)))
 
