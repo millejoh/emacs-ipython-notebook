@@ -286,11 +286,8 @@ will be updated with kernel's cwd."
        (ein:worksheet-focus-cell))
      (unless no-pop*
        (with-current-buffer (ein:notebook-buffer notebook*)
-         (if ein:polymode
-             (progn
-               (pm-select-buffer (pm-innermost-span))
-               (pop-to-buffer (pm-span-buffer (pm-innermost-span))))
-           (pop-to-buffer (ein:notebook-buffer notebook*)))))
+         (pm-select-buffer (pm-innermost-span))
+         (pop-to-buffer (pm-span-buffer (pm-innermost-span)))))
      (when (and (not noninteractive)
                 (null (plist-member (ein:$notebook-metadata notebook*) :kernelspec)))
        (aif (ein:$notebook-kernelspec notebook*)
@@ -563,27 +560,12 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook--worksheet-render (notebook ws)
   (ein:worksheet-render ws)
   (with-current-buffer (ein:worksheet-buffer ws)
-    (let (multilang-failed)
-      (if ein:polymode
-          (poly-ein-mode)
-        ;; Changing major mode here is super dangerous as it
-        ;; kill-all-local-variables.
-        ;; Our saviour has been `ein:deflocal' which applies 'permanent-local
-        ;; to variables assigned up to this point, but we ought not rely on it
-        (funcall (ein:notebook-choose-mode))
-        (ein:worksheet-reinstall-undo-hooks ws)
-        (condition-case err
-            (aif (ein:$notebook-kernelspec notebook)
-                (ein:ml-lang-setup it))
-          (error (ein:log 'error (error-message-string err))
-                 (setq multilang-failed t))))
-      (unless multilang-failed
-        (ein:notebook-mode)
-        (ein:notebook--notification-setup notebook)
-        (ein:notebook-setup-kill-buffer-hook)
-        (setq ein:%notebook% notebook)
-        (when ein:polymode
-          (poly-ein-fontify-buffer (ein:notebook-buffer notebook)))))))
+    (poly-ein-mode)
+    (ein:notebook-mode)
+    (ein:notebook--notification-setup notebook)
+    (ein:notebook-setup-kill-buffer-hook)
+    (setq ein:%notebook% notebook)
+    (poly-ein-fontify-buffer (ein:notebook-buffer notebook))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup

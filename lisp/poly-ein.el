@@ -4,21 +4,6 @@
 
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
-(defcustom ein:polymode t
-  "When enabled ein will use polymode to provide multi-major mode
-support in a notebook buffer, otherwise ein's custom and outdated
-multi-major mode support will be used. Emacs must be restarted
-after changing this setting!"
-  :type 'boolean
-  :set (lambda (symbol value)
-         (set-default symbol value)
-         (when value
-           (if (featurep 'poly-ein)
-               (poly-ein--decorate-functions)
-             (with-eval-after-load 'poly-ein
-               (poly-ein--decorate-functions)))))
-  :group 'ein)
-
 (defmacro poly-ein--remove-hook (label functions)
   "Remove any hooks saying LABEL from FUNCTIONS"
   `(mapc (lambda (x) (when (cl-search ,label (symbol-name x))
@@ -350,5 +335,7 @@ TYPE can be 'body, nil."
              (or (null (nth 0 span)) (not (eq major-mode span-mode)))))))
 
 (make-variable-buffer-local 'parse-sexp-lookup-properties)
+
+(poly-ein--decorate-functions)
 
 (provide 'poly-ein)
