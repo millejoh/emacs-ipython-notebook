@@ -183,7 +183,9 @@ This function adds NBLIST to `ein:notebooklist-map'."
                 when (destructuring-bind
                          (&key password url token &allow-other-keys)
                          (ein:json-read-from-string line)
-                       (prog1 (equal (ein:url url) url-or-port)
+                       (prog1 (or (equal (ein:url url) url-or-port)
+                                  (equal (url-host (url-generic-parse-url url))
+                                         "0.0.0.0"))
                          (setq password0 password) ;; t or :json-false
                          (setq token0 token)))
                 return (list password0 token0))
@@ -191,8 +193,8 @@ This function adds NBLIST to `ein:notebooklist-map'."
 
 (defun ein:crib-running-servers ()
   "Shell out to jupyter for running servers."
-  (cl-loop for line in
-           (nconc
+  (nconc
+   (cl-loop for line in
             (apply #'ein:jupyter-process-lines nil
                    ein:jupyter-server-command
                    (split-string
@@ -200,10 +202,11 @@ This function adds NBLIST to `ein:notebooklist-map'."
                             (aif ein:jupyter-server-use-subcommand
                                 (concat it " ") "")
                             "list" "--json")))
-            (aif (ein:k8s-service-url-or-port) (list it)))
-           collecting (destructuring-bind
-                          (&key url &allow-other-keys)
-                          (ein:json-read-from-string line) (ein:url url))))
+            collecting (destructuring-bind
+                           (&key url &allow-other-keys)
+                           (ein:json-read-from-string line)
+                         (ein:url url)))
+   (aif (ein:k8s-service-url-or-port) (list it))))
 
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password for URL-OR-PORT.
@@ -220,22 +223,24 @@ Return nil if unclear what, if any, authentication applies."
             (t nil)))))
 
 (defun ein:notebooklist-ask-url-or-port ()
+  (call-interactively #'ein:k8s-select-context)
   (let* ((default (ein:url (aif (ein:get-notebook)
                                (ein:$notebook-url-or-port it)
                              (aif ein:%notebooklist%
-                                 (ein:$notebooklist-url-or-port it)
-                               (ein:default-url-or-port)))))
+                                 (ein:$notebooklist-url-or-port it)))))
          (url-or-port-list
           (-distinct (mapcar #'ein:url
-                             (append (list default)
-                                     ein:url-or-port
+                             (append (when default
+                                       (list default))
+                                     (if (atom ein:url-or-port)
+                                         (list ein:url-or-port)
+                                       ein:url-or-port)
                                      (ein:crib-running-servers)))))
-         (url-or-port (let ((ido-report-no-match nil)
-                            (ido-use-faces nil))
+         (url-or-port (let (ido-report-no-match ido-use-faces)
                         (ein:completing-read "URL or port: "
                                              url-or-port-list
                                              nil nil nil nil
-                                             default))))
+                                             (car-safe url-or-port-list)))))
     (ein:url url-or-port)))
 
 (defun ein:notebooklist-open* (url-or-port &optional path resync restore-point-p callback errback)
@@ -430,7 +435,9 @@ This function is called via `ein:notebook-after-rename-hook'."
   "Upon notebook-open, rename the notebook, then funcall CALLBACK."
   (interactive
    (let* ((url-or-port (or (ein:get-url-or-port)
-                           (ein:default-url-or-port)))
+                           (if (atom ein:url-or-port)
+                               ein:url-or-port
+                             (car-safe ein:url-or-port))))
           (kernelspec (ein:completing-read
                        "Select kernel: "
                        (ein:list-available-kernels url-or-port)
@@ -782,8 +789,7 @@ or even this (if you want fast Emacs start-up)::
   ;; load notebook list if Emacs is idle for 3 sec after start-up
   (run-with-idle-timer 3 nil #'ein:notebooklist-load)
 
-You should setup `ein:url-or-port' or `ein:default-url-or-port'
-in order to make this code work.
+You should setup `ein:url-or-port' in order to make this code work.
 
 See also:
 `ein:connect-to-default-notebook', `ein:connect-default-notebook'."
@@ -838,7 +844,6 @@ and the url-or-port argument of ein:notebooklist-open*."
                  ,(lambda (buffer url-or-port) (pop-to-buffer buffer))
                  ,(if current-prefix-arg (ein:notebooklist-ask-user-pw-pair "Cookie name" "Cookie content"))))
   (unless callback (setq callback (lambda (buffer url-or-port))))
-
   (when cookie-plist
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
            (domain (url-host parsed-url))
@@ -846,7 +851,6 @@ and the url-or-port argument of ein:notebooklist-open*."
       (cl-loop for (name content) on cookie-plist by (function cddr)
             for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
             do (write-region line nil (request--curl-cookie-jar) 'append))))
-
   (let ((token (ein:notebooklist-token-or-password url-or-port)))
     (cond ((null token) ;; don't know
            (ein:notebooklist-login--iteration url-or-port callback nil nil -1 nil))
@@ -854,20 +858,6 @@ and the url-or-port argument of ein:notebooklist-open*."
            (ein:log 'verbose "Skipping login %s" url-or-port)
            (ein:notebooklist-open* url-or-port nil nil nil callback nil))
           (t (ein:notebooklist-login--iteration url-or-port callback nil token 0 nil)))))
-
-;;;###autoload
-(defun ein:cluster-login (callback)
-  "Deal with security before main entry of ein:notebooklist-open*.
-
-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--success
-and the url-or-port argument of ein:notebooklist-open*."
-  (interactive `(,(lambda (buffer url-or-port) (pop-to-buffer buffer))))
-  (unless callback (setq callback #'ignore))
-  (call-interactively #'ein:k8s-select-context)
-  (if-let ((url-or-port (ein:k8s-service-url-or-port)))
-      url-or-port
-    (error "ein:cluster-login: No jupyter node found for %s"
-           (alist-get 'name (kubernetes-state-current-context (kubernetes-state))))))
 
 (defun ein:notebooklist-login--parser ()
   (goto-char (point-min))
