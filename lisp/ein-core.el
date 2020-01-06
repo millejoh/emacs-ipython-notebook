@@ -48,17 +48,20 @@
 This will be used for completion. So put your IPython servers.
 You can connect to servers not in this list \(but you will need
 to type every time)."
-  :type '(repeat (choice (integer :tag "Port number" 8888)
-                         (string :tag "URL" "http://127.0.0.1:8888")))
+  :type '(repeat (choice (integer :tag "Port number" 8888)))
   :group 'ein)
 
 (defcustom ein:default-url-or-port nil
-  "Default URL or port.  This should be your main IPython
-Notebook server."
-  :type '(choice (integer :tag "Port number" 8888)
-                 (string :tag "URL" "http://127.0.0.1:8888")
-                 (const :tag "First value of `ein:url-or-port'" nil))
+  "Should just be first element of `ein:url-or-port'."
+  :initialize 'custom-initialize-default
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when value
+           (push value ein:url-or-port)))
+  :type '(choice (integer :tag "Port number" 8888))
   :group 'ein)
+
+(make-obsolete-variable 'ein:default-url-or-port 'ein:url-or-port "0.17.0" 'set)
 
 (defcustom ein:filename-translations nil
   "Convert file paths between Emacs and Python process.
@@ -107,9 +110,6 @@ pair of TO-PYTHON and FROM-PYTHON."
 
 
 ;;; Configuration getter
-
-(defun ein:default-url-or-port ()
-  (or ein:default-url-or-port (car ein:url-or-port) 8888))
 
 (defun ein:version (&optional interactively copy-to-kill)
   "Return a longer version string.

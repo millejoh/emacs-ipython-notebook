@@ -2,16 +2,16 @@
 
 # install julia for Actions CI
 
-set -x
+set -ex
 
 WORKDIR=${HOME}/local
 UNAME=$(uname -s)
 cd $WORKDIR
 if [ "x$UNAME" = "xLinux" ] ; then
-    if [ ! -d ${WORKDIR}/julia-1.1.0 ]; then
-        wget https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz
-        tar zxvf julia-1.1.0-linux-x86_64.tar.gz
-        rm -f julia-1.1.0-linux-x86_64.tar.gz
+    if [ ! -d ${WORKDIR}/julia-1.3.1 ]; then
+        wget https://julialang-s3.julialang.org/bin/linux/x64/1.3/julia-1.3.1-linux-x86_64.tar.gz
+        tar zxvf julia-1.3.1-linux-x86_64.tar.gz
+        rm -f julia-1.3.1-linux-x86_64.tar.gz
     fi
     hash
     julia --version

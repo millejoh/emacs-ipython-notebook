@@ -448,7 +448,10 @@ and content format (one of json, text, or base64)."
 
 (defun ein:content-upload (path uploaded-file-path &optional url-or-port)
   (multiple-value-bind (name type format contents) (ein:get-local-file uploaded-file-path)
-    (let* ((content (make-ein:$content :url-or-port (or url-or-port (ein:default-url-or-port))
+    (let* ((content (make-ein:$content :url-or-port (or url-or-port
+                                                        (if (atom ein:url-or-port)
+                                                            ein:url-or-port
+                                                          (car-safe ein:url-or-port)))
                                        :name name
                                        :path (concat path "/" name)
                                        :raw-content contents))

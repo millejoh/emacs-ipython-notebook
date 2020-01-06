@@ -135,6 +135,19 @@
                (error (ein:log 'info "ein:k8s-p %s" (error-message-string err))
                       nil))))))
 
+(defsubst ein:k8s-in-cluster (addr)
+  "Is ein client inside the k8s cluster?"
+  (if-let ((ip-command (executable-find "ip")))
+      (with-temp-buffer
+        (apply #'call-process ip-command nil t nil
+               (split-string (format "n ls %s" addr)))
+        (goto-char (point-min))
+        (search-forward addr nil t))
+    ;; hack if ip command not found
+    (string= "minikube"
+             (alist-get 'name (kubernetes-state-current-context
+                               (kubernetes-state))))))
+
 (defun ein:k8s-service-url-or-port ()
   (-when-let* ((k8s-p (ein:k8s-p))
                (service (ein:k8s-get-service))
@@ -146,6 +159,16 @@
                             (when (string= (alist-get 'type address) "InternalIP")
                               (alist-get 'address address)))
                           addresses)))
-    (ein:url (concat host-ip ":" (number-to-string nodePort)))))
+    (if (ein:k8s-in-cluster host-ip)
+        (ein:url (concat "http://" host-ip ":" (number-to-string nodePort)))
+      (when-let ((ips (kubernetes-kubectl-await-command ingress
+                        (lambda (item)
+                          (-let* (((&alist 'status
+                                           (&alist 'loadBalancer
+                                                   (&alist 'ingress
+                                                           [(&alist 'ip)])))
+                                   item))
+                            ip)))))
+        (ein:url (concat "http://" (car ips)))))))
 
 (provide 'ein-k8s)
