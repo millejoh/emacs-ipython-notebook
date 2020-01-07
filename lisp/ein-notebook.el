@@ -61,7 +61,6 @@
 (require 'ein-traceback)
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
-(require 'ein-multilang)
 (require 'ob-ein)
 (require 'poly-ein)
 
@@ -874,21 +873,25 @@ NAME is any non-empty string that does not contain '/' or '\\'.
                     (apply #'apply-partially callback cbargs)))
     (ein:notebook-ask-save notebook callback0)))
 
-(defun ein:notebook-kill-kernel-then-close-command (notebook)
+(defun ein:notebook-kill-kernel-then-close-command (notebook &optional callback1)
   "Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual."
-  (interactive (list (ein:notebook--get-nb-or-error)))
-  (let ((kernel (ein:$notebook-kernel notebook))
-        (callback1 (apply-partially
-                    (lambda (notebook* kernel)
-                      (ein:notebook-close notebook*))
-                    notebook)))
-    (if (ein:kernel-live-p kernel)
-        (ein:message-whir "Ending session"
-                          (add-function :before callback1 done-callback)
-                          (ein:kernel-delete-session kernel callback1))
-      (funcall callback1 nil))))
+  (declare (indent defun))
+  (interactive (list (ein:notebook--get-nb-or-error) nil))
+  (unless callback1 (setq callback1 #'ignore))
+  (lexical-let ((callback1 callback1))
+    (let ((kernel (ein:$notebook-kernel notebook))
+          (callback (apply-partially
+                     (lambda (notebook* kernel*)
+                       (ein:notebook-close notebook*)
+                       (funcall callback1 kernel*))
+                     notebook)))
+      (if (ein:kernel-live-p kernel)
+          (ein:message-whir "Ending session"
+                            (add-function :before callback done-callback)
+                            (ein:kernel-delete-session kernel callback))
+        (funcall callback nil)))))
 
 (defun ein:fast-content-from-notebook (notebook)
   "Quickly generate a basic content structure from notebook. This
@@ -1234,27 +1237,12 @@ associated with current buffer (if any)."
 
 
 ;;; Notebook mode
-
-(defcustom ein:notebook-modes
-  '(ein:notebook-multilang-mode)
-  "Obsolete."
-  :type '(repeat (choice (const :tag "Multi-lang" ein:notebook-multilang-mode)
-                         (const :tag "Only Python" ein:notebook-python-mode)
-                         (const :tag "Plain" ein:notebook-plain-mode)))
-  :group 'ein)
-
-
-(defun ein:notebook-choose-mode ()
-  "Return usable (defined) notebook mode."
-  (autoload 'ein:notebook-multilang-mode "ein-multilang")
-  (cl-loop for mode in ein:notebook-modes
-        if (functionp mode)
-        return mode))
-
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (defmacro ein:notebook--define-key (keymap key defn)
-  "Ideally we could override just the keymap binding with a (string . wrapped) cons pair (as opposed to messing with the DEFN itself), but then describe-minor-mode unhelpfully shows ?? for the keymap commands.
+  "Ideally we could override just the keymap binding with a
+(string . wrapped) cons pair (as opposed to messing with the DEFN itself),
+but then describe-minor-mode unhelpfully shows ?? for the keymap commands.
 
 Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (let ((km (intern (concat (symbol-name defn) "-km"))))
@@ -1556,15 +1544,6 @@ the first argument and CBARGS as the rest of arguments."
 (defun ein:notebook-setup-kill-buffer-hook ()
   "Add \"notebook destructor\" to `kill-buffer-hook'."
   (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback nil t))
-
-(lexical-let* ((the-mode (ein:notebook-choose-mode))
-               (incompatible-func (lambda ()
-                                    (when (boundp 'undo-tree-incompatible-major-modes)
-                                      (nconc undo-tree-incompatible-major-modes
-                                             (list the-mode))))))
-  (unless (funcall incompatible-func)
-    (with-eval-after-load 'undo-tree
-      (funcall incompatible-func))))
 
 (provide 'ein-notebook)
 

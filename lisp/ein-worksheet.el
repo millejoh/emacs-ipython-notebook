@@ -1180,7 +1180,7 @@ in the history."
   (let* ((beg (ein:cell-input-pos-min cell))
          (end (ein:cell-input-pos-max cell)))
     (indent-rigidly
-     beg end (- (ein:find-leftmot-column beg end)))))
+     beg end (- (ein:find-leftmost-column beg end)))))
 
 (defun ein:worksheet--cells-before-cell (ws cell)
   (let ((cells (ein:worksheet-get-cells ws)))

@@ -43,9 +43,7 @@
     (if-let ((contexts (ein:k8s-get-contexts)))
         (let ((desired-context
                (ein:completing-read "Select context: " contexts nil t)))
-          (ein:message-whir "Rereading state"
-                            (add-function :before callback1 done-callback)
-                            (ein:kernel-delete-session kernel callback1))
+          (message "Rereading state...")
           (kubernetes-state-clear)
           (let ((response
                  (kubernetes-kubectl-await
@@ -82,7 +80,7 @@
                                       (funcall refresh-f))))
                                 (cl-remove-if (apply-partially #'eq 'nodes)
                                               (mapcar #'car kubernetes-overview-views-alist)))
-                          (message "Selected %s" current-name))
+                          (message ""))
                       (error "ein:k8s-select-context: %s is down" current-name))))
               (error "ein:k8s-select-context: use-context returned %s, expected %s"
                      response desired-context))))

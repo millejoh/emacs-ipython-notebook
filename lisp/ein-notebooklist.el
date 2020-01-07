@@ -38,7 +38,11 @@
 (require 'dash)
 (require 'ido)
 
-(autoload 'ein:jupyterhub-connect "ein-jupyterhub")
+(declare-function ein:jupyterhub-connect "ein-jupyterhub")
+(declare-function ein:jupyter-crib-token "ein-jupyter")
+(declare-function ein:jupyter-server-conn-info "ein-jupyter")
+(declare-function ein:jupyter-get-default-kernel "ein-jupyter")
+(declare-function ein:jupyter-crib-running-servers "ein-jupyter")
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
@@ -160,54 +164,13 @@ This function adds NBLIST to `ein:notebooklist-map'."
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
-(defun ein:crib-token (url-or-port)
-  "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (aif (cl-loop for line in
-                (apply #'ein:jupyter-process-lines url-or-port
-                       ein:jupyter-server-command
-                       (split-string
-                        (format "%s%s %s"
-                                (aif ein:jupyter-server-use-subcommand
-                                    (concat it " ") "")
-                                "list" "--json")))
-                with token0
-                with password0
-                when (destructuring-bind
-                         (&key password url token &allow-other-keys)
-                         (ein:json-read-from-string line)
-                       (prog1 (or (equal (ein:url url) url-or-port)
-                                  (equal (url-host (url-generic-parse-url url))
-                                         "0.0.0.0"))
-                         (setq password0 password) ;; t or :json-false
-                         (setq token0 token)))
-                return (list password0 token0))
-      it (list nil nil)))
-
-(defun ein:crib-running-servers ()
-  "Shell out to jupyter for running servers."
-  (nconc
-   (cl-loop for line in
-            (apply #'ein:jupyter-process-lines nil
-                   ein:jupyter-server-command
-                   (split-string
-                    (format "%s%s %s"
-                            (aif ein:jupyter-server-use-subcommand
-                                (concat it " ") "")
-                            "list" "--json")))
-            collecting (destructuring-bind
-                           (&key url &allow-other-keys)
-                           (ein:json-read-from-string line)
-                         (ein:url url)))
-   (aif (ein:k8s-service-url-or-port) (list it))))
-
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password for URL-OR-PORT.
 
 Jupyter requires one or the other but not both.
 Return empty string token if all authentication disabled.
 Return nil if unclear what, if any, authentication applies."
-  (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
-    (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
+  (multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
     (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
       (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
             ((and (stringp token) (eql password-p :json-false)) token)
@@ -226,7 +189,7 @@ Return nil if unclear what, if any, authentication applies."
                                      (if (atom ein:url-or-port)
                                          (list ein:url-or-port)
                                        ein:url-or-port)
-                                     (ein:crib-running-servers)))))
+                                     (ein:jupyter-crib-running-servers)))))
          (url-or-port (let (ido-report-no-match ido-use-faces)
                         (ein:completing-read "URL or port: "
                                              url-or-port-list
@@ -508,7 +471,6 @@ This function is called via `ein:notebook-after-rename-hook'."
     (-concat dirs nbs files)))
 
 (defun render-header (url-or-port &rest args)
-  "Render the header (for ipython>=3)."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
      (format "Contents API %s (%s)\n\n"
@@ -531,20 +493,11 @@ This function is called via `ein:notebook-after-rename-hook'."
       (widget-insert " |\n\n"))
     (lexical-let* ((url-or-port url-or-port)
                    (kernels (ein:list-available-kernels url-or-port)))
-      (unless ein:%notebooklist-new-kernel%
-        (setq ein:%notebooklist-new-kernel%
-              (if (eq ein:jupyter-default-kernel 'first-alphabetically)
-                  (ein:get-kernelspec url-or-port (caar kernels))
-                (ein:get-kernelspec
-                 url-or-port
-                 (if (stringp ein:jupyter-default-kernel)
-                     ein:jupyter-default-kernel
-                   (symbol-name ein:jupyter-default-kernel))))))
       (widget-create
        'link
        :notify (lambda (&rest _ignore) (ein:notebooklist-new-notebook
-                                       url-or-port
-                                       ein:%notebooklist-new-kernel%))
+                                        url-or-port
+                                        ein:%notebooklist-new-kernel%))
        "New Notebook")
       (widget-insert " ")
       (widget-create
@@ -571,14 +524,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                        (ein:$kernelspec-display-name update)))
                             (setq ein:%notebooklist-new-kernel% update)))))))
         (if kernels
-            (let ((initial (cond (ein:%notebooklist-new-kernel%
-                                  (ein:$kernelspec-name ein:%notebooklist-new-kernel%))
-                                 ((eq ein:jupyter-default-kernel 'first-alphabetically)
-                                  (car (car kernels)))
-                                 ((stringp ein:jupyter-default-kernel)
-                                  ein:jupyter-default-kernel)
-                                 (t
-                                  (symbol-name ein:jupyter-default-kernel)))))
+            (let ((initial (ein:jupyter-get-default-kernel kernels)))
               (dolist (k kernels)
                 (let ((child (widget-radio-add-item
                               radio-widget

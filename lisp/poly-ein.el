@@ -12,6 +12,11 @@
 
 (defsubst poly-ein--neuter-markdown-mode ()
   "Consolidate fragility here."
+  (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
+    (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
+      (setf minor-mode-map-alist
+            (cons entry
+                  (assq-delete-all 'ein:notebook-mode minor-mode-map-alist)))))
   (when (eq major-mode 'markdown-mode)
     (poly-ein--remove-hook "markdown" after-change-functions)
     (poly-ein--remove-hook "markdown" jit-lock-after-change-extend-region-functions)

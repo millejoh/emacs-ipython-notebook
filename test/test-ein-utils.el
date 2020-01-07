@@ -98,7 +98,7 @@ def func():
 
 ;;; Text manipulation on buffer
 
-(ert-deftest ein:find-leftmot-column-simple-cases ()
+(ert-deftest ein:find-leftmost-column-simple-cases ()
   (cl-loop for (indent text) in
         '(;; No indent
           (0 "\
@@ -123,7 +123,7 @@ def f():
           )
         do (with-temp-buffer
              (insert text)
-             (should (= (ein:find-leftmot-column (point-min) (point-max))
+             (should (= (ein:find-leftmost-column (point-min) (point-max))
                         indent)))))
 
 

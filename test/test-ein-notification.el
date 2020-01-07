@@ -44,7 +44,7 @@
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
              (concat "IP[y]: Saving Notebook... | "
-                     (substitute-command-keys "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command] | ")
+                     (substitute-command-keys "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command-km] | ")
                      ;;"Kernel requires restart C-c C-x C-r | "
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
 
