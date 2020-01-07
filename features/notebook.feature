@@ -98,7 +98,6 @@ Scenario: Assign variable, save, kill notebook buffer, get it back, check variab
   And I type "b"
   And I wait for cell to execute
   Then I should see "3.1415"
-  And I press "C-x k"
 
 @julia
 Scenario: Smoke test julia

@@ -47,8 +47,7 @@
              do (cl-loop repeat 16
                          until done-p
                          do (sleep-for 0 1000)
-                         finally do (if done-p
-                                        (message "killed %s" path)
+                         finally do (unless done-p
                                       (ein:display-warning (format "cannot close %s" path))))
              do (when (or (ob-ein-anonymous-p path)
                           (search "Untitled" path)
@@ -65,7 +64,10 @@
       (cl-loop for nb in it
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
-            finally do (assert nil))))
+            finally do (assert nil)))
+  (let ((stragglers (file-name-all-completions "Untitled"
+                                               ein:testing-jupyter-server-root)))
+    (should-not stragglers)))
 
 (Setup
  (ein:dev-start-debug)

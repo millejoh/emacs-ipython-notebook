@@ -316,7 +316,7 @@
           (let ((was (widget-at)))
             (When "I press \"RET\"")
             (cl-loop until (not (equal was (widget-at)))
-                  do (sleep-for 0 500))))))
+                     do (sleep-for 0 500))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
