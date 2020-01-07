@@ -29,6 +29,7 @@
 (require 'ein-jupyter)
 (require 'ein-file)
 (require 'ein-notebooklist)
+(require 'ein-k8s)
 
 (defcustom ein:process-jupyter-regexp "\\(jupyter\\|ipython\\)\\(-\\|\\s-+\\)note"
   "Regexp by which we recognize notebook servers."
@@ -208,9 +209,10 @@ is used instead.  BUFFER-CALLBACK is called after notebook opened."
 (defun ein:process-find-file-callback ()
   "A callback function for `find-file-hook' to open notebook."
   (interactive)
-  (-when-let* ((filename buffer-file-name)
-               (match-p (string-match-p "\\.ipynb$" filename)))
-    (ein:process-open-notebook filename #'kill-buffer-if-not-modified)))
+  (cl-letf (((symbol-function 'ein:k8s-select-context) #'ignore))
+    (-when-let* ((filename buffer-file-name)
+                 (match-p (string-match-p "\\.ipynb$" filename)))
+      (ein:process-open-notebook filename #'kill-buffer-if-not-modified))))
 
 (provide 'ein-process)
 

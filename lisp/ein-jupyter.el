@@ -109,6 +109,16 @@ with the call to the jupyter notebook."
 (defvar *ein:jupyter-server-buffer-name*
   (format "*%s*" *ein:jupyter-server-process-name*))
 
+(defun ein:jupyter-get-default-kernel (kernels)
+  (cond (ein:%notebooklist-new-kernel%
+         (ein:$kernelspec-name ein:%notebooklist-new-kernel%))
+        ((eq ein:jupyter-default-kernel 'first-alphabetically)
+         (car (car kernels)))
+        ((stringp ein:jupyter-default-kernel)
+         ein:jupyter-default-kernel)
+        (t
+         (symbol-name ein:jupyter-default-kernel))))
+
 (defun ein:jupyter-process-lines (url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
   (condition-case err
@@ -197,6 +207,49 @@ our singleton jupyter server process here."
                       (funcall #'ein:notebooklist-sentinel url-or-port* proc* event))
                     url-or-port (process-sentinel proc))))
 
+(defun ein:jupyter-crib-token (url-or-port)
+  "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
+  (aif (cl-loop for line in
+                (apply #'ein:jupyter-process-lines url-or-port
+                       ein:jupyter-server-command
+                       (split-string
+                        (format "%s%s %s"
+                                (aif ein:jupyter-server-use-subcommand
+                                    (concat it " ") "")
+                                "list" "--json")))
+                with token0
+                with password0
+                when (destructuring-bind
+                         (&key password url token &allow-other-keys)
+                         (ein:json-read-from-string line)
+                       (prog1 (or (equal (ein:url url) url-or-port)
+                                  (equal (url-host (url-generic-parse-url url))
+                                         "0.0.0.0"))
+                         (setq password0 password) ;; t or :json-false
+                         (setq token0 token)))
+                return (list password0 token0))
+      it (list nil nil)))
+
+(defun ein:jupyter-crib-running-servers ()
+  "Shell out to jupyter for running servers."
+  (nconc
+   (cl-loop for line in
+            (apply #'ein:jupyter-process-lines nil
+                   ein:jupyter-server-command
+                   (split-string
+                    (format "%s%s %s"
+                            (aif ein:jupyter-server-use-subcommand
+                                (concat it " ") "")
+                            "list" "--json")))
+            collecting (destructuring-bind
+                           (&key url &allow-other-keys)
+                           (ein:json-read-from-string line)
+                         (ein:url url)))
+   (aif (ein:k8s-service-url-or-port) (list it))))
+
+
+
+
 ;;;###autoload
 (defun ein:jupyter-server-start (server-command
                                  notebook-directory
@@ -276,14 +329,6 @@ server command."
 
 ;;;###autoload
 (defalias 'ein:stop 'ein:jupyter-server-stop)
-
-(defun ein:undocumented-shutdown (url-or-port)
-  (ein:query-singleton-ajax
-   (list 'shutdown-server url-or-port)
-   (ein:url url-or-port "api/shutdown")
-   :type "POST"
-   :timeout 3 ;; content-query-timeout and query-timeout default nil
-   :sync t))
 
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)

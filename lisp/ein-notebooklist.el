@@ -38,20 +38,16 @@
 (require 'dash)
 (require 'ido)
 
-(autoload 'ein:jupyterhub-connect "ein-jupyterhub")
+(declare-function ein:jupyterhub-connect "ein-jupyterhub")
+(declare-function ein:jupyter-crib-token "ein-jupyter")
+(declare-function ein:jupyter-server-conn-info "ein-jupyter")
+(declare-function ein:jupyter-get-default-kernel "ein-jupyter")
+(declare-function ein:jupyter-crib-running-servers "ein-jupyter")
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"
   :group 'ein
   :type 'integer)
-
-(defcustom ein:notebooklist-render-order
-  '(render-header
-    render-directory)
-  "Order of notebook list sections.
-Must contain render-header, and render-directory."
-  :group 'ein
-  :type 'list)
 
 (defcustom ein:notebooklist-first-open-hook nil
   "Hooks to run when the notebook list is opened at first time.
@@ -113,7 +109,7 @@ is opened at first time.::
   `(widget-create
     'menu-choice :tag ,tag
     :value ,custom-var
-    :notify (lambda (widget &rest ignore)
+    :notify (lambda (widget &rest _ignore)
               (run-at-time 1 nil #'ein:notebooklist-reload)
               (setq ,custom-var (widget-value widget)))
     ,@(mapcar (lambda (const)
@@ -168,54 +164,13 @@ This function adds NBLIST to `ein:notebooklist-map'."
   (get-buffer-create
    (format ein:notebooklist-buffer-name-template url-or-port)))
 
-(defun ein:crib-token (url-or-port)
-  "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
-  (aif (cl-loop for line in
-                (apply #'ein:jupyter-process-lines url-or-port
-                       ein:jupyter-server-command
-                       (split-string
-                        (format "%s%s %s"
-                                (aif ein:jupyter-server-use-subcommand
-                                    (concat it " ") "")
-                                "list" "--json")))
-                with token0
-                with password0
-                when (destructuring-bind
-                         (&key password url token &allow-other-keys)
-                         (ein:json-read-from-string line)
-                       (prog1 (or (equal (ein:url url) url-or-port)
-                                  (equal (url-host (url-generic-parse-url url))
-                                         "0.0.0.0"))
-                         (setq password0 password) ;; t or :json-false
-                         (setq token0 token)))
-                return (list password0 token0))
-      it (list nil nil)))
-
-(defun ein:crib-running-servers ()
-  "Shell out to jupyter for running servers."
-  (nconc
-   (cl-loop for line in
-            (apply #'ein:jupyter-process-lines nil
-                   ein:jupyter-server-command
-                   (split-string
-                    (format "%s%s %s"
-                            (aif ein:jupyter-server-use-subcommand
-                                (concat it " ") "")
-                            "list" "--json")))
-            collecting (destructuring-bind
-                           (&key url &allow-other-keys)
-                           (ein:json-read-from-string line)
-                         (ein:url url)))
-   (aif (ein:k8s-service-url-or-port) (list it))))
-
 (defun ein:notebooklist-token-or-password (url-or-port)
   "Return token or password for URL-OR-PORT.
 
 Jupyter requires one or the other but not both.
 Return empty string token if all authentication disabled.
 Return nil if unclear what, if any, authentication applies."
-  (multiple-value-bind (password-p token) (ein:crib-token url-or-port)
-    (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
+  (multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
     (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
       (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
             ((and (stringp token) (eql password-p :json-false)) token)
@@ -223,7 +178,6 @@ Return nil if unclear what, if any, authentication applies."
             (t nil)))))
 
 (defun ein:notebooklist-ask-url-or-port ()
-  (call-interactively #'ein:k8s-select-context)
   (let* ((default (ein:url (aif (ein:get-notebook)
                                (ein:$notebook-url-or-port it)
                              (aif ein:%notebooklist%
@@ -235,7 +189,7 @@ Return nil if unclear what, if any, authentication applies."
                                      (if (atom ein:url-or-port)
                                          (list ein:url-or-port)
                                        ein:url-or-port)
-                                     (ein:crib-running-servers)))))
+                                     (ein:jupyter-crib-running-servers)))))
          (url-or-port (let (ido-report-no-match ido-use-faces)
                         (ein:completing-read "URL or port: "
                                              url-or-port-list
@@ -285,7 +239,7 @@ refresh the notebook connection."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:notebooklist-date-format "%x"
+(defcustom ein:notebooklist-date-format "%F"
   "The format spec for date in notebooklist mode.
 See `ein:format-time-string'."
   :type '(or string function)
@@ -516,53 +470,14 @@ This function is called via `ein:notebook-after-rename-hook'."
                                         sort-order)))
     (-concat dirs nbs files)))
 
-(defun render-header-ipy2 (&rest args)
-  "Render the header (for ipython2)."
-  ;; Create notebook list
-  (widget-insert (format "IPython %s Notebook list\n\n" (ein:$notebooklist-api-version ein:%notebooklist%)))
-
-  (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
-    (dolist (p breadcrumbs)
-      (lexical-let ((name (car p))
-                    (path (cdr p)))
-        (widget-insert " | ")
-        (widget-create
-         'link
-         :notify (lambda (&rest ignore)
-                   (ein:notebooklist-login
-                    (ein:$notebooklist-url-or-port ein:%notebooklist%) path))
-         name)))
-    (widget-insert " |\n\n"))
-
-  (widget-create
-   'link
-   :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
-                                   (ein:$notebooklist-url-or-port ein:%notebooklist%)
-                                   (unless (eq ein:jupyter-default-kernel
-                                               'first-alphabetically)
-                                     ein:jupyter-default-kernel)))
-   "New Notebook")
-  (widget-insert " ")
-  (widget-create
-   'link
-   :notify (lambda (&rest ignore) (ein:notebooklist-reload nil t))
-   "Reload List")
-  (widget-insert " ")
-  (widget-create
-   'link
-   :notify (lambda (&rest ignore)
-             (browse-url
-              (ein:url (ein:$notebooklist-url-or-port ein:%notebooklist%))))
-   "Open In Browser")
-  (widget-insert "\n"))
-
-(defun render-header* (url-or-port &rest args)
-  "Render the header (for ipython>=3)."
+(defun render-header (url-or-port &rest args)
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
-     (format "Contents API %s (%s)\n\n" (ein:need-notebook-version url-or-port) url-or-port))
-
-    (let ((breadcrumbs (generate-breadcrumbs (ein:$notebooklist-path ein:%notebooklist%))))
+     (format "Contents API %s (%s)\n\n"
+             (ein:need-notebook-version url-or-port)
+             url-or-port))
+    (let ((breadcrumbs (generate-breadcrumbs
+                        (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
         (lexical-let ((url-or-port url-or-port)
                       (name (car p))
@@ -570,39 +485,29 @@ This function is called via `ein:notebook-after-rename-hook'."
           (widget-insert " | ")
           (widget-create
            'link
-           :notify (lambda (&rest ignore)
+           :notify (lambda (&rest _ignore)
                      (ein:notebooklist-open* url-or-port path nil nil
                                              (lambda (buffer url-or-port)
                                                (pop-to-buffer buffer))))
            name)))
       (widget-insert " |\n\n"))
-
     (lexical-let* ((url-or-port url-or-port)
                    (kernels (ein:list-available-kernels url-or-port)))
-      (unless ein:%notebooklist-new-kernel%
-        (setq ein:%notebooklist-new-kernel%
-              (if (eq ein:jupyter-default-kernel 'first-alphabetically)
-                  (ein:get-kernelspec url-or-port (caar kernels))
-                (ein:get-kernelspec
-                 url-or-port
-                 (if (stringp ein:jupyter-default-kernel)
-                     ein:jupyter-default-kernel
-                   (symbol-name ein:jupyter-default-kernel))))))
       (widget-create
        'link
-       :notify (lambda (&rest ignore) (ein:notebooklist-new-notebook
-                                       url-or-port
-                                       ein:%notebooklist-new-kernel%))
+       :notify (lambda (&rest _ignore) (ein:notebooklist-new-notebook
+                                        url-or-port
+                                        ein:%notebooklist-new-kernel%))
        "New Notebook")
       (widget-insert " ")
       (widget-create
        'link
-       :notify (lambda (&rest ignore) (ein:notebooklist-reload nil t))
+       :notify (lambda (&rest _ignore) (ein:notebooklist-reload nil t))
        "Resync")
       (widget-insert " ")
       (widget-create
        'link
-       :notify (lambda (&rest ignore)
+       :notify (lambda (&rest _ignore)
                  (browse-url (ein:url url-or-port)))
        "Open In Browser")
 
@@ -610,30 +515,26 @@ This function is called via `ein:notebook-after-rename-hook'."
       (let ((radio-widget
              (widget-create
               'radio-button-choice
-              :value (and ein:%notebooklist-new-kernel%
-                          (ein:$kernelspec-name
-                           ein:%notebooklist-new-kernel%))
               :notify (lambda (widget &rest _args)
-                        (setq ein:%notebooklist-new-kernel%
-                              (ein:get-kernelspec
-                               url-or-port
-                               (widget-value widget)))
-                        (message "New notebooks started with %s kernel"
-                                 (ein:$kernelspec-display-name
-                                  ein:%notebooklist-new-kernel%))))))
-        (if (null kernels)
-            (widget-insert "\n  No kernels found.")
-          (dolist (k kernels)
-            (widget-radio-add-item radio-widget (list 'item
-                                                      :value (car k)
-                                                      :format (format "%s\n" (cdr k)))))
-          (unless (eq ein:jupyter-default-kernel 'first-alphabetically)
-            (widget-radio-value-set
-             radio-widget
-             (if (stringp ein:jupyter-default-kernel)
-                 ein:jupyter-default-kernel
-               (symbol-name ein:jupyter-default-kernel))))
-          (widget-insert "\n"))))))
+                        (let ((update (ein:get-kernelspec url-or-port
+                                                          (widget-value widget))))
+                          (unless (equal ein:%notebooklist-new-kernel% update)
+                            (when ein:%notebooklist-new-kernel%
+                              (message "New notebooks started with %s kernel"
+                                       (ein:$kernelspec-display-name update)))
+                            (setq ein:%notebooklist-new-kernel% update)))))))
+        (if kernels
+            (let ((initial (ein:jupyter-get-default-kernel kernels)))
+              (dolist (k kernels)
+                (let ((child (widget-radio-add-item
+                              radio-widget
+                              (list 'item
+                                    :value (car k)
+                                    :format (format "%s\n" (cdr k))))))
+                  (when (string= initial (car k))
+                    (widget-apply-action (widget-get child :button)))))
+              (widget-insert "\n"))
+          (widget-insert "\n  No kernels found."))))))
 
 (defun ein:format-nbitem-data (name last-modified)
   (let ((dt (date-to-time last-modified)))
@@ -661,7 +562,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                      'link
                      :notify (lexical-let ((url-or-port url-or-port)
                                            (name name))
-                               (lambda (&rest ignore)
+                               (lambda (&rest _ignore)
                                  ;; each directory creates a whole new notebooklist
                                  (ein:notebooklist-open* url-or-port
                                     (concat (file-name-as-directory
@@ -682,7 +583,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                     (widget-create
                      'link
                      :notify (lexical-let ((path path))
-                               (lambda (&rest ignore)
+                               (lambda (&rest _ignore)
                                  (message "[EIN]: NBlist delete file command. Implement me!")))
                      "Delete")
                     (widget-insert " : " (ein:format-nbitem-data name last-modified))
@@ -693,7 +594,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                      'link
                      :notify (lexical-let ((url-or-port url-or-port)
                                            (path path))
-                               (lambda (&rest ignore)
+                               (lambda (&rest _ignore)
                                  (run-at-time 3 nil #'ein:notebooklist-reload)
                                  (ein:notebook-open url-or-port path)))
                      "Open")
@@ -703,7 +604,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                          'link
                          :notify (lexical-let ((url url-or-port)
                                                (session (car (gethash path sessions))))
-                                   (lambda (&rest ignore)
+                                   (lambda (&rest _ignore)
                                      (ein:kernel-delete--from-session-id url session #'ein:notebooklist-reload)))
                          "Stop")
                       (widget-insert "------"))
@@ -711,7 +612,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                     (widget-create
                      'link
                      :notify (lexical-let ((path path))
-                               (lambda (&rest ignore)
+                               (lambda (&rest _ignore)
                                  (ein:notebooklist-delete-notebook-ask
                                   path)))
                      "Delete")
@@ -734,11 +635,8 @@ Notebook list data is passed via the buffer local variable
                                 nil)))
 
 (defun ein:notebooklist-render--finish (nb-version url-or-port restore-point sessions)
-  (cl-letf (((symbol-function 'render-header) (if (< nb-version 3)
-                                                  #'render-header-ipy2
-                                                #'render-header*)))
-    (mapc (lambda (x) (funcall (symbol-function x) url-or-port sessions))
-          ein:notebooklist-render-order))
+  (render-header url-or-port sessions)
+  (render-directory url-or-port sessions)
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (ein:notebooklist-mode)
     (widget-setup)
@@ -945,15 +843,12 @@ and the url-or-port argument of ein:notebooklist-open*."
          ("New Notebook (with name)"
           ein:notebooklist-new-notebook-with-name)))))
 
-(defun ein:notebooklist-revert-wrapper (&optional ignore-auto noconfirm preserve-modes)
-  (ein:notebooklist-reload))
-
 (define-derived-mode ein:notebooklist-mode special-mode "ein:notebooklist"
   "IPython notebook list mode.
 Commands:
 \\{ein:notebooklist-mode-map}"
   (set (make-local-variable 'revert-buffer-function)
-       'ein:notebooklist-revert-wrapper))
+       (lambda (&rest _args) (ein:notebooklist-reload))))
 
 
 (provide 'ein-notebooklist)

@@ -395,7 +395,7 @@ Adapted from twittering-mode.el's `case-string'."
 
 ;;; Text manipulation on buffer
 
-(defun ein:find-leftmot-column (beg end)
+(defun ein:find-leftmost-column (beg end)
   "Return the leftmost column in region BEG to END."
   (save-excursion
     (let (mincol)
@@ -407,16 +407,18 @@ Adapted from twittering-mode.el's `case-string'."
                            (min mincol (current-column))
                          (current-column))))
         (unless (= (forward-line 1) 0)
-          (return-from ein:find-leftmot-column mincol)))
+          (return-from ein:find-leftmost-column mincol)))
       mincol)))
 
-
 ;;; Misc
 
 (defun ein:completing-read (&rest args)
-  (if (eq completing-read-function 'completing-read-default)
-      (apply #'ido-completing-read args)
-    (apply completing-read-function args)))
+  (cond (noninteractive (if (consp (cl-second args))
+                            (car (cl-second args))
+                          (cl-second args)))
+        ((eq completing-read-function 'completing-read-default)
+         (apply #'ido-completing-read args))
+        (t (apply completing-read-function args))))
 
 (defun ein:plist-iter (plist)
   "Return list of (key . value) in PLIST."

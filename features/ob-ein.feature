@@ -113,7 +113,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I should not see "[....]"
 
 @org
-Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
+Scenario: portless url with path, image
   When I open temp file "path.org"
   And I call "org-mode"
   And I type "<s"
@@ -134,18 +134,8 @@ Scenario: portless url with path, image, C-c ' lets you C-c C-c as well
   And I press "RET"
   And I type "import matplotlib.pyplot as plt ; import numpy as np ; x = np.linspace(0, 1, 100) ; y = np.random.rand(100,1) ; plt.plot(x,y)"
   And I ctrl-c-ctrl-c
-  And I press "M->"
-  And I type "<s"
-  And I press "TAB"
-  And I type "ein :session localhost :results raw drawer"
-  And I press "RET"
-  And I insert percent sign
-  And I type "matplotlib inline"
-  And I press "RET"
-  And I type "import matplotlib.pyplot as plt ; import numpy as np ; x = np.linspace(0, 1, 100) ; y = np.random.rand(100,1) ; plt.plot(x,y)"
-  And I ctrl-c-ctrl-c
-  And I dump buffer
   And I wait for buffer to say "file:ein-image"
+  And I dump buffer
 
 @export
 Scenario: Test ob-exp captures code and results.

@@ -184,21 +184,6 @@ callback (`websocket-callback-debug-on-error') is enabled."
      (websocket-get-debug-buffer-create
       (ein:$websocket-ws channel)))))
 
-(defun ein:dev-notebook-plain-mode ()
-  "Use `ein:notebook-plain-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-plain-mode)))
-
-(defun ein:dev-notebook-python-mode ()
-  "Use `ein:notebook-python-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-python-mode)))
-
-(defun ein:dev-notebook-multilang-mode ()
-  "Use `ein:notebook-multilang-mode'."
-  (interactive)
-  (setq ein:notebook-modes '(ein:notebook-multilang-mode)))
-
 (defun ein:dev-sys-info--lib (name)
   (let* ((libsym (intern-soft name))
          (version-var (cl-loop for fmt in '("%s-version" "%s:version")
