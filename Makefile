@@ -1,4 +1,5 @@
-EMACS ?= $(shell which emacs)
+export EMACS ?= $(shell which emacs)
+CASK_DIR := $(shell EMACS=$(EMACS) cask package-directory)
 SRC=$(shell cask files)
 PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
@@ -52,14 +53,17 @@ clean:
 dist-clean: clean
 	rm -rf dist
 
+.PHONY: cask
+cask: $(CASK_DIR)
+$(CASK_DIR): Cask
+	cask install
 
 .PHONY: test-compile
 test-compile: clean autoloads
-	cask install
 	! (cask eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; cask clean-elc && exit $$ret)
 
 .PHONY: quick
-quick: test-compile test-ob-ein-recurse test-unit
+quick: cask test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile

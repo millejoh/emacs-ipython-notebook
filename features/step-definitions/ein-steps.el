@@ -115,9 +115,23 @@
       (lambda (log-expr)
         (switch-to-buffer (symbol-value (intern log-expr)))))
 
+(When "^no notebooks pending$"
+  (lambda ()
+    (cl-loop repeat 10
+             until (zerop (hash-table-count *ein:notebook--pending-query*))
+             do (sleep-for 0 500)
+             finally do (should (zerop (hash-table-count *ein:notebook--pending-query*))))))
+
 (When "^I switch to buffer like \"\\(.+\\)\"$"
       (lambda (substr)
-        (switch-to-buffer (car (-non-nil (mapcar (lambda (b) (if (search substr (buffer-name b)) b)) (buffer-list)))))))
+        (cl-loop repeat 10
+                 for buf = (seq-some (lambda (b)
+                                       (and (search substr (buffer-name b)) b))
+                                     (buffer-list))
+                 until (buffer-live-p buf)
+                 do (sleep-for 0 500)
+                 finally do (and (should (buffer-live-p buf))
+                                 (switch-to-buffer buf)))))
 
 (When "^rename notebook to \"\\(.+\\)\" succeeds$"
       (lambda (new-name)
@@ -293,7 +307,7 @@
 (When "^I click\\( without going top\\)? on \"\\(.+\\)\"$"
       (lambda (stay word)
         ;; from espuds "go to word" without the '\\b's
-        (when (not stay)
+        (unless stay
           (goto-char (point-min)))
         (let ((search (re-search-forward (format "\\[%s\\]" word) nil t))
               (msg "Cannot go to link '%s' in buffer: %s"))

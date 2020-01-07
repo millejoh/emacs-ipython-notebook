@@ -35,57 +35,60 @@
   :type 'string
   :group 'ein)
 
-(defun ein:k8s-select-context ()
-  (interactive)
-  (kubernetes-contexts-refresh-now)
-  (if-let ((contexts (ein:k8s-get-contexts)))
-      (let ((desired-context
-             (ein:completing-read "Select context: " contexts nil t)))
-        (kubernetes-state-clear)
-        (let ((response (kubernetes-kubectl-await
-                         (apply-partially #'kubernetes-kubectl
-                                          kubernetes-props
-                                          (kubernetes-state)
-                                          (split-string (format "config use-context %s"
-                                                                desired-context)))
-                         (lambda (buf)
-                           (with-current-buffer buf
-                             (string-match (rx bol "Switched to context \""
-                                               (group (+? nonl)) "\"." (* space) eol)
-                                           (buffer-string))
-                             (match-string 1 (buffer-string)))))))
-          (if (string= response desired-context)
-              (progn
-                (kubernetes-state-update-config (kubernetes-kubectl-await-on-async
-                                                 kubernetes-props
-                                                 (kubernetes-state)
-                                                 #'kubernetes-kubectl-config-view))
-                (let ((current-name (alist-get
-                                     'name
-                                     (kubernetes-state-current-context
-                                      (kubernetes-state)))))
-                  (unless (string= current-name desired-context)
-                    (error "ein:k8s-select-context': could not update state for %s"
-                           desired-context))
-                  (if (kubernetes-kubectl-await
-                       (apply-partially #'kubernetes-kubectl
-                                        kubernetes-props
-                                        (kubernetes-state)
-                                        (split-string "get nodes -o json"))
-                       (lambda (buf)
-                         (prog1 t
-                           (with-current-buffer buf
-                             (kubernetes-state-update-nodes
-                              (json-read-from-string (buffer-string))))))
-                       nil #'ignore)
-                      (message "Selected %s" current-name)
-                    (error "ein:k8s-select-context: %s is down" current-name))))
-            (error "ein:k8s-select-context: use-context returned %s, expected %s"
-                   response desired-context))))
-    (error "ein:k8s-select-context: No contexts found")))
+(defun ein:k8s-select-context (&optional query-p)
+  (interactive "p")
+  (when (or query-p
+            (null (kubernetes-state-config (kubernetes-state))))
+    (kubernetes-contexts-refresh-now)
+    (if-let ((contexts (ein:k8s-get-contexts)))
+        (let ((desired-context
+               (ein:completing-read "Select context: " contexts nil t)))
+          (ein:message-whir "Rereading state"
+                            (add-function :before callback1 done-callback)
+                            (ein:kernel-delete-session kernel callback1))
+          (kubernetes-state-clear)
+          (let ((response
+                 (kubernetes-kubectl-await
+                  (apply-partially #'kubernetes-kubectl
+                                   kubernetes-props
+                                   (kubernetes-state)
+                                   (split-string (format "config use-context %s"
+                                                         desired-context)))
+                  (lambda (buf)
+                    (with-current-buffer buf
+                      (string-match (rx bol "Switched to context \""
+                                        (group (+? nonl)) "\"." (* space) eol)
+                                    (buffer-string))
+                      (match-string 1 (buffer-string)))))))
+            (if (string= response desired-context)
+                (progn
+                  (kubernetes-state-update-config (kubernetes-kubectl-await-on-async
+                                                   kubernetes-props
+                                                   (kubernetes-state)
+                                                   #'kubernetes-kubectl-config-view))
+                  (let ((current-name (alist-get
+                                       'name
+                                       (kubernetes-state-current-context
+                                        (kubernetes-state)))))
+                    (unless (string= current-name desired-context)
+                      (error "ein:k8s-select-context': could not update state for %s"
+                             desired-context))
+                    (if (kubernetes-nodes-refresh-now)
+                        (progn
+                          (mapc (lambda (resource)
+                                  (when-let ((refresh-f
+                                              (intern-soft (format "kubernetes-%s-refresh-now" resource))))
+                                    (when (fboundp refresh-f)
+                                      (funcall refresh-f))))
+                                (cl-remove-if (apply-partially #'eq 'nodes)
+                                              (mapcar #'car kubernetes-overview-views-alist)))
+                          (message "Selected %s" current-name))
+                      (error "ein:k8s-select-context: %s is down" current-name))))
+              (error "ein:k8s-select-context: use-context returned %s, expected %s"
+                     response desired-context))))
+      (error "ein:k8s-select-context: No contexts found"))))
 
 (defun ein:k8s-get-contexts ()
-  (kubernetes-contexts-refresh-now)
   (let ((response (kubernetes-kubectl-await-on-async kubernetes-props
                                                      (kubernetes-state)
                                                      #'kubernetes-kubectl-config-view)))
@@ -96,7 +99,6 @@
       names)))
 
 (defun ein:k8s-get-deployment ()
-  (kubernetes-deployments-refresh-now)
   (-let* [(deployments (kubernetes-state-deployments (kubernetes-state)))
           ((&alist 'items items) deployments)]
     (seq-some (lambda (it)
@@ -105,12 +107,10 @@
               items)))
 
 (defun ein:k8s-get-pod ()
-  (kubernetes-pods-refresh-now)
   (when-let ((deployment (ein:k8s-get-deployment)))
     (cl-first (kubernetes-overview--pods-for-deployment (kubernetes-state)
                                                         deployment))))
 (defun ein:k8s-get-service ()
-  (kubernetes-services-refresh-now)
   (-let* [(services (kubernetes-state-services (kubernetes-state)))
           ((&alist 'items items) services)]
     (seq-some (lambda (it)
@@ -119,21 +119,20 @@
               items)))
 
 (defun ein:k8s-get-node ()
-  (kubernetes-nodes-refresh-now)
   (-when-let* ((pod (ein:k8s-get-pod))
                ((&alist 'spec (&alist 'nodeName)) pod)
                (node (kubernetes-state-lookup-node nodeName (kubernetes-state)))
                ((&alist 'metadata (&alist 'name)) node))
     node))
 
-(defsubst ein:k8s-p ()
+(defsubst ein:k8s-ensure ()
   (and (executable-find kubernetes-kubectl-executable)
-       (or (kubernetes-state-current-context (kubernetes-state))
-           (unless noninteractive
-             (condition-case err
-                 (ein:k8s-select-context)
-               (error (ein:log 'info "ein:k8s-p %s" (error-message-string err))
-                      nil))))))
+       (condition-case err
+           (progn
+             (ein:k8s-select-context)
+             (kubernetes-state-current-context (kubernetes-state)))
+         (error (ein:log 'info "ein:k8s-ensure: %s" (error-message-string err))
+                nil))))
 
 (defsubst ein:k8s-in-cluster (addr)
   "Is ein client inside the k8s cluster?"
@@ -149,8 +148,8 @@
                                (kubernetes-state))))))
 
 (defun ein:k8s-service-url-or-port ()
-  (-when-let* ((k8s-p (ein:k8s-p))
-               (service (ein:k8s-get-service))
+  (ein:k8s-ensure)
+  (-when-let* ((service (ein:k8s-get-service))
                ((&alist 'spec (&alist 'ports [(&alist 'nodePort)])) service)
                (node (ein:k8s-get-node))
                ((&alist 'status (&alist 'addresses)) node)

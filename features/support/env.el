@@ -51,13 +51,13 @@
                        (search "Untitled" path)
                        (search "Renamed" path))
                (ein:notebooklist-delete-notebook path)
-               (cl-loop repeat 16
-                     with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
-                     for extant = (file-exists-p fullpath)
-                     until (not extant)
-                     do (sleep-for 0 1000)
-                     finally do (when extant
-                                  (ein:display-warning (format "cannot del %s" path)))))))
+               (cl-loop with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
+                        repeat 10
+                        for extant = (file-exists-p fullpath)
+                        until (not extant)
+                        do (sleep-for 0 1000)
+                        finally do (when extant
+                                     (ein:display-warning (format "cannot del %s" path)))))))
   (aif (ein:notebook-opened-notebooks)
       (cl-loop for nb in it
             for path = (ein:$notebook-notebook-path nb)

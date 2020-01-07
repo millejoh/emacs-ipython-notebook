@@ -14,6 +14,7 @@ Scenario: New Notebook
   Given I am in notebooklist buffer
   When I clear log expr "ein:log-all-buffer-name"
   And I click on "New Notebook"
+  And no notebooks pending
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "Opened notebook Untitled"
 
@@ -28,9 +29,11 @@ Scenario: Resync
 Scenario: Stop after closing notebook
   Given I am in notebooklist buffer
   And I click on "New Notebook"
+  And no notebooks pending
   And I switch to buffer like "Untitled"
   And I press "C-x k"
   And I am in notebooklist buffer
+  And I clear log expr "ein:log-all-buffer-name"
   And I keep clicking "Resync" until "Stop"
   And I click on "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
@@ -38,7 +41,10 @@ Scenario: Stop after closing notebook
   And I am in notebooklist buffer
   And I go to word "Untitled"
   And I go to beginning of line
+  And I dump buffer
   And I click without going top on "Open"
+  And no notebooks pending
+  And I switch to buffer like "Untitled"
 
 @content
 Scenario: Read a massive directory
