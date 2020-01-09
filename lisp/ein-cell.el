@@ -217,7 +217,10 @@ a number will limit the number of lines in a cell output."
                     (symbol-name (plist-get (cdr image) :type)))))
     (with-temp-buffer
       (save-excursion (insert (plist-get (cdr image) :data)))
-      (let ((encoding (mm-encode-buffer (list mime-type))))
+      (let* ((encoding (mm-encode-buffer (list mime-type)))
+             (coded (decode-coding-string (buffer-string) 'us-ascii)))
+        (erase-buffer)
+        (insert "\n" coded)
         (mm-possibly-verify-or-decrypt
          (mm-dissect-singlepart (list mime-type) encoding)
          (list mime-type))))))
