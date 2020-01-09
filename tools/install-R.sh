@@ -5,7 +5,6 @@
 set -x
 
 WORKDIR=${HOME}/local
-mkdir -p ${WORKDIR}/R
 UNAME=$(uname -s)
 cd $WORKDIR
 if [ "x$UNAME" = "xLinux" ] ; then
@@ -20,6 +19,7 @@ if [ "x$UNAME" = "xLinux" ] ; then
 elif [ "x$UNAME" = "xDarwin" ]; then
     brew list r &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install r
 fi
+mkdir -p ${WORKDIR}/R
 echo ".libPaths( c( '${WORKDIR}/R' , .libPaths() ) )" > ${HOME}/.Rprofile
 R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com', lib='${WORKDIR}/R')"
 R -e "IRkernel::installspec()"
