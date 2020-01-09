@@ -51,7 +51,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/local
-        key: ${{ runner.os }}-local-julia13
+        key: ${{ runner.os }}-local-000
 
     - uses: actions/cache@v1
       with:
