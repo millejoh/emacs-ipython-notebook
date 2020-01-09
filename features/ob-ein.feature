@@ -112,7 +112,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I wait for buffer to say "3.1415"
   And I should not see "[....]"
 
-@org
+@imogene
 Scenario: portless url with path, image
   When I open temp file "path.org"
   And I call "org-mode"

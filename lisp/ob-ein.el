@@ -58,7 +58,8 @@
 (autoload 'ein:shared-output-get-cell "ein-shared-output")
 (autoload 'ein:shared-output-eval-string "ein-shared-output")
 (autoload 'ein:kernel-live-p "ein-kernel")
-(autoload 'ein:query-singleton-ajax "ein:query")
+(autoload 'ein:query-singleton-ajax "ein-query")
+(autoload 'ein:output-area-case-type "ein-output-area")
 
 (defvar *ob-ein-sentinel* "[....]"
   "Placeholder string replaced after async cell execution")
@@ -117,22 +118,14 @@
       (base64-decode-region (point-min) (point-max)))))
 
 (defun ob-ein--return-mime-type (json file)
-  (cl-loop
-   for key in ein:output-types-text-preferred
-   for type = (intern (format ":%s" key)) ; something like `:text'
-   for value = (plist-get json type)      ; FIXME: optimize
-   when (plist-member json type)
-   return
-   (case key
-     ((svg image/svg)
-      (let ((file (or file (ob-ein--inline-image-info value))))
-        (ob-ein--write-base64-image value file)
-        (format "[[file:%s]]" file)))
-     ((png image/png jpeg image/jpeg)
-      (let ((file (or file (ob-ein--inline-image-info value))))
-        (ob-ein--write-base64-image value file)
-        (format "[[file:%s]]" file)))
-     (t (plist-get json type)))))
+  (ein:output-area-case-type
+   json
+   (cl-case type
+     ((:svg :png :jpeg)
+      (ob-ein--write-base64-image value
+                                  (or file (ob-ein--inline-image-info value)))
+      (format "[[file:%s]]" file))
+     (otherwise value))))
 
 (defun ob-ein--process-outputs (outputs params)
   (let ((file (cdr (assoc :image params))))

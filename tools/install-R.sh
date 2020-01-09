@@ -16,11 +16,9 @@ if [ "x$UNAME" = "xLinux" ] ; then
         make && make install
         find ${WORKDIR}/R -name R -print
     fi
-    R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com')"
-    R -e "IRkernel::installspec()"
 elif [ "x$UNAME" = "xDarwin" ]; then
     brew list r &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install r
-    R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com')"
-    R -e "IRkernel::installspec()"
 fi
+R -e "install.packages('IRkernel', repos='http://cran.mirrors.hoobly.com')"
+R -e "IRkernel::installspec()"
 R --version

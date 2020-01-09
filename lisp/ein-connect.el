@@ -100,13 +100,14 @@ Same as `ein:connect-run-command'."
                  (const :tag "Ask" ask))
   :group 'ein)
 
-(defcustom ein:connect-aotoexec-lighter nil
+(defcustom ein:connect-autoexec-lighter nil
   "String appended to the lighter of `ein:connect-mode' (`ein:c')
 when auto-execution mode is on.  When `nil', use the same string
 as `ein:cell-autoexec-prompt'."
   :type '(choice (string :tag "String appended to ein:c" "@")
                  (const :tag "Use `ein:cell-autoexec-prompt'." nil))
   :group 'ein)
+(define-obsolete-variable-alias 'ein:connect-aotoexec-lighter 'ein:connect-autoexec-lighter "0.17.0")
 
 (defcustom ein:connect-default-notebook nil
   "Notebook to be connect when `ein:connect-to-default-notebook' is called.
@@ -383,7 +384,7 @@ notebook."
 
 (defun ein:connect-mode-get-lighter ()
   (if (slot-value ein:%connect% 'autoexec)
-      (format " ein:c%s" (or ein:connect-aotoexec-lighter
+      (format " ein:c%s" (or ein:connect-autoexec-lighter
                              ein:cell-autoexec-prompt))
     " ein:c"))
 

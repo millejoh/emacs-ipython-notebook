@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'f)
 (require 'espuds)
 (require 'ert)

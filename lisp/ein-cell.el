@@ -42,6 +42,10 @@
 (require 'ein-kernel)
 (require 'ein-output-area)
 
+(declare-function mm-encode-buffer "mm-encode")
+(declare-function mm-possibly-verify-or-decrypt "mm-decode")
+(declare-function mm-dissect-singlepart "mm-decode")
+
 (defun ein:cell--ewoc-delete (ewoc &rest nodes)
   "Delete NODES from EWOC."
   (ewoc--set-buffer-bind-dll-let* ewoc
@@ -156,7 +160,6 @@ Delete current text first, thus effecting a \"refresh\"."
   "Face for tooltip when using pos-tip backend."
   :group 'ein)
 
-
 ;;; Customization
 
 (make-obsolete-variable 'ein:enable-dynamic-javascript nil "0.17.0")
@@ -182,18 +185,6 @@ is on.  See also `ein:connect-aotoexec-lighter'."
   :type 'string
   :group 'ein)
 
-(defcustom ein:slice-image nil
-  "[EXPERIMENTAL] When non-`nil', use `insert-sliced-image' when
-drawing images.  If it is of the form of ``(ROWS COLS)``, it is
-passed to the corresponding arguments of `insert-sliced-image'.
-
-.. FIXME: ROWS and COLS must be determined dynamically by measuring
-   the size of iamge and Emacs window.
-
-See also: https://github.com/tkf/emacs-ipython-notebook/issues/94"
-  :type 'boolean
-  :group 'ein)
-
 (defcustom ein:truncate-long-cell-output nil
   "When nil do not truncate cells with long outputs. When set to
 a number will limit the number of lines in a cell output."
@@ -209,7 +200,6 @@ a number will limit the number of lines in a cell output."
   :type 'list
   :group 'ein)
 
-
 ;;; EIEIO related utils
 
 (defmacro ein:oset-if-empty (obj slot value)
@@ -220,26 +210,64 @@ a number will limit the number of lines in a cell output."
   `(when (slot-boundp ,obj ,slot)
      (slot-value ,obj ,slot)))
 
-
 ;;; Utils
-(defvar ein:mime-type-map
-  '((image/svg+xml . svg) (image/png . png) (image/jpeg . jpeg)))
+
+(defun ein:make-mm-handle (image)
+  (let ((mime-type (mailcap-extension-to-mime
+                    (symbol-name (plist-get (cdr image) :type)))))
+    (with-temp-buffer
+      (save-excursion (insert (plist-get (cdr image) :data)))
+      (let ((encoding (mm-encode-buffer (list mime-type))))
+        (mm-possibly-verify-or-decrypt
+         (mm-dissect-singlepart (list mime-type) encoding)
+         (list mime-type))))))
+
+(defun ein:external-image-viewer (image-type)
+  (let (major				; Major encoding (text, etc)
+        minor				; Minor encoding (html, etc)
+        info				; Other info
+        major-info			; (assoc major mailcap-mime-data)
+        viewers				; Possible viewers
+        passed				; Viewers that passed the test
+        viewer				; The one and only viewer
+        (ctl (mail-header-parse-content-type (concat "image/" image-type))))
+    (mailcap-parse-mailcaps nil t)
+    (setq major (split-string (car ctl) "/"))
+    (setq minor (cadr major)
+          major (car major))
+    (when (setq major-info (cdr (assoc major mailcap-mime-data)))
+      (when (setq viewers (mailcap-possible-viewers major-info minor))
+        (setq info (mapcar (lambda (a)
+                             (cons (symbol-name (car a)) (cdr a)))
+                           (cdr ctl)))
+        (dolist (entry viewers)
+          (when (mailcap-viewer-passes-test entry info)
+            (push entry passed)))
+        (setq passed (sort (nreverse passed) 'mailcap-viewer-lessp))
+        ;; When we want to prefer entries from the user's
+        ;; ~/.mailcap file, then we filter out the system entries
+        ;; and see whether we have anything left.
+        (when (if (boundp 'mailcap-prefer-mailcap-viewers)
+                  mailcap-prefer-mailcap-viewers
+                t)
+          (when-let ((user-entry
+                      (seq-find (lambda (elem)
+                                  (eq (cdr (assq 'source elem)) 'user))
+                                passed)))
+            (setq passed (list user-entry))))
+        (setq viewer (car passed))))
+    (when (and (stringp (cdr (assq 'viewer viewer)))
+               passed)
+      (setq viewer (car passed)))
+    (mailcap-unescape-mime-test (cdr (assq 'viewer viewer)) info)))
 
 (defun ein:insert-image (&rest args)
-  ;; Try to insert the image, otherwise emit a warning message and proceed.
   (condition-case-unless-debug err
-      (let* ((img (apply #'create-image args))
-             (buffer-undo-list t))
-        (if ein:slice-image
-            (destructuring-bind (&optional rows cols)
-                (when (listp ein:slice-image) ein:slice-image)
-              (insert-sliced-image img "." nil (or rows 20) cols))
-          (insert-image img ".")))
-    (error (ein:log 'warn "Could not insert image: %s"
-                    (error-message-string err))
-           nil)))
+      (let ((img (apply #'create-image args))
+            (buffer-undo-list t))
+        (insert-image img "."))
+    (error (ein:log 'warn "Could not insert image: %s" (error-message-string err)))))
 
-
 ;;; Cell factory
 
 (defun ein:cell-class-from-type (type)
@@ -364,7 +392,6 @@ a number will limit the number of lines in a cell output."
           for en in (ein:cell-all-element cell)
           do (ein:cell--ewoc-invalidate ewoc en))))
 
-
 ;;; Getter/setter
 
 (cl-defmethod ein:cell-num-outputs ((cell ein:codecell))
@@ -430,7 +457,6 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
 (cl-defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
 
-
 ;; EWOC
 
 (defun ein:cell-make-element (make-node num-outputs)
@@ -776,7 +802,6 @@ If END is non-`nil', return the location of next element."
   "Return a buffer associated by CELL (if any)."
   (ein:aand (ein:oref-safe cell 'ewoc) (ewoc-buffer it)))
 
-
 ;; Data manipulation
 
 (cl-defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
@@ -836,7 +861,7 @@ If END is non-`nil', return the location of next element."
      (list 'output-stream 'output-subarea
            (intern (format "output-%s" (plist-get json :stream)))))))
 
-(cl-defmethod ein:cell-append-output ((cell ein:codecell) json dynamic)
+(cl-defmethod ein:cell-append-output ((cell ein:codecell) json)
   ;; When there is a python error, we actually get two identical tracebacks back
   ;; from the kernel, one from the "shell" channel, and one from the "iopub"
   ;; channel.  As a workaround, we remember the cell's traceback and ignore
@@ -847,10 +872,10 @@ If END is non-`nil', return the location of next element."
            (null old-tb)
            (null new-tb)
            (not (cl-equalp new-tb old-tb)))
-      (ein:cell-actually-append-output cell json dynamic))
+      (ein:cell-actually-append-output cell json))
     (setf (slot-value cell 'traceback) new-tb)))
 
-(cl-defmethod ein:cell-actually-append-output ((cell ein:codecell) json dynamic)
+(cl-defmethod ein:cell-actually-append-output ((cell ein:codecell) json)
   (ein:cell-expand cell)
   ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
@@ -876,7 +901,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                 (or (plist-get json :prompt_number) " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
-  (ein:cell-append-mime-type json (slot-value cell 'dynamic))
+  (ein:cell-append-mime-type json)
   (ein:insert-read-only "\n"))
 
 (cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
@@ -923,86 +948,33 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json (slot-value cell 'dynamic))
+  (ein:cell-append-mime-type json)
   (ein:insert-read-only "\n"))
 
-(defcustom ein:output-type-preference
-  (if (and (fboundp 'shr-insert-document)
-           (fboundp 'libxml-parse-xml-region))
-      #'ein:output-type-prefer-pretty-text-over-html
-    '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
-  "Output types to be used in notebook.
-First output-type found in this list will be used.
-This variable can be a list or a function returning a list given
-DATA plist.
-See also `ein:output-type-prefer-pretty-text-over-html'.
+(make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
 
-**Example**:
-If you prefer HTML type over text type, you can set it as::
+(defsubst ein:cell-output-type (mime-type)
+  "Investigate why :image/svg+xml to :svg and :text/plain to :text"
+  (let* ((mime-str (if (symbolp mime-type) (symbol-name mime-type) mime-type))
+         (minor (car (nreverse (split-string mime-str "/")))))
+    (intern (concat ":"
+                    (cond ((string= minor "plain") "text")
+                          (t (intern (cl-subseq minor 0 (cl-search "+" minor)))))))))
 
-    (setq ein:output-type-preference
-          '(emacs-lisp svg png jpeg html text latex javascript))
-
-Note that ``html`` comes before ``text``."
-  :type '(choice function (repeat symbol))
-  :group 'ein)
-
-(defvar ein:output-types-text-preferred
-  '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg text text/plain html text/html latex text/latex javascript text/javascript))
-
-(defvar ein:output-types-html-preferred
-  '(emacs-lisp svg image/svg+xml png image/png jpeg image/jpeg html text/html latex text/latex javascript text/javascript text text/plain))
-
-(defun ein:output-type-prefer-pretty-text-over-html (data)
-  "Use text type if it is a \"prettified\" text instead of HTML.
-This is mostly for *not* using HTML table for pandas but using
-HTML for other object.
-
-If the text type output contains a newline, it is assumed be a
-prettified text thus be used instead of HTML type."
-  (if (ein:aand (or (plist-get data :text)
-                    (plist-get data :text/plain))
-                (string-match-p "\n" it))
-      ein:output-types-text-preferred
-    ein:output-types-html-preferred))
-
-(defun ein:fix-mime-type (type)
-  (aif (assoc type ein:mime-type-map)
-      (cdr it)
-    type))
-
-(defun ein:cell-append-mime-type (json dynamic)
-  (when (plist-get json :data)
-    (setq json (plist-get json :data))) ;; For nbformat v4 support.
-  (cl-loop
-   for key in (cond
-               ((functionp ein:output-type-preference)
-                (funcall ein:output-type-preference json))
-               (t ein:output-type-preference))
-   for type = (intern (format ":%s" key)) ; something like `:text'
-   for value = (plist-get json type)      ; FIXME: optimize
-   when (plist-member json type)
-   return
-   (case key
-     ;; NOTE: Normally `javascript' and `html' will not be inserted as
-     ;; they come out after `text'.  Maybe it is better to inform user
-     ;; when one of them is inserted.
-     ((javascript text/javascript)
-      (when dynamic
-        (ein:log 'info (concat "ein:cell-append-mime-type does not support "
-                               "dynamic javascript. got: %s") value))
-      (ein:insert-read-only (plist-get json type)))
-     (emacs-lisp
-      (when dynamic
-        (ein:cell-safe-read-eval-insert (plist-get json type))))
-     ((html text/html)
-      (funcall (ein:output-area-get-html-renderer) (plist-get json type)))
-     ((latex text/latex text text/plain)
-      (ein:insert-read-only (plist-get json type)))
-     ((svg image/svg+xml)
-      (ein:insert-image value (ein:fix-mime-type key) t))
-     ((png image/png jpeg image/jpeg)
-      (ein:insert-image (base64-decode-string value) (ein:fix-mime-type key) t)))))
+(defun ein:cell-append-mime-type (json)
+  (ein:output-area-case-type
+   json
+   (cl-case type
+     ((:html)
+      (funcall (ein:output-area-get-html-renderer) value))
+     ((:svg :png :jpeg)
+      (ein:insert-image (condition-case nil
+                            (base64-decode-string value)
+                          (error value))
+                        type
+                        t))
+     (otherwise
+      (ein:insert-read-only value)))))
 
 (defun ein:cell-append-text (data &rest properties)
   ;; escape ANSI in plaintext:
@@ -1154,7 +1126,6 @@ prettified text thus be used instead of HTML type."
         (when (cl-typep cell 'ein:basecell)
           cell))))
 
-
 ;;; Kernel related calls.
 
 (cl-defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
@@ -1172,7 +1143,6 @@ prettified text thus be used instead of HTML type."
   (ein:cell-running-set cell t)
   (ein:cell-clear-output cell t t t)
   (ein:cell-set-input-prompt cell "*")
-  (setf (slot-value cell 'dynamic) t)
   (apply #'ein:kernel-execute kernel code (ein:cell-make-callbacks cell) args))
 
 (cl-defmethod ein:cell-make-callbacks ((cell ein:codecell))
@@ -1201,7 +1171,6 @@ prettified text thus be used instead of HTML type."
     ))
 
 
-
 ;;; Output area
 
 ;; These function should go to ein-output-area.el.  But as cell and
@@ -1220,31 +1189,28 @@ prettified text thus be used instead of HTML type."
        (when (or (equal msg-type "pyout")
                  (equal msg-type "execute_result"))
          (plist-put json :prompt_number (plist-get content :execution_count)))
-       (setq json
-             (ein:output-area-convert-mime-types json (plist-get content :data))))
+       (setq json (ein:output-area-convert-mime-types json (plist-get content :data))))
       (("pyerr" "error")
        (plist-put json :ename (plist-get content :ename))
        (plist-put json :evalue (plist-get content :evalue))
        (plist-put json :traceback (plist-get content :traceback))))
-    (ein:cell-append-output cell json t)
+    (ein:cell-append-output cell json)
     ;; (setf (slot-value cell 'dirty) t)
     (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))
 
-
 (defun ein:output-area-convert-mime-types (json data)
-  (cl-loop for (prop . mime) in '((:text       . :text/plain)
-                               (:html       . :text/html)
-                               (:svg        . :image/svg+xml)
-                               (:png        . :image/png)
-                               (:jpeg       . :image/jpeg)
-                               (:latex      . :text/latex)
-                               (:json       . :application/json)
-                               (:javascript . :application/javascript)
-                               (:emacs-lisp . :application/emacs-lisp))
-        when (plist-member data mime)
-        do (plist-put json prop (plist-get data mime)))
-  json)
-
+  (let ((known-mimes (cl-remove-if-not
+                      #'identity
+                      (mapcar (lambda (x) (intern-soft (concat ":" x)))
+                              (mailcap-mime-types)))))
+    (or (seq-some (lambda (x)
+                    (-when-let* ((mime-val
+                                  (plist-get data x))
+                                 (minor-kw
+                                  (ein:cell-output-type x)))
+                      (plist-put json minor-kw mime-val)))
+                  known-mimes)
+        json)))
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)
@@ -1256,7 +1222,6 @@ prettified text thus be used instead of HTML type."
                          )
   (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
 
-
 ;;; Misc.
 
 (cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
