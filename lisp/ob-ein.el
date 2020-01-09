@@ -118,7 +118,7 @@
       (base64-decode-region (point-min) (point-max)))))
 
 (defun ob-ein--proxy-images (json explicit-file)
-  (lexical-let (result)
+  (let (result)
     (ein:output-area-case-type
      json
      (cl-case type
@@ -126,7 +126,10 @@
         (let ((file (or explicit-file (ob-ein--inline-image-info value))))
           (ob-ein--write-base64-image value file)
           (setq result (format "[[file:%s]]" file))))
-       (otherwise (setq result value))))
+       (otherwise
+        (message "HEYYYYY %s %s" type value)
+        (setq result value))))
+
     result))
 
 (defun ob-ein--process-outputs (outputs params)
