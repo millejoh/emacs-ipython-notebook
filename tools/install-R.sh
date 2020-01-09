@@ -5,6 +5,7 @@
 set -x
 
 WORKDIR=${HOME}/local
+mkdir -p ${WORKDIR}/R
 UNAME=$(uname -s)
 cd $WORKDIR
 if [ "x$UNAME" = "xLinux" ] ; then
