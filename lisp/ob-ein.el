@@ -119,6 +119,7 @@
 
 (defun ob-ein--proxy-images (json explicit-file)
   (let (result)
+    (message "WHAAASAAART %s" json)
     (ein:output-area-case-type
      json
      (cl-case type
@@ -127,7 +128,6 @@
           (ob-ein--write-base64-image value file)
           (setq result (format "[[file:%s]]" file))))
        (otherwise
-        (message "HEYYYYY %s %s" type value)
         (setq result value))))
 
     result))

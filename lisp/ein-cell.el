@@ -1204,6 +1204,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                       #'identity
                       (mapcar (lambda (x) (intern-soft (concat ":" x)))
                               (mailcap-mime-types)))))
+    (message "!!!! %s\n%s" known-mimes json)
     (or (seq-some (lambda (x)
                     (-when-let* ((mime-val
                                   (plist-get data x))
