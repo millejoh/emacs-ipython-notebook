@@ -953,13 +953,14 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
 
-(defsubst ein:cell-output-type (mime-type)
+(defun ein:cell-output-type (mime-type)
   "Investigate why :image/svg+xml to :svg and :text/plain to :text"
   (let* ((mime-str (if (symbolp mime-type) (symbol-name mime-type) mime-type))
-         (minor (car (nreverse (split-string mime-str "/")))))
+         (minor-kw (car (nreverse (split-string mime-str "/"))))
+         (minor (car (nreverse (split-string minor-kw ":")))))
     (intern (concat ":"
                     (cond ((string= minor "plain") "text")
-                          (t (intern (cl-subseq minor 0 (cl-search "+" minor)))))))))
+                          (t (cl-subseq minor 0 (cl-search "+" minor))))))))
 
 (defun ein:cell-append-mime-type (json)
   (ein:output-area-case-type
@@ -1204,15 +1205,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                       #'identity
                       (mapcar (lambda (x) (intern-soft (concat ":" x)))
                               (mailcap-mime-types)))))
-    (message "!!!! %s\n%s" known-mimes json)
-    (or (seq-some (lambda (x)
-                    (-when-let* ((mime-val
-                                  (plist-get data x))
-                                 (minor-kw
-                                  (ein:cell-output-type x)))
-                      (plist-put json minor-kw mime-val)))
-                  known-mimes)
-        json)))
+    (mapc (lambda (x)
+            (-when-let* ((mime-val (plist-get data x))
+                         (minor-kw (ein:cell-output-type x)))
+              (setq json (plist-put json minor-kw mime-val))))
+          known-mimes)
+    json))
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)

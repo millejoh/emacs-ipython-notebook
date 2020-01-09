@@ -119,7 +119,6 @@
 
 (defun ob-ein--proxy-images (json explicit-file)
   (let (result)
-    (message "WHAAASAAART %s" json)
     (ein:output-area-case-type
      json
      (cl-case type
