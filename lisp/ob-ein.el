@@ -117,21 +117,22 @@
       (insert img-string)
       (base64-decode-region (point-min) (point-max)))))
 
-(defun ob-ein--return-mime-type (json file)
-  (ein:output-area-case-type
-   json
-   (cl-case type
-     ((:svg :png :jpeg)
-      (ob-ein--write-base64-image value
-                                  (or file (ob-ein--inline-image-info value)))
-      (format "[[file:%s]]" file))
-     (otherwise value))))
+(defun ob-ein--proxy-images (json explicit-file)
+  (lexical-let (result)
+    (ein:output-area-case-type
+     json
+     (cl-case type
+       ((:svg :png :jpeg)
+        (let ((file (or explicit-file (ob-ein--inline-image-info value))))
+          (ob-ein--write-base64-image value file)
+          (setq result (format "[[file:%s]]" file))))
+       (otherwise (setq result value))))))
 
 (defun ob-ein--process-outputs (outputs params)
   (let ((file (cdr (assoc :image params))))
     (ein:join-str "\n"
                   (cl-loop for o in outputs
-                        collecting (ob-ein--return-mime-type o file)))))
+                        collecting (ob-ein--proxy-images o file)))))
 
 
 (defun ob-ein--get-name-create (src-block-info)

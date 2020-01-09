@@ -170,7 +170,6 @@ some input
     (:data (:latex "second output \\LaTeX"))
     (:data (:text "some output text" :svg ein:testing-example-svg)))))
 
-
 ;; Insert pyerr
 
 (ert-deftest ein:cell-insert-output-pyerr-simple ()

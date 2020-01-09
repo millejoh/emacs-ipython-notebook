@@ -124,7 +124,8 @@ Usage::
   `(progn (aif (plist-get ,json :data) (setq ,json it)) ;; nbformat v4 ???
           (seq-some (lambda (type)
                       (when-let ((value (plist-get ,json type)))
-                        ,@case-body))
+                        ,@case-body
+                        t))
                     (list :svg :png :jpeg :text :html :latex :javascript))))
 
 (provide 'ein-output-area)

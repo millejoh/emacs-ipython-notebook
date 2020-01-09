@@ -971,7 +971,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:insert-image (condition-case nil
                             (base64-decode-string value)
                           (error value))
-                        type
+                        (intern (car (nreverse
+                                      (split-string (symbol-name type) ":"))))
                         t))
      (otherwise
       (ein:insert-read-only value)))))
