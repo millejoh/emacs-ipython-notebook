@@ -32,6 +32,7 @@
 
 (!cons "evil" ecukes-exclude-tags)
 (!cons "memory" ecukes-exclude-tags)
+(!cons "content" ecukes-exclude-tags)
 (when (eq system-type 'darwin) ;; julia bogs github actions catalina
   (!cons "julia" ecukes-exclude-tags))
 
