@@ -88,7 +88,7 @@ some input
           :execution_count 111)
     :ewoc (oref ein:%worksheet% :ewoc))
    (goto-char (ein:cell-location cell))
-   (message "%s" (buffer-string))
+   ;; (message "%s" (buffer-string))
    (should (looking-at (format "\
 In \\[111\\]:
 some input
@@ -138,7 +138,7 @@ some input
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    svg
-   ("some output text")
+   ("\\.")
    ((:data (:text "some output text" :svg ein:testing-example-svg)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
@@ -165,7 +165,7 @@ some input
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    text-latex-svg
-   ("first output text" "second output \\\\LaTeX" "some output text")
+   ("first output text" "second output \\\\LaTeX")
    ((:data (:text "first output text"))
     (:data (:latex "second output \\LaTeX"))
     (:data (:text "some output text" :svg ein:testing-example-svg)))))
