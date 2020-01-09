@@ -270,17 +270,6 @@ Typed `:input-prompt-number' becomes a problem when reading a
 notebook that saved "*".  So don't add `:type'!")
    (collapsed :initarg :collapsed :initform nil :type boolean)
    (running :initarg :running :initform nil :type boolean)
-   (dynamic :initarg :dynamic :initform nil :type boolean
-            :documentation "\
-Whether cell output is evaluated dynamically or not.
-
-Only Emacs lisp type output data will be affected by this
-slot (Javascript will not be evaluated).  This value must be set
-to `t' when executing cell.  See `ein:notebook-execute-cell'.
-In the implantation of IPython web client it is passed around via
-argument, but since it is difficult to pass argument to EWOC
-pretty printer, `ein:codecell' instance holds this setting in a
-slot.")
    (autoexec :initarg :autoexec :initform nil :type boolean
              :documentation "Auto-execution flag.
 

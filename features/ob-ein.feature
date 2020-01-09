@@ -134,8 +134,8 @@ Scenario: portless url with path, image
   And I press "RET"
   And I type "import matplotlib.pyplot as plt ; import numpy as np ; x = np.linspace(0, 1, 100) ; y = np.random.rand(100,1) ; plt.plot(x,y)"
   And I ctrl-c-ctrl-c
-  And I wait for buffer to say "file:ein-image"
   And I dump buffer
+  And I wait for buffer to say "file:ein-image"
 
 @export
 Scenario: Test ob-exp captures code and results.

@@ -6,7 +6,6 @@
 (require 'ein-notebook)
 (require 'ein-testing-notebook)
 
-
 ;; ein:cell-location
 
 (ert-deftest ein:cell-location-codecell-prompt-beg ()
@@ -34,7 +33,6 @@
     (should (equal (marker-position (ein:cell-location cell :input t))
                    (1+ (point))))))
 
-
 ;; from-json
 
 (ert-deftest eintest:cell-input-prompt-number ()
@@ -78,27 +76,23 @@ In \\[ \\]:
 some input
 "))))
 
-
 ;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
-  (let ((ein:output-type-preference (reverse (if (functionp ein:output-type-preference)
-                                                 (funcall ein:output-type-preference nil)
-                                               ein:output-type-preference))))
-    (ein:testing-with-one-cell
-        (ein:cell-from-json
-         (list :cell_type "code"
-               :outputs outputs
-               :source "some input"
-	       :metadata (list :collapsed json-false :autoscroll json-false)
-               :execution_count 111)
-         :ewoc (oref ein:%worksheet% :ewoc))
-      (goto-char (ein:cell-location cell))
-      ;; (message "%s" (buffer-string))
-      (should (looking-at (format "\
+  (ein:testing-with-one-cell
+   (ein:cell-from-json
+    (list :cell_type "code"
+          :outputs outputs
+          :source "some input"
+          :metadata (list :collapsed json-false :autoscroll json-false)
+          :execution_count 111)
+    :ewoc (oref ein:%worksheet% :ewoc))
+   (goto-char (ein:cell-location cell))
+   ;; (message "%s" (buffer-string))
+   (should (looking-at (format "\
 In \\[111\\]:
 some input
-%s" regexp))))))
+%s" regexp)))))
 
 (defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data
   (name regexps outputs)
@@ -109,11 +103,11 @@ some input
          (intern (format "ein:cell-insert-output-display-data-%s" name)))
         (outputs-pyout
          (cl-loop for i from 1
-               for x in outputs
-               collect
-               ;; ein:cell--handle-output doesn't get called
-               ;; so can't use :execution_count here although that is preferable
-               (append x (list :output_type "execute_result" :prompt_number i :metadata nil))))
+                  for x in outputs
+                  collect
+                  ;; ein:cell--handle-output doesn't get called
+                  ;; so can't use :execution_count here although that is preferable
+                  (append x (list :output_type "execute_result" :prompt_number i :metadata nil))))
         (outputs-display-data
          (mapcar (lambda (x) (append '(:output_type "display_data" :metadata nil) x))
                  outputs))
@@ -134,49 +128,48 @@ some input
                                      ,regexp-display-data)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
-  text ("some output") ((:data (:text/plain "some output"))))
+  text ("some output") ((:data (:text "some output"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   latex
   ("some output \\\\LaTeX")
-  ((:data (:text/latex "some output \\LaTeX"))))
+  ((:data (:latex "some output \\LaTeX"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    svg
-   ("some output text")
-   ((:data (:text/plain "some output text" :image/svg ein:testing-example-svg)))))
+   ("\\.")
+   ((:data (:text "some output text" :svg ein:testing-example-svg)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
   ("some output text")
-  ((:data (:text/plain "some output text" :text/html "<b>not shown</b>"))))
+  ((:data (:text "some output text" :html "<b>not shown</b>"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   javascript
   ("some output text")
-  ((:data (:text/plain "some output text" :text/javascript "$.do.something()"))))
+  ((:data (:text "some output text" :javascript "$.do.something()"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-two
   ("first output text" "second output text")
-  ((:data (:text/plain "first output text")) (:data (:text/plain "second output text"))))
+  ((:data (:text "first output text")) (:data (:text "second output text"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-javascript
   ("first output text" "second output text")
-  ((:data (:text/plain "first output text"))
-   (:data (:text/plain "second output text" :text/javascript "$.do.something()"))))
+  ((:data (:text "first output text"))
+   (:data (:text "second output text" :javascript "$.do.something()"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    text-latex-svg
-   ("first output text" "second output \\\\LaTeX" "some output text")
-   ((:data (:text/plain "first output text"))
-    (:data (:text/latex "second output \\LaTeX"))
-    (:data (:text/plain "some output text" :image/svg ein:testing-example-svg)))))
+   ("first output text" "second output \\\\LaTeX")
+   ((:data (:text "first output text"))
+    (:data (:latex "second output \\LaTeX"))
+    (:data (:text "some output text" :svg ein:testing-example-svg)))))
 
-
 ;; Insert pyerr
 
 (ert-deftest ein:cell-insert-output-pyerr-simple ()
