@@ -22,96 +22,12 @@
 
 ;;; Commentary:
 
-;;
+;; This needs to get re-written.
 
 ;;; Code:
 
-(require 'ein-core)
-(require 'ein-log)
-(require 'ein-subpackages)
-(require 'ein-kernel)
-(require 'ein-pytools)
-(require 'dash)
-
 (make-obsolete-variable 'ein:complete-on-dot nil "0.15.0")
-
-(defun ein:completer-choose ()
-  (cond
-   ((eq ein:completion-backend 'ein:use-none-backend) #'ignore)
-   (t #'ein:completer-finish-completing-default)))
-
-(defun ein:completer-beginning (matched-text)
-  (save-excursion
-    (re-search-backward (concat matched-text "\\="))))
-
-(defun ein:completer-finish-completing (args content _metadata)
-  (ein:log 'debug "COMPLETER-FINISH-COMPLETING: content=%S" content)
-  (let* ((beg (point))
-         (delta (- (plist-get content :cursor_end)
-                   (plist-get content :cursor_start)))
-         (matched-text (buffer-substring beg (- beg delta)))
-         (matches (plist-get content :matches))
-         (completer (ein:completer-choose)))
-    (ein:log 'debug "COMPLETER-FINISH-COMPLETING: completer=%s" completer)
-    (apply completer matched-text matches args)))
-
-(defun ein:completer-finish-completing-default (matched-text matches
-                                                &rest _ignore)
-  (let* ((end (point))
-         (beg (ein:completer-beginning matched-text))
-         (word (if (and beg matches)
-                   (ein:completing-read "Complete: " matches
-                                    nil nil matched-text))))
-    (when word
-      (delete-region beg end)
-      (insert word))))
-
-;;; Retrieving Python Object Info
-(defun ein:completions--reset-oinfo-cache (kernel)
-  (setf (ein:$kernel-oinfo-cache kernel) (make-hash-table :test #'equal)))
-
-(defun ein:completions-get-cached (partial oinfo-cache)
-  (cl-loop for candidate being the hash-keys of oinfo-cache
-        when (string-prefix-p partial candidate)
-        collect candidate))
-
-(defun ein:completions--get-oinfo (_obj)
-  (let ((d (deferred:new #'identity))
-        (_kernel (ein:get-kernel)))
-    d))
-
-(defun ein:completions--build-oinfo-cache (objs)
-  (let ((kernel (ein:get-kernel)))
-    (dolist (o (-non-nil objs))
-      (deferred:$
-        (deferred:next
-          (lambda ()
-            (ein:completions--get-oinfo (ein:trim o "\\s-\\|\n\\|\\."))))
-        (deferred:nextc it
-          (lambda (output)
-            (if (stringp output)
-                (ein:display-warning output :error)
-              (ein:completions--prepare-oinfo output o kernel))))))))
-
-(defun ein:completions--prepare-oinfo (output obj kernel)
-  (condition-case err
-      (destructuring-bind (msg-type content _) output
-        (ein:case-equal msg-type
-          (("stream" "display_data" "pyout" "execute_result")
-           (aif (plist-get content :text)
-               (let ((oinfo (ein:json-read-from-string it)))
-                 (unless (string= (plist-get oinfo :string_form) "None")
-                   (setf (gethash obj (ein:$kernel-oinfo-cache kernel))
-                         oinfo)))))
-          (("error" "pyerr")
-           (ein:log 'verbose "ein:completions--prepare-oinfo: %s"
-                    (plist-get content :traceback)))))
-    (error
-     (ein:log 'verbose "ein:completions--prepare-oinfo: [%s]"
-              (error-message-string err))
-     (let (eval-expression-print-length eval-expression-print-level)
-       (prin1 output #'external-debugging-output))
-     (setf (gethash obj (ein:$kernel-oinfo-cache kernel)) :json-false))))
+(make-obsolete-variable 'ein:completion-backend nil "0.17.0")
 
 (provide 'ein-completer)
 

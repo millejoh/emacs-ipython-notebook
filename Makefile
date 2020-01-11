@@ -28,13 +28,7 @@ README.rst: README.in.rst lisp/ein.el
 	grep ';;' lisp/ein.el \
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
-	    | tools/readme-sed.sh "COMMENTARY" README.rst1 > README.rst0
-	cask eval "(progn \
-	             (add-to-list 'load-path \"./lisp\") \
-	             (load \"ein-connect\") \
-	             (describe-minor-mode \"ein:connect-mode\") \
-	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
-	| tools/readme-sed.sh "KEYS CONNECT" README.rst0 "key.*binding" > README.rst
+	    | tools/readme-sed.sh "COMMENTARY" README.rst1 > README.rst
 	rm README.rst0 README.rst1
 
 .PHONY: autoloads
@@ -47,6 +41,7 @@ clean:
 	rm -rf test/test-install
 	rm -rf log
 	rm -f features/Untitled*.ipynb
+	rm -f features/Renamed.ipynb
 	rm -f test/Untitled*.ipynb
 
 .PHONY: dist-clean

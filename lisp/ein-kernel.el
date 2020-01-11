@@ -105,7 +105,6 @@
     (setq iteration 0))
   (let ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
-     (list 'kernel-session-p session-id)
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "GET"
      :sync ein:force-sync
@@ -168,7 +167,6 @@ CALLBACK of arity 1, the kernel.
           (kernelspec (ein:$kernel-kernelspec kernel))
           (path (ein:$kernel-path kernel)))
       (ein:query-singleton-ajax
-       (list 'kernel-retrieve-session kernel-id)
        (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
        :type "POST"
        :data (json-encode
@@ -333,7 +331,6 @@ delete the kernel on the server side"
     (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id kernel))
     (ein:kernel-reconnect-session kernel callback)))
 
-
 ;;; Main public methods
 
 ;; NOTE: The argument CALLBACKS for the following functions is almost
@@ -614,7 +611,6 @@ Example::
   (when (ein:kernel-live-p kernel)
     (ein:log 'info "Interrupting kernel")
     (ein:query-singleton-ajax
-     (list 'kernel-interrupt (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel)
               "interrupt")
@@ -627,7 +623,6 @@ Example::
 
 We need this to have proper behavior for the 'Stop' command in the ein:notebooklist buffer."
   (ein:query-singleton-ajax
-   (list 'kernel-delete-session session-id)
    (ein:url url "api/sessions" session-id)
    :success (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
    :error (apply-partially #'ein:kernel-delete--from-session-error session-id)
@@ -645,7 +640,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK (kernel)"
   (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
-     (list 'kernel-delete-session session-id)
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "DELETE"
      :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
@@ -670,7 +664,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
   (when callback (funcall callback kernel)))
-
 
 ;; Reply handlers.
 (defun ein:kernel-get-callbacks-for-msg (kernel msg-id)

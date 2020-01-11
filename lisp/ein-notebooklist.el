@@ -30,10 +30,8 @@
 
 (require 'ein-core)
 (require 'ein-notebook)
-(require 'ein-connect)
 (require 'ein-file)
 (require 'ein-contents-api)
-(require 'ein-subpackages)
 (require 'deferred)
 (require 'dash)
 (require 'ido)
@@ -345,7 +343,6 @@ This function is called via `ein:notebook-after-rename-hook'."
          (version (ein:$notebooklist-api-version notebooklist))
          (url (ein:notebooklist-url url-or-port version path)))
     (ein:query-singleton-ajax
-     (list 'notebooklist-new-notebook url-or-port path)
      url
      :type "POST"
      :data (json-encode '((:type . "notebook")))
@@ -419,13 +416,24 @@ This function is called via `ein:notebook-after-rename-hook'."
                  (notebooklist ein:%notebooklist%)
                  (callback callback)
                  (url-or-port (ein:$notebooklist-url-or-port notebooklist)))
-    (unless callback (setq callback (lambda () (ein:notebooklist-reload notebooklist))))
-    (ein:query-singleton-ajax
-     (list 'notebooklist-delete-notebook (ein:url url-or-port path))
-     (ein:notebook-url-from-url-and-id
-      url-or-port (ein:$notebooklist-api-version notebooklist) path)
-     :type "DELETE"
-     :complete (apply-partially #'ein:notebooklist-delete-notebook--complete (ein:url url-or-port path) callback))))
+    (unless callback
+      (setq callback (apply-partially #'ein:notebooklist-reload notebooklist)))
+    (dolist (buf (seq-filter (lambda (b)
+                               (with-current-buffer b
+                                 (aif (ein:get-notebook)
+                                     (string= path (ein:$notebook-notebook-path it)))))
+                             (buffer-list)))
+      (kill-buffer buf))
+    (if (ein:notebook-opened-notebooks
+         (lambda (nb)
+           (string= path (ein:$notebook-notebook-path nb))))
+        (ein:log 'error "ein:notebooklist-delete-notebook: cannot close %s" path)
+      (ein:query-singleton-ajax
+       (ein:notebook-url-from-url-and-id
+        url-or-port (ein:$notebooklist-api-version notebooklist) path)
+       :type "DELETE"
+       :complete (apply-partially #'ein:notebooklist-delete-notebook--complete
+                                  (ein:url url-or-port path) callback)))))
 
 (cl-defun ein:notebooklist-delete-notebook--complete
     (url callback
@@ -548,77 +556,78 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
     (ein:make-sorting-widget "In Order" ein:notebooklist-sort-order)
     (widget-insert "\n")
-    (cl-loop for note in (ein:notebooklist--order-data (ein:$notebooklist-data ein:%notebooklist%)
-                                                    ein:notebooklist-sort-field
-                                                    ein:notebooklist-sort-order)
-          for name = (plist-get note :name)
-          for path = (plist-get note :path)
-          for last-modified = (plist-get note :last_modified)
-          for type = (plist-get note :type)
-          for opened-notebook-maybe = (ein:notebook-get-opened-notebook url-or-port path)
-          do (widget-insert " ")
-          if (string= type "directory")
-          do (progn (widget-create
-                     'link
-                     :notify (lexical-let ((url-or-port url-or-port)
-                                           (name name))
-                               (lambda (&rest _ignore)
-                                 ;; each directory creates a whole new notebooklist
-                                 (ein:notebooklist-open* url-or-port
-                                    (concat (file-name-as-directory
-                                             (ein:$notebooklist-path ein:%notebooklist%))
-                                            name)
-                                    nil nil
-                                    (lambda (buffer url-or-port) (pop-to-buffer buffer)))))
-                     "Dir")
-                    (widget-insert " : " name)
-                    (widget-insert "\n"))
-          end
-          if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
-          do (progn (widget-create
-                     'link
-                     :notify (apply-partially #'ein:file-open url-or-port path)
-                     "Open")
-                    (widget-insert " ------ ")
-                    (widget-create
-                     'link
-                     :notify (lexical-let ((path path))
-                               (lambda (&rest _ignore)
-                                 (message "[EIN]: NBlist delete file command. Implement me!")))
-                     "Delete")
-                    (widget-insert " : " (ein:format-nbitem-data name last-modified))
-                    (widget-insert "\n"))
-          end
-          if (string= type "notebook")
-          do (progn (widget-create
-                     'link
-                     :notify (lexical-let ((url-or-port url-or-port)
-                                           (path path))
-                               (lambda (&rest _ignore)
-                                 (run-at-time 3 nil #'ein:notebooklist-reload)
-                                 (ein:notebook-open url-or-port path)))
-                     "Open")
-                    (widget-insert " ")
-                    (if (gethash path sessions)
-                        (widget-create
-                         'link
-                         :notify (lexical-let ((url url-or-port)
-                                               (session (car (gethash path sessions))))
-                                   (lambda (&rest _ignore)
-                                     (ein:kernel-delete--from-session-id url session #'ein:notebooklist-reload)))
-                         "Stop")
-                      (widget-insert "------"))
-                    (widget-insert " ")
-                    (widget-create
-                     'link
-                     :notify (lexical-let ((path path))
-                               (lambda (&rest _ignore)
-                                 (ein:notebooklist-delete-notebook-ask
-                                  path)))
-                     "Delete")
-                    (widget-insert " : " (ein:format-nbitem-data name last-modified))
-                    (widget-insert "\n"))
-          end)))
+    (cl-loop for note in (ein:notebooklist--order-data
+                          (ein:$notebooklist-data ein:%notebooklist%)
+                          ein:notebooklist-sort-field
+                          ein:notebooklist-sort-order)
+             for name = (plist-get note :name)
+             for path = (plist-get note :path)
+             for last-modified = (plist-get note :last_modified)
+             for type = (plist-get note :type)
+             for opened-notebook-maybe = (ein:notebook-get-opened-notebook
+                                          url-or-port path)
+             do (widget-insert " ")
+             if (string= type "directory")
+             do (progn (widget-create
+                        'link
+                        :notify (lexical-let ((url-or-port url-or-port)
+                                              (name name))
+                                  (lambda (&rest _ignore)
+                                    ;; each directory creates a whole new notebooklist
+                                    (ein:notebooklist-open* url-or-port
+                                                            (concat (file-name-as-directory
+                                                                     (ein:$notebooklist-path ein:%notebooklist%))
+                                                                    name)
+                                                            nil nil
+                                                            (lambda (buffer url-or-port) (pop-to-buffer buffer)))))
+                        "Dir")
+                       (widget-insert " : " name)
+                       (widget-insert "\n"))
+             end
+             if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
+             do (progn (widget-create
+                        'link
+                        :notify (apply-partially #'ein:file-open url-or-port path)
+                        "Open")
+                       (widget-insert " ------ ")
+                       (widget-create
+                        'link
+                        :notify (lexical-let ((path path))
+                                  (lambda (&rest _ignore)
+                                    (message "[EIN]: NBlist delete file command. Implement me!")))
+                        "Delete")
+                       (widget-insert " : " (ein:format-nbitem-data name last-modified))
+                       (widget-insert "\n"))
+             end
+             if (string= type "notebook")
+             do (progn (widget-create
+                        'link
+                        :notify (lexical-let ((url-or-port url-or-port)
+                                              (path path))
+                                  (lambda (&rest _ignore)
+                                    (run-at-time 3 nil #'ein:notebooklist-reload)
+                                    (ein:notebook-open url-or-port path)))
+                        "Open")
+                       (widget-insert " ")
+                       (if (gethash path sessions)
+                           (widget-create
+                            'link
+                            :notify (lexical-let ((url url-or-port)
+                                                  (session (car (gethash path sessions))))
+                                      (lambda (&rest _ignore)
+                                        (ein:kernel-delete--from-session-id url session #'ein:notebooklist-reload)))
+                            "Stop")
+                         (widget-insert "------"))
+                       (widget-insert " ")
+                       (widget-create
+                        'link
+                        :notify (lexical-let ((path path))
+                                  (lambda (&rest _ignore)
+                                    (ein:notebooklist-delete-notebook-ask path)))
+                        "Delete")
+                       (widget-insert " : " (ein:format-nbitem-data name last-modified))
+                       (widget-insert "\n"))
+             end)))
 
 (defun ein:notebooklist-render (nb-version &optional restore-point)
   "Render notebook list widget.
@@ -687,12 +696,9 @@ or even this (if you want fast Emacs start-up)::
   ;; load notebook list if Emacs is idle for 3 sec after start-up
   (run-with-idle-timer 3 nil #'ein:notebooklist-load)
 
-You should setup `ein:url-or-port' in order to make this code work.
-
-See also:
-`ein:connect-to-default-notebook', `ein:connect-default-notebook'."
+You should setup `ein:url-or-port' in order to make this code work."
   (ein:notebooklist-open* url-or-port))
-
+
 ;;; Login
 
 (defun ein:notebooklist-login--iteration (url-or-port callback errback token iteration response-status)
@@ -703,7 +709,6 @@ See also:
   (unless errback
     (setq errback #'ignore))
   (ein:query-singleton-ajax
-   (list 'notebooklist-login--iteration url-or-port)
    (ein:url url-or-port "login")
    ;; do not use :type "POST" here (see git history)
    :timeout ein:notebooklist-login-timeout

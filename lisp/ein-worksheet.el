@@ -1225,11 +1225,7 @@ in the history."
 
 (defun ein:worksheet-turn-on-autoexec (cells &optional off)
   "Turn on auto-execution flag of the cells in region or cell at point.
-When the prefix argument is given, turn off the flag instead.
-
-To use autoexec feature, you need to turn on auto-execution mode
-in connected buffers, using the `ein:connect-toggle-autoexec'
-command."
+When the prefix argument is given, turn off the flag instead.  Questionable."
   (interactive
    (list (ein:worksheet-get-cells-in-region-or-at-point
           :cell-p #'ein:codecell-p)

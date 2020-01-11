@@ -29,6 +29,31 @@
 (require 'xml)
 (require 'ein-core)
 
+(defcustom ein:output-area-inlined-images t
+  "Turn off to spawn external image viewers."
+  :type 'boolean
+  :group 'ein)
+
+(defcustom ein:shr-env
+  '((shr-table-horizontal-line ?-)
+    (shr-table-vertical-line ?|)
+    (shr-table-corner ?+))
+  "Variables let-bound while calling `shr-insert-document'.
+
+To use default shr setting::
+
+    (setq ein:shr-env nil)
+
+Draw boundaries for table (default)::
+
+    (setq ein:shr-env
+          '((shr-table-horizontal-line ?-)
+            (shr-table-vertical-line ?|)
+            (shr-table-corner ?+)))
+"
+  :type '(sexp)
+  :group 'ein)
+
 ;;; XML/HTML utils
 
 (defun ein:xml-parse-html-string (html-string)
@@ -69,26 +94,6 @@ when REPLACE-P returns non-`nil'."
   (if (and (fboundp 'shr-insert-document) (fboundp 'libxml-parse-xml-region))
       #'ein:insert-html-shr
     #'ein:insert-read-only))
-
-(defcustom ein:shr-env
-  '((shr-table-horizontal-line ?-)
-    (shr-table-vertical-line ?|)
-    (shr-table-corner ?+))
-  "Variables let-bound while calling `shr-insert-document'.
-
-To use default shr setting::
-
-    (setq ein:shr-env nil)
-
-Draw boundaries for table (default)::
-
-    (setq ein:shr-env
-          '((shr-table-horizontal-line ?-)
-            (shr-table-vertical-line ?|)
-            (shr-table-corner ?+)))
-"
-  :type '(sexp)
-  :group 'ein)
 
 (defun ein:shr-insert-document (dom)
   "`shr-insert-document' with EIN setting."

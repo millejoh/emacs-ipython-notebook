@@ -163,7 +163,6 @@ the source is in git repository) or elpa version."
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
-   (list 'ein:query-kernelspecs url-or-port)
    (ein:url url-or-port "api/kernelspecs")
    :type "GET"
    :timeout ein:content-query-timeout
@@ -227,7 +226,6 @@ the source is in git repository) or elpa version."
 (defun ein:query-notebook-version (url-or-port callback)
   "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
   (ein:query-singleton-ajax
-   (list 'query-notebook-version url-or-port)
    (ein:url url-or-port "api")
    :parser #'ein:json-read
    :sync ein:force-sync
@@ -336,10 +334,7 @@ but can operate in different contexts."
                         ein:get-url-or-port--shared-output
                         ein:get-url-or-port--connect)))
 
-(defun ein:get-notebook ()
-  (ein:generic-getter '(ein:get-notebook--notebook
-                        ;; ein:get-notebook--shared-output
-                        ein:get-notebook--connect)))
+(defsubst ein:get-notebook () ein:%notebook%)
 
 (defun ein:get-notebook-or-error ()
   (or (ein:get-notebook)

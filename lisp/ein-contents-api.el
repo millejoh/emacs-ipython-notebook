@@ -81,7 +81,6 @@ global setting.  For global setting and more information, see
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
-   (list 'content-query-contents url-or-port path)
    (ein:content-url* url-or-port path)
    :type "GET"
    :timeout ein:content-query-timeout
@@ -282,7 +281,6 @@ global setting.  For global setting and more information, see
 
 (defun ein:content-save-legacy (content &optional callback cbargs errcb errcbargs)
   (ein:query-singleton-ajax
-   (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
    (ein:content-url content)
    :type "PUT"
    :headers '(("Content-Type" . "application/json"))
@@ -294,7 +292,6 @@ global setting.  For global setting and more information, see
 (defun ein:content-save (content &optional callback cbargs errcb errcbargs)
   (if (>= (ein:$content-notebook-version content) 3)
       (ein:query-singleton-ajax
-       (list 'content-save (ein:$content-url-or-port content) (ein:$content-path content))
        (ein:content-url content)
        :type "PUT"
        :headers '(("Content-Type" . "application/json"))
@@ -324,7 +321,6 @@ global setting.  For global setting and more information, see
   (let ((path (substring new-path 0 (or (cl-position ?/ new-path :from-end t) 0)))
         (name (substring new-path (or (cl-position ?/ new-path :from-end t) 0))))
     (ein:query-singleton-ajax
-     (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
      (ein:content-url content)
      :type "PATCH"
      :data (json-encode `((name . ,name)
@@ -344,7 +340,6 @@ global setting.  For global setting and more information, see
 (defun ein:content-rename (content new-path &optional callback cbargs)
   (if (>= (ein:$content-notebook-version content) 3)
       (ein:query-singleton-ajax
-       (list 'content-rename (ein:$content-url-or-port content) (ein:$content-path content))
        (ein:content-url content)
        :type "PATCH"
        :data (json-encode `((path . ,new-path)))
@@ -355,7 +350,6 @@ global setting.  For global setting and more information, see
 
 (defun ein:session-rename (url-or-port session-id new-path)
   (ein:query-singleton-ajax
-   (list 'session-rename session-id new-path)
    (ein:url url-or-port "api/sessions" session-id)
    :type "PATCH"
    :data (json-encode `((path . ,new-path)))
@@ -389,7 +383,6 @@ global setting.  For global setting and more information, see
   (unless errback
     (setq errback #'ignore))
   (ein:query-singleton-ajax
-   (list 'content-query-sessions url-or-port)
    (ein:url url-or-port "api/sessions")
    :type "GET"
    :parser #'ein:json-read
@@ -462,7 +455,6 @@ and content format (one of json, text, or base64)."
             (gethash 'format data) format
             (gethash 'content data) contents)
       (ein:query-singleton-ajax
-       (list 'content-upload name)
        (ein:content-url content)
        :type "PUT"
        :headers '(("Content-Type" . "application/json"))

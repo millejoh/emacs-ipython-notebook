@@ -45,6 +45,7 @@
 (declare-function mm-encode-buffer "mm-encode")
 (declare-function mm-possibly-verify-or-decrypt "mm-decode")
 (declare-function mm-dissect-singlepart "mm-decode")
+(declare-function mm-interactively-view-part "mm-decode")
 
 (defun ein:cell--ewoc-delete (ewoc &rest nodes)
   "Delete NODES from EWOC."
@@ -181,7 +182,7 @@ To view full output, use `ein:notebook-show-in-shared-output'."
 
 (defcustom ein:cell-autoexec-prompt "⚡"
   "String shown in the cell prompt when the auto-execution flag
-is on.  See also `ein:connect-aotoexec-lighter'."
+is on."
   :type 'string
   :group 'ein)
 
@@ -264,11 +265,10 @@ a number will limit the number of lines in a cell output."
       (setq viewer (car passed)))
     (mailcap-unescape-mime-test (cdr (assq 'viewer viewer)) info)))
 
-(defun ein:insert-image (&rest args)
+(defun ein:insert-image (image)
   (condition-case-unless-debug err
-      (let ((img (apply #'create-image args))
-            (buffer-undo-list t))
-        (insert-image img "."))
+      (let ((buffer-undo-list t))
+        (insert-image image "."))
     (error (ein:log 'warn "Could not insert image: %s" (error-message-string err)))))
 
 ;;; Cell factory
@@ -972,12 +972,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      ((:html)
       (funcall (ein:output-area-get-html-renderer) value))
      ((:svg :png :jpeg)
-      (ein:insert-image (condition-case nil
-                            (base64-decode-string value)
-                          (error value))
-                        (intern (car (nreverse
-                                      (split-string (symbol-name type) ":"))))
-                        t))
+      (let ((image (create-image (condition-case nil
+                                     (base64-decode-string value)
+                                   (error value))
+                                 (intern (car (nreverse
+                                               (split-string (symbol-name type) ":"))))
+                                 t)))
+        (if ein:output-area-inlined-images
+            (ein:insert-image image)
+          (mm-interactively-view-part (ein:make-mm-handle image)))))
      (otherwise
       (ein:insert-read-only value)))))
 

@@ -95,7 +95,7 @@
            (ein:jupyterhub--add-header
             (cons "Authorization" (format "token %s" it)))))
      (apply #'ein:query-singleton-ajax
-            ,url ,url
+            ,url
             :error
             (lambda (&rest args)
               (ein:log 'error "ein:jupyterhub-query--error (%s) %s (%s)" ,url

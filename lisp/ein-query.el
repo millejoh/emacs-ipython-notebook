@@ -71,8 +71,6 @@ aborts).  Instead you will see Race! in debug messages.
 
 ;;; Functions
 
-(defvar ein:query-running-process-table (make-hash-table :test 'equal))
-
 (defvar ein:query-xsrf-cache (make-hash-table :test 'equal)
   "Hack: remember the last xsrf token by host in case we catch cookie jar in transition.  The proper fix is to sempahore between competing curl processes.")
 
@@ -93,15 +91,6 @@ aborts).  Instead you will see Race! in debug messages.
       (setf (gethash host ein:query-xsrf-cache) xsrf))
     (setq settings (plist-put settings :encoding 'binary))
     settings))
-
-(defcustom ein:max-simultaneous-queries 100
-  "Limit number of simultaneous queries to Jupyter server.
-
-If too many calls to `request' are made at once Emacs may
-complaint and raise a 'Too Many Files' exception. By setting this
-variable to a reasonable value you can avoid this situation."
-  :group 'ein
-  :type 'integer)
 
 (let ((checked-curl-version nil))
   (defun ein:warn-on-curl-version ()
@@ -124,37 +113,13 @@ variable to a reasonable value you can avoid this situation."
       (ein:display-warning
        (format "The %s program was not found" request-curl) :error))))
 
-(cl-defun ein:query-singleton-ajax (key url &rest settings
-                                    &key (timeout ein:query-timeout)
-                                    &allow-other-keys)
-  "Do not cancel the old process if there is a process associated with
-KEY, then call `request' with URL and SETTINGS.  KEY is compared by
-`equal'."
+(cl-defun ein:query-singleton-ajax (url &rest settings
+                                        &key (timeout ein:query-timeout)
+                                        &allow-other-keys)
   (ein:query-enforce-curl)
-  (with-local-quit
-    (when timeout
-      (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-    (cl-loop do (ein:query-running-process-table)
-          for running = (hash-table-count ein:query-running-process-table)
-          until (< running ein:max-simultaneous-queries)
-          do (ein:log 'warn "ein:query-singleton-ajax: %d running processes"
-                      running)
-          do (sleep-for 3))
-    (aif (gethash key ein:query-running-process-table)
-        (unless (request-response-done-p it)
-          (ein:log 'debug "Race! %s %s" key (request-response-data it))))
-    (let ((response (apply #'request (url-encode-url url)
-                           (ein:query-prepare-header url settings))))
-      (puthash key response ein:query-running-process-table)
-      response)))
-
-(defun ein:query-running-process-table ()
-  "Keep track of unfinished curl requests."
-  (maphash
-   (lambda (key buffer)
-     (when (request-response-done-p buffer)
-       (remhash key ein:query-running-process-table)))
-   ein:query-running-process-table))
+  (when timeout
+    (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
+  (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
 
 (defun ein:get-response-redirect (response)
   "Determine if the query has been redirected, and if so return then URL the request was redirected to."
@@ -165,7 +130,6 @@ KEY, then call `request' with URL and SETTINGS.  KEY is compared by
                 (url-host url)
                 (url-port url)))))
 
-
 ;;; Cookie
 
 (defalias 'ein:query-get-cookie 'request-cookie-string)

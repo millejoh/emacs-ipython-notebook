@@ -53,8 +53,6 @@
 (autoload 'ein:process-refresh-processes "ein-process")
 (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
 (autoload 'ein:jupyter-server-start "ein-jupyter")
-(autoload 'ein:connect-buffer-to-notebook "ein-connect")
-(autoload 'ein:connect-run-buffer "ein-connect")
 (autoload 'ein:shared-output-get-cell "ein-shared-output")
 (autoload 'ein:shared-output-eval-string "ein-shared-output")
 (autoload 'ein:kernel-live-p "ein-kernel")
@@ -337,7 +335,6 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
            (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
              (ein:notebook-close notebook))
            (ein:query-singleton-ajax
-            (list 'ob-ein--initiate-session (ein:url url-or-port path))
             (ein:notebook-url notebook)
             :type "DELETE")
            (cl-loop repeat 8

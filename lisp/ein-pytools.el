@@ -188,17 +188,9 @@ pager buffer.  You can explicitly specify the object by selecting it."
                      filename (ein:kernel-filename-from-python kernel filename))
                (ein:log 'debug "filename[[%s]] lineno[[%s]] ignore[[%s]]"
                         filename lineno ignore)
-               (if (not (file-exists-p filename))
-                   (ein:log 'info
-                     "Jumping to the source of %s...Not found" object)
-                 (let ((ein:connect-default-notebook nil))
-                   ;; Avoid auto connection to connect to the
-                   ;; NOTEBOOK instead of the default one.
-                   (ein:goto-file filename lineno other-window))
-                 ;; Connect current buffer to NOTEBOOK. No reconnection.
-                 (ein:connect-buffer-to-notebook notebook nil t)
-                 (push (point-marker) ein:pytools-jump-stack)
-                 (ein:log 'info "Jumping to the source of %s...Done" object))))))
+               (unless (file-exists-p filename)
+                 (ein:log 'info
+                   "Jumping to the source of %s...Not found" object))))))
       (("pyerr" "error")
        (ein:log 'info "Jumping to the source of %s...Not found" object)))))
 

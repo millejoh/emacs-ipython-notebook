@@ -76,8 +76,10 @@
 if I call this between links in a deferred chain.  Adding a flush-queue."
   (deferred:flush-queue!)
   (ein:testing-wait-until (lambda ()
-                            (ein:query-running-process-table)
-                            (zerop (hash-table-count ein:query-running-process-table)))
+                            (not (seq-some (lambda (proc)
+                                             (cl-search "request curl"
+                                                        (process-name proc)))
+                                           (process-list))))
                           nil ms interval t))
 
 (defun ein:testing-make-directory-level (parent current-depth width depth)

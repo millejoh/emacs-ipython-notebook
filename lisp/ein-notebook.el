@@ -38,7 +38,6 @@
 (require 'eldoc nil t)
 (require 'ein-core)
 (require 'ein-classes)
-(require 'ein-console)
 (require 'ein-log)
 (require 'ein-node)
 (require 'ein-contents-api)
@@ -240,10 +239,9 @@ combo must match exactly these url/port you used format
 
 (defun ein:notebook-buffer (notebook)
   "Return first buffer in NOTEBOOK's worksheets."
-  (cl-loop for ws in (append (ein:$notebook-worksheets notebook)
-                          (ein:$notebook-scratchsheets notebook))
-        if (ein:worksheet-buffer ws)
-        return it))
+  (aif notebook
+      (seq-some #'ein:worksheet-buffer (append (ein:$notebook-worksheets it)
+                                               (ein:$notebook-scratchsheets it)))))
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the buffers associated with NOTEBOOK's kernel.
@@ -814,36 +812,18 @@ NAME is any non-empty string that does not contain '/' or '\\'.
     (setf (ein:$kernel-path kernel) (ein:$content-path content)))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
-(defmacro ein:notebook-avoid-recursion (&rest body)
-  `(let ((kill-buffer-query-functions
-          (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
-                        kill-buffer-query-functions)))
-     ,@body))
-
 (defun ein:notebook-kill-notebook-buffers (notebook)
-  "Kill all of NOTEBOOK's buffers"
-  (mapc #'ein:notebook-kill-current-buffer (ein:notebook-buffer-list notebook)))
-
-(defun ein:notebook-kill-current-buffer (buf)
-  "Kill BUF and avoid recursion in kill-buffer-query-functions"
+  "Callback for `ein:notebook-close'"
   (ein:notebook-avoid-recursion
-   (let ((notebook (buffer-local-value 'ein:%notebook% buf)))
-     (when (kill-buffer buf)
-       (ein:notebook-tidy-opened-notebooks notebook)))))
+   (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
 
-(defsubst ein:notebook-kill-buffer-query ()
-  (aif (ein:get-notebook--notebook)
-      (let ((buf (or (buffer-base-buffer (current-buffer))
-                     (current-buffer))))
-        (ein:notebook-ask-save it (apply-partially
-                                   #'ein:notebook-kill-current-buffer
-                                   buf))
-        ;; don't kill buffer!
-        nil)
-    ;; kill buffer!
+(defun ein:notebook-kill-buffer-query ()
+  (aif (ein:get-notebook)
+      (ein:notebook-ask-save it)
     t))
 
-(defun ein:notebook-ask-save (notebook callback0)
+(defun ein:notebook-ask-save (notebook &optional callback0)
+  "Return t if proceeding with kill-buffer."
   (unless callback0
     (setq callback0 #'ignore))
   (if (and (ein:notebook-modified-p notebook)
@@ -1172,7 +1152,7 @@ worksheet to save result."
 
 (defun ein:notebook-tidy-opened-notebooks (notebook)
   "Remove NOTEBOOK from ein:notebook--opened-map if it's not ein:notebook-live-p"
-  (unless (ein:notebook-live-p notebook)
+  (when (ein:notebook-live-p notebook)
     (ein:notebook-remove-opened-notebook notebook)))
 
 (defun ein:notebook-remove-opened-notebook (notebook)
@@ -1208,9 +1188,6 @@ PREDICATE is called with the buffer name for each opened notebook."
 
 (defun ein:get-url-or-port--notebook ()
   (when ein:%notebook% (ein:$notebook-url-or-port ein:%notebook%)))
-
-(defun ein:get-notebook--notebook ()
-  ein:%notebook%)
 
 (defun ein:get-kernel--notebook ()
   (when (ein:$notebook-p ein:%notebook%)
@@ -1430,11 +1407,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
            '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
       ;; Misc:
       ,@(ein:generate-menu
-         '(("Open regular IPython console" ein:console-open)
-           ("Open scratch sheet" ein:notebook-scratchsheet-open)
-           ("Toggle pseudo console mode" ein:pseudo-console-mode)
-           ))
-      ))
+         '(("Open scratch sheet" ein:notebook-scratchsheet-open)))))
   map)
 
 (defcustom ein:enable-eldoc-support nil
@@ -1498,7 +1471,6 @@ the first argument and CBARGS as the rest of arguments."
   (let ((url-or-port (ein:$notebook-url-or-port notebook))
         (notebook-id (ein:$notebook-notebook-id notebook)))
     (ein:query-singleton-ajax
-     (list 'notebook-fetch-data url-or-port notebook-id)
      (ein:url url-or-port notebook-id)
      :parser
      (lambda ()
@@ -1533,17 +1505,21 @@ the first argument and CBARGS as the rest of arguments."
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 
-(defun ein:notebook-kill-buffer-callback ()
-  "Call notebook destructor.  This function is called via `kill-buffer-hook'."
-  ;; TODO - it remains a bug that neither `ein:notebook-kill-buffer-callback'
-  ;; nor `ein:notebook-close' updates ein:notebook--opened-map
-  (ein:log 'debug "ein:notebook-kill-buffer-callback called")
-  (when (ein:$notebook-p ein:%notebook%)
-    (ein:notebook-close-worksheet ein:%notebook% ein:%worksheet%)))
+(defmacro ein:notebook-avoid-recursion (&rest body)
+  `(let ((kill-buffer-query-functions
+          (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
+                        kill-buffer-query-functions)))
+     ,@body))
 
 (defun ein:notebook-setup-kill-buffer-hook ()
-  "Add \"notebook destructor\" to `kill-buffer-hook'."
-  (add-hook 'kill-buffer-hook 'ein:notebook-kill-buffer-callback nil t))
+  "The buffer being killed is current while the hook is running."
+  (add-hook 'kill-buffer-hook
+            (lambda ()
+              (aif ein:%worksheet%
+                (ein:notebook-close-worksheet ein:%notebook% it))
+              (aif ein:%notebook%
+                (ein:notebook-tidy-opened-notebooks it)))
+            nil t))
 
 (provide 'ein-notebook)
 

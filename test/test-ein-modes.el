@@ -29,7 +29,6 @@
 
 (eintest:test-keymap ein:notebooklist-mode-map)
 (eintest:test-keymap ein:notebook-mode-map)
-(eintest:test-keymap ein:connect-mode-map)
 (eintest:test-keymap ein:traceback-mode-map)
 (eintest:test-keymap ein:shared-output-mode-map)
 (eintest:test-keymap ein:pager-mode-map)
