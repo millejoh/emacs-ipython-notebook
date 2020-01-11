@@ -121,12 +121,12 @@
      json
      (cl-case type
        ((:svg :png :jpeg)
+        (message "got here %s" type)
         (let ((file (or explicit-file (ob-ein--inline-image-info value))))
           (ob-ein--write-base64-image value file)
           (setq result (format "[[file:%s]]" file))))
        (otherwise
         (setq result value))))
-
     result))
 
 (defun ob-ein--process-outputs (outputs params)
