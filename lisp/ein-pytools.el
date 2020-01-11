@@ -117,7 +117,7 @@ working."
                    (lambda (name msg-type content -metadata-not-used-)
                      (ein:case-equal msg-type
                        (("stream" "display_data")
-                        (ein:pytools-finish-tooltip name (ein:json-read-from-string (plist-get content :text)) nil))))
+                        (ein:pytools-finish-tooltip name (ein:json-read-from-string (or (plist-get content :text) (plist-get (plist-get content :data) :text/plain))) nil))))
                    func)))
       (ein:kernel-object-info-request
        kernel func (list :object_info_reply
@@ -178,7 +178,7 @@ pager buffer.  You can explicitly specify the object by selecting it."
     (ein:log 'debug "object[[%s]] other-window[[%s]]" object other-window)
     (ein:case-equal msg-type
       (("stream" "display_data")
-       (aif (or (plist-get content :text) (plist-get content :data))
+       (aif (or (plist-get content :text) (plist-get (plist-get content :data) :text/plain))
            (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                (ein:log 'info
                  "Jumping to the source of %s...Not found" object)
@@ -231,7 +231,7 @@ is defined."
   (destructuring-bind (kernel object callback) packed
     (if (or (string= msg-type "stream")
             (string= msg-type "display_data"))
-        (aif (or (plist-get content :text) (plist-get content :data))
+        (aif (or (plist-get content :text) (plist-get (plist-get content :data) :text/plain))
             (if (string-match ein:pytools-jump-to-source-not-found-regexp it)
                 (ein:log 'info
                   "Source of %s not found" object)

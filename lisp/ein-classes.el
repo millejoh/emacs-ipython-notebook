@@ -166,10 +166,6 @@
   ((nbformat :initarg :nbformat :type integer)
    (get-notebook-name :initarg :get-notebook-name :type cons
                       :accessor ein:worksheet--notebook-name)
-   ;; This slot introduces too much complexity so therefore must be
-   ;; removed later.  This is here only for backward compatible
-   ;; reason.
-   (discard-output-p :initarg :discard-output-p :accessor ein:worksheet--discard-output-p)
    (saved-cells :initarg :saved-cells :initform nil
                 :accessor ein:worksheet--saved-cells
                 :documentation
@@ -251,7 +247,7 @@
    (input :initarg :input :type string
           :documentation "Place to hold data until it is rendered via `ewoc'.")
    (outputs :initarg :outputs :initform nil :type list)
-   (metadata :initarg :metadata :initform nil :type list :accessor ein:cell-metadata) ;; For nbformat >= 4
+   (metadata :initarg :metadata :initform nil :type list :accessor ein:cell-metadata)
    (events :initarg :events :type ein:events)
    (cell-id :initarg :cell-id :initform (ein:utils-uuid) :type string
             :accessor ein:cell-id))
@@ -290,11 +286,6 @@ auto-execution mode flag in the connected buffer is `t'.")))
 (defclass ein:rawcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "raw")))
 
-(defclass ein:headingcell (ein:textcell)
-  ((cell-type :initarg :cell-type :initform "heading")
-   (level :initarg :level :initform 1)))
-
-
 ;;; Notifications
 
 (defclass ein:notification-status ()
@@ -331,9 +322,9 @@ auto-execution mode flag in the connected buffer is `t'.")))
     (ein:notification-status
      "NotebookStatus"
      :s2m
-     '((notebook_saving.Notebook       . "Saving Notebook...")
-       (notebook_saved.Notebook        . "Notebook is saved")
-       (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
+     '((notebook_saving.Notebook       . "Saving notebook...")
+       (notebook_saved.Notebook        . "Notebook saved")
+       (notebook_save_failed.Notebook  . "Failed saving notebook!")))
     :type ein:notification-status)
    (kernel
     :initarg :kernel
@@ -342,7 +333,7 @@ auto-execution mode flag in the connected buffer is `t'.")))
      "KernelStatus"
      :s2m
      '((status_idle.Kernel . nil)
-       (status_busy.Kernel . "Kernel is busy...")
+       (status_busy.Kernel . "Kernel busy...")
        (status_restarting.Kernel . "Kernel restarting...")
        (status_restarted.Kernel . "Kernel restarted")
        (status_dead.Kernel . "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command-km]")
@@ -352,7 +343,6 @@ auto-execution mode flag in the connected buffer is `t'.")))
     :type ein:notification-status))
   "Notification widget for Notebook.")
 
-
 ;;; Events
 
 (defclass ein:events ()

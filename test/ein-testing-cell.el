@@ -67,10 +67,6 @@ To make OUTPUTS data, use `ein:testing-codecell-pyout-data'."
 (defun ein:testing-htmlcell-data (&optional source)
   (ein:testing-textcell-data source "html"))
 
-(defun ein:testing-headingcell-data (&optional source level)
-  (append (ein:testing-textcell-data source "heading")
-          (list :level (or level 1))))
-
 (provide 'ein-testing-cell)
 
 ;;; ein-testing-cell.el ends here

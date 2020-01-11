@@ -125,13 +125,34 @@ Usage::
     (ein:xml-replace-attributes dom 'a 'href replace-p replacer)
     (ein:xml-replace-attributes dom 'img 'src replace-p replacer)))
 
+(defun ein:output-area-type (mime-type)
+  "Investigate why :image/svg+xml to :svg and :text/plain to :text"
+  (let* ((mime-str (if (symbolp mime-type) (symbol-name mime-type) mime-type))
+         (minor-kw (car (nreverse (split-string mime-str "/"))))
+         (minor (car (nreverse (split-string minor-kw ":")))))
+    (intern (concat ":"
+                    (cond ((string= minor "plain") "text")
+                          (t (cl-subseq minor 0 (cl-search "+" minor))))))))
+
+(defun ein:output-area-convert-mime-types (json data)
+  (let ((known-mimes (cl-remove-if-not
+                      #'identity
+                      (mapcar (lambda (x) (intern-soft (concat ":" x)))
+                              (mailcap-mime-types)))))
+    (mapc (lambda (x)
+            (-when-let* ((mime-val (plist-get data x))
+                         (minor-kw (ein:output-area-type x)))
+              (setq json (plist-put json minor-kw mime-val))))
+          known-mimes)
+    json))
+
 (defmacro ein:output-area-case-type (json &rest case-body)
-  `(progn (aif (plist-get ,json :data) (setq ,json it)) ;; nbformat v4 ???
+  `(progn (aif (plist-get ,json :data) (setq ,json it))
           (seq-some (lambda (type)
                       (when-let ((value (plist-get ,json type)))
                         ,@case-body
                         t))
-                    (list :svg :png :jpeg :text :html :latex :javascript))))
+                    (list :image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript))))
 
 (provide 'ein-output-area)
 

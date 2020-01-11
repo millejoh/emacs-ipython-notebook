@@ -37,9 +37,7 @@
   (!cons "memory" ecukes-exclude-tags)
   (!cons "content" ecukes-exclude-tags)
   (when (eq system-type 'darwin)
-    (!cons "julia" ecukes-exclude-tags)))
-
-(unless (fboundp 'libxml-parse-xml-region)
+    (!cons "julia" ecukes-exclude-tags))
   (!cons "svg" ecukes-exclude-tags))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))

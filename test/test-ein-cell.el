@@ -23,8 +23,7 @@
          (input (ein:join-str "\n" '("first input" "second input")))
          (output-0 (list :output_type "execute_result"
                          :prompt_number output-prompt-number
-                         :text (list "first output"
-                                     "second output")))
+                         :text (list "first output" "second output")))
          (data (ein:testing-codecell-data
                 input input-prompt-number (list output-0)))
          (cell (eintest:cell-from-json data)))
@@ -62,21 +61,13 @@
     (should (ein:rawcell-p cell))
     (should (equal (oref cell :input) input))))
 
-(ert-deftest ein:cell-from-json-heading ()
-  (let* ((input (ein:join-str "\n" '("first input" "second input")))
-         (data (list :cell_type "heading" :source input))
-         (cell (eintest:cell-from-json data)))
-    (should (ein:headingcell-p cell))
-    (should (equal (oref cell :input) input))))
-
-
 ;; ein:cell-to-json
 
-(defun eintest:cell-to-json (cell input &optional discard-output)
+(defun eintest:cell-to-json (cell input)
   (mocker-let ((ein:cell-get-text
                 (cell)
                 ((:input (list cell) :output input))))
-    (ein:cell-to-json cell discard-output)))
+    (ein:cell-to-json cell)))
 
 (ert-deftest ein:cell-to-json-code ()
   (let* ((input-prompt-number 111)
@@ -93,24 +84,6 @@
     (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
     (should (equal (cdr (assq 'cell_type alist)) "code"))
     (should (equal (cdr (assq 'outputs alist)) `[,output-0]))
-    (should (equal (cdr (assq 'language alist)) "python"))
-    (should (equal (cdr (assq 'collapsed alist)) json-false))))
-
-(ert-deftest ein:cell-to-json-code-discard-output ()
-  (let* ((input-prompt-number 111)
-         (output-prompt-number 222)
-         (input (ein:join-str "\n" '("first input" "second input")))
-         (output-0 (list :output_type "execute_result"
-                         :prompt_number output-prompt-number
-                         :text (list "first output"
-                                     "second output")))
-         (data (ein:testing-codecell-data
-                input input-prompt-number (list output-0)))
-         (cell (eintest:cell-from-json data))
-         (alist (eintest:cell-to-json cell input t)))
-    (should (equal (cdr (assq 'input alist)) "first input\nsecond input"))
-    (should (equal (cdr (assq 'cell_type alist)) "code"))
-    (should (equal (cdr (assq 'outputs alist)) []))
     (should (equal (cdr (assq 'language alist)) "python"))
     (should (equal (cdr (assq 'collapsed alist)) json-false))))
 
@@ -146,16 +119,6 @@
     (should (equal (cdr (assq 'cell_type alist)) "raw"))
     (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))))
 
-(ert-deftest ein:cell-to-json-heading ()
-  (let* ((input (ein:join-str "\n" '("first input" "second input")))
-         (data (list :cell_type "heading" :source input))
-         (cell (eintest:cell-from-json data))
-         (alist (eintest:cell-to-json cell input)))
-    (should (equal (cdr (assq 'cell_type alist)) "heading"))
-    (should (equal (cdr (assq 'source alist)) "first input\nsecond input"))
-    (should (equal (cdr (assq 'level alist)) 1))))
-
-
 ;;; ein:cell-convert/copy
 
 (ert-deftest ein:cell-convert-code-to-markdown ()
@@ -206,7 +169,7 @@
     (should (equal (oref new :input) input))))
 
 (ert-deftest ein:cell-copy-text-types ()
-  (cl-loop for cell-type in '("text" "html" "markdown" "raw" "heading")
+  (cl-loop for cell-type in '("text" "html" "markdown" "raw")
         for cell-p = (intern (format "ein:%scell-p" cell-type))
         do
         (let* ((input (ein:join-str "\n" '("first input" "second input")))

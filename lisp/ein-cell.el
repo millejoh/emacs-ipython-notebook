@@ -113,36 +113,6 @@ Delete current text first, thus effecting a \"refresh\"."
   "Face for cell output area errors"
   :group 'ein)
 
-(defface ein:cell-heading-1
-  '((t :height 1.1 :inherit ein:cell-heading-2))
-  "Face for level 1 heading."
-  :group 'ein)
-
-(defface ein:cell-heading-2
-  '((t :height 1.1 :inherit ein:cell-heading-3))
-  "Face for level 2 heading."
-  :group 'ein)
-
-(defface ein:cell-heading-3
-  '((t :height 1.1 :inherit ein:cell-heading-4))
-  "Face for level 3 heading."
-  :group 'ein)
-
-(defface ein:cell-heading-4
-  '((t :height 1.1 :inherit ein:cell-heading-5))
-  "Face for level 4 heading."
-  :group 'ein)
-
-(defface ein:cell-heading-5
-  '((t :height 1.1 :inherit ein:cell-heading-6))
-  "Face for level 5 heading."
-  :group 'ein)
-
-(defface ein:cell-heading-6
-  '((t :weight bold :inherit (variable-pitch ein:cell-input-area)))
-  "Face for level 6 heading."
-  :group 'ein)
-
 (defface ein:cell-output-prompt
   '((t :inherit header-line))
   "Face for cell output prompt"
@@ -280,7 +250,6 @@ a number will limit the number of lines in a cell output."
     (("html") 'ein:htmlcell)
     (("markdown") 'ein:markdowncell)
     (("raw") 'ein:rawcell)
-    (("heading") 'ein:headingcell)
     (("shared-output") 'ein:shared-output-cell)
     (t (error "No cell type called %S" type))))
 
@@ -318,12 +287,6 @@ a number will limit the number of lines in a cell output."
       (setf (slot-value cell 'input) it))
   cell)
 
-(cl-defmethod ein:cell-init ((cell ein:headingcell) data) ;; FIXME: Was :after method
-  (cl-call-next-method)
-  (aif (plist-get data :level)
-      (setf (slot-value cell 'level) it))
-  cell)
-
 (cl-defmethod ein:cell-convert ((cell ein:basecell) type)
   (let ((new (ein:cell-from-type type)))
     ;; copy attributes
@@ -343,12 +306,6 @@ a number will limit the number of lines in a cell output."
     (when (and (cl-typep new 'ein:codecell)
                (slot-boundp cell :kernel))
       (setf (slot-value new 'kernel) (slot-value cell 'kernel)))
-    new))
-
-(cl-defmethod ein:cell-convert ((cell ein:headingcell) type)
-  (let ((new (cl-call-next-method)))
-    (when (ein:headingcell-p new)
-      (setf (slot-value new 'level) (slot-value cell 'level)))
     new))
 
 (cl-defmethod ein:cell-copy ((cell ein:basecell))
@@ -384,16 +341,6 @@ a number will limit the number of lines in a cell output."
             for en in (ein:cell-all-element new)
             do (ein:cell--ewoc-invalidate ewoc en)))
     new))
-
-(cl-defmethod ein:cell-change-level ((cell ein:headingcell) level)
-  (assert (integerp level))
-  (let ((inhibit-read-only t)
-        (buffer-undo-list t))         ; disable undo recording
-    (setf (slot-value cell 'level) level)
-    ;; draw ewoc node
-    (cl-loop with ewoc = (slot-value cell 'ewoc)
-          for en in (ein:cell-all-element cell)
-          do (ein:cell--ewoc-invalidate ewoc en))))
 
 ;;; Getter/setter
 
@@ -534,11 +481,6 @@ Return language name as a string or `nil' when not defined.
    (format "%s:" (slot-value cell 'cell-type))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-insert-prompt ((cell ein:headingcell))
-  (ein:insert-read-only
-   (format "h%s:" (slot-value cell 'level))
-   'font-lock-face 'ein:cell-input-prompt))
-
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
@@ -556,9 +498,6 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-get-input-area-face ((cell ein:basecell))
   "Return the face (symbol) for input area."
   'ein:cell-input-area)
-
-(cl-defmethod ein:cell-get-input-area-face ((cell ein:headingcell))
-  (intern (format "ein:cell-heading-%d" (slot-value cell 'level))))
 
 (cl-defmethod ein:cell-get-output-area-face-for-output-type (output-type)
   "Return the face (symbol) for output area."
@@ -956,27 +895,24 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
 
-(defun ein:cell-output-type (mime-type)
-  "Investigate why :image/svg+xml to :svg and :text/plain to :text"
+(defun ein:cell-extract-image-format (mime-type)
+  "From :image/svg+xml to \"svg\"."
   (let* ((mime-str (if (symbolp mime-type) (symbol-name mime-type) mime-type))
          (minor-kw (car (nreverse (split-string mime-str "/"))))
          (minor (car (nreverse (split-string minor-kw ":")))))
-    (intern (concat ":"
-                    (cond ((string= minor "plain") "text")
-                          (t (cl-subseq minor 0 (cl-search "+" minor))))))))
+    (cl-subseq minor 0 (cl-search "+" minor))))
 
 (defun ein:cell-append-mime-type (json)
   (ein:output-area-case-type
    json
    (cl-case type
-     ((:html)
+     ((:text/html)
       (funcall (ein:output-area-get-html-renderer) value))
-     ((:svg :png :jpeg)
+     ((:image/svg+xml :image/png :image/jpeg)
       (let ((image (create-image (condition-case nil
                                      (base64-decode-string value)
                                    (error value))
-                                 (intern (car (nreverse
-                                               (split-string (symbol-name type) ":"))))
+                                 (intern-soft (ein:cell-extract-image-format type))
                                  t)))
         (if ein:output-area-inlined-images
             (ein:insert-image image)
@@ -999,124 +935,38 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                text)
       (format "Error: %S" err)))))
 
-(cl-defmethod ein:cell-to-json ((cell ein:codecell) &optional discard-output)
+(cl-defmethod ein:cell-to-json ((cell ein:codecell))
   "Return json-ready alist."
   `((input . ,(ein:cell-get-text cell))
     (cell_type . "code")
     ,@(aif (ein:oref-safe cell 'input-prompt-number)
           `((prompt_number . ,it)))
-    (outputs . ,(if discard-output [] (apply #'vector (slot-value cell 'outputs))))
+    (outputs . ,(apply #'vector (slot-value cell 'outputs)))
     (language . ,(or (ein:cell-language cell) "python"))
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
 
-(defvar ein:output-type-map
-  '((:svg . :image/svg+xml) (:png . :image/png) (:jpeg . :image/jpeg)
-    (:text . :text/plain)
-    (:html . :text/html) (:latex . :text/latex) (:javascript . :text/javascript)))
-
-(defun ein:output-property-p (maybe-property)
-  (assoc maybe-property ein:output-type-map))
-
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx &optional discard-output)
-  (let* ((metadata (slot-value cell 'metadata))
-         (outputs (if discard-output []
-                    (slot-value cell 'outputs)))
-         (renamed-outputs '())
-         (execute-count (aif (ein:oref-safe cell 'input-prompt-number)
-                            (and (numberp it) it))))
-    (setq metadata (plist-put metadata :collapsed (if (slot-value cell 'collapsed) t json-false)))
-    (setq metadata (plist-put metadata :autoscroll json-false))
-    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    (unless discard-output
-      (dolist (output outputs)
-        (let ((otype (plist-get output :output_type)))
-          (ein:log 'debug "Saving output of type %S" otype)
-          (if (and (or (equal otype "display_data")
-                       (equal otype "execute_result"))
-                   (null (plist-get output :metadata)))
-              (plist-put output :metadata (make-hash-table)))
-          (setq renamed-outputs
-                (append renamed-outputs
-                        (list (let ((ocopy (cl-copy-list output))
-                                    (new-output '()))
-                                (cl-loop while ocopy
-                                      do (let ((prop (pop ocopy))
-                                               (value (pop ocopy)))
-                                           (ein:log 'debug "Checking property %s for output type '%s'"
-                                                    prop otype)
-                                           (cond
-                                            ((equal prop :stream) (progn (push value new-output)
-                                                                         (push :name new-output)))
-
-                                            ((and (or (equal otype "display_data")
-                                                      (equal otype "execute_result"))
-                                                  (ein:output-property-p prop))
-                                             (let ((new-prop (cdr (ein:output-property-p prop))))
-                                               (if (plist-member new-output :data)
-                                                   (setq new-output (plist-put new-output :data
-                                                                               (append (plist-get new-output :data)
-                                                                                       (list new-prop (list value))
-                                                                                       )))
-                                                 (push (list new-prop (list value)) new-output)
-                                                 (push :data new-output))
-                                               ))
-
-                                            ((and (equal otype "display_data")
-                                                  (equal prop :text))
-                                             (ein:log 'debug "SAVE-NOTEBOOK: Skipping unnecessary :text data."))
-
-                                            ;; ((and (equal otype "execute_result")
-                                            ;;       (ein:output-property-p prop)
-                                            ;;       ;; (or (equal prop :text)
-                                            ;;       ;;     (equal prop :html)
-                                            ;;       ;;     (equal prop :latex))
-                                            ;;       )
-                                            ;;  (ein:log 'debug "Fixing execute_result (%s?)." otype)
-                                            ;;  (let ((new-prop (cdr (ein:output-property-p prop))))
-                                            ;;    (push (list new-prop (list value)) new-output)
-                                            ;;    (push :data new-output)))
-
-
-                                            ((and (equal otype "execute_result")
-                                                  (equal prop :prompt_number))
-                                             (ein:log 'debug "SAVE-NOTEBOOK: Fixing prompt_number property.")
-                                             (push value new-output)
-                                             (push :execution_count new-output))
-
-                                            (t (progn (push value new-output) (push prop new-output)))))
-                                      finally return new-output))))
-                ))))
+(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx)
+  (let ((execute-count (aif (ein:oref-safe cell 'input-prompt-number)
+                           (and (numberp it) it)))
+        (metadata (slot-value cell 'metadata)))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
-      ,@(if execute-count
-            `((execution_count . ,execute-count))
-          `((execution_count)))
-      (outputs . ,(apply #'vector (or renamed-outputs outputs)))
-      (metadata . ,metadata))))
+      ,@(when execute-count
+          `((execution_count . ,execute-count)))
+      (outputs . ,(apply #'vector (slot-value cell 'outputs)))
+      (metadata . ,(plist-put metadata :collapsed (if (slot-value cell 'collapsed) t
+                                                    json-false))))))
 
 
-(cl-defmethod ein:cell-to-json ((cell ein:textcell) &optional discard-output)
+(cl-defmethod ein:cell-to-json ((cell ein:textcell))
   `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx &optional discard-output)
+(cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx)
   (let ((metadata (slot-value cell 'metadata)))
-    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
     `((cell_type . ,(slot-value cell 'cell-type))
       (source    . ,(ein:cell-get-text cell))
-      (metadata . ,metadata))))
-
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:headingcell) wsidx &optional discard-output)
-  (let ((metadata (slot-value cell 'metadata))
-        (header (make-string (slot-value cell 'level) ?#)))
-    (setq metadata (plist-put metadata :ein.tags (format "worksheet-%s" wsidx)))
-    `((cell_type . "markdown")
-      (source .  ,(format "%s %s" header (ein:cell-get-text cell)))
-      (metadata . ,metadata))))
-
-(cl-defmethod ein:cell-to-json ((cell ein:headingcell) &optional discard-output)
-  (let ((json (cl-call-next-method)))
-    (append json `((level . ,(slot-value cell 'level))))))
+      (metadata . ,(plist-put metadata :collapsed json-false)))))
 
 (cl-defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
@@ -1175,48 +1025,16 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (let ((events (slot-value cell 'events)))
     (ein:events-trigger events 'set_next_input.Worksheet
                         (list :cell cell :text text))
-    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)
-    ))
+    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
 
-
-;;; Output area
-
-;; These function should go to ein-output-area.el.  But as cell and
-;; EWOC is connected in complicated way, I will leave them in
-;; ein-cell.el.
-
-(cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content
-                                       _metadata)
-  (let* ((json (list :output_type msg-type)))
-    (ein:case-equal msg-type
-      (("stream")
-       (plist-put json :text (or (plist-get content :data)
-                                 (plist-get content :text))) ;; Horrible hack to deal with version 5.0 of messaging protocol.
-       (plist-put json :stream (plist-get content :name)))
-      (("display_data" "pyout" "execute_result") ;; in v4 nbformat execute_result == pyout
-       (when (or (equal msg-type "pyout")
-                 (equal msg-type "execute_result"))
-         (plist-put json :prompt_number (plist-get content :execution_count)))
-       (setq json (ein:output-area-convert-mime-types json (plist-get content :data))))
-      (("pyerr" "error")
-       (plist-put json :ename (plist-get content :ename))
-       (plist-put json :evalue (plist-get content :evalue))
-       (plist-put json :traceback (plist-get content :traceback))))
-    (ein:cell-append-output cell json)
-    ;; (setf (slot-value cell 'dirty) t)
-    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))
-
-(defun ein:output-area-convert-mime-types (json data)
-  (let ((known-mimes (cl-remove-if-not
-                      #'identity
-                      (mapcar (lambda (x) (intern-soft (concat ":" x)))
-                              (mailcap-mime-types)))))
-    (mapc (lambda (x)
-            (-when-let* ((mime-val (plist-get data x))
-                         (minor-kw (ein:cell-output-type x)))
-              (setq json (plist-put json minor-kw mime-val))))
-          known-mimes)
-    json))
+(cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content meta)
+  ;; (ein:output-area-convert-mime-types content (plist-get content :data))
+  (ein:cell-append-output cell
+                          (plist-put
+                           (plist-put content :output_type msg-type)
+                           :metadata meta))
+  ;; (setf (slot-value cell 'dirty) t)
+  (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)
@@ -1230,18 +1048,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 ;;; Misc.
 
-(cl-defmethod ein:cell-has-image-ouput-p ((cell ein:codecell))
+(cl-defmethod ein:cell-has-image-output-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
-  (cl-loop for out in (slot-value cell 'outputs)
-        when (or (plist-member out :svg)
-                 (plist-member out :image/svg+xml)
-                 (plist-member out :png)
-                 (plist-member out :image/png)
-                 (plist-member out :jpeg)
-                 (plist-member out :image/jpeg))
-        return t))
+  (seq-some (lambda (out)
+              (or (plist-member out :image/svg+xml)
+                  (plist-member out :image/png)
+                  (plist-member out :image/jpeg)))
+            (slot-value cell 'outputs)))
 
-(cl-defmethod ein:cell-has-image-ouput-p ((cell ein:textcell))
+(cl-defmethod ein:cell-has-image-output-p ((cell ein:textcell))
   nil)
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))

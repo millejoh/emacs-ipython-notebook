@@ -752,8 +752,8 @@ and the url-or-port argument of ein:notebooklist-open*."
            (domain (url-host parsed-url))
            (securep (string-match "^wss://" url-or-port)))
       (cl-loop for (name content) on cookie-plist by (function cddr)
-            for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
-            do (write-region line nil (request--curl-cookie-jar) 'append))))
+               for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
+               do (write-region line nil (request--curl-cookie-jar) 'append))))
   (let ((token (ein:notebooklist-token-or-password url-or-port)))
     (cond ((null token) ;; don't know
            (ein:notebooklist-login--iteration url-or-port callback nil nil -1 nil))

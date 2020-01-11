@@ -296,9 +296,11 @@ global setting.  For global setting and more information, see
        :type "PUT"
        :headers '(("Content-Type" . "application/json"))
        :timeout ein:content-query-timeout
-       :data (encode-coding-string (ein:content-to-json content) buffer-file-coding-system)
+       :data (encode-coding-string (ein:content-to-json content)
+                                   buffer-file-coding-system)
        :success (apply-partially #'ein:content-save-success callback cbargs)
-       :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs))
+       :error (apply-partially #'ein:content-save-error
+                               (ein:content-url content) errcb errcbargs))
     (ein:content-save-legacy content callback cbargs)))
 
 (cl-defun ein:content-save-success (callback cbargs &key status response &allow-other-keys)

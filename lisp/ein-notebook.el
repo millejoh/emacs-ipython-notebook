@@ -44,7 +44,6 @@
 (require 'ein-kernel)
 (require 'ein-kernelinfo)
 (require 'ein-cell)
-(require 'ein-cell-output)
 (require 'ein-worksheet)
 (require 'ein-iexec)
 (require 'ein-scratchsheet)
@@ -65,31 +64,7 @@
 
 ;;; Configuration
 
-(defcustom ein:notebook-discard-output-on-save 'no
-  "Configure if the output part of the cell should be saved or not.
-
-.. warning:: This configuration is obsolete now.
-   Use nbconvert (https://github.com/ipython/nbconvert) to
-   strip output.
-
-`no' : symbol
-    Save output. This is the default.
-`yes' : symbol
-    Always discard output.
-a function
-    This function takes two arguments, notebook and cell.  Return
-    `t' to discard output and return `nil' to save.  For example,
-    if you don't want to save image output but other kind of
-    output, use `ein:notebook-cell-has-image-output-p'.
-"
-  :type '(choice (const :tag "No" 'no)
-                 (const :tag "Yes" 'yes)
-                 )
-  :group 'ein)
 (make-obsolete-variable 'ein:use-smartrep nil "0.17.0")
-
-(defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
-  "A map: (URL-OR-PORT . PATH) => t/nil")
 
 (make-obsolete-variable 'ein:notebook-autosave-frequency nil "0.17.0")
 
@@ -97,15 +72,11 @@ a function
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.17.0")
 
-(defun ein:notebook-cell-has-image-output-p (-ignore- cell)
-  (ein:cell-has-image-ouput-p cell))
+(defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
+  "A map: (URL-OR-PORT . PATH) => t/nil")
 
-(defun ein:notebook-discard-output-p (notebook cell)
-  "Return non-`nil' if the output must be discarded, otherwise save."
-  (case ein:notebook-discard-output-on-save
-    (no nil)
-    (yes t)
-    (t (funcall ein:notebook-discard-output-on-save notebook cell))))
+(defun ein:notebook-cell-has-image-output-p (_ignore cell)
+  (ein:cell-has-image-output-p cell))
 
 ;; As opening/saving notebook treats possibly huge data, define these
 ;; timeouts separately:
@@ -548,9 +519,6 @@ This is equivalent to do ``C-c`` in the console program."
   (funcall func
            (ein:$notebook-nbformat notebook)
            (ein:notebook-name-getter notebook)
-           (cons (lambda (notebook cell)
-                   (ein:notebook-discard-output-p notebook cell))
-                 notebook)
            (ein:$notebook-kernel notebook)
            (ein:$notebook-events notebook)))
 
@@ -761,8 +729,8 @@ This is equivalent to do ``C-c`` in the console program."
 (cl-defun ein:notebook-save-notebook-error (notebook &key symbol-status
                                                      &allow-other-keys)
   (if (eq symbol-status 'user-cancel)
-      (ein:log 'info "Cancel saving notebook.")
-    (ein:log 'info "Failed to save notebook!")
+      (ein:log 'info "Cancelled save.")
+    (ein:log 'warn "Failed saving notebook!")
     (ein:events-trigger (ein:$notebook-events notebook)
                         'notebook_save_failed.Notebook)))
 
@@ -1437,18 +1405,11 @@ watch the fireworks!"
     (aif ein:anything-kernel-history-search-key
         (ein:notebook--define-key ein:notebook-mode-map it anything-ein-kernel-history))
     (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
-    (ein:worksheet-imenu-setup)))
+    ))
 
 ;; To avoid MuMaMo to discard `ein:notebook-mode', make it
 ;; permanent local.
 (put 'ein:notebook-mode 'permanent-local t)
-
-(define-derived-mode ein:notebook-plain-mode fundamental-mode "EIN[plain]"
-  "IPython notebook mode without fancy coloring."
-  (font-lock-mode))
-
-(define-derived-mode ein:notebook-python-mode python-mode "EIN[python]"
-  "Use `python-mode' for whole notebook buffer.")
 
 (defun ein:notebook-open-in-browser (&optional print)
   "Open current notebook in web browser.
