@@ -160,22 +160,6 @@ is not found."
 
 ;;; Destructor
 
-(defvar ein:testing-notebook-del-args-log 'nolog)
-
-(defadvice ein:notebook-del (before ein:testing-notebook-del activate)
-  "Log argument passed to"
-  (when (listp ein:testing-notebook-del-args-log)
-    (push (ad-get-args 0) ein:testing-notebook-del-args-log)))
-
-(defun ein:testing-assert-notebook-del-not-called ()
-  (should-not ein:testing-notebook-del-args-log))
-
-(defun ein:testing-assert-notebook-del-called-once-with (notebook)
-  (should (= (length ein:testing-notebook-del-args-log) 1))
-  (mapc (lambda (arg) (should (= (length arg) 1)))
-        ein:testing-notebook-del-args-log)
-  (should (eq (caar ein:testing-notebook-del-args-log) notebook)))
-
 (defun ein:testing-notebook-close-scratchsheet-open-and-close
   (num-open num-close)
   "Test for closing scratch sheet using `ein:notebook-close-worksheet'.
@@ -187,8 +171,7 @@ is not found."
 When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (should (> num-open 0))
   (let ((notebook (buffer-local-value 'ein:%notebook%
-                                      (ein:testing-notebook-make-empty)))
-        ein:testing-notebook-del-args-log)
+                                      (ein:testing-notebook-make-empty))))
     (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets notebook)))
       ;; Add scratchsheets.  They can be just empty instance for this test.
       (dotimes (_ num-open)
@@ -205,10 +188,7 @@ When NUM-OPEN = NUM-CLOSE, notebook should be closed."
       (dotimes (_ num-close)
         (ein:notebook-close-worksheet notebook (car ss-list)))
       ;; Actual tests:
-      (should (= (length ss-list) (- num-open num-close)))
-      (if (= num-open num-close)
-          (ein:testing-assert-notebook-del-called-once-with notebook)
-        (ein:testing-assert-notebook-del-not-called)))))
+      (should (= (length ss-list) (- num-open num-close))))))
 
 (ert-deftest ein:notebook-close-scratchsheet/open-one-close-one ()
   (ein:testing-notebook-close-scratchsheet-open-and-close 1 1))
@@ -846,15 +826,13 @@ defined."
   (should (= num-ws 1))             ; currently EIN only supports 1 WS
   (should (>= num-ss 0))
   (let ((notebook (buffer-local-value 'ein:%notebook%
-                                      (ein:testing-notebook-make-empty)))
-        ein:testing-notebook-del-args-log)
+                                      (ein:testing-notebook-make-empty))))
     (dotimes (_ num-ss)
       (ein:notebook-scratchsheet-render-new notebook))
-    (let ((buffers (ein:notebook-buffer-list notebook)))
-      (should (= (length buffers) (+ num-ws num-ss)))
-      (ein:notebook-close notebook)
-      (mapc (lambda (b) (should-not (buffer-live-p b))) buffers)
-      (ein:testing-assert-notebook-del-called-once-with notebook))))
+    (should (= (length (ein:notebook-buffer-list notebook)) (+ num-ws num-ss)))
+    (ein:notebook-close notebook)
+    (mapc (lambda (b) (should-not (buffer-live-p b)))
+          (ein:notebook-buffer-list notebook))))
 
 (ert-deftest ein:notebook-close/one-ws-no-ss ()
   (ein:testin-notebook-close 1 0))
@@ -904,13 +882,10 @@ defined."
           (ein:testing-notebook-data-assert-nb3-worksheet-contents notebook "some text")
         (ein:testing-notebook-data-assert-nb4-worksheet-contents notebook "some text"))
       (should (ein:notebook-modified-p notebook))
-      ;; Open scratch sheet.
-      (ein:notebook-scratchsheet-open notebook)
-      ;; Pretend that notebook is saved
       (ein:notebook-save-notebook-success notebook)
       (should-not (ein:notebook-modified-p notebook))
-      ;; Kill a worksheet buffer
-      (kill-buffer buffer)
+      ;; Kill scratch sheet.
+      (kill-buffer (ein:worksheet-buffer (ein:notebook-scratchsheet-open notebook)))
       (should (ein:notebook-live-p notebook))
       ;; to-json should still work
       (if (< (ein:$notebook-nbformat notebook) 4)
@@ -929,20 +904,15 @@ defined."
           (ein:testing-notebook-data-assert-nb3-worksheet-contents notebook "some text")
         (ein:testing-notebook-data-assert-nb4-worksheet-contents notebook "some text"))
       (should (ein:notebook-modified-p notebook))
-      ;; Open scratch sheet.
-      (ein:notebook-scratchsheet-open notebook)
-      ;; Discard a worksheet buffer
-      (cl-letf (((symbol-function 'y-or-n-p)
-                 (lambda (&rest _args) (setq asked t) nil)))
-        (should (kill-buffer buffer))
-        (should asked))
-      (ein:testing-wait-until (lambda ()
-                                (not (buffer-live-p buffer))))
-      (should (ein:notebook-live-p notebook))
-      ;; to-json should still work
-      (if (< (ein:$notebook-nbformat notebook) 4)
-          (ein:testing-notebook-data-assert-nb3-worksheet-contents notebook)
-        (ein:testing-notebook-data-assert-nb4-worksheet-contents notebook)))))
+      (let ((ss-buf (save-current-buffer (ein:notebook-scratchsheet-open notebook))))
+        ;; Discard a worksheet buffer
+        (cl-letf (((symbol-function 'y-or-n-p)
+                   (lambda (&rest _args) (setq asked t) nil)))
+          (should-not (kill-buffer buffer)))
+        (should asked)
+        (should-not (buffer-live-p buffer))
+        (should-not (ein:notebook-live-p notebook))
+        (should-not (buffer-live-p ss-buf))))))
 
 (defun ein:testing-notebook-should-be-closed (notebook buffer)
   (should-not (buffer-live-p buffer))
@@ -1215,7 +1185,6 @@ value of `ein:worksheet-enable-undo'."
       (ein:notebook-close-notebooks t)
       (should-not (ein:notebook-opened-notebooks)))))
 
-
 ;;; Buffer and kill hooks
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/no-ein-buffer ()
@@ -1228,8 +1197,9 @@ value of `ein:worksheet-enable-undo'."
                   (buf (current-buffer)))
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (&rest _args) (setq asked t) nil)))
-        (should (kill-buffer buf))
-        (should-not asked)))))
+        (should-not (kill-buffer buf))
+        (should-not asked)
+        (should-not (buffer-live-p buf))))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
@@ -1238,8 +1208,9 @@ value of `ein:worksheet-enable-undo'."
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (&rest _args) (setq asked t) nil)))
         (call-interactively #'ein:worksheet-insert-cell-below)
-        (should (kill-buffer buffer))
-        (should asked)))))
+        (should-not (kill-buffer buffer))
+        (should asked)
+        (should-not (buffer-live-p buffer))))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
@@ -1257,13 +1228,15 @@ value of `ein:worksheet-enable-undo'."
           (should (ein:worksheet-modified-p ein:%worksheet%))
           (cl-letf (((symbol-function 'y-or-n-p)
                      (lambda (&rest _args) (setq asked t) nil)))
-            (should (kill-buffer buf2))
-            (should-not asked))))
+            (should (kill-buffer buf2)))
+          (should-not asked)
+          (should-not (buffer-live-p buf2))))
       (should-not (ein:worksheet-modified-p ein:%worksheet%))
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (&rest _args) (setq asked t) nil)))
-        (should (kill-buffer buf))
-        (should-not asked)))))
+        (should-not (kill-buffer buf)))
+      (should-not asked)
+      (should-not (buffer-live-p buf)))))
 
 ;; Misc unit tests
 
