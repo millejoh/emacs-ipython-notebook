@@ -30,11 +30,17 @@
 (when (file-exists-p (concat default-directory "features/support/test-poly.el"))
   (load-file (concat default-directory "features/support/test-poly.el")))
 
+;; how to turn off undo-tree-mode under polymode?
 (!cons "evil" ecukes-exclude-tags)
-(!cons "memory" ecukes-exclude-tags)
-(!cons "content" ecukes-exclude-tags)
-(when (eq system-type 'darwin) ;; julia bogs github actions catalina
-  (!cons "julia" ecukes-exclude-tags))
+
+(when (getenv "GITHUB_ACTIONS")
+  (!cons "memory" ecukes-exclude-tags)
+  (!cons "content" ecukes-exclude-tags)
+  (when (eq system-type 'darwin)
+    (!cons "julia" ecukes-exclude-tags)))
+
+(unless (fboundp 'libxml-parse-xml-region)
+  (!cons "svg" ecukes-exclude-tags))
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 

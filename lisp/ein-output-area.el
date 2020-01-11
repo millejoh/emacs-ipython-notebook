@@ -91,7 +91,7 @@ when REPLACE-P returns non-`nil'."
 
 
 (defun ein:output-area-get-html-renderer ()
-  (if (and (fboundp 'shr-insert-document) (fboundp 'libxml-parse-xml-region))
+  (if (fboundp 'libxml-parse-xml-region)
       #'ein:insert-html-shr
     #'ein:insert-read-only))
 
