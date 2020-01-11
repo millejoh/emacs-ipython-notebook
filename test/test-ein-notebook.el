@@ -86,7 +86,7 @@
     (ein:kernel--handle-shell-reply kernel (json-encode packet))))
 
 (defun eintest:kernel-fake-stream (kernel msg-id data)
-  (let* ((content (list :data data
+  (let* ((content (list :text data
                         :name "stdout"))
          (packet (list :header (list :msg_type "stream")
                        :parent_header (list :msg_id msg-id)
@@ -143,16 +143,11 @@ is not found."
        (list (ein:testing-codecell-data "import numpy")
              (ein:testing-markdowncell-data "*markdown* text")
              (ein:testing-rawcell-data "`raw` cell text")
-             (ein:testing-htmlcell-data "<b>HTML</b> text")
-             (ein:testing-headingcell-data "Heading 1" 1)
-             (ein:testing-headingcell-data "Heading 2" 2)
-             (ein:testing-headingcell-data "Heading 3" 3)
-             (ein:testing-headingcell-data "Heading 4" 4)
-             (ein:testing-headingcell-data "Heading 5" 5)
-             (ein:testing-headingcell-data "Heading 6" 6)))
+             (ein:testing-htmlcell-data "<b>HTML</b> text")))
     (should (ein:$notebook-p ein:%notebook%))
-    (should (equal (ein:$notebook-notebook-name ein:%notebook%) ein:testing-notebook-dummy-name))
-    (should (equal (ein:worksheet-ncells ein:%worksheet%) 10))
+    (should (equal (ein:$notebook-notebook-name ein:%notebook%)
+                   ein:testing-notebook-dummy-name))
+    (should (equal (ein:worksheet-ncells ein:%worksheet%) 4))
     (let ((cells (ein:worksheet-get-cells ein:%worksheet%)))
       (should (ein:codecell-p     (nth 0 cells)))
       (should (ein:markdowncell-p (nth 1 cells)))
@@ -161,16 +156,8 @@ is not found."
       (should (equal (ein:cell-get-text (nth 0 cells)) "import numpy"))
       (should (equal (ein:cell-get-text (nth 1 cells)) "*markdown* text"))
       (should (equal (ein:cell-get-text (nth 2 cells)) "`raw` cell text"))
-      (should (equal (ein:cell-get-text (nth 3 cells)) "<b>HTML</b> text"))
-      (cl-loop for i from 4 to 9
-            for level from 1
-            for cell = (nth i cells)
-            do (should (ein:headingcell-p cell))
-            do (should (equal (ein:cell-get-text cell)
-                              (format "Heading %s" level)))
-            do (should (= (oref cell :level) level))))))
+      (should (equal (ein:cell-get-text (nth 3 cells)) "<b>HTML</b> text")))))
 
-
 ;;; Destructor
 
 (defvar ein:testing-notebook-del-args-log 'nolog)
@@ -340,7 +327,6 @@ some text
     (when (< (ein:$notebook-nbformat ein:%notebook%) 4)
       ;; toggle to heading
       (call-interactively #'ein:worksheet-toggle-cell-type)
-      (should (ein:headingcell-p (ein:worksheet-get-current-cell)))
       (should (looking-back "some text"))
       ;; toggle to code
       (call-interactively #'ein:worksheet-toggle-cell-type)
@@ -356,21 +342,18 @@ some text
     (should (ein:codecell-p (ein:worksheet-get-current-cell)))
     (should (slot-boundp (ein:worksheet-get-current-cell) :kernel))
     (let ((check
-           (lambda (type &optional level)
+           (lambda (type)
              (let ((cell-p (intern (format "ein:%scell-p" type)))
                    (cell (ein:worksheet-get-current-cell)))
                (ein:worksheet-change-cell-type ein:%worksheet% cell
-                                               type level t)
+                                               type t)
                (let ((new (ein:worksheet-get-current-cell)))
                  (should-not (eq new cell))
                  (should (funcall cell-p new)))
                (should (looking-back "some text"))))))
       ;; change type: code (no change) -> markdown -> raw
       (cl-loop for type in '("code" "markdown" "raw")
-            do (funcall check type))
-      ;; change level: 1 to 6
-      (cl-loop for level from 1 to 6
-            do (funcall check "heading" level))
+               do (funcall check type))
       ;; back to code
       (funcall check "code")
       (should (slot-boundp (ein:worksheet-get-current-cell) :kernel)))))
@@ -936,8 +919,9 @@ defined."
 
 (ert-deftest ein:notebook-to-json-after-discarding-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
-    (let ((buffer (current-buffer))
-          (notebook ein:%notebook%))
+    (lexical-let (asked
+                  (buffer (current-buffer))
+                  (notebook ein:%notebook%))
       ;; Edit notebook.
       (ein:cell-goto (ein:get-cell-at-point))
       (insert "some text")
@@ -948,7 +932,10 @@ defined."
       ;; Open scratch sheet.
       (ein:notebook-scratchsheet-open notebook)
       ;; Discard a worksheet buffer
-      (should-not (kill-buffer buffer))
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _args) (setq asked t) nil)))
+        (should (kill-buffer buffer))
+        (should asked))
       (ein:testing-wait-until (lambda ()
                                 (not (buffer-live-p buffer))))
       (should (ein:notebook-live-p notebook))
@@ -1237,38 +1224,46 @@ value of `ein:worksheet-enable-undo'."
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/new-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let ((buf (current-buffer)))
-      (should-not (kill-buffer buf))
-      (ein:testing-wait-until (lambda ()
-                                (not (buffer-live-p buf)))))))
+    (lexical-let (asked
+                  (buf (current-buffer)))
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _args) (setq asked t) nil)))
+        (should (kill-buffer buf))
+        (should-not asked)))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let ((buffer (current-buffer)))
-      (call-interactively #'ein:worksheet-insert-cell-below)
-      (should-not (kill-buffer buffer))
-      (ein:testing-wait-until (lambda ()
-                                (not (buffer-live-p buffer)))))))
+    (lexical-let (asked
+                  (buffer (current-buffer)))
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _args) (setq asked t) nil)))
+        (call-interactively #'ein:worksheet-insert-cell-below)
+        (should (kill-buffer buffer))
+        (should asked)))))
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let ((buf (current-buffer)))
+    (lexical-let (asked
+                  (buf (current-buffer)))
       (should (buffer-live-p buf))
       (with-current-buffer (ein:worksheet-buffer
                             (ein:notebook-scratchsheet-open ein:%notebook%))
-        (lexical-let ((buf2 (current-buffer)))
+        (lexical-let (asked
+                      (buf2 (current-buffer)))
           (should-not (eq buf buf2))
           (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
           (call-interactively #'ein:worksheet-insert-cell-below)
           (should (= (ein:worksheet-ncells ein:%worksheet%) 2))
           (should (ein:worksheet-modified-p ein:%worksheet%))
-          (should-not (kill-buffer buf2))
-          (ein:testing-wait-until (lambda ()
-                                    (not (buffer-live-p buf2))))))
+          (cl-letf (((symbol-function 'y-or-n-p)
+                     (lambda (&rest _args) (setq asked t) nil)))
+            (should (kill-buffer buf2))
+            (should-not asked))))
       (should-not (ein:worksheet-modified-p ein:%worksheet%))
-      (should-not (kill-buffer buf))
-      (ein:testing-wait-until (lambda ()
-                                (not (buffer-live-p buf)))))))
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _args) (setq asked t) nil)))
+        (should (kill-buffer buf))
+        (should-not asked)))))
 
 ;; Misc unit tests
 

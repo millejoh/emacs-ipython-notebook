@@ -29,7 +29,6 @@
 (declare-function markdown-mode "markdown-mode")
 
 (require 'ein-notebook)
-(require 'ein-subpackages)
 
 ;;;###autoload
 (defun ein:dev-insert-mode-map (map-string)

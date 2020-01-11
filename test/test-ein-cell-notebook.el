@@ -128,47 +128,47 @@ some input
                                      ,regexp-display-data)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
-  text ("some output") ((:data (:text "some output"))))
+  text ("some output") ((:data (:text/plain "some output"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   latex
   ("some output \\\\LaTeX")
-  ((:data (:latex "some output \\LaTeX"))))
+  ((:data (:application/latex "some output \\LaTeX"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    svg
    ("\\.")
-   ((:data (:text "some output text" :svg ein:testing-example-svg)))))
+   ((:data (:text/plain "some output text" :image/svg+xml ein:testing-example-svg)))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
   ("some output text")
-  ((:data (:text "some output text" :html "<b>not shown</b>"))))
+  ((:data (:text/plain "some output text" :text/html "<b>not shown</b>"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   javascript
   ("some output text")
-  ((:data (:text "some output text" :javascript "$.do.something()"))))
+  ((:data (:text/plain "some output text" :application/javascript "$.do.something()"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-two
   ("first output text" "second output text")
-  ((:data (:text "first output text")) (:data (:text "second output text"))))
+  ((:data (:text/plain "first output text")) (:data (:text/plain "second output text"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   text-javascript
   ("first output text" "second output text")
-  ((:data (:text "first output text"))
-   (:data (:text "second output text" :javascript "$.do.something()"))))
+  ((:data (:text/plain "first output text"))
+   (:data (:text/plain "second output text" :application/javascript "$.do.something()"))))
 
 (when (image-type-available-p 'svg)
   (eintest:gene-test-cell-insert-output-pyout-and-display-data
    text-latex-svg
    ("first output text" "second output \\\\LaTeX")
-   ((:data (:text "first output text"))
-    (:data (:latex "second output \\LaTeX"))
-    (:data (:text "some output text" :svg ein:testing-example-svg)))))
+   ((:data (:text/plain "first output text"))
+    (:data (:application/latex "second output \\LaTeX"))
+    (:data (:text/plain "some output text" :image/svg+xml ein:testing-example-svg)))))
 
 ;; Insert pyerr
 

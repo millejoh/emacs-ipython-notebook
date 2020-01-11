@@ -105,7 +105,6 @@
     (setq iteration 0))
   (let ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
-     (list 'kernel-session-p session-id)
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "GET"
      :sync ein:force-sync
@@ -168,7 +167,6 @@ CALLBACK of arity 1, the kernel.
           (kernelspec (ein:$kernel-kernelspec kernel))
           (path (ein:$kernel-path kernel)))
       (ein:query-singleton-ajax
-       (list 'kernel-retrieve-session kernel-id)
        (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
        :type "POST"
        :data (json-encode
@@ -213,7 +211,7 @@ CALLBACK of arity 1, the kernel.
   (let ((session-id (plist-get data :id)))
     (if (plist-get data :kernel)
         (setq data (plist-get data :kernel)))
-    (destructuring-bind (&key id &allow-other-keys) data
+    (cl-destructuring-bind (&key id &allow-other-keys) data
       (ein:log 'verbose "ein:kernel-retrieve-session--success: kernel-id=%s session-id=%s"
                id session-id)
       (setf (ein:$kernel-kernel-id kernel) id)
@@ -310,7 +308,6 @@ See https://github.com/ipython/ipython/pull/3307"
   (ein:log 'info "Kernel connect_request_reply received."))
 
 (defun ein:kernel-run-after-start-hook (kernel)
-  (ein:log 'debug "EIN:KERNEL-RUN-AFTER-START-HOOK")
   (mapc #'ein:funcall-packed
         (ein:$kernel-after-start-hook kernel)))
 
@@ -332,16 +329,6 @@ delete the kernel on the server side"
       (funcall callback kernel)
     (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id kernel))
     (ein:kernel-reconnect-session kernel callback)))
-
-
-;;; Main public methods
-
-;; NOTE: The argument CALLBACKS for the following functions is almost
-;;       same as the JS implementation in IPython.  However, as Emacs
-;;       lisp does not support closure, value is "packed" using
-;;       `cons': `car' is the actual callback function and `cdr' is
-;;       its first argument.  It's like using `cons' instead of
-;;       `$.proxy'.
 
 (defun ein:kernel-object-info-request (kernel objname callbacks &optional cursor-pos detail-level)
   "Send object info request of OBJNAME to KERNEL.
@@ -388,63 +375,18 @@ http://ipython.org/ipython-doc/dev/development/messaging.html#object-information
                               (stop-on-error nil))
   "Execute CODE on KERNEL.
 
-When calling this method pass a CALLBACKS structure of the form:
+The CALLBACKS plist looks like:
 
   (:execute_reply  EXECUTE-REPLY-CALLBACK
    :output         OUTPUT-CALLBACK
    :clear_output   CLEAR-OUTPUT-CALLBACK
    :set_next_input SET-NEXT-INPUT)
 
-Right hand sides ending -CALLBACK above must cons a FUNCTION and its
-`packed' ARGUMENT which is a sublist of args:
+Right hand sides ending -CALLBACK above are of the form (FUNCTION ARG1 ... ARGN).
+(Hindsight: this was all much better implemented using `apply-partially')
 
-  (FUNCTION . ARGUMENT)
-
-Call signature
---------------
-::
-
-  (`funcall' EXECUTE-REPLY-CALLBACK ARGUMENT          CONTENT METADATA)
-  (`funcall' OUTPUT-CALLBACK        ARGUMENT MSG-TYPE CONTENT METADATA)
-  (`funcall' CLEAR-OUTPUT-CALLBACK  ARGUMENT          CONTENT METADATA)
-  (`funcall' SET-NEXT-INPUT         ARGUMENT TEXT)
-
-* Both CONTENT and METADATA objects are plist.
-* The MSG-TYPE argument for OUTPUT-CALLBACK is a string
-  (one of `stream', `display_data', `pyout' and `pyerr').
-* The CONTENT object for CLEAR-OUTPUT-CALLBACK has
-  `stdout', `stderr' and `other' fields that are booleans.
-* The SET-NEXT-INPUT callback will be passed the `set_next_input' payload,
-  which is a string.
-  See `ein:kernel--handle-shell-reply' for how the callbacks are called.
-
-Links
------
-* For general description of CONTENT and METADATA:
-  http://ipython.org/ipython-doc/dev/development/messaging.html#general-message-format
-* `execute_reply' message is documented here:
-  http://ipython.org/ipython-doc/dev/development/messaging.html#execute
-* Output type messages is documented here:
-  http://ipython.org/ipython-doc/dev/development/messaging.html#messages-on-the-pub-sub-socket
-
-Sample implementations
-----------------------
-* `ein:cell--handle-execute-reply'
-* `ein:cell--handle-output'
-* `ein:cell--handle-clear-output'
-* `ein:cell--handle-set-next-input'
+Return randomly generated MSG-ID tag uniquely identifying expectation of a kernel response.
 "
-  ;; FIXME: Consider changing callback to use `&key'.
-  ;;        Otherwise, adding new arguments to callback requires
-  ;;        backward incompatible changes (hence a big diff), unlike
-  ;;        Javascript.  Downside of this is that there is no short way
-  ;;        to write anonymous callback because there is no `lambda*'.
-  ;;        You can use `function*', but that's bit long...
-
-  ;; FIXME: Consider allowing a list of fixed argument so that the
-  ;;        call signature becomes something like:
-  ;;           (funcall FUNCTION [ARG ...] CONTENT METADATA)
-
   (assert (ein:kernel-live-p kernel) nil "execute_reply: Kernel is not active.")
   (let* ((content (list
                    :code code
@@ -455,7 +397,7 @@ Sample implementations
                    :stop_on_error (or stop-on-error json-false)))
          (msg (ein:kernel--get-msg kernel "execute_request" content))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
-    (ein:log 'debug "KERNEL-EXECUTE: code=%s msg_id=%s" code msg-id)
+    (ein:log 'debug "ein:kernel-execute: code=%s msg_id=%s" code msg-id)
     (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
     (ein:websocket-send-shell-channel kernel msg)
     (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
@@ -580,41 +522,10 @@ Example::
     (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
     msg-id))
 
-(defun ein:kernel-kernel-info-request (kernel callbacks)
-  "Request core information of KERNEL.
-
-When calling this method pass a CALLBACKS structure of the form::
-
-  (:kernel_info_reply (FUNCTION . ARGUMENT))
-
-Call signature::
-
-  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
-
-CONTENT and METADATA are given by `kernel_info_reply' message.
-
-`kernel_info_reply' message is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info
-
-Example::
-
-  (ein:kernel-kernel-info-request
-   (ein:get-kernel)
-   '(:kernel_info_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
-"
-  (assert (ein:kernel-live-p kernel) nil "kernel_info_reply: Kernel is not active.")
-  (ein:log 'debug "EIN:KERNEL-KERNEL-INFO-REQUEST: Sending request.")
-  (let* ((msg (ein:kernel--get-msg kernel "kernel_info_request" nil))
-         (msg-id (plist-get (plist-get msg :header) :msg_id)))
-    (ein:websocket-send-shell-channel kernel msg)
-    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-    msg-id))
-
 (defun ein:kernel-interrupt (kernel)
   (when (ein:kernel-live-p kernel)
     (ein:log 'info "Interrupting kernel")
     (ein:query-singleton-ajax
-     (list 'kernel-interrupt (ein:$kernel-kernel-id kernel))
      (ein:url (ein:$kernel-url-or-port kernel)
               (ein:$kernel-kernel-url kernel)
               "interrupt")
@@ -627,7 +538,6 @@ Example::
 
 We need this to have proper behavior for the 'Stop' command in the ein:notebooklist buffer."
   (ein:query-singleton-ajax
-   (list 'kernel-delete-session session-id)
    (ein:url url "api/sessions" session-id)
    :success (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
    :error (apply-partially #'ein:kernel-delete--from-session-error session-id)
@@ -645,7 +555,6 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK (kernel)"
   (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
     (ein:query-singleton-ajax
-     (list 'kernel-delete-session session-id)
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "DELETE"
      :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
@@ -670,24 +579,24 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
   (ein:kernel-disconnect kernel)
   (when callback (funcall callback kernel)))
-
 
 ;; Reply handlers.
 (defun ein:kernel-get-callbacks-for-msg (kernel msg-id)
   (gethash msg-id (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel-set-callbacks-for-msg (kernel msg-id callbacks)
+  "Set up promise for MSG-ID."
   (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel--handle-stdin-reply (kernel packet)
   (setf (ein:$kernel-stdin-activep kernel) t)
-  (destructuring-bind
+  (cl-destructuring-bind
       (&key header parent_header metadata content &allow-other-keys)
       (ein:json-read-from-string packet)
     (let ((msg-type (plist-get header :msg_type))
           (msg-id (plist-get header :msg_id))
           (password (plist-get content :password)))
-      (ein:log 'debug "KERNEL--HANDLE-STDIN-REPLY: msg_type=%s msg_id=%s"
+      (ein:log 'debug "ein:kernel--handle-stdin-reply: msg_type=%s msg_id=%s"
                msg-type msg-id)
       (cond ((string-equal msg-type "input_request")
              (if (not (eql password :json-false))
@@ -704,33 +613,10 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                           (ein:websocket-send-stdin-channel kernel msg)
                           (setf (ein:$kernel-stdin-activep kernel) nil))))))))))
 
-(defun ein:kernel--handle-shell-reply (kernel packet)
-  (destructuring-bind
-      (&key header content metadata parent_header &allow-other-keys)
-      (ein:json-read-from-string packet)
-    (let* ((msg-type (plist-get header :msg_type))
-           (msg-id (plist-get parent_header :msg_id))
-           (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
-           (cb (plist-get callbacks (intern (format ":%s" msg-type)))))
-      (ein:log 'debug "KERNEL--HANDLE-SHELL-REPLY: msg_type=%s msg_id=%s"
-               msg-type msg-id)
-      (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
-      (aif cb (ein:funcall-packed it content metadata))
-      (aif (plist-get content :payload)
-          (ein:kernel--handle-payload kernel callbacks it))
-      (let ((events (ein:$kernel-events kernel)))
-        (ein:case-equal msg-type
-          (("execute_reply")
-           (aif (plist-get content :execution_count)
-               ;; It can be `nil' for silent execution
-               (ein:events-trigger events 'execution_count.Kernel it))))))))
-
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (cl-loop with events = (ein:$kernel-events kernel)
         for p in payload
-        for text = (or (plist-get p :text)
-                       (plist-get (plist-get p :data)
-                                  :text/plain))
+        for text = (or (plist-get p :text) (plist-get (plist-get p :data) :text/plain))
         for source = (plist-get p :source)
         if (member source '("IPython.kernel.zmq.page.page"
                             "IPython.zmq.page.page"
@@ -747,39 +633,63 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
         do (let ((cb (plist-get callbacks :set_next_input)))
              (when cb (ein:funcall-packed cb text)))))
 
+(defun ein:kernel--handle-shell-reply (kernel packet)
+  (cl-destructuring-bind
+      (&key header content metadata parent_header &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (msg-id (plist-get parent_header :msg_id))
+           (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id)))
+      (ein:log 'debug "ein:kernel--handle-shell-reply: msg_type=%s msg_id=%s"
+               msg-type msg-id)
+      (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
+      (aif (plist-get callbacks (intern-soft (format ":%s" msg-type)))
+          (ein:funcall-packed it content metadata)
+        (ein:log 'info "ein:kernel--handle-shell-reply: No :%s callback for msg_id=%s"
+                 msg-type msg-id))
+      (aif (plist-get content :payload)
+          (ein:kernel--handle-payload kernel callbacks it))
+      (let ((events (ein:$kernel-events kernel)))
+        (ein:case-equal msg-type
+          (("execute_reply")
+           (aif (plist-get content :execution_count)
+               (ein:events-trigger events 'execution_count.Kernel it))))))))
+
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (if (ein:$kernel-stdin-activep kernel)
       (ein:ipdb--handle-iopub-reply kernel packet)
-    (destructuring-bind
+    (cl-destructuring-bind
         (&key content metadata parent_header header &allow-other-keys)
         (ein:json-read-from-string packet)
       (let* ((msg-type (plist-get header :msg_type))
              (msg-id (plist-get parent_header :msg_id))
              (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
              (events (ein:$kernel-events kernel)))
-        (ein:log 'debug "KERNEL--HANDLE-IOPUB-REPLY: msg_type=%s msg_id=%s"
+        (ein:log 'debug "ein:kernel--handle-iopub-reply: msg_type=%s msg_id=%s"
                  msg-type msg-id)
-        (if (and (not (equal msg-type "status")) (null callbacks))
-            (ein:log 'verbose "Not processing msg_type=%s msg_id=%s" msg-type msg-id)
-          (ein:case-equal msg-type
-            (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-             (aif (plist-get callbacks :output)
-                 (ein:funcall-packed it msg-type content metadata)))
-            (("status")
-             (ein:case-equal (plist-get content :execution_state)
-               (("busy")
-                (ein:events-trigger events 'status_busy.Kernel))
-               (("idle")
-                (ein:events-trigger events 'status_idle.Kernel))
-               (("dead")
-                (ein:kernel-disconnect kernel))))
-            (("data_pub")
-             (ein:log 'verbose (format "Received data_pub message w/content %s" packet)))
-            (("clear_output")
-             (aif (plist-get callbacks :clear_output)
-                 (ein:funcall-packed it content metadata)))))))))
-
-;;; Utility functions
+        (ein:case-equal msg-type
+          (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
+           (aif (plist-get callbacks :output)
+               (ein:funcall-packed it msg-type content metadata)
+             (ein:log 'warn (concat "ein:kernel--handle-iopub-reply: "
+                                    "No :output callback for msg_id=%s")
+                      msg-id)))
+          (("status")
+           (ein:case-equal (plist-get content :execution_state)
+             (("busy")
+              (ein:events-trigger events 'status_busy.Kernel))
+             (("idle")
+              (ein:events-trigger events 'status_idle.Kernel))
+             (("dead")
+              (ein:kernel-disconnect kernel))))
+          (("data_pub")
+           (ein:log 'verbose "ein:kernel--handle-iopub-reply: data_pub %S" packet))
+          (("clear_output")
+           (aif (plist-get callbacks :clear_output)
+               (ein:funcall-packed it content metadata)
+             (ein:log 'info (concat "ein:kernel--handle-iopub-reply: "
+                                    "No :clear_output callback for msg_id=%s")
+                      msg-id))))))))
 
 (defun ein:kernel-filename-to-python (kernel filename)
   "See: `ein:filename-to-python'."
@@ -799,7 +709,6 @@ Used in `ein:pytools-finish-tooltip', etc."
 (defun ein:kernel-construct-help-string (content)
   "Construct help string from CONTENT of ``:object_info_reply``.
 Used in `ein:pytools-finish-tooltip', etc."
-  (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING")
   (let* ((defstring (ein:aand
                      (ein:kernel-construct-defstring content)
                      (ansi-color-apply it)
@@ -814,7 +723,6 @@ Used in `ein:pytools-finish-tooltip', etc."
          (help (ein:aand
                 (delete nil (list defstring docstring))
                 (ein:join-str "\n" it))))
-    (ein:log 'debug "KERNEL-CONSTRUCT-HELP-STRING: help=%s" help)
     help))
 
 (defun ein:kernel-request-stream (kernel code func &optional args)

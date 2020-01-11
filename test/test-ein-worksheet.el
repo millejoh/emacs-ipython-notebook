@@ -7,12 +7,10 @@
   (list (ein:testing-codecell-data "code example input")
         (ein:testing-markdowncell-data "markdown example input")
         (ein:testing-rawcell-data "raw example input")
-        (ein:testing-htmlcell-data "html example input")
-        (ein:testing-headingcell-data "heading example input")))
+        (ein:testing-htmlcell-data "html example input")))
 
 (defun ein:testing-worksheet-new ()
-  (make-instance 'ein:worksheet
-                 :discard-output-p (cons #'ignore nil)))
+  (make-instance 'ein:worksheet))
 
 (defun ein:testing-worksheet-to-json (cells &optional metadata)
   (let* ((ws-0 (ein:worksheet-from-json (ein:testing-worksheet-new)

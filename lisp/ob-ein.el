@@ -53,8 +53,6 @@
 (autoload 'ein:process-refresh-processes "ein-process")
 (autoload 'ein:jupyter-server-conn-info "ein-jupyter")
 (autoload 'ein:jupyter-server-start "ein-jupyter")
-(autoload 'ein:connect-buffer-to-notebook "ein-connect")
-(autoload 'ein:connect-run-buffer "ein-connect")
 (autoload 'ein:shared-output-get-cell "ein-shared-output")
 (autoload 'ein:shared-output-eval-string "ein-shared-output")
 (autoload 'ein:kernel-live-p "ein-kernel")
@@ -122,13 +120,12 @@
     (ein:output-area-case-type
      json
      (cl-case type
-       ((:svg :png :jpeg)
+       ((:image/svg+xml :image/png :image/jpeg)
         (let ((file (or explicit-file (ob-ein--inline-image-info value))))
           (ob-ein--write-base64-image value file)
           (setq result (format "[[file:%s]]" file))))
        (otherwise
         (setq result value))))
-
     result))
 
 (defun ob-ein--process-outputs (outputs params)
@@ -337,7 +334,6 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
            (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
              (ein:notebook-close notebook))
            (ein:query-singleton-ajax
-            (list 'ob-ein--initiate-session (ein:url url-or-port path))
             (ein:notebook-url notebook)
             :type "DELETE")
            (cl-loop repeat 8

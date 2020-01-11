@@ -220,7 +220,8 @@ Scenario: Undo needs to at least work for reopened notebooks
   And I press "C-/"
   And I undo again
   And I undo again
-  Then the cursor should be at point "106"
+  And I undo again
+  Then the cursor should be at point "124"
 
 @undo
 Scenario: Toggling between markdown and codecell does not break undo

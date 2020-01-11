@@ -21,7 +21,7 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set kernel
                                  'status_busy.Kernel)
-    (should (string-prefix-p "IP[y]: Kernel is busy... | /1\\ /2\\ /3\\ [+]"
+    (should (string-prefix-p "IP[y]: Kernel busy... | /1\\ /2\\ /3\\ [+]"
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-status-busy ()
@@ -30,7 +30,7 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set notebook
                                  'notebook_saved.Notebook)
-    (should (string-prefix-p "IP[y]: Notebook is saved | /1\\ /2\\ /3\\ [+]"
+    (should (string-prefix-p "IP[y]: Notebook saved | /1\\ /2\\ /3\\ [+]"
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-complex ()
@@ -43,7 +43,7 @@
     (ein:notification-status-set notebook
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
-             (concat "IP[y]: Saving Notebook... | "
+             (concat "IP[y]: Saving notebook... | "
                      (substitute-command-keys "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command-km] | ")
                      ;;"Kernel requires restart C-c C-x C-r | "
                      "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))

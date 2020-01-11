@@ -122,7 +122,11 @@ with the call to the jupyter notebook."
 (defun ein:jupyter-process-lines (url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
   (condition-case err
-      (cond ((and url-or-port (string= url-or-port (ein:k8s-service-url-or-port)))
+      (cond ((-when-let* ((url-or-port url-or-port)
+                          (parsed-url (url-generic-parse-url url-or-port))
+                          (not-local (not (string= (url-host parsed-url)
+                                                   ein:url-localhost))))
+               (string= url-or-port (ein:k8s-service-url-or-port)))
              (let ((pod-name (kubernetes-state-resource-name (ein:k8s-get-pod))))
                (apply #'process-lines kubernetes-kubectl-executable
                       (nconc
@@ -247,9 +251,6 @@ our singleton jupyter server process here."
                          (ein:url url)))
    (aif (ein:k8s-service-url-or-port) (list it))))
 
-
-
-
 ;;;###autoload
 (defun ein:jupyter-server-start (server-command
                                  notebook-directory
@@ -337,9 +338,11 @@ server command."
                  (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
     (cl-loop repeat 10
-          do (ein:query-running-process-table)
-          until (zerop (hash-table-count ein:query-running-process-table))
-          do (sleep-for 0 500))
+             until (not (seq-some (lambda (proc)
+                                    (cl-search "request curl"
+                                               (process-name proc)))
+                                  (process-list)))
+             do (sleep-for 0 500))
     (lexical-let* ((proc (ein:jupyter-server-process))
                    (pid (process-id proc)))
       (ein:log 'info "Signaled %s with pid %s" proc pid)

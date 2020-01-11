@@ -293,11 +293,10 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 ;;; Initialization of object and buffer
 
-(defun ein:worksheet-new (nbformat get-notebook-name discard-output-p
-                                   kernel events &rest args)
+(defun ein:worksheet-new (nbformat get-notebook-name kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
          :nbformat nbformat :get-notebook-name get-notebook-name
-         :discard-output-p discard-output-p :kernel kernel :events events
+         :kernel kernel :events events
          args))
 
 (cl-defmethod ein:worksheet-bind-events ((ws ein:worksheet))
@@ -463,21 +462,17 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   "Convert worksheet WS into JSON ready alist.
 It sets buffer internally so that caller doesn not have to set
 current buffer."
-  (let* ((discard-output-p (ein:worksheet--discard-output-p ws))
-         (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
+  (let* ((cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
-                            (ein:cell-to-json
-                             c (ein:funcall-packed discard-output-p c)))
+                            (ein:cell-to-json c))
                           (ein:worksheet-get-cells ws)))))
     `((cells . ,(apply #'vector cells))
       ,@(ein:aand (ein:worksheet--metadata ws) `((metadata . ,it))))))
 
 (cl-defmethod ein:worksheet-to-nb4-json ((ws ein:worksheet) wsidx)
-  (let* ((discard-output-p (slot-value ws 'discard-output-p))
-         (cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
+  (let* ((cells (ein:with-possibly-killed-buffer (ein:worksheet-buffer ws)
                   (mapcar (lambda (c)
-                            (ein:cell-to-nb4-json
-                             c wsidx (ein:funcall-packed discard-output-p c)))
+                            (ein:cell-to-nb4-json c wsidx))
                           (ein:worksheet-get-cells ws)))))
     cells))
 
@@ -613,7 +608,7 @@ If you really want use this command, you can do something like this
                      t))
   (ein:worksheet--shift-undo-list cell)
   (let ((inhibit-read-only t)
-        (buffer-undo-list t))        ; disable undo recording
+        (buffer-undo-list t))
     (apply #'ewoc-delete
            (slot-value ws 'ewoc)
            (ein:cell-all-element cell)))
@@ -772,13 +767,12 @@ directly."
       (when focus (ein:cell-goto new relpos))
       (ein:worksheet--unshift-undo-list new nil cell))))
 
-(defun ein:worksheet-change-cell-type (ws cell type &optional level focus)
+(defun ein:worksheet-change-cell-type (ws cell type &optional focus)
   "Change the cell type of the current cell.
 Prompt will appear in the minibuffer.
 
 When used in as a Lisp function, TYPE (string) should be chose
-from \"code\", \"markdown\", \"raw\" and \"heading\".  LEVEL is
-an integer used only when the TYPE is \"heading\"."
+from \"code\", \"markdown\", \"raw\" and \"heading\"."
   (interactive
    (let* ((ws (ein:worksheet--get-ws-or-error))
           (cell (ein:worksheet-get-current-cell))
@@ -791,18 +785,12 @@ an integer used only when the TYPE is \"heading\"."
           (type (case key
                   (?c "code")
                   (?m "markdown")
-                  (?r "raw")
-                  (t "heading")))
-          (level (when (equal type "heading")
-                   (string-to-number (char-to-string key)))))
-     (list ws cell type level t)))
-
+                  (?r "raw"))))
+     (list ws cell type t)))
   (let ((relpos (ein:cell-relative-point cell))
         (new (ein:cell-convert-inplace cell type)))
     (when (ein:codecell-p new)
       (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
-    (when level
-      (ein:cell-change-level new level))
     (ein:worksheet--unshift-undo-list cell)
     (when focus (ein:cell-goto new relpos))))
 
@@ -819,10 +807,7 @@ argument \(C-u)."
          (head (buffer-substring beg pos))
          (new (ein:worksheet-insert-cell-above ws
                                                (slot-value cell 'cell-type)
-                                               cell))
-         )
-    (when (ein:headingcell-p cell)
-      (ein:cell-change-level new (slot-value cell 'level)))
+                                               cell)))
     (undo-boundary)
     (delete-region beg pos)
     (unless no-trim
@@ -1225,11 +1210,7 @@ in the history."
 
 (defun ein:worksheet-turn-on-autoexec (cells &optional off)
   "Turn on auto-execution flag of the cells in region or cell at point.
-When the prefix argument is given, turn off the flag instead.
-
-To use autoexec feature, you need to turn on auto-execution mode
-in connected buffers, using the `ein:connect-toggle-autoexec'
-command."
+When the prefix argument is given, turn off the flag instead.  Questionable."
   (interactive
    (list (ein:worksheet-get-cells-in-region-or-at-point
           :cell-p #'ein:codecell-p)
@@ -1256,26 +1237,6 @@ function."
                   (seq-filter #'ein:cell-autoexec-p
                               (ein:worksheet-get-cells ws))))))
       ws (current-buffer)))))
-
-
-;;; Imenu
-
-(defun ein:worksheet-imenu-create-index ()
-  "`imenu-create-index-function' for notebook buffer."
-  ;; As Imenu does not provide the way to represent level *and*
-  ;; position, use #'s to do that.
-  (cl-loop for cell in (when (ein:worksheet-p ein:%worksheet%)
-                      (seq-filter #'ein:headingcell-p
-                                  (ein:worksheet-get-cells ein:%worksheet%)))
-        for sharps = (cl-loop repeat (slot-value cell 'level) collect "#")
-        for text = (ein:cell-get-text cell)
-        for name = (ein:join-str "" (append sharps (list " " text)))
-        collect (cons name (ein:cell-input-pos-min cell))))
-
-(defun ein:worksheet-imenu-setup ()
-  "Called via notebook mode hooks."
-  (setq imenu-create-index-function #'ein:worksheet-imenu-create-index))
-
 
 ;;; Workarounds
 
