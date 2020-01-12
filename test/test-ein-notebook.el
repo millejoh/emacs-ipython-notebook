@@ -10,7 +10,6 @@
 (require 'ein-testing-notebook)
 (require 'ein-testing-cell)
 
-
 ;; Test utils
 
 ;;; This is the content portion of a response fromt he content API.
@@ -170,25 +169,22 @@ is not found."
 
 When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (should (> num-open 0))
-  (let ((notebook (buffer-local-value 'ein:%notebook%
-                                      (ein:testing-notebook-make-empty))))
-    (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets notebook)))
+  (with-current-buffer (ein:testing-notebook-make-empty)
+    (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets ein:%notebook%)))
       ;; Add scratchsheets.  They can be just empty instance for this test.
       (dotimes (_ num-open)
-        (setq ss-list
-              (append ss-list (list (make-instance 'ein:scratchsheet)))))
-      ;; Close worksheet
-      (let ((ws (car (ein:$notebook-worksheets notebook))))
-        (ein:notebook-close-worksheet notebook ws)
-        (kill-buffer (ein:worksheet-buffer ws)))
-      ;; Make sure adding scratchsheet work.
-      (should (= (length ss-list) num-open))
-      (mapc (lambda (ws) (should (ein:scratchsheet-p ws))) ss-list)
-      ;; Close scratchsheets
-      (dotimes (_ num-close)
-        (ein:notebook-close-worksheet notebook (car ss-list)))
-      ;; Actual tests:
-      (should (= (length ss-list) (- num-open num-close))))))
+        (ein:notebook-scratchsheet-render-new ein:%notebook%))
+      (let ((ss (car ss-list)))
+        (kill-buffer (ein:worksheet-buffer ss)))
+      (should (= (length ss-list) (1- num-open)))
+      (dotimes (_ (1- num-close))
+        (kill-buffer (ein:worksheet-buffer (car ss-list))))
+      (should (= (length ss-list) (- num-open num-close)))
+      (let ((my-buffer (buffer-name)))
+        (kill-buffer (current-buffer))
+        (should-not (seq-some (lambda (b)
+                                (cl-search my-buffer (buffer-name b)))
+                              (buffer-list)))))))
 
 (ert-deftest ein:notebook-close-scratchsheet/open-one-close-one ()
   (ein:testing-notebook-close-scratchsheet-open-and-close 1 1))
@@ -825,14 +821,19 @@ defined."
 (defun ein:testin-notebook-close (num-ws num-ss)
   (should (= num-ws 1))             ; currently EIN only supports 1 WS
   (should (>= num-ss 0))
-  (let ((notebook (buffer-local-value 'ein:%notebook%
-                                      (ein:testing-notebook-make-empty))))
-    (dotimes (_ num-ss)
-      (ein:notebook-scratchsheet-render-new notebook))
-    (should (= (length (ein:notebook-buffer-list notebook)) (+ num-ws num-ss)))
-    (ein:notebook-close notebook)
-    (mapc (lambda (b) (should-not (buffer-live-p b)))
-          (ein:notebook-buffer-list notebook))))
+  (let* ((buf (ein:testing-notebook-make-empty))
+         (buffers (with-current-buffer buf
+                    (ein:notebook-buffer-list ein:%notebook%))))
+    (with-current-buffer buf
+      (dotimes (_ num-ss)
+        (ein:notebook-scratchsheet-render-new ein:%notebook%))
+      (should (= (+ num-ws num-ss)
+                 (length (seq-filter
+                          (lambda (b) (not (buffer-base-buffer (get-buffer b))))
+                          (ein:notebook-buffer-list ein:%notebook%))))))
+
+    (kill-buffer buf)
+    (mapc (lambda (b) (should-not (get-buffer b))) buffers)))
 
 (ert-deftest ein:notebook-close/one-ws-no-ss ()
   (ein:testin-notebook-close 1 0))
@@ -1228,7 +1229,7 @@ value of `ein:worksheet-enable-undo'."
           (should (ein:worksheet-modified-p ein:%worksheet%))
           (cl-letf (((symbol-function 'y-or-n-p)
                      (lambda (&rest _args) (setq asked t) nil)))
-            (should (kill-buffer buf2)))
+            (should-not (kill-buffer buf2)))
           (should-not asked)
           (should-not (buffer-live-p buf2))))
       (should-not (ein:worksheet-modified-p ein:%worksheet%))

@@ -162,12 +162,14 @@ Current buffer for these functions is set to the notebook buffer.")
            args)))
 
 (defun ein:notebook-close-worksheet (notebook ws)
-  "Close worksheet WS in NOTEBOOK."
-  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
-                    (scratchsheets (ein:$notebook-scratchsheets notebook)))
+  "Close worksheet WS in NOTEBOOK.
+
+This is problematic as ein:$notebook-worksheets doesn't delq ws.
+And I don't know if I can on account of the dont-save-cells nonsense."
+  (symbol-macrolet ((scratchsheets (ein:$notebook-scratchsheets notebook)))
     (cond
      ((ein:worksheet-p ws) (ein:worksheet-save-cells ws t))
-     (t (setq scratchsheets (delq ws scratchsheets))))))
+     (t (setf scratchsheets (delq ws scratchsheets))))))
 
 ;;; Notebook utility functions
 
@@ -200,13 +202,13 @@ combo must match exactly these url/port you used format
                                                (ein:$notebook-scratchsheets it)))))
 
 (defun ein:notebook-buffer-list (notebook)
-  "Return the buffers associated with NOTEBOOK's kernel.
-The buffer local variable `default-directory' of these buffers
-will be updated with kernel's cwd."
-  (delete nil
-          (mapcar #'ein:worksheet-buffer
-                  (append (ein:$notebook-worksheets notebook)
-                          (ein:$notebook-scratchsheets notebook)))))
+  "Return the direct and indirect buffers."
+  (mapcan (lambda (ws)
+            (when-let ((ws-buf (ein:worksheet-buffer ws)))
+              (with-current-buffer ws-buf
+                (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+          (append (ein:$notebook-worksheets notebook)
+                  (ein:$notebook-scratchsheets notebook))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))
@@ -766,26 +768,28 @@ NAME is any non-empty string that does not contain '/' or '\\'.
 
 (defun ein:notebook-kill-buffers (notebook)
   "Callback for `ein:notebook-close'"
-  (mapc (lambda (b)
-          (with-current-buffer b
-            (aif ein:%worksheet%
-                (ein:notebook-close-worksheet ein:%notebook% it))
-            (aif ein:%notebook%
-                (ein:notebook-tidy-opened-notebooks it))))
-        (ein:notebook-buffer-list notebook))
-  (ein:notebook-avoid-recursion
-   (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
+  (let ((buffers (ein:notebook-buffer-list notebook)))
+    (mapc (lambda (b)
+            (with-current-buffer b
+              (aif ein:%worksheet%
+                  (ein:notebook-close-worksheet ein:%notebook% it))
+              (aif ein:%notebook%
+                  (ein:notebook-tidy-opened-notebooks it))))
+          buffers)
+    (ein:notebook-avoid-recursion (mapc #'kill-buffer buffers))))
 
 (defun ein:notebook-kill-buffer-query ()
   (if-let ((notebook (ein:get-notebook))
            (ws ein:%worksheet%))
-      (cond ((ein:scratchsheet-p ws)
-             (ein:notebook-close-worksheet notebook ws)
-             t)
-            (t
-             (cl-assert (ein:worksheet-p ws))
-             (ein:notebook-close notebook)
-             nil))
+      (prog1 nil
+        (cond ((ein:scratchsheet-p ws)
+               (ein:notebook-close-worksheet notebook ws)
+               (with-current-buffer (ein:worksheet-buffer ws)
+                 (ein:notebook-avoid-recursion
+                  (mapc #'kill-buffer (eieio-oref pm/polymode '-buffers)))))
+              (t
+               (cl-assert (ein:worksheet-p ws))
+               (ein:notebook-close notebook))))
     t))
 
 (defun ein:notebook-ask-save (notebook &optional callback0)
