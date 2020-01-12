@@ -161,29 +161,16 @@ Current buffer for these functions is set to the notebook buffer.")
            :notebook-path notebook-path
            args)))
 
-;;; Destructor
-
-(defun ein:notebook-del (notebook)
-  "Destructor for `ein:$notebook'."
-  (ein:log-ignore-errors
-    (ein:kernel-del (ein:$notebook-kernel notebook))))
-
 (defun ein:notebook-close-worksheet (notebook ws)
-  "Close worksheet WS in NOTEBOOK.  If WS is the last worksheet,
-call notebook destructor `ein:notebook-del'."
-  (symbol-macrolet ((worksheets (ein:$notebook-worksheets notebook))
-                    (scratchsheets (ein:$notebook-scratchsheets notebook)))
+  "Close worksheet WS in NOTEBOOK.
+
+This is problematic as ein:$notebook-worksheets doesn't delq ws.
+And I don't know if I can on account of the dont-save-cells nonsense."
+  (symbol-macrolet ((scratchsheets (ein:$notebook-scratchsheets notebook)))
     (cond
      ((ein:worksheet-p ws) (ein:worksheet-save-cells ws t))
-     (t (setq scratchsheets (delq ws scratchsheets))))
-    (unless (or (seq-filter (lambda (x)
-                              (and (not (eq x ws))
-                                   (ein:worksheet-has-buffer-p x)))
-                            worksheets)
-                scratchsheets)
-      (ein:notebook-del notebook))))
+     (t (setf scratchsheets (delq ws scratchsheets))))))
 
-
 ;;; Notebook utility functions
 
 (defun ein:notebook-update-url-or-port (new-url-or-port notebook)
@@ -215,13 +202,13 @@ combo must match exactly these url/port you used format
                                                (ein:$notebook-scratchsheets it)))))
 
 (defun ein:notebook-buffer-list (notebook)
-  "Return the buffers associated with NOTEBOOK's kernel.
-The buffer local variable `default-directory' of these buffers
-will be updated with kernel's cwd."
-  (delete nil
-          (mapcar #'ein:worksheet-buffer
-                  (append (ein:$notebook-worksheets notebook)
-                          (ein:$notebook-scratchsheets notebook)))))
+  "Return the direct and indirect buffers."
+  (cl-mapcan (lambda (ws)
+               (when-let ((ws-buf (ein:worksheet-buffer ws)))
+                 (with-current-buffer ws-buf
+                   (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+             (append (ein:$notebook-worksheets notebook)
+                     (ein:$notebook-scratchsheets notebook))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))
@@ -528,7 +515,6 @@ This is equivalent to do ``C-c`` in the console program."
     (poly-ein-mode)
     (ein:notebook-mode)
     (ein:notebook--notification-setup notebook)
-    (ein:notebook-setup-kill-buffer-hook)
     (setq ein:%notebook% notebook)
     (poly-ein-fontify-buffer (ein:notebook-buffer notebook))))
 
@@ -780,14 +766,30 @@ NAME is any non-empty string that does not contain '/' or '\\'.
     (setf (ein:$kernel-path kernel) (ein:$content-path content)))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
-(defun ein:notebook-kill-notebook-buffers (notebook)
+(defun ein:notebook-kill-buffers (notebook)
   "Callback for `ein:notebook-close'"
-  (ein:notebook-avoid-recursion
-   (mapc #'kill-buffer (ein:notebook-buffer-list notebook))))
+  (let ((buffers (ein:notebook-buffer-list notebook)))
+    (mapc (lambda (b)
+            (with-current-buffer b
+              (aif ein:%worksheet%
+                  (ein:notebook-close-worksheet ein:%notebook% it))
+              (aif ein:%notebook%
+                  (ein:notebook-tidy-opened-notebooks it))))
+          buffers)
+    (ein:notebook-avoid-recursion (mapc #'kill-buffer buffers))))
 
 (defun ein:notebook-kill-buffer-query ()
-  (aif (ein:get-notebook)
-      (ein:notebook-ask-save it)
+  (if-let ((notebook (ein:get-notebook))
+           (ws ein:%worksheet%))
+      (prog1 nil
+        (cond ((ein:scratchsheet-p ws)
+               (ein:notebook-close-worksheet notebook ws)
+               (with-current-buffer (ein:worksheet-buffer ws)
+                 (ein:notebook-avoid-recursion
+                  (mapc #'kill-buffer (eieio-oref pm/polymode '-buffers)))))
+              (t
+               (cl-assert (ein:worksheet-p ws))
+               (ein:notebook-close notebook))))
     t))
 
 (defun ein:notebook-ask-save (notebook &optional callback0)
@@ -815,7 +817,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
 (defun ein:notebook-close (notebook &optional callback &rest cbargs)
   (interactive (list (ein:notebook--get-nb-or-error)))
   (lexical-let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
-                 (callback0 (apply-partially #'ein:notebook-kill-notebook-buffers notebook)))
+                 (callback0 (apply-partially #'ein:notebook-kill-buffers notebook)))
     (when callback
       (add-function :after callback0
                     (apply #'apply-partially callback cbargs)))
@@ -1452,9 +1454,6 @@ the first argument and CBARGS as the rest of arguments."
                          (apply callback data cbargs)))
                       callback cbargs))))
 
-;;; Buffer and kill hooks
-(add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
-
 (defun ein:notebook-close-notebooks (&optional blithely)
   "Used in `ein:jupyter-server-stop' and `kill-emacs-query-functions' hook."
   (aif (ein:notebook-opened-notebooks)
@@ -1464,23 +1463,15 @@ the first argument and CBARGS as the rest of arguments."
         t)
     t))
 
-(add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
-
 (defmacro ein:notebook-avoid-recursion (&rest body)
   `(let ((kill-buffer-query-functions
           (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
                         kill-buffer-query-functions)))
      ,@body))
 
-(defun ein:notebook-setup-kill-buffer-hook ()
-  "The buffer being killed is current while the hook is running."
-  (add-hook 'kill-buffer-hook
-            (lambda ()
-              (aif ein:%worksheet%
-                (ein:notebook-close-worksheet ein:%notebook% it))
-              (aif ein:%notebook%
-                (ein:notebook-tidy-opened-notebooks it)))
-            nil t))
+
+(add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
+(add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
 
 (provide 'ein-notebook)
 
