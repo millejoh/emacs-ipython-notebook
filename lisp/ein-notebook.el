@@ -203,12 +203,12 @@ combo must match exactly these url/port you used format
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the direct and indirect buffers."
-  (mapcan (lambda (ws)
-            (when-let ((ws-buf (ein:worksheet-buffer ws)))
-              (with-current-buffer ws-buf
-                (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
-          (append (ein:$notebook-worksheets notebook)
-                  (ein:$notebook-scratchsheets notebook))))
+  (cl-mapcan (lambda (ws)
+               (when-let ((ws-buf (ein:worksheet-buffer ws)))
+                 (with-current-buffer ws-buf
+                   (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+             (append (ein:$notebook-worksheets notebook)
+                     (ein:$notebook-scratchsheets notebook))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))

@@ -496,6 +496,6 @@
 (When "^text property at point includes \"\\(.+\\)\"$"
       (lambda (properties)
         (should-not
-         (mapcan (lambda (prop)
-                   (not (get-text-property (point) (intern prop))))
-                 (split-string properties ",")))))
+         (cl-mapcan (lambda (prop)
+                      (not (get-text-property (point) (intern prop))))
+                    (split-string properties ",")))))
