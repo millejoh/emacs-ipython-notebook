@@ -830,18 +830,16 @@ as usual."
   (declare (indent defun))
   (interactive (list (ein:notebook--get-nb-or-error) nil))
   (unless callback1 (setq callback1 #'ignore))
-  (lexical-let ((callback1 callback1))
-    (let ((kernel (ein:$notebook-kernel notebook))
-          (callback (apply-partially
-                     (lambda (notebook* kernel*)
-                       (ein:notebook-close notebook*)
-                       (funcall callback1 kernel*))
-                     notebook)))
-      (if (ein:kernel-live-p kernel)
-          (ein:message-whir "Ending session"
-                            (add-function :before callback done-callback)
-                            (ein:kernel-delete-session kernel callback))
-        (funcall callback nil)))))
+  (let* ((kernel (ein:$notebook-kernel notebook))
+         (callback (apply-partially
+                    (lambda (notebook* cb* kernel*)
+                      (ein:notebook-close notebook*)
+                      (funcall cb* kernel*))
+                    notebook callback1)))
+    (if (ein:kernel-live-p kernel)
+        (ein:message-whir "Ending session" callback
+                          (ein:kernel-delete-session callback :kernel kernel))
+      (funcall callback nil))))
 
 (defun ein:fast-content-from-notebook (notebook)
   "Quickly generate a basic content structure from notebook. This

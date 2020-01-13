@@ -226,9 +226,6 @@ at point, i.e. any word before then \"(\", if it is present."
 See: http://api.jquery.com/jQuery.ajax/"
   (concat url (format-time-string "?_=%s")))
 
-
-;;; HTML utils
-
 (defun ein:html-get-data-in-body-tag (key)
   "Very ad-hoc parser to get data in body tag."
   (ignore-errors
@@ -237,9 +234,6 @@ See: http://api.jquery.com/jQuery.ajax/"
       (search-forward "<body")
       (search-forward-regexp (format "%s=\\([^[:space:]\n]+\\)" key))
       (match-string 1))))
-
-
-;;; JSON utils
 
 (defmacro ein:with-json-setting (&rest body)
   `(let ((json-object-type 'plist)
@@ -287,9 +281,6 @@ See: http://api.jquery.com/jQuery.ajax/"
 ;;   (if (null object)
 ;;     (setq ad-return-value "{}")
 ;;     ad-do-it))
-
-
-;;; EWOC
 
 (defun ein:ewoc-create (pretty-printer &optional header footer nosep)
   "Do nothing wrapper of `ewoc-create' to provide better error message."
@@ -392,7 +383,6 @@ Adapted from twittering-mode.el's `case-string'."
              ,@body)))
        clauses)))
 
-
 ;;; Text manipulation on buffer
 
 (defun ein:find-leftmost-column (beg end)
@@ -604,14 +594,16 @@ otherwise it should be a function, which is called on `time'."
     (string (format-time-string format time))
     (function (funcall format time))))
 
-
 ;;; Emacs utilities
-(defmacro ein:message-whir (mesg &rest body)
+(defmacro ein:message-whir (mesg callback &rest body)
   "Display MESG with a modest animation until ASYNC-CALL completes."
   `(lexical-let* (done-p
-                  (done-callback (lambda (&rest ignore) (setf done-p t)))
-                  (errback (lambda (&rest ignore) (setf done-p 'error))))
-     (ein:message-whir-subr ,mesg (lambda () done-p))
+                  (done-callback (lambda (&rest _args) (setf done-p t)))
+                  (errback (lambda (&rest _args) (setf done-p 'error))))
+     ;; again, how can done-callback remove itself after running?
+     (add-function :before ,callback done-callback)
+     (unless noninteractive
+       (ein:message-whir-subr ,mesg (lambda () done-p)))
      ,@body))
 
 (defun ein:message-whir-subr (mesg doneback)
@@ -626,7 +618,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
     ;; "complicated timings of macro expansion lexical-let, deferred:lambda"
     ;; using deferred:loop instead
     (deferred:$
-      (deferred:loop (cl-loop for i from 1 below 30 by 1 collect i)
+      (deferred:loop (cl-loop for i from 1 below 60 by 1 collect i)
         (lambda ()
           (deferred:$
             (deferred:next

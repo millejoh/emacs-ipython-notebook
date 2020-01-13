@@ -406,34 +406,36 @@ This function is called via `ein:notebook-after-rename-hook'."
                  name))
   (ein:notebooklist-new-notebook url-or-port kernelspec callback no-pop))
 
-(defun ein:notebooklist-delete-notebook-ask (path)
-  (when (y-or-n-p (format "Delete notebook %s?" path))
-    (ein:notebooklist-delete-notebook path)))
-
-(defun ein:notebooklist-delete-notebook (path &optional callback)
+(defun ein:notebooklist-delete-notebook (notebooklist url-or-port path &optional callback)
   "CALLBACK with no arguments, e.g., semaphore"
-  (lexical-let* ((path path)
-                 (notebooklist ein:%notebooklist%)
-                 (callback callback)
-                 (url-or-port (ein:$notebooklist-url-or-port notebooklist)))
-    (unless callback
-      (setq callback (apply-partially #'ein:notebooklist-reload notebooklist)))
-    (dolist (buf (seq-filter (lambda (b)
-                               (with-current-buffer b
-                                 (aif (ein:get-notebook)
-                                     (string= path (ein:$notebook-notebook-path it)))))
-                             (buffer-list)))
-      (kill-buffer buf))
-    (if (ein:notebook-opened-notebooks
-         (lambda (nb)
-           (string= path (ein:$notebook-notebook-path nb))))
-        (ein:log 'error "ein:notebooklist-delete-notebook: cannot close %s" path)
-      (ein:query-singleton-ajax
-       (ein:notebook-url-from-url-and-id
-        url-or-port (ein:$notebooklist-api-version notebooklist) path)
-       :type "DELETE"
-       :complete (apply-partially #'ein:notebooklist-delete-notebook--complete
-                                  (ein:url url-or-port path) callback)))))
+  (declare (indent defun))
+  (unless callback (setq callback #'ignore))
+  (dolist (buf (seq-filter (lambda (b)
+                             (with-current-buffer b
+                               (aif (ein:get-notebook)
+                                   (string= path (ein:$notebook-notebook-path it)))))
+                           (buffer-list)))
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _args) nil)))
+      (kill-buffer buf)))
+  (if (ein:notebook-opened-notebooks (lambda (nb)
+                                       (string= path
+                                                (ein:$notebook-notebook-path nb))))
+      (ein:log 'error "ein:notebooklist-delete-notebook: cannot close %s" path)
+    (let ((delete-nb
+           (apply-partially
+            (lambda (url* settings* _kernel)
+              (apply #'ein:query-singleton-ajax url* settings*))
+            (ein:notebook-url-from-url-and-id
+             url-or-port (ein:$notebooklist-api-version notebooklist) path)
+            (list :type "DELETE"
+                  :complete (apply-partially
+                             #'ein:notebooklist-delete-notebook--complete
+                             (ein:url url-or-port path) callback)))))
+      (ein:message-whir
+       "Ending session" delete-nb
+       (ein:kernel-delete-session delete-nb
+                                  :url-or-port url-or-port
+                                  :path path)))))
 
 (cl-defun ein:notebooklist-delete-notebook--complete
     (url callback
@@ -556,7 +558,10 @@ This function is called via `ein:notebook-after-rename-hook'."
     (ein:make-sorting-widget "Sort by" ein:notebooklist-sort-field)
     (ein:make-sorting-widget "In Order" ein:notebooklist-sort-order)
     (widget-insert "\n")
-    (cl-loop for note in (ein:notebooklist--order-data
+    (cl-loop with reloader = (apply-partially (lambda (nblist _kernel)
+                                                (ein:notebooklist-reload nblist))
+                                              ein:%notebooklist%)
+             for note in (ein:notebooklist--order-data
                           (ein:$notebooklist-data ein:%notebooklist%)
                           ein:notebooklist-sort-field
                           ein:notebooklist-sort-order)
@@ -602,28 +607,41 @@ This function is called via `ein:notebook-after-rename-hook'."
              if (string= type "notebook")
              do (progn (widget-create
                         'link
-                        :notify (lexical-let ((url-or-port url-or-port)
-                                              (path path))
-                                  (lambda (&rest _ignore)
-                                    (run-at-time 3 nil #'ein:notebooklist-reload)
-                                    (ein:notebook-open url-or-port path)))
+                        :notify (apply-partially
+                                 (lambda (url-or-port* path* reloader* &rest _args)
+                                   (ein:notebook-open url-or-port* path* nil reloader*))
+                                 url-or-port path
+                                 (apply-partially (lambda (reloader* &rest _args)
+                                                    (funcall reloader* nil))
+                                                  reloader))
                         "Open")
                        (widget-insert " ")
                        (if (gethash path sessions)
                            (widget-create
                             'link
-                            :notify (lexical-let ((url url-or-port)
-                                                  (session (car (gethash path sessions))))
-                                      (lambda (&rest _ignore)
-                                        (ein:kernel-delete--from-session-id url session #'ein:notebooklist-reload)))
+                            :notify
+                            (apply-partially
+                             (lambda (callback* url-or-port* path* &rest _ignore)
+                               (ein:message-whir
+                                "Ending session" callback*
+                                (ein:kernel-delete-session callback*
+                                                           :url-or-port url-or-port*
+                                                           :path path*)))
+                             reloader url-or-port path)
                             "Stop")
                          (widget-insert "------"))
                        (widget-insert " ")
                        (widget-create
                         'link
-                        :notify (lexical-let ((path path))
-                                  (lambda (&rest _ignore)
-                                    (ein:notebooklist-delete-notebook-ask path)))
+                        :notify (apply-partially
+                                 (lambda (notebooklist* url-or-port* path* callback*
+                                          &rest _args)
+                                   (when (or noninteractive
+                                             (y-or-n-p (format "Delete notebook %s?" path*)))
+                                     (ein:notebooklist-delete-notebook
+                                       notebooklist* url-or-port* path*
+                                       (apply-partially callback* nil))))
+                                 ein:%notebooklist% url-or-port path reloader)
                         "Delete")
                        (widget-insert " : " (ein:format-nbitem-data name last-modified))
                        (widget-insert "\n"))

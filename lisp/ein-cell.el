@@ -519,7 +519,7 @@ Return language name as a string or `nil' when not defined.
         (when (and (not (slot-value cell 'collapsed))
                    (= index ein:cell-max-num-outputs)
                    (> (point) (point-at-bol)))
-         ;; The first output which exceeds `ein:cell-max-num-outputs'.
+          ;; The first output which exceeds `ein:cell-max-num-outputs'.
           (ein:insert-read-only "\n"))
         (ein:insert-read-only "."))
     (let ((out (nth index (slot-value cell 'outputs))))
@@ -819,7 +819,6 @@ If END is non-`nil', return the location of next element."
 
 (cl-defmethod ein:cell-actually-append-output ((cell ein:codecell) json)
   (ein:cell-expand cell)
-  ;; (ein:flush-clear-timeout)
   (setf (slot-value cell 'outputs)
         (append (slot-value cell 'outputs) (list json)))
   (let* ((inhibit-read-only t)
@@ -840,7 +839,9 @@ If END is non-`nil', return the location of next element."
   "Insert pyout type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:insert-read-only (format "Out [%s]:"
-                                (or (plist-get json :prompt_number) " "))
+                                (or (plist-get json :prompt_number)
+                                    (plist-get json :execution_count)
+                                    " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
   (ein:cell-append-mime-type json)
@@ -951,8 +952,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
         (metadata (slot-value cell 'metadata)))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
-      ,@(when execute-count
-          `((execution_count . ,execute-count)))
+      (execution_count . ,execute-count)
       (outputs . ,(apply #'vector (slot-value cell 'outputs)))
       (metadata . ,(plist-put metadata :collapsed (if (slot-value cell 'collapsed) t
                                                     json-false))))))
@@ -1010,8 +1010,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
    :clear_output   (cons #'ein:cell--handle-clear-output   cell)
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
-(cl-defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content
-                                              metadata)
+(cl-defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content metadata)
   (run-hook-with-args 'ein:on-execute-reply-functions cell content metadata)
   (ein:cell-set-input-prompt cell (plist-get content :execution_count))
   (ein:cell-running-set cell nil)
@@ -1027,14 +1026,31 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                         (list :cell cell :text text))
     (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
 
-(cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content meta)
-  ;; (ein:output-area-convert-mime-types content (plist-get content :data))
-  (ein:cell-append-output cell
-                          (plist-put
-                           (plist-put content :output_type msg-type)
-                           :metadata meta))
-  ;; (setf (slot-value cell 'dirty) t)
-  (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
+(cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content _metadata)
+  (let ((json `(:output_type ,msg-type)))
+    (cl-macrolet ((copy-props
+                   (src tgt props)
+                   `(mapc (lambda (kw)
+                            (let ((val (plist-get ,src kw)))
+                              (when (and (null val) (plist-member ,src kw))
+                                (setq val (make-hash-table)))
+                              (setq ,tgt (plist-put ,tgt kw val))))
+                          ,props)))
+      (ein:case-equal msg-type
+        (("stream")
+         (copy-props content json '(:name :text)))
+        (("display_data")
+         (copy-props content json '(:data :metadata)))
+        (("execute_result" "pyout")
+         (copy-props content json '(:execution_count :data :metadata)))
+        (("error" "pyerr")
+         (copy-props content json '(:ename :evalue :traceback)))
+        (t
+         (ein:log 'error "ein:cell--handle-output: unhandled msg_type '%s'" msg-type)
+         (setq json nil))))
+    (when json
+      (ein:cell-append-output cell json)
+      (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))))
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)
