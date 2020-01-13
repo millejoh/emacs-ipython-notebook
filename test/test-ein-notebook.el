@@ -924,7 +924,8 @@ defined."
     (let ((buffer (current-buffer))
           (notebook ein:%notebook%))
       (cl-letf (((symbol-function 'ein:kernel-live-p) (lambda (&rest args) t))
-                ((symbol-function 'ein:kernel-delete-session) (lambda (kernel callback) (funcall callback kernel))))
+                ((symbol-function 'ein:kernel-delete-session)
+                 (cl-function (lambda (callback &key kernel) (funcall callback kernel)))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))
       (ein:testing-notebook-should-be-closed notebook buffer))))
 

@@ -37,14 +37,29 @@ Scenario: Stop after closing notebook
   And I keep clicking "Resync" until "Stop"
   And I click on "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
-  Then I should see "Deleted session"
+  Then I should see "kernel-delete-session--success"
   And I am in notebooklist buffer
   And I go to word "Untitled"
   And I go to beginning of line
-  And I dump buffer
   And I click without going top on "Open"
   And no notebooks pending
   And I switch to buffer like "Untitled"
+
+@delete
+Scenario: Delete closes buffers and sessions
+  Given I am in notebooklist buffer
+  And I click on "New Notebook"
+  And no notebooks pending
+  And I switch to buffer like "Untitled"
+  And I am in notebooklist buffer
+  And I clear log expr "ein:log-all-buffer-name"
+  And I click on "Delete"
+  And I wait for buffer to not say "Untitled"
+  Then eval "(should-not (ein:notebook-opened-notebooks)))"
+  Then eval "(should-not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list)))"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "kernel-delete-session--success"
+  Then I should see "notebooklist-delete-notebook--complete"
 
 @content
 Scenario: Read a massive directory

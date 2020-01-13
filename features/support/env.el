@@ -46,6 +46,7 @@
   (ein:testing-flush-queries)
   (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
     (cl-loop for notebook in (ein:notebook-opened-notebooks)
+             for url-or-port = (ein:$notebook-url-or-port notebook)
              for path = (ein:$notebook-notebook-path notebook)
              for done-p = nil
              do (ein:notebook-kill-kernel-then-close-command
@@ -58,14 +59,14 @@
              do (when (or (ob-ein-anonymous-p path)
                           (search "Untitled" path)
                           (search "Renamed" path))
-                  (ein:notebooklist-delete-notebook path)
+                  (ein:notebooklist-delete-notebook ein:%notebooklist% url-or-port path)
                   (cl-loop with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
                            repeat 10
                            for extant = (file-exists-p fullpath)
                            until (not extant)
                            do (sleep-for 0 1000)
                            finally do (when extant
-                                        (ein:display-warning (format "cannot del %s" path)))))))
+                                        (ein:display-warning (format "cannot delete %s" path)))))))
   (aif (ein:notebook-opened-notebooks)
       (cl-loop for nb in it
             for path = (ein:$notebook-notebook-path nb)

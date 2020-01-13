@@ -54,17 +54,18 @@
                  (dummy-response (make-request-response))
                  got-url)
     (cl-letf (((symbol-function 'request)
-               (lambda (url &rest ignore) (setq got-url url) dummy-response))
+               (lambda (url &rest _ignore) (setq got-url url) dummy-response))
               ((symbol-function 'set-process-query-on-exit-flag) #'ignore)
               ((symbol-function 'ein:kernel-stop-channels) #'ignore)
-              ((symbol-function 'ein:websocket) (lambda (&rest ignore) (make-ein:$websocket :ws nil :kernel kernel :closed-by-client nil)))
-              ((symbol-function 'ein:websocket-open-p) (lambda (&rest ignore) t)))
+              ((symbol-function 'ein:websocket)
+               (lambda (&rest ignore) (make-ein:$websocket :ws nil :kernel kernel
+                                                           :closed-by-client nil)))
+              ((symbol-function 'ein:websocket-open-p) (lambda (&rest _ignore) t)))
       (ein:kernel-retrieve-session--success
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
-      (ein:kernel-delete-session kernel))
+      (ein:kernel-delete-session nil :kernel kernel))
     (should (equal got-url desired-url))))
 
-
 ;;; Test `ein:kernel-construct-help-string'
 
 (ert-deftest ein:kernel-construct-help-string-when-found ()

@@ -141,13 +141,13 @@
 (cl-defun ein:kernel-restart-session (kernel)
   "Server side delete of KERNEL session and subsequent restart with all new state"
   (ein:kernel-delete-session
-   kernel
    (lambda (kernel)
      (ein:events-trigger (ein:$kernel-events kernel) 'status_restarting.Kernel)
      (ein:kernel-retrieve-session kernel 0
                                   (lambda (kernel)
                                     (ein:events-trigger (ein:$kernel-events kernel)
-                                                        'status_restarted.Kernel))))))
+                                                        'status_restarted.Kernel))))
+   :kernel kernel))
 
 (cl-defun ein:kernel-retrieve-session (kernel &optional iteration callback)
   "Formerly ein:kernel-start, but that was misnomer because 1. the server really starts a session (and an accompanying kernel), and 2. it may not even start a session if one exists for the same path.
@@ -533,33 +533,36 @@ Example::
      :success (lambda (&rest ignore)
                 (ein:log 'info "Sent interruption command.")))))
 
-(defun ein:kernel-delete--from-session-id (url session-id &optional callback)
-  "Stop/delete a running kernel from a session id. May also specify a callback function of 0 args to be called once oepration is complete.
-
-We need this to have proper behavior for the 'Stop' command in the ein:notebooklist buffer."
-  (ein:query-singleton-ajax
-   (ein:url url "api/sessions" session-id)
-   :success (apply-partially #'ein:kernel-delete--from-session-complete session-id callback)
-   :error (apply-partially #'ein:kernel-delete--from-session-error session-id)
-   :type "DELETE"))
-
-(defun ein:kernel-delete--from-session-complete (session-id callback &rest _)
-  (ein:log 'info "Deleted session %s and its associated kernel process." session-id)
-  (when callback
-    (funcall callback)))
-
-(defun ein:kernel-delete--from-session-error (session-id &rest _)
-  (ein:log 'info "Error, could not delete session %s." session-id))
-
-(defun ein:kernel-delete-session (kernel &optional callback)
+(cl-defun ein:kernel-delete-session (&optional callback
+                                     &key url-or-port path kernel
+                                     &aux (session-id))
   "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK (kernel)"
-  (ein:and-let* ((session-id (ein:$kernel-session-id kernel)))
-    (ein:query-singleton-ajax
-     (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
-     :type "DELETE"
-     :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
-     :error (apply-partially #'ein:kernel-delete-session--error session-id callback)
-     :success (apply-partially #'ein:kernel-delete-session--success session-id callback))))
+  (cond (kernel
+         (setq url-or-port (ein:$kernel-url-or-port kernel))
+         (setq path (ein:$kernel-path kernel))
+         (setq session-id (ein:$kernel-session-id kernel)))
+        ((and url-or-port path)
+         (aif (ein:notebook-get-opened-notebook url-or-port path)
+             (progn
+               (setq kernel (ein:$notebook-kernel it))
+               (setq session-id (ein:$kernel-session-id kernel)))
+           (let ((ein:force-sync t))
+             (ein:content-query-sessions
+              url-or-port
+              (lambda (session-hash)
+                (setq session-id (car (gethash path session-hash))))
+              nil))))
+        (t (error "ein:kernel-delete-session: need kernel, or url-or-port and path")))
+  (if session-id
+      (ein:query-singleton-ajax
+       (ein:url url-or-port "api/sessions" session-id)
+       :type "DELETE"
+       :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
+       :error (apply-partially #'ein:kernel-delete-session--error session-id callback)
+       :success (apply-partially #'ein:kernel-delete-session--success session-id callback))
+    (ein:log 'verbose "ein:kernel-delete-session: no sessions found for %s" path)
+    (when callback
+      (funcall callback kernel))))
 
 (cl-defun ein:kernel-delete-session--error (session-id callback
                                             &key response error-thrown
@@ -577,7 +580,8 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                                                &allow-other-keys
                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
-  (ein:kernel-disconnect kernel)
+  (when kernel
+    (ein:kernel-disconnect kernel))
   (when callback (funcall callback kernel)))
 
 ;; Reply handlers.
@@ -669,7 +673,7 @@ We need this to have proper behavior for the 'Stop' command in the ein:notebookl
                  msg-type msg-id)
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-           (aif (plist-get callbacks :output)
+           (aif (plist-get callbacks :output) ;; ein:cell--handle-output
                (ein:funcall-packed it msg-type content metadata)
              (ein:log 'warn (concat "ein:kernel--handle-iopub-reply: "
                                     "No :output callback for msg_id=%s")

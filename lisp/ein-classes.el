@@ -179,7 +179,6 @@
    (metadata :initarg :metadata :initform nil :accessor ein:worksheet--metadata)
    (events :initarg :events :accessor ein:worksheet--events)))
 
-
 ;;; Kernel
 (defstruct ein:$kernelspec
   "Kernel specification as return by the Jupyter notebook server.

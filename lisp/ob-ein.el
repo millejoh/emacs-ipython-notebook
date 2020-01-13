@@ -343,7 +343,8 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                     do (sleep-for 0 500)
                     finally do (if extant
                                    (ein:display-warning
-                                    (format "cannot del path=%s nbpath=%s" fullpath nbpath))
+                                    (format "cannot delete path=%s nbpath=%s"
+                                            fullpath nbpath))
                                  (ob-ein--initiate-session session kernelspec callback))))
           (notebook (funcall callback notebook))
           ((string= (url-host parsed-url) ein:url-localhost)

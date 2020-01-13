@@ -40,7 +40,7 @@
 
 (When "^I kill kernel$"
       (lambda ()
-        (ein:kernel-delete-session (ein:$notebook-kernel ein:%notebook%))
+        (ein:kernel-delete-session nil :kernel (ein:$notebook-kernel ein:%notebook%))
         (And "I wait for the smoke to clear")))
 
 (When "^my reconnect is questioned"
@@ -121,6 +121,10 @@
              until (zerop (hash-table-count *ein:notebook--pending-query*))
              do (sleep-for 0 500)
              finally do (should (zerop (hash-table-count *ein:notebook--pending-query*))))))
+
+(When "^no notebooks open$"
+  (lambda ()
+    (should ())))
 
 (When "^I switch to buffer like \"\\(.+\\)\"$"
       (lambda (substr)
@@ -283,6 +287,10 @@
             (eval `(cl-letf ,bindings
                      (When "I call \"ein:notebooklist-login\"")
                      (And "I wait for the smoke to clear")))))))
+
+(When "^eval \"\\(.*\\)\"$"
+  (lambda (command)
+    (eval (car (read-from-string command)))))
 
 (When "^I wait for completions \"\\(.+\\)\"$"
       (lambda (key)
