@@ -166,6 +166,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     result))
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
+  (cl-assert (listp buffer-undo-list))
   (if (/= (length buffer-undo-list) (length ein:%which-cell%))
       (ein:log 'debug "jig %s to %s: %S %S" (length ein:%which-cell%) (length buffer-undo-list) buffer-undo-list ein:%which-cell%))
   (ein:and-let* ((old-cell-id (car change-cell-id))
@@ -202,43 +203,46 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     (setq old-cell cell))
   (when buffer-local-enable-undo
     (ein:with-live-buffer (ein:cell-buffer cell)
-      (let* ((opl (ein:worksheet--prompt-length old-cell t))
-             (ool (ein:worksheet--output-length old-cell t))
-             (otl (ein:worksheet--total-length old-cell t))
-             (npl (ein:worksheet--prompt-length cell))
-             (nol (ein:worksheet--output-length cell))
-             (ntl (ein:worksheet--total-length cell))
-             (pdist (- npl opl))
-             (odist (- nol ool))
-             (has-output (memq :output (slot-value cell 'element-names)))
-             (old-has-output (memq :output (slot-value old-cell 'element-names)))
-             (converted-newline (if (eq has-output old-has-output) 0
-                                  (if has-output -1 1)))
-             (after-ids (ein:worksheet--get-ids-after cell))
-             (func-same-cell (hof-add pdist))
-             (func-after-cell (hof-add (if (zerop otl)
-                                           ntl (+ pdist odist converted-newline))))
-             lst)
-        (ein:log 'debug "unsh trig=%s pdist=%s odist=%s otl=%s ntl=%s conv=%s"
-                 (ein:worksheet--unique-enough-cell-id cell) pdist odist otl ntl converted-newline)
-        (ein:worksheet--jigger-undo-list
-         (cons (ein:worksheet--unique-enough-cell-id old-cell)
-               (ein:worksheet--unique-enough-cell-id cell)))
-        (dolist (uc (cl-mapcar #'cons buffer-undo-list ein:%which-cell%))
-          (let ((u (car uc))
-                (cell-id (or (cdr uc) "")))
-            (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
-                (setq lst (nconc lst (list (funcall func-same-cell u))))
-              (if (plist-member after-ids cell-id)
-                  (progn
-                    (ein:log 'debug "unsh adj %s %s" u cell-id)
-                    (setq lst (nconc lst (list (funcall func-after-cell u)))))
-                (setq lst (nconc lst (list u)))))))
-        (cl-assert (= (length buffer-undo-list) (length lst)) t
-                   "ein:worksheet--unshift-undo-list %d != %d"
-                   (length buffer-undo-list) (length lst))
-        (setq buffer-undo-list lst)
-        (ein:worksheet--update-cell-lengths cell exogenous-input)))))
+      (if (listp buffer-undo-list)
+          (let* ((opl (ein:worksheet--prompt-length old-cell t))
+                 (ool (ein:worksheet--output-length old-cell t))
+                 (otl (ein:worksheet--total-length old-cell t))
+                 (npl (ein:worksheet--prompt-length cell))
+                 (nol (ein:worksheet--output-length cell))
+                 (ntl (ein:worksheet--total-length cell))
+                 (pdist (- npl opl))
+                 (odist (- nol ool))
+                 (has-output (memq :output (slot-value cell 'element-names)))
+                 (old-has-output (memq :output (slot-value old-cell 'element-names)))
+                 (converted-newline (if (eq has-output old-has-output) 0
+                                      (if has-output -1 1)))
+                 (after-ids (ein:worksheet--get-ids-after cell))
+                 (func-same-cell (hof-add pdist))
+                 (func-after-cell (hof-add (if (zerop otl)
+                                               ntl (+ pdist odist converted-newline))))
+                 lst)
+            (ein:log 'debug "unsh trig=%s pdist=%s odist=%s otl=%s ntl=%s conv=%s"
+                     (ein:worksheet--unique-enough-cell-id cell) pdist odist otl ntl converted-newline)
+            (ein:worksheet--jigger-undo-list
+             (cons (ein:worksheet--unique-enough-cell-id old-cell)
+                   (ein:worksheet--unique-enough-cell-id cell)))
+            (dolist (uc (cl-mapcar #'cons buffer-undo-list ein:%which-cell%))
+              (let ((u (car uc))
+                    (cell-id (or (cdr uc) "")))
+                (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
+                    (setq lst (nconc lst (list (funcall func-same-cell u))))
+                  (if (plist-member after-ids cell-id)
+                      (progn
+                        (ein:log 'debug "unsh adj %s %s" u cell-id)
+                        (setq lst (nconc lst (list (funcall func-after-cell u)))))
+                    (setq lst (nconc lst (list u)))))))
+            (cl-assert (= (length buffer-undo-list) (length lst)) t
+                       "ein:worksheet--unshift-undo-list %d != %d"
+                       (length buffer-undo-list) (length lst))
+            (setq buffer-undo-list lst)
+            (ein:worksheet--update-cell-lengths cell exogenous-input))
+        (ein:log 'debug "ein:worksheet--unshift-undo-list: buffer-undo-list %s in %s"
+                 buffer-undo-list (ein:cell-buffer cell))))))
 
 (defun ein:worksheet--calc-offset (u)
   "Return length of inserted (or uninserted) text corresponding to undo entry U."
@@ -252,35 +256,38 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   "Adjust `buffer-undo-list' for deleting CELL.  Shift in list parlance means removing the front."
   (when buffer-local-enable-undo
     (ein:with-live-buffer (ein:cell-buffer cell)
-      (let* ((pdist (ein:worksheet--prompt-length cell))
-             (odist (ein:worksheet--output-length cell))
-             (sdist (ein:worksheet--saved-input-length cell))
-             (after-ids (ein:worksheet--get-ids-after cell))
-             (offset 0)
-             lst wc)
-        (ein:log 'debug "shft trig=%s pdist=%s odist=%s sdist=%s" (ein:worksheet--unique-enough-cell-id cell) pdist odist sdist)
-        (ein:worksheet--jigger-undo-list)
-        ;; Deletion of a less recent undo affects a more recent undo (arrow of time)
-        ;; Since buffer-undo-list is ordered most to least recent, we must
-        ;; reverse.
-        (dolist (uc (nreverse (cl-mapcar #'cons buffer-undo-list ein:%which-cell%)))
-          (let ((u (car uc))
-                (cell-id (or (cdr uc) "")))
-            (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
-                (progn
-                  (setq offset (+ offset (ein:worksheet--calc-offset u)))
-                  (ein:log 'debug "shft del %s (%s) %s" u (ein:worksheet--calc-offset u) cell-id))
-              (setq wc (nconc wc (list (cdr uc))))
-              (if (plist-member after-ids cell-id)
-                  (progn
-                    (ein:log 'debug "shft adj %s %s" u cell-id)
-                    ;; 1 for when cell un-executed, there is still a newline
-                    (setq lst (nconc lst (list (funcall (hof-add (- (+ 1 offset pdist odist sdist))) u)))))
-                (setq lst (nconc lst (list u)))))))
-        (setq buffer-undo-list (nreverse lst))
-        (setq ein:%which-cell% (nreverse wc))
-        (ein:worksheet--jigger-undo-list)
-        (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id))))))
+      (if (listp buffer-undo-list)
+          (let* ((pdist (ein:worksheet--prompt-length cell))
+                 (odist (ein:worksheet--output-length cell))
+                 (sdist (ein:worksheet--saved-input-length cell))
+                 (after-ids (ein:worksheet--get-ids-after cell))
+                 (offset 0)
+                 lst wc)
+            (ein:log 'debug "shft trig=%s pdist=%s odist=%s sdist=%s" (ein:worksheet--unique-enough-cell-id cell) pdist odist sdist)
+            (ein:worksheet--jigger-undo-list)
+            ;; Deletion of a less recent undo affects a more recent undo (arrow of time)
+            ;; Since buffer-undo-list is ordered most to least recent, we must
+            ;; reverse.
+            (dolist (uc (nreverse (cl-mapcar #'cons buffer-undo-list ein:%which-cell%)))
+              (let ((u (car uc))
+                    (cell-id (or (cdr uc) "")))
+                (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
+                    (progn
+                      (setq offset (+ offset (ein:worksheet--calc-offset u)))
+                      (ein:log 'debug "shft del %s (%s) %s" u (ein:worksheet--calc-offset u) cell-id))
+                  (setq wc (nconc wc (list (cdr uc))))
+                  (if (plist-member after-ids cell-id)
+                      (progn
+                        (ein:log 'debug "shft adj %s %s" u cell-id)
+                        ;; 1 for when cell un-executed, there is still a newline
+                        (setq lst (nconc lst (list (funcall (hof-add (- (+ 1 offset pdist odist sdist))) u)))))
+                    (setq lst (nconc lst (list u)))))))
+            (setq buffer-undo-list (nreverse lst))
+            (setq ein:%which-cell% (nreverse wc))
+            (ein:worksheet--jigger-undo-list)
+            (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id)))
+        (ein:log 'debug "ein:worksheet--shift-undo-list: buffer-undo-list %s in %s"
+                 buffer-undo-list (ein:cell-buffer cell))))))
 
 
 ;;; Class and variable
@@ -309,7 +316,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
   "Binds event handlers which are not needed to be bound per instance."
   (ein:events-on events
                  'maybe_reset_undo.Worksheet
-                 (lambda (-ignore- cell)
+                 (lambda (_ignore cell)
                    (ein:worksheet--unshift-undo-list cell)))
   (ein:events-on events 'set_next_input.Worksheet
                  #'ein:worksheet--set-next-input)

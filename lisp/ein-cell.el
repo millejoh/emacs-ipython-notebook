@@ -45,7 +45,8 @@
 (declare-function mm-encode-buffer "mm-encode")
 (declare-function mm-possibly-verify-or-decrypt "mm-decode")
 (declare-function mm-dissect-singlepart "mm-decode")
-(declare-function mm-interactively-view-part "mm-decode")
+(declare-function mm-display-external "mm-decode")
+(declare-function mm-handle-media-type "mm-decode")
 
 (defun ein:cell--ewoc-delete (ewoc &rest nodes)
   "Delete NODES from EWOC."
@@ -844,7 +845,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                     " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
-  (ein:cell-append-mime-type json)
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
   (ein:insert-read-only "\n"))
 
 (cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
@@ -891,7 +892,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json)
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
   (ein:insert-read-only "\n"))
 
 (make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
@@ -903,7 +904,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
          (minor (car (nreverse (split-string minor-kw ":")))))
     (cl-subseq minor 0 (cl-search "+" minor))))
 
-(defun ein:cell-append-mime-type (json)
+(defun ein:cell-append-mime-type (json starting-p)
   (ein:output-area-case-type
    json
    (cl-case type
@@ -917,7 +918,17 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                  t)))
         (if ein:output-area-inlined-images
             (ein:insert-image image)
-          (mm-interactively-view-part (ein:make-mm-handle image)))))
+          (unless starting-p ;; don't display on ein:worksheet-render
+            (let* ((handle (ein:make-mm-handle image))
+                   (type (mm-handle-media-type handle))
+                   (method (seq-some (lambda (i) (cdr (assoc 'viewer i)))
+                                     (mailcap-mime-info type 'all))))
+              (when (and (stringp method) (string-match "^[^% \t]+$" method))
+                (setq method (concat method " %s")))
+              (if (and (stringp method) (> (length method) 0))
+                  (mm-display-external handle method)
+                (ein:log 'warn "ein:cell-append-mime-type: %s"
+                         "no viewer method found in mailcap")))))))
      (otherwise
       (ein:insert-read-only value)))))
 
