@@ -107,7 +107,6 @@
     (ein:query-singleton-ajax
      (ein:url (ein:$kernel-url-or-port kernel) "api/sessions" session-id)
      :type "GET"
-     :sync ein:force-sync
      :parser #'ein:json-read
      :complete (apply-partially #'ein:kernel-session-p--complete session-id)
      :success (apply-partially #'ein:kernel-session-p--success kernel session-id callback)
@@ -183,7 +182,6 @@ CALLBACK of arity 1, the kernel.
                                   (("name" . ,(ein:$kernelspec-name kernelspec))
                                    ,@(if kernel-id
                                          `(("id" . ,kernel-id)))))))))))
-       :sync ein:force-sync
        :parser #'ein:json-read
        :complete (apply-partially #'ein:kernel-retrieve-session--complete kernel callback)
        :success (apply-partially #'ein:kernel-retrieve-session--success kernel callback)

@@ -59,7 +59,7 @@ global setting.  For global setting and more information, see
   :group 'ein)
 
 (defcustom ein:force-sync nil
-  "If T, force ein to communicate with the IPython/Jupyter contents API synchronously. If not, use asynchronous communication. If you are seeing odd errors while using ein try setting this to T, though note that Emacs will likely be less responsive as it blocks while waiting for the IPython/Jupyter notebook server to respond"
+  "When non-nil, force synchronous http requests."
   :type 'boolean
   :group 'ein)
 
@@ -77,7 +77,8 @@ global setting.  For global setting and more information, see
                            params))))
 
 (defun ein:content-query-contents (url-or-port path callback errback &optional iteration)
-  "Register CALLBACK of arity 1 for the contents at PATH from the URL-OR-PORT.  ERRBACK of arity 1 for the contents."
+  "Register CALLBACK of arity 1 for the contents at PATH from the URL-OR-PORT.
+ERRBACK of arity 1 for the contents."
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
@@ -85,7 +86,6 @@ global setting.  For global setting and more information, see
    :type "GET"
    :timeout ein:content-query-timeout
    :parser #'ein:json-read
-   :sync ein:force-sync
    :complete (apply-partially #'ein:content-query-contents--complete url-or-port path)
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
    :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)))
@@ -377,7 +377,9 @@ global setting.  For global setting and more information, see
 ;;; Sessions
 
 (defun ein:content-query-sessions (url-or-port callback errback &optional iteration)
-  "Register CALLBACK of arity 1 to retrieve the sessions.  Call ERRBACK of arity 1 (contents) upon failure."
+  "Register CALLBACK of arity 1 to retrieve the sessions.
+Call ERRBACK of arity 1 (contents) upon failure."
+  (declare (indent defun))
   (unless iteration
     (setq iteration 0))
   (unless callback
@@ -390,8 +392,7 @@ global setting.  For global setting and more information, see
    :parser #'ein:json-read
    :complete (apply-partially #'ein:content-query-sessions--complete url-or-port callback)
    :success (apply-partially #'ein:content-query-sessions--success url-or-port callback)
-   :error (apply-partially #'ein:content-query-sessions--error url-or-port callback errback iteration)
-   :sync ein:force-sync))
+   :error (apply-partially #'ein:content-query-sessions--error url-or-port callback errback iteration)))
 
 (cl-defun ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
