@@ -167,7 +167,6 @@ the source is in git repository) or elpa version."
    :type "GET"
    :timeout ein:content-query-timeout
    :parser 'ein:json-read
-   :sync ein:force-sync
    :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port)
    :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
    :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
@@ -228,7 +227,6 @@ the source is in git repository) or elpa version."
   (ein:query-singleton-ajax
    (ein:url url-or-port "api")
    :parser #'ein:json-read
-   :sync ein:force-sync
    :complete (apply-partially #'ein:query-notebook-version--complete url-or-port callback)))
 
 (cl-defun ein:query-notebook-version--complete (url-or-port callback

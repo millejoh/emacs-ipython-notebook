@@ -119,6 +119,7 @@ aborts).  Instead you will see Race! in debug messages.
   (ein:query-enforce-curl)
   (when timeout
     (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
+  (setq settings (plist-put settings :sync ein:force-sync))
   (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
 
 (defun ein:get-response-redirect (response)

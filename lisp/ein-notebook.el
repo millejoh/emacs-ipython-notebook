@@ -233,7 +233,12 @@ combo must match exactly these url/port you used format
          (ein:url url-or-port "api/contents" path))))
 
 (defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback no-pop)
-  "In addition to CALLBACK, also clear the pending semaphore, pop-to-buffer the new notebook, save to disk the kernelspec metadata, and put last warning in minibuffer."
+  "In addition to CALLBACK,
+clear the pending semaphore,
+pop-to-buffer the new notebook,
+save to disk the kernelspec metadata,
+reload the notebooklist so that \"[Stop]\" shows up,
+and put last warning in minibuffer."
   (apply-partially
    (lambda (notebook* created callback* pending-clear* no-pop*)
      (funcall pending-clear*)
@@ -254,11 +259,13 @@ combo must match exactly these url/port you used format
              (ein:notebook-save-notebook notebook*))))
      (when callback*
        (funcall callback* notebook* created))
-     (ein:and-let* ((created)
-                    (buffer (get-buffer "*Warnings*"))
-                    (last-warning (with-current-buffer buffer
-                                    (thing-at-point 'line t))))
-       (message "%s" last-warning)))
+     (-when-let* ((created created)
+                  (buffer (get-buffer "*Warnings*"))
+                  (last-warning (with-current-buffer buffer
+                                  (thing-at-point 'line t))))
+       (message "%s" last-warning))
+     (aif (ein:notebooklist-get-buffer (ein:$notebook-url-or-port notebook*))
+         (ein:notebooklist-reload (buffer-local-value 'ein:%notebooklist% it))))
    notebook (not existing) callback pending-clear no-pop))
 
 (defun ein:notebook-open-or-create (url-or-port path &optional kernelspec callback no-pop)
