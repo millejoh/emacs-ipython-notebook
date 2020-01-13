@@ -36,6 +36,7 @@
 (require 'clojure-mode nil t)
 (require 'julia-mode nil t)
 (require 'haskell-mode nil t)
+(require 'hy-mode nil t)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
@@ -202,6 +203,19 @@ This function may raise an error."
       (set-syntax-table haskell-mode-syntax-table))
     (when (boundp 'haskell-mode-map)
       (set-keymap-parent ein:notebook-multilang-mode-map haskell-mode-map))))
+
+(defun ein:ml-lang-setup-hy ()
+  (when (featurep 'hy-mode)
+    (setq-local mode-name "EIN[hy]")
+    (setq-local comment-start "; ")
+    (setq-local comment-start-skip  ";+\\s-*")
+    (setq-local parse-sexp-lookup-properties t)
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'hy-indent-function))
+    ;; (setq-local indent-region-function
+    ;;             (apply-partially #'ein:ml-indent-region #'hy-indent-region))
+    (set-syntax-table hy-mode-syntax-table)
+    (set-keymap-parent ein:notebook-multilang-mode-map hy-mode-map)))
 
 (defun ein:ml-lang-setup (kernelspec)
   (let ((setup-func (intern (concat "ein:ml-lang-setup-" (ein:$kernelspec-language kernelspec)))))
