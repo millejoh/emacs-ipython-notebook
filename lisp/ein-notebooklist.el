@@ -244,7 +244,8 @@ See `ein:format-time-string'."
         (funcall callback (current-buffer) url-or-port))
       (ein:content-query-sessions url-or-port
         (apply-partially #'ein:notebooklist-render url-or-port restore-point)
-        #'ignore))))
+        #'ignore)
+      (current-buffer))))
 
 (cl-defun ein:notebooklist-open-error (url-or-port path
                                        &key error-thrown &allow-other-keys)
@@ -544,12 +545,9 @@ This function is called via `ein:notebook-after-rename-hook'."
              do (progn (widget-create
                         'link
                         :notify (apply-partially
-                                 (lambda (url-or-port* path* reloader* &rest _args)
-                                   (ein:notebook-open url-or-port* path* nil reloader*))
-                                 url-or-port path
-                                 (apply-partially (lambda (reloader* &rest _args)
-                                                    (funcall reloader* nil))
-                                                  reloader))
+                                 (lambda (url-or-port* path* &rest _args)
+                                   (ein:notebook-open url-or-port* path*))
+                                 url-or-port path)
                         "Open")
                        (widget-insert " ")
                        (if (gethash path sessions)

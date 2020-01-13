@@ -264,7 +264,8 @@ and put last warning in minibuffer."
                   (last-warning (with-current-buffer buffer
                                   (thing-at-point 'line t))))
        (message "%s" last-warning))
-     )
+     (aif (ein:notebooklist-get-buffer (ein:$notebook-url-or-port notebook*))
+         (ein:notebooklist-reload (buffer-local-value 'ein:%notebooklist% it))))
    notebook (not existing) callback pending-clear no-pop))
 
 (defun ein:notebook-open-or-create (url-or-port path &optional kernelspec callback no-pop)
