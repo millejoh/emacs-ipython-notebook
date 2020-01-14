@@ -350,7 +350,7 @@
                  (And "I clear log expr \"ein:log-all-buffer-name\"")
                  (Then "I ctrl-c-ctrl-c"))
                nil)))
-         nil 40000 2000)))
+         nil 80000 2000)))
 
 (When "^I wait for cell to execute$"
       (lambda ()
