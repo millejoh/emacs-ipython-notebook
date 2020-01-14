@@ -61,7 +61,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.cask
-        key: cask
+        key: cask-000
 
     - name: paths
       uses: dickmao/setup-paths@master
@@ -100,9 +100,6 @@ jobs:
     - name: cask
       run: |
         sh tools/install-cask.sh
-        curl -sLk -O https://github.com/dickmao/kubernetes-el/archive/dev.zip && unzip dev.zip
-        ( cd ./kubernetes-el-dev ; cask pkg-file )
-        cask link kubernetes ./kubernetes-el-dev
         cask link list
 
     - name: test
