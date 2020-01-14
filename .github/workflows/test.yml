@@ -58,6 +58,11 @@ jobs:
         path: ~/.emacs.d
         key: emacs.d
 
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cask
+        key: cask-000
+
     - name: paths
       uses: dickmao/setup-paths@master
       with:
