@@ -211,6 +211,7 @@ our singleton jupyter server process here."
                       (funcall #'ein:notebooklist-sentinel url-or-port* proc* event))
                     url-or-port (process-sentinel proc))))
 
+;;;###autoload
 (defun ein:jupyter-crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
   (aif (cl-loop for line in
@@ -234,6 +235,7 @@ our singleton jupyter server process here."
                 return (list password0 token0))
       it (list nil nil)))
 
+;;;###autoload
 (defun ein:jupyter-crib-running-servers ()
   "Shell out to jupyter for running servers."
   (nconc

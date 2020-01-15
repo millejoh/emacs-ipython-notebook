@@ -441,33 +441,4 @@ and content format (one of json, text, or base64)."
              (list name "file" "base64" (buffer-string)))
             (t (list name "file" "text" (buffer-string)))))))
 
-
-(defun ein:content-upload (path uploaded-file-path &optional url-or-port)
-  (multiple-value-bind (name type format contents) (ein:get-local-file uploaded-file-path)
-    (let* ((content (make-ein:$content :url-or-port (or url-or-port
-                                                        (if (atom ein:url-or-port)
-                                                            ein:url-or-port
-                                                          (car-safe ein:url-or-port)))
-                                       :name name
-                                       :path (concat path "/" name)
-                                       :raw-content contents))
-           (data (make-hash-table)))
-      (setf (gethash 'path data) path
-            (gethash 'name data) name
-            (gethash 'type data) type
-            (gethash 'format data) format
-            (gethash 'content data) contents)
-      (ein:query-singleton-ajax
-       (ein:content-url content)
-       :type "PUT"
-       :headers '(("Content-Type" . "application/json"))
-       :timeout ein:content-query-timeout
-       :data (json-encode data)
-       :success (lexical-let ((uploaded-file-path uploaded-file-path))
-                  #'(lambda (&rest _args) (message "File %s succesfully uploaded." uploaded-file-path)))
-       :error (apply-partially #'ein:content-upload-error uploaded-file-path)))))
-
-(cl-defun ein:content-upload-error (path &key symbol-status response &allow-other-keys)
-  (ein:display-warning (format "Could not upload %s. Failed with status %s" path symbol-status)))
-
 (provide 'ein-contents-api)
