@@ -58,7 +58,7 @@ test-compile: clean autoloads
 	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 
 .PHONY: quick
-quick: $(CASK) test-compile test-ob-ein-recurse test-unit test-init
+quick: $(CASK) test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile
