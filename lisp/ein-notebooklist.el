@@ -172,9 +172,9 @@ Return nil if unclear what, if any, authentication applies."
           (-distinct (mapcar #'ein:url
                              (append (when default
                                        (list default))
-                                     (if (atom ein:url-or-port)
-                                         (list ein:url-or-port)
-                                       ein:url-or-port)
+                                     (if (stringp ein:urls)
+                                         (list ein:urls)
+                                       ein:urls)
                                      (ein:jupyter-crib-running-servers)))))
          (url-or-port (let (ido-report-no-match ido-use-faces)
                         (ein:completing-read "URL or port: "
@@ -271,14 +271,6 @@ This function is called via `ein:notebook-after-rename-hook'."
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
 ;;;###autoload
-(defun ein:notebooklist-upload-file (upload-path)
-  (interactive "fSelect file to upload:")
-  (unless ein:%notebooklist%
-    (error "Only works when called from an ein:notebooklist buffer."))
-  (let ((nb-path (ein:$notebooklist-path ein:%notebooklist%)))
-    (ein:content-upload nb-path upload-path)))
-
-;;;###autoload
 (defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry)
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (ein:completing-read
@@ -333,17 +325,16 @@ This function is called via `ein:notebook-after-rename-hook'."
     (url-or-port kernelspec name &optional callback no-pop)
   "Upon notebook-open, rename the notebook, then funcall CALLBACK."
   (interactive
-   (let* ((url-or-port (or (ein:get-url-or-port)
-                           (if (atom ein:url-or-port)
-                               ein:url-or-port
-                             (car-safe ein:url-or-port))))
-          (kernelspec (ein:completing-read
-                       "Select kernel: "
-                       (ein:list-available-kernels url-or-port)
-                       nil t nil nil "default" nil))
-          (name (read-from-minibuffer
-                 (format "Notebook name (at %s): " url-or-port))))
-     (list url-or-port kernelspec name)))
+   (let ((url-or-port (ein:get-url-or-port)))
+     (unless url-or-port
+       (error "ein:notebooklist-new-notebook-with-name: no server context"))
+     (let ((kernelspec (ein:completing-read
+                        "Select kernel: "
+                        (ein:list-available-kernels url-or-port)
+                        nil t nil nil "default" nil))
+           (name (read-from-minibuffer
+                  (format "Notebook name (at %s): " url-or-port))))
+       (list url-or-port kernelspec name))))
   (unless callback
     (setq callback #'ignore))
   (add-function :before callback
@@ -632,9 +623,7 @@ add this in the Emacs initialization file::
 or even this (if you want fast Emacs start-up)::
 
   ;; load notebook list if Emacs is idle for 3 sec after start-up
-  (run-with-idle-timer 3 nil #'ein:notebooklist-load)
-
-You should setup `ein:url-or-port' in order to make this code work."
+  (run-with-idle-timer 3 nil #'ein:notebooklist-load)"
   (ein:notebooklist-open* url-or-port))
 
 ;;; Login

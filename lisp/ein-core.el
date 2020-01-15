@@ -43,7 +43,7 @@
 
 ;;; Configuration
 
-(defcustom ein:url-or-port '(8888)
+(defcustom ein:urls nil
   "List of default url-or-port values.
 This will be used for completion. So put your IPython servers.
 You can connect to servers not in this list \(but you will need
@@ -51,17 +51,8 @@ to type every time)."
   :type '(repeat (choice (integer :tag "Port number" 8888)))
   :group 'ein)
 
-(defcustom ein:default-url-or-port nil
-  "Should just be first element of `ein:url-or-port'."
-  :initialize 'custom-initialize-default
-  :set (lambda (symbol value)
-         (set-default symbol value)
-         (when value
-           (push value ein:url-or-port)))
-  :type '(choice (integer :tag "Port number" 8888))
-  :group 'ein)
-
-(make-obsolete-variable 'ein:default-url-or-port 'ein:url-or-port "0.17.0" 'set)
+(make-obsolete-variable 'ein:default-url-or-port nil "0.17.0")
+(define-obsolete-variable-alias 'ein:url-or-port 'ein:urls "0.17.0")
 
 (defcustom ein:filename-translations nil
   "Convert file paths between Emacs and Python process.
@@ -329,8 +320,7 @@ but can operate in different contexts."
   (ein:generic-getter '(ein:get-url-or-port--notebooklist
                         ein:get-url-or-port--notebook
                         ein:get-url-or-port--worksheet
-                        ein:get-url-or-port--shared-output
-                        ein:get-url-or-port--connect)))
+                        ein:get-url-or-port--shared-output)))
 
 (defsubst ein:get-notebook () ein:%notebook%)
 
