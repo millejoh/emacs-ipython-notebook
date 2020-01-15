@@ -33,7 +33,7 @@ introduced by `[gregsexton]`_.
 
 Install
 =======
-Clone this repo and ``make install``.  You will need `Cask`_.
+Clone this repo and ``make install``.
 
 Usage
 =====

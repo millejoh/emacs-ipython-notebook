@@ -81,8 +81,8 @@ test-unit:
 test-ob-ein-recurse:
 	cask eval "(progn (require 'cl) (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
 
-.PHONY: test-install
-test-install:
+.PHONY: travis-install
+travis-install:
 	mkdir -p test/test-install
 	if [ ! -s "test/test-install/$(PKBUILD).tar.gz" ] ; then \
 	  cd test/test-install ; curl -sLOk https://github.com/melpa/package-build/archive/$(PKBUILD).tar.gz ; fi
@@ -117,8 +117,29 @@ dist:
 	rm -rf dist
 	cask package
 
+.PHONY: backup-melpa
+backup-melpa:
+	$(EMACS) -Q --batch --eval "(package-initialize)" --eval \
+	  "(with-temp-buffer \
+	    (insert-file-contents-literally (car (file-expand-wildcards \"dist/ein*.tar\"))) \
+	    (tar-mode) \
+	    (let* ((my-desc (package-tar-file-info)) \
+	           (name (package-desc-name my-desc)) \
+	           (other-pkgs (cdr (assq name package-alist)))) \
+	      (when other-pkgs \
+	        (mapcar (lambda (odesc) \
+	                  (let* ((odir (package-desc-dir odesc)) \
+	                         (parent (file-name-directory odir)) \
+	                         (leaf (file-name-nondirectory odir))) \
+	                    (unless (equal (package-desc-version my-desc) \
+	                                   (package-desc-version odesc)) \
+	                      (rename-file odir \
+	                                   (expand-file-name (format \"BACKUP-%s\" leaf) parent) \
+	                                   t)))) \
+	                other-pkgs))))"
+
 .PHONY: install
-install: dist
+install: dist backup-melpa
 	$(EMACS) -Q --batch --eval "(package-initialize)" \
 	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
