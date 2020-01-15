@@ -288,14 +288,15 @@ server command."
          (let (result
                (default-dir ein:jupyter-default-notebook-directory))
            (while (or (not result) (not (file-directory-p result)))
-             (setq result (read-directory-name
-                           (format "%sNotebook directory: "
-                                   (if result
-                                       (format "[%s not a directory]" result)
-                                     ""))
-                           nil
-                           ein:jupyter-default-notebook-directory
-                           t)))
+             (setq result (expand-file-name
+                           (read-directory-name
+                            (format "%sNotebook directory: "
+                                    (if result
+                                        (format "[%s not a directory]" result)
+                                      ""))
+                            nil
+                            ein:jupyter-default-notebook-directory
+                            t))))
            result)
          nil
          (lambda (buffer url-or-port)

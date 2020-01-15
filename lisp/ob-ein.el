@@ -333,8 +333,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                     kernelspec)
            (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
              (ein:notebook-close notebook))
-           (ein:query-singleton-ajax
-            (ein:notebook-url notebook)
+           (ein:query-singleton-ajax (ein:notebook-url notebook)
             :type "DELETE")
            (cl-loop repeat 8
                     with fullpath = (concat (file-name-as-directory nbpath) path)
@@ -354,7 +353,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
              (ein:jupyter-server-start
               (executable-find (or (ein:eval-if-bound 'ein:jupyter-server-command)
                                    "jupyter"))
-              (read-directory-name "Notebook directory: " default-directory)
+              (expand-file-name (read-directory-name "Notebook directory: " default-directory))
               nil
               callback-login
               (let* ((port (url-port parsed-url))
