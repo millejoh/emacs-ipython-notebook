@@ -103,6 +103,12 @@ jobs:
         cask link list
 
     - name: test
+      if: startsWith(runner.os, 'Linux')
       run: |
         rm -rf ~/.matplotlib ~/.cache/fontconfig
         make test
+
+    - name: test-mem-constrained
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        make quick
