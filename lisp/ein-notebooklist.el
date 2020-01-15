@@ -132,9 +132,10 @@ This function adds NBLIST to `ein:notebooklist-map'."
   "Get an instance of `ein:$notebooklist' by URL-OR-PORT as a key."
   (gethash url-or-port ein:notebooklist-map))
 
-(defun ein:notebooklist-url (url-or-port version &optional path)
-  (let ((base-path (cond ((= version 2) "api/notebooks")
-                         ((>= version 3) "api/contents"))))
+(defun ein:notebooklist-url (url-or-port path)
+  (let* ((version (ein:notebook-version-numeric url-or-port))
+         (base-path (cond ((= version 2) "api/notebooks")
+                          (t "api/contents"))))
     (ein:url url-or-port base-path path)))
 
 (defun ein:notebooklist-sentinel (url-or-port process event)
@@ -280,8 +281,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                       nil t nil nil "default" nil)))
   (let* ((notebooklist (ein:notebooklist-list-get url-or-port))
          (path (ein:$notebooklist-path notebooklist))
-         (version (ein:$notebooklist-api-version notebooklist))
-         (url (ein:notebooklist-url url-or-port version path)))
+         (url (ein:notebooklist-url url-or-port path)))
     (ein:query-singleton-ajax
      url
      :type "POST"
@@ -364,8 +364,7 @@ This function is called via `ein:notebook-after-rename-hook'."
            (apply-partially
             (lambda (url* settings* _kernel)
               (apply #'ein:query-singleton-ajax url* settings*))
-            (ein:notebook-url-from-url-and-id
-             url-or-port (ein:$notebooklist-api-version notebooklist) path)
+            (ein:notebooklist-url url-or-port path)
             (list :type "DELETE"
                   :complete (apply-partially
                              #'ein:notebooklist-delete-notebook--complete

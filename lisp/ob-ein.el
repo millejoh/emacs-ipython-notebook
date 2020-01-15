@@ -333,8 +333,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
                     kernelspec)
            (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
              (ein:notebook-close notebook))
-           (ein:query-singleton-ajax
-            (ein:notebook-url notebook)
+           (ein:query-singleton-ajax (ein:notebook-url notebook)
             :type "DELETE")
            (cl-loop repeat 8
                     with fullpath = (concat (file-name-as-directory nbpath) path)

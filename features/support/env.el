@@ -71,9 +71,14 @@
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
             finally do (assert nil)))
-  (let ((stragglers (file-name-all-completions "Untitled"
-                                               ein:testing-jupyter-server-root)))
-    (should-not stragglers)))
+  (cl-loop repeat 5
+           for stragglers = (file-name-all-completions "Untitled"
+                                                       ein:testing-jupyter-server-root)
+           until (null stragglers)
+           do (message "ein:testing-after-scenario: fs stale handles: %s"
+                       (mapconcat #'identity stragglers ", "))
+           do (sleep-for 0 1000)
+           finally do (should-not stragglers)))
 
 (Setup
  (ein:dev-start-debug)

@@ -221,16 +221,9 @@ combo must match exactly these url/port you used format
 
 ;;; Open notebook
 
-(defun ein:notebook-url (notebook)
-  (ein:notebook-url-from-url-and-id (ein:$notebook-url-or-port notebook)
-                                    (ein:$notebook-api-version notebook)
-                                    (ein:$notebook-notebook-path notebook)))
-
-(defun ein:notebook-url-from-url-and-id (url-or-port api-version path)
-  (cond ((= api-version 2)
-         (ein:url url-or-port "api/notebooks" path))
-        ((>= api-version 3)
-         (ein:url url-or-port "api/contents" path))))
+(defsubst ein:notebook-url (notebook)
+  (ein:notebooklist-url (ein:$notebook-url-or-port notebook)
+                        (ein:$notebook-notebook-path notebook)))
 
 (defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback no-pop)
   "In addition to CALLBACK,
@@ -1417,20 +1410,6 @@ watch the fireworks!"
 ;; To avoid MuMaMo to discard `ein:notebook-mode', make it
 ;; permanent local.
 (put 'ein:notebook-mode 'permanent-local t)
-
-(defun ein:notebook-open-in-browser (&optional print)
-  "Open current notebook in web browser.
-When the prefix argument (``C-u``) is given, print page is opened.
-Note that print page is not supported in IPython 0.12.1."
-  (interactive "P")
-  (let ((url (apply #'ein:url
-                    (ein:$notebook-url-or-port ein:%notebook%)
-                    (if (>= (ein:$notebook-api-version ein:%notebook%) 3)
-                        "notebooks")
-                    (ein:$notebook-notebook-path ein:%notebook%)
-                    (if print (list "print")))))
-    (message "Opening %s in browser" url)
-    (browse-url url)))
 
 (defun ein:notebook-fetch-data (notebook callback &optional cbargs)
   "Fetch data in body tag of NOTEBOOK html page.

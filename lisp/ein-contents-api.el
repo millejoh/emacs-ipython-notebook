@@ -63,26 +63,13 @@ global setting.  For global setting and more information, see
   :type 'boolean
   :group 'ein)
 
-(defun ein:content-url (content &rest params)
-  (apply #'ein:content-url* (ein:$content-url-or-port content) (ein:$content-path content) params))
-
-(defun ein:content-url* (url-or-port path &rest params)
-  (let* ((which (if (< (ein:notebook-version-numeric url-or-port) 3)
-                    "notebooks" "contents"))
-         (api-path (concat "api/" which)))
-    (url-encode-url (apply #'ein:url
-                           url-or-port
-                           api-path
-                           path
-                           params))))
-
 (defun ein:content-query-contents (url-or-port path callback errback &optional iteration)
   "Register CALLBACK of arity 1 for the contents at PATH from the URL-OR-PORT.
 ERRBACK of arity 1 for the contents."
   (unless iteration
     (setq iteration 0))
   (ein:query-singleton-ajax
-   (ein:content-url* url-or-port path)
+   (ein:notebooklist-url url-or-port path)
    :type "GET"
    :timeout ein:content-query-timeout
    :parser #'ein:json-read
@@ -276,7 +263,7 @@ ERRBACK of arity 1 for the contents."
                          (when callback* (funcall callback* nil)))))
                     url-or-port callback)
    callback))
-
+
 ;;; Save Content
 
 (defun ein:content-save-legacy (content &optional callback cbargs errcb errcbargs)
@@ -287,7 +274,13 @@ ERRBACK of arity 1 for the contents."
    :timeout ein:content-query-timeout
    :data (ein:content-to-json content)
    :success (apply-partially #'ein:content-save-success callback cbargs)
-   :error (apply-partially #'ein:content-save-error (ein:content-url content) errcb errcbargs)))
+   :error (apply-partially #'ein:content-save-error
+                           (ein:content-url content)
+                           errcb errcbargs)))
+
+(defsubst ein:content-url (content)
+  (ein:notebooklist-url (ein:$content-url-or-port content)
+                        (ein:$content-path content)))
 
 (defun ein:content-save (content &optional callback cbargs errcb errcbargs)
   (if (>= (ein:$content-notebook-version content) 3)
