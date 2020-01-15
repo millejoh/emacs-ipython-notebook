@@ -1,6 +1,10 @@
 export EMACS ?= $(shell which emacs)
-CASK_DIR := $(shell EMACS=$(EMACS) cask package-directory)
-SRC=$(shell cask files)
+export CASK := $(shell which cask)
+ifeq ($(CASK),)
+$(error Please install CASK at https://cask.readthedocs.io/en/latest/guide/installation.html)
+endif
+CASK_DIR := $(shell EMACS=$(EMACS) cask package-directory || exit 1)
+SRC=$(shell $(CASK) files)
 PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
 ifeq ($(TRAVIS_PULL_REQUEST_SLUG),)
@@ -18,7 +22,7 @@ endif
 .DEFAULT_GOAL := test-compile
 
 README.rst: README.in.rst lisp/ein.el
-	cask eval "(progn \
+	$(CASK) eval "(progn \
 	             (add-to-list 'load-path \"./lisp\") \
 	             (load \"ein-notebook\") \
 	             (describe-minor-mode \"ein:notebook-mode\") \
@@ -37,52 +41,48 @@ autoloads:
 
 .PHONY: clean
 clean:
-	cask clean-elc
+	$(CASK) clean-elc
 	rm -rf test/test-install
 	rm -rf log
 	rm -f features/Untitled*.ipynb
 	rm -f features/Renamed.ipynb
 	rm -f test/Untitled*.ipynb
 
-.PHONY: dist-clean
-dist-clean: clean
-	rm -rf dist
-
 .PHONY: cask
 cask: $(CASK_DIR)
 $(CASK_DIR): Cask
-	cask install
+	$(CASK) install
 
 .PHONY: test-compile
 test-compile: clean autoloads
-	! (cask eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; cask clean-elc && exit $$ret)
+	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 
 .PHONY: quick
-quick: cask test-compile test-ob-ein-recurse test-unit
+quick: $(CASK) test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile
 # jupyterhub slightly temperamental with json-readtable-error
 # seems to be affecting ob-ipython too but probably my bug.. just need to find it
-	-cask exec ecukes --tags @jupyterhub --reporter magnars
+	-$(CASK) exec ecukes --tags @jupyterhub --reporter magnars
 
 .PHONY: test
 test: quick test-int
 
 .PHONY: test-int
 test-int:
-	cask exec ecukes --reporter magnars
+	$(CASK) exec ecukes --reporter magnars
 
 .PHONY: test-unit
 test-unit:
-	cask exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
+	$(CASK) exec ert-runner -L ./lisp -L ./test -l test/testein.el test/test-ein*.el
 
 .PHONY: test-ob-ein-recurse
 test-ob-ein-recurse:
-	cask eval "(progn (require 'cl) (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
+	$(CASK) eval "(progn (require 'cl) (custom-set-variables (quote (org-babel-load-languages (quote ((emacs-lisp . t) (ein . t)))))) (org-version))"
 
-.PHONY: test-install
-test-install:
+.PHONY: travis-install
+travis-install:
 	mkdir -p test/test-install
 	if [ ! -s "test/test-install/$(PKBUILD).tar.gz" ] ; then \
 	  cd test/test-install ; curl -sLOk https://github.com/melpa/package-build/archive/$(PKBUILD).tar.gz ; fi
@@ -112,13 +112,38 @@ test-install:
 	--eval "(package-install-file (car (file-expand-wildcards (concat package-build-archive-dir \"ein*.tar\"))))" 2>&1 | tee /tmp/test-install.out
 	! ( egrep -a "Error: " /tmp/test-install.out )
 
-.PHONY: dist
-dist:
+.PHONY: dist-clean
+dist-clean:
 	rm -rf dist
-	cask package
+
+.PHONY: dist
+dist: dist-clean
+	$(CASK) package
+
+.PHONY: backup-melpa
+backup-melpa:
+	$(EMACS) -Q --batch --eval "(package-initialize)" --eval \
+	  "(with-temp-buffer \
+	    (insert-file-contents-literally (car (file-expand-wildcards \"dist/ein*.tar\"))) \
+	    (tar-mode) \
+	    (let* ((my-desc (package-tar-file-info)) \
+	           (name (package-desc-name my-desc)) \
+	           (other-pkgs (cdr (assq name package-alist)))) \
+	      (when other-pkgs \
+	        (mapcar (lambda (odesc) \
+	                  (let* ((odir (package-desc-dir odesc)) \
+	                         (parent (file-name-directory odir)) \
+	                         (leaf (file-name-nondirectory odir))) \
+	                    (if (equal (package-desc-version my-desc) \
+	                               (package-desc-version odesc)) \
+	                        (delete-directory odir t) \
+	                      (rename-file odir \
+	                                   (expand-file-name (format \"BACKUP-%s\" leaf) parent) \
+	                                   t)))) \
+	                other-pkgs))))"
 
 .PHONY: install
-install: dist
+install: dist backup-melpa
 	$(EMACS) -Q --batch --eval "(package-initialize)" \
 	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
