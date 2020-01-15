@@ -353,7 +353,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
              (ein:jupyter-server-start
               (executable-find (or (ein:eval-if-bound 'ein:jupyter-server-command)
                                    "jupyter"))
-              (expand-file-name (read-directory-name "Notebook directory: " default-directory))
+              (read-directory-name "Notebook directory: " default-directory)
               nil
               callback-login
               (let* ((port (url-port parsed-url))

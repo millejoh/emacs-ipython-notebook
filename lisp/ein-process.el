@@ -177,14 +177,14 @@
           (if (ein:notebooklist-list-get url-or-port)
               (ein:notebook-open url-or-port path nil callback)
             (ein:notebooklist-login url-or-port callback2)))
-      (let* ((nbdir (expand-file-name
-                     (read-directory-name "Notebook directory: "
-                                          (ein:process-suitable-notebook-dir filename))))
+      (let* ((nbdir (read-directory-name "Notebook directory: "
+                                         (ein:process-suitable-notebook-dir filename)))
              (path
               (concat (if ein:jupyter-use-containers
                           (file-name-as-directory (file-name-base ein:jupyter-docker-mount-point))
                         "")
-                      (cl-subseq filename (length (file-name-as-directory nbdir)))))
+                      (cl-subseq (expand-file-name filename)
+                                 (length (file-name-as-directory (expand-file-name nbdir))))))
              (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
                                            (pop-to-buffer buffer)
                                            (ein:notebook-open url-or-port
