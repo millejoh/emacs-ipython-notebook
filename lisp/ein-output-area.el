@@ -29,8 +29,8 @@
 (require 'xml)
 (require 'ein-core)
 
-(defcustom ein:output-area-inlined-images t
-  "Turn off to spawn external image viewers."
+(defcustom ein:output-area-inlined-images nil
+  "Turn on to insert images into buffer.  Default spawns external viewer."
   :type 'boolean
   :group 'ein)
 
