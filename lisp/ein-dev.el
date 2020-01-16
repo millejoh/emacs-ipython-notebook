@@ -26,7 +26,6 @@
 ;;; Code:
 
 (declare-function rst-shift-region "rst")
-(declare-function markdown-mode "markdown-mode")
 
 (require 'ein-notebook)
 
@@ -270,7 +269,6 @@ callback (`websocket-callback-debug-on-error') is enabled."
         (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
       (insert "```\n")
       (goto-char (point-min))
-      (markdown-mode)
       (pop-to-buffer buffer))))
 
 (defun ein:dev-print-sys-info (&optional stream)

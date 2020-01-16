@@ -94,8 +94,7 @@ In \\[111\\]:
 some input
 %s" regexp)))))
 
-(defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data
-  (name regexps outputs)
+(defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data (name regexps outputs)
   (declare (indent defun))
   (let ((test-pyout
          (intern (format "ein:cell-insert-output-pyout-%s" name)))

@@ -7,7 +7,6 @@
     (request "20191211.0")
     (deferred "0.5")
     (polymode "20190426.1729")
-    (markdown-mode "20171116.756")
     (kubernetes "20200114.0")
     (dash "2.13.0")
     (s "1.11.0")))

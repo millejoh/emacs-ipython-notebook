@@ -4,10 +4,10 @@
 (require 'ein-output-area)
 
 (defun ein:testing-insert-html--fix-urls-do-test (source desired)
-  (setq source (ein:xml-parse-html-string source))
-  (setq desired (ein:xml-parse-html-string desired))
-  (ein:insert-html--fix-urls source 8888)
-  (should (equal source desired)))
+  (let ((s (ein:xml-parse-html-string source))
+        (d (ein:xml-parse-html-string desired)))
+    (ein:insert-html--fix-urls s 8888)
+    (should (equal s d))))
 
 (defmacro ein:testing-insert-html--fix-urls-deftests (args-list)
   `(progn
