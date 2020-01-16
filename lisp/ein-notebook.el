@@ -548,23 +548,6 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-set-buffer-file-name-maybe (notebook)
   (ein:log 'warn "This function is deprecated. Who could be calling me?"))
 
-;; (defun ein:notebook-set-buffer-file-name-maybe (notebook)
-;;   "Set `buffer-file-name' of the current buffer to ipynb file
-;; of NOTEBOOK."
-;;   (when ein:notebook-set-buffer-file-name
-;;     (ein:notebook-fetch-data
-;;      notebook
-;;      (lambda (data notebook buffer)
-;;        (with-current-buffer buffer
-;;          (destructuring-bind (&key project &allow-other-keys)
-;;              data
-;;            (setq buffer-file-name
-;;                  (expand-file-name
-;;                   (format "%s.ipynb"
-;;                           (ein:$notebook-notebook-name notebook))
-;;                   project)))))
-;;      (list notebook (current-buffer)))))
-
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
                             &allow-other-keys)
