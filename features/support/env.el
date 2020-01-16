@@ -6,7 +6,6 @@
 (require 'python)
 (require 'julia-mode)
 (require 'ess-r-mode)
-(require 'markdown-mode)
 
 (let* ((support-path (f-dirname load-file-name))
        (root-path (f-parent (f-parent support-path))))

@@ -9,7 +9,6 @@
 (require 'ein-cell)
 (require 'ein-testing-cell)
 
-
 ;;; ein:cell-from-json
 
 (defun eintest:cell-from-json (data &rest args)

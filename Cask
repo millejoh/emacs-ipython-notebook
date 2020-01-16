@@ -17,7 +17,6 @@
  (depends-on "deferred")
  (depends-on "company")
  (depends-on "polymode")
- (depends-on "markdown-mode")
  (depends-on "julia-mode")
  (depends-on "undo-tree")
  (depends-on "ess")

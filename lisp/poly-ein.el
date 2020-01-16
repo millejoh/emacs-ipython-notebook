@@ -13,15 +13,16 @@
 (defsubst poly-ein--neuter-markdown-mode ()
   "Consolidate fragility here."
   (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
+    ;; move `ein:notebook-mode' to the head of `minor-mode-map-alist'
     (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
       (setf minor-mode-map-alist
             (cons entry
                   (assq-delete-all 'ein:notebook-mode minor-mode-map-alist)))))
-  (when (eq major-mode 'markdown-mode)
-    (poly-ein--remove-hook "markdown" after-change-functions)
-    (poly-ein--remove-hook "markdown" jit-lock-after-change-extend-region-functions)
-    (poly-ein--remove-hook "markdown" window-configuration-change-hook)
-    (poly-ein--remove-hook "markdown" syntax-propertize-extend-region-functions)))
+  (when (eq major-mode 'ein:markdown-mode)
+    (poly-ein--remove-hook "ein:markdown" after-change-functions)
+    (poly-ein--remove-hook "ein:markdown" jit-lock-after-change-extend-region-functions)
+    (poly-ein--remove-hook "ein:markdown" window-configuration-change-hook)
+    (poly-ein--remove-hook "ein:markdown" syntax-propertize-extend-region-functions)))
 
 (defun poly-ein--narrow-to-inner (modifier f &rest args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
@@ -126,11 +127,6 @@
   (add-function :filter-args (symbol-function 'jit-lock-after-change)
                 #'poly-ein--span-start-end)
 
-  (if (fboundp 'markdown-unfontify-region-wiki-links)
-      (fset 'markdown-unfontify-region-wiki-links #'ignore)
-    (with-eval-after-load "markdown-mode"
-      (fset 'markdown-unfontify-region-wiki-links #'ignore)))
-
   (add-function :before-until
                 (symbol-function 'pm--synchronize-points)
                 (lambda (&rest args) poly-ein-mode)))
@@ -172,7 +168,7 @@ TYPE can be 'body, nil."
                                        (error-message-string err))
                               "python")))
                     (what (cond ((ein:codecell-p cell) lang)
-                                ((ein:markdowncell-p cell) "markdown")
+                                ((ein:markdowncell-p cell) "ein:markdown")
                                 (t "fundamental")))
                     (mode (pm-get-mode-symbol-from-name what))
                     (_ (not (equal mode (ein:oref-safe cm 'mode)))))
@@ -297,7 +293,8 @@ TYPE can be 'body, nil."
              (buffer-live-p src-buf)
              (buffer-live-p dest-buf))
     (cl-destructuring-bind (point window-start region-begin pos-visible _)
-        (with-current-buffer src-buf (list (point) (window-start)
+        (with-current-buffer src-buf (list (point)
+                                           (window-start)
                                            (and switch (region-active-p) (mark))
                                            (pos-visible-in-window-p)
                                            (when switch (deactivate-mark))))

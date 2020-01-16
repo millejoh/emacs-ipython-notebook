@@ -60,10 +60,14 @@ Draw boundaries for table (default)::
   "Parse HTML-STRING and return a dom object which
 can be handled by the xml module."
   (with-temp-buffer
-    (erase-buffer)
     (insert html-string)
-    (if (fboundp 'libxml-parse-html-region)
-        (libxml-parse-html-region (point-min) (point-max)))))
+    (when (fboundp 'libxml-parse-html-region)
+      (cl-loop with result
+               repeat 3
+               do (setq result
+                        (libxml-parse-html-region (point-min) (point-max)))
+               until result
+               finally return result))))
 
 (defalias 'ein:xml-node-p 'listp)
 
