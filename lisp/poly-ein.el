@@ -71,15 +71,15 @@
          (save-excursion
            (with-silent-modifications
              (let ((parse-sexp-lookup-properties t)
-                   (start (point-min))
+                   (start (point-min)) ;; i've narrowed in the :around
                    (end (point-max)))
-               ;; (dolist (fun syntax-propertize-extend-region-functions)
-               ;;   (ein:and-let* ((new (funcall fun start end)))
-               ;;     (setq start (min start (car new)))
-               ;;     (setq end (max end (cdr new)))))
                (setq syntax-propertize--done end)
+
                (remove-text-properties start end
                                        '(syntax-table nil syntax-multiline nil))
+
+               (message "syntax-propertizing from %s to %s" start end)
+
                ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
                (when syntax-propertize-function
                  (let ((syntax-propertize--done most-positive-fixnum))
@@ -160,18 +160,18 @@ TYPE can be 'body, nil."
          (cell (ein:worksheet-get-current-cell :pos pos :noerror nil)))
      ;; Change :mode if necessary
      (-when-let* ((lang
-                     (condition-case err
-                         (ein:$kernelspec-language
-                          (ein:$notebook-kernelspec
-                           (ein:get-notebook)))
-                       (error (message "%s: defaulting language to python"
-                                       (error-message-string err))
-                              "python")))
-                    (what (cond ((ein:codecell-p cell) lang)
-                                ((ein:markdowncell-p cell) "ein:markdown")
-                                (t "fundamental")))
-                    (mode (pm-get-mode-symbol-from-name what))
-                    (_ (not (equal mode (ein:oref-safe cm 'mode)))))
+                   (condition-case err
+                       (ein:$kernelspec-language
+                        (ein:$notebook-kernelspec
+                         (ein:get-notebook)))
+                     (error (message "%s: defaulting language to python"
+                                     (error-message-string err))
+                            "python")))
+                  (what (cond ((ein:codecell-p cell) lang)
+                              ((ein:markdowncell-p cell) "ein:markdown")
+                              (t "fundamental")))
+                  (mode (pm-get-mode-symbol-from-name what))
+                  (_ (not (equal mode (ein:oref-safe cm 'mode)))))
        (when (eq mode 'poly-fallback-mode)
          (ein:display-warning
           (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
@@ -189,7 +189,13 @@ TYPE can be 'body, nil."
        (cond ((zerop rel)
               (setq span `(body
                            ,(ein:cell-input-pos-min cell)
-                           ,(1+ (ein:cell-input-pos-max cell)))))
+                           ,(1+ (ein:cell-input-pos-max cell))))
+              ;; thought about putting this in `ein:cell-init' but
+              ;; prefer all syntax-ppss-related stuff to be here
+              (let ((beg (nth 1 span))
+                    (end (1- (nth 2 span))))
+                (unless (text-property-any beg end 'syntax-multiline t)
+                  (add-text-properties beg end '(syntax-multiline t front-sticky (syntax-multiline))))))
              ((< rel 0)
               (setq span `(nil
                            ,(or (ein:aand (ein:cell-prev cell)
@@ -232,6 +238,7 @@ TYPE can be 'body, nil."
 
 (defun poly-ein-undo-damage (type)
   (remove-hook 'after-change-functions 'polymode-flush-syntax-ppss-cache t)
+  (remove-hook 'syntax-propertize-extend-region-functions #'polymode-syntax-propertize-extend-region-in-host t)
   (add-hook 'jit-lock-after-change-extend-region-functions #'poly-ein--hem-jit-lock t t)
   (setq jit-lock-contextually nil) ; else recenter font-lock-fontify-keywords-region
   (setq jit-lock-context-unfontify-pos nil)
@@ -239,6 +246,8 @@ TYPE can be 'body, nil."
       (setq syntax-propertize-function nil)
     (aif pm--syntax-propertize-function-original
         (progn
+          (add-hook 'syntax-propertize-extend-region-functions
+                    #'syntax-propertize-multiline 'append 'local)
           (setq syntax-propertize-function it)
           (add-function :before-until (local 'syntax-propertize-function)
                         #'poly-ein--unrelated-span)
@@ -246,6 +255,8 @@ TYPE can be 'body, nil."
                         #'poly-ein--span-start-end)))))
 
 (defun poly-ein-init-input-cell (_type)
+  "Contrary to intuition, this inits the entire buffer of input cells
+(collectively denoted by the chunkmode pm-inner/ein-input-cell), not each individual one."
   (mapc (lambda (f) (add-to-list 'after-change-functions f))
         (buffer-local-value 'after-change-functions (pm-base-buffer)))
   (poly-ein-copy-state (pm-base-buffer) (current-buffer))

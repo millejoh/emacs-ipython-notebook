@@ -1059,66 +1059,6 @@ cell bellow."
   (mapc #'ein:cell-execute
         (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
-(defun ein:worksheet-insert-last-input-history (ws cell index)
-  "Insert INDEX-th previous history into CELL in worksheet WS."
-  (ein:kernel-history-request
-   (slot-value ws 'kernel)
-   (list
-    :history_reply
-    (cons
-     (lambda (cell content -metadata-not-used-)
-       (destructuring-bind (session line-number input)
-           (car (plist-get content :history))
-         (if (eq (ein:worksheet-get-current-cell) cell)
-             (ein:cell-set-text cell input)
-           (ein:log 'warning
-             "Cursor moved from the cell after history request."))
-         (ein:log 'info "Input history inserted: session:%d line:%d"
-                  session line-number)))
-     cell))
-   :hist-access-type "range"
-   :session 0
-   :start (- index)
-   :stop (- 1 index)))
-
-(defvar ein:worksheet--history-index 1)
-
-(defun ein:worksheet--get-history-index (inc)
-  "Increment history index by (possibly negative) INC.
-Get history index for `ein:worksheet-previous-input-history' and
-`ein:worksheet-next-input-history'.  Raise error if caller tries
-to decrement index to less than or equal to 1."
-  (if (or (eq last-command 'ein:worksheet-previous-input-history)
-          (eq last-command 'ein:worksheet-next-input-history))
-      (progn
-        (setq ein:worksheet--history-index
-              (+ ein:worksheet--history-index inc))
-        (when (< ein:worksheet--history-index 1)
-          (setq ein:worksheet--history-index 1)
-          (warn "This is the latest input"))
-        ein:worksheet--history-index)
-    (setq ein:worksheet--history-index 1)))
-
-(defun ein:worksheet-previous-input-history (ws cell index)
-  "Insert the previous input in the execution history.
-You can go back further in the history by repeating this command.
-Use `ein:worksheet-next-input-history' to go forward in the
-history."
-  (interactive (list (ein:worksheet--get-ws-or-error)
-                     (ein:worksheet-get-current-cell)
-                     (ein:worksheet--get-history-index +1)))
-  (ein:worksheet-insert-last-input-history ws cell index))
-
-(defun ein:worksheet-next-input-history (ws cell index)
-  "Insert next input in the execution history.
-You can go forward further in the history by repeating this
-command.  Use `ein:worksheet-previous-input-history' to go back
-in the history."
-  (interactive (list (ein:worksheet--get-ws-or-error)
-                     (ein:worksheet-get-current-cell)
-                     (ein:worksheet--get-history-index -1)))
-  (ein:worksheet-insert-last-input-history ws cell index))
-
 ;;; Metadata
 
 (defun ein:worksheet-rename-sheet (ws name)
