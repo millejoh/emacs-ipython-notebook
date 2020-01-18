@@ -61,7 +61,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.cask
-        key: cask-000
+        key: cask-001
 
     - name: paths
       uses: dickmao/setup-paths@master
