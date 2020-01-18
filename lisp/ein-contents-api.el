@@ -266,38 +266,21 @@ ERRBACK of arity 1 for the contents."
 
 ;;; Save Content
 
-(defun ein:content-save-legacy (content &optional callback cbargs errcb errcbargs)
-  (ein:query-singleton-ajax
-   (ein:content-url content)
-   :type "PUT"
-   :headers '(("Content-Type" . "application/json"))
-   :timeout ein:content-query-timeout
-   :data (ein:content-to-json content)
-   :success (apply-partially #'ein:content-save-success callback cbargs)
-   :error (apply-partially #'ein:content-save-error
-                           (ein:content-url content)
-                           errcb errcbargs)))
-
 (defsubst ein:content-url (content)
   (ein:notebooklist-url (ein:$content-url-or-port content)
                         (ein:$content-path content)))
 
 (defun ein:content-save (content &optional callback cbargs errcb errcbargs)
-  (if (>= (ein:$content-notebook-version content) 3)
-      (ein:query-singleton-ajax
-       (ein:content-url content)
-       :type "PUT"
-       :headers '(("Content-Type" . "application/json"))
-       :timeout ein:content-query-timeout
-       :data (encode-coding-string (ein:content-to-json content)
-                                   buffer-file-coding-system)
-       :success (apply-partially #'ein:content-save-success callback cbargs)
-       :error (apply-partially #'ein:content-save-error
-                               (ein:content-url content) errcb errcbargs))
-    (ein:content-save-legacy content callback cbargs)))
+  (ein:query-singleton-ajax
+   (ein:content-url content)
+   :type "PUT"
+   :headers '(("Content-Type" . "application/json"))
+   :data (encode-coding-string (ein:content-to-json content) buffer-file-coding-system)
+   :success (apply-partially #'ein:content-save-success callback cbargs)
+   :error (apply-partially #'ein:content-save-error
+                           (ein:content-url content) errcb errcbargs)))
 
 (cl-defun ein:content-save-success (callback cbargs &key status response &allow-other-keys)
-  ;;(ein:log 'verbose "Saving content successful with status %s" status)
   (when callback
     (apply callback cbargs)))
 
@@ -307,10 +290,6 @@ ERRBACK of arity 1 for the contents."
     url (request-response-error-thrown response) (plist-get data :message))
   (when errcb
     (apply errcb errcbargs)))
-
-
-;;; Rename Content
-
 
 (defun ein:content-legacy-rename (content new-path callback cbargs)
   (let ((path (substring new-path 0 (or (cl-position ?/ new-path :from-end t) 0)))

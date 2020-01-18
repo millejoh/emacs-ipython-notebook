@@ -782,14 +782,12 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (if (and (ein:notebook-modified-p notebook)
            (not (ob-ein-anonymous-p (ein:$notebook-notebook-path notebook))))
       (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
-          (lexical-let ((success-positive 0))
-            (add-function :before callback0 (lambda () (setq success-positive 1)))
-            (ein:notebook-save-notebook notebook callback0 nil
-                                        (lambda () (setq success-positive -1)))
-            (cl-loop repeat 10
-                  until (not (zerop success-positive))
-                  do (sleep-for 0 200)
-                  finally return (> success-positive 0)))
+          (let ((ein:force-sync t))
+            (lexical-let ((success-positive 0))
+              (add-function :before callback0 (lambda (&rest _args) (setq success-positive 1)))
+              (ein:notebook-save-notebook notebook callback0 nil
+                                          (lambda (&rest _args) (setq success-positive -1)))
+              (> success-positive 0)))
         (when (ein:worksheet-p ein:%worksheet%)
           (ein:worksheet-dont-save-cells ein:%worksheet%)) ;; TODO de-obfuscate
         (funcall callback0)
@@ -799,8 +797,8 @@ NAME is any non-empty string that does not contain '/' or '\\'.
 
 (defun ein:notebook-close (notebook &optional callback &rest cbargs)
   (interactive (list (ein:notebook--get-nb-or-error)))
-  (lexical-let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
-                 (callback0 (apply-partially #'ein:notebook-kill-buffers notebook)))
+  (let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
+         (callback0 (apply-partially #'ein:notebook-kill-buffers notebook)))
     (when callback
       (add-function :after callback0
                     (apply #'apply-partially callback cbargs)))
@@ -1227,8 +1225,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
-  (ein:notebook--define-key map "\M-p"          ein:worksheet-previous-input-history)
-  (ein:notebook--define-key map "\M-n"          ein:worksheet-next-input-history)
   (ein:notebook--define-key map (kbd "C-c C-/") ein:notebook-scratchsheet-open)
   ;; Worksheets
   (ein:notebook--define-key map (kbd "C-c !")     ein:worksheet-rename-sheet)
@@ -1312,11 +1308,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
              ein:pytools-request-tooltip-or-help)
             ("Jump to definition" ein:pytools-jump-to-source-command)
             ("Go back to the previous jump point"
-             ein:pytools-jump-back-command)
-            ("Previous input history"
-             ein:worksheet-previous-input-history)
-            ("Next input history"
-             ein:worksheet-next-input-history))))
+             ein:pytools-jump-back-command))))
       ("Kernel"
        ,@(ein:generate-menu
           '(("Restart session" ein:notebook-restart-session-command)
