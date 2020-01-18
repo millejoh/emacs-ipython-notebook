@@ -30,7 +30,8 @@
     (save-restriction
       (widen)
       (let ((range (pm-innermost-range
-                    (or (aif (car args) (max (funcall modifier it) (point-min)))
+                    (or (if (numberp (car args))
+                            (max (funcall modifier (car args)) (point-min)))
                         (point)))))
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))
@@ -244,7 +245,9 @@ TYPE can be 'body, nil."
           (add-function :before-until (local 'syntax-propertize-function)
                         #'poly-ein--unrelated-span)
           (add-function :filter-args (local 'syntax-propertize-function)
-                        #'poly-ein--span-start-end)))))
+                        #'poly-ein--span-start-end)))
+    (add-function :around (local 'font-lock-syntactic-face-function)
+                  (apply-partially #'poly-ein--narrow-to-inner #'identity))))
 
 (defun poly-ein-init-input-cell (_type)
   "Contrary to intuition, this inits the entire buffer of input cells
