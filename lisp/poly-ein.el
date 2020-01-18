@@ -30,7 +30,7 @@
     (save-restriction
       (widen)
       (let ((range (pm-innermost-range
-                    (or (when (car args) (max (point-min) (funcall modifier (car args))))
+                    (or (aif (car args) (max (funcall modifier it) (point-min)))
                         (point)))))
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))
@@ -69,29 +69,28 @@
      (prog1 poly-ein-mode
        (when (and poly-ein-mode (< syntax-propertize--done pos))
          (save-excursion
+           ;; pared down from default `syntax-propertize'
            (with-silent-modifications
              (let ((parse-sexp-lookup-properties t)
                    (start (point-min)) ;; i've narrowed in the :around
-                   (end (point-max)))
+                   (end (point-max))
+                   (span (pm-innermost-span pos)))
                (setq syntax-propertize--done end)
-
-               (remove-text-properties start end
-                                       '(syntax-table nil syntax-multiline nil))
-
-               (message "syntax-propertizing from %s to %s" start end)
-
-               ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
-               (when syntax-propertize-function
-                 (let ((syntax-propertize--done most-positive-fixnum))
-                   (funcall syntax-propertize-function start end))))))))))
+               (when (eq 'body (nth 0 span))
+                 (remove-text-properties start end
+                                         '(syntax-table nil syntax-multiline nil))
+                 ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
+                 (when syntax-propertize-function
+                   (let ((syntax-propertize--done most-positive-fixnum))
+                     (funcall syntax-propertize-function start end)))))))))))
 
   (add-function
    :around (symbol-function 'syntax-propertize)
-   (apply-partially #'poly-ein--narrow-to-inner #'1-))
+   (apply-partially #'poly-ein--narrow-to-inner #'identity))
 
   (add-function
    :around (symbol-function 'syntax-ppss)
-   (apply-partially #'poly-ein--narrow-to-inner #'1-))
+   (apply-partially #'poly-ein--narrow-to-inner #'identity))
 
   (add-function
    :around (symbol-function 'pm--mode-setup)
@@ -189,13 +188,7 @@ TYPE can be 'body, nil."
        (cond ((zerop rel)
               (setq span `(body
                            ,(ein:cell-input-pos-min cell)
-                           ,(1+ (ein:cell-input-pos-max cell))))
-              ;; thought about putting this in `ein:cell-init' but
-              ;; prefer all syntax-ppss-related stuff to be here
-              (let ((beg (nth 1 span))
-                    (end (1- (nth 2 span))))
-                (unless (text-property-any beg end 'syntax-multiline t)
-                  (add-text-properties beg end '(syntax-multiline t front-sticky (syntax-multiline))))))
+                           ,(1+ (ein:cell-input-pos-max cell)))))
              ((< rel 0)
               (setq span `(nil
                            ,(or (ein:aand (ein:cell-prev cell)
@@ -237,8 +230,9 @@ TYPE can be 'body, nil."
       (setq jit-lock-end (min jit-lock-end (cdr range))))))
 
 (defun poly-ein-undo-damage (type)
-  (remove-hook 'after-change-functions 'polymode-flush-syntax-ppss-cache t)
-  (remove-hook 'syntax-propertize-extend-region-functions #'polymode-syntax-propertize-extend-region-in-host t)
+  (poly-ein--remove-hook "polymode" after-change-functions)
+  (poly-ein--remove-hook "polymode" syntax-propertize-extend-region-functions)
+
   (add-hook 'jit-lock-after-change-extend-region-functions #'poly-ein--hem-jit-lock t t)
   (setq jit-lock-contextually nil) ; else recenter font-lock-fontify-keywords-region
   (setq jit-lock-context-unfontify-pos nil)
@@ -246,8 +240,6 @@ TYPE can be 'body, nil."
       (setq syntax-propertize-function nil)
     (aif pm--syntax-propertize-function-original
         (progn
-          (add-hook 'syntax-propertize-extend-region-functions
-                    #'syntax-propertize-multiline 'append 'local)
           (setq syntax-propertize-function it)
           (add-function :before-until (local 'syntax-propertize-function)
                         #'poly-ein--unrelated-span)
@@ -260,6 +252,7 @@ TYPE can be 'body, nil."
   (mapc (lambda (f) (add-to-list 'after-change-functions f))
         (buffer-local-value 'after-change-functions (pm-base-buffer)))
   (poly-ein-copy-state (pm-base-buffer) (current-buffer))
+  (setq-local font-lock-dont-widen t)
   (ein:notebook-mode))
 
 (defcustom pm-host/ein
