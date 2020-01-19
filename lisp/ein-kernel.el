@@ -558,9 +558,8 @@ Example::
        :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
        :error (apply-partially #'ein:kernel-delete-session--error session-id callback)
        :success (apply-partially #'ein:kernel-delete-session--success session-id
-                                 (buffer-local-value
-                                  'ein:%notebooklist%
-                                  (ein:notebooklist-get-buffer url-or-port))
+                                 (aif (ein:notebooklist-get-buffer url-or-port)
+                                     (buffer-local-value 'ein:%notebooklist% it))
                                  callback))
     (ein:log 'verbose "ein:kernel-delete-session: no sessions found for %s" path)
     (when callback
@@ -576,7 +575,8 @@ Example::
                                               &key data symbol-status response
                                               &allow-other-keys)
   (ein:log 'verbose "ein:kernel-delete-session--success: %s deleted" session-id)
-  (ein:notebooklist-reload nblist))
+  (when nblist
+    (ein:notebooklist-reload nblist)))
 
 (cl-defun ein:kernel-delete-session--complete (kernel session-id callback
                                                &key data response
