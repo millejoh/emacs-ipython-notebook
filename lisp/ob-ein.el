@@ -58,6 +58,7 @@
 (autoload 'ein:kernel-live-p "ein-kernel")
 (autoload 'ein:query-singleton-ajax "ein-query")
 (autoload 'ein:output-area-case-type "ein-output-area")
+(autoload 'ein:log "ein-log")
 
 (defvar *ob-ein-sentinel* "[....]"
   "Placeholder string replaced after async cell execution")
@@ -159,19 +160,27 @@ Based on ob-ipython--configure-kernel."
         `(lambda (body params)
            (require (quote ,(intern (format "ob-%s" lang-mode))) nil t)
            (custom-set-variables '(python-indent-guess-indent-offset-verbose nil))
-           (let* ((parser
-                   (quote
-                    ,(intern
-                      (format "org-babel-variable-assignments:%s" lang-mode))))
-                  (assignments (if (fboundp parser)
-                                   (funcall (symbol-function parser) params)
-                                 (ein:log 'verbose "%s: No suitable ob-%s module"
-                                          (concat "org-babel-execute:" ,lang-name)
-                                          (quote ,lang-mode))
-                                 nil)))
-             (ob-ein--execute-body body params assignments)))))
+           (let ((parser
+                  (quote
+                   ,(intern (format "org-babel-variable-assignments:%s" lang-mode))))
+                 (expander
+                  (quote
+                   ,(intern (format "org-babel-expand-body:%s" lang-mode)))))
+             (ob-ein--execute-body
+              (cond ((fboundp expander)
+                     (funcall (symbol-function expander)
+                              (encode-coding-string body 'utf-8)
+                              params))
+                    ((fboundp parser)
+                     (org-babel-expand-body:generic
+                      body params (funcall (symbol-function parser) params)))
+                    (t (ein:log 'verbose "%s: No org-babel-expand-body:%s"
+                                (concat "org-babel-execute:" ,lang-name)
+                                (quote ,lang-mode))
+                       nil))
+              params)))))
 
-(defun ob-ein--execute-body (body params assignments)
+(defun ob-ein--execute-body (body params)
   (let* ((buffer (current-buffer))
          (processed-params (org-babel-process-params params))
          (result-params (cdr (assq :result-params params)))
@@ -186,14 +195,10 @@ Based on ob-ipython--configure-kernel."
                            (error "ob-ein--execute-body: %s not among %s"
                                   lang (mapcar #'car org-src-lang-modes)))))
          (name (ob-ein--get-name-create (org-babel-get-src-block-info)))
-         (full-body (org-babel-expand-body:generic
-                     (encode-coding-string body 'utf-8)
-                     params
-                     assignments))
          (callback (lambda (notebook)
                     (ob-ein--execute-async
                      buffer
-                     full-body
+                     body
                      (ein:$notebook-kernel notebook)
                      processed-params
                      result-params
