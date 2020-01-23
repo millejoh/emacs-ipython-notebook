@@ -307,24 +307,26 @@
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
       (lambda (go stop)
         (cl-loop repeat 10
-              until (search stop (buffer-string))
-              do (And (format "I click on \"%s\"" go))
-              do (sleep-for 0 1000)
-              finally do (should (search stop (buffer-string))))))
+                 until (search stop (buffer-string))
+                 do (And (format "I click on \"%s\"" go))
+                 do (sleep-for 0 1000)
+                 finally do (should (search stop (buffer-string))))))
 
 (When "^I click\\( without going top\\)? on \"\\(.+\\)\"$"
       (lambda (stay word)
         ;; from espuds "go to word" without the '\\b's
         (unless stay
           (goto-char (point-min)))
-        (let ((search (re-search-forward (format "\\[%s\\]" word) nil t))
-              (msg "Cannot go to link '%s' in buffer: %s"))
-          (should search)
-          (backward-char)
-          (let ((was (widget-at)))
-            (When "I press \"RET\"")
-            (cl-loop until (not (equal was (widget-at)))
-                     do (sleep-for 0 500))))))
+        (cl-loop repeat 10
+                 for search = (re-search-forward (format "\\[%s\\]" word) nil t)
+                 until search
+                 do (sleep-for 0 1000)
+                 finally do (should search))
+        (backward-char)
+        (let ((was (widget-at)))
+          (When "I press \"RET\"")
+          (cl-loop until (not (equal was (widget-at)))
+                   do (sleep-for 0 500)))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
@@ -499,7 +501,7 @@
 
 (When "I evaluate the python code \"\\(.+\\)\"$"
       (lambda (code-str)
-        (ein:shared-output-eval-string nil code-str nil)))
+        (ein:shared-output-eval-string nil code-str)))
 
 (When "^text property at point includes \"\\(.+\\)\"$"
       (lambda (properties)

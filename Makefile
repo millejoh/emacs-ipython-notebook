@@ -21,7 +21,7 @@ endif
 
 .DEFAULT_GOAL := test-compile
 
-README.rst: README.in.rst lisp/ein.el
+README.rst: README.in.rst lisp/ein-notebook.el
 	$(CASK) eval "(progn \
 	             (add-to-list 'load-path \"./lisp\") \
 	             (load \"ein-notebook\") \

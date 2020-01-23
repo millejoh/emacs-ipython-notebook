@@ -34,13 +34,9 @@
 
 (require 'ein-cell)
 
-
-;;; Classes and variables
-
 (defclass ein:shared-output-cell (ein:codecell)
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
-   (popup :initarg :popup :initform nil :type boolean)
    (callback :initarg :callback :initform #'ignore :type function)
    (callback-called :initarg :callback-called :initform nil :type boolean))
   "A singleton cell to show output from non-notebook buffers.")
@@ -55,9 +51,6 @@
 
 (defconst ein:shared-output-buffer-name "*ein:shared-output*")
 
-
-;;; Cell related
-
 (cl-defmethod ein:cell-insert-prompt ((cell ein:shared-output-cell))
   "Insert prompt of the CELL in the buffer.
 Called from ewoc pretty printer via `ein:cell-pp'."
@@ -68,11 +61,10 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
    'font-lock-face 'ein:cell-input-prompt))
 
-(cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code popup
+(cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
                                 &rest args)
   (unless (plist-get args :silent)
     (setq args (plist-put args :silent nil)))
-  (setf (slot-value cell 'popup) popup)
   (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
@@ -80,8 +72,6 @@ Called from ewoc pretty printer via `ein:cell-pp'."
                                        msg-type _content _metadata)
   (ein:log 'debug
     "ein:cell--handle-output (cell ein:shared-output-cell): %s" msg-type)
-  (when (slot-value cell 'popup)
-    (pop-to-buffer (ein:shared-output-create-buffer)))
   (cl-call-next-method)
   (aif (ein:oref-safe cell 'callback)
       (progn
@@ -194,33 +184,15 @@ See also `ein:cell-max-num-outputs'."
         (ein:shared-output-show-code-cell cell)
       (error "No code cell at point."))))
 
-(defvar ein:shared-output-eval-string-history nil
-  "History of the `ein:shared-output-eval-string' prompt.")
-
 ;;;###autoload
-(defun ein:shared-output-eval-string (kernel code popup &rest args)
-  "Evaluate a piece of code.  Prompt will appear asking the code to run.
-This is handy when you want to execute something quickly without
-making a cell.  If the code outputs something, it will go to the
-shared output buffer.  You can open the buffer by the command
-`ein:shared-output-pop-to-buffer'.
-
-.. ARGS is passed to `ein:kernel-execute'.  Unlike `ein:kernel-execute',
-   `:silent' is `nil' by default."
-  (interactive
-   (list nil
-         (read-string
-          "IP[y]: "
-          (when (region-active-p)
-            (buffer-substring (region-beginning) (region-end)))
-          'ein:shared-output-eval-string-history)
-         nil))
+(defun ein:shared-output-eval-string (kernel code &rest args)
+  "Entry to `ein:cell-execute-internal' from the shared output cell."
   (unless kernel (setq kernel (ein:get-kernel-or-error)))
   (let ((cell (ein:shared-output-get-cell)))
     (ein:kernel-when-ready
      kernel
      (lambda (ready-kernel)
-       (apply #'ein:cell-execute cell ready-kernel (ein:trim-indent code) popup args)))))
+       (apply #'ein:cell-execute cell ready-kernel (ein:trim-indent code) args)))))
 
 ;;; Generic getter
 

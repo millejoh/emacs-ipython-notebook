@@ -669,18 +669,20 @@ Example::
         (&key content metadata parent_header header &allow-other-keys)
         (ein:json-read-from-string packet)
       (let* ((msg-type (plist-get header :msg_type))
-             (msg-id (plist-get parent_header :msg_id))
-             (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id))
+             (msg-id (plist-get header :msg_id))
+             (parent-id (plist-get parent_header :msg_id))
+             (callbacks (ein:kernel-get-callbacks-for-msg kernel parent-id))
              (events (ein:$kernel-events kernel)))
-        (ein:log 'debug "ein:kernel--handle-iopub-reply: msg_type=%s msg_id=%s"
-                 msg-type msg-id)
+        (ein:log 'debug
+          "ein:kernel--handle-iopub-reply: msg_type=%s msg_id=%s parent_id=%s"
+          msg-type msg-id parent-id)
         (ein:case-equal msg-type
           (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
            (aif (plist-get callbacks :output) ;; ein:cell--handle-output
                (ein:funcall-packed it msg-type content metadata)
              (ein:log 'warn (concat "ein:kernel--handle-iopub-reply: "
-                                    "No :output callback for msg_id=%s")
-                      msg-id)))
+                                    "No :output callback for parent_id=%s")
+                      parent-id)))
           (("status")
            (ein:case-equal (plist-get content :execution_state)
              (("busy")
@@ -695,8 +697,8 @@ Example::
            (aif (plist-get callbacks :clear_output)
                (ein:funcall-packed it content metadata)
              (ein:log 'info (concat "ein:kernel--handle-iopub-reply: "
-                                    "No :clear_output callback for msg_id=%s")
-                      msg-id))))))))
+                                    "No :clear_output callback for parent_id=%s")
+                      parent-id))))))))
 
 (defun ein:kernel-filename-to-python (kernel filename)
   "See: `ein:filename-to-python'."

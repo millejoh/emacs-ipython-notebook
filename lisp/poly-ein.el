@@ -173,8 +173,15 @@ TYPE can be 'body, nil."
                   (mode (pm-get-mode-symbol-from-name what))
                   (_ (not (equal mode (ein:oref-safe cm 'mode)))))
        (when (eq mode 'poly-fallback-mode)
-         (ein:display-warning
-          (format "pm:get-span: no major mode for kernelspec language '%s'" what)))
+         (let ((warning (format (concat "pm-get-span: Add (%s . [mode-prefix]) to "
+                                        "polymode-mode-name-aliases")
+                                what)))
+           (when (or (not (get-buffer "*Warnings*"))
+                     (not (with-current-buffer "*Warnings*"
+                            (save-excursion
+                              (goto-char (point-min))
+                              (re-search-forward (regexp-quote warning) nil t)))))
+             (ein:display-warning warning))))
        (setq result-cm
              (cl-loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
                    when (equal mode (ein:oref-safe ocm 'mode))

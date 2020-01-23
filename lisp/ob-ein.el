@@ -158,26 +158,20 @@ Based on ob-ipython--configure-kernel."
     'ob-ein-default-header-args:ein)
   (fset (intern (concat "org-babel-execute:" lang-name))
         `(lambda (body params)
+           "Should get rid of accommodating org-babel-variable-assignments.
+We don't test it, and finding a module named ob-LANG-MODE won't work generally,
+e.g., ob-c++ is not ob-C.el."
            (require (quote ,(intern (format "ob-%s" lang-mode))) nil t)
+           ;; hack because ob-ein loads independently of ein
            (custom-set-variables '(python-indent-guess-indent-offset-verbose nil))
            (let ((parser
                   (quote
-                   ,(intern (format "org-babel-variable-assignments:%s" lang-mode))))
-                 (expander
-                  (quote
-                   ,(intern (format "org-babel-expand-body:%s" lang-mode)))))
+                   ,(intern (format "org-babel-variable-assignments:%s" lang-mode)))))
              (ob-ein--execute-body
-              (cond ((fboundp expander)
-                     (funcall (symbol-function expander)
-                              (encode-coding-string body 'utf-8)
-                              params))
-                    ((fboundp parser)
-                     (org-babel-expand-body:generic
-                      body params (funcall (symbol-function parser) params)))
-                    (t (ein:log 'verbose "%s: No org-babel-expand-body:%s"
-                                (concat "org-babel-execute:" ,lang-name)
-                                (quote ,lang-mode))
-                       nil))
+              (if (fboundp parser)
+                  (org-babel-expand-body:generic
+                   body params (funcall (symbol-function parser) params))
+                body)
               params)))))
 
 (defun ob-ein--execute-body (body params)
@@ -222,9 +216,8 @@ Based on ob-ipython--configure-kernel."
                 do (sleep-for 0 interval)
                 finally return
                 (if pending
-                    (progn
-                      (ein:log 'error "ob-ein--execute-body: %s timed out" name)
-                      "")
+                    (prog1 ""
+                      (ein:log 'error "ob-ein--execute-body: %s timed out" name))
                   (ob-ein--process-outputs
                    (ein:oref-safe (ein:shared-output-get-cell) 'outputs)
                    processed-params))))
@@ -278,7 +271,7 @@ one at a time.  Further, we do not order the queued up blocks!"
             (deferred:nextc (deferred:wait 1200) self)))))
     (deferred:nextc it
       (lambda (_x)
-        (ein:shared-output-eval-string kernel body nil)))))
+        (ein:shared-output-eval-string kernel body)))))
 
 (defun ob-ein--parse-session (session)
   (multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)

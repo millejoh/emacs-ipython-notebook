@@ -117,7 +117,6 @@ Keymap (C-h m)
    C-c		Prefix Command
    C-x		Prefix Command
    ESC		Prefix Command
-   C-:		ein:shared-output-eval-string-km
    <C-down>	ein:worksheet-goto-next-input-km
    <C-up>		ein:worksheet-goto-prev-input-km
    <M-S-return>	ein:worksheet-execute-cell-and-insert-below-km
@@ -130,15 +129,13 @@ Keymap (C-h m)
    M-RET		ein:worksheet-execute-cell-and-goto-next-km
    M-,		ein:pytools-jump-back-command
    M-.		ein:pytools-jump-to-source-command
-   M-n		ein:worksheet-next-input-history-km
-   M-p		ein:worksheet-previous-input-history-km
    
    C-c C-a		ein:worksheet-insert-cell-above-km
    C-c C-b		ein:worksheet-insert-cell-below-km
    C-c C-c		ein:worksheet-execute-cell-km
    C-c C-e		ein:worksheet-toggle-output-km
    C-c C-f		ein:file-open-km
-   C-c C-h		ein:pytools-request-tooltip-or-help-km
+   C-c C-h		ein:pytools-request-help-km
    C-c C-k		ein:worksheet-kill-cell-km
    C-c C-l		ein:worksheet-clear-output-km
    C-c RET		ein:worksheet-merge-cell-km
@@ -174,8 +171,6 @@ Keymap (C-h m)
    C-c C-#		ein:notebook-close-km
    C-c C-$		ein:tb-show-km
    C-c C-'		ein:worksheet-turn-on-autoexec-km
-   C-c C-,		ein:pytools-jump-back-command
-   C-c C-.		ein:pytools-jump-to-source-command
    C-c C-/		ein:notebook-scratchsheet-open-km
    C-c C-;		ein:shared-output-show-code-cell-at-point-km
    C-c <down>	ein:worksheet-move-cell-down-km

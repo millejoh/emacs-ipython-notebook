@@ -182,8 +182,6 @@ a number will limit the number of lines in a cell output."
   `(when (slot-boundp ,obj ,slot)
      (slot-value ,obj ,slot)))
 
-;;; Utils
-
 (defun ein:make-mm-handle (image)
   (let ((mime-type (mailcap-extension-to-mime
                     (symbol-name (plist-get (cdr image) :type)))))
@@ -241,8 +239,6 @@ a number will limit the number of lines in a cell output."
       (let ((buffer-undo-list t))
         (insert-image image "."))
     (error (ein:log 'warn "Could not insert image: %s" (error-message-string err)))))
-
-;;; Cell factory
 
 (defun ein:cell-class-from-type (type)
   (ein:case-equal type
@@ -412,8 +408,6 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
 (cl-defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
 (cl-defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
-
-;; EWOC
 
 (defun ein:cell-make-element (make-node num-outputs)
   (let ((buffer-undo-list t))           ; disable undo recording
@@ -633,7 +627,7 @@ Return language name as a string or `nil' when not defined.
   (slot-value cell 'element))
 
 (cl-defmethod ein:cell-running-set ((cell ein:codecell) running)
-  ;; FIXME: change the appearance of the cell
+  "FIXME: change the appearance of the cell"
   (setf (slot-value cell 'running) running))
 
 (cl-defmethod ein:cell-set-collapsed ((cell ein:codecell) collapsed)
@@ -750,12 +744,10 @@ If END is non-`nil', return the location of next element."
   "Return a buffer associated by CELL (if any)."
   (ein:aand (ein:oref-safe cell 'ewoc) (ewoc-buffer it)))
 
-;; Data manipulation
-
 (cl-defmethod ein:cell-clear-output ((cell ein:codecell) stdout stderr other)
-  ;; codecell.js in IPython implements it using timeout and callback.
-  ;; As it is unclear why timeout is needed, just clear output
-  ;; instantaneously for now.
+  "codecell.js in IPython implements it using timeout and callback.
+  As it is unclear why timeout is needed, just clear output
+  instantaneously for now."
   (ein:log 'debug "cell-clear-output stdout=%s stderr=%s other=%s"
            stdout stderr other)
   (setf (slot-value cell 'traceback) nil)
@@ -810,10 +802,10 @@ If END is non-`nil', return the location of next element."
            (intern (format "output-%s" (plist-get json :stream)))))))
 
 (cl-defmethod ein:cell-append-output ((cell ein:codecell) json)
-  ;; When there is a python error, we actually get two identical tracebacks back
-  ;; from the kernel, one from the "shell" channel, and one from the "iopub"
-  ;; channel.  As a workaround, we remember the cell's traceback and ignore
-  ;; traceback outputs that are identical to the one we already have.
+  "When there is a python error, we actually get two identical tracebacks back
+  from the kernel, one from the \"shell\" channel, and one from the \"iopub\"
+  channel.  As a workaround, we remember the cell's traceback and ignore
+  traceback outputs that are identical to the one we already have."
   (let ((new-tb (plist-get json :traceback))
         (old-tb (slot-value cell 'traceback)))
     (when (or
@@ -938,7 +930,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:insert-read-only value)))))
 
 (defun ein:cell-append-text (data &rest properties)
-  ;; escape ANSI in plaintext:
+  "escape ANSI in plaintext:"
   (apply #'ein:insert-read-only (ansi-color-apply data) properties))
 
 (defun ein:cell-safe-read-eval-insert (text)
@@ -1000,8 +992,6 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
         (when (cl-typep cell 'ein:basecell)
           cell))))
 
-;;; Kernel related calls.
-
 (cl-defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
   (setf (slot-value cell 'kernel) kernel))
 
@@ -1043,6 +1033,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
 
 (cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content _metadata)
+  (ein:log 'debug "ein:cell--handle-output (cell ein:codecell): %s" msg-type)
   (let ((json `(:output_type ,msg-type)))
     (cl-macrolet ((copy-props
                    (src tgt props)
@@ -1070,15 +1061,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)
-  ;; Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output
+  "Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output"
   (ein:cell-clear-output cell
                          t ;;(plist-get content :stdout)
                          t ;;(plist-get content :stderr)
                          t ;;(plist-get content :other))
                          )
   (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
-
-;;; Misc.
 
 (cl-defmethod ein:cell-has-image-output-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
@@ -1093,9 +1082,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))
   (cl-loop for out in (slot-value cell 'outputs)
-        when (and (plist-get out :traceback)
-                  (member (plist-get out :output_type) '("pyerr" "error")))
-        return (plist-get out :traceback)))
+           when (and (plist-get out :traceback)
+                     (member (plist-get out :output_type) '("pyerr" "error")))
+           return (plist-get out :traceback)))
 
 (provide 'ein-cell)
 

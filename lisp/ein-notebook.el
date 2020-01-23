@@ -149,11 +149,11 @@ Current buffer for these functions is set to the notebook buffer.")
          (cond ((ein:$kernelspec-p pre-kernelspec) pre-kernelspec)
                ((consp pre-kernelspec)
                 (cl-loop for (name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
-                      when (and (ein:$kernelspec-p ks)
-                                (string= (cdr pre-kernelspec)
-                                         (cl-struct-slot-value
-                                          'ein:$kernelspec (car pre-kernelspec) ks)))
-                      return ks))
+                         when (and (ein:$kernelspec-p ks)
+                                   (string= (cdr pre-kernelspec)
+                                            (cl-struct-slot-value
+                                             'ein:$kernelspec (car pre-kernelspec) ks)))
+                         return ks))
                (t (ein:get-kernelspec url-or-port pre-kernelspec)))))
     (apply #'make-ein:$notebook
            :url-or-port url-or-port
@@ -484,9 +484,6 @@ This is equivalent to do ``C-c`` in the console program."
 (define-obsolete-function-alias
   'ein:notebook-eval-string
   'ein:shared-output-eval-string "0.1.2")
-
-
-;;; Persistence and loading
 
 (defun ein:notebook-set-notebook-name (notebook name)
   "Check NAME and change the name of NOTEBOOK to it."
@@ -1208,7 +1205,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (ein:notebook--define-key map (kbd "C-c <down>") ein:worksheet-move-cell-down)
   (ein:notebook--define-key map (kbd "M-<up>") ein:worksheet-move-cell-up)
   (ein:notebook--define-key map (kbd "M-<down>") ein:worksheet-move-cell-down)
-  (ein:notebook--define-key map "\C-c\C-h" ein:pytools-request-tooltip-or-help)
+  (ein:notebook--define-key map "\C-c\C-h" ein:pytools-request-help)
   (ein:notebook--define-key map (kbd "C-c C-$") ein:tb-show)
   (ein:notebook--define-key map "\C-c\C-x" nil)
   (ein:notebook--define-key map "\C-c\C-x\C-r" ein:notebook-restart-session-command)
@@ -1216,15 +1213,12 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (ein:notebook--define-key map "\C-c\C-z" ein:notebook-kernel-interrupt-command)
   (ein:notebook--define-key map "\C-c\C-q" ein:notebook-kill-kernel-then-close-command)
   (ein:notebook--define-key map (kbd "C-c C-#") ein:notebook-close)
-  (ein:notebook--define-key map (kbd "C-:") ein:shared-output-eval-string)
   (ein:notebook--define-key map "\C-c\C-f" ein:file-open)
   (ein:notebook--define-key map "\C-c\C-o" ein:notebook-open)
   (ein:notebook--define-key map "\C-x\C-s" ein:notebook-save-notebook-command)
   (ein:notebook--define-key map "\C-x\C-w" ein:notebook-rename-command)
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
-  (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
-  (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
   (ein:notebook--define-key map (kbd "C-c C-/") ein:notebook-scratchsheet-open)
   ;; Worksheets
   (ein:notebook--define-key map (kbd "C-c !")     ein:worksheet-rename-sheet)
@@ -1284,10 +1278,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
              :active (ein:worksheet-at-codecell-p))
             ("Execute all"
              ein:worksheet-execute-all-cell)
-            ("Turn on auto execution flag" ein:worksheet-turn-on-autoexec
-             :active (ein:worksheet-at-codecell-p))
-            ("Evaluate code in minibuffer" ein:shared-output-eval-string)
-            ("Toggle instant cell execution mode" ein:iexec-mode)
             ))
        "---"
        ,@(ein:generate-menu
@@ -1305,7 +1295,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
        "---"
        ,@(ein:generate-menu
           '(("Show object help"
-             ein:pytools-request-tooltip-or-help)
+             ein:pytools-request-help)
             ("Jump to definition" ein:pytools-jump-to-source-command)
             ("Go back to the previous jump point"
              ein:pytools-jump-back-command))))
