@@ -37,7 +37,7 @@ env:
 matrix:
   include:
     - os: linux
-      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python3 PIP="${PY} -m pip install --user"
+      env: EMACS_CI=emacs-25-1 IPYTHON=5.8.0 PY=python PIP="${PY} -m pip install --user"
     - os: linux
       env: EMACS_CI=emacs-26-1 IPYTHON=6.5.0 PY=python3 PIP="${PY} -m pip install --user"
     - os: linux
