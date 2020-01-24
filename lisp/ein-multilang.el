@@ -37,6 +37,7 @@
 (require 'julia-mode nil t)
 (require 'haskell-mode nil t)
 (require 'hy-mode nil t)
+(require 'c++-mode nil t)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
@@ -212,11 +213,48 @@ This function may raise an error."
     (hy-mode--support-smartparens)
     (set-keymap-parent ein:notebook-multilang-mode-map hy-mode-map)))
 
+(defun ein:ml-lang-setup-c++ ()
+  (when (featurep 'c++-mode)
+    (setq-local mode-name "EIN[c++]")
+    (setq-local comment-start "// ")
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'c-indent-line))
+    (set-syntax-table c++-mode-syntax-table)
+    (set-keymap-parent ein:notebook-multilang-mode-map c++-mode-map)))
+
+(defun ein:ml-lang-setup-c ()
+  (when (featurep 'c-mode)
+    (setq-local mode-name "EIN[c]")
+    (setq-local comment-start "/* ")
+    (setq-local comment-end " */")
+    (setq-local indent-line-function
+                (apply-partially #'ein:ml-indent-line-function #'c-indent-line))
+    (set-syntax-table c-mode-syntax-table)
+    (set-keymap-parent ein:notebook-multilang-mode-map c-mode-map)))
+
+(defun ein:ml-lang-setup-C++11 ()
+  (ein:ml-lang-setup-c++))
+
+(defun ein:ml-lang-setup-C++14 ()
+  (ein:ml-lang-setup-c++))
+
+(defun ein:ml-lang-setup-C++17 ()
+  (ein:ml-lang-setup-c++))
+
+(defun ein:ml-lang-setup-generic ()
+  (setq-local mode-name "EIN[unknown]")
+  (setq-local indent-line-function
+              (apply-partially #'ein:ml-indent-line-function #'indent-relative))
+  (set-syntax-table prog-mode-syntax-table)
+  (set-keymap-parent ein:notebook-multilang-mode-map prog-mode-map))
+
 (defun ein:ml-lang-setup (kernelspec)
   (let ((setup-func (intern (concat "ein:ml-lang-setup-" (ein:$kernelspec-language kernelspec)))))
     (if (fboundp setup-func)
         (funcall setup-func)
-      (error "ein:ml-lang-setup: kernelspec language '%s' unsupported" (ein:$kernelspec-language kernelspec)))))
+      (warn "ein:ml-lang-setup: unknown kernelspec language '%s', multilang support disabled."
+            (ein:$kernelspec-language kernelspec))
+      (ein:ml-lang-setup-generic))))
 
 ;; (defun ein:ml-lang-setup-markdown ()
 ;;   "Use `markdown-mode-map'.  NOTE: This function is not used now."

@@ -71,7 +71,11 @@
     ("ein-R" . R)
     ("ein-r" . R)
     ("ein-julia" . julia)
-    ("ein-hy" . hy))
+    ("ein-hy" . hy)
+    ("ein-c" . c)
+    ("ein-C++11" . c++)
+    ("ein-C++14" . c++)
+    ("ein-C++17" . c++))
   "ob-ein has knowledge of these (ein-LANG . LANG-MODE) pairs."
   :type '(repeat (cons string symbol))
   :group 'ein)
