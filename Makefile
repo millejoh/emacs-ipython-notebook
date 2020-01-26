@@ -3,7 +3,7 @@ export CASK := $(shell which cask)
 ifeq ($(CASK),)
 $(error Please install CASK at https://cask.readthedocs.io/en/latest/guide/installation.html)
 endif
-CASK_DIR := $(shell EMACS=$(EMACS) cask package-directory || exit 1)
+CASK_DIR := $(shell EMACS=$(EMACS) $(CASK) package-directory || exit 1)
 SRC=$(shell $(CASK) files)
 PKBUILD=2.3
 ELCFILES = $(SRC:.el=.elc)
@@ -48,17 +48,16 @@ clean:
 	rm -f features/Renamed.ipynb
 	rm -f test/Untitled*.ipynb
 
-.PHONY: cask
-cask: $(CASK_DIR)
 $(CASK_DIR): Cask
 	$(CASK) install
+	touch $(CASK_DIR)
 
 .PHONY: test-compile
 test-compile: clean autoloads
 	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 
 .PHONY: quick
-quick: $(CASK) test-compile test-ob-ein-recurse test-unit
+quick: $(CASK_DIR) test-compile test-ob-ein-recurse test-unit
 
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile
