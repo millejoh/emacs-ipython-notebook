@@ -37,7 +37,7 @@
 (require 'julia-mode nil t)
 (require 'haskell-mode nil t)
 (require 'hy-mode nil t)
-(require 'c++-mode nil t)
+(require 'cc-mode)
 
 (declare-function ess-indent-line "ess")
 (declare-function ess-r-eldoc-function "ess-r-completion")
