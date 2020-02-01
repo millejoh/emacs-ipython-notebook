@@ -1,12 +1,12 @@
 ========================================================================
- EIN -- Emacs IPython Notebook |build-status|
+ EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
 ========================================================================
 
 .. COMMENTARY (see Makefile)
 
 .. |build-status|
-   image:: https://github.com/dickmao/emacs-ipython-notebook/workflows/CI/badge.svg
-   :target: https://github.com/dickmao/emacs-ipython-notebook/actions
+   image:: https://github.com/millejoh/emacs-ipython-notebook/workflows/CI/badge.svg
+   :target: https://github.com/millejoh/emacs-ipython-notebook/actions
    :alt: Build Status
 .. |melpa-dev|
    image:: http://melpa.milkbox.net/packages/ein-badge.svg
@@ -24,7 +24,18 @@
 
 Install
 =======
-Clone this repo and ``make install``.
+As described in `Getting started`_, ensure melpa's whereabouts in ``init.el`` or ``.emacs``::
+
+   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+
+Then
+
+::
+
+   M-x package-refresh-contents RET
+   M-x package-install RET ein RET
+
+Alternatively, directly clone this repo and ``make install``.
 
 Usage
 =====
@@ -39,7 +50,7 @@ Use ``C-u M-x ein:login`` for services such as ``mybinder.org`` requiring cookie
 Alternatively, ob-ein_.
 
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
-.. _MELPA: http://melpa.org/#/
+.. _Getting started: http://melpa.org/#/getting-started
 
 Reporting bugs
 --------------
