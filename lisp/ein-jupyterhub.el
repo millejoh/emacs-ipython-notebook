@@ -21,7 +21,7 @@
 ;; along with ein-jupyter.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;
+;;    Deprecated.
 ;;;
 ;;; An interface to the Jupyterhub login and management API as described in
 ;;; http://jupyterhub.readthedocs.io/en/latest/api/index.html
