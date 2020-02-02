@@ -556,11 +556,11 @@ Example::
        (ein:url url-or-port "api/sessions" session-id)
        :type "DELETE"
        :complete (apply-partially #'ein:kernel-delete-session--complete kernel session-id callback)
-       :error (apply-partially #'ein:kernel-delete-session--error session-id callback)
+       :error (apply-partially #'ein:kernel-delete-session--error session-id nil)
        :success (apply-partially #'ein:kernel-delete-session--success session-id
                                  (aif (ein:notebooklist-get-buffer url-or-port)
                                      (buffer-local-value 'ein:%notebooklist% it))
-                                 callback))
+                                 nil))
     (ein:log 'verbose "ein:kernel-delete-session: no sessions found for %s" path)
     (when callback
       (funcall callback kernel))))
@@ -582,7 +582,7 @@ Example::
                                                &key data response
                                                &allow-other-keys
                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
-  (ein:log 'debug "ein:kernel-delete-session--complete %s" resp-string)
+  (ein:log 'verbose "ein:kernel-delete-session--complete %s" resp-string)
   (when kernel
     (ein:kernel-disconnect kernel))
   (when callback (funcall callback kernel)))
