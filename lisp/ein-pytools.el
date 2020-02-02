@@ -31,7 +31,73 @@
 
 (require 'ein-kernel)
 (require 'ein-notebook)
-(require 'ein-shared-output)
+;; (require 'ein-shared-output)
+
+
+;;; Support tooling in languages other than Python
+
+(defvar *ein:langtools-db* (make-hash-table)
+  "Lookup table tool support functions for a given language. Keys
+are symbols representing the language of a running
+kernel (i.e. (make-symbol (ein:kernelinfo-language <kinfo>)).
+Values are an plist of (TOOL-COMMAND-NAME LANG-CODE). TOOL-COMMAND-NAME is a symbol,
+LANG-CODE is a string suitable for passing to format.")
+
+
+(defun ein:define-langtool-command (language tool-command code)
+  (ein:aif (gethash language *ein:langtools-db*)
+      (plist-put it tool-command code)
+    (setf (gethash language *ein:langtools-db*)
+          (list tool-command code))))
+
+(defun ein:get-langtool-command (language tool-command)
+  (plist-get (gethash language *ein:langtools-db*) tool-command))
+
+(eval-when-compile
+  (cl-defmacro ein:make-langtool (language defs)
+    (let ((expr (cl-loop for d in defs
+                         collecting `(ein:define-langtool-command ',language ',(car d) ,(cdr d)))))
+      `(progn
+         ,@expr)))
+  (cl-defmacro ein:langtool-execute-command (kernel command &key args output)
+    (let ((lang (cl-gensym))
+          (cmd (cl-gensym)))
+      `(let* ((,lang (intern (ein:$kernelspec-language (ein:$kernel-kernelspec ,kernel))))
+              (,cmd (ein:get-langtool-command ,lang ,command)))
+         (if ,cmd
+             (ein:kernel-execute
+              ,kernel
+              ,(if (listp args)
+                   `(format ,cmd ,@args)
+                 `(format ,cmd ,args))
+              ,(if (not (null output))
+                   `(list :output (cons ,@output))))
+           (error "ein-pytools: Langtool command not defined for %s in language %s" ,command ,lang))))))
+
+
+(ein:make-langtool python
+                   ((get-notebook-dir . "print(__import__('os').getcwd(),end='')")
+                    (add-sys-path . "__import__('sys').path.append('%s')")
+                    (request-tooltip . "__ein_print_object_info_for(%s)")
+                    (request-help . "%s?")
+                    (object-info-request . "__ein_print_object_info_for(%s)")
+                    (find-source . "__ein_find_source('%s')")
+                    (run-doctest . "__ein_run_docstring_examples(%s)")
+                    (set-figure-size . "__ein_set_figure_size('[%s, %s]')")
+                    (set-figure-dpi . "__ein_set_figure_dpi('%s')")
+                    (set-figure-param . "__ein_set_matplotlib_param('%s', '%s', '%s')")
+                    (get-figure-param . "__ein_get_matplotlib_params()")
+                    (export . "__ein_export_nb(r'%s', '%s')")
+                    (tools-file . "ein_remote_safe.py")))
+
+(ein:make-langtool hy
+                   ((find-source . "(ein-find-source \"%s\")")
+                    (request-tooltip . "(ein-print-object-info-for \"%s\")")
+                    (object-info-request . "(ein-print-object-info-for \"%s\")")
+                    (tools-file . "ein_hytools.hy")))
+
+
+
 
 (defun ein:goto-file (filename lineno &optional other-window)
   "Jump to file FILEAME at line LINENO.
@@ -60,7 +126,10 @@ If OTHER-WINDOW is non-`nil', open the file in the other window."
 
 (defun ein:pytools-load-safely (kernel)
   (with-temp-buffer
-    (let ((pytools-file (format "%s/%s" ein:source-dir "ein_remote_safe.py")))
+    (let* ((fname (ein:get-langtool-command (intern (ein:$kernelspec-language
+                                                     (ein:$kernel-kernelspec kernel)))
+                                            'tools-file))
+           (pytools-file (format "%s/%s" ein:source-dir fname)))
       (insert-file-contents pytools-file)
       (ein:kernel-execute
        kernel
@@ -76,9 +145,7 @@ working."
   (ein:pytools-load-safely (ein:get-kernel-or-error)))
 
 (defun ein:pytools-add-sys-path (kernel)
-  (ein:kernel-execute
-   kernel
-   (format "__import__('sys').path.append('%s')" ein:source-dir)))
+  (ein:langtool-execute-command kernel 'add-sys-path :args ein:source-dir))
 
 (defun ein:set-buffer-file-name (nb msg-type content -not-used-)
   (let ((buf (ein:notebook-buffer nb)))
@@ -92,14 +159,15 @@ working."
 
 (defun ein:pytools-get-notebook-dir (packed)
   (cl-multiple-value-bind (kernel notebook) packed
-    (ein:kernel-execute
-     kernel
-     (format "print(__import__('os').getcwd(),end='')")
-     (list
-      :output (cons
-               #'ein:set-buffer-file-name
-               notebook)))))
-
+    (ein:langtool-execute-command kernel 'get-notebook-dir
+                                  :output (#'ein:set-buffer-file-name notebook))))
+;; (ein:kernel-execute
+;;  kernel
+;;  (format "print(__import__('os').getcwd(),end='')")
+;;  (list
+;;   :output (cons
+;;            #'ein:set-buffer-file-name
+;;            notebook)))
 
 ;;; Tooltip and help
 
@@ -113,16 +181,16 @@ working."
                      (ein:object-at-point-or-error)))
   (unless (ein:pytools-magic-func-p func)
     (if (>= (ein:$kernel-api-version kernel) 3)
-        (ein:kernel-execute
-         kernel
-         (format "__ein_print_object_info_for(%s)" func)
-         (list
-          :output (cons
-                   (lambda (name msg-type content -metadata-not-used-)
-                     (ein:case-equal msg-type
-                       (("stream" "display_data")
-                        (ein:pytools-finish-tooltip name (ein:json-read-from-string (plist-get content :text)) nil))))
-                   func)))
+        (ein:langtool-execute-command kernel 'object-info-request :args func
+                                      :output
+                                      ((lambda (name msg-type content -metadata-not-used-)
+                                         (ein:case-equal msg-type
+                                           (("stream" "display_data")
+                                            (ein:pytools-finish-tooltip name
+                                                                        (ein:json-read-from-string
+                                                                         (plist-get content :text))
+                                                                        nil))))
+                                       func))
       (ein:kernel-object-info-request
        kernel func (list :object_info_reply
                          (cons #'ein:pytools-finish-tooltip nil))))))
@@ -214,14 +282,18 @@ pager buffer.  You can explicitly specify the object by selecting it."
         (unless (equal (point) (marker-position last))
           (push (point-marker) ein:pytools-jump-stack))
       (setq ein:pytools-jump-stack (list (point-marker)))))
-  (ein:kernel-execute
-   kernel
-   (format "__ein_find_source('%s')" object)
-   (list
-    :output
-    (cons
-     #'ein:pytools-jump-to-source-1
-     (list kernel object other-window notebook)))))
+  (ein:langtool-execute-command kernel 'find-source :args object
+                                :output (#'ein:pytools-jump-to-source-1
+                                         (list kernel object other-window notebook))))
+
+;; (ein:kernel-execute
+;;  kernel
+;;  (format "__ein_find_source('%s')" object)
+;;  (list
+;;   :output
+;;   (cons
+;;    #'ein:pytools-jump-to-source-1
+;;    (list kernel object other-window notebook))))
 
 (defun ein:pytools-find-source (kernel object &optional callback)
   "Find the file and line where object is defined.
@@ -230,14 +302,18 @@ useful for other purposes. If the definition for object can be
 found and when callback isort specified, the callback will be
 called with a cons of the filename and line number where object
 is defined."
-  (ein:kernel-execute
-   kernel
-   (format "__ein_find_source('%s')" object)
-   (list
-    :output
-    (cons
-     #'ein:pytools-finish-find-source
-     (list kernel object callback)))))
+  (ein:langtool-execute-command kernel 'find-source :args object
+                                :output (#'ein:pytools-finish-find-source
+                                         (list kernel object callback))))
+
+;; (ein:kernel-execute
+;;  kernel
+;;  (format "__ein_find_source('%s')" object)
+;;  (list
+;;   :output
+;;   (cons
+;;    #'ein:pytools-finish-find-source
+;;    (list kernel object callback))))
 
 (defun ein:pytools-finish-find-source (packed msg-type content -ignored-)
   (cl-destructuring-bind (kernel object callback) packed
@@ -297,9 +373,11 @@ given, open the last point in the other window."
 (defun ein:pytools-doctest ()
   "Do the doctest of the object at point."
   (interactive)
-  (let ((object (ein:object-at-point)))
+  (let* ((object (ein:object-at-point))
+         (kernel (ein:get-kernel))
+         (cmd (ein:get-langtool-command kernel 'run-docstring)))
     (ein:shared-output-eval-string (ein:get-kernel)
-                                   (format "__ein_run_docstring_examples(%s)" object)
+                                   (format cmd object)
                                    t)))
 
 (defun ein:pytools-whos ()
@@ -410,40 +488,43 @@ Currently EIN/IPython supports exporting to the following formats:
 (defun ein:pytools-set-figure-size (width height)
   "Set the default figure size for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
   (interactive "nWidth: \nnHeight: ")
-  (ein:shared-output-eval-string (ein:get-kernel)
-                                 (format "__ein_set_figure_size('[%s, %s]')" width height)
-                                 nil))
+  (let ((kernel (ein:get-kernel)))
+    (ein:langtool-execute-command kernel 'set-figure-size :args (width height)))
+  )
+;; (ein:shared-output-eval-string (ein:get-kernel)
+;;                                (format "__ein_set_figure_size('[%s, %s]')" width height)
+;;                                nil)
 
 (defun ein:pytools-set-figure-dpi (dpi)
   "Set the default figure dpi for matplotlib figures. Works by setting `rcParams['figure.figsize']`."
   (interactive "nFigure DPI: ")
-  (ein:shared-output-eval-string (ein:get-kernel)
-                                 (format "__ein_set_figure_dpi('%s')" dpi)
-                                 nil))
+  (let ((kernel (ein:get-kernel)))
+    (ein:langtool-execute-command kernel 'set-figure-dpi :args dpi)))
 
 (defun ein:pytools-set-matplotlib-parameter (param value)
   "Generically set any matplotlib parameter exposed in the matplotlib.pyplot.rcParams variable. Value is evaluated as a Python expression, so be careful of side effects."
   (interactive
    (list (completing-read "Parameter: " (ein:pytools--get-matplotlib-params) nil t)
          (read-string "Value: " nil)))
-  (let* ((split (cl-position ?. param))
+  (let* ((kernel (ein:get-kernel))
+         (split (cl-position ?. param))
          (family (cl-subseq param 0 split))
          (setting (cl-subseq param (1+ split))))
-    (ein:shared-output-eval-string (ein:get-kernel)
-                                   (format "__ein_set_matplotlib_param('%s', '%s', '%s')" family setting value)
-                                   nil)))
+    (ein:langtool-execute-command kernel 'set-figure-param :args (family setting value))))
 
 (defun ein:pytools--get-matplotlib-params ()
-  (ein:shared-output-eval-string (ein:get-kernel)
-                                 (format "__ein_get_matplotlib_params()")
-                                 nil)
-  (with-current-buffer (ein:shared-output-create-buffer)
-    (ein:wait-until #'(lambda ()
-                       (slot-value (slot-value *ein:shared-output* :cell) :outputs))
-                    nil
-                    5.0)
-    (let ((outputs (first (slot-value (slot-value *ein:shared-output* :cell) :outputs))))
-      (ein:json-read-from-string (plist-get outputs :text)))))
+  (let* ((kernel (ein:get-kernel))
+         (cmd (ein:get-langtool-command kernel 'get-figure-param)))
+    (ein:shared-output-eval-string (ein:get-kernel)
+                                   (format cmd)
+                                   nil)
+    (with-current-buffer (ein:shared-output-create-buffer)
+      (ein:wait-until #'(lambda ()
+                          (slot-value (slot-value *ein:shared-output* :cell) :outputs))
+                      nil
+                      5.0)
+      (let ((outputs (first (slot-value (slot-value *ein:shared-output* :cell) :outputs))))
+        (ein:json-read-from-string (plist-get outputs :text))))))
 
 (defun ein:pytools--estimate-screen-dpi ()
   (let* ((pixel-width (display-pixel-width))

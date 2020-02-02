@@ -144,7 +144,6 @@ def __ein_object_info_for(obj):
     except Exception:
         return inspector.info(None)
 
-
 def __ein_print_object_info_for(obj):
     import json
 
