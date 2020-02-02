@@ -375,12 +375,7 @@
          (lambda ()
            (let ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
              (aif (if negate (not says) says)
-                 it
-               (when (with-current-buffer ein:log-all-buffer-name
-                       (search "WS closed unexpectedly" (buffer-string)))
-                 (And "I clear log expr \"ein:log-all-buffer-name\"")
-                 (Then "I ctrl-c-ctrl-c"))
-               nil)))
+                 it)))
          nil 35000 2000)))
 
 (When "^I wait for cell to execute$"

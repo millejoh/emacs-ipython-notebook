@@ -545,13 +545,17 @@ This function is called via `ein:notebook-after-rename-hook'."
                             'link
                             :notify
                             (apply-partially
-                             (lambda (callback* url-or-port* path* &rest _ignore)
-                               (ein:message-whir
-                                "Ending session" callback*
-                                (ein:kernel-delete-session callback*
-                                                           :url-or-port url-or-port*
-                                                           :path path*)))
-                             reloader url-or-port path)
+                             (cl-function
+                              (lambda (url-or-port*
+                                       path*
+                                       &rest _ignore
+                                       &aux (callback (lambda (_kernel) t)))
+                                (ein:message-whir
+                                 "Ending session" callback
+                                 (ein:kernel-delete-session callback
+                                                            :url-or-port url-or-port*
+                                                            :path path*))))
+                             url-or-port path)
                             "Stop")
                          (widget-insert "[----]"))
                        (widget-insert " ")
