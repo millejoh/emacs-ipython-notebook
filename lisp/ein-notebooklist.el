@@ -228,7 +228,8 @@ See `ein:format-time-string'."
            (ein:url url-or-port (ein:$content-path content)))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (let ((restore-point (ein:aand (widget-at)
-                                   (widget-value it)
+                                   (aif (widget-value it)
+                                       (and (stringp it) it))
                                    (string-match-p "Open\\|Stop\\|Delete" it)
                                    (point))))
       (aif ein:%notebooklist%

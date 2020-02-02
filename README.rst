@@ -69,13 +69,15 @@ and later.
 
 **Please file issues using** ``M-x ein:dev-bug-report-template``.
 
-You may also try to self-diagnose.
+First try ``emacs -Q -f package-initialize`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
-First invoke ``M-x ein:dev-start-debug``.  Then reproduce the error.
+Invoking ``M-x ein:dev-start-debug`` activates verbose logging.
 
-General logging ``M-x ein:log-pop-to-all-buffer``.
+EIN log buffer ``*ein:log-all*``.
 
-Notebook server ``M-x ein:log-pop-to-request-buffer``.
+Server log buffer (if running jupyter locally) ``*ein server*``.
+
+HTTP requests ``M-x ein:log-pop-to-request-buffer``.
 
 Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-channels``.
 
