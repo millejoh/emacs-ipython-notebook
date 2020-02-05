@@ -17,7 +17,7 @@ skip_commits:
 max_jobs: 1
 
 # Build worker image (VM template)
-image: Visual Studio 2015
+image: Visual Studio 2017
 
 # scripts that are called at very beginning, before repo cloning
 init:

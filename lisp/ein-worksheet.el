@@ -1058,7 +1058,7 @@ cell bellow."
 
 (cl-defun ein:worksheet-execute-all-cells (ws &key above below)
   "Execute all cells in the current worksheet buffer.
-If :above or :below specified, execute above/below the current cell (exclusively)."
+If :above or :below specified, execute above/below the current cell."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (let* ((all (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws)))
          (current-id (aif (ein:worksheet-get-current-cell) (slot-value it 'cell-id)))

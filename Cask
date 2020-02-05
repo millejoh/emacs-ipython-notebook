@@ -2,7 +2,7 @@
 (source melpa)
 
 (package-descriptor "lisp/ein-pkg.el")
-(files "lisp/*.el" "lisp/*.py")
+(files "lisp/*.el")
 
 (development
  (depends-on "anaphora")
