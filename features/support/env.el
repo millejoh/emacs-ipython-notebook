@@ -70,7 +70,7 @@
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
             finally do (assert nil)))
-  (cl-loop repeat 5
+  (cl-loop repeat 30
            for stragglers = (file-name-all-completions "Untitled"
                                                        ein:testing-jupyter-server-root)
            until (null stragglers)
