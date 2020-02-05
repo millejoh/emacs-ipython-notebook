@@ -1053,39 +1053,41 @@ cell bellow."
                      (ein:worksheet-get-current-cell)))
   (ein:worksheet-execute-cell-and-goto-next ws cell t))
 
-;;; TODO add version number here before creating a new release
 (define-obsolete-function-alias
-  'ein:worksheet-execute-all-cell
-  'ein:worksheet-execute-all-cells)
+  'ein:worksheet-execute-all-cell 'ein:worksheet-execute-all-cells "0.17.0")
 
-(defun ein:worksheet-execute-all-cells (ws)
-  "Execute all cells in the current worksheet buffer."
+(cl-defun ein:worksheet-execute-all-cells (ws &key above below)
+  "Execute all cells in the current worksheet buffer.
+If :above or :below specified, execute above/below the current cell (exclusively)."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (cl-loop for c in (ein:worksheet-get-cells ws)
-	   when (ein:codecell-p c)
-	   do (ein:cell-execute c)))
+  (let* ((all (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws)))
+         (current-id (aif (ein:worksheet-get-current-cell) (slot-value it 'cell-id)))
+         (not-matching (apply-partially (lambda (my other)
+                                          (not (string= (slot-value other 'cell-id) my)))
+                                        current-id)))
+    (mapc #'ein:cell-execute
+          (if (or above below)
+              (append (when (and current-id above)
+                        (aif (seq-take-while not-matching all)
+                            it
+                          (prog1 nil
+                            (ein:log 'info
+                              "ein:worksheet-execute-all-cells: no cells above current"))))
+                      (when (and current-id below)
+                        (seq-drop-while not-matching all)))
+            all))))
 
 (defun ein:worksheet-execute-all-cells-above (ws)
   "Execute all cells above the current cell (exclusively) in the
 current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
-	   for c in (ein:worksheet-get-cells ws)
-	   until (equal (ein:cell-id c) curr-cell-id)
-	   when (ein:codecell-p c)
-	   do (ein:cell-execute c)))
+  (ein:worksheet-execute-all-cells ws :above t))
 
 (defun ein:worksheet-execute-all-cells-below (ws)
   "Execute all cells below the current cell (inclusively) in the
 current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (cl-loop with curr-cell-id = (ein:cell-id (ein:worksheet-get-current-cell))
-	   and curr-cell-reached?
-	   for c in (ein:worksheet-get-cells ws)
-	   when (and (not curr-cell-reached?) (equal (ein:cell-id c) curr-cell-id))
-	   do (setq curr-cell-reached? t)
-	   when (and curr-cell-reached? (ein:codecell-p c))
-	   do (ein:cell-execute c)))
+  (ein:worksheet-execute-all-cells ws :below t))
 
 ;;; Metadata
 
@@ -1141,40 +1143,6 @@ current worksheet buffer."
          (end (ein:cell-input-pos-max cell)))
     (indent-rigidly
      beg end (- (ein:find-leftmost-column beg end)))))
-
-(defun ein:worksheet--cells-before-cell (ws cell)
-  (let ((cells (ein:worksheet-get-cells ws)))
-    (cl-loop for c in cells
-          collecting c
-          until (eql (ein:cell-id c) (ein:cell-id cell)))))
-
-(defun ein:worksheet--cells-after-cell (ws cell)
-  (let ((cells (ein:worksheet-get-cells ws))
-        (prior-cells (length (ein:worksheet--cells-before-cell ws cell))))
-    (seq-drop cells prior-cells)))
-
-(defun ein:worksheet-first-executing-cell (cells)
-  (cl-loop for c in cells
-        when (and (ein:codecell-p c)
-                  (slot-value c 'running))
-        return c))
-
-(defun ein:worksheet-jump-to-first-executing-cell ()
-  "Move the point to the first executing cell in the current worksheet."
-  (interactive)
-  (aif (ein:worksheet-first-executing-cell (ein:worksheet-get-cells ein:%worksheet%))
-      (ein:cell-goto it)
-    (message "No cell currently executing.")))
-
-(defun ein:worksheet-jump-to-next-executing-cell ()
-  "Move the point to the next executing cell in the current worksheet."
-  (interactive)
-  (let* ((curcell (ein:get-cell-at-point--worksheet))
-         (restcells (ein:worksheet--cells-after-cell ein:%worksheet% curcell)))
-    (aif (ein:worksheet-first-executing-cell restcells)
-        (ein:cell-goto it)
-      (message "No additional cells are executing."))))
-
 
 ;;; Auto-execution
 
