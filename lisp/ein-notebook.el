@@ -1276,8 +1276,12 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
             ("Execute cell and insert below"
              ein:worksheet-execute-cell-and-insert-below
              :active (ein:worksheet-at-codecell-p))
-            ("Execute all"
-             ein:worksheet-execute-all-cell)
+            ("Execute all cells"
+             ein:worksheet-execute-all-cells)
+	    ("Execute all cells above"
+             ein:worksheet-execute-all-cells-above)
+	    ("Execute all cells below"
+             ein:worksheet-execute-all-cells-below)
             ))
        "---"
        ,@(ein:generate-menu
