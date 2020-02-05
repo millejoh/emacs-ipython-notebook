@@ -120,11 +120,9 @@
     (cl-loop repeat 10
              until (zerop (hash-table-count *ein:notebook--pending-query*))
              do (sleep-for 0 500)
-             finally do (should (zerop (hash-table-count *ein:notebook--pending-query*))))))
-
-(When "^no notebooks open$"
-  (lambda ()
-    (should ())))
+             finally do (should (zerop (hash-table-count *ein:notebook--pending-query*))))
+    (with-current-buffer ein:log-all-buffer-name
+      (And "I wait for buffer to say \"ein:query-sessions--complete\""))))
 
 (When "^I switch to buffer like \"\\(.+\\)\"$"
       (lambda (substr)

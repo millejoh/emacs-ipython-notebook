@@ -48,7 +48,7 @@ Alternatively, directly clone this repo and ``make install``.
 
 Usage
 =====
-Start EIN using **one** of the following:
+Start EIN using **ONE** of the following:
 
 - Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``, or,
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
@@ -61,25 +61,34 @@ Alternatively, ob-ein_.
 .. _Cask: https://cask.readthedocs.io/en/latest/guide/installation.html
 .. _Getting started: http://melpa.org/#/getting-started
 
-Reporting bugs
---------------
-EIN is tested on GNU Emacs versions
-25.1
-and later.
+FAQ
+===
 
-**Please file issues using** ``M-x ein:dev-bug-report-template``.
+How do I...
+-----------
 
-First try ``emacs -Q -f package-initialize`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
+... report a bug?
+   File an issue using ``M-x ein:dev-bug-report-template``.
 
-Invoking ``M-x ein:dev-start-debug`` activates verbose logging.
+   First try ``emacs -Q -f package-initialize`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
-EIN log buffer ``*ein:log-all*``.
+   Note EIN is tested only for *released* GNU Emacs versions
+   25.1
+   and later.  Pre-release versions are unlikely to work.
 
-Server log buffer (if running jupyter locally) ``*ein server*``.
+... display images inline?
+   We find inserting images into emacs disruptive, and so default to spawning an external viewer.  To override this,
 
-HTTP requests ``M-x ein:log-pop-to-request-buffer``.
+   ::
 
-Kernel messaging (must be run from notebook buffer) ``M-x ein:dev-pop-to-debug-channels``.
+      M-x customize-group RET ein
+      Ein:Output Area Inlined Images
+
+... configure the external image viewer?
+   ::
+
+      M-x customize-group RET mailcap
+      Mailcap User Mime Data
 
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode
@@ -195,8 +204,3 @@ Keymap (C-h m)
    C-c M-w		ein:worksheet-copy-cell-km
    C-c M-{		ein:notebook-worksheet-move-prev-km
    C-c M-}		ein:notebook-worksheet-move-next-km
-
-License
-=======
-Emacs IPython Notebook is licensed under GPL v3.
-See COPYING for details.

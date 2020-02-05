@@ -1,5 +1,6 @@
 export EMACS ?= $(shell which emacs)
 export CASK := $(shell which cask)
+TEST_VERSION := $(shell yq .jobs.build.strategy.matrix.emacs_version .github/workflows/test.yml | jq .[] | sort -n | head -1)
 ifeq ($(CASK),)
 $(error Please install CASK at https://cask.readthedocs.io/en/latest/guide/installation.html)
 endif
@@ -28,7 +29,7 @@ README.rst: README.in.rst lisp/ein-notebook.el
 	             (describe-minor-mode \"ein:notebook-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
 	| tools/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
-	sed "/CI VERSION/c"`yq .jobs.build.strategy.matrix.emacs_version .github/workflows/test.yml | jq .[] | sort -n | head -1` README.rst0 > README.rst1
+	perl -ne "s/^(\s*)\S+.*CI VERSION.*$$/\$${1}$(TEST_VERSION)/; print" README.rst0 > README.rst1
 	grep ';;' lisp/ein.el \
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
