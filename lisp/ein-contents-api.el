@@ -106,10 +106,6 @@ ERRBACK of arity 1 for the contents."
                (ein:log 'error notice)
                (when errback (funcall errback url-or-port status-code)))))))))
 
-
-;; TODO: This is one place to check for redirects - update the url slot if so.
-;; Will need to pass the response object and check either request-response-history
-;; or request-response-url.
 (cl-defun ein:content-query-contents--success (url-or-port path callback
                                                &key data symbol-status response
                                                &allow-other-keys)
@@ -117,8 +113,6 @@ ERRBACK of arity 1 for the contents."
     (if (< (ein:notebook-version-numeric url-or-port) 3)
         (setq content (ein:new-content-legacy url-or-port path data))
       (setq content (ein:new-content url-or-port path data)))
-    (aif response
-        (setf (ein:$content-url-or-port content) (ein:get-response-redirect it)))
     (when callback
       (funcall callback content))))
 

@@ -122,15 +122,6 @@ aborts).  Instead you will see Race! in debug messages.
   (setq settings (plist-put settings :sync ein:force-sync))
   (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
 
-(defun ein:get-response-redirect (response)
-  "Determine if the query has been redirected, and if so return then URL the request was redirected to."
-  (if (length (request-response-history response))
-      (let ((url (url-generic-parse-url (format "%s" (request-response-url response)))))
-        (format "%s://%s:%s"
-                (url-type url)
-                (url-host url)
-                (url-port url)))))
-
 ;;; Cookie
 
 (defalias 'ein:query-get-cookie 'request-cookie-string)

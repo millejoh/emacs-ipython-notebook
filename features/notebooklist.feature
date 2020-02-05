@@ -55,11 +55,13 @@ Scenario: Delete closes buffers and sessions
   And I clear log expr "ein:log-all-buffer-name"
   And I click on "Delete"
   And I wait for buffer to not say "Untitled"
+  And I dump buffer
   Then eval "(should-not (ein:notebook-opened-notebooks)))"
   Then eval "(should-not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list)))"
   And I switch to log expr "ein:log-all-buffer-name"
-  And I wait for buffer to say "kernel-delete-session--success"
-  And I wait for buffer to say "notebooklist-delete-notebook--complete"
+  And I dump buffer
+  Then I should see "kernel-delete-session--success"
+  Then I should see "notebooklist-delete-notebook--complete"
 
 @content
 Scenario: Read a massive directory
