@@ -151,12 +151,6 @@ To view full output, use `ein:notebook-show-in-shared-output'."
                  (const :tag "Show all traceback" nil))
   :group 'ein)
 
-(defcustom ein:cell-autoexec-prompt "⚡"
-  "String shown in the cell prompt when the auto-execution flag
-is on."
-  :type 'string
-  :group 'ein)
-
 (defcustom ein:truncate-long-cell-output nil
   "When nil do not truncate cells with long outputs. When set to
 a number will limit the number of lines in a cell output."
@@ -471,9 +465,7 @@ Return language name as a string or `nil' when not defined.
   Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
-   (concat
-    (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
-    (when (slot-value cell 'autoexec) " %s" ein:cell-autoexec-prompt))
+   (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
    'font-lock-face 'ein:cell-input-prompt))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:textcell))
@@ -660,25 +652,6 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-set-input-prompt ((cell ein:codecell) &optional number)
   (setf (slot-value cell 'input-prompt-number) number)
   (ein:cell-invalidate-prompt cell))
-
-(cl-defmethod ein:cell-set-autoexec ((cell ein:codecell) bool)
-  "Set auto-execution flag of CELL to BOOL and invalidate the
-prompt EWOC node."
-  (setf (slot-value cell 'autoexec) bool)
-  (ein:cell-invalidate-prompt cell))
-
-(cl-defmethod ein:cell-autoexec-p ((cell ein:basecell))
-  "Auto-execution flag set to CELL.
-Return `nil' always for non-code cells."
-  nil)
-
-(cl-defmethod ein:cell-autoexec-p ((cell ein:codecell))
-  (slot-value cell 'autoexec))
-
-(cl-defmethod ein:cell-toggle-autoexec ((cell ein:codecell))
-  "Toggle auto-execution flag of CELL to BOOL and invalidate the
-prompt EWOC node."
-  (ein:cell-set-autoexec cell (not (ein:cell-autoexec-p cell))))
 
 (cl-defmethod ein:cell-goto ((cell ein:basecell) &optional relpos prop)
   "Go to the input area of the given CELL.

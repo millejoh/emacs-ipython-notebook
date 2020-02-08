@@ -260,13 +260,7 @@ Implementation note:
 Typed `:input-prompt-number' becomes a problem when reading a
 notebook that saved "*".  So don't add `:type'!")
    (collapsed :initarg :collapsed :initform nil :type boolean)
-   (running :initarg :running :initform nil :type boolean)
-   (autoexec :initarg :autoexec :initform nil :type boolean
-             :documentation "Auto-execution flag.
-
-This cell is executed when the connected buffer is saved,
-provided that (1) this flag is `t' and (2) corresponding
-auto-execution mode flag in the connected buffer is `t'.")))
+   (running :initarg :running :initform nil :type boolean)))
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")

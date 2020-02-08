@@ -142,8 +142,8 @@ Keymap (C-h m)
    <C-down>	ein:worksheet-goto-next-input-km
    <C-up>		ein:worksheet-goto-prev-input-km
    <M-S-return>	ein:worksheet-execute-cell-and-insert-below-km
-   <M-down>	ein:worksheet-move-cell-down-km
-   <M-up>		ein:worksheet-move-cell-up-km
+   <M-down>	ein:worksheet-not-move-cell-down-km
+   <M-up>		ein:worksheet-not-move-cell-up-km
    
    C-x C-s		ein:notebook-save-notebook-command-km
    C-x C-w		ein:notebook-rename-command-km
@@ -155,6 +155,7 @@ Keymap (C-h m)
    C-c C-a		ein:worksheet-insert-cell-above-km
    C-c C-b		ein:worksheet-insert-cell-below-km
    C-c C-c		ein:worksheet-execute-cell-km
+   C-u C-c C-c    		ein:worksheet-execute-all-cells
    C-c C-e		ein:worksheet-toggle-output-km
    C-c C-f		ein:file-open-km
    C-c C-h		ein:pytools-request-help-km
@@ -192,7 +193,6 @@ Keymap (C-h m)
    C-c C-S-l	ein:worksheet-clear-all-output-km
    C-c C-#		ein:notebook-close-km
    C-c C-$		ein:tb-show-km
-   C-c C-'		ein:worksheet-turn-on-autoexec-km
    C-c C-/		ein:notebook-scratchsheet-open-km
    C-c C-;		ein:shared-output-show-code-cell-at-point-km
    C-c <down>	ein:worksheet-move-cell-down-km

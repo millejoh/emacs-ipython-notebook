@@ -461,14 +461,6 @@ This is equivalent to do ``C-c`` in the console program."
   (interactive)
   (ein:kernel-interrupt (ein:$notebook-kernel ein:%notebook%)))
 
-;; autoexec
-
-(defun ein:notebook-execute-autoexec-cells (notebook)
-  "Execute cells of which auto-execution flag is on."
-  (interactive (list (or ein:%notebook% (error "Not in notebook buffer!"))))
-  (mapc #'ein:worksheet-execute-autoexec-cells
-        (ein:$notebook-worksheets notebook)))
-
 (define-obsolete-function-alias
   'ein:notebook-eval-string
   'ein:shared-output-eval-string "0.1.2")
@@ -1169,7 +1161,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (ein:notebook--define-key map (kbd "M-RET") ein:worksheet-execute-cell-and-goto-next)
   (ein:notebook--define-key map (kbd "<M-S-return>")
     ein:worksheet-execute-cell-and-insert-below)
-  (ein:notebook--define-key map (kbd "C-c C-'") ein:worksheet-turn-on-autoexec)
   (ein:notebook--define-key map "\C-c\C-e" ein:worksheet-toggle-output)
   (ein:notebook--define-key map "\C-c\C-v" ein:worksheet-set-output-visibility-all)
   (ein:notebook--define-key map "\C-c\C-l" ein:worksheet-clear-output)
@@ -1191,8 +1182,8 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (ein:notebook--define-key map (kbd "C-<down>") ein:worksheet-goto-next-input)
   (ein:notebook--define-key map (kbd "C-c <up>") ein:worksheet-move-cell-up)
   (ein:notebook--define-key map (kbd "C-c <down>") ein:worksheet-move-cell-down)
-  (ein:notebook--define-key map (kbd "M-<up>") ein:worksheet-move-cell-up)
-  (ein:notebook--define-key map (kbd "M-<down>") ein:worksheet-move-cell-down)
+  (ein:notebook--define-key map (kbd "M-<up>") ein:worksheet-not-move-cell-up)
+  (ein:notebook--define-key map (kbd "M-<down>") ein:worksheet-not-move-cell-down)
   (ein:notebook--define-key map "\C-c\C-h" ein:pytools-request-help)
   (ein:notebook--define-key map (kbd "C-c C-$") ein:tb-show)
   (ein:notebook--define-key map "\C-c\C-x" nil)

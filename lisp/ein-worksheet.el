@@ -33,12 +33,18 @@
 (require 'ein-utils)
 (require 'ein-cell)
 (require 'ein-kill-ring)
+(require 'warnings)
 (require 'poly-ein)
 
 ;;; Configuration
 
 ;; (define-obsolete-variable-alias
 ;;   'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
+
+(defcustom ein:worksheet-warn-obsolesced-keybinding t
+  "Warn of keybindings we arbitrarily obsolesce."
+  :type 'boolean
+  :group 'ein)
 
 (defcustom ein:worksheet-enable-undo t
   "When non-`nil', allow undo of cell inputs only (as opposed to
@@ -948,6 +954,26 @@ It is set in `ein:notebook-multilang-mode'."
           (poly-ein-fontify-buffer (ein:worksheet--get-buffer ein:%worksheet%))))
     (message "No %s cell" (if up "previous" "next"))))
 
+(defun ein:worksheet-not-move-cell (which)
+  (when ein:worksheet-warn-obsolesced-keybinding
+    (ein:display-warning-once
+     (mapconcat #'identity
+                '("M-<up> and M-<down> no longer move cells."
+                  "Use C-c <up> and C-c <down>."
+                  "Custom set variable `ein:worksheet-warn-obsolesced-keybinding' to disable this warning.") "\n")
+     warning-minimum-level))
+  (call-interactively (cl-some #'identity
+                               (mapcar (lambda (pair) (lookup-key (cdr pair) which))
+                                       (cdr minor-mode-map-alist)))))
+
+(defun ein:worksheet-not-move-cell-up (&rest _args)
+  (interactive)
+  (ein:worksheet-not-move-cell (kbd "M-<up>")))
+
+(defun ein:worksheet-not-move-cell-down (&rest _args)
+  (interactive)
+  (ein:worksheet-not-move-cell (kbd "M-<down>")))
+
 (defun ein:worksheet-move-cell-up (ws cell)
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)))
@@ -1021,18 +1047,24 @@ Do not clear input prompts when the prefix argument is given."
   (mapc (lambda (cell) (setf (slot-value cell 'kernel) (slot-value ws 'kernel)))
         (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws))))
 
-(defun ein:worksheet-execute-cell (ws cell)
+(defun ein:worksheet-execute-cell (ws cell &optional batch)
   "Execute code type CELL."
-  (interactive (list (ein:worksheet--get-ws-or-error)
-                     (ein:worksheet-get-current-cell
-                      :cell-p #'ein:codecell-p)))
+  (interactive `(,(ein:worksheet--get-ws-or-error)
+                 ,(ein:worksheet-get-current-cell)
+                 ,(when current-prefix-arg
+                    (prog1 (read-char-choice "[RET]all [a]bove [b]elow: " (list ?\r ?a ?b))
+                      (message "")))))
   (ein:kernel-when-ready (slot-value ws 'kernel)
                          (apply-partially
-                          (lambda (ws* cell* kernel)
-                            (ein:cell-execute cell*)
-                            (oset ws* :dirty t)
-                            (ein:worksheet--unshift-undo-list cell*))
-                          ws cell))
+                          (lambda (ws* cell* batch* _kernel)
+                            (cl-case batch*
+                              (?\r (ein:worksheet-execute-all-cells ws*))
+                              (?a (ein:worksheet-execute-all-cells ws* :above cell*))
+                              (?b (ein:worksheet-execute-all-cells ws* :below cell*))
+                              (t (ein:cell-execute cell*)
+                                 (oset ws* :dirty t)
+                                 (ein:worksheet--unshift-undo-list cell*))))
+                          ws cell batch))
   cell)
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
@@ -1060,34 +1092,37 @@ cell bellow."
   "Execute all cells in the current worksheet buffer.
 If :above or :below specified, execute above/below the current cell."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (let* ((all (seq-filter #'ein:codecell-p (ein:worksheet-get-cells ws)))
-         (current-id (aif (ein:worksheet-get-current-cell) (slot-value it 'cell-id)))
-         (not-matching (apply-partially (lambda (my other)
-                                          (not (string= (slot-value other 'cell-id) my)))
-                                        current-id)))
-    (mapc #'ein:cell-execute
-          (if (or above below)
-              (append (when (and current-id above)
-                        (aif (seq-take-while not-matching all)
-                            it
-                          (prog1 nil
-                            (ein:log 'info
-                              "ein:worksheet-execute-all-cells: no cells above current"))))
-                      (when (and current-id below)
-                        (seq-drop-while not-matching all)))
-            all))))
+  (let ((all (ein:worksheet-get-cells ws)))
+    (mapc (apply-partially #'ein:worksheet-execute-cell ws)
+          (seq-filter
+           #'ein:codecell-p
+           (aif (or above below)
+               (-when-let* ((current-id (slot-value it 'cell-id))
+                            (not-matching (apply-partially
+                                           (lambda (my other)
+                                             (not (string= (slot-value other 'cell-id) my)))
+                                           current-id)))
+                 (append (when (and current-id above)
+                           (aif (seq-take-while not-matching all)
+                               it
+                             (prog1 nil
+                               (ein:log 'info
+                                 "ein:worksheet-execute-all-cells: no cells above current"))))
+                         (when (and current-id below)
+                           (seq-drop-while not-matching all))))
+             all)))))
 
 (defun ein:worksheet-execute-all-cells-above (ws)
   "Execute all cells above the current cell (exclusively) in the
 current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (ein:worksheet-execute-all-cells ws :above t))
+  (ein:worksheet-execute-all-cells ws :above (ein:worksheet-get-current-cell)))
 
 (defun ein:worksheet-execute-all-cells-below (ws)
   "Execute all cells below the current cell (inclusively) in the
 current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
-  (ein:worksheet-execute-all-cells ws :below t))
+  (ein:worksheet-execute-all-cells ws :below (ein:worksheet-get-current-cell)))
 
 ;;; Metadata
 
@@ -1143,43 +1178,6 @@ current worksheet buffer."
          (end (ein:cell-input-pos-max cell)))
     (indent-rigidly
      beg end (- (ein:find-leftmost-column beg end)))))
-
-;;; Auto-execution
-
-(defun ein:worksheet-toggle-autoexec (cell)
-  "Toggle auto-execution flag of the cell at point."
-  (interactive (list (ein:worksheet-get-current-cell #'ein:codecell-p)))
-  (ein:cell-toggle-autoexec cell))
-
-(defun ein:worksheet-turn-on-autoexec (cells &optional off)
-  "Turn on auto-execution flag of the cells in region or cell at point.
-When the prefix argument is given, turn off the flag instead.  Questionable."
-  (interactive
-   (list (ein:worksheet-get-cells-in-region-or-at-point
-          :cell-p #'ein:codecell-p)
-         current-prefix-arg))
-  (mapc (lambda (c) (ein:cell-set-autoexec c (not off))) cells)
-  (ein:log 'info "Turn %s auto-execution flag of %s cells."
-           (if off "off" "on")
-           (length cells)))
-
-(defun ein:worksheet-execute-autoexec-cells (ws)
-  "Execute cells of which auto-execution flag is on.
-This function internally sets current buffer to the worksheet
-buffer, so you don't need to set current buffer to call this
-function."
-  (interactive (list (ein:worksheet--get-ws-or-error)))
-  (ein:with-live-buffer (ein:worksheet-buffer ws)
-    (ein:kernel-when-ready
-     (slot-value ws 'kernel)
-     (apply-partially
-      (lambda (ws buffer kernel)
-        (with-current-buffer buffer
-          (let ((buffer-undo-list t))
-            (mapc #'ein:cell-execute
-                  (seq-filter #'ein:cell-autoexec-p
-                              (ein:worksheet-get-cells ws))))))
-      ws (current-buffer)))))
 
 ;;; Workarounds
 
