@@ -45,7 +45,6 @@
 (require 'ein-kernelinfo)
 (require 'ein-cell)
 (require 'ein-worksheet)
-(require 'ein-iexec)
 (require 'ein-scratchsheet)
 (require 'ein-notification)
 (require 'ein-completer)
