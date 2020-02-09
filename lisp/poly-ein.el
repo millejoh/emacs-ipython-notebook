@@ -6,7 +6,7 @@
 
 (defmacro poly-ein--remove-hook (label functions)
   "Remove any hooks saying LABEL from FUNCTIONS"
-  `(mapc (lambda (x) (when (cl-search ,label (symbol-name x))
+  `(mapc (lambda (x) (when (and (symbolp x) (cl-search ,label (symbol-name x)))
                        (remove-hook (quote ,functions) x t)))
          ,functions))
 
