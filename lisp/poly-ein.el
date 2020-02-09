@@ -64,26 +64,27 @@
   (fmakunbound 'poly-lock-mode)
   (defalias 'poly-lock-mode (symbol-function (default-value 'font-lock-function)))
 
+  (defun poly-ein--syntax-propertize (pos)
+    (prog1 poly-ein-mode
+      (when (and poly-ein-mode (< syntax-propertize--done pos))
+        (save-excursion
+          ;; pared down from default `syntax-propertize'
+          (with-silent-modifications
+            (let ((parse-sexp-lookup-properties t)
+                  (start (point-min)) ;; i've narrowed in the :around
+                  (end (point-max))
+                  (span (pm-innermost-span pos)))
+              (setq syntax-propertize--done end)
+              (when (eq 'body (nth 0 span))
+                (remove-text-properties start end
+                                        '(syntax-table nil syntax-multiline nil))
+                ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
+                (when syntax-propertize-function
+                  (let ((syntax-propertize--done most-positive-fixnum))
+                    (funcall syntax-propertize-function start end))))))))))
   (add-function
    :before-until (symbol-function 'syntax-propertize)
-   (lambda (pos)
-     (prog1 poly-ein-mode
-       (when (and poly-ein-mode (< syntax-propertize--done pos))
-         (save-excursion
-           ;; pared down from default `syntax-propertize'
-           (with-silent-modifications
-             (let ((parse-sexp-lookup-properties t)
-                   (start (point-min)) ;; i've narrowed in the :around
-                   (end (point-max))
-                   (span (pm-innermost-span pos)))
-               (setq syntax-propertize--done end)
-               (when (eq 'body (nth 0 span))
-                 (remove-text-properties start end
-                                         '(syntax-table nil syntax-multiline nil))
-                 ;; avoid recursion if syntax-propertize-function calls me (syntax-propertize)
-                 (when syntax-propertize-function
-                   (let ((syntax-propertize--done most-positive-fixnum))
-                     (funcall syntax-propertize-function start end)))))))))))
+   #'poly-ein--syntax-propertize)
 
   (add-function
    :around (symbol-function 'syntax-propertize)
@@ -263,6 +264,7 @@ TYPE can be 'body, nil."
         (buffer-local-value 'after-change-functions (pm-base-buffer)))
   (poly-ein-copy-state (pm-base-buffer) (current-buffer))
   (setq-local font-lock-dont-widen t)
+  (setq-local syntax-propertize-chunks 0) ;; internal--syntax-propertize too far
   (ein:notebook-mode))
 
 (defcustom pm-host/ein

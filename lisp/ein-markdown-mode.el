@@ -2047,16 +2047,6 @@ Used for `flyspell-generic-check-word-predicate'."
                                ein:markdown-inline-code-face
                                ein:markdown-url-face))))))))
 
-(defun ein:markdown-font-lock-ensure ()
-  "Provide `font-lock-ensure' in Emacs 24."
-  (if (fboundp 'font-lock-ensure)
-      (font-lock-ensure)
-    (with-no-warnings
-      ;; Suppress warning about non-interactive use of
-      ;; `font-lock-fontify-buffer' in Emacs 25.
-      (font-lock-fontify-buffer))))
-
-
 ;;; ein:markdown Parsing Functions ================================================
 
 (define-obsolete-function-alias
@@ -6961,24 +6951,6 @@ Translate filenames using `markdown-filename-translate-function'."
       (add-text-properties start end props)
       t)))
 
-(defun ein:markdown-extend-changed-region (from to)
-  "Extend region given by FROM and TO so that we can fontify all links.
-The region is extended to the first newline before and the first
-newline after."
-  ;; start looking for the first new line before 'from
-  (goto-char from)
-  (re-search-backward "\n" nil t)
-  (let ((new-from (point-min))
-        (new-to (point-max)))
-    (if (not (= (point) from))
-        (setq new-from (point)))
-    ;; do the same thing for the first new line after 'to
-    (goto-char to)
-    (re-search-forward "\n" nil t)
-    (if (not (= (point) to))
-        (setq new-to (point)))
-    (cl-values new-from new-to)))
-
 ;;; Following & Doing =========================================================
 
 (defun ein:markdown-follow-thing-at-point (_arg)
@@ -7271,40 +7243,6 @@ Use matching function MATCHER."
 (defun ein:markdown-fontify-fenced-code-blocks (last)
   "Add text properties to next tilde fenced code block from point to LAST."
   (ein:markdown-fontify-code-blocks-generic 'ein:markdown-match-fenced-code-blocks last))
-
-
-(require 'edit-indirect nil t)
-(defvar edit-indirect-guess-mode-function)
-(defvar edit-indirect-after-commit-functions)
-
-(defun ein:markdown--edit-indirect-after-commit-function (_beg end)
-  "Ensure trailing newlines at the END of code blocks."
-  (goto-char end)
-  (unless (eq (char-before) ?\n)
-    (insert "\n")))
-
-(defun ein:markdown-edit-code-block ()
-  "Edit ein:markdown code block in an indirect buffer."
-  (interactive)
-  (save-excursion
-    (if (fboundp 'edit-indirect-region)
-        (let* ((bounds (ein:markdown-get-enclosing-fenced-block-construct))
-               (begin (and bounds (goto-char (nth 0 bounds)) (point-at-bol 2)))
-               (end (and bounds (goto-char (nth 1 bounds)) (point-at-bol 1))))
-          (if (and begin end)
-              (let* ((lang (ein:markdown-code-block-lang))
-                     (mode (or (and lang (ein:markdown-get-lang-mode lang))
-                               ein:markdown-edit-code-block-default-mode))
-                     (edit-indirect-guess-mode-function
-                      (lambda (_parent-buffer _beg _end)
-                        (funcall mode))))
-                (edit-indirect-region begin end 'display-buffer))
-            (user-error "Not inside a GFM or tilde fenced code block")))
-      (when (y-or-n-p "Package edit-indirect needed to edit code blocks. Install it now? ")
-        (progn (package-refresh-contents)
-               (package-install 'edit-indirect)
-               (ein:markdown-edit-code-block))))))
-
 
 ;;; Table Editing =============================================================
 
@@ -8134,12 +8072,7 @@ rows and columns and the column alignment."
   ;; Backwards compatibility with ein:markdown-css-path
   (when (boundp 'ein:markdown-css-path)
     (warn "ein:markdown-css-path is deprecated, see ein:markdown-css-paths.")
-    (add-to-list 'ein:markdown-css-paths ein:markdown-css-path))
-
-  ;; edit-indirect
-  (add-hook 'edit-indirect-after-commit-functions
-            #'ein:markdown--edit-indirect-after-commit-function
-            nil 'local))
+    (add-to-list 'ein:markdown-css-paths ein:markdown-css-path)))
 
 (ein:markdown-update-header-faces)
 (provide 'ein-markdown-mode)
