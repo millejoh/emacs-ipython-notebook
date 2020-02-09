@@ -1102,13 +1102,13 @@ If :above or :below specified, execute above/below the current cell."
                                            (lambda (my other)
                                              (not (string= (slot-value other 'cell-id) my)))
                                            current-id)))
-                 (append (when (and current-id above)
+                 (append (when above
                            (aif (seq-take-while not-matching all)
                                it
                              (prog1 nil
                                (ein:log 'info
                                  "ein:worksheet-execute-all-cells: no cells above current"))))
-                         (when (and current-id below)
+                         (when below
                            (seq-drop-while not-matching all))))
              all)))))
 

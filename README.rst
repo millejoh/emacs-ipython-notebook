@@ -70,7 +70,7 @@ How do I...
 ... report a bug?
    File an issue using ``M-x ein:dev-bug-report-template``.
 
-   First try ``emacs -Q -f package-initialize`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
+   First try ``emacs -Q -f package-initialize --eval "(setq debug-on-error t)"`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
    Note EIN is tested only for *released* GNU Emacs versions
    25.1
