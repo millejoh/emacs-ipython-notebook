@@ -48,6 +48,7 @@
 (require 'ein-scratchsheet)
 (require 'ein-notification)
 (require 'ein-completer)
+(require 'ein-pager)
 (require 'ein-events)
 (require 'ein-notification)
 (require 'ein-kill-ring)
@@ -130,6 +131,7 @@ Current buffer for these functions is set to the notebook buffer.")
 ;; is at:
 ;; https://github.com/ipython/ipython/wiki/IPEP-16%3A-Notebook-multi-directory-dashboard-and-URL-mapping
 
+(defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 (defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (ein:deflocal ein:%notebook% nil
@@ -381,7 +383,14 @@ of minor mode."
 (defun ein:notebook-bind-events (notebook events)
   "Bind events related to PAGER to the event handler EVENTS."
   (setf (ein:$notebook-events notebook) events)
-  (ein:worksheet-class-bind-events events))
+  (ein:worksheet-class-bind-events events)
+  ;; Bind events for sub components:
+  (setf (ein:$notebook-pager notebook)
+        (ein:pager-new
+         (format ein:notebook-pager-buffer-name-template
+                 (ein:$notebook-url-or-port notebook)
+                 (ein:$notebook-notebook-name notebook))
+         (ein:$notebook-events notebook))))
 
 (defalias 'ein:notebook-reconnect-kernel 'ein:notebook-reconnect-session-command "The distinction between kernel and session is a bit mysterious, all the action is now occurring in `ein:notebook-reconnect-session-command' these days, for which this function is now an alias.")
 

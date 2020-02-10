@@ -112,6 +112,9 @@
 `ein:$notebook-kernelinfo' : `ein:kernelinfo'
   `ein:kernelinfo' instance.
 
+`ein:$notebook-pager'
+  Variable for `ein:pager-*' functions. See ein-pager.el.
+
 `ein:$notebook-dirty' : boolean
   Set to `t' if notebook has unsaved changes.  Otherwise `nil'.
 
@@ -145,6 +148,7 @@
   kernel
   kernelinfo
   kernelspec
+  pager
   dirty
   metadata
   notebook-name
