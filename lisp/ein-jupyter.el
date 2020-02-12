@@ -345,8 +345,12 @@ server command."
              do (sleep-for 0 500))
     (lexical-let* ((proc (ein:jupyter-server-process))
                    (pid (process-id proc)))
-      (ein:log 'info "Signaled %s with pid %s" proc pid)
-      (signal-process pid 15)
+      (if (eq system-type 'windows-nt)
+          (ein:query-singleton-ajax
+           (ein:url url-or-port "api/shutdown")
+           :type "POST")
+        (ein:log 'info "Signaled %s with pid %s" proc pid)
+        (signal-process pid 15))
       (run-at-time 2 nil
                    (lambda ()
                      (ein:log 'info "Resignaled %s with pid %s" proc pid)
