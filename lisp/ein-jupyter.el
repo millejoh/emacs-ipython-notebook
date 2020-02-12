@@ -293,9 +293,7 @@ server command."
                                    (if result
                                        (format "[%s not a directory]" result)
                                      ""))
-                           nil
-                           ein:jupyter-default-notebook-directory
-                           t)))
+                           default-dir default-dir t)))
            result)
          nil
          (lambda (buffer url-or-port)
@@ -352,7 +350,7 @@ server command."
       (run-at-time 2 nil
                    (lambda ()
                      (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                     (signal-process pid 15))))
+                     (signal-process pid (if (eql system-type 'windows-nt) 9 15)))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)
