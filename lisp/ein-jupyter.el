@@ -350,7 +350,7 @@ server command."
       (run-at-time 2 nil
                    (lambda ()
                      (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                     (signal-process pid (if (eql system-type 'windows-nt) 9 15)))))
+                     (signal-process pid (if (eq system-type 'windows-nt) 9 15)))))
 
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)

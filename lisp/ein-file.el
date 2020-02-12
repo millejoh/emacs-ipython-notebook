@@ -44,7 +44,7 @@
                                                                 (ein:$content-path content)))
     (setq ein:content-file-buffer--content content)
     (let ((raw-content (ein:$content-raw-content content)))
-      (if (eql system-type 'windows-nt)
+      (if (eq system-type 'windows-nt)
           (insert (decode-coding-string raw-content 'utf-8))
         (insert raw-content)))
     (set-visited-file-name (buffer-name))
