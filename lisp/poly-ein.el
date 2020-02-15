@@ -139,11 +139,9 @@
          (pm-allow-post-command-hook nil)
          (pm-initialization-in-progress t))
      (poly-ein--set-buffer derived-buffer base-buffer)
-     (condition-case err
-         (prog1 (progn ,@body)
-           (poly-ein--set-buffer base-buffer derived-buffer))
-       (error (message "%s" (error-message-string err))
-              (poly-ein--set-buffer base-buffer derived-buffer)))))
+     (unwind-protect
+         (progn ,@body)
+       (poly-ein--set-buffer base-buffer derived-buffer))))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
   ()
@@ -155,10 +153,9 @@
 TYPE can be 'body, nil."
   (poly-ein-base
    (setq pos (or pos (point)))
-   ;; Assume: ein:worksheet-get-current-cell always returns non-nil
-   (let ((result-cm cm)
-         (span `(nil ,(point-min) ,(point-min)))
-         (cell (ein:worksheet-get-current-cell :pos pos :noerror nil)))
+   (when-let ((result-cm cm)
+              (span `(nil ,(point-min) ,(point-min)))
+              (cell (ein:worksheet-get-current-cell :pos pos :noerror t)))
      ;; Change :mode if necessary
      (-when-let* ((lang
                    (condition-case err
@@ -185,12 +182,12 @@ TYPE can be 'body, nil."
              (ein:display-warning warning))))
        (setq result-cm
              (cl-loop for ocm in (eieio-oref pm/polymode '-auto-innermodes)
-                   when (equal mode (ein:oref-safe ocm 'mode))
-                   return ocm
-                   finally return (let ((new-mode (clone cm :mode mode)))
-                                    (object-add-to-list pm/polymode '-auto-innermodes
-                                                    new-mode)
-                                    new-mode))))
+                      when (equal mode (ein:oref-safe ocm 'mode))
+                      return ocm
+                      finally return (let ((new-mode (clone cm :mode mode)))
+                                       (object-add-to-list pm/polymode '-auto-innermodes
+                                                           new-mode)
+                                       new-mode))))
      ;; Span is a zebra pattern of "body" (within input cell) and "nil"
      ;; (outside input cell).  Decide boundaries of span and return it.
      (let ((rel (poly-ein--relative-to-input pos cell)))
@@ -257,6 +254,27 @@ TYPE can be 'body, nil."
     (add-function :around (local 'font-lock-syntactic-face-function)
                   (apply-partially #'poly-ein--narrow-to-inner #'identity))))
 
+(defun poly-ein--record-window-buffer ()
+  "(pm--visible-buffer-name) needs to get onto window's prev-buffers.
+But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers."
+  (when (buffer-base-buffer)
+    (let* ((buffer-list (frame-parameter nil 'buffer-list))
+           (pos-visible (seq-position
+                         buffer-list
+                         (pm--visible-buffer-name)
+                         (lambda (x visible*)
+                           (string-prefix-p (buffer-name x) visible*)))))
+      ;; no way to know if i've switched in or out of indirect buf.
+      ;; (if in, I *don't* want to add visible to buffer-list)
+      (cond ((and (numberp pos-visible) (> pos-visible 0))
+             (let ((visible-buffer (nth pos-visible buffer-list)))
+               (setcdr (nthcdr (1- pos-visible) buffer-list)
+                       (nthcdr (1+ pos-visible) buffer-list))
+               (set-frame-parameter nil 'buffer-list (cons visible-buffer buffer-list))))
+            ((null pos-visible)
+             (set-frame-parameter nil 'buffer-list
+                                  (cons (buffer-base-buffer) buffer-list)))))))
+
 (defun poly-ein-init-input-cell (_type)
   "Contrary to intuition, this inits the entire buffer of input cells
 (collectively denoted by the chunkmode pm-inner/ein-input-cell), not each individual one."
@@ -265,6 +283,7 @@ TYPE can be 'body, nil."
   (poly-ein-copy-state (pm-base-buffer) (current-buffer))
   (setq-local font-lock-dont-widen t)
   (setq-local syntax-propertize-chunks 0) ;; internal--syntax-propertize too far
+  (add-hook 'buffer-list-update-hook #'poly-ein--record-window-buffer nil t)
   (ein:notebook-mode))
 
 (defcustom pm-host/ein

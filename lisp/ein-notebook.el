@@ -1161,7 +1161,10 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
     `(if (functionp (quote ,defn))
          (progn
            (fset (quote ,km) (lambda () (interactive)
-                               (poly-ein-base (call-interactively (function ,defn)))))
+                               (condition-case err
+                                   (poly-ein-base (call-interactively (function ,defn)))
+                                 (cl-no-method (message "%s: no applicable method" (quote ,km)))
+                                 (error (message "%s: %s" (quote ,km) (error-message-string err))))))
            (define-key ,keymap ,key (quote ,km)))
        (define-key ,keymap ,key (quote ,defn)))))
 
