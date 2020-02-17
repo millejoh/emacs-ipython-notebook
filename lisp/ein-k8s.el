@@ -25,7 +25,7 @@
 
 (require 'kubernetes)
 
-(defcustom ein:k8s-name-deployment "jupyter-deployment"
+(defcustom ein:k8s-name-deployment nil
   "Regexp by which we recognize jupyter services."
   :type 'string
   :group 'ein)
@@ -124,7 +124,7 @@
     node))
 
 (defsubst ein:k8s-ensure ()
-  (and (executable-find kubernetes-kubectl-executable)
+  (and ein:k8s-name-deployment (executable-find kubernetes-kubectl-executable)
        (condition-case err
            (progn
              (ein:k8s-select-context)

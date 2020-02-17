@@ -57,10 +57,9 @@
 (require 'ein-traceback)
 (require 'ein-shared-output)
 (require 'ein-notebooklist)
-(require 'ob-ein)
 (require 'poly-ein)
 
-;;; Configuration
+(declare-function ob-ein-anonymous-p "ob-ein")
 
 (make-obsolete-variable 'ein:use-smartrep nil "0.17.0")
 
