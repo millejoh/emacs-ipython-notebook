@@ -78,29 +78,12 @@
   :type '(choice (const :tag "Name" :name)
                  (const :tag "Last modified" :last_modified))
   :group 'ein)
-(make-variable-buffer-local 'ein:notebooklist-sort-field)
-(put 'ein:notebooklist-sort-field 'permanent-local t)
 
 (defcustom ein:notebooklist-sort-order :ascending
   "The notebook list sort order."
   :type '(choice (const :tag "Ascending" :ascending)
                  (const :tag "Descending" :descending))
   :group 'ein)
-(make-variable-buffer-local 'ein:notebooklist-sort-order)
-(put 'ein:notebooklist-sort-order 'permanent-local t)
-
-(defmacro ein:make-sorting-widget (tag custom-var)
-  "Create the sorting widget."
-  ;; assume that custom-var has type `choice' of `const's.
-  `(widget-create
-    'menu-choice :tag ,tag
-    :value ,custom-var
-    :notify (lambda (widget &rest _ignore)
-              (run-at-time 1 nil #'ein:notebooklist-reload)
-              (setq ,custom-var (widget-value widget)))
-    ,@(mapcar (lambda (const)
-                `'(item :tag ,(third const) :value ,(fourth const)))
-              (rest (custom-variable-type custom-var)))))
 
 (define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 
@@ -160,7 +143,7 @@ Return nil if unclear what, if any, authentication applies."
   (multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
     (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
       (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
-            ((and (stringp token) (eql password-p :json-false)) token)
+            ((and (stringp token) (eq password-p :json-false)) token)
             ((equal url-or-port my-url-or-port) my-token)
             (t nil)))))
 
@@ -395,10 +378,10 @@ This function is called via `ein:notebook-after-rename-hook'."
 
 (cl-defun ein:nblist--sort-group (group by-param order)
   (sort group #'(lambda (x y)
-                  (cond ((eql order :ascending)
+                  (cond ((eq order :ascending)
                          (string-lessp (plist-get x by-param)
                                        (plist-get y by-param)))
-                        ((eql order :descending)
+                        ((eq order :descending)
                          (string-greaterp (plist-get x by-param)
                                           (plist-get y by-param)))))))
 

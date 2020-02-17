@@ -87,28 +87,6 @@ notebook.  For global setting and more information, see
                  (const :tag "Use global setting" nil))
   :group 'ein)
 
-(defcustom ein:helm-kernel-history-search-key nil
-  "Bind `helm-ein-kernel-history' to this key in notebook mode.
-
-Example::
-
-    (setq ein:helm-kernel-history-search-key \"\\M-r\")
-
-This key will be installed in the `ein:notebook-mode-map'."
-  :type 'boolean
-  :group 'ein)
-
-(defcustom ein:anything-kernel-history-search-key nil
-  "Bind `anything-ein-kernel-history' to this key in notebook mode.
-
-Example::
-
-    (setq ein:anything-kernel-history-search-key \"\\M-r\")
-
-This key will be installed in the `ein:notebook-mode-map'."
-  :type 'boolean
-  :group 'ein)
-
 (defcustom ein:notebook-set-buffer-file-name nil
   "[DEPRECATED] Set `buffer-file-name' of notebook buffer. Currently does nothing."
   :type 'boolean
@@ -168,28 +146,6 @@ And I don't know if I can on account of the dont-save-cells nonsense."
      (t (setf scratchsheets (delq ws scratchsheets))))))
 
 ;;; Notebook utility functions
-
-(defun ein:notebook-update-url-or-port (new-url-or-port notebook)
-  "Change the url and port the notebook is saved to. Calling
-this will propagate the change to the kernel, trying to restart
-the kernel in the process. Use case for this command is when
-the jupyter server dies and restarted on a different port.
-
-If you have enabled token or password security on server running
-at the new url/port, then please be aware that this new url-port
-combo must match exactly these url/port you used format
-`ein:notebooklist-login'."
-  (interactive (list
-                (ein:notebooklist-ask-url-or-port)
-                (ein:notebook--get-nb-or-error)))
-  (message "Updating server info and restarting kernel for notebooklist %s"
-           (ein:$notebook-notebook-name notebook))
-  (setf (ein:$notebook-url-or-port notebook) new-url-or-port)
-  (with-current-buffer (ein:notebook-buffer notebook)
-    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook))
-    (rename-buffer (format ein:notebook-buffer-name-template
-                           (ein:$notebook-url-or-port notebook)
-                           (ein:$notebook-notebook-name notebook)))))
 
 (defun ein:notebook-buffer (notebook)
   "Return first buffer in NOTEBOOK's worksheets."
@@ -1358,17 +1314,7 @@ watch the fireworks!"
   ;; BODY contains code to execute each time the mode is enabled or disabled.
   ;; It is executed after toggling the mode, and before running MODE-hook.
 
-  (when ein:notebook-mode
-    (aif ein:helm-kernel-history-search-key
-        (ein:notebook--define-key ein:notebook-mode-map it helm-ein-kernel-history))
-    (aif ein:anything-kernel-history-search-key
-        (ein:notebook--define-key ein:notebook-mode-map it anything-ein-kernel-history))
-    (setq indent-tabs-mode nil) ;; Being T causes problems with Python code.
-    ))
-
-;; To avoid MuMaMo to discard `ein:notebook-mode', make it
-;; permanent local.
-(put 'ein:notebook-mode 'permanent-local t)
+  )
 
 (defun ein:notebook-fetch-data (notebook callback &optional cbargs)
   "Fetch data in body tag of NOTEBOOK html page.

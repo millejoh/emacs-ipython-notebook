@@ -86,12 +86,8 @@
                               (get-buffer-create (format "*ipdb: %s*" (ein:pdb-session-id session))))
     (set (make-local-variable 'ein:ipdb-buffer-active-kernel) (ein:pdb-session-id session))
     (set (make-local-variable 'ein:ipdb-buffer-prompt) prompt)
-    (put 'ein:ipdb-buffer-active-kernel 'permanent-local t)
-    (put 'ein:ipdb-buffer-prompt 'permanent-local t)
     (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
-
     (ein:ipdb-mode)
-
     (pop-to-buffer (ein:$ipdb-session-buffer session))))
 
 (defun ein:ipdb-on-stop ()
