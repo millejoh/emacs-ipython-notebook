@@ -42,11 +42,11 @@
 (require 'ein-kernel)
 (require 'ein-output-area)
 
-(declare-function mm-encode-buffer "mm-encode")
-(declare-function mm-possibly-verify-or-decrypt "mm-decode")
-(declare-function mm-dissect-singlepart "mm-decode")
-(declare-function mm-display-external "mm-decode")
-(declare-function mm-handle-media-type "mm-decode")
+(autoload 'mm-encode-buffer "mm-encode")
+(autoload 'mm-possibly-verify-or-decrypt "mm-decode")
+(autoload 'mm-dissect-singlepart "mm-decode")
+(autoload 'mm-display-external "mm-decode")
+(autoload 'mm-handle-media-type "mm-decode")
 
 (defun ein:cell--ewoc-delete (ewoc &rest nodes)
   "Delete NODES from EWOC."
