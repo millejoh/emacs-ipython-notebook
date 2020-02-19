@@ -395,11 +395,12 @@ This function is called via `ein:notebook-after-rename-hook'."
          (nbs (ein:nblist--sort-group (cdr (assoc "notebook" groups))
                                       sort-param
                                       sort-order))
-         (files (ein:nblist--sort-group (-flatten-n 1 (-map #'cdr (-group-by
-                                             #'(lambda (x) (car (last (s-split "\\." (plist-get x :name)))))
-                                             (cdr (assoc "file" groups)))))
-                                        sort-param
-                                        sort-order)))
+         (files (ein:nblist--sort-group
+                 (-flatten-n 1 (-map #'cdr (-group-by
+                                            #'(lambda (x) (car (last (split-string (plist-get x :name) "\\."))))
+                                            (cdr (assoc "file" groups)))))
+                 sort-param
+                 sort-order)))
     (-concat dirs nbs files)))
 
 (defun render-header (url-or-port &rest args)

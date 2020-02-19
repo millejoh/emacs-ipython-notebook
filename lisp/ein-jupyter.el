@@ -26,7 +26,6 @@
 (require 'ein-core)
 (require 'ein-notebooklist)
 (require 'ein-dev)
-(require 'ein-k8s)
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -122,17 +121,7 @@ with the call to the jupyter notebook."
 (defun ein:jupyter-process-lines (url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
   (condition-case err
-      (cond ((-when-let* ((url-or-port url-or-port)
-                          (parsed-url (url-generic-parse-url url-or-port))
-                          (not-local (not (string= (url-host parsed-url)
-                                                   ein:url-localhost))))
-               (string= url-or-port (ein:k8s-service-url-or-port)))
-             (let ((pod-name (kubernetes-state-resource-name (ein:k8s-get-pod))))
-               (apply #'process-lines kubernetes-kubectl-executable
-                      (nconc
-                       (split-string (format "exec %s -- %s" pod-name command))
-                       args))))
-            (t (apply #'process-lines command args)))
+      (apply #'process-lines command args)
     (error (ein:log 'info "ein:jupyter-process-lines: %s" (error-message-string err))
            nil)))
 
@@ -238,20 +227,18 @@ our singleton jupyter server process here."
 ;;;###autoload
 (defun ein:jupyter-crib-running-servers ()
   "Shell out to jupyter for running servers."
-  (nconc
-   (cl-loop for line in
-            (apply #'ein:jupyter-process-lines nil
-                   ein:jupyter-server-command
-                   (split-string
-                    (format "%s%s %s"
-                            (aif ein:jupyter-server-use-subcommand
-                                (concat it " ") "")
-                            "list" "--json")))
-            collecting (destructuring-bind
-                           (&key url &allow-other-keys)
-                           (ein:json-read-from-string line)
-                         (ein:url url)))
-   (aif (ein:k8s-service-url-or-port) (list it))))
+  (cl-loop for line in
+           (apply #'ein:jupyter-process-lines nil
+                  ein:jupyter-server-command
+                  (split-string
+                   (format "%s%s %s"
+                           (aif ein:jupyter-server-use-subcommand
+                               (concat it " ") "")
+                           "list" "--json")))
+           collecting (destructuring-bind
+                          (&key url &allow-other-keys)
+                          (ein:json-read-from-string line)
+                        (ein:url url))))
 
 ;;;###autoload
 (defun ein:jupyter-server-start (server-command

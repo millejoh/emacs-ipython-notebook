@@ -27,12 +27,10 @@
 
 (require 'cc-mode)
 (require 'json)
-(require 's)
 (require 'dash)
 (require 'url)
 (require 'deferred)
 
-
 ;;; Macros and core functions/variables
 
 (defmacro ein:with-undo-disabled (&rest body)
@@ -210,8 +208,7 @@ at point, i.e. any word before then \"(\", if it is present."
         (setq url-or-port (format "http://localhost:%s" url-or-port)))
     (let ((parsed-url (url-generic-parse-url url-or-port)))
       (when (null (url-host parsed-url))
-        (setq url-or-port (concat (if (string= url-or-port (ein:k8s-service-url-or-port))
-                                      "http" "https") "://" url-or-port))
+        (setq url-or-port (concat "https://" url-or-port))
         (setq parsed-url (url-generic-parse-url url-or-port)))
       (when (or (string= (url-host parsed-url) "localhost")
                 (string= (url-host parsed-url) ein:url-localhost)
@@ -685,7 +682,6 @@ Use `ein:log' for debugging and logging."
     (when ein:enable-gc-adjust
       (setq gc-cons-threshold current-gc-cons-threshold))))
 
-
 ;;; Git utilities
 
 (defun ein:call-process (command &optional args)
