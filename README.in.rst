@@ -82,10 +82,14 @@ How do I...
       M-x customize-group RET mailcap
       Mailcap User Mime Data
 
+... get IDE-like behavior?
+   The official python module for EIN is elpy_, installed separately.  Other `program modes`_ for non-python kernels may be installed with varying degrees of EIN compatibility.
+
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
-
+.. _elpy: https://melpa.org/#/elpy
+.. _program modes: https://www.gnu.org/software/emacs/manual/html_node/emacs/Program-Modes.html
 ob-ein
 ======
 Configuration:
