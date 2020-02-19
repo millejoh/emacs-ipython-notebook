@@ -59,7 +59,7 @@
 (require 'ein-notebooklist)
 (require 'poly-ein)
 
-(declare-function ob-ein-anonymous-p "ob-ein")
+(autoload 'ob-ein-anonymous-p "ob-ein")
 
 (make-obsolete-variable 'ein:use-smartrep nil "0.17.0")
 
