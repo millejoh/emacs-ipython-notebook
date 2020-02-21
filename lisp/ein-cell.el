@@ -72,8 +72,7 @@
               (ewoc--node-right node) nil)))))
 
 (defun ein:cell--ewoc-invalidate (ewoc &rest nodes)
-  "Call EWOC's pretty-printer for each element in NODES.
-Delete current text first, thus effecting a \"refresh\"."
+  "Call EWOC's pretty-printer (`ein:worksheet-pp') for each element in NODES."
   (ewoc--set-buffer-bind-dll-let* ewoc
       ((pp (ewoc--pretty-printer ewoc)))
     (save-excursion
@@ -792,9 +791,7 @@ If END is non-`nil', return the location of next element."
   (ein:cell-expand cell)
   (setf (slot-value cell 'outputs)
         (append (slot-value cell 'outputs) (list json)))
-  (let* ((inhibit-read-only t)
-         (buffer-undo-list t)
-         (ewoc (slot-value cell 'ewoc))
+  (let* ((ewoc (slot-value cell 'ewoc))
          (index (1- (ein:cell-num-outputs cell)))
          (path `(cell output ,index))
          (class (ein:cell-output-json-to-class json))
@@ -838,9 +835,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell-append-stream ((cell ein:codecell) json)
   "Insert stream type output in the buffer.
-Called from ewoc pretty printer via `ein:cell-insert-output'."
-  ;; (unless (plist-get json :stream)
-  ;;   (plist-put json :stream "stdout"))
+Called from ewoc pretty printer `ein:worksheet-pp'."
   (unless (eq cell ein:%cell-append-stream-last-cell%)
     ;; Avoid applying unclosed ANSI escape code in the cell.  Note
     ;; that I don't need to distinguish stdout/stderr because it looks
@@ -984,9 +979,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell-make-callbacks ((cell ein:codecell))
   (list
-   :execute_reply  (cons #'ein:cell--handle-execute-reply  cell)
-   :output         (cons #'ein:cell--handle-output         cell)
-   :clear_output   (cons #'ein:cell--handle-clear-output   cell)
+   :execute_reply  (cons #'ein:cell--handle-execute-reply cell)
+   :output         (cons #'ein:cell--handle-output cell)
+   :clear_output   (cons #'ein:cell--handle-clear-output cell)
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
 (cl-defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content metadata)
@@ -1035,11 +1030,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
                                              _metadata)
   "Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output"
-  (ein:cell-clear-output cell
-                         t ;;(plist-get content :stdout)
-                         t ;;(plist-get content :stderr)
-                         t ;;(plist-get content :other))
-                         )
+  (ein:cell-clear-output cell t t t)
   (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
 
 (cl-defmethod ein:cell-has-image-output-p ((cell ein:codecell))

@@ -173,38 +173,39 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
   (cl-assert (listp buffer-undo-list))
-  (if (/= (length buffer-undo-list) (length ein:%which-cell%))
-      (ein:log 'debug "jig %s to %s: %S %S" (length ein:%which-cell%) (length buffer-undo-list) buffer-undo-list ein:%which-cell%))
-  (ein:and-let* ((old-cell-id (car change-cell-id))
-                 (new-cell-id (cdr change-cell-id))
-                 (changed-p (not (eq old-cell-id new-cell-id))))
+  (when (/= (length buffer-undo-list) (length ein:%which-cell%))
+    (ein:log 'debug "jig %s to %s: %S %S"
+             (length ein:%which-cell%) (length buffer-undo-list)
+             buffer-undo-list ein:%which-cell%))
+  (-when-let* ((old-cell-id (car change-cell-id))
+               (new-cell-id (cdr change-cell-id))
+               (changed-p (not (eq old-cell-id new-cell-id))))
     (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
   (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
-    (if (> (abs fill) 1)
-        (progn
-          (let ((msg (format "Undo failure diagnostic %s %s | %s"
-                             buffer-undo-list ein:%which-cell% fill))
-                (pm-allow-post-command-hook nil))
-            (setq ein:worksheet-enable-undo nil)
-            (ein:worksheet-undo-setup ein:%worksheet%)
-            (when pm/polymode
-              (dolist (b (eieio-oref pm/polymode '-buffers))
-                (when (buffer-live-p b)
-                  (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
-            (ein:display-warning msg :error)
-            (error "ein:worksheet--jigger-undo-list: aborting")))
-      (if (< fill 0)
-          (setq ein:%which-cell% (nthcdr (- fill)  ein:%which-cell%))
-        (if (> fill 0)
-            (setq ein:%which-cell%
-                  (nconc (make-list fill (car ein:%which-cell%))
-                         ein:%which-cell%))))))
+    (cond ((> (abs fill) 1)
+           (let ((msg (format "Undo failure diagnostic %s %s | %s"
+                              buffer-undo-list ein:%which-cell% fill))
+                 (pm-allow-post-command-hook nil))
+             (setq ein:worksheet-enable-undo nil)
+             (ein:worksheet-undo-setup ein:%worksheet%)
+             (when pm/polymode
+               (dolist (b (eieio-oref pm/polymode '-buffers))
+                 (when (buffer-live-p b)
+                   (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
+             (ein:display-warning msg :error)
+             (error "ein:worksheet--jigger-undo-list: aborting")))
+          ((< fill 0)
+           (setq ein:%which-cell% (nthcdr (- fill) ein:%which-cell%)))
+          ((> fill 0)
+           (setq ein:%which-cell% (nconc (make-list fill (car ein:%which-cell%))
+                                         ein:%which-cell%)))))
   (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
              "ein:worksheet--jigger-undo-list %d != %d"
              (length buffer-undo-list) (length ein:%which-cell%)))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
-  "Adjust `buffer-undo-list' for adding CELL.  Unshift in list parlance means prepending to list."
+  "Adjust `buffer-undo-list' for adding CELL.
+Unshift in list parlance means prepending to list."
   (unless old-cell
     (setq old-cell cell))
   (when buffer-local-enable-undo
@@ -453,13 +454,12 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
 
 (defun ein:worksheet-pp (ewoc-data)
+  "Consider disabling `buffer-undo-list' here instead of `ein:cell--ewoc-invalidate'
+which is probably unnecessarily 'surgical'."
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
     (case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
-
-
-;;; Persistance and loading
 
 (cl-defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
   (destructuring-bind (&key cells metadata &allow-other-keys) data

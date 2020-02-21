@@ -297,13 +297,12 @@ See: http://api.jquery.com/jQuery.ajax/"
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 
 (defun ein:insert-read-only (string &rest properties)
-  (let ((buffer-undo-list t))
+  (let ((buffer-undo-list t)
+        (start (point)))
     (insert (apply #'ein:propertize-read-only
                    (ein:maybe-truncate-string-lines string ein:truncate-long-cell-output)
-                   properties))))
-
-
-;;; String manipulation
+                   properties))
+    (comint-carriage-motion start (point))))
 
 (defun ein:maybe-truncate-string-lines (string nlines)
   "Truncate multi-line `string' to the number of lines specified by `nlines'. If actual

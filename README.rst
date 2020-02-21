@@ -6,8 +6,6 @@ Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
 idiosyncrasies of in-browser editing.
 
-EIN is not tested on Doom or Spacemacs.  There are known issues with both.
-
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
 EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
@@ -79,7 +77,6 @@ How do I...
 
 ... display images inline?
    We find inserting images into emacs disruptive, and so default to spawning an external viewer.  To override this,
-
    ::
 
       M-x customize-group RET ein
@@ -94,11 +91,18 @@ How do I...
 ... get IDE-like behavior?
    The official python module for EIN is elpy_, installed separately.  Other `program modes`_ for non-python kernels may be installed with varying degrees of EIN compatibility.
 
+... undo?
+   Cell-level actions like ``C-c C-b`` cannot be undone.
+   Undo's whilst a cell continues receiving output will actually *redo* the last action.  This is due to "`undo boundaries`_" being inserted by the receiving cell, a known EIN bug.
+   Undo's will not work under ``undo-tree-mode``, a default mode for Doom and Spacemacs, and other packages employing ``evil-mode``.
+
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 .. _elpy: https://melpa.org/#/elpy
 .. _program modes: https://www.gnu.org/software/emacs/manual/html_node/emacs/Program-Modes.html
+.. _undo boundaries: https://www.gnu.org/software/emacs/manual/html_node/elisp/Undo.html
+
 ob-ein
 ======
 Configuration:
