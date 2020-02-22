@@ -841,9 +841,8 @@ Called from ewoc pretty printer `ein:worksheet-pp'."
     ;; that I don't need to distinguish stdout/stderr because it looks
     ;; like normal terminal does not.
     (setq ansi-color-context nil))
-  (let ((start (point)))
-    (ein:cell-append-stream-text-fontified (or (plist-get json :text) "") json)
-    (comint-carriage-motion start (point)))
+  (ein:cell-append-stream-text-fontified (or (plist-get json :text) "") json)
+
   ;; NOTE: newlines for stream is handled in `ein:cell-insert-output'.
   ;; So do not insert newline here.
   (setq ein:%cell-append-stream-last-cell% cell))
