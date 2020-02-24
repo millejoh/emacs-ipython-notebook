@@ -507,10 +507,13 @@ This function is called via `ein:notebook-after-rename-hook'."
                        (widget-insert " : " name)
                        (widget-insert "\n"))
              end
-             if (and (string= type "file") (> (ein:notebook-version-numeric url-or-port) 2))
+             if (string= type "file")
              do (progn (widget-create
                         'link
-                        :notify (apply-partially #'ein:file-open url-or-port path)
+                        :notify (apply-partially
+                                 (lambda (url-or-port* path* &rest _args)
+                                   (ein:file-open url-or-port* path*))
+                                 url-or-port path)
                         "Open")
                        (widget-insert "                ")
                        (widget-insert " : " (ein:format-nbitem-data name last-modified))

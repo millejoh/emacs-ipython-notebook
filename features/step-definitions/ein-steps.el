@@ -314,8 +314,8 @@
                  do (sleep-for 0 1000)
                  finally do (should (search stop (buffer-string))))))
 
-(When "^I click\\( without going top\\)? on \"\\(.+\\)\"$"
-      (lambda (stay word)
+(When "^I click\\( without going top\\)? on\\( file\\)? \"\\(.+\\)\"$"
+      (lambda (stay file word)
         ;; from espuds "go to word" without the '\\b's
         (unless stay
           (goto-char (point-min)))
@@ -327,8 +327,9 @@
         (backward-char)
         (let ((was (widget-at)))
           (When "I press \"RET\"")
-          (cl-loop until (not (equal was (widget-at)))
-                   do (sleep-for 0 500)))))
+          (unless file
+            (cl-loop until (not (equal was (widget-at)))
+                     do (sleep-for 0 500))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
       (lambda (dir)
