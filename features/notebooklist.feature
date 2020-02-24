@@ -25,6 +25,17 @@ Scenario: Resync
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "kernelspecs--complete"
 
+@file
+Scenario: File open
+  Given I am in notebooklist buffer
+  And I go to word "notebooklist.feature"
+  And I go to beginning of line
+  And I click without going top on "Open"
+  And I clear log expr "ein:log-all-buffer-name"
+  And I click on "Open"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "kernelspecs--complete"
+
 @stop
 Scenario: Stop after closing notebook
   Given I am in notebooklist buffer
