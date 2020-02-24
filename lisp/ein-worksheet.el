@@ -962,9 +962,10 @@ It is set in `ein:notebook-multilang-mode'."
                   "Use C-c <up> and C-c <down>."
                   "Custom set variable `ein:worksheet-warn-obsolesced-keybinding' to disable this warning.") "\n")
      warning-minimum-level))
-  (call-interactively (cl-some #'identity
-                               (mapcar (lambda (pair) (lookup-key (cdr pair) which))
-                                       (cdr minor-mode-map-alist)))))
+  (aif (cl-some (lambda (c) (and (commandp c) c))
+                (mapcar (lambda (pair) (lookup-key (cdr pair) which))
+                        (cdr minor-mode-map-alist)))
+      (call-interactively it)))
 
 (defun ein:worksheet-not-move-cell-up (&rest _args)
   (interactive)
