@@ -27,6 +27,7 @@
 (require 'ein-cell)
 (require 'jit-lock)
 (require 'display-line-numbers nil t)
+(require 'undo-tree nil t)
 
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
@@ -52,6 +53,9 @@
   (when (ein:eval-if-bound 'display-line-numbers-mode)
     (when (fboundp 'display-line-numbers-mode)
       (display-line-numbers-mode -1)))
+  (when (ein:eval-if-bound 'undo-tree-mode)
+    (when (fboundp 'undo-tree-mode)
+      (undo-tree-mode -1)))
   (when visual-line-mode
     (visual-line-mode -1)))
 
