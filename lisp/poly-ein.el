@@ -1,6 +1,32 @@
+;;; poly-ein.el --- polymode for EIN
+
+;; Copyright (C) 2019- The Authors
+
+;; This file is NOT part of GNU Emacs.
+
+;; poly-ein.el is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; poly-ein.el is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with poly-ein.el.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;
+
+;;; Code:
+
 (require 'polymode)
 (require 'ein-cell)
 (require 'jit-lock)
+(require 'display-line-numbers)
 
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
@@ -10,8 +36,8 @@
                        (remove-hook (quote ,functions) x t)))
          ,functions))
 
-(defsubst poly-ein--neuter-markdown-mode ()
-  "Consolidate fragility here."
+(defsubst poly-ein--retweak-input-mode ()
+  "Whenever we enter input cell, ensure behavioral uniformity."
   (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
     ;; move `ein:notebook-mode' to the head of `minor-mode-map-alist'
     (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
@@ -22,7 +48,11 @@
     (poly-ein--remove-hook "ein:markdown" after-change-functions)
     (poly-ein--remove-hook "ein:markdown" jit-lock-after-change-extend-region-functions)
     (poly-ein--remove-hook "ein:markdown" window-configuration-change-hook)
-    (poly-ein--remove-hook "ein:markdown" syntax-propertize-extend-region-functions)))
+    (poly-ein--remove-hook "ein:markdown" syntax-propertize-extend-region-functions))
+  (when display-line-numbers-mode
+    (display-line-numbers-mode -1))
+  (when visual-line-mode
+    (visual-line-mode -1)))
 
 (defun poly-ein--narrow-to-inner (modifier f &rest args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
@@ -38,13 +68,20 @@
 
 (defun poly-ein--decorate-functions ()
   "Affect global definitions of ppss and jit-lock rather intrusively."
+  (mapc (lambda (fun)
+          (dolist (adv (list 'poly-lock-no-jit-lock-in-polymode-buffers
+                             'polymode-inhibit-during-initialization))
+            (when (advice-member-p adv fun)
+              ;; must set log level at toplevel to show following
+              (ein:log 'debug "poly-ein--decorate-functions: removing %s from %s"
+                       adv fun)
+              (advice-remove fun adv))))
+        (list 'jit-lock-mode
+              'font-lock-fontify-region
+              'font-lock-fontify-buffer
+              'font-lock-ensure))
 
-  (advice-remove 'jit-lock-mode #'poly-lock-no-jit-lock-in-polymode-buffers)
-  (advice-remove 'font-lock-fontify-region #'polymode-inhibit-during-initialization)
-  (advice-remove 'font-lock-fontify-buffer #'polymode-inhibit-during-initialization)
-  (advice-remove 'font-lock-ensure #'polymode-inhibit-during-initialization)
-
-  (add-hook 'after-change-major-mode-hook #'poly-ein--neuter-markdown-mode t)
+  (add-hook 'after-change-major-mode-hook #'poly-ein--retweak-input-mode t)
 
   ;; https://github.com/millejoh/emacs-ipython-notebook/issues/537
   ;; alternatively, filter-args on ad-should-compile but then we'd have to
