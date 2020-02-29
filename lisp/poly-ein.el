@@ -26,7 +26,7 @@
 (require 'polymode)
 (require 'ein-cell)
 (require 'jit-lock)
-(require 'display-line-numbers)
+(require 'display-line-numbers nil t)
 
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
@@ -49,8 +49,9 @@
     (poly-ein--remove-hook "ein:markdown" jit-lock-after-change-extend-region-functions)
     (poly-ein--remove-hook "ein:markdown" window-configuration-change-hook)
     (poly-ein--remove-hook "ein:markdown" syntax-propertize-extend-region-functions))
-  (when display-line-numbers-mode
-    (display-line-numbers-mode -1))
+  (when (ein:eval-if-bound 'display-line-numbers-mode)
+    (when (fboundp 'display-line-numbers-mode)
+      (display-line-numbers-mode -1)))
   (when visual-line-mode
     (visual-line-mode -1)))
 
