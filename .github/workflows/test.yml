@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        emacs_version: [25.1, 26.3]
+        emacs_version: [25.1, 26.3, snapshot]
         python-version: [3.7]
         include:
           - emacs_version: 24.1
@@ -43,13 +43,13 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip
+        key: ${{ runner.os }}-pip-001
 
     - uses: actions/cache@v1
       if: startsWith(runner.os, 'macOS')
       with:
         path: ~/Library/Caches/pip
-        key: ${{ runner.os }}-pip
+        key: ${{ runner.os }}-pip-001
 
     - uses: actions/cache@v1
       with:
@@ -81,7 +81,7 @@ jobs:
       run: |
         mkdir -p ~/local/bin
         python -m pip install --upgrade pip
-        pip install setuptools wheel jupyter ipykernel ipython\<=7.8.0 numpy\<=1.16.4 matplotlib\<=3.0.3
+        pip install yq setuptools wheel jupyter ipykernel ipython\<=7.8.0 numpy\<=1.16.4 matplotlib\<=3.0.3
         python -m ipykernel install --user
         sh tools/install-R.sh
 
@@ -110,8 +110,10 @@ jobs:
       run: |
         rm -rf ~/.matplotlib ~/.cache/fontconfig
         make test
+      continue-on-error: ${{ matrix.emacs_version == 'snapshot' }}
 
     - name: test-mem-constrained
       if: startsWith(runner.os, 'macOS')
       run: |
         make quick
+      continue-on-error: ${{ matrix.emacs_version == 'snapshot' }}
