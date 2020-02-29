@@ -45,11 +45,6 @@
       (setf minor-mode-map-alist
             (cons entry
                   (assq-delete-all 'ein:notebook-mode minor-mode-map-alist)))))
-  (when (eq major-mode 'ein:markdown-mode)
-    (poly-ein--remove-hook "ein:markdown" after-change-functions)
-    (poly-ein--remove-hook "ein:markdown" jit-lock-after-change-extend-region-functions)
-    (poly-ein--remove-hook "ein:markdown" window-configuration-change-hook)
-    (poly-ein--remove-hook "ein:markdown" syntax-propertize-extend-region-functions))
   (when (ein:eval-if-bound 'display-line-numbers-mode)
     (when (fboundp 'display-line-numbers-mode)
       (display-line-numbers-mode -1)))
