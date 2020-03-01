@@ -393,17 +393,22 @@ Unshift in list parlance means prepending to list."
     (dolist (b (or (and pm/polymode (eieio-oref pm/polymode '-buffers))
                    (list (current-buffer))))
       (ein:with-live-buffer b
-        (rename-buffer
-         (let ((simple-name (ein:worksheet--buffer-name ein:%worksheet%)))
-           (if (and pm/polymode (not (eq (pm-base-buffer) (current-buffer))))
-               (let ((chunkmode (nth 3 (pm-innermost-span))))
-                 (format "%s[%s]" simple-name
-                         (replace-regexp-in-string
-                          "poly-\\|-mode" ""
-                          (symbol-name
-                           (pm--get-existing-mode (eieio-oref chunkmode 'mode)
-                                                  (eieio-oref chunkmode 'fallback-mode))))))
-             simple-name)))))))
+        (let* ((base-name (ein:worksheet--buffer-name ws))
+               (impl-name
+                (and pm/polymode
+                     (not (eq (pm-base-buffer) (current-buffer)))
+                     (let ((chunkmode (nth 3 (pm-innermost-span))))
+                       (format "%s%s[%s]" (if pm-hide-implementation-buffers " " "")
+                               base-name
+                               (replace-regexp-in-string
+                                "poly-\\|-mode" ""
+                                (symbol-name
+                                 (pm--get-existing-mode
+                                  (eieio-oref chunkmode 'mode)
+                                  (eieio-oref chunkmode 'fallback-mode))))))))
+               (new-name (or impl-name base-name)))
+          (unless (string= new-name (buffer-name b))
+            (rename-buffer new-name)))))))
 
 (cl-defmethod ein:worksheet-set-modified-p ((ws ein:worksheet) dirty)
   (ein:with-live-buffer (ein:worksheet-buffer ws)
