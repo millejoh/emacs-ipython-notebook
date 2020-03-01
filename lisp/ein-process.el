@@ -25,12 +25,7 @@
 
 ;;; Code:
 
-(require 'ein-core)
-
-(declare-function ein:notebook-open "ein-notebook")
-(declare-function ein:notebooklist-list-get "ein-notebooklist")
-(declare-function ein:notebooklist-login "ein-notebooklist")
-(declare-function ein:jupyter-server-start "ein-jupyter")
+(require 'ein-jupyter)
 
 (defcustom ein:process-jupyter-regexp "\\(jupyter\\|ipython\\)\\(-\\|\\s-+\\)note"
   "Regexp by which we recognize notebook servers."
@@ -121,27 +116,25 @@
           (setq directory (directory-file-name (file-name-directory directory)))
           finally return suitable)))
 
-(defvar ein:jupyter-server-command)
-(defvar ein:jupyter-server-use-subcommand)
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
   (cl-loop for line in (condition-case err
-                        (apply #'process-lines
-                               ein:jupyter-server-command
-                               (append (aif ein:jupyter-server-use-subcommand
-                                           (list it))
-                                       '("list" "--json")))
-                      ;; often there is no local jupyter installation
-                      (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
-        do (destructuring-bind
-               (&key pid url notebook_dir &allow-other-keys)
-               (ein:json-read-from-string line)
-             (puthash (directory-file-name notebook_dir)
-                      (make-ein:$process :pid pid
-                                         :url (ein:url url)
-                                         :dir (directory-file-name notebook_dir))
-                      ein:%processes%))))
+                           (apply #'process-lines
+                                  ein:jupyter-server-command
+                                  (append (aif ein:jupyter-server-use-subcommand
+                                              (list it))
+                                          '("list" "--json")))
+                         ;; often there is no local jupyter installation
+                         (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
+           do (destructuring-bind
+                  (&key pid url notebook_dir &allow-other-keys)
+                  (ein:json-read-from-string line)
+                (puthash (directory-file-name notebook_dir)
+                         (make-ein:$process :pid pid
+                                            :url (ein:url url)
+                                            :dir (directory-file-name notebook_dir))
+                         ein:%processes%))))
 
 (defun ein:process-dir-match (filename)
   "Return ein:process whose directory is prefix of FILENAME."
@@ -166,8 +159,6 @@
   "Construct path by eliding PROC's dir from filename"
   (cl-subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
-(defvar ein:jupyter-use-containers)
-(defvar ein:jupyter-docker-mount-point)
 (defun ein:process-open-notebook* (filename callback)
   "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
   (ein:process-refresh-processes)
