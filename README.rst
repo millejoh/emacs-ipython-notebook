@@ -71,7 +71,7 @@ How do I...
    First try ``emacs -Q -f package-initialize --eval "(setq debug-on-error t)"`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
    Note EIN is tested only for *released* GNU Emacs versions
-   snapshot
+   25.1
    and later.  Pre-release versions are unlikely to work.
 
 ... display images inline?
