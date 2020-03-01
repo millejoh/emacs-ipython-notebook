@@ -2,6 +2,10 @@
       (lambda ()
         (insert-char 37)))
 
+(When "^I set the kernel connect message$"
+      (lambda ()
+        (add-to-list 'ein:on-kernel-connect-functions #'(lambda (_) (message "Hello ein.")))))
+
 (When "^I type session port \\([0-9]+\\)$"
       (lambda (port)
         (ein:process-refresh-processes)
