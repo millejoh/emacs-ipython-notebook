@@ -28,14 +28,14 @@
 
 (require 'eieio)
 
-(require 'ein-notebook)
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-events)
 
-
-;; Class and variable
-
+(declare-function ein:get-notebook "ein:notebook")
+(declare-function ein:notebook-opened-buffer-names "ein:notebook")
+(declare-function ein:list-available-kernels "ein:notebook")
+(declare-function ein:notebook-switch-kernel "ein:notebook")
 
 (ein:deflocal ein:%notification% nil
   "Buffer local variable to hold an instance of `ein:notification'.")
@@ -199,16 +199,13 @@ insert-prev insert-next move-prev move-next)"
                    'help-echo "Click (mouse-1) to insert a new tab."
                    'mouse-face 'highlight
                    'face 'ein:notification-tab-normal)
-       (propertize (aif (and ein:%notebook% (ein:$notebook-kernelspec ein:%notebook%))
+       (propertize (aif (and (ein:get-notebook) (ein:$notebook-kernelspec (ein:get-notebook)))
                        (format "|%s|" (ein:$kernelspec-name it))
                      "|unknown: please click and select a kernel|")
                    'keymap ein:header-line-switch-kernel-map
                    'help-echo "Click (mouse-1) to change the running kernel."
                    'mouse-face 'highlight
                    'face 'ein:notification-tab-normal))))))
-
-
-;;; Header line
 
 (let ((map ein:header-line-tab-map))
   (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)

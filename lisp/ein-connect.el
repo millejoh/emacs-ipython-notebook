@@ -34,9 +34,6 @@
 (require 'anaphora)
 (require 'ein-notebook)
 
-
-;;; Utils
-
 (defun ein:maybe-save-buffer (option)
   "Conditionally save current buffer.
 Return `t' if the buffer is unmodified or `nil' otherwise.

@@ -940,18 +940,16 @@ It is set in `ein:notebook-multilang-mode'."
   ;; effectively kill and yank modulo dirtying kill ring
   (aif (if up (ein:cell-prev cell) (ein:cell-next cell))
       (let ((inhibit-read-only t)
-            (pivot-cell it) clone)
+            (pivot-cell it))
         (ein:cell-save-text cell)
         (ein:worksheet-delete-cell ws cell)
         (ein:cell-deactivate cell)
 
         ;; the clone conveniently makes otl zero
         ;; (as opposed to ein:worksheet-insert-cell)
-        (setq clone (ein:worksheet-insert-clone ws cell pivot-cell (if up "above" "below")))
-        (ein:cell-goto clone)
-        (oset ws :dirty t)
-        (when pm/polymode
-          (poly-ein-fontify-buffer (ein:worksheet--get-buffer ein:%worksheet%))))
+        (ein:cell-goto
+         (ein:worksheet-insert-clone ws cell pivot-cell (if up "above" "below")))
+        (poly-ein-fontify-buffer (ein:worksheet--get-buffer ws)))
     (message "No %s cell" (if up "previous" "next"))))
 
 (defun ein:worksheet-not-move-cell (which)

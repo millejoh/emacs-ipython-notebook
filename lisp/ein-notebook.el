@@ -33,18 +33,12 @@
 ;;; Code:
 
 
-(require 'ewoc)
 (require 'company nil t)
 (require 'eldoc nil t)
-(require 'ein-core)
-(require 'ein-classes)
-(require 'ein-log)
 (require 'ein-node)
-(require 'ein-contents-api)
-(require 'ein-kernel)
+(require 'ein-file)
+(require 'ein-notebooklist)
 (require 'ein-kernelinfo)
-(require 'ein-cell)
-(require 'ein-worksheet)
 (require 'ein-scratchsheet)
 (require 'ein-notification)
 (require 'ein-completer)
@@ -55,9 +49,6 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
-(require 'ein-shared-output)
-(require 'ein-notebooklist)
-(require 'poly-ein)
 
 (autoload 'ob-ein-anonymous-p "ob-ein")
 
@@ -114,9 +105,13 @@ Current buffer for these functions is set to the notebook buffer.")
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
+(defsubst ein:get-notebook () ein:%notebook%)
+
+(defun ein:get-notebook-or-error ()
+  (or (ein:get-notebook)
+      (error "No notebook related to the current buffer.")))
+
 (define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
-
-;;; Constructor
 
 (defun ein:notebook-new (url-or-port notebook-path pre-kernelspec &rest args)
   (let ((kernelspec

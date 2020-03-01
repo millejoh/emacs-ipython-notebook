@@ -35,8 +35,9 @@
 (require 'ein-utils)
 (require 'ein-log)
 (require 'ein-query)
-(provide 'ein-notebook) ; see manual "Named Features" regarding recursive requires
-(require 'ein-notebook)
+
+(declare-function ein:notebook-to-json "ein-notebook")
+(declare-function ein:notebooklist-url "ein-notebooklist")
 
 (defcustom ein:content-query-max-depth 2
   "Don't recurse the directory tree deeper than this."

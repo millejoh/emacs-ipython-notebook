@@ -26,7 +26,6 @@
 ;;; Code:
 
 (require 'ein-kernel)
-(require 'ein-notebook)
 
 (defun ein:pytools-request-help (kernel func)
   (interactive (list (ein:get-kernel-or-error)

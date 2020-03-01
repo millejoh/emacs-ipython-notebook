@@ -93,14 +93,8 @@ pair of TO-PYTHON and FROM-PYTHON."
   :group 'ein)
 
 
-
-;;; Constants
-
 (defconst ein:source-dir (file-name-directory load-file-name)
   "Directory in which `ein*.el` files are located.")
-
-
-;;; Configuration getter
 
 (defun ein:version (&optional interactively copy-to-kill)
   "Return a longer version string.
@@ -321,12 +315,6 @@ but can operate in different contexts."
                         ein:get-url-or-port--notebook
                         ein:get-url-or-port--worksheet
                         ein:get-url-or-port--shared-output)))
-
-(defsubst ein:get-notebook () ein:%notebook%)
-
-(defun ein:get-notebook-or-error ()
-  (or (ein:get-notebook)
-      (error "No notebook related to the current buffer.")))
 
 (defun ein:get-kernel ()
   (ein:generic-getter '(ein:get-kernel--notebook

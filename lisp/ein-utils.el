@@ -290,9 +290,6 @@ See: http://api.jquery.com/jQuery.ajax/"
   See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
      (error "Incompatible EWOC version."))))
 
-
-;;; Text property
-
 (defun ein:propertize-read-only (string &rest properties)
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 

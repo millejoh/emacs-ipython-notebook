@@ -12,12 +12,11 @@
   (add-to-list 'load-path (concat root-path "/lisp"))
   (add-to-list 'load-path (concat root-path "/test")))
 
-(require 'ein-notebooklist)
 (require 'ein-jupyter)
 (require 'ein-dev)
 (require 'ein-testing)
 (require 'ein-ipynb-mode)
-(require 'ein-contents-api)
+(require 'ein-file)
 (require 'poly-ein)
 (require 'ob-ein)
 

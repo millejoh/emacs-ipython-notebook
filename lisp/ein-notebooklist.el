@@ -29,8 +29,6 @@
 (require 'cus-edit)
 
 (require 'ein-core)
-(require 'ein-notebook)
-(require 'ein-file)
 (require 'ein-contents-api)
 (require 'deferred)
 (require 'dash)
@@ -41,6 +39,7 @@
 (declare-function ein:jupyter-server-conn-info "ein-jupyter")
 (declare-function ein:jupyter-get-default-kernel "ein-jupyter")
 (declare-function ein:jupyter-crib-running-servers "ein-jupyter")
+(declare-function ein:file-open "ein-file")
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"

@@ -33,6 +33,9 @@
 (require 'ein-core)
 (require 'ein-shared-output)
 
+(declare-function ein:get-notebook "ein-notebook")
+(declare-function ein:notebook-buffer "ein-notebook")
+
 (defclass ein:traceback ()
   ((tb-data :initarg :tb-data :type list)
    (notebook :initarg :source-notebook ;; :type ein:$notebook

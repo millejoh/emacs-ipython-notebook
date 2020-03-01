@@ -33,12 +33,14 @@
 (require 'ein-core)
 (require 'ein-classes)
 (require 'ein-log)
-;; FIXME: use websocket.el directly once v1.0 is released.
 (require 'ein-websocket)
 (require 'ein-events)
 (require 'ein-query)
 (require 'ein-ipdb)
-;; "Public" getters.  Use them outside of this package.
+
+(declare-function ein:notebook-get-opened-notebook "ein-notebook")
+(declare-function ein:notebooklist-get-buffer "ein-notebooklist")
+(declare-function ein:notebooklist-reload "ein-notebooklist")
 
 (defun ein:$kernel-session-url (kernel)
   (concat "/api/sessions/" (ein:$kernel-session-id kernel)))

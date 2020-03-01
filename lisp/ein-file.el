@@ -22,8 +22,6 @@
 
 ;;; Commentary:
 
-(require 'ein-contents-api)
-
 (defvar *ein:file-buffername-template* "'/ein:%s:%s")
 (ein:deflocal ein:content-file-buffer--content nil)
 

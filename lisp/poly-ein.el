@@ -29,6 +29,9 @@
 (require 'display-line-numbers nil t)
 (require 'undo-tree nil t)
 
+(declare-function ein:get-notebook "ein-notebook")
+(declare-function ein:notebook-mode "ein-notebook")
+
 (declare-function polymode-inhibit-during-initialization "polymode-core")
 
 (defmacro poly-ein--remove-hook (label functions)

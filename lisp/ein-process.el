@@ -26,9 +26,11 @@
 ;;; Code:
 
 (require 'ein-core)
-(require 'ein-jupyter)
-(require 'ein-file)
-(require 'ein-notebooklist)
+
+(declare-function ein:notebook-open "ein-notebook")
+(declare-function ein:notebooklist-list-get "ein-notebooklist")
+(declare-function ein:notebooklist-login "ein-notebooklist")
+(declare-function ein:jupyter-server-start "ein-jupyter")
 
 (defcustom ein:process-jupyter-regexp "\\(jupyter\\|ipython\\)\\(-\\|\\s-+\\)note"
   "Regexp by which we recognize notebook servers."
@@ -119,6 +121,8 @@
           (setq directory (directory-file-name (file-name-directory directory)))
           finally return suitable)))
 
+(defvar ein:jupyter-server-command)
+(defvar ein:jupyter-server-use-subcommand)
 (defun ein:process-refresh-processes ()
   "Use `jupyter notebook list --json` to populate ein:%processes%"
   (clrhash ein:%processes%)
@@ -162,6 +166,8 @@
   "Construct path by eliding PROC's dir from filename"
   (cl-subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
+(defvar ein:jupyter-use-containers)
+(defvar ein:jupyter-docker-mount-point)
 (defun ein:process-open-notebook* (filename callback)
   "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
   (ein:process-refresh-processes)
