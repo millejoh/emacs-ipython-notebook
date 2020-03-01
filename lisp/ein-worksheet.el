@@ -759,19 +759,10 @@ directly."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
-  (let ((type (case (slot-value ws 'nbformat)
-                (2 (ein:case-equal (slot-value cell 'cell-type)
-                     (("code") "markdown")
-                     (("markdown") "code")))
-                (3 (ein:case-equal (slot-value cell 'cell-type)
-                     (("code") "markdown")
-                     (("markdown") "raw")
-                     (("raw") "heading")
-                     (("heading") "code")))
-                (4 (ein:case-equal (slot-value cell 'cell-type)
-                     (("code") "markdown")
-                     (("markdown") "raw")
-                     (("raw") "code"))))))
+  (let ((type (ein:case-equal (slot-value cell 'cell-type)
+                              (("code") "markdown")
+                              (("markdown") "raw")
+                              (("raw") "code"))))
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)
@@ -780,32 +771,7 @@ directly."
       (when focus (ein:cell-goto new relpos))
       (ein:worksheet--unshift-undo-list new nil cell))))
 
-(defun ein:worksheet-change-cell-type (ws cell type &optional focus)
-  "Change the cell type of the current cell.
-Prompt will appear in the minibuffer.
-
-When used in as a Lisp function, TYPE (string) should be chose
-from \"code\", \"markdown\", \"raw\" and \"heading\"."
-  (interactive
-   (let* ((ws (ein:worksheet--get-ws-or-error))
-          (cell (ein:worksheet-get-current-cell))
-          (choices (case (slot-value ws 'nbformat)
-                     (2 "cm")
-                     (3 "cmr123456")
-                     (4 "chmr123456")))
-          (key (ein:ask-choice-char
-                (format "Cell type [%s]: " choices) choices))
-          (type (case key
-                  (?c "code")
-                  (?m "markdown")
-                  (?r "raw"))))
-     (list ws cell type t)))
-  (let ((relpos (ein:cell-relative-point cell))
-        (new (ein:cell-convert-inplace cell type)))
-    (when (ein:codecell-p new)
-      (setf (slot-value new 'kernel) (slot-value ws 'kernel)))
-    (ein:worksheet--unshift-undo-list cell)
-    (when focus (ein:cell-goto new relpos))))
+(defalias 'ein:worksheet-change-cell-type #'ein:worksheet-toggle-cell-type)
 
 (defun ein:worksheet-split-cell-at-point (ws cell &optional no-trim focus)
   "Split cell at current position. Newlines at the splitting
@@ -932,9 +898,6 @@ This function is for `end-of-defun-function', so behaves
 similarly with `end-of-defun'.
 It is set in `ein:notebook-multilang-mode'."
   (ein:worksheet-goto-next-cell-element (or arg 1) nil 0 :after-input))
-
-
-;;; Cell movement
 
 (defun ein:worksheet-move-cell (ws cell up)
   ;; effectively kill and yank modulo dirtying kill ring
@@ -1123,8 +1086,6 @@ current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:worksheet-execute-all-cells ws :below (ein:worksheet-get-current-cell)))
 
-;;; Metadata
-
 (defun ein:worksheet-rename-sheet (ws name)
   "Change worksheet name (*not* notebook name)."
   (interactive (let ((ws (ein:worksheet--get-ws-or-error)))
@@ -1135,8 +1096,6 @@ current worksheet buffer."
     (ein:worksheet-set-name ws name)
     (ein:worksheet-set-modified-p ws t)
     (ein:worksheet-set-buffer-name ws)))
-
-;;; Generic getter
 
 (defun ein:get-url-or-port--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%)

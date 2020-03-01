@@ -321,17 +321,15 @@ some text
            (lambda (type)
              (let ((cell-p (intern (format "ein:%scell-p" type)))
                    (cell (ein:worksheet-get-current-cell)))
-               (ein:worksheet-change-cell-type ein:%worksheet% cell
-                                               type t)
+               (ein:worksheet-change-cell-type ein:%worksheet% cell t)
                (let ((new (ein:worksheet-get-current-cell)))
                  (should-not (eq new cell))
                  (should (funcall cell-p new)))
                (should (looking-back "some text"))))))
       ;; change type: code (no change) -> markdown -> raw
-      (cl-loop for type in '("code" "markdown" "raw")
+      (cl-loop for type in '("markdown" "raw" "code")
                do (funcall check type))
       ;; back to code
-      (funcall check "code")
       (should (slot-boundp (ein:worksheet-get-current-cell) :kernel)))))
 
 (defun eintest:notebook-split-cell-at-point
