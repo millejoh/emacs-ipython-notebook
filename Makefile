@@ -118,7 +118,7 @@ dist-clean:
 	rm -rf dist
 
 .PHONY: dist
-dist: dist-clean
+dist: dist-clean autoloads
 	$(CASK) package
 
 .PHONY: backup-melpa
