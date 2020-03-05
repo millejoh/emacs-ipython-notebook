@@ -40,6 +40,7 @@
 (declare-function ein:jupyter-get-default-kernel "ein-jupyter")
 (declare-function ein:jupyter-crib-running-servers "ein-jupyter")
 (declare-function ein:file-open "ein-file")
+(autoload 'ein:get-notebook "ein-notebook")
 
 (defcustom ein:notebooklist-login-timeout (truncate (* 6.3 1000))
   "Timeout in milliseconds for logging into server"

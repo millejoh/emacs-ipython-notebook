@@ -105,7 +105,7 @@ Current buffer for these functions is set to the notebook buffer.")
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
-(defsubst ein:get-notebook () ein:%notebook%)
+(defun ein:get-notebook () ein:%notebook%)
 
 (defun ein:get-notebook-or-error ()
   (or (ein:get-notebook)
