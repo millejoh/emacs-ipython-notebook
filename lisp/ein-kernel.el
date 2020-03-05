@@ -62,6 +62,12 @@
   :type 'list
   :group 'ein)
 
+(defcustom ein:on-kernel-connect-functions nil
+  "Abnormal hook that is run after a websocket connection is made
+to a jupyter kernel. Functions defined here must accept a single
+argument, which is the kernel that was just connected."
+  :type 'list
+  :group 'ein)
 
 
 ;;; Initialization and connection.
@@ -293,7 +299,8 @@ See https://github.com/ipython/ipython/pull/3307"
                             (let* ((websocket (websocket-client-data ws))
                                    (kernel (ein:$websocket-kernel websocket)))
                               (when (ein:kernel-live-p kernel)
-                                (ein:kernel-run-after-start-hook kernel)
+                                (ein:log 'verbose "ein:start-single-websocket: Running on-connect abnormal hooks.")
+                                (run-hook-with-args 'ein:on-kernel-connect-functions kernel)
                                 (when cb
                                   (funcall cb kernel)))
                               (ein:log 'verbose "WS opened: %s" (websocket-url ws))))
@@ -306,10 +313,6 @@ See https://github.com/ipython/ipython/pull/3307"
 
 (defun ein:kernel-on-connect (kernel content -metadata-not-used-)
   (ein:log 'info "Kernel connect_request_reply received."))
-
-(defun ein:kernel-run-after-start-hook (kernel)
-  (mapc #'ein:funcall-packed
-        (ein:$kernel-after-start-hook kernel)))
 
 (defun ein:kernel-disconnect (kernel)
   "Close websocket connection to running kernel, but do not
