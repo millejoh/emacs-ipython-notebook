@@ -40,23 +40,6 @@
                        (remove-hook (quote ,functions) x t)))
          ,functions))
 
-(defsubst poly-ein--retweak-input-mode ()
-  "Whenever we enter input cell, ensure behavioral uniformity."
-  (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
-    ;; move `ein:notebook-mode' to the head of `minor-mode-map-alist'
-    (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
-      (setf minor-mode-map-alist
-            (cons entry
-                  (assq-delete-all 'ein:notebook-mode minor-mode-map-alist)))))
-  (when (ein:eval-if-bound 'display-line-numbers-mode)
-    (when (fboundp 'display-line-numbers-mode)
-      (display-line-numbers-mode -1)))
-  (when (ein:eval-if-bound 'undo-tree-mode)
-    (when (fboundp 'undo-tree-mode)
-      (undo-tree-mode -1)))
-  (when visual-line-mode
-    (visual-line-mode -1)))
-
 (defun poly-ein--narrow-to-inner (modifier f &rest args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
       (apply f args)
@@ -83,8 +66,6 @@
               'font-lock-fontify-region
               'font-lock-fontify-buffer
               'font-lock-ensure))
-
-  (add-hook 'after-change-major-mode-hook #'poly-ein--retweak-input-mode t)
 
   ;; https://github.com/millejoh/emacs-ipython-notebook/issues/537
   ;; alternatively, filter-args on ad-should-compile but then we'd have to
@@ -275,13 +256,20 @@ TYPE can be 'body, nil."
       (setq jit-lock-start (max jit-lock-start (car range)))
       (setq jit-lock-end (min jit-lock-end (cdr range))))))
 
-(defun poly-ein-undo-damage (type)
+(defun poly-ein-initialize (type)
   (poly-ein--remove-hook "polymode" after-change-functions)
   (poly-ein--remove-hook "polymode" syntax-propertize-extend-region-functions)
-
   (add-hook 'jit-lock-after-change-extend-region-functions #'poly-ein--hem-jit-lock t t)
   (setq jit-lock-contextually nil) ; else recenter font-lock-fontify-keywords-region
   (setq jit-lock-context-unfontify-pos nil)
+  (when (ein:eval-if-bound 'display-line-numbers-mode)
+    (when (fboundp 'display-line-numbers-mode)
+      (display-line-numbers-mode -1)))
+  (when (ein:eval-if-bound 'undo-tree-mode)
+    (when (fboundp 'undo-tree-mode)
+      (undo-tree-mode -1)))
+  (when visual-line-mode
+    (visual-line-mode -1))
   (if (eq type 'host)
       (setq syntax-propertize-function nil)
     (aif pm--syntax-propertize-function-original
@@ -324,18 +312,24 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
   (setq-local font-lock-dont-widen t)
   (setq-local syntax-propertize-chunks 0) ;; internal--syntax-propertize too far
   (add-hook 'buffer-list-update-hook #'poly-ein--record-window-buffer nil t)
-  (ein:notebook-mode))
+  (ein:notebook-mode)
+  (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
+    ;; move `ein:notebook-mode' to the head of `minor-mode-map-alist'
+    (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
+      (setf minor-mode-map-alist
+	    (cons entry
+		  (assq-delete-all 'ein:notebook-mode minor-mode-map-alist))))))
 
 (defcustom pm-host/ein
   (pm-host-chunkmode :name "ein"
-                     :init-functions '(poly-ein-undo-damage))
+                     :init-functions '(poly-ein-initialize))
   "EIN host chunkmode"
   :group 'poly-hostmodes
   :type 'object)
 
 (defcustom pm-inner/ein-input-cell
   (pm-inner-overlay-chunkmode :name "ein-input-cell"
-                              :init-functions '(poly-ein-undo-damage poly-ein-init-input-cell))
+                              :init-functions '(poly-ein-initialize poly-ein-init-input-cell))
   "EIN input cell."
   :group 'poly-innermodes
   :type 'object)
