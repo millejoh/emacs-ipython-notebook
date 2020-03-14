@@ -251,6 +251,7 @@ Scenario: Execute all cells, mod some cells, get outputs, undo mods
   And I undo again
   Then the cursor should be at point "139"
   And I undo again
+  And dump diagnostic
   Then the cursor should be at point "125"
 
 @undo

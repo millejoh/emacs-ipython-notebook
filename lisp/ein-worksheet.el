@@ -57,10 +57,10 @@
 (ein:deflocal buffer-local-enable-undo t
   "Buffer local variable activating undo accounting.  Should not modify.")
 
-(ein:deflocal ein:%cell-lengths% '()
+(ein:deflocal ein:%cell-lengths% nil
   "Buffer local variable with buffer-undo-list's current knowledge of cell lengths.")
 
-(ein:deflocal ein:%which-cell% '()
+(ein:deflocal ein:%which-cell% nil
   "Buffer local variable one-to-one buffer-undo-list item to cell id.")
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)

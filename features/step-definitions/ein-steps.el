@@ -297,6 +297,12 @@
                      (When "I call \"ein:notebooklist-login\"")
                      (And "I wait for the smoke to clear")))))))
 
+(When "^dump diagnostic"
+  (lambda ()
+    (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
+      (message "Undo failure diagnostic %s %s | %s"
+	      buffer-undo-list ein:%which-cell% fill))))
+
 (When "^eval \"\\(.*\\)\"$"
   (lambda (command)
     (eval (car (read-from-string command)))))
