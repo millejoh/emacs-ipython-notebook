@@ -659,7 +659,10 @@ Use `ein:log' for debugging and logging."
 (defun ein:generate-menu (list-name-callback)
   (mapcar (lambda (name-callback)
             (destructuring-bind (name callback &rest args) name-callback
-              `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
+              `[,name
+		,(let ((km (intern-soft (concat (symbol-name callback) "-km"))))
+		   (if (commandp km) km callback))
+		:help ,(ein:get-docstring callback) ,@args]))
           list-name-callback))
 
 (defcustom ein:enable-gc-adjust t

@@ -1107,10 +1107,11 @@ associated with current buffer (if any)."
 but then describe-minor-mode unhelpfully shows ?? for the keymap commands.
 
 Tried add-function: the &rest from :around is an emacs-25 compilation issue."
-  (let ((km (intern (concat (symbol-name defn) "-km"))))
-    `(if (functionp (quote ,defn))
+  (let ((km (intern (concat (symbol-name defn) "-km")))
+	(docstring (and (functionp defn) (ein:get-docstring defn))))
+    `(if ,docstring
          (progn
-           (fset (quote ,km) (lambda () (interactive)
+           (fset (quote ,km) (lambda () ,docstring (interactive)
                                (condition-case err
                                    (poly-ein-base (call-interactively (function ,defn)))
                                  (cl-no-method (message "%s: no applicable method" (quote ,km)))
