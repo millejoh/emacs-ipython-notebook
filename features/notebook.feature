@@ -118,5 +118,5 @@ Scenario: Test ein:on-kernel-connect-functions abnormal hooks
   Given I set the kernel connect message
   Given new python notebook
   And I wait for the smoke to clear
-  And I switch to buffer "*Messages*"
-  Then I should see "Hello ein."
+  Then I should see message "Hello ein"
+  And I clear the kernel connect message

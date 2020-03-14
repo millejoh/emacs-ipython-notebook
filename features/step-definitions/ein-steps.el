@@ -2,9 +2,12 @@
       (lambda ()
         (insert-char 37)))
 
-(When "^I set the kernel connect message$"
-      (lambda ()
-        (add-to-list 'ein:on-kernel-connect-functions #'(lambda (_) (message "Hello ein.")))))
+(When "^I \\(set\\|clear\\) the kernel connect message$"
+      (lambda (which)
+	(if (string= which "clear")
+	    (setq ein:on-kernel-connect-functions nil)
+	  (add-to-list 'ein:on-kernel-connect-functions
+		       (apply-partially #'message "Hello ein")))))
 
 (When "^I type session port \\([0-9]+\\)$"
       (lambda (port)

@@ -299,7 +299,7 @@ See https://github.com/ipython/ipython/pull/3307"
                             (let* ((websocket (websocket-client-data ws))
                                    (kernel (ein:$websocket-kernel websocket)))
                               (when (ein:kernel-live-p kernel)
-                                (ein:log 'verbose "ein:start-single-websocket: Running on-connect abnormal hooks.")
+                                (ein:log 'debug "ein:start-single-websocket: Running on-connect abnormal hooks.")
                                 (run-hook-with-args 'ein:on-kernel-connect-functions kernel)
                                 (when cb
                                   (funcall cb kernel)))
