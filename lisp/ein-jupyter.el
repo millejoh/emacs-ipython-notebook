@@ -184,7 +184,10 @@ via a call to `ein:notebooklist-open'."
   (interactive)
   (when (ein:jupyter-server-process)
     (multiple-value-bind (url-or-port password) (ein:jupyter-server-conn-info)
-      (ein:notebooklist-login url-or-port callback))))
+      (if-let ((token (ein:notebooklist-token-or-password url-or-port)))
+	  (ein:notebooklist-login url-or-port callback nil token)
+	(ein:log 'error "`(ein:notebooklist-token-or-password %s)` must return non-nil"
+		 url-or-port)))))
 
 (defsubst ein:set-process-sentinel (proc url-or-port)
   "URL-OR-PORT might get redirected from (ein:jupyter-server-conn-info).

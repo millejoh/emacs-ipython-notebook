@@ -656,14 +656,15 @@ or even this (if you want fast Emacs start-up)::
              (read-no-blanks-input (format "%s: " pw-prompt))))
 
 ;;;###autoload
-(defun ein:notebooklist-login (url-or-port callback &optional cookie-plist)
+(defun ein:notebooklist-login (url-or-port callback &optional cookie-plist token)
   "Deal with security before main entry of ein:notebooklist-open*.
 
 CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--success
 and the url-or-port argument of ein:notebooklist-open*."
   (interactive `(,(ein:notebooklist-ask-url-or-port)
                  ,(lambda (buffer _url-or-port) (pop-to-buffer buffer))
-                 ,(if current-prefix-arg (ein:notebooklist-ask-user-pw-pair "Cookie name" "Cookie content"))))
+                 ,(if current-prefix-arg (ein:notebooklist-ask-user-pw-pair "Cookie name" "Cookie content"))
+		 nil))
   (unless callback (setq callback (lambda (buffer url-or-port))))
   (when cookie-plist
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
@@ -672,7 +673,7 @@ and the url-or-port argument of ein:notebooklist-open*."
       (cl-loop for (name content) on cookie-plist by (function cddr)
                for line = (mapconcat #'identity (list domain "FALSE" (car (url-path-and-query parsed-url)) (if securep "TRUE" "FALSE") "0" (symbol-name name) (concat content "\n")) "\t")
                do (write-region line nil (request--curl-cookie-jar) 'append))))
-  (let ((token (ein:notebooklist-token-or-password url-or-port)))
+  (let ((token (or token (ein:notebooklist-token-or-password url-or-port))))
     (cond ((null token) ;; don't know
            (ein:notebooklist-login--iteration url-or-port callback nil nil -1 nil))
           ((string= token "") ;; all authentication disabled
