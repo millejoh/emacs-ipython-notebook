@@ -28,6 +28,7 @@
 (require 'jit-lock)
 (require 'display-line-numbers nil t)
 (require 'undo-tree nil t)
+(require 'multiple-cursors nil t)
 
 (declare-function ein:get-notebook "ein-notebook")
 (declare-function ein:notebook-mode "ein-notebook")
@@ -270,6 +271,9 @@ TYPE can be 'body, nil."
       (undo-tree-mode -1)))
   (when visual-line-mode
     (visual-line-mode -1))
+  (when (ein:eval-if-bound 'multiple-cursors-mode)
+    (when (fboundp 'multiple-cursors-mode)
+      (multiple-cursors-mode -1)))
   (if (eq type 'host)
       (setq syntax-propertize-function nil)
     (aif pm--syntax-propertize-function-original
