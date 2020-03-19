@@ -183,16 +183,21 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 		 (new-cell-id (cdr change-cell-id))
 		 (changed-p (not (eq old-cell-id new-cell-id))))
       (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
-    (let ((multiple-cursors-p
-	   (cl-some (lambda (entry)
-		      (cl-flet ((check (entry bogey) (and (listp entry)
-							  (not (atom (cdr entry)))
-							  (eq (nth 1 entry) bogey))))
-			(or (check entry 'activate-cursor-for-undo)
-			    (check entry 'deactivate-cursor-after-undo))))
-		    (cl-subseq buffer-undo-list 0 (min len-buffer-undo-list 30))))
+    (let (multiple-cursors-p
 	  (fill (- len-buffer-undo-list len-which-cell)))
-      (cond ((and (not multiple-cursors-p) (> (abs fill) 1))
+      (cond ((and
+	      (> (abs fill) 1)
+	      (not (setq multiple-cursors-p
+			 (cl-some
+			  (lambda (entry)
+			    (cl-flet ((check
+				       (entry bogey)
+				       (and (listp entry)
+					    (not (atom (cdr entry)))
+					    (eq (nth 1 entry) bogey))))
+			      (or (check entry 'activate-cursor-for-undo)
+				  (check entry 'deactivate-cursor-after-undo))))
+			  (cl-subseq buffer-undo-list 0 (min len-buffer-undo-list 30))))))
 	     (let ((msg (format "Undo failure diagnostic %s %s | %s"
 				buffer-undo-list ein:%which-cell% fill))
 		   (pm-allow-post-command-hook nil))
@@ -210,7 +215,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 	     (when (and (> fill 1) multiple-cursors-p)
 	       (ein:log 'debug "multiple-cursors-mode exception fill %s" fill))
 	     (setq ein:%which-cell% (nconc (make-list fill (car ein:%which-cell%))
-					   ein:%which-cell%)))))
+				       ein:%which-cell%)))))
     (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
 	       "ein:worksheet--jigger-undo-list %d != %d"
 	       (length buffer-undo-list) (length ein:%which-cell%))))
