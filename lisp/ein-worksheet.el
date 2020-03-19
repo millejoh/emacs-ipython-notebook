@@ -190,7 +190,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 							  (eq (nth 1 entry) bogey))))
 			(or (check entry 'activate-cursor-for-undo)
 			    (check entry 'deactivate-cursor-after-undo))))
-		    (cl-subseq buffer-undo-list 0 (min (length buffer-undo-list) 30))))
+		    (cl-subseq buffer-undo-list 0 (min len-buffer-undo-list 30))))
 	  (fill (- len-buffer-undo-list len-which-cell)))
       (cond ((and (not multiple-cursors-p) (> (abs fill) 1))
 	     (let ((msg (format "Undo failure diagnostic %s %s | %s"
