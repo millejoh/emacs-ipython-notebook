@@ -37,6 +37,9 @@
   (!cons "content" ecukes-exclude-tags)
   (!cons "svg" ecukes-exclude-tags))
 
+(defalias 'activate-cursor-for-undo #'ignore)
+(defalias 'deactivate-cursor-after-undo #'ignore)
+
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
 (defun ein:testing-after-scenario ()

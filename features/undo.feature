@@ -86,9 +86,10 @@ Scenario: Test the conflagrative commands
   Then the cursor should be at point "22"
 
 @undo
-Scenario: Clear output doesn't break undo
+Scenario: Clear output doesn't break undo, throw in multiple-cursors
   Given I enable "ein:worksheet-enable-undo"
   Given new python notebook
+  And I clear log expr "ein:log-all-buffer-name"
   When I type "from time import sleep"
   And I press "RET"
   And I press "C-c C-b"
@@ -99,6 +100,7 @@ Scenario: Clear output doesn't break undo
   And I type "print("abba\nabba")"
   And I press "RET"
   And I type "1.618"
+  And I add fake cursor to undo list
   And I wait for cell to execute
   And I press "C-<down>"
   And I press "C-n"
@@ -109,6 +111,8 @@ Scenario: Clear output doesn't break undo
   Then the cursor should be at point "74"
   And I undo again
   Then the cursor should be at point "53"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should see "multiple-cursors-mode exception"
 
 @undo
 Scenario: Moving cells doesn't break undo
@@ -133,7 +137,7 @@ Scenario: Moving cells doesn't break undo
   And I press "C-/"
   Then the cursor should be at point "67"
 
-@forlorn
+@undo
 Scenario: Split and merge don't break undo
   Given I enable "ein:worksheet-enable-undo"
   Given new python notebook

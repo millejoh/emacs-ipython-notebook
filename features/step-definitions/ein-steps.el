@@ -300,8 +300,13 @@
 (When "^dump diagnostic"
   (lambda ()
     (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
-      (message "Undo failure diagnostic %s %s | %s"
+      (message "Undo inspect diagnostic %s %s | %s"
 	      buffer-undo-list ein:%which-cell% fill))))
+
+(When "^I add fake cursor to undo list$"
+  (lambda ()
+    (push '(apply deactivate-cursor-after-undo 20) buffer-undo-list)
+    (push '(apply activate-cursor-for-undo 20) buffer-undo-list)))
 
 (When "^eval \"\\(.*\\)\"$"
   (lambda (command)

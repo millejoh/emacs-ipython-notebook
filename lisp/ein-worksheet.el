@@ -173,35 +173,47 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
   (cl-assert (listp buffer-undo-list))
-  (when (/= (length buffer-undo-list) (length ein:%which-cell%))
-    (ein:log 'debug "jig %s to %s: %S %S"
-             (length ein:%which-cell%) (length buffer-undo-list)
-             buffer-undo-list ein:%which-cell%))
-  (-when-let* ((old-cell-id (car change-cell-id))
-               (new-cell-id (cdr change-cell-id))
-               (changed-p (not (eq old-cell-id new-cell-id))))
-    (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
-  (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
-    (cond ((> (abs fill) 1)
-           (let ((msg (format "Undo failure diagnostic %s %s | %s"
-                              buffer-undo-list ein:%which-cell% fill))
-                 (pm-allow-post-command-hook nil))
-             (setq ein:worksheet-enable-undo nil)
-             (ein:worksheet-undo-setup ein:%worksheet%)
-             (when pm/polymode
-               (dolist (b (eieio-oref pm/polymode '-buffers))
-                 (when (buffer-live-p b)
-                   (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
-             (ein:display-warning msg :error)
-             (error "ein:worksheet--jigger-undo-list: aborting")))
-          ((< fill 0)
-           (setq ein:%which-cell% (nthcdr (- fill) ein:%which-cell%)))
-          ((> fill 0)
-           (setq ein:%which-cell% (nconc (make-list fill (car ein:%which-cell%))
-                                         ein:%which-cell%)))))
-  (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
-             "ein:worksheet--jigger-undo-list %d != %d"
-             (length buffer-undo-list) (length ein:%which-cell%)))
+  (let ((len-buffer-undo-list (length buffer-undo-list))
+	(len-which-cell (length ein:%which-cell%)))
+    (when (/= len-buffer-undo-list len-which-cell)
+      (ein:log 'debug "jig %s to %s: %S %S"
+	       len-which-cell len-buffer-undo-list
+	       buffer-undo-list ein:%which-cell%))
+    (-when-let* ((old-cell-id (car change-cell-id))
+		 (new-cell-id (cdr change-cell-id))
+		 (changed-p (not (eq old-cell-id new-cell-id))))
+      (setq ein:%which-cell% (-replace old-cell-id new-cell-id ein:%which-cell%)))
+    (let ((multiple-cursors-p
+	   (cl-some (lambda (entry)
+		      (cl-flet ((check (entry bogey) (and (listp entry)
+							  (not (atom (cdr entry)))
+							  (eq (nth 1 entry) bogey))))
+			(or (check entry 'activate-cursor-for-undo)
+			    (check entry 'deactivate-cursor-after-undo))))
+		    (cl-subseq buffer-undo-list 0 (min (length buffer-undo-list) 30))))
+	  (fill (- len-buffer-undo-list len-which-cell)))
+      (cond ((and (not multiple-cursors-p) (> (abs fill) 1))
+	     (let ((msg (format "Undo failure diagnostic %s %s | %s"
+				buffer-undo-list ein:%which-cell% fill))
+		   (pm-allow-post-command-hook nil))
+	       (setq ein:worksheet-enable-undo nil)
+	       (ein:worksheet-undo-setup ein:%worksheet%)
+	       (when pm/polymode
+		 (dolist (b (eieio-oref pm/polymode '-buffers))
+		   (when (buffer-live-p b)
+		     (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
+	       (ein:display-warning msg :error)
+	       (error "ein:worksheet--jigger-undo-list: aborting")))
+	    ((< fill 0)
+	     (setq ein:%which-cell% (nthcdr (- fill) ein:%which-cell%)))
+	    ((> fill 0)
+	     (when (and (> fill 1) multiple-cursors-p)
+	       (ein:log 'debug "multiple-cursors-mode exception fill %s" fill))
+	     (setq ein:%which-cell% (nconc (make-list fill (car ein:%which-cell%))
+					   ein:%which-cell%)))))
+    (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
+	       "ein:worksheet--jigger-undo-list %d != %d"
+	       (length buffer-undo-list) (length ein:%which-cell%))))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.
