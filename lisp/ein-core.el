@@ -150,7 +150,6 @@ the source is in git repository) or elpa version."
   (ein:query-singleton-ajax
    (ein:url url-or-port "api/kernelspecs")
    :type "GET"
-   :timeout ein:content-query-timeout
    :parser 'ein:json-read
    :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port)
    :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
@@ -226,7 +225,7 @@ the source is in git repository) or elpa version."
            (setf (gethash url-or-port *ein:notebook-version*) "2.0.0"))
       (t (ein:log 'warn "notebook version currently unknowable"))))
   (when callback (funcall callback)))
-
+
 ;;; File name translation (tramp support)
 
 ;; Probably it's better to define `ein:filename-translations-get' as

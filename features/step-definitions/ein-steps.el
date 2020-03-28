@@ -131,10 +131,6 @@
     (with-current-buffer ein:log-all-buffer-name
       (And "I wait for buffer to say \"ein:query-sessions--complete\""))))
 
-(When "^I create buffer named \"\\(.+\\)\"$"
-      (lambda (bufname)
-        (get-buffer-create bufname)))
-
 (When "^I switch to buffer like \"\\(.+\\)\"$"
       (lambda (substr)
         (cl-loop repeat 10

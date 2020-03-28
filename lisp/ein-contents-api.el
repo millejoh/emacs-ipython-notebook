@@ -49,15 +49,7 @@
   :type 'integer
   :group 'ein)
 
-(defcustom ein:content-query-timeout nil ; (* 60 1000) ;1 min
-  "Query timeout for getting content from Jupyter/IPython notebook.
-If you cannot open large notebooks because of a timeout error try
-increasing this value.  Setting this value to `nil' means to use
-global setting.  For global setting and more information, see
-`ein:query-timeout'."
-  :type '(choice (integer :tag "Timeout [ms]" 5000)
-                 (const :tag "Use global setting" nil))
-  :group 'ein)
+(make-obsolete-variable 'ein:content-query-timeout nil "0.17.0")
 
 (defcustom ein:force-sync nil
   "When non-nil, force synchronous http requests."
@@ -72,7 +64,6 @@ ERRBACK of arity 1 for the contents."
   (ein:query-singleton-ajax
    (ein:notebooklist-url url-or-port path)
    :type "GET"
-   :timeout ein:content-query-timeout
    :parser #'ein:json-read
    :complete (apply-partially #'ein:content-query-contents--complete url-or-port path)
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)

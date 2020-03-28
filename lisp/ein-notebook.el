@@ -49,6 +49,7 @@
 (require 'ein-query)
 (require 'ein-pytools)
 (require 'ein-traceback)
+(require 'ein-python-send)
 
 (autoload 'ob-ein-anonymous-p "ob-ein")
 
@@ -217,7 +218,7 @@ and put last warning in minibuffer."
 (defun ein:notebook-jump-to-opened-notebook (notebook)
   "List all opened notebook buffers and switch to one that the user selects."
   (interactive
-   (list  (completing-read "Jump to notebook:" (ein:notebook-opened-buffer-names) nil t)))
+   (list (completing-read "Jump to notebook:" (ein:notebook-opened-buffer-names) nil t)))
   (switch-to-buffer notebook))
 
 ;;;###autoload
@@ -1068,18 +1069,12 @@ PREDICATE is called with the buffer name for each opened notebook."
         (seq-filter predicate notebooks)
       notebooks)))
 
-
-;;; Generic getter
-
 (defun ein:get-url-or-port--notebook ()
   (when ein:%notebook% (ein:$notebook-url-or-port ein:%notebook%)))
 
 (defun ein:get-kernel--notebook ()
   (when (ein:$notebook-p ein:%notebook%)
     (ein:$notebook-kernel ein:%notebook%)))
-
-
-;;; Predicate
 
 (defun ein:notebook-live-p (notebook)
   "Return non-`nil' if NOTEBOOK has live buffer."
@@ -1357,6 +1352,7 @@ the first argument and CBARGS as the rest of arguments."
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
+(ein:python-send--init)
 
 (provide 'ein-notebook)
 

@@ -21,7 +21,6 @@
 
 ;;; Commentary:
 
-
 ;;; Content
 (require 'eieio)
 
@@ -89,7 +88,6 @@
   kernel
   closed-by-client)
 
-
 ;;; Notebook
 (defstruct ein:$notebook
   "Hold notebook variables.
@@ -160,7 +158,6 @@
   api-version)
 
 
-
 ;;; Worksheet
 (defclass ein:worksheet ()
   ((nbformat :initarg :nbformat :type integer)
@@ -233,7 +230,6 @@
   after-execute-hook)
 
 
-
 ;;; Cells
 
 (defclass ein:basecell ()

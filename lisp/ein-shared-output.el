@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t -*-
-;;; ein-shared-output.el --- Output buffer for ein-connect.el
+;;; ein-shared-output.el --- Output buffer for ob-ein and ein-python-send
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
