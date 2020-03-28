@@ -55,37 +55,13 @@
       (setf (ein:$kernel-stdin-activep kernel) t)
       (ein:prepare-ipdb-session pdb-session prompt))))
 
-(defun ein:prepare-ipdb-session-old (session prompt)
-  (with-current-buffer  (setf (ein:$ipdb-session-buffer session)
-                              (get-buffer-create (format "*ipdb: %s*" (ein:pdb-session-id session))))
-    (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
-    (ein:ipdb-mode)
-    (setq comint-prompt-regexp (concat "^" (regexp-quote prompt)))
-    (setq comint-input-sender 'ein:ipdb-input-sender)
-
-    (unless (comint-check-proc (current-buffer))
-      ;; Was cat, but on non-Unix platforms that might not exist, so
-      ;; use hexl instead, which is part of the Emacs distribution.
-      (let ((fake-proc
-             (condition-case nil
-                 (start-process "ein:ipdb" (current-buffer) "cat")
-               (file-error (start-process "ein:ipdb" (current-buffer) "hexl")))))
-        (set-process-query-on-exit-flag fake-proc nil)
-        (insert "#ipdb#\n")
-        (set-marker
-         (process-mark fake-proc) (point))
-        (comint-output-filter fake-proc prompt)))
-    (setq ein:ipdb-buffer-active-kernel (ein:pdb-session-id session))
-    (setq ein:ipdb-buffer-prompt prompt)
-
-
-    (switch-to-buffer (ein:$ipdb-session-buffer session))))
-
 (defun ein:prepare-ipdb-session (session prompt)
   (with-current-buffer  (setf (ein:$ipdb-session-buffer session)
                               (get-buffer-create (format "*ipdb: %s*" (ein:pdb-session-id session))))
-    (set (make-local-variable 'ein:ipdb-buffer-active-kernel) (ein:pdb-session-id session))
-    (set (make-local-variable 'ein:ipdb-buffer-prompt) prompt)
+    (setq-local ein:ipdb-buffer-active-kernel (ein:pdb-session-id session))
+    (put 'ein:ipdb-buffer-active-kernel 'permanent-local t)
+    (setq-local ein:ipdb-buffer-prompt prompt)
+    (put 'ein:ipdb-buffer-prompt 'permanent-local t)
     (add-hook 'kill-buffer-hook 'ein:ipdb-on-stop)
     (ein:ipdb-mode)
     (pop-to-buffer (ein:$ipdb-session-buffer session))))
@@ -104,20 +80,24 @@
       (&key content metadata parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let ((msg-type (plist-get header :msg_type)))
-      (if (string-equal msg-type "stream")
-          (let* ((session (ein:find-or-create-ipdb-session kernel))
-                 (buf (ein:$ipdb-session-buffer session))
-                 (text (plist-get content :text)))
-            (with-current-buffer buf
-              (setf (ein:$ipdb-session-current-payload session) text)
-              (let ((buffer-read-only nil)
-                    (proc (get-buffer-process buf)))
-                (comint-output-filter proc text)
-                (comint-output-filter proc ein:ipdb-buffer-prompt))
-              (when ein:ipdb--received-quit-p
-                (kill-buffer)
-                (aif (ein:$ipdb-session-notebook-buffer session)
-                    (pop-to-buffer it)))))))))
+      (cond ((string-equal msg-type "stream")
+             (let* ((session (ein:find-or-create-ipdb-session kernel))
+                    (buf (ein:$ipdb-session-buffer session))
+                    (text (plist-get content :text)))
+               (with-current-buffer buf
+                 (setf (ein:$ipdb-session-current-payload session) text)
+                 (let ((buffer-read-only nil)
+                       (proc (get-buffer-process buf)))
+                   (comint-output-filter proc text)
+                   (comint-output-filter proc ein:ipdb-buffer-prompt)))))
+            (t
+             (let* ((session (ein:find-or-create-ipdb-session kernel))
+                    (buf (ein:$ipdb-session-buffer session)))
+               (with-current-buffer buf
+                 (when ein:ipdb--received-quit-p
+                   (kill-buffer)
+                   (aif (ein:$ipdb-session-notebook-buffer session)
+                       (pop-to-buffer it))))))))))
 
 
 ;;; Now try with comint
