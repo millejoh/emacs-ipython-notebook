@@ -78,12 +78,6 @@
           (ein:notebook-restart-session-command))
         (And "I wait for the smoke to clear")))
 
-(When "I call eldoc-documentation-function$"
-      (lambda ()
-        (funcall (symbol-value 'eldoc-documentation-function))
-        (And "I wait for the smoke to clear")
-        ))
-
 (When "I kill processes like \"\\(.+\\)\"$"
       (lambda (substr)
         (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p)))

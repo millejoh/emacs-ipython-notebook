@@ -83,9 +83,7 @@
 
 (Setup
  (ein:dev-start-debug)
- (cl-assert (boundp 'company-frontends))
- (custom-set-variables '(company-frontends nil)
-                       '(python-indent-guess-indent-offset-verbose nil)
+ (custom-set-variables '(python-indent-guess-indent-offset-verbose nil)
                        '(ein:jupyter-use-containers nil))
  (setq ein:jupyter-default-kernel
        (cl-loop with cand = ""

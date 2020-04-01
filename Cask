@@ -15,7 +15,6 @@
  (depends-on "espuds")
  (depends-on "mocker")
  (depends-on "deferred")
- (depends-on "company")
  (depends-on "polymode")
  (depends-on "julia-mode")
  (depends-on "undo-tree")

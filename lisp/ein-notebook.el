@@ -33,8 +33,6 @@
 ;;; Code:
 
 
-(require 'company nil t)
-(require 'eldoc nil t)
 (require 'ein-node)
 (require 'ein-file)
 (require 'ein-notebooklist)
@@ -1283,14 +1281,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
       ,@(ein:generate-menu
          '(("Open scratch sheet" ein:notebook-scratchsheet-open)))))
   map)
-
-(defcustom ein:enable-eldoc-support nil
-  "Enable experimental support for eldoc in notebook buffers.
-
-Disabled by default, but if you want to help debug this feature set it to T and
-watch the fireworks!"
-  :type 'boolean
-  :group 'ein)
 
 (define-minor-mode ein:notebook-mode
   "A mode for jupyter notebooks.
