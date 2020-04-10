@@ -26,8 +26,6 @@
 ;; is needed.  This module buffer containing one special cell for that
 ;; purpose.
 
-;; TODO - Undo accounting is almost certainly broken by this module
-
 ;;; Code:
 
 (require 'eieio)
@@ -38,7 +36,8 @@
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))
    (callback :initarg :callback :initform #'ignore :type function)
-   (callback-called :initarg :callback-called :initform nil :type boolean))
+   (clear :initarg :clear :initform #'ignore :type function)
+   (results-inserted :initarg :results-inserted :initform nil :type boolean))
   "A singleton cell to show output from non-notebook buffers.")
 
 (defclass ein:shared-output ()
@@ -66,15 +65,17 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   (setf (slot-value cell 'kernel) kernel)
   (apply #'ein:cell-execute-internal cell kernel code args))
 
+(cl-defmethod ein:cell-append-display-data ((_cell ein:shared-output-cell) _json)
+  "Do not display the plot in the shared output context.")
+
 (cl-defmethod ein:cell--handle-output ((cell ein:shared-output-cell)
                                        msg-type _content _metadata)
   (ein:log 'debug
     "ein:cell--handle-output (cell ein:shared-output-cell): %s" msg-type)
   (cl-call-next-method)
-  (aif (ein:oref-safe cell 'callback)
-      (progn
-        (funcall it cell)
-        (setf (slot-value cell 'callback-called) t))))
+  (awhen (ein:oref-safe cell 'callback)
+    (when (funcall it cell)
+      (setf (slot-value cell 'results-inserted) t))))
 
 (cl-defmethod ein:cell--handle-execute-reply ((cell ein:shared-output-cell)
                                               content _metadata)
@@ -82,21 +83,20 @@ Called from ewoc pretty printer via `ein:cell-pp'."
     "ein:cell--handle-execute-reply (cell ein:shared-output-cell): %s"
     content)
   (cl-call-next-method)
-  (aif (ein:oref-safe cell 'callback)
-    ;; clear the way for waiting block in `ob-ein--execute-async'
-    ;; but only after 2 seconds to allow for handle-output stragglers
-    ;; TODO avoid this hack
-      (progn
-        (unless (ein:oref-safe cell 'callback-called)
-          (funcall it cell)
-          (setf (slot-value cell 'callback-called) t))
-        (run-at-time 2 nil (lambda ()
-                             (ein:log 'debug "Clearing callback shared output cell")
-                             (setf (slot-value cell 'callback) #'ignore)
-                             (setf (slot-value cell 'callback-called) nil))))))
-
-
-;;; Main
+  (awhen (ein:oref-safe cell 'callback)
+    (when (funcall it cell)
+      (setf (slot-value cell 'results-inserted) t)))
+  (unless (slot-value cell 'results-inserted)
+    (awhen (ein:oref-safe cell 'clear)
+      (funcall it)))
+  ;; clear the way for waiting block in `ob-ein--execute-async'
+  ;; but only after 2 seconds to allow for handle-output stragglers
+  ;; TODO avoid this hack
+  (run-at-time 2 nil (lambda ()
+		       (ein:log 'debug "Clearing callback shared output cell")
+		       (setf (slot-value cell 'callback) #'ignore)
+		       (setf (slot-value cell 'clear) #'ignore)
+		       (setf (slot-value cell 'results-inserted) nil))))
 
 (defun ein:shared-output-create-buffer ()
   "Get or create the shared output buffer."
@@ -211,9 +211,6 @@ See also `ein:cell-max-num-outputs'."
 
 (defun ein:get-traceback-data--shared-output ()
   (ein:aand (ein:get-cell-at-point--shared-output) (ein:cell-get-tb-data it)))
-
-
-;;; ein:shared-output-mode
 
 (defvar ein:shared-output-mode-map
   (let ((map (make-sparse-keymap)))

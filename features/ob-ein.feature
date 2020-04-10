@@ -74,7 +74,6 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I type session port 8317
   And I press "RET"
   And I type "(1 + 5 ** 0.5) / 2"
-  And I dump buffer
   And I ctrl-c-ctrl-c
   And I wait for buffer to say "1.618"
   And I should not see "[....]"
@@ -84,7 +83,6 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I type "ein :session localhost :results raw drawer"
   And I press "RET"
   And I type "import math ; 4 * math.atan(1.0)"
-  And I dump buffer
   And I clear log expr "ein:log-all-buffer-name"
   And I ctrl-c-ctrl-c
   And I wait for buffer to say "3.14159"
@@ -111,6 +109,31 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I dump buffer
   And I wait for buffer to say "3.1415"
   And I should not see "[....]"
+
+@org
+Scenario: ":results output" just gets stdout
+  Given I stop the server
+  When I open temp file "ecukes.org"
+  And I call "org-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :session localhost :results output drawer"
+  And I press "RET"
+  And I type "print("start {}".format(0))"
+  And I press "RET"
+  And I type "from time import sleep"
+  And I press "RET"
+  And I type "import math"
+  And I press "RET"
+  And I type "sleep(1)"
+  And I press "RET"
+  And I type "print("done {}".format(0))"
+  And I press "RET"
+  And I type "math.pi"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to say "done 0"
+  And I should not see "3.14159"
+  And I should see "start 0"
 
 @svg
 Scenario: portless url with path, image

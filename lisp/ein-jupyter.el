@@ -349,6 +349,8 @@ server command."
     ;; `ein:notebooklist-sentinel' frequently does not trigger
     (ein:notebooklist-list-remove url-or-port)
     (kill-buffer (ein:notebooklist-get-buffer url-or-port))
+    (when (ein:shared-output-healthy-p)
+      (kill-buffer (ein:shared-output-buffer)))
     (when log
       (with-current-buffer *ein:jupyter-server-buffer-name*
         (write-region (point-min) (point-max) log)))))

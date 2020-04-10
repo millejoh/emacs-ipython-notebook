@@ -109,7 +109,8 @@
         (let ((buffer (get-buffer (symbol-value (intern log-expr)))))
           (when (buffer-live-p buffer)
             (with-current-buffer buffer
-              (let ((inhibit-read-only t))
+              (let ((inhibit-read-only t)
+		    (buffer-undo-list t))
                 (erase-buffer)))))))
 
 (When "^I switch to log expr \"\\(.+\\)\"$"

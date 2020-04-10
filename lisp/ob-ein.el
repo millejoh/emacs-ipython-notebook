@@ -117,6 +117,7 @@
       (base64-decode-region (point-min) (point-max)))))
 
 (defun ob-ein--proxy-images (json explicit-file)
+  (declare (indent defun))
   (let (result)
     (ein:output-area-case-type
      json
@@ -129,12 +130,22 @@
         (setq result value))))
     result))
 
-(defun ob-ein--process-outputs (outputs params)
-  (let ((file (cdr (assoc :image params))))
-    (ein:join-str "\n"
-                  (cl-loop for o in outputs
-                        collecting (ob-ein--proxy-images o file)))))
-
+(defun ob-ein--process-outputs (result-type cell params)
+  (let* ((render (let ((stdout-p
+			(lambda (out)
+			  (and (equal "stream" (plist-get out :output_type))
+			       (equal "stdout" (plist-get out :name))))))
+		   (if (eq result-type 'output)
+		       (lambda (out)
+			 (and (funcall stdout-p out) (plist-get out :text)))
+		     (lambda (out)
+		       (and (not (funcall stdout-p out))
+			    (ob-ein--proxy-images
+			      out (cdr (assoc :image params))))))))
+	 (outputs (cl-loop for out in (ein:oref-safe cell 'outputs)
+			   collect (funcall render out))))
+    (when outputs
+      (ein:join-str "\n" outputs))))
 
 (defun ob-ein--get-name-create (src-block-info)
   "Get the name of a src block or add a uuid as the name."
@@ -177,7 +188,8 @@ e.g., ob-c++ is not ob-C.el."
 (defun ob-ein--execute-body (body params)
   (let* ((buffer (current-buffer))
          (processed-params (org-babel-process-params params))
-         (result-params (cdr (assq :result-params params)))
+	 (result-type (cdr (assq :result-type params)))
+	 (result-params (cdr (assq :result-params params)))
          (session (or (ein:aand (cdr (assoc :session processed-params))
                                 (unless (string= "none" it)
                                   (format "%s" it)))
@@ -195,6 +207,7 @@ e.g., ob-c++ is not ob-C.el."
                      body
                      (ein:$notebook-kernel notebook)
                      processed-params
+		     result-type
                      result-params
                      name))))
     (save-excursion
@@ -218,44 +231,64 @@ e.g., ob-c++ is not ob-C.el."
                 (if pending
                     (prog1 ""
                       (ein:log 'error "ob-ein--execute-body: %s timed out" name))
-                  (ob-ein--process-outputs
-                   (ein:oref-safe (ein:shared-output-get-cell) 'outputs)
-                   processed-params))))
+                  (ob-ein--process-outputs result-type
+					   (ein:shared-output-get-cell)
+					   processed-params))))
       (org-babel-remove-result)
       *ob-ein-sentinel*)))
 
-(defsubst ob-ein--execute-async-callback (buffer params result-params name)
-  "Callback of 1-arity (the shared output cell) to update org buffer when
-`ein:shared-output-eval-string' completes."
-  (apply-partially
-   (lambda (buffer* params* result-params* name* cell)
-     (let* ((raw (aif (ein:oref-safe cell 'traceback)
-                     (ansi-color-apply (ein:join-str "\n" it))
-                   (ob-ein--process-outputs
-                    (ein:oref-safe cell 'outputs) params*)))
-            (result
-             (let ((tmp-file (org-babel-temp-file "ein-")))
-               (with-temp-file tmp-file raw)
-               (org-babel-result-cond result-params*
-                 raw (org-babel-import-elisp-from-file tmp-file '(16)))))
-            (info (org-babel-get-src-block-info 'light)))
-       (ein:log 'debug "ob-ein--execute-async-callback %s \"%s\" %s" name* result buffer*)
-       (save-excursion
-         (save-restriction
-           (with-current-buffer buffer*
-             (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
-               (when info ;; kill #+RESULTS: (no-name)
-                 (setf (nth 4 info) nil)
-                 (org-babel-remove-result info))
-               (org-babel-remove-result) ;; kill #+RESULTS: name
-               (org-babel-insert-result
-                result
-                (cdr (assoc :result-params
-                            (third (org-babel-get-src-block-info)))))
-               (org-redisplay-inline-images)))))))
-   buffer params result-params name))
+(defun ob-ein--execute-async-callback (buffer params result-type result-params name)
+  "Return callback of 1-arity (the shared output cell) to update org buffer when
+`ein:shared-output-eval-string' completes.
 
-(defun ob-ein--execute-async (buffer body kernel params result-params name)
+The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
+  (apply-partially
+   (lambda (buffer* params* result-type* result-params* name* cell)
+     (when-let ((raw (aif (ein:oref-safe cell 'traceback)
+			 (ansi-color-apply (ein:join-str "\n" it))
+		       (ob-ein--process-outputs result-type* cell params*))))
+       (prog1 t
+	 (let ((result
+		(let ((tmp-file (org-babel-temp-file "ein-")))
+		  (with-temp-file tmp-file raw)
+		  (org-babel-result-cond result-params*
+		    raw (org-babel-import-elisp-from-file tmp-file '(16)))))
+	       (info (org-babel-get-src-block-info 'light)))
+	   (ein:log 'debug "ob-ein--execute-async-callback %s \"%s\" %s"
+		    name* result buffer*)
+	   (save-excursion
+	     (save-restriction
+	       (with-current-buffer buffer*
+		 (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
+		   (when info ;; kill #+RESULTS: (no-name)
+		     (setf (nth 4 info) nil)
+		     (org-babel-remove-result info))
+		   (org-babel-remove-result) ;; kill #+RESULTS: name
+		   (org-babel-insert-result
+		    result
+		    (cdr (assoc :result-params
+				(third (org-babel-get-src-block-info)))))
+		   (org-redisplay-inline-images)))))))))
+   buffer params result-type result-params name))
+
+(defun ob-ein--execute-async-clear (buffer result-params name)
+  "Return function of 0-arity to clear *ob-ein-sentinel*."
+  (apply-partially
+   (lambda (buffer* result-params* name*)
+     (let ((info (org-babel-get-src-block-info 'light)))
+       (save-excursion
+	 (save-restriction
+	   (with-current-buffer buffer*
+	     (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
+	       (when info ;; kill #+RESULTS: (no-name)
+		 (setf (nth 4 info) nil)
+		 (org-babel-remove-result info))
+	       (org-babel-remove-result) ;; kill #+RESULTS: name
+	       (org-babel-insert-result "" result-params*)
+	       (org-redisplay-inline-images)))))))
+   buffer result-params name))
+
+(defun ob-ein--execute-async (buffer body kernel params result-type result-params name)
   "As `ein:shared-output-get-cell' is a singleton, ob-ein can only execute blocks
 one at a time.  Further, we do not order the queued up blocks!"
   (deferred:$
@@ -263,10 +296,12 @@ one at a time.  Further, we do not order the queued up blocks!"
       (deferred:lambda ()
         (let ((cell (ein:shared-output-get-cell)))
           (if (eq (slot-value cell 'callback) #'ignore)
-              (let ((callback
-                     (ob-ein--execute-async-callback buffer params
-                                                     result-params name)))
-                (setf (slot-value cell 'callback) callback))
+              (let ((callback (ob-ein--execute-async-callback
+			       buffer params result-type
+			       result-params name))
+		    (clear (ob-ein--execute-async-clear buffer result-params name)))
+                (setf (slot-value cell 'callback) callback)
+		(setf (slot-value cell 'clear) clear))
             ;; still pending previous callback
             (deferred:nextc (deferred:wait 1200) self)))))
     (deferred:nextc it
