@@ -107,12 +107,6 @@ Scenario: Smoke test julia
   Then I should see "true"
   And I dump buffer
 
-@evil
-Scenario: Test the undo-tree-incompatible logic
-  Given new python notebook
-  And I call "turn-on-undo-tree-mode"
-  Then the value of "undo-tree-mode" is nil
-
 @kernel-on-connect
 Scenario: Test ein:on-kernel-connect-functions abnormal hooks
   Given I set the kernel connect message

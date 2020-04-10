@@ -2,7 +2,6 @@
 (require 'f)
 (require 'espuds)
 (require 'ert)
-(require 'undo-tree)
 (require 'python)
 (require 'julia-mode)
 (require 'ess-r-mode)
@@ -27,9 +26,6 @@
 
 (when (file-exists-p (concat default-directory "features/support/test-poly.el"))
   (load-file (concat default-directory "features/support/test-poly.el")))
-
-;; how to turn off undo-tree-mode under polymode?
-(!cons "evil" ecukes-exclude-tags)
 
 (when (getenv "GITHUB_ACTIONS")
   (cl-assert (not (eq system-type 'darwin)))
