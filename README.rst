@@ -164,7 +164,6 @@ Keymap (C-h m)
    C-u C-c C-c    		ein:worksheet-execute-all-cells
    C-c C-e		ein:worksheet-toggle-output-km
    C-c C-f		ein:file-open-km
-   C-c C-h		ein:pytools-request-help-km
    C-c C-k		ein:worksheet-kill-cell-km
    C-c C-l		ein:worksheet-clear-output-km
    C-c RET		ein:worksheet-merge-cell-km
