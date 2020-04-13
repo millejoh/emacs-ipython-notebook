@@ -1140,7 +1140,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (ein:notebook--define-key map (kbd "C-c <down>") ein:worksheet-move-cell-down)
   (ein:notebook--define-key map (kbd "M-<up>") ein:worksheet-not-move-cell-up)
   (ein:notebook--define-key map (kbd "M-<down>") ein:worksheet-not-move-cell-down)
-  (ein:notebook--define-key map (kbd "C-c C-S-h") ein:pytools-request-help)
   (ein:notebook--define-key map (kbd "C-c C-$") ein:tb-show)
   (ein:notebook--define-key map "\C-c\C-x" nil)
   (ein:notebook--define-key map "\C-c\C-x\C-r" ein:notebook-restart-session-command)
@@ -1233,9 +1232,7 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
             ))
        "---"
        ,@(ein:generate-menu
-          '(("Show object help"
-             ein:pytools-request-help)
-            ("Jump to definition" ein:pytools-jump-to-source-command)
+          '(("Jump to definition" ein:pytools-jump-to-source-command)
             ("Go back to the previous jump point"
              ein:pytools-jump-back-command))))
       ("Kernel"

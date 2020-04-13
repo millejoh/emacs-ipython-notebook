@@ -27,16 +27,6 @@
 
 (require 'ein-kernel)
 
-(defun ein:pytools-request-help (kernel func)
-  (interactive (list (ein:get-kernel-or-error)
-                     (ein:object-at-point-or-error)))
-  (ein:kernel-execute kernel
-                      (format "%s?" func) ; = code
-                      nil                 ; = callbacks
-                      ;; It looks like that magic command does
-                      ;; not work in silent mode.
-                      :silent nil))
-
 (defun ein:pytools-jump-to-source-command (&optional other-window)
   "Jump to the source code of the object at point.
 When the prefix argument ``C-u`` is given, open the source code
