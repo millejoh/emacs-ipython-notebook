@@ -6,6 +6,9 @@ Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
 idiosyncrasies of in-browser editing.
 
+No require statements, e.g. ``require ein``, are necessary, contrary to the
+`prevailing documentation`_, which should be disregarded.
+
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
 EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
@@ -93,6 +96,7 @@ How do I...
 ... send expressions from a python buffer to a running kernel?
    Unpublicized keybindings *exclusively* for the Python language ``C-c C-/ e`` and ``C-c C-/ r`` send the current statement or region respectively to a running kernel.  If the region is not set, ``C-c C-/ r`` sends the entire buffer.  You must manually inspect the ``*ein:shared output*`` buffer for errors.
 
+.. _prevailing documentation: http://millejoh.github.io/emacs-ipython-notebook
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
