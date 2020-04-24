@@ -270,7 +270,7 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
                         (wrong-number-of-arguments (org-babel-remove-result info))))
                    (condition-case nil
                        (org-babel-remove-result nil t)
-                     (wrong-number-of-arguments org-babel-remove-result)) ;; kill #+RESULTS: name
+                     (wrong-number-of-arguments (org-babel-remove-result))) ;; kill #+RESULTS: name
 		   (org-babel-insert-result
 		    result
 		    (cdr (assoc :result-params
