@@ -236,8 +236,8 @@ e.g., ob-c++ is not ob-C.el."
 					   processed-params))))
 
       (condition-case nil
-        (org-babel-remove-result nil t)
-        (error (org-babel-remove-result)));; kill #+RESULTS: name
+          (org-babel-remove-result nil t)
+        (wrong-number-of-arguments (org-babel-remove-result)));; kill #+RESULTS: name
       *ob-ein-sentinel*)))
 
 (defun ob-ein--execute-async-callback (buffer params result-type result-params name)
@@ -267,10 +267,10 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 		     (setf (nth 4 info) nil)
                      (condition-case nil
                          (org-babel-remove-result info t)
-                        (error (org-babel-remove-result info))))
+                        (wrong-number-of-arguments (org-babel-remove-result info))))
                    (condition-case nil
                        (org-babel-remove-result nil t)
-                     (error org-babel-remove-result)) ;; kill #+RESULTS: name
+                     (wrong-number-of-arguments org-babel-remove-result)) ;; kill #+RESULTS: name
 		   (org-babel-insert-result
 		    result
 		    (cdr (assoc :result-params
@@ -291,10 +291,10 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 		 (setf (nth 4 info) nil)
                  (condition-case nil
                      (org-babel-remove-result info t)
-                   (error (org-babel-remove-result info))))
+                   (wrong-number-of-arguments (org-babel-remove-result info))))
                (condition-case nil
                    (org-babel-remove-result nil t)
-                 (error (org-babel-remove-result)));; kill #+RESULTS: name
+                 (wrong-number-of-arguments (org-babel-remove-result)));; kill #+RESULTS: name
 	       (org-babel-insert-result "" result-params*)
 	       (org-redisplay-inline-images)))))))
    buffer result-params name))
