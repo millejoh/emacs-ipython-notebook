@@ -125,6 +125,13 @@
   (setf (ein:$websocket-closed-by-client websocket) t)
   (websocket-close (ein:$websocket-ws websocket)))
 
+(defun ein:websocket--message-protocol-version (msg)
+  (condition-case err
+      (progn
+       (if (stringp msg)
+           (setf msg (ein:json-read-from-string msg)))
+       (string-to-number (plist-get (plist-get msg :header) :version)))
+    (error 3))) ;; Assume a protocol version if it is not specified in the header.
 
 (defun ein:websocket-send-shell-channel (kernel msg)
   (cond ((= (ein:$kernel-api-version kernel) 2)
@@ -143,6 +150,13 @@
          (ein:websocket-send
           (ein:$kernel-websocket kernel)
           (json-encode (plist-put msg :channel "stdin"))))))
+
+(defun ein:websocket-send-control-channel (kernel msg)
+  (cond ((< (ein:$kernel-message-protocol-version kernel) 5.3)
+         (ein:log 'warn "Control channel only supported in Jupyter message protocol version 5.3 and later."))
+        (t (ein:websocket-send
+            (ein:$kernel-websocket kernel)
+            (json-encode (plist-put msg :channel "control"))))))
 
 (provide 'ein-websocket)
 

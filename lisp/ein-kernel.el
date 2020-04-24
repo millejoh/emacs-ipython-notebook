@@ -270,12 +270,16 @@ See https://github.com/ipython/ipython/pull/3307"
 (defun ein:kernel--handle-websocket-reply (kernel ws frame)
   (ein:and-let* ((packet (websocket-frame-payload frame))
                  (channel (plist-get (ein:json-read-from-string packet) :channel)))
+    (unless (ein:$kernel-message-protocol-version kernel)
+      (setf (ein:$kernel-message-protocol-version kernel) (ein:websocket--message-protocol-version packet)))
     (cond ((string-equal channel "iopub")
            (ein:kernel--handle-iopub-reply kernel packet))
           ((string-equal channel "shell")
            (ein:kernel--handle-shell-reply kernel packet))
           ((string-equal channel "stdin")
            (ein:kernel--handle-stdin-reply kernel packet))
+          ((string-equal channel "control")
+           (ein:kernel--handle-control-reply kernel packet))
           (t (ein:log 'warn "Received reply from unforeseen channel %s" channel)))))
 
 (defun ein:start-single-websocket (kernel open-callback)
@@ -536,6 +540,17 @@ Example::
      :success (lambda (&rest ignore)
                 (ein:log 'info "Sent interruption command.")))))
 
+(defun ein:kernel-interrupt-command (kernel)
+  "Send an interrupt request to the kernel via the control channel (see
+https://jupyter-client.readthedocs.io/en/stable/messaging.html#kernel-interrupt).
+This message was recently introduced and only works with kernels that support messaging
+protocols version 5.3 and greater. As of April 2020 I believe only xeus-python will correctly
+process interrupt messages."
+  (interactive (list (ein:get-kernel)))
+  (awhen kernel
+    (let* ((msg (ein:kernel--get-msg kernel "interrupt_request" (make-hash-table))))
+      (ein:websocket-send-control-channel kernel msg))))
+
 (cl-defun ein:kernel-delete-session (&optional callback
                                      &key url-or-port path kernel
                                      &aux (session-id))
@@ -666,6 +681,29 @@ Example::
           (("execute_reply")
            (aif (plist-get content :execution_count)
                (ein:events-trigger events 'execution_count.Kernel it))))))))
+
+(defun ein:kernel--handle-control-reply (kernel packet)
+  (cl-destructuring-bind
+      (&key header content metadata &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (msg-id (plist-get header :msg_id))
+           (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id)))
+      (ein:log 'debug "ein:kernel--handle-control-reply: msg_type=%s msg_id=%s"
+               msg-type msg-id)
+      (aif (plist-get callbacks (intern-soft (format ":%s" msg-type)))
+          (ein:funcall-packed it content metadata)
+        (ein:log 'info "ein:kernel--handle-control-reply: No :%s callback for msg_id=%s"
+                 msg-type msg-id))
+      (let ((events (ein:$kernel-events kernel)))
+        (ein:case-equal msg-type
+          (("shutdown_reply")
+           (aif (plist-get content :restart)
+               (ein:log 'info "ein:kernel--handle-control-reply: Kernel restarting.")))
+          (("interrupt_reply")
+           (ein:log 'info "ein:kernel--handle-control-reply: Kernel interrupt request received."))
+          (("debug_reply")
+           (ein:log 'info "ein:kernel--handle-control-reply: Kernel debug request received: %s" content)))))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
   (if (ein:$kernel-stdin-activep kernel)

@@ -213,6 +213,7 @@
   kernelspec
   events
   api-version
+  message-protocol-version
   session-id
   kernel-id
   shell-channel
