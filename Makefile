@@ -61,12 +61,6 @@ test-compile: clean autoloads
 .PHONY: quick
 quick: $(CASK_DIR) test-compile test-ob-ein-recurse test-unit
 
-.PHONY: test-jupyterhub
-test-jupyterhub: test-compile
-# jupyterhub slightly temperamental with json-readtable-error
-# seems to be affecting ob-ipython too but probably my bug.. just need to find it
-	-$(CASK) exec ecukes --tags @jupyterhub --reporter magnars
-
 .PHONY: test
 test: quick test-int
 

@@ -34,7 +34,6 @@
 (require 'dash)
 (require 'ido)
 
-(declare-function ein:jupyterhub-connect "ein-jupyterhub")
 (declare-function ein:jupyter-crib-token "ein-jupyter")
 (declare-function ein:jupyter-server-conn-info "ein-jupyter")
 (declare-function ein:jupyter-get-default-kernel "ein-jupyter")
@@ -651,7 +650,7 @@ or even this (if you want fast Emacs start-up)::
 (defalias 'ein:login 'ein:notebooklist-login)
 
 (defun ein:notebooklist-ask-user-pw-pair (user-prompt pw-prompt)
-  "Currently used for cookie and jupyterhub additional inputs.  If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
+  "Currently used for cookie additional inputs.  If we need more than one cookie, we first need to ask for how many.  Returns list of name and content."
   (plist-put nil (intern (read-no-blanks-input (format "%s: " user-prompt)))
              (read-no-blanks-input (format "%s: " pw-prompt))))
 
@@ -713,11 +712,11 @@ and the url-or-port argument of ein:notebooklist-open*."
            (setq token (read-passwd (format "Password for %s: " url-or-port)))
            (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status)))
         ((request-response-header response "x-jupyterhub-version")
-         (let ((pam-plist (ein:notebooklist-ask-user-pw-pair "User" "Password")))
-           (destructuring-bind (user pw)
-               (cl-loop for (user pw) on pam-plist by (function cddr)
-                     return (list (symbol-name user) pw))
-             (ein:jupyterhub-connect url-or-port user pw callback))))
+	 (ein:notebooklist-login--error
+	  url-or-port token callback errback iteration
+	  :data data
+	  :response response
+	  :error-thrown '(error . ("Jupyterhub unsupported"))))
         (t (ein:notebooklist-login--success-1 url-or-port callback errback))))
 
 (cl-defun ein:notebooklist-login--error
