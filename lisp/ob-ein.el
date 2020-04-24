@@ -234,7 +234,7 @@ e.g., ob-c++ is not ob-C.el."
                   (ob-ein--process-outputs result-type
 					   (ein:shared-output-get-cell)
 					   processed-params))))
-      (org-babel-remove-result)
+      (org-babel-remove-result nil t)
       *ob-ein-sentinel*)))
 
 (defun ob-ein--execute-async-callback (buffer params result-type result-params name)
@@ -262,8 +262,8 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 		 (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
 		   (when info ;; kill #+RESULTS: (no-name)
 		     (setf (nth 4 info) nil)
-		     (org-babel-remove-result info))
-		   (org-babel-remove-result) ;; kill #+RESULTS: name
+		     (org-babel-remove-result info t))
+		   (org-babel-remove-result nil t) ;; kill #+RESULTS: name
 		   (org-babel-insert-result
 		    result
 		    (cdr (assoc :result-params
@@ -282,8 +282,8 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 	     (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
 	       (when info ;; kill #+RESULTS: (no-name)
 		 (setf (nth 4 info) nil)
-		 (org-babel-remove-result info))
-	       (org-babel-remove-result) ;; kill #+RESULTS: name
+		 (org-babel-remove-result info t))
+	       (org-babel-remove-result nil t) ;; kill #+RESULTS: name
 	       (org-babel-insert-result "" result-params*)
 	       (org-redisplay-inline-images)))))))
    buffer result-params name))
