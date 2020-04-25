@@ -109,7 +109,7 @@ Snippet:
 
 ::
 
-   #BEGIN_SRC ein-python :session localhost :results raw drawer
+   #BEGIN_SRC ein-python :session localhost
      import numpy, math, matplotlib.pyplot as plt
      %matplotlib inline
      x = numpy.linspace(0, 2*math.pi)

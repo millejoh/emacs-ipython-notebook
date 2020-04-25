@@ -6,7 +6,7 @@ Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
 idiosyncrasies of in-browser editing.
 
-No require statements, e.g. ``require 'ein``, are necessary, contrary to the
+No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 `prevailing documentation`_, which should be disregarded.
 
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
@@ -119,7 +119,7 @@ Snippet:
 
 ::
 
-   #BEGIN_SRC ein-python :session localhost :results raw drawer
+   #BEGIN_SRC ein-python :session localhost
      import numpy, math, matplotlib.pyplot as plt
      %matplotlib inline
      x = numpy.linspace(0, 2*math.pi)

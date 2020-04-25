@@ -250,7 +250,7 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
        (prog1 t
 	 (let ((result
 		(let ((tmp-file (org-babel-temp-file "ein-")))
-		  (with-temp-file tmp-file raw)
+		  (with-temp-file tmp-file (insert raw))
 		  (org-babel-result-cond result-params*
 		    raw (org-babel-import-elisp-from-file tmp-file '(16)))))
 	       (info (org-babel-get-src-block-info 'light)))
@@ -260,10 +260,11 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 	     (save-restriction
 	       (with-current-buffer buffer*
 		 (unless (stringp (org-babel-goto-named-src-block name*)) ;; stringp=error
-		   (when info ;; kill #+RESULTS: (no-name)
-		     (setf (nth 4 info) nil)
-		     (org-babel-remove-result info))
-		   (org-babel-remove-result) ;; kill #+RESULTS: name
+		   (when (version-list-< (version-to-list (org-release)) '(9))
+		     (when info ;; kill #+RESULTS: (no-name)
+		       (setf (nth 4 info) nil)
+		       (org-babel-remove-result info))
+		     (org-babel-remove-result)) ;; kill #+RESULTS: name
 		   (org-babel-insert-result
 		    result
 		    (cdr (assoc :result-params
