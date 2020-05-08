@@ -400,7 +400,7 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
       do (ob-ein--babelize-lang lang mode))
 
 ;;;###autoload
-(if (featurep 'org)
+(when (featurep 'org)
   (let* ((orig (get 'org-babel-load-languages 'custom-type))
          (orig-cdr (cdr orig))
          (choices (plist-get orig-cdr :key-type)))

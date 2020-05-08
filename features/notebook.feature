@@ -6,7 +6,7 @@ Scenario: rename notebook
   And rename notebook to "Renamed" succeeds
 
 @image
-Scenario: image fails to materialize initially.  Document this in a test.
+Scenario: in ipython<=7.10, image failed to materialize initially
   Given new python notebook
   And I type "import numpy, math, matplotlib.pyplot as plt"
   And I press "RET"
@@ -15,11 +15,6 @@ Scenario: image fails to materialize initially.  Document this in a test.
   And I type "plt.plot(x, numpy.sin(x))"
   And I press "RET"
   And I clear log expr "ein:log-all-buffer-name"
-  And I wait for cell to execute
-  And I dump buffer
-  And I switch to log expr "ein:log-all-buffer-name"
-  Then I should not see "msg_type=display_data"
-  And I switch to buffer like "Untitled"
   And I wait for cell to execute
   And I dump buffer
   And I switch to log expr "ein:log-all-buffer-name"

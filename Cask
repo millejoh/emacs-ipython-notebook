@@ -19,4 +19,5 @@
  (depends-on "julia-mode")
  (depends-on "ess")
  (depends-on "f")
- (depends-on "s"))
+ (depends-on "s")
+ (depends-on "exec-path-from-shell"))

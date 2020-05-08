@@ -74,7 +74,7 @@ jobs:
       run: |
         mkdir -p ~/local/bin
         python -m pip install --upgrade pip
-        pip install yq setuptools wheel jupyter ipykernel ipython\<=7.8.0 numpy\<=1.16.4 matplotlib\<=3.0.3
+        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
         python -m ipykernel install --user
         sh tools/install-R.sh
 
@@ -91,7 +91,8 @@ jobs:
 
     - name: gnupg
       if: startsWith(runner.os, 'macOS')
-      run: brew list gnupg &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg
+      run: |
+         brew list gnupg &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg
 
     - name: cask
       run: |

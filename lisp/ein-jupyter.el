@@ -26,6 +26,7 @@
 (require 'ein-core)
 (require 'ein-notebooklist)
 (require 'ein-dev)
+(require 'exec-path-from-shell)
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -57,14 +58,20 @@ Note some options like '-v' and '-network' are imposed by EIN."
 
 Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use-subcommand' to nil."
   :group 'ein
-  :type 'string)
+  :type 'string
+  :set (lambda (symbol value)
+	 (set-default symbol value)
+	 (unless (memq system-type '(ms-dos windows-nt))
+	   (let (exec-path-from-shell-check-startup-files)
+	     (exec-path-from-shell-initialize)))))
 
 (defcustom ein:jupyter-default-server-command ein:jupyter-server-command
   "Obsolete alias for `ein:jupyter-server-command'"
   :group 'ein
   :type 'string
+  :set-after '(ein:jupyter-server-command)
   :set (lambda (_symbol value)
-         (setq ein:jupyter-server-command value)))
+         (set-default 'ein:jupyter-server-command value)))
 
 (defcustom ein:jupyter-server-use-subcommand "notebook"
   "Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") need to Omit."

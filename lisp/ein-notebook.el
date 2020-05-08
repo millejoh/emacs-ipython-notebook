@@ -326,7 +326,6 @@ of minor mode."
                orig_nbformat orig_nbformat_minor
                nbformat nbformat_minor))))))
 
-
 ;;; Initialization.
 
 (defun ein:notebook-bind-events (notebook events)
