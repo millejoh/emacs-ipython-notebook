@@ -92,7 +92,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
     (ein:notification-status-set ns status)))
 
 (defun ein:notification--set-execution-count (notification count)
-  (oset notification :execution-count count))
+  (setf (oref notification :execution-count) count))
 
 (defun ein:notification--fadeout-callback (packed data)
   ;; FIXME: I can simplify this.
@@ -101,8 +101,8 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
         (message (nth 1 packed))
         (status (nth 2 packed))
         (next (nth 3 packed)))
-    (oset ns :status status)
-    (oset ns :message message)
+    (setf (oref ns :status) status)
+    (setf (oref ns :message) message)
     (apply #'run-at-time
            1 nil
            (lambda (ns message status next)
@@ -149,7 +149,7 @@ insert-prev insert-next move-prev move-next)"
                          :buffer buffer))
     (setq header-line-format ein:header-line-format)
     (ein:notification-bind-events ein:%notification% events)
-    (oset ein:%notification% :tab
+    (setf (oref ein:%notification% :tab)
           (apply #'make-instance 'ein:notification-tab tab-slots))
     ein:%notification%))
 

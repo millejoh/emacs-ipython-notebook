@@ -647,7 +647,7 @@ If you really want use this command, you can do something like this
     (apply #'ewoc-delete
            (slot-value ws 'ewoc)
            (ein:cell-all-element cell)))
-  (oset ws :dirty t)
+  (setf (oref ws :dirty) t)
   (when focus (ein:worksheet-focus-cell)))
 
 (defun ein:worksheet-kill-cell (ws cells &optional focus)
@@ -745,7 +745,7 @@ after PIVOT and return the new cell."
          "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
     (ein:worksheet--unshift-undo-list cell (- (ein:cell-input-pos-max cell)
                                               (ein:cell-input-pos-min cell)))
-    (oset ws :dirty t)
+    (setf (oref ws :dirty) t)
     (when focus (ein:cell-goto cell))
     cell))
 
@@ -770,7 +770,7 @@ See also: `ein:worksheet-insert-cell-below'."
          "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
     (ein:worksheet--unshift-undo-list cell (- (ein:cell-input-pos-max cell)
                                               (ein:cell-input-pos-min cell)))
-    (oset ws :dirty t)
+    (setf (oref ws :dirty) t)
     (when focus (ein:cell-goto cell))
     cell))
 
@@ -1046,7 +1046,7 @@ Do not clear input prompts when the prefix argument is given."
                               (?a (ein:worksheet-execute-all-cells ws* :above cell*))
                               (?b (ein:worksheet-execute-all-cells ws* :below cell*))
                               (t (ein:cell-execute cell*)
-                                 (oset ws* :dirty t)
+                                 (setf (oref ws* :dirty) t)
                                  (ein:worksheet--unshift-undo-list cell*))))
                           ws cell batch))
   cell)
