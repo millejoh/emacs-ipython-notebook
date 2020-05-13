@@ -1,6 +1,7 @@
 doc/build/
 .cask/*
 *.pyc
+*.elc
 log/*
 *.zip
 .gitattributes
