@@ -1,4 +1,4 @@
-;;; ein-node.el --- Structure to hold data in ewoc node
+;;; ein-node.el --- Structure to hold data in ewoc node    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -28,7 +28,7 @@
 (require 'ewoc)
 (require 'ein-core)
 
-(defstruct ein:$node
+(cl-defstruct ein:$node
   path                                  ; list of path
   data                                  ; actual data
   class                                 ; list
@@ -38,7 +38,7 @@
   (apply #'make-ein:$node :path path :data data :class class args))
 
 (defun ein:node-add-class (node &rest classes)
-  (mapc (lambda (c) (add-to-list (ein:$node-class node) c)) classes))
+  (mapc (lambda (c) (cl-pushnew c (ein:$node-class node))) classes))
 
 (defun ein:node-remove-class (node &rest classes)
   (let ((node-class (ein:$node-class node)))
@@ -53,7 +53,7 @@
         do (setq ewoc-node-list
                  (cl-loop for ewoc-node in ewoc-node-list
                        for node = (ewoc-data ewoc-node)
-                       when (case key
+                       when (cl-case key
                               (:is (ein:node-has-class node class))
                               (:not (not (ein:node-has-class node class)))
                               (t (error "%s is not supported" key)))

@@ -1,4 +1,4 @@
-;;; ein-core.el --- EIN core
+;;; ein-core.el --- EIN core    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -35,6 +35,9 @@
 (require 'ein)  ; get autoloaded functions into namespace
 (require 'ein-utils)
 (require 'anaphora)
+(require 'request)
+
+(declare-function ein:query-singleton-ajax "ein-query")
 
 (defgroup ein nil
   "IPython notebook client in Emacs"
@@ -129,7 +132,7 @@ the source is in git repository) or elpa version."
                    (intern (format ":%s" name))
                  name))
          (ks (or (plist-get kernelspecs name)
-                 (cl-loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+                 (cl-loop for (_key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
                        if (string= (ein:$kernelspec-language spec) lang)
                        return spec
                        end))))
@@ -162,8 +165,8 @@ the source is in git repository) or elpa version."
     name))
 
 (cl-defun ein:query-kernelspecs--success (url-or-port callback
-                                       &key data symbol-status response
-                                       &allow-other-keys)
+                                          &key data _symbol-status _response
+                                          &allow-other-keys)
   (let ((ks (list :default (plist-get data :default)))
         (specs (ein:plist-iter (plist-get data :kernelspecs))))
     (setf (gethash url-or-port *ein:kernelspecs*)
@@ -192,9 +195,8 @@ the source is in git repository) or elpa version."
              "ein:query-kernelspecs--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when callback (funcall callback))))
 
-(cl-defun ein:query-kernelspecs--complete (url-or-port &key data response
-                                                       &allow-other-keys
-                                                       &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:query-kernelspecs--complete (_url-or-port &key data response &allow-other-keys
+                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
 (defsubst ein:notebook-version-numeric (url-or-port)
@@ -220,7 +222,7 @@ the source is in git repository) or elpa version."
   (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
   (aif (plist-get data :version)
       (setf (gethash url-or-port *ein:notebook-version*) it)
-    (case (request-response-status-code response)
+    (cl-case (request-response-status-code response)
       (404 (ein:log 'warn "notebook version api not implemented")
            (setf (gethash url-or-port *ein:notebook-version*) "2.0.0"))
       (t (ein:log 'warn "notebook version currently unknowable"))))
@@ -279,8 +281,8 @@ the host named MY-HOSTNAME.
 
 Adapted from `slime-create-filename-translator'."
   (require 'tramp)
-  (lexical-let ((remote-host remote-host)
-                (username (or username (user-login-name))))
+  (let ((remote-host remote-host)
+        (username (or username (user-login-name))))
     (list (lambda (emacs-filename)
             (tramp-file-name-localname
              (tramp-dissect-file-name emacs-filename)))

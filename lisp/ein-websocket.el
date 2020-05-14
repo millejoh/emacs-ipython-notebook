@@ -1,4 +1,4 @@
-;;; ein-websocket.el --- Wrapper of websocket.el
+;;; ein-websocket.el --- Wrapper of websocket.el    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -32,14 +32,14 @@
 (require 'request)
 
 ;; Fix issues reading cookies in request when using curl backend
-(defun fix-request-netscape-cookie-parse (next-method)
+(defun fix-request-netscape-cookie-parse (_next-method)
   "Parse Netscape/Mozilla cookie format."
   (goto-char (point-min))
   (let ((tsv-re (concat "^\\="
                         (cl-loop repeat 6 concat "\\([^\t\n]+\\)\t")
                         "\\(.*\\)"))
         cookies)
-    (forward-line 3) ;; Skip header (first three lines)
+    (forward-line 3) ;; Skip header (cl-first three lines)
     (while
         (and
          (cond
@@ -64,9 +64,9 @@
   (url-cookie-store (car c) (cdr c) nil host-port url-filename securep))
 
 (defun ein:maybe-get-jhconn-user (url)
-  (let ((paths (rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
-    (if (string= (first paths) "user")
-        (format "/%s/%s/" (first paths) (second paths))
+  (let ((paths (cl-rest (split-string (url-filename (url-generic-parse-url url)) "/"))))
+    (if (string= (cl-first paths) "user")
+        (format "/%s/%s/" (cl-first paths) (cl-second paths))
       "")))
 
 ;;(advice-add 'request--netscape-cookie-parse :around #'fix-request-netscape-cookie-parse)
@@ -74,7 +74,7 @@
   "Websocket gets its cookies using the url-cookie API, so we need to copy over
  any cookies that are made and stored during the contents API calls via
  emacs-request."
-  (lexical-let*
+  (let*
       ((parsed-url (url-generic-parse-url url))
        (host-port (if (url-port-if-non-default parsed-url)
                       (format "%s:%s" (url-host parsed-url) (url-port parsed-url))

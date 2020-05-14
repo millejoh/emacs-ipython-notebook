@@ -1,4 +1,4 @@
-;;; ein-worksheet.el --- Worksheet module
+;;; ein-worksheet.el --- Worksheet module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -67,7 +67,7 @@
   "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
   (intern (substring (slot-value cell 'cell-id) 0 5)))
 
-(defun ein:worksheet--which-cell-hook (change-beg change-end prev-len)
+(defun ein:worksheet--which-cell-hook (change-beg change-end _prev-len)
   "Hook important for undo thats runs for everything we type (an after-change-functions hook).
 
 Normalize `buffer-undo-list' by removing extraneous details, and update the ein:%which-cell% ledger that associates changes in `buffer-undo-list' with individual cells."
@@ -102,11 +102,11 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
             (ein:worksheet--element-start cell :footer))))))
 
 (defsubst ein:worksheet--saved-input-length (cell)
-  (or (fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
+  (or (cl-fourth (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0))
 
 (defsubst ein:worksheet--prompt-length (cell &optional cached)
   (if cached
-      (or (first (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
+      (or (cl-first (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     ;; 1+ for newline
     (1+ (- (ein:worksheet--element-start cell :input)
            (ein:worksheet--element-start cell :prompt)))))
@@ -114,7 +114,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 (defsubst ein:worksheet--output-length (cell &optional cached)
   (if cached
       ;; 1 for when cell un-executed, there is still a newline
-      (or (second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
+      (or (cl-second (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 1)
     (if (string= (slot-value cell 'cell-type) "code")
       (- (ein:worksheet--next-cell-start cell)
          (ein:worksheet--element-start cell :output))
@@ -122,7 +122,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 (defsubst ein:worksheet--total-length (cell &optional cached)
   (if cached
-      (or (third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
+      (or (cl-third (plist-get ein:%cell-lengths% (slot-value cell 'cell-id))) 0)
     (- (ein:worksheet--next-cell-start cell)
        (ein:worksheet--element-start cell :prompt))))
 
@@ -346,8 +346,8 @@ Unshift in list parlance means prepending to list."
                  #'ein:worksheet--set-next-input)
   (ein:events-on events 'set_dirty.Worksheet #'ein:worksheet--set-dirty))
 
-(defun ein:worksheet--set-next-input (-ignore- data)
-  (destructuring-bind (&key cell text) data
+(defun ein:worksheet--set-next-input (_ignore data)
+  (cl-destructuring-bind (&key cell text) data
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:and-let* ((ws ein:%worksheet%)
                      (new-cell
@@ -355,9 +355,9 @@ Unshift in list parlance means prepending to list."
         (ein:cell-set-text new-cell text)
         (setf (slot-value ws 'dirty) t)))))
 
-(defun ein:worksheet--set-dirty (-ignore- data)
+(defun ein:worksheet--set-dirty (_ignore data)
   "Set dirty flag of worksheet in which CELL in DATA locates."
-  (destructuring-bind (&key value cell) data
+  (cl-destructuring-bind (&key value cell) data
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
@@ -374,7 +374,7 @@ Unshift in list parlance means prepending to list."
   "Set worksheet name.
 
 \(fn ws name)"
-  (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
+  (cl-assert (stringp name) nil "NAME must be a string.  Got: %S" name)
   (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
 
 (cl-defmethod ein:worksheet-full-name ((ws ein:worksheet))
@@ -480,17 +480,17 @@ Unshift in list parlance means prepending to list."
 which is probably unnecessarily 'surgical'."
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
-    (case (car path)
+    (cl-case (car path)
       (cell (ein:cell-pp (cdr path) data)))))
 
 (cl-defmethod ein:worksheet-from-json ((ws ein:worksheet) data)
-  (destructuring-bind (&key cells metadata &allow-other-keys) data
+  (cl-destructuring-bind (&key cells metadata &allow-other-keys) data
     (setf (slot-value ws 'metadata) metadata)
     (setf (slot-value ws 'saved-cells)
           (mapcar (lambda (data) (ein:cell-from-json data)) cells)))
   ws)
 
-(cl-defmethod ein:worksheet-from-cells ((ws ein:worksheet) cells)
+(cl-defmethod ein:worksheet-from-cells ((_ws ein:worksheet) _cells)
   )
 
 (cl-defmethod ein:worksheet-to-json ((ws ein:worksheet))
@@ -577,7 +577,7 @@ worksheet WS is reopened.
 (defun ein:worksheet-get-current-ewoc-node (&optional pos)
   (ein:aand (ein:worksheet-get-ewoc) (ewoc-locate it pos)))
 
-(defun ein:worksheet-get-nearest-cell-ewoc-node (&optional pos max cell-p)
+(defun ein:worksheet-get-nearest-cell-ewoc-node (&optional pos _max cell-p)
   (ein:and-let* ((ewoc-node (ein:worksheet-get-current-ewoc-node pos)))
     ;; FIXME: can be optimized using the argument `max'
     (while (and ewoc-node
@@ -836,7 +836,7 @@ If prefix is given, merge current cell into next cell."
   (when cell
     (let* ((next-cell (ein:cell-next cell))
            (head (ein:cell-get-text cell)))
-      (assert next-cell nil "No cell to merge.")
+      (cl-assert next-cell nil "No cell to merge.")
       (ein:worksheet-delete-cell ws cell)
       (save-excursion
         (goto-char (ein:cell-input-pos-min next-cell))

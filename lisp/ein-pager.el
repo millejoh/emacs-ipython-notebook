@@ -1,4 +1,4 @@
-;;; ein-pager.el --- Pager module
+;;; ein-pager.el --- Pager module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 

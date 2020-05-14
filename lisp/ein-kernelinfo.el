@@ -1,4 +1,4 @@
-;;; ein-kernelinfo.el --- Kernel info module
+;;; ein-kernelinfo.el --- Kernel info module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 

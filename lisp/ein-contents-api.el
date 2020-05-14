@@ -1,4 +1,4 @@
-;;; ein-contents-api.el --- Interface to Jupyter's Contents API
+;;; ein-contents-api.el --- Interface to Jupyter's Contents API  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2015 - John Miller
 
@@ -69,15 +69,15 @@ ERRBACK of arity 1 for the contents."
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
    :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)))
 
-(cl-defun ein:content-query-contents--complete (url-or-port path
-                                                &key data symbol-status response
+(cl-defun ein:content-query-contents--complete (_url-or-port _path
+                                                &key data _symbol-status response
                                                 &allow-other-keys
                                                 &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
 (cl-defun ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown data &allow-other-keys)
   (let ((status-code (request-response-status-code response))) ; may be nil!
-    (case status-code
+    (cl-case status-code
       (404 (ein:log 'error "ein:content-query-contents--error %s %s"
                     status-code (plist-get data :message))
            (when errback (funcall errback url-or-port status-code)))
@@ -99,7 +99,7 @@ ERRBACK of arity 1 for the contents."
                (when errback (funcall errback url-or-port status-code)))))))))
 
 (cl-defun ein:content-query-contents--success (url-or-port path callback
-                                               &key data symbol-status response
+                                               &key data _symbol-status _response
                                                &allow-other-keys)
   (let (content)
     (if (< (ein:notebook-version-numeric url-or-port) 3)
@@ -188,35 +188,33 @@ ERRBACK of arity 1 for the contents."
 
 (defun ein:content-query-hierarchy* (url-or-port path callback sessions depth content)
   "Returns list (tree) of content objects.  CALLBACK accepts tree."
-  (lexical-let* ((url-or-port url-or-port)
-                 (path path)
-                 (callback callback)
-                 (items (ein:$content-raw-content content))
-                 (directories (if (< depth ein:content-query-max-depth)
-                                  (cl-loop for item in items
-                                        with result
-                                        until (>= (length result) ein:content-query-max-branch)
-                                        if (string= "directory" (plist-get item :type))
-                                        collect (ein:new-content url-or-port path item)
-                                        into result
-                                        end
-                                        finally return result)))
-                 (others (cl-loop for item in items
-                               with c0
-                               if (not (string= "directory" (plist-get item :type)))
-                               do (setf c0 (ein:new-content url-or-port path item))
-                               (setf (ein:$content-session-p c0)
-                                     (gethash (ein:$content-path c0) sessions))
-                               and collect c0
-                               end)))
+  (let* ((url-or-port url-or-port)
+         (path path)
+         (callback callback)
+         (items (ein:$content-raw-content content))
+         (directories (if (< depth ein:content-query-max-depth)
+                          (cl-loop for item in items
+                                   until (>= (length result) ein:content-query-max-branch)
+                                   if (string= "directory" (plist-get item :type))
+                                   collect (ein:new-content url-or-port path item)
+                                   into result
+                                   end
+                                   finally return result)))
+         (others (cl-loop for item in items
+                          with c0
+                          if (not (string= "directory" (plist-get item :type)))
+                          do (setf c0 (ein:new-content url-or-port path item))
+                          (setf (ein:$content-session-p c0)
+                                (gethash (ein:$content-path c0) sessions))
+                          and collect c0
+                          end)))
     (deferred:$
       (apply
        #'deferred:parallel
        (cl-loop for c0 in directories
              collect
-             (lexical-let
-                 ((c0 c0)
-                  (d0 (deferred:new #'identity)))
+             (let ((c0 c0)
+                   (d0 (deferred:new #'identity)))
                (ein:content-query-contents
                 url-or-port
                 (ein:$content-path c0)
@@ -245,7 +243,7 @@ ERRBACK of arity 1 for the contents."
                                         url-or-port*
                                         ""
                                         callback* sessions 0)
-                       (lambda (&rest ignore)
+                       (lambda (&rest _ignore)
                          (when callback* (funcall callback* nil)))))
                     url-or-port callback)
    callback))
@@ -266,7 +264,7 @@ ERRBACK of arity 1 for the contents."
    :error (apply-partially #'ein:content-save-error
                            (ein:content-url content) errcb errcbargs)))
 
-(cl-defun ein:content-save-success (callback cbargs &key status response &allow-other-keys)
+(cl-defun ein:content-save-success (callback cbargs &key _status _response &allow-other-keys)
   (when callback
     (apply callback cbargs)))
 
@@ -315,9 +313,9 @@ ERRBACK of arity 1 for the contents."
    :data (json-encode `((path . ,new-path)))
    :complete #'ein:session-rename--complete))
 
-(cl-defun ein:session-rename--complete (&key data response symbol-status
-                                      &allow-other-keys
-                                      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:session-rename--complete (&key data response _symbol-status
+                                        &allow-other-keys
+                                        &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:session-rename--complete %s" resp-string))
 
 (cl-defun update-content-path (content callback cbargs &key data &allow-other-keys)
@@ -375,7 +373,7 @@ Call ERRBACK of arity 1 (contents) upon failure."
     (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when errback (funcall errback nil))))
 
-(cl-defun ein:content-query-sessions--complete (url-or-port callback
+(cl-defun ein:content-query-sessions--complete (_url-or-port _callback
                                                 &key data response
                                                 &allow-other-keys
                                                 &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))

@@ -1,4 +1,4 @@
-;;; ein-jupyter.el --- Manage the jupyter notebook server
+;;; ein-jupyter.el --- Manage the jupyter notebook server    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2017 John M. Miller
 
@@ -125,7 +125,7 @@ with the call to the jupyter notebook."
         (t
          (symbol-name ein:jupyter-default-kernel))))
 
-(defun ein:jupyter-process-lines (url-or-port command &rest args)
+(defun ein:jupyter-process-lines (_url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
   (condition-case err
       (apply #'process-lines command args)
@@ -152,7 +152,7 @@ with the call to the jupyter notebook."
                                args
                                (let ((copy ein:jupyter-server-args))
                                  (when ein:debug
-                                   (add-to-list 'copy "--debug"))
+                                   (cl-pushnew "--debug" copy))
                                  copy)))))
          (proc (apply #'start-process
                       *ein:jupyter-server-process-name* buf cmd vargs)))
@@ -190,7 +190,7 @@ call to `ein:notebooklist-login' and once authenticated open the notebooklist bu
 via a call to `ein:notebooklist-open'."
   (interactive)
   (when (ein:jupyter-server-process)
-    (multiple-value-bind (url-or-port password) (ein:jupyter-server-conn-info)
+    (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
       (if-let ((token (ein:notebooklist-token-or-password url-or-port)))
 	  (ein:notebooklist-login url-or-port callback nil token)
 	(ein:log 'error "`(ein:notebooklist-token-or-password %s)` must return non-nil"
@@ -223,7 +223,7 @@ our singleton jupyter server process here."
                                 "list" "--json")))
                 with token0
                 with password0
-                when (destructuring-bind
+                when (cl-destructuring-bind
                          (&key password url token &allow-other-keys)
                          (ein:json-read-from-string line)
                        (prog1 (or (equal (ein:url url) url-or-port)
@@ -245,7 +245,7 @@ our singleton jupyter server process here."
                            (aif ein:jupyter-server-use-subcommand
                                (concat it " ") "")
                            "list" "--json")))
-           collecting (destructuring-bind
+           collecting (cl-destructuring-bind
                           (&key url &allow-other-keys)
                           (ein:json-read-from-string line)
                         (ein:url url))))
@@ -293,7 +293,7 @@ server command."
                            default-dir default-dir t)))
            result)
          nil
-         (lambda (buffer url-or-port)
+         (lambda (buffer _url-or-port)
            (pop-to-buffer buffer))
          nil))
   (if (ein:jupyter-server-process)
@@ -317,7 +317,7 @@ server command."
       (unless login-callback
         (setq login-callback #'ignore))
       (add-function :after login-callback
-                    (apply-partially (lambda (proc* buffer url-or-port)
+                    (apply-partially (lambda (proc* _buffer url-or-port)
                                        (ein:set-process-sentinel proc* url-or-port))
                                      proc))
       (ein:jupyter-server-login-and-open login-callback))))
@@ -331,8 +331,8 @@ server command."
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   (interactive)
-  (ein:and-let* ((url-or-port (first (ein:jupyter-server-conn-info)))
-                 (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
+  (ein:and-let* ((url-or-port (cl-first (ein:jupyter-server-conn-info)))
+                 (ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
     (cl-loop repeat 10
              until (not (seq-some (lambda (proc)
@@ -340,8 +340,8 @@ server command."
                                                (process-name proc)))
                                   (process-list)))
              do (sleep-for 0 500))
-    (lexical-let* ((proc (ein:jupyter-server-process))
-                   (pid (process-id proc)))
+    (let* ((proc (ein:jupyter-server-process))
+           (pid (process-id proc)))
       (if (eq system-type 'windows-nt)
           (ein:query-singleton-ajax
            (ein:url url-or-port "api/shutdown")

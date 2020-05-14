@@ -1,4 +1,4 @@
-;;; ein-dev.el --- Development tools
+;;; ein-dev.el --- Development tools    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -119,11 +119,11 @@ callback (`websocket-callback-debug-on-error') is enabled."
 ;;  (setq deferred:debug-on-signal t)
 ;;  (setq deferred:debug t)
   (setq request-log-level (quote debug))
-  (lexical-let ((curl-trace (concat temporary-file-directory "curl-trace")))
+  (let ((curl-trace (concat temporary-file-directory "curl-trace")))
     (nconc request-curl-options `("--trace-ascii" ,curl-trace))
     (add-function :after
                   (symbol-function 'request--curl-callback)
-                  (lambda (&rest args)
+                  (lambda (&rest _args)
                     (if (file-readable-p curl-trace)
                         (with-temp-buffer
                           (insert-file-contents curl-trace)
@@ -208,10 +208,10 @@ callback (`websocket-callback-debug-on-error') is enabled."
               (buffer-string))))
 
 (defsubst ein:dev-packages ()
-  (lexical-let (result)
+  (let (result)
     (cl-letf (((symbol-function 'define-package)
                (lambda (&rest args)
-                 (setq result (mapcar (lambda (x) (symbol-name (first x))) (nth 3 args))))))
+                 (setq result (mapcar (lambda (x) (symbol-name (cl-first x))) (nth 3 args))))))
       (load "ein-pkg")
       result)))
 
@@ -275,6 +275,7 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (princ (ein:dev--pp-to-string (ein:dev-sys-info))
          (or stream standard-output)))
 
+(defvar pp-escape-newlines)     ; "pp"
 (defun ein:dev--pp-to-string (object)
   "`pp-to-string' with additional prettifier."
   (with-temp-buffer

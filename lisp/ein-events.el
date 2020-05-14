@@ -1,4 +1,4 @@
-;;; ein-events.el --- Event module
+;;; ein-events.el --- Event module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -51,7 +51,7 @@ When EVENT-TYPE is triggered on the event handler EVENTS,
 CALLBACK is called.  CALLBACK must take two arguments:
 ARG as the first argument and DATA, which is passed via
 `ein:events-trigger', as the second."
-  (assert (symbolp event-type) t "%s not symbol" event-type)
+  (cl-assert (symbolp event-type) t "%s not symbol" event-type)
   (let* ((table (slot-value events 'callbacks))
          (cbs (gethash event-type table)))
     (push (cons callback arg) cbs)
