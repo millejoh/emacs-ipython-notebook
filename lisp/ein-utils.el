@@ -594,6 +594,7 @@ otherwise it should be a function, which is called on `time'."
   `(let* (done-p
           (done-callback (lambda (&rest _args) (setf done-p t)))
           (errback (lambda (&rest _args) (setf done-p 'error))))
+     (ignore errback)           ; make errback ignorable
      ;; again, how can done-callback remove itself after running?
      (add-function :before ,callback done-callback)
      (unless noninteractive
