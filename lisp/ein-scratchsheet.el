@@ -1,4 +1,4 @@
-;;; ein-scratchsheet.el --- Worksheet without needs for saving
+;;; ein-scratchsheet.el --- Worksheet without needs for saving     -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 

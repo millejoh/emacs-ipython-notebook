@@ -1,4 +1,4 @@
-;;; ein-file.el --- Editing files downloaded from jupyter
+;;; ein-file.el --- Editing files downloaded from jupyter    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2017- John M. Miller
 

@@ -1,4 +1,4 @@
-;;; ein-notification.el --- Notification widget for Notebook
+;;; ein-notification.el --- Notification widget for Notebook    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -75,7 +75,7 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
                  #'ein:notification--set-execution-count
                  notification))
 
-(defun ein:notification--callback (packed data)
+(defun ein:notification--callback (packed _data)
   (let ((ns (car packed))
         (status (cdr packed)))
     (ein:notification-status-set ns status)))
@@ -83,18 +83,15 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
 (defun ein:notification--set-execution-count (notification count)
   (setf (oref notification :execution-count) count))
 
-(defun ein:notification--fadeout-callback (packed data)
+(defun ein:notification--fadeout-callback (packed _data)
   ;; FIXME: I can simplify this.
   ;;        Do not pass around message, for exmaple.
-  (let ((ns (nth 0 packed))
-        (message (nth 1 packed))
-        (status (nth 2 packed))
-        (next (nth 3 packed)))
+  (cl-destructuring-bind (ns message status &rest) packed
     (setf (oref ns :status) status)
     (setf (oref ns :message) message)
     (apply #'run-at-time
            1 nil
-           (lambda (ns message status next)
+           (lambda (ns _message status next)
              (when (equal (slot-value ns 'status) status)
                (ein:notification-status-set ns next)
                ;; (ein:with-live-buffer (slot-value ns :buffer)
@@ -152,7 +149,7 @@ GET-NAME : function
   (declare (debug (form &rest form))
            (indent 1))
   ;; See: (info "(elisp) Click Events")
-  `(destructuring-bind
+  `(cl-destructuring-bind
        (event-type
         (window pos-or-area (x . y) timestamp
                 object text-pos (col . row)

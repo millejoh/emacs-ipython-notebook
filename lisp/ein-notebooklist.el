@@ -1,4 +1,4 @@
-;;; ein-notebooklist.el --- Notebook list buffer
+;;; ein-notebooklist.el --- Notebook list buffer    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2018- John M. Miller
 
@@ -48,7 +48,7 @@
 
 (make-obsolete-variable 'ein:notebooklist-first-open-hook nil "0.17.0")
 
-(defstruct ein:$notebooklist
+(cl-defstruct ein:$notebooklist
   "Hold notebooklist variables.
 
 `ein:$notebooklist-url-or-port'
@@ -136,8 +136,8 @@ This function adds NBLIST to `ein:notebooklist-map'."
 Jupyter requires one or the other but not both.
 Return empty string token if all authentication disabled.
 Return nil if unclear what, if any, authentication applies."
-  (multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
-    (multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
+  (cl-multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
+    (cl-multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
       (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
             ((and (stringp token) (eq password-p :json-false)) token)
             ((equal url-or-port my-url-or-port) my-token)
@@ -172,11 +172,11 @@ version and kernelspecs.
 
 CALLBACK takes two arguments, the resulting buffer and URL-OR-PORT.
 ERRBACK takes one argument, the resulting buffer."
-  (lexical-let* ((url-or-port (ein:url url-or-port))
-                 (path (or path ""))
-                 (success (apply-partially #'ein:notebooklist-open--finish
-                                           url-or-port callback))
-                 (failure errback))
+  (let* ((url-or-port (ein:url url-or-port))
+         (path (or path ""))
+         (success (apply-partially #'ein:notebooklist-open--finish
+                                   url-or-port callback))
+         (failure errback))
     (if (and (not resync) (ein:notebooklist-list-get url-or-port))
         (ein:content-query-contents url-or-port path success failure)
       (ein:query-notebook-version
@@ -314,7 +314,7 @@ See `ein:format-time-string'."
                  name))
   (ein:notebooklist-new-notebook url-or-port kernelspec callback no-pop))
 
-(defun ein:notebooklist-delete-notebook (notebooklist url-or-port path &optional callback)
+(defun ein:notebooklist-delete-notebook (_notebooklist url-or-port path &optional callback)
   "CALLBACK with no arguments, e.g., semaphore"
   (declare (indent defun))
   (unless callback (setq callback #'ignore))
@@ -345,8 +345,8 @@ See `ein:format-time-string'."
                                   :path path)))))
 
 (cl-defun ein:notebooklist-delete-notebook--complete
-    (url callback
-     &key data response symbol-status
+    (_url callback
+     &key data response _symbol-status
      &allow-other-keys
      &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:notebooklist-delete-notebook--complete %s" resp-string)
@@ -388,7 +388,7 @@ See `ein:format-time-string'."
                  sort-order)))
     (-concat dirs nbs files)))
 
-(defun render-header (url-or-port &rest args)
+(defun render-header (url-or-port &rest _args)
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
      (format "Contents API %s (%s)\n\n"
@@ -397,9 +397,9 @@ See `ein:format-time-string'."
     (let ((breadcrumbs (generate-breadcrumbs
                         (ein:$notebooklist-path ein:%notebooklist%))))
       (dolist (p breadcrumbs)
-        (lexical-let ((url-or-port url-or-port)
-                      (name (car p))
-                      (path (cdr p)))
+        (let ((url-or-port url-or-port)
+              (name (car p))
+              (path (cdr p)))
           (widget-insert " | ")
           (widget-create
            'link
@@ -409,8 +409,8 @@ See `ein:format-time-string'."
                                                (pop-to-buffer buffer))))
            name)))
       (widget-insert " |\n\n"))
-    (lexical-let* ((url-or-port url-or-port)
-                   (kernels (ein:list-available-kernels url-or-port)))
+    (let* ((url-or-port url-or-port)
+           (kernels (ein:list-available-kernels url-or-port)))
       (widget-create
        'link
        :notify (lambda (&rest _ignore) (ein:notebooklist-new-notebook
@@ -473,13 +473,12 @@ See `ein:format-time-string'."
              for path = (plist-get note :path)
              for last-modified = (plist-get note :last_modified)
              for type = (plist-get note :type)
-             for opened-notebook-maybe = (ein:notebook-get-opened-notebook
-                                          url-or-port path)
+             do (ein:notebook-get-opened-notebook url-or-port path)
              if (string= type "directory")
              do (progn (widget-create
                         'link
-                        :notify (lexical-let ((url-or-port url-or-port)
-                                              (name name))
+                        :notify (let ((url-or-port url-or-port)
+                                      (name name))
                                   (lambda (&rest _ignore)
                                     ;; each directory creates a whole new notebooklist
                                     (ein:notebooklist-open* url-or-port
@@ -650,7 +649,7 @@ and the url-or-port argument of ein:notebooklist-open*."
                  ,(lambda (buffer _url-or-port) (pop-to-buffer buffer))
                  ,(if current-prefix-arg (ein:notebooklist-ask-user-pw-pair "Cookie name" "Cookie content"))
 		 nil))
-  (unless callback (setq callback (lambda (buffer url-or-port))))
+  (unless callback (setq callback (lambda (_buffer _url-or-port))))
   (when cookie-plist
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
            (domain (url-host parsed-url))
@@ -682,7 +681,7 @@ and the url-or-port argument of ein:notebooklist-open*."
            (request-response--raw-header response))
   (funcall errback))
 
-(cl-defun ein:notebooklist-login--complete (url-or-port
+(cl-defun ein:notebooklist-login--complete (_url-or-port
                                             &key data response
                                             &allow-other-keys
                                             &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
@@ -707,7 +706,7 @@ and the url-or-port argument of ein:notebooklist-open*."
 
 (cl-defun ein:notebooklist-login--error
     (url-or-port token callback errback iteration
-     &key data symbol-status response error-thrown
+     &key _data symbol-status response error-thrown
      &allow-other-keys
      &aux (response-status (request-response-status-code response)))
   (cond ((and response-status (< iteration 0))

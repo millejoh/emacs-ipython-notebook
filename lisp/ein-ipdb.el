@@ -1,4 +1,4 @@
-;;; ein-ipdb.el --- Support ipython debugger (ipdb)
+;;; ein-ipdb.el --- Support ipython debugger (ipdb)    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2015 - John Miller
 
@@ -30,7 +30,7 @@
 (defvar ein:ipdb-buffer-active-kernel nil)
 (defvar ein:ipdb-buffer-prompt nil)
 
-(defstruct ein:$ipdb-session
+(cl-defstruct ein:$ipdb-session
   buffer
   notebook-buffer
   kernel
@@ -66,6 +66,8 @@
     (ein:ipdb-mode)
     (pop-to-buffer (ein:$ipdb-session-buffer session))))
 
+(declare-function ein:kernel--get-msg "ein-kernel")
+
 (defun ein:ipdb-on-stop ()
   (when ein:ipdb-buffer-active-kernel
     (let* ((kernel (ein:$ipdb-session-kernel
@@ -75,9 +77,11 @@
       (setf (ein:$kernel-stdin-activep kernel) nil)
       (remhash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))))
 
+(defvar ein:ipdb--received-quit-p nil)
+
 (defun ein:ipdb--handle-iopub-reply (kernel packet)
-  (destructuring-bind
-      (&key content metadata parent_header header &allow-other-keys)
+  (cl-destructuring-bind
+      (&key content _metadata _parent_header header &allow-other-keys)
       (ein:json-read-from-string packet)
     (let ((msg-type (plist-get header :msg_type)))
       (cond ((string-equal msg-type "stream")
@@ -104,7 +108,7 @@
 
 (defun ein:ipdb-input-sender (proc input)
   (with-current-buffer (process-buffer proc)
-    (assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
+    (cl-assert (not (null ein:ipdb-buffer-active-kernel)) t "No active kernel associated with this buffer %s.")
     (let* ((session (gethash ein:ipdb-buffer-active-kernel *ein:ipdb-sessions*))
            (buffer-read-only nil)
            (kernel (ein:$ipdb-session-kernel session))
@@ -118,8 +122,6 @@
 (defun ein:ipdb-buffer-initialize ()
   "Helper function to initialize a newly minted ein:ipdb buffer."
   (setq comint-use-prompt-regexp t))
-
-(defvar ein:ipdb--received-quit-p nil)
 
 (define-derived-mode ein:ipdb-mode comint-mode "EIN:IPDB"
     "Run an EIN debug session.

@@ -1,4 +1,4 @@
-;;; ein-pytools.el --- Python tools build on top of kernel
+;;; ein-pytools.el --- Python tools build on top of kernel    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -38,7 +38,7 @@ selecting it."
         (call-interactively #'xref-find-definitions-other-window)
       (call-interactively #'xref-find-definitions))))
 
-(defun ein:pytools-jump-back-command (&optional other-window)
+(defun ein:pytools-jump-back-command (&optional _other-window)
   "Go back to the point where `ein:pytools-jump-to-source-command'
 is executed last time.  When the prefix argument ``C-u`` is
 given, open the last point in the other window."

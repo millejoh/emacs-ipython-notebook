@@ -36,6 +36,7 @@
 ;;; Code:
 (require 'ob)
 (require 'ein-utils)
+(require 'ein-cell)
 (require 'anaphora)
 
 (autoload 'org-element-property "org-element")
@@ -158,7 +159,7 @@
 
 (defun ob-ein--get-name-create (src-block-info)
   "Get the name of a src block or add a uuid as the name."
-  (if-let ((name (fifth src-block-info)))
+  (if-let ((name (cl-fifth src-block-info)))
       name
     (save-excursion
       (let ((el (org-element-context))
@@ -277,7 +278,7 @@ The callback returns t if results containt RESULT-TYPE outputs, nil otherwise."
 		   (org-babel-insert-result
 		    result
 		    (cdr (assoc :result-params
-				(third (org-babel-get-src-block-info)))))
+				(cl-third (org-babel-get-src-block-info)))))
 		   (org-redisplay-inline-images)))))))))
    buffer params result-type result-params name))
 
@@ -319,7 +320,7 @@ one at a time.  Further, we do not order the queued up blocks!"
         (ein:shared-output-eval-string kernel body)))))
 
 (defun ob-ein--parse-session (session)
-  (multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
+  (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
     (let ((tokens (split-string session "/"))
           (parsed-url (url-generic-parse-url session)))
       (cond ((null (url-host parsed-url))

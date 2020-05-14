@@ -1,4 +1,4 @@
-;;; ein-process.el --- Notebook list buffer
+;;; ein-process.el --- Notebook list buffer    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2018- John M. Miller
 
@@ -60,7 +60,7 @@
                                    ein:process-lsof pid)
                            standard-output error-buffer)))))))
 
-(defun ein:process-divine-ip (pid args)
+(defun ein:process-divine-ip (_pid args)
   "Returns notebook-ip of PID"
   (if (string-match "\\bip\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
       (match-string 2 args)
@@ -77,7 +77,7 @@
   :type 'string
   :group 'ein)
 
-(defstruct ein:$process
+(cl-defstruct ein:$process
   "Hold process variables.
 
 `ein:$process-pid' : integer
@@ -127,7 +127,7 @@
                                           '("list" "--json")))
                          ;; often there is no local jupyter installation
                          (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))
-           do (destructuring-bind
+           do (cl-destructuring-bind
                   (&key pid url notebook_dir &allow-other-keys)
                   (ein:json-read-from-string line)
                 (puthash (directory-file-name notebook_dir)
@@ -166,7 +166,7 @@
     (if proc
         (let* ((url-or-port (ein:process-url-or-port proc))
                (path (ein:process-path proc filename))
-               (callback2 (apply-partially (lambda (path* callback* buffer url-or-port)
+               (callback2 (apply-partially (lambda (path* callback* _buffer url-or-port)
                                              (ein:notebook-open
                                               url-or-port path* nil callback*))
                                            path callback)))
@@ -194,9 +194,9 @@
 is used instead.  BUFFER-CALLBACK is called after notebook opened."
   (interactive)
   (unless filename (setq filename buffer-file-name))
-  (assert filename nil "Not visiting a file")
-  (let ((callback2 (apply-partially (lambda (buffer buffer-callback* notebook created
-                                                    &rest args)
+  (cl-assert filename nil "Not visiting a file")
+  (let ((callback2 (apply-partially (lambda (buffer buffer-callback* _notebook _created
+                                                    &rest _args)
                                       (when (buffer-live-p buffer)
                                         (funcall buffer-callback* buffer)))
                                     (current-buffer) (or buffer-callback #'ignore))))

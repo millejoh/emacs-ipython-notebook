@@ -1,4 +1,4 @@
-;;; ein-notebook.el --- Notebook module
+;;; ein-notebook.el --- Notebook module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -85,7 +85,7 @@
   (let ((kernelspec
          (cond ((ein:$kernelspec-p pre-kernelspec) pre-kernelspec)
                ((consp pre-kernelspec)
-                (cl-loop for (name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
+                (cl-loop for (_name ks) on (ein:need-kernelspecs url-or-port) by 'cddr
                          when (and (ein:$kernelspec-p ks)
                                    (string= (cdr pre-kernelspec)
                                             (cl-struct-slot-value
@@ -103,7 +103,7 @@
 
 This is problematic as ein:$notebook-worksheets doesn't delq ws.
 And I don't know if I can on account of the dont-save-cells nonsense."
-  (symbol-macrolet ((scratchsheets (ein:$notebook-scratchsheets notebook)))
+  (cl-symbol-macrolet ((scratchsheets (ein:$notebook-scratchsheets notebook)))
     (cond
      ((ein:worksheet-p ws) (ein:worksheet-save-cells ws t))
      (t (setf scratchsheets (delq ws scratchsheets))))))
@@ -138,6 +138,12 @@ And I don't know if I can on account of the dont-save-cells nonsense."
 (defsubst ein:notebook-url (notebook)
   (ein:notebooklist-url (ein:$notebook-url-or-port notebook)
                         (ein:$notebook-notebook-path notebook)))
+
+(defsubst ein:notebook--spec-insert-name (name spec)
+  "Add kernel NAME, e.g., 'python2', to the kernelspec member of ipynb metadata."
+  (if (plist-member spec :name)
+      spec
+    (plist-put spec :name name)))
 
 (defun ein:notebook-open--decorate-callback (notebook existing pending-clear callback no-pop)
   "In addition to CALLBACK,
@@ -177,7 +183,7 @@ and put last warning in minibuffer."
 
 (defun ein:notebook-open-or-create (url-or-port path &optional kernelspec callback no-pop)
   "Same as `ein:notebook-open' but create PATH if not found."
-  (let ((if-not-found (lambda (contents status-code) )))
+  (let ((if-not-found (lambda (_contents _status-code) )))
     (ein:notebook-open url-or-port path kernelspec callback if-not-found no-pop)))
 
 ;;;###autoload
@@ -204,7 +210,7 @@ where `created' indicates a new notebook or an existing one."
   (unless errback (setq errback #'ignore))
   (let* ((pending-key (cons url-or-port path))
          (pending-p (gethash pending-key *ein:notebook--pending-query*))
-         (pending-clear (apply-partially (lambda (pending-key* &rest args)
+         (pending-clear (apply-partially (lambda (pending-key* &rest _args)
                                            (remhash pending-key*
                                                     *ein:notebook--pending-query*))
                                          pending-key))
@@ -232,32 +238,31 @@ where `created' indicates a new notebook or an existing one."
 
 (defun ein:notebook-open--callback (notebook callback0 content)
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
-  (let ((notebook-path (ein:$notebook-notebook-path notebook)))
-    (ein:gc-prepare-operation)
-    (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
-          (ein:$notebook-notebook-name notebook) (ein:$content-name content))
-    (ein:notebook-bind-events notebook (ein:events-new))
-    (ein:notebook-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
-    (ein:notebook-install-kernel notebook)
-    (ein:notebook-from-json notebook (ein:$content-raw-content content))
-    (if (not (with-current-buffer (ein:notebook-buffer notebook)
-               (ein:get-notebook)))
-        (error "ein:notebook-open--callback: notebook instantiation failed")
-      ;; Start websocket only after worksheet is rendered
-      ;; because ein:notification-bind-events only gets called after worksheet's
-      ;; buffer local notification widget is instantiated
-      (ein:kernel-retrieve-session (ein:$notebook-kernel notebook) nil
-                                   (apply-partially (lambda (callback0* name* kernel)
-                                                      (funcall callback0*)
-                                                      (ein:log 'info "Notebook %s is ready" name*))
-                                                    callback0
-                                                    (ein:$notebook-notebook-name notebook)))
-      (setf (ein:$notebook-kernelinfo notebook)
-            (ein:kernelinfo-new (ein:$notebook-kernel notebook)
-                                (cons #'ein:notebook-buffer-list notebook)))
-      (ein:notebook-put-opened-notebook notebook)
-      (ein:notebook--check-nbformat (ein:$content-raw-content content))
-      (ein:gc-complete-operation))))
+  (ein:gc-prepare-operation)
+  (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
+        (ein:$notebook-notebook-name notebook) (ein:$content-name content))
+  (ein:notebook-bind-events notebook (ein:events-new))
+  (ein:notebook-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))
+  (ein:notebook-install-kernel notebook)
+  (ein:notebook-from-json notebook (ein:$content-raw-content content))
+  (if (not (with-current-buffer (ein:notebook-buffer notebook)
+             (ein:get-notebook)))
+      (error "ein:notebook-open--callback: notebook instantiation failed")
+    ;; Start websocket only after worksheet is rendered
+    ;; because ein:notification-bind-events only gets called after worksheet's
+    ;; buffer local notification widget is instantiated
+    (ein:kernel-retrieve-session (ein:$notebook-kernel notebook) nil
+                                 (apply-partially (lambda (callback0* name* _kernel)
+                                                    (funcall callback0*)
+                                                    (ein:log 'info "Notebook %s is ready" name*))
+                                                  callback0
+                                                  (ein:$notebook-notebook-name notebook)))
+    (setf (ein:$notebook-kernelinfo notebook)
+          (ein:kernelinfo-new (ein:$notebook-kernel notebook)
+                              (cons #'ein:notebook-buffer-list notebook)))
+    (ein:notebook-put-opened-notebook notebook)
+    (ein:notebook--check-nbformat (ein:$content-raw-content content))
+    (ein:gc-complete-operation)))
 
 (defun ein:notebook-set-kernelspec (notebook content-metadata)
   (-when-let* ((ks-plist (plist-get content-metadata :kernelspec))
@@ -276,9 +281,9 @@ See https://github.com/ipython/ipython/pull/1934 for the purpose
 of minor mode."
   ;; See `Notebook.prototype.load_notebook_success'
   ;; at IPython/frontend/html/notebook/static/js/notebook.js
-  (destructuring-bind (&key nbformat orig_nbformat
-                            nbformat_minor orig_nbformat_minor
-                            &allow-other-keys)
+  (cl-destructuring-bind (&key nbformat orig_nbformat
+                               nbformat_minor orig_nbformat_minor
+                          &allow-other-keys)
       data
     (cond
      ((ein:notebook--different-number nbformat orig_nbformat)
@@ -318,7 +323,7 @@ of minor mode."
 
 (defun ein:list-available-kernels (url-or-port)
   (when-let ((kernelspecs (ein:need-kernelspecs url-or-port)))
-    (sort (cl-loop for (key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
+    (sort (cl-loop for (_key spec) on (ein:plist-exclude kernelspecs '(:default)) by 'cddr
                 collecting (cons (ein:$kernelspec-name spec)
                                  (ein:$kernelspec-display-name spec)))
           (lambda (c1 c2) (string< (cdr c1) (cdr c2))))))
@@ -427,11 +432,59 @@ This is equivalent to do ``C-c`` in the console program."
    :get-list
    (lambda () (ein:$notebook-worksheets ein:%notebook%))
    :get-current
+<<<<<<< HEAD
    (lambda () ein:%worksheet%)))
+||||||| parent of f2c0a61d... use -*- lexical-binding:t -*- throughout and eliminate most warnings
+   (lambda () ein:%worksheet%)
+   :get-name
+   #'ein:worksheet-name
+   :get-buffer
+   (lambda (ws)
+     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
+     (ein:worksheet-buffer ws))
+   :delete
+   (lambda (ws)
+     (ein:notebook-worksheet-delete ein:%notebook% ws t))
+   :insert-prev
+   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
+   :insert-next
+   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
+   :move-prev
+   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
+   :move-next
+   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
+   ))
+
+(defun ein:notebook-set-buffer-file-name-maybe (notebook)
+  (ein:log 'warn "This function is deprecated. Who could be calling me?"))
+=======
+   (lambda () ein:%worksheet%)
+   :get-name
+   #'ein:worksheet-name
+   :get-buffer
+   (lambda (ws)
+     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
+     (ein:worksheet-buffer ws))
+   :delete
+   (lambda (ws)
+     (ein:notebook-worksheet-delete ein:%notebook% ws t))
+   :insert-prev
+   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
+   :insert-next
+   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
+   :move-prev
+   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
+   :move-next
+   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
+   ))
+
+(defun ein:notebook-set-buffer-file-name-maybe (_notebook)
+  (ein:log 'warn "This function is deprecated. Who could be calling me?"))
+>>>>>>> f2c0a61d... use -*- lexical-binding:t -*- throughout and eliminate most warnings
 
 (defun ein:notebook-from-json (notebook data)
-  (destructuring-bind (&key metadata nbformat nbformat_minor
-                            &allow-other-keys)
+  (cl-destructuring-bind (&key metadata nbformat nbformat_minor
+                          &allow-other-keys)
       data
     (setf (ein:$notebook-metadata notebook) metadata)
     (setf (ein:$notebook-nbformat notebook) nbformat)
@@ -443,7 +496,7 @@ This is equivalent to do ``C-c`` in the console program."
           (t (ein:log 'error "nbformat version %s unsupported"
                       (ein:$notebook-nbformat notebook)))))
   (ein:notebook--worksheet-render notebook
-                                  (first (ein:$notebook-worksheets notebook)))
+                                  (cl-first (ein:$notebook-worksheets notebook)))
   notebook)
 
 (defun ein:read-nbformat3-worksheets (notebook data)
@@ -473,7 +526,7 @@ This is equivalent to do ``C-c`` in the console program."
 (defun ein:notebook-to-json (notebook)
   "Return json-ready alist."
   (let ((data
-         (case (ein:$notebook-nbformat notebook)
+         (cl-case (ein:$notebook-nbformat notebook)
            (3 (ein:write-nbformat3-worksheets notebook))
            (4 (ein:write-nbformat4-worksheets notebook))
            (t (ein:log 'error "nbformat version %s unsupported"
@@ -497,12 +550,6 @@ This is equivalent to do ``C-c`` in the console program."
     `((worksheets . ,(apply #'vector worksheets))
       (metadata . ,(ein:$notebook-metadata notebook))
       )))
-
-(defsubst ein:notebook--spec-insert-name (name spec)
-  "Add kernel NAME, e.g., 'python2', to the kernelspec member of ipynb metadata."
-  (if (plist-member spec :name)
-      spec
-    (plist-put spec :name name)))
 
 (defun ein:write-nbformat4-worksheets (notebook)
   (let ((all-cells (cl-loop for ws in (ein:$notebook-worksheets notebook)
@@ -615,6 +662,12 @@ NAME is any non-empty string that does not contain '/' or '\\'.
     (setf (ein:$kernel-path kernel) (ein:$content-path content)))
   (ein:log 'info "Notebook renamed to %s." (ein:$content-name content)))
 
+(defmacro ein:notebook-avoid-recursion (&rest body)
+  `(let ((kill-buffer-query-functions
+          (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
+                        kill-buffer-query-functions)))
+     ,@body))
+
 (defun ein:notebook-kill-buffers (notebook)
   "Callback for `ein:notebook-close'"
   (let ((buffers (ein:notebook-buffer-list notebook)))
@@ -651,7 +704,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
            (not (ob-ein-anonymous-p (ein:$notebook-notebook-path notebook))))
       (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
           (let ((ein:force-sync t))
-            (lexical-let ((success-positive 0))
+            (let ((success-positive 0))
               (add-function :before callback0 (lambda (&rest _args) (setq success-positive 1)))
               (ein:notebook-save-notebook notebook callback0 nil
                                           (lambda (&rest _args) (setq success-positive -1)))
@@ -960,7 +1013,7 @@ the first argument and CBARGS as the rest of arguments."
         :notebook-id
         (ein:html-get-data-in-body-tag "data-notebook-id")))
      :success
-     (apply-partially (function*
+     (apply-partially (cl-function
                        (lambda (callback cbargs &key data &allow-other-keys)
                          (apply callback data cbargs)))
                       callback cbargs))))
@@ -973,12 +1026,6 @@ the first argument and CBARGS as the rest of arguments."
           (y-or-n-p "Some notebooks could not be saved.  Exit anyway?")
         t)
     t))
-
-(defmacro ein:notebook-avoid-recursion (&rest body)
-  `(let ((kill-buffer-query-functions
-          (cl-remove-if (lambda (x) (eq 'ein:notebook-kill-buffer-query x))
-                        kill-buffer-query-functions)))
-     ,@body))
 
 
 ;; I tried to make this buffer-local, but when rewriting ein:notebook-avoid-recursion,

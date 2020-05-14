@@ -1,4 +1,4 @@
-;;; ein-kill-ring.el --- Kill-ring for cells
+;;; ein-kill-ring.el --- Kill-ring for cells    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 

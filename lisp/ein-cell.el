@@ -1,4 +1,4 @@
-;;; ein-cell.el --- Cell module
+;;; ein-cell.el --- Cell module    -*- lexical-binding:t -*-
 
 ;; (C) 2012 - Takafumi Arakaki
 ;; (C) 2017 - John M. Miller
@@ -296,7 +296,7 @@ a number will limit the number of lines in a cell output."
       (setf (slot-value new 'outputs) (mapcar 'identity (slot-value cell 'outputs))))
     new))
 
-(cl-defmethod ein:cell-convert ((cell ein:codecell) type)
+(cl-defmethod ein:cell-convert ((cell ein:codecell) _type)
   (let ((new (cl-call-next-method)))
     (when (and (cl-typep new 'ein:codecell)
                (slot-boundp cell :kernel))
@@ -342,10 +342,10 @@ a number will limit the number of lines in a cell output."
 (cl-defmethod ein:cell-num-outputs ((cell ein:codecell))
   (length (slot-value cell 'outputs)))
 
-(cl-defmethod ein:cell-num-outputs ((cell ein:textcell))
+(cl-defmethod ein:cell-num-outputs ((_cell ein:textcell))
   0)
 
-(cl-defmethod ein:cell-element-get ((cell ein:basecell) prop &rest args)
+(cl-defmethod ein:cell-element-get ((cell ein:basecell) prop &rest _args)
   "Return ewoc node named PROP in CELL.
   If PROP is `:output' a list of ewoc nodes is returned.
   A specific node can be specified using optional ARGS."
@@ -357,9 +357,9 @@ a number will limit the number of lines in a cell output."
   (let ((element (slot-value cell 'element)))
     (if index
         (progn
-          (assert (eql prop :output))
+          (cl-assert (eql prop :output))
           (nth index (plist-get element prop)))
-      (case prop
+      (cl-case prop
         (:after-input
          (aif (nth 0 (plist-get element :output))
              it
@@ -373,9 +373,9 @@ a number will limit the number of lines in a cell output."
            (plist-get element :input)))
         (t (cl-call-next-method))))))
 
-(cl-defmethod ein:cell-element-get ((cell ein:textcell) prop &rest args)
+(cl-defmethod ein:cell-element-get ((cell ein:textcell) prop &rest _args)
   (let ((element (slot-value cell 'element)))
-    (case prop
+    (cl-case prop
       (:after-input (plist-get element :footer))
       (:before-input (plist-get element :prompt))
       (t (cl-call-next-method)))))
@@ -389,7 +389,7 @@ a number will limit the number of lines in a cell output."
   (append (cl-call-next-method)
           (ein:cell-element-get cell :output)))
 
-(cl-defmethod ein:cell-language ((cell ein:basecell))
+(cl-defmethod ein:cell-language ((_cell ein:basecell))
   "Programming language used for CELL.
 Return language name as a string or `nil' when not defined.
   (fn cell)")
@@ -398,9 +398,9 @@ Return language name as a string or `nil' when not defined.
   (ein:and-let* ((kernel (ein:oref-safe cell 'kernel))
                  (kernelspec (ein:$kernel-kernelspec kernel)))
     (ein:$kernelspec-language kernelspec)))
-(cl-defmethod ein:cell-language ((cell ein:markdowncell)) nil "markdown")
-(cl-defmethod ein:cell-language ((cell ein:htmlcell)) nil "html")
-(cl-defmethod ein:cell-language ((cell ein:rawcell)) nil "rst")
+(cl-defmethod ein:cell-language ((_cell ein:markdowncell)) nil "markdown")
+(cl-defmethod ein:cell-language ((_cell ein:htmlcell)) nil "html")
+(cl-defmethod ein:cell-language ((_cell ein:rawcell)) nil "rst")
 
 (defun ein:cell-make-element (make-node num-outputs)
   (let ((buffer-undo-list t))           ; disable undo recording
@@ -453,7 +453,7 @@ Return language name as a string or `nil' when not defined.
     other-cell))
 
 (defun ein:cell-pp (path data)
-  (case (car path)
+  (cl-case (car path)
     (prompt (ein:cell-insert-prompt data))
     (input  (ein:cell-insert-input data))
     (output (ein:cell-insert-output (cadr path) data))
@@ -486,7 +486,7 @@ Return language name as a string or `nil' when not defined.
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t))))
 
-(cl-defmethod ein:cell-get-input-area-face ((cell ein:basecell))
+(cl-defmethod ein:cell-get-input-area-face ((_cell ein:basecell))
   "Return the face (symbol) for input area."
   'ein:cell-input-area)
 
@@ -542,7 +542,7 @@ Return language name as a string or `nil' when not defined.
 	  (overlay-put ol 'face (ein:cell-get-output-area-face-for-output-type output-type))
 	  (overlay-put ol 'evaporate t))))))
 
-(cl-defmethod ein:cell-insert-footer ((cell ein:basecell))
+(cl-defmethod ein:cell-insert-footer ((_cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only "\n"))
@@ -660,7 +660,7 @@ PROP is a name of cell element.  Default is `:input'.
   (unless relpos (setq relpos 0))
   (unless prop (setq prop :input))
   (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop))
-  (let ((offset (case prop
+  (let ((offset (cl-case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
                   (t 0))))
@@ -676,7 +676,7 @@ PROP is a name of cell element.  Default is `:input'.
   (unless prop (setq prop :input))
   (let ((goal-column nil))
     (ewoc-goto-node (slot-value cell 'ewoc) (ein:cell-element-get cell prop)))
-  (let ((offset (case prop
+  (let ((offset (cl-case prop
                   ((:input :before-output) 1)
                   (:after-input -1)
                   (t 0))))
@@ -697,19 +697,18 @@ understands.  Note that you can't use `:output' since it returns
 a list.  Use `:after-input' instead.
 If END is non-`nil', return the location of next element."
   (unless elm (setq elm :prompt))
-  (let ((element (slot-value cell 'element)))
-    (when end
-      (setq elm (case elm
-                  (:prompt :input)
-                  (:input :after-input)
-                  (:output :after-output)))
-      (unless elm
-        (setq cell (ein:cell-next cell))
-        (setq elm :prompt)))
-    (if cell
-        (ewoc-location (ein:cell-element-get cell elm))
-      (assert end)
-      (point-max))))
+  (when end
+    (setq elm (cl-case elm
+                (:prompt :input)
+                (:input :after-input)
+                (:output :after-output)))
+    (unless elm
+      (setq cell (ein:cell-next cell))
+      (setq elm :prompt)))
+  (if cell
+      (ewoc-location (ein:cell-element-get cell elm))
+    (cl-assert end)
+    (point-max)))
 
 (cl-defmethod ein:cell-buffer ((cell ein:basecell))
   "Return a buffer associated by CELL (if any)."
@@ -814,7 +813,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
   (ein:insert-read-only "\n"))
 
-(cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
+(cl-defmethod ein:cell-append-pyerr ((_cell ein:codecell) json)
   "Insert pyerr type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
@@ -923,7 +922,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (language . ,(or (ein:cell-language cell) "python"))
     (collapsed . ,(if (slot-value cell 'collapsed) t json-false))))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) wsidx)
+(cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) _wsidx)
   (let ((execute-count (aif (ein:oref-safe cell 'input-prompt-number)
                            (and (numberp it) it)))
         (metadata (slot-value cell 'metadata)))
@@ -939,7 +938,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   `((cell_type . ,(slot-value cell 'cell-type))
     (source    . ,(ein:cell-get-text cell))))
 
-(cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) wsidx)
+(cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) _wsidx)
   (let ((metadata (slot-value cell 'metadata)))
     `((cell_type . ,(slot-value cell 'cell-type))
       (source    . ,(ein:cell-get-text cell))
@@ -1028,8 +1027,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:cell-append-output cell json)
       (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))))
 
-(cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) content
-                                             _metadata)
+(cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) _content _metadata)
   "Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output"
   (ein:cell-clear-output cell t t t)
   (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
@@ -1042,7 +1040,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                   (plist-member out :image/jpeg)))
             (slot-value cell 'outputs)))
 
-(cl-defmethod ein:cell-has-image-output-p ((cell ein:textcell))
+(cl-defmethod ein:cell-has-image-output-p ((_cell ein:textcell))
   nil)
 
 (cl-defmethod ein:cell-get-tb-data ((cell ein:codecell))

@@ -1,4 +1,4 @@
-;;; poly-ein.el --- polymode for EIN
+;;; poly-ein.el --- polymode for EIN    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2019- The Authors
 
@@ -151,7 +151,7 @@
 
   (add-function :before-until
                 (symbol-function 'pm--synchronize-points)
-                (lambda (&rest args) poly-ein-mode))
+                (lambda (&rest _args) poly-ein-mode))
 
   (advice-add 'other-buffer
 	      :filter-args
@@ -198,7 +198,7 @@ TYPE can be 'body, nil."
                               ((ein:markdowncell-p cell) "ein:markdown")
                               (t "fundamental")))
                   (mode (pm-get-mode-symbol-from-name what))
-                  (_ (not (equal mode (ein:oref-safe cm 'mode)))))
+                  (f (not (equal mode (ein:oref-safe cm 'mode)))))
        (when (eq mode 'poly-fallback-mode)
          (let ((warning (format (concat "pm-get-span: Add (%s . [mode-prefix]) to "
                                         "polymode-mode-name-aliases")
@@ -258,7 +258,7 @@ TYPE can be 'body, nil."
 
 (defvar jit-lock-start)
 (defvar jit-lock-end)
-(defun poly-ein--hem-jit-lock (start end _old-len)
+(defun poly-ein--hem-jit-lock (start _end _old-len)
   (when (and poly-ein-mode (not pm-initialization-in-progress))
     (let ((range (pm-innermost-range (or start (point)))))
       (setq jit-lock-start (max jit-lock-start (car range)))
@@ -411,14 +411,14 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 (defsubst poly-ein--span-start-end (args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
       args
-    (let* ((span-start (first args))
-           (span-end (second args))
+    (let* ((span-start (cl-first args))
+           (span-end (cl-second args))
            (range (pm-innermost-range (or span-start (point)))))
       (setq span-start (max (or span-start (car range)) (car range)))
       (setq span-end (min (or span-end (cdr range)) (cdr range)))
       (append (list span-start span-end) (cddr args)))))
 
-(defsubst poly-ein--unrelated-span (&optional beg end)
+(defsubst poly-ein--unrelated-span (&optional beg _end)
   (or pm-initialization-in-progress
       (and poly-ein-mode
            (let* ((span (pm-innermost-span (or beg (point))))

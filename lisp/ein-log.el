@@ -1,4 +1,4 @@
-;;; ein-log.el --- Logging module for ein.el
+;;; ein-log.el --- Logging module for ein.el    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 

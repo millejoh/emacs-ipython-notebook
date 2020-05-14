@@ -1,4 +1,4 @@
-;;; ein-ipynb-mode.el --- A simple mode for ipynb file
+;;; ein-ipynb-mode.el --- A simple mode for ipynb file    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 

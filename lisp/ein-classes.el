@@ -1,4 +1,4 @@
-;;; ein-classes.el --- Classes and structures.
+;;; ein-classes.el --- Classes and structures.      -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2017 John M. Miller
 
@@ -24,7 +24,7 @@
 ;;; Content
 (require 'eieio)
 
-(defstruct ein:$content
+(cl-defstruct ein:$content
   "Content returned from the Jupyter notebook server:
 `ein:$content-url-or-port'
   URL or port of Jupyter server.
@@ -77,7 +77,7 @@
   session-p)
 ;;; Websockets
 
-(defstruct ein:$websocket
+(cl-defstruct ein:$websocket
   "A wrapper object of `websocket'.
 
 `ein:$websocket-ws'               : an instance returned by `websocket-open'
@@ -89,7 +89,7 @@
   closed-by-client)
 
 ;;; Notebook
-(defstruct ein:$notebook
+(cl-defstruct ein:$notebook
   "Hold notebook variables.
 
 `ein:$notebook-url-or-port'
@@ -177,7 +177,7 @@
    (events :initarg :events :accessor ein:worksheet--events)))
 
 ;;; Kernel
-(defstruct ein:$kernelspec
+(cl-defstruct ein:$kernelspec
   "Kernel specification as return by the Jupyter notebook server.
 
 `ein:$kernelspec-name' : string
@@ -204,7 +204,7 @@
 
 ;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
 ;;        testing since I can mock I/O using method overriding.
-(defstruct ein:$kernel
+(cl-defstruct ein:$kernel
   "Should perhaps be named ein:$session.  We glom session and kernel as defined by the server as just ein:$kernel in the client.
 
 "

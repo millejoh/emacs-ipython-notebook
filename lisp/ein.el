@@ -1,4 +1,4 @@
-;;; ein.el --- jupyter notebook client
+;;; ein.el --- jupyter notebook client    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012-2019 The Authors of the Emacs IPython Notebook (EIN)
 
@@ -42,7 +42,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (when (boundp 'mouse-buffer-menu-mode-groups)
   (add-to-list 'mouse-buffer-menu-mode-groups
                '("^ein:" . "ein")))

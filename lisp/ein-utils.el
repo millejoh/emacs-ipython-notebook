@@ -1,4 +1,4 @@
-;;; ein-utils.el --- Utility module
+;;; ein-utils.el --- Utility module    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -294,6 +294,7 @@ See: http://api.jquery.com/jQuery.ajax/"
 (defun ein:propertize-read-only (string &rest properties)
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 
+(defvar ein:truncate-long-cell-output) ; defined in ein-cell - but cannot require it because of circularity
 (defun ein:insert-read-only (string &rest properties)
   (let ((buffer-undo-list t)
         (start (point)))
@@ -391,7 +392,7 @@ Adapted from twittering-mode.el's `case-string'."
                            (min mincol (current-column))
                          (current-column))))
         (unless (= (forward-line 1) 0)
-          (return-from ein:find-leftmost-column mincol)))
+          (cl-return-from ein:find-leftmost-column mincol)))
       mincol)))
 
 ;;; Misc
@@ -462,7 +463,7 @@ Elements are compared using the function TEST (default: `eq')."
 
 (cl-defun ein:list-move-left (list elem &key (test #'eq))
   "Move ELEM in LIST left.  TEST is used to compare elements"
-  (macrolet ((== (a b) `(funcall test ,a ,b)))
+  (cl-macrolet ((== (a b) `(funcall test ,a ,b)))
     (cond
      ((== (car list) elem)
       (append (cdr list) (list (car list))))
@@ -591,9 +592,9 @@ otherwise it should be a function, which is called on `time'."
 ;;; Emacs utilities
 (defmacro ein:message-whir (mesg callback &rest body)
   "Display MESG with a modest animation until ASYNC-CALL completes."
-  `(lexical-let* (done-p
-                  (done-callback (lambda (&rest _args) (setf done-p t)))
-                  (errback (lambda (&rest _args) (setf done-p 'error))))
+  `(let* (done-p
+          (done-callback (lambda (&rest _args) (setf done-p t)))
+          (errback (lambda (&rest _args) (setf done-p 'error))))
      ;; again, how can done-callback remove itself after running?
      (add-function :before ,callback done-callback)
      (unless noninteractive
@@ -604,10 +605,10 @@ otherwise it should be a function, which is called on `time'."
   "Display MESG with a modest animation until done-p returns t.
 
 DONEBACK returns t or 'error when calling process is done, and nil if not done."
-  (lexical-let* ((mesg mesg)
-                 (doneback doneback)
-                 (count -1))
-    (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
+  (let* ((mesg mesg)
+         (doneback doneback)
+         (count -1))
+    (message "%s%s" mesg (make-string (1+ (% (cl-incf count) 3)) ?.))
     ;; https://github.com/kiwanami/emacs-deferred/issues/28
     ;; "complicated timings of macro expansion lexical-let, deferred:lambda"
     ;; using deferred:loop instead
@@ -618,7 +619,7 @@ DONEBACK returns t or 'error when calling process is done, and nil if not done."
             (deferred:next
               (lambda ()
                 (aif (funcall doneback) it
-                  (message "%s%s" mesg (make-string (1+ (% (incf count) 3)) ?.))
+                  (message "%s%s" mesg (make-string (1+ (% (cl-incf count) 3)) ?.))
                   (sleep-for 0 365)))))))
       (deferred:nextc it
         (lambda (status)
@@ -645,11 +646,10 @@ Use `ein:log' for debugging and logging."
       (ein:display-warning message level)
       (puthash key t ein:display-warning-once--db))))
 
+(defvar help-xref-following)    ; defined in help-mode
 (defun ein:get-docstring (function)
   "Return docstring of FUNCTION."
   (with-temp-buffer
-    ;; import help-xref-following
-    (require 'help-mode)
     (erase-buffer)
     (let ((standard-output (current-buffer))
           (help-xref-following t)
@@ -659,7 +659,7 @@ Use `ein:log' for debugging and logging."
 
 (defun ein:generate-menu (list-name-callback)
   (mapcar (lambda (name-callback)
-            (destructuring-bind (name callback &rest args) name-callback
+            (cl-destructuring-bind (name callback &rest args) name-callback
               `[,name
 		,(let ((km (intern-soft (concat (symbol-name callback) "-km"))))
 		   (if (commandp km) km callback))
@@ -671,7 +671,7 @@ Use `ein:log' for debugging and logging."
   :type 'boolean
   :group 'ein)
 
-(lexical-let ((current-gc-cons-threshold gc-cons-threshold))
+(let ((current-gc-cons-threshold gc-cons-threshold))
   (defun ein:gc-prepare-operation ()
     (ein:log 'debug "[GC-PREPARE-OPERATION] Setting cons threshold to %s." (* current-gc-cons-threshold 10000) )
     (when ein:enable-gc-adjust
