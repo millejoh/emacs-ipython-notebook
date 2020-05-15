@@ -432,55 +432,7 @@ This is equivalent to do ``C-c`` in the console program."
    :get-list
    (lambda () (ein:$notebook-worksheets ein:%notebook%))
    :get-current
-<<<<<<< HEAD
    (lambda () ein:%worksheet%)))
-||||||| parent of f2c0a61d... use -*- lexical-binding:t -*- throughout and eliminate most warnings
-   (lambda () ein:%worksheet%)
-   :get-name
-   #'ein:worksheet-name
-   :get-buffer
-   (lambda (ws)
-     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
-     (ein:worksheet-buffer ws))
-   :delete
-   (lambda (ws)
-     (ein:notebook-worksheet-delete ein:%notebook% ws t))
-   :insert-prev
-   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
-   :insert-next
-   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
-   :move-prev
-   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
-   :move-next
-   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
-   ))
-
-(defun ein:notebook-set-buffer-file-name-maybe (notebook)
-  (ein:log 'warn "This function is deprecated. Who could be calling me?"))
-=======
-   (lambda () ein:%worksheet%)
-   :get-name
-   #'ein:worksheet-name
-   :get-buffer
-   (lambda (ws)
-     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
-     (ein:worksheet-buffer ws))
-   :delete
-   (lambda (ws)
-     (ein:notebook-worksheet-delete ein:%notebook% ws t))
-   :insert-prev
-   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
-   :insert-next
-   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
-   :move-prev
-   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
-   :move-next
-   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
-   ))
-
-(defun ein:notebook-set-buffer-file-name-maybe (_notebook)
-  (ein:log 'warn "This function is deprecated. Who could be calling me?"))
->>>>>>> f2c0a61d... use -*- lexical-binding:t -*- throughout and eliminate most warnings
 
 (defun ein:notebook-from-json (notebook data)
   (cl-destructuring-bind (&key metadata nbformat nbformat_minor
