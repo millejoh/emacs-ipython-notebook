@@ -152,7 +152,8 @@ And I don't know if I can on account of the dont-save-cells nonsense."
   (cl-mapcan (lambda (ws)
                (when-let ((ws-buf (ein:worksheet-buffer ws)))
                  (with-current-buffer ws-buf
-                   (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+                   (mapcar #'buffer-name (cl-remove-if-not
+                                          #'buffer-live-p (eieio-oref pm/polymode '-buffers))))))
              (append (ein:$notebook-worksheets notebook)
                      (ein:$notebook-scratchsheets notebook))))
 
