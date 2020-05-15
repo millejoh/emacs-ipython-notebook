@@ -316,7 +316,7 @@ server command."
     (when (and (not no-login-p) (ein:jupyter-server-process))
       (unless login-callback
         (setq login-callback #'ignore))
-      (add-function :after login-callback
+      (add-function :after (var login-callback)
                     (apply-partially (lambda (proc* _buffer url-or-port)
                                        (ein:set-process-sentinel proc* url-or-port))
                                      proc))

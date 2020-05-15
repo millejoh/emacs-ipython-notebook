@@ -320,7 +320,7 @@ This function is called via `ein:notebook-after-rename-hook'."
        (list url-or-port kernelspec name))))
   (unless callback
     (setq callback #'ignore))
-  (add-function :before callback
+  (add-function :before (var callback)
                 (apply-partially
                  (lambda (name* notebook _created)
                    (with-current-buffer (ein:notebook-buffer notebook)
@@ -353,7 +353,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                              #'ein:notebooklist-delete-notebook--complete
                              (ein:url url-or-port path) callback)))))
       (ein:message-whir
-       "Ending session" delete-nb
+       "Ending session" (var delete-nb)
        (ein:kernel-delete-session delete-nb
                                   :url-or-port url-or-port
                                   :path path)))))
@@ -537,7 +537,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                                        &rest _ignore
                                        &aux (callback (lambda (_kernel) t)))
                                 (ein:message-whir
-                                 "Ending session" callback
+                                 "Ending session" (var callback)
                                  (ein:kernel-delete-session callback
                                                             :url-or-port url-or-port*
                                                             :path path*))))

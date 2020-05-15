@@ -261,7 +261,7 @@ where `created' indicates a new notebook or an existing one."
         (when (or (not pending-p)
                   (y-or-n-p (format "Notebook %s pending open!  Retry? " path)))
           (setf (gethash pending-key *ein:notebook--pending-query*) t)
-          (add-function :before errback pending-clear)
+          (add-function :before (var errback) pending-clear)
           (ein:content-query-contents url-or-port path
                                       (apply-partially #'ein:notebook-open--callback
                                                        notebook callback0)
@@ -723,7 +723,8 @@ NAME is any non-empty string that does not contain '/' or '\\'.
       (if (y-or-n-p (format "Save %s?" (ein:$notebook-notebook-name notebook)))
           (let ((ein:force-sync t))
             (let ((success-positive 0))
-              (add-function :before callback0 (lambda (&rest _args) (setq success-positive 1)))
+              (add-function :before (var callback0)
+                            (lambda (&rest _args) (setq success-positive 1)))
               (ein:notebook-save-notebook notebook callback0 nil
                                           (lambda (&rest _args) (setq success-positive -1)))
               (> success-positive 0)))
@@ -739,7 +740,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (let* ((notebook (or notebook (ein:notebook--get-nb-or-error)))
          (callback0 (apply-partially #'ein:notebook-kill-buffers notebook)))
     (when callback
-      (add-function :after callback0
+      (add-function :after (var callback0)
                     (apply #'apply-partially callback cbargs)))
     (ein:notebook-ask-save notebook callback0)))
 
@@ -757,7 +758,7 @@ as usual."
                       (funcall cb* kernel*))
                     notebook callback1)))
     (if (ein:kernel-live-p kernel)
-        (ein:message-whir "Ending session" callback
+        (ein:message-whir "Ending session" (var callback)
                           (ein:kernel-delete-session callback :kernel kernel))
       (funcall callback nil))))
 
