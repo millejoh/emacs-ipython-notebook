@@ -1,6 +1,6 @@
 export EMACS ?= $(shell which emacs)
 export CASK := $(shell which cask)
-TEST_VERSION := $(shell yq r .github/workflows/test.yml jobs.build.strategy.matrix.emacs_version | egrep -o "[0-9.]+" | sort -n | head -1)
+TEST_VERSION := $(shell python -c "from yq import cli; import sys; sys.exit(cli())" .jobs.build.strategy.matrix.emacs_version .github/workflows/test.yml | jq .[] | egrep "[0-9]" | sort -n | head -1)
 ifeq ($(CASK),)
 $(error Please install CASK at https://cask.readthedocs.io/en/latest/guide/installation.html)
 endif
