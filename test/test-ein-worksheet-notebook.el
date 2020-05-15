@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
 (require 'ert)
 
 (require 'ein-notebook)
@@ -30,7 +30,7 @@
                               pre-dirty value
                               (or fired-in "current-buffer"))))
         (fired-in-defun
-         (case fired-in
+         (cl-case fired-in
            (scratchsheet 'ein:testing-scratchsheet-buffer)
            (t 'current-buffer))))
     `(ert-deftest ,name ()

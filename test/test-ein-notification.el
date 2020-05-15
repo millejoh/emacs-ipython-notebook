@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
 (require 'ert)
 
 (require 'ein-notification)
@@ -12,6 +12,7 @@
 (ert-deftest ein:header-line-normal ()
   (let* ((ein:%notification% (ein:notification))
          (kernel (oref ein:%notification% :kernel)))
+    (ignore kernel)
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (should (string-prefix-p "IP[y]: /1\\ /2\\ /3\\ [+]" (ein:header-line)))))
 

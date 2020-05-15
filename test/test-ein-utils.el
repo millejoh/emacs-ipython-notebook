@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
 (require 'ert)
 
 (require 'ein)
@@ -164,9 +164,8 @@ def f():
   (should-error  (ein:list-move-right '(a b c d) 'X)))
 
 (defun ein:testing-choose-setting-should-equal
-  (setting value desired &optional single-p)
-  (let ((setting setting))
-    (should (equal (ein:choose-setting 'setting value single-p) desired))))
+  (_setting value desired &optional single-p)
+  (should (equal (ein:choose-setting 'setting value single-p) desired)))
 
 (ert-deftest ein:choose-setting-single-string ()
   (let ((test 'ein:testing-choose-setting-should-equal))
@@ -189,7 +188,7 @@ def f():
 (ert-deftest ein:choose-setting-func ()
   (let* ((test (lambda (&rest args)
                  (apply #'ein:testing-choose-setting-should-equal
-                        (lambda (x) 1)
+                        (lambda (_x) 1)
                         args))))
     (funcall test nil 1)
     (funcall test 'whatever 1)))

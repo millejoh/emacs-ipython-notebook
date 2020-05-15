@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+; -*- lexical-binding:t -*-
 (require 'ert)
 (require 'ob-ein)
 
@@ -30,5 +30,5 @@ sys.version
         (insert eintest:ob-src-block)
         (search-backward "SRC")
         (cl-letf (((symbol-function 'ob-ein--initiate-session)
-                   (lambda (&rest args) (make-ein:$notebook))))
+                   (lambda (&rest _args) (make-ein:$notebook))))
           (should (call-interactively #'org-edit-special)))))))

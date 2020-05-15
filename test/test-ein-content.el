@@ -1,4 +1,4 @@
-;;; test-ein-content.el --- Testing content interface
+;;; test-ein-content.el --- Testing content interface  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2015 John Miller
 
@@ -26,8 +26,6 @@
 ;;
 
 ;;; Code:
-
-(eval-when-compile (require 'cl))
 
 (require 'ein-contents-api)
 

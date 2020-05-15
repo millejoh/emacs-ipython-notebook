@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
 (require 'ert)
 
 (require 'ein-dev)
@@ -11,7 +11,7 @@
 (defun eintest:assert-keymap-fboundp (keymap)
   (let (assert-fboundp)
     (setq assert-fboundp
-          (lambda (event value)
+          (lambda (_event value)
             (cond
              ((keymapp value)
               (map-keymap assert-fboundp value))

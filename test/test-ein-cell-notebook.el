@@ -1,6 +1,5 @@
-;; Tests for cell function that requires notebook buffer
+;; Tests for cell function that requires notebook buffer  -*- lexical-binding:t -*-
 
-(eval-when-compile (require 'cl))
 (require 'ert)
 
 (require 'ein-notebook)
