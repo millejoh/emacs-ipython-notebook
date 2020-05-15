@@ -1,3 +1,4 @@
+;; -*- lexical-binding:t -*-
 (require 'ein-notebooklist)
 (require 'ein-testing-notebook)
 

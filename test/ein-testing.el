@@ -1,4 +1,4 @@
-;;; ein-testing.el --- Tools for testing
+;;; ein-testing.el --- Tools for testing    -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -29,6 +29,7 @@
 (require 'ein-jupyter)
 (require 'request)
 (require 'anaphora)
+(require 'f)
 
 (defmacro ein:setq-if-not (sym val)
   `(unless ,sym (setq ,sym ,val)))
@@ -59,10 +60,10 @@
   (mapc (lambda (b)
           (ein:and-let* ((bname (buffer-name b))
                          (prefix "kernels/")
-                         (is-websocket (search "*websocket" bname))
-                         (kernel-start (search prefix bname))
+                         (is-websocket (cl-search "*websocket" bname))
+                         (kernel-start (cl-search prefix bname))
                          (sofar (subseq bname (+ kernel-start (length prefix))))
-                         (kernel-end (search "/" sofar)))
+                         (kernel-end (cl-search "/" sofar)))
             (ein:testing-save-buffer
              bname
              (concat ein:testing-dump-file-websocket "."
@@ -83,7 +84,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                           nil ms interval t))
 
 (defun ein:testing-make-directory-level (parent current-depth width depth)
-  (let ((write-region-inhibit-sync nil))
+  (let ((write-region-inhibit-fsync nil))
     (f-touch (concat (file-name-as-directory parent) "foo.txt"))
     (f-touch (concat (file-name-as-directory parent) "bar.ipynb"))
     (f-write-text "{
@@ -119,7 +120,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                                   (ein:notebooklist-list-get url-or-port))
                                 nil 10000 1000)
         (ein:notebooklist-new-notebook url-or-port ks
-                                       (lambda (nb created)
+                                       (lambda (nb _created)
                                          (setq notebook nb))
                                        nil nil subdir)
         (ein:testing-wait-until (lambda ()
@@ -145,12 +146,12 @@ is not run in batch mode before Emacs 24.1."
 
 (with-eval-after-load "ein-notebook"
   ;; if y-or-n-p isn't specially overridden, make it always "no"
-  (lexical-let ((original-y-or-n-p (symbol-function 'y-or-n-p)))
+  (let ((original-y-or-n-p (symbol-function 'y-or-n-p)))
     (add-function :around (symbol-function 'ein:notebook-ask-save)
                   (lambda (f &rest args)
                     (if (not (eq (symbol-function 'y-or-n-p) original-y-or-n-p))
                         (apply f args)
-                      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+                      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _args) nil)))
                         (apply f args)))))))
 
 (provide 'ein-testing)

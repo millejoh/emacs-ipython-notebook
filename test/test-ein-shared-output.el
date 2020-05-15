@@ -1,3 +1,4 @@
+;; -*- lexical-binding:t -*-
 (require 'ein-shared-output)
 
 (defmacro eintest:shared-output-with-buffer (&rest body)

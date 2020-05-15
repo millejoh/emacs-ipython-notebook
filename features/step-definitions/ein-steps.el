@@ -1,3 +1,5 @@
+;; -*- lexical-binding:t -*-
+
 (When "^I minibuffer press \"\\(.+\\)\"$"
   (lambda (keybinding)
     (switch-to-buffer " *Minibuf-1*")
@@ -23,7 +25,7 @@
 (When "^I ctrl-c-ctrl-c$"
   (lambda ()
     (cl-letf (((symbol-function 'read-directory-name)
-               (lambda (&rest args) ein:testing-jupyter-server-root)))
+               (lambda (&rest _args) ein:testing-jupyter-server-root)))
       (When "I press \"C-c C-c\""))))
 
 (When "^with no opened notebooks call \"\\(.+\\)\"$"
@@ -85,12 +87,12 @@
 
 (When "I kill processes like \"\\(.+\\)\"$"
   (lambda (substr)
-    (mapc (lambda (p) (if (search substr (process-name p)) (delete-process p)))
+    (mapc (lambda (p) (if (cl-search substr (process-name p)) (delete-process p)))
           (process-list))))
 
 (When "^I clear websocket log$"
   (lambda ()
-    (let ((buffer (cl-some (lambda (x) (and (search "*websocket" x) x))
+    (let ((buffer (cl-some (lambda (x) (and (cl-search "*websocket" x) x))
                            (mapcar #'buffer-name (buffer-list)))))
       (with-current-buffer buffer
         (let ((inhibit-read-only t))
@@ -99,15 +101,15 @@
 (When "^I kill all websocket buffers$"
   (lambda ()
     (dolist (b (buffer-list))
-      (when (search "*websocket" (buffer-name b))
+      (when (cl-search "*websocket" (buffer-name b))
         (kill-buffer b)))))
 
 (When "^no completion traffic"
   (lambda ()
-    (let ((buffer (cl-some (lambda (x) (and (search "*websocket" x) x))
+    (let ((buffer (cl-some (lambda (x) (and (cl-search "*websocket" x) x))
                            (mapcar #'buffer-name (buffer-list)))))
       (with-current-buffer buffer
-        (should-not (search "\"matches\"" (buffer-string)))))))
+        (should-not (cl-search "\"matches\"" (buffer-string)))))))
 
 (When "^I clear log expr \"\\(.+\\)\"$"
   (lambda (log-expr)
@@ -135,7 +137,7 @@
   (lambda (substr)
     (cl-loop repeat 10
              for buf = (seq-some (lambda (b)
-                                   (and (search substr (buffer-name b)) b))
+                                   (and (cl-search substr (buffer-name b)) b))
                                  (buffer-list))
              until (buffer-live-p buf)
              do (sleep-for 0 500)
@@ -147,14 +149,14 @@
     (let* ((old-name (ein:$notebook-notebook-name ein:%notebook%))
            (old-count
             (length (seq-filter (lambda (b)
-                                  (search old-name (buffer-name b)))
+                                  (cl-search old-name (buffer-name b)))
                                 (buffer-list)))))
       (ein:notebook-rename-command new-name)
       (ein:testing-wait-until
        (lambda ()
          (= old-count
             (length (seq-filter (lambda (b)
-                                  (search new-name (buffer-name b)))
+                                  (cl-search new-name (buffer-name b)))
                                 (buffer-list)))))))))
 
 (When "^I am in notebooklist buffer$"
@@ -236,7 +238,7 @@
   (lambda (config)
     (When "I stop the server")
     (cl-letf (((symbol-function 'ein:notebooklist-ask-user-pw-pair)
-               (lambda (&rest args) (list (intern (user-login-name)) ""))))
+               (lambda (&rest _args) (list (intern (user-login-name)) ""))))
       (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
       (let ((ein:jupyter-server-args
              '("--debug" "--no-db" "--config=.ecukes-temp-config.py")))
@@ -261,9 +263,9 @@
 (When "^I login erroneously to \\(.*\\)$"
   (lambda (port)
     (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-               (lambda (&rest args) (ein:url port)))
+               (lambda (&rest _args) (ein:url port)))
               ((symbol-function 'read-passwd)
-               (lambda (&rest args) "foo")))
+               (lambda (&rest _args) "foo")))
       (with-demoted-errors "demoted: %s"
         (When "I call \"ein:notebooklist-login\"")
         (And "I wait for the smoke to clear")))))
@@ -272,9 +274,9 @@
   (lambda ()
     (let ((request-curl-options '("--no-such-option")))
       (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                 (lambda (&rest args) (ein:url 8888)))
+                 (lambda (&rest _args) (ein:url 8888)))
                 ((symbol-function 'read-passwd)
-                 (lambda (&rest args) "foo")))
+                 (lambda (&rest _args) "foo")))
         (When "I call \"ein:notebooklist-login\"")
         (And "I wait for the smoke to clear")))))
 
@@ -283,9 +285,9 @@
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (when token
         (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                   (lambda (&rest args) url-or-port))
+                   (lambda (&rest _args) url-or-port))
                   ((symbol-function 'read-passwd)
-                   (lambda (&rest args) token)))
+                   (lambda (&rest _args) token)))
           (When "I call \"ein:notebooklist-login\"")
           (And "I wait for the smoke to clear"))))))
 
@@ -293,9 +295,9 @@
   (lambda ()
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                 (lambda (&rest args) url-or-port))
+                 (lambda (&rest _args) url-or-port))
                 ((symbol-function 'ein:crib-token)
-                 (lambda (&rest args) (list nil nil))))
+                 (lambda (&rest _args) (list nil nil))))
         (When "I call \"ein:notebooklist-login\"")
         (And "I wait for the smoke to clear")))))
 
@@ -303,12 +305,12 @@
   (lambda (no-crib password)
     (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (let ((bindings '(((symbol-function 'ein:notebooklist-ask-url-or-port)
-                         (lambda (&rest args) url-or-port))
+                         (lambda (&rest _args) url-or-port))
                         ((symbol-function 'read-passwd)
-                         (lambda (&rest args) password)))))
+                         (lambda (&rest _args) password)))))
         (if no-crib
             (setq bindings (append bindings
-                                   (list '((symbol-function 'ein:notebooklist-token-or-password) (lambda (&rest args) nil))))))
+                                   (list '((symbol-function 'ein:notebooklist-token-or-password) (lambda (&rest _args) nil))))))
         (eval `(cl-letf ,bindings
                  (When "I call \"ein:notebooklist-login\"")
                  (And "I wait for the smoke to clear")))))))
@@ -343,10 +345,10 @@
 (When "^I keep clicking \"\\(.+\\)\" until \"\\(.+\\)\"$"
   (lambda (go stop)
     (cl-loop repeat 10
-             until (search stop (buffer-string))
+             until (cl-search stop (buffer-string))
              do (And (format "I click on \"%s\"" go))
              do (sleep-for 0 1000)
-             finally do (should (search stop (buffer-string))))))
+             finally do (should (cl-search stop (buffer-string))))))
 
 (When "^I click\\( without going top\\)? on\\( file\\)? \"\\(.+\\)\"$"
   (lambda (stay file word)
@@ -378,14 +380,14 @@
 (When "^I click on dir \"\\(.+\\)\" until \"\\(.+\\)\"$"
   (lambda (dir stop)
     (cl-loop repeat 10
-             until (search stop (buffer-string))
+             until (cl-search stop (buffer-string))
              do (When (format "I go to word \"%s\"" dir))
              do (re-search-backward "Dir" nil t)
              do (let ((was (widget-at)))
                   (When "I press \"RET\"")
                   (cl-loop until (not (equal was (widget-at)))
                            do (sleep-for 0 500)))
-             finally do (should (search stop (buffer-string))))))
+             finally do (should (cl-search stop (buffer-string))))))
 
 (When "^old notebook \"\\(.+\\)\"$"
   (lambda (path)
@@ -394,7 +396,7 @@
       (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
         (cl-loop repeat 2
                  do (ein:notebook-open url-or-port path nil
-                                       (lambda (nb created) (setq notebook nb)))
+                                       (lambda (nb _created) (setq notebook nb)))
                  until (and notebook
                             (ein:aand (ein:$notebook-kernel notebook)
                                       (ein:kernel-live-p it)))
@@ -415,9 +417,9 @@
 (When "^I wait to be in buffer like \"\\(.+\\)\"$"
   (lambda (substr)
     (cl-loop repeat 10
-             until (search substr (buffer-name))
+             until (cl-search substr (buffer-name))
              do (sleep-for 0 500)
-             finally do (should (search substr (buffer-name))))))
+             finally do (should (cl-search substr (buffer-name))))))
 
 (When "^I wait for cell to execute$"
   (lambda ()
@@ -456,16 +458,16 @@
     (condition-case err
         (let ((ein:jupyter-server-command "not-jupyter"))
           (cl-letf (((symbol-function 'read-file-name)
-                     (lambda (&rest args) ein:jupyter-server-command))
+                     (lambda (&rest _args) ein:jupyter-server-command))
                     ((symbol-function 'read-string)
-                     (lambda (&rest args)
+                     (lambda (&rest _args)
                        (error "%s" (car args))))
                     ((symbol-function 'read-directory-name)
-                     (lambda (&rest args) ein:jupyter-default-notebook-directory)))
+                     (lambda (&rest _args) ein:jupyter-default-notebook-directory)))
             (call-interactively #'ein:jupyter-server-start))
           ;; should err before getting here
           (should-not t))
-      (error (should (search "Server command:" (error-message-string err)))))))
+      (error (should (cl-search "Server command:" (error-message-string err)))))))
 
 (When "^I create a directory \"\\(.+\\)\" with depth \\([0-9]+\\) and width \\([0-9]+\\)$"
   (lambda (dir depth width)
@@ -527,9 +529,9 @@
   (lambda (content-type file-name)
     (Given "I am in notebooklist buffer")
     (And "I clear log expr \"ein:log-all-buffer-name\"")
-    (lexical-let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+    (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
       (cl-letf (((symbol-function 'ein:notebooklist-ask-path)
-                 (lambda (&rest args) nbpath)))
+                 (lambda (&rest _args) nbpath)))
         (When (format "I press \"C-c C-%s\"" (if (string= content-type "file") "f" "o")))
         (And "I wait for the smoke to clear")
         (Given "I switch to log expr \"ein:log-all-buffer-name\"")

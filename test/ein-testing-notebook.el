@@ -1,4 +1,4 @@
-;;; ein-testing-notebook.el --- Testing utilities for notebook module
+;;; ein-testing-notebook.el --- Testing utilities for notebook module  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (require 'ein-notebook)
 (require 'ein-testing-cell)
 
@@ -41,7 +39,8 @@
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
                                      :notebook-version "5.7.0"
                                      :path path)))
-    (cl-letf (((symbol-function 'ein:need-notebook-version) (lambda (&rest ignore) "5.7.0"))
+    (ignore content)
+    (cl-letf (((symbol-function 'ein:need-notebook-version) (lambda (&rest _ignore) "5.7.0"))
               ((symbol-function 'ein:kernel-retrieve-session) #'ignore)
               ((symbol-function 'ein:notebook-enable-autosaves) #'ignore))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))

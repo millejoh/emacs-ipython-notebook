@@ -1,4 +1,4 @@
-;;; ein-testing-cell.el --- Testing utilities for cell module
+;;; ein-testing-cell.el --- Testing utilities for cell module  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 

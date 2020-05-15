@@ -1,4 +1,4 @@
-;;; ein-testing-kernel.el --- Testing utilities for kernel module
+;;; ein-testing-kernel.el --- Testing utilities for kernel module  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012 Takafumi Arakaki
 
@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'ert)
 
 (require 'ein-kernel)

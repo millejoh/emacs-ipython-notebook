@@ -1,3 +1,4 @@
+;; -*- lexical-binding:t -*-
 (custom-set-variables '(python-indent-guess-indent-offset-verbose nil)
                       '(ein:jupyter-use-containers nil)
                       '(ein:output-area-inlined-images t))

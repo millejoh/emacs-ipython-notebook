@@ -1,4 +1,4 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
 (require 'ert)
 
 (require 'ein-output-area)

@@ -1,4 +1,5 @@
-(eval-when-compile (require 'cl))
+;; -*- lexical-binding:t -*-
+
 (require 'ert)
 
 (when load-file-name
@@ -76,7 +77,7 @@
 ")
 
 
-(defun eintest:kernel-fake-execute-reply (kernel msg-id execution-count)
+(defun eintest:kernel-fake-execute-reply (kernel msg-id _execution-count)
   (let* ((payload nil)
          (content (list :execution_count 1 :payload payload))
          (packet (list :header (list :msg_type "execute_reply")
@@ -170,7 +171,7 @@ is not found."
 When NUM-OPEN = NUM-CLOSE, notebook should be closed."
   (should (> num-open 0))
   (with-current-buffer (ein:testing-notebook-make-empty)
-    (symbol-macrolet ((ss-list (ein:$notebook-scratchsheets ein:%notebook%)))
+    (cl-symbol-macrolet ((ss-list (ein:$notebook-scratchsheets ein:%notebook%)))
       ;; Add scratchsheets.  They can be just empty instance for this test.
       (dotimes (_ num-open)
         (ein:notebook-scratchsheet-render-new ein:%notebook%))
@@ -619,9 +620,9 @@ NO-TRIM is passed to `ein:notebook-split-cell-at-point'."
         if callback
         do (funcall callback i cell)))
 
-(defun* ein:testing-insert-cells-with-format (num &optional
-                                                  (format "Cell %s")
-                                                  (type 'code))
+(cl-defun ein:testing-insert-cells-with-format (num &optional
+                                                    (format "Cell %s")
+                                                    (type 'code))
   (ein:testing-insert-cells (cl-loop repeat num collect type)
                             nil
                             (lambda (i &rest _) (insert (format format i))))
@@ -848,8 +849,8 @@ defined."
          (cells (assoc-default 'cells (elt worksheets 0) #'eq)))
     (should (= (length worksheets) 1))
     (if text
-        (let ((cell-0 (elt cells 0))
-              (input (assoc-default 'input cell-0 #'eq)))
+        (let* ((cell-0 (elt cells 0))
+               (input (assoc-default 'input cell-0 #'eq)))
           (should (equal input text)))
       (should (= (length cells) 0)))))
 
@@ -872,8 +873,7 @@ defined."
 
 (ert-deftest ein:notebook-to-json-after-closing-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
-    (let ((buffer (current-buffer))
-          (notebook ein:%notebook%))
+    (let ((notebook ein:%notebook%))
       ;; Edit notebook.
       (ein:cell-goto (ein:get-cell-at-point))
       (insert "some text")
@@ -893,9 +893,9 @@ defined."
 
 (ert-deftest ein:notebook-to-json-after-discarding-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
-    (lexical-let (asked
-                  (buffer (current-buffer))
-                  (notebook ein:%notebook%))
+    (let (asked
+          (buffer (current-buffer))
+          (notebook ein:%notebook%))
       ;; Edit notebook.
       (ein:cell-goto (ein:get-cell-at-point))
       (insert "some text")
@@ -921,7 +921,7 @@ defined."
   (with-current-buffer (ein:testing-notebook-make-new)
     (let ((buffer (current-buffer))
           (notebook ein:%notebook%))
-      (cl-letf (((symbol-function 'ein:kernel-live-p) (lambda (&rest args) t))
+      (cl-letf (((symbol-function 'ein:kernel-live-p) (lambda (&rest _args) t))
                 ((symbol-function 'ein:kernel-delete-session)
                  (cl-function (lambda (callback &key kernel) (funcall callback kernel)))))
         (call-interactively #'ein:notebook-kill-kernel-then-close-command))
@@ -1181,7 +1181,7 @@ value of `ein:worksheet-enable-undo'."
     (should (gethash `(,ein:testing-notebook-dummy-url "Saved Notebook.ipynb") ein:notebook--opened-map))
     (should-not (gethash `(,ein:testing-notebook-dummy-url "Killed Notebook.ipynb") ein:notebook--opened-map))
     (should (= (hash-table-count ein:notebook--opened-map) 2))
-    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _args) nil)))
       (ein:notebook-close-notebooks t)
       (should-not (ein:notebook-opened-notebooks)))))
 
@@ -1193,8 +1193,8 @@ value of `ein:worksheet-enable-undo'."
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/new-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let (asked
-                  (buf (current-buffer)))
+    (let (asked
+          (buf (current-buffer)))
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (&rest _args) (setq asked t) nil)))
         (should-not (kill-buffer buf))
@@ -1203,8 +1203,8 @@ value of `ein:worksheet-enable-undo'."
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-notebook ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let (asked
-                  (buffer (current-buffer)))
+    (let (asked
+          (buffer (current-buffer)))
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (&rest _args) (setq asked t) nil)))
         (call-interactively #'ein:worksheet-insert-cell-below)
@@ -1214,13 +1214,13 @@ value of `ein:worksheet-enable-undo'."
 
 (ert-deftest ein:notebook-ask-before-kill-buffer/modified-scratchsheet ()
   (with-current-buffer (ein:testing-make-notebook-with-outputs '(nil))
-    (lexical-let (asked
-                  (buf (current-buffer)))
+    (let (asked
+          (buf (current-buffer)))
       (should (buffer-live-p buf))
       (with-current-buffer (ein:worksheet-buffer
                             (ein:notebook-scratchsheet-open ein:%notebook%))
-        (lexical-let (asked
-                      (buf2 (current-buffer)))
+        (let (asked
+              (buf2 (current-buffer)))
           (should-not (eq buf buf2))
           (should (= (ein:worksheet-ncells ein:%worksheet%) 1))
           (call-interactively #'ein:worksheet-insert-cell-below)
@@ -1251,11 +1251,11 @@ value of `ein:worksheet-enable-undo'."
   (should-not (ein:notebook-test-notebook-name "a:b"))
   (should (ein:notebook-test-notebook-name "This is a OK notebook name")))
 
-(defun* eintest:notebook--check-nbformat (&optional orig_nbformat
-                                                    orig_nbformat_minor
-                                                    nbformat
-                                                    nbformat_minor
-                                                    &key data)
+(cl-defun eintest:notebook--check-nbformat (&optional orig_nbformat
+                                                      orig_nbformat_minor
+                                                      nbformat
+                                                      nbformat_minor
+                                                      &key data)
   (let ((data (or data
                   (list :nbformat nbformat :nbformat_minor nbformat_minor
                         :orig_nbformat orig_nbformat
