@@ -194,7 +194,8 @@ WARNING: OBJ and SLOT are evaluated multiple times,
          (mm-dissect-singlepart (list mime-type) encoding)
          (list mime-type))))))
 
-(defun ein:external-image-viewer (image-type)
+(defun ein:external-image-viewer (image-type-)
+  ;; don't shadow image-type - a buffer-local variable in image-mode.el
   (let (major				; Major encoding (text, etc)
         minor				; Minor encoding (html, etc)
         info				; Other info
@@ -202,7 +203,7 @@ WARNING: OBJ and SLOT are evaluated multiple times,
         viewers				; Possible viewers
         passed				; Viewers that passed the test
         viewer				; The one and only viewer
-        (ctl (mail-header-parse-content-type (concat "image/" image-type))))
+        (ctl (mail-header-parse-content-type (concat "image/" image-type-))))
     (mailcap-parse-mailcaps nil t)
     (setq major (split-string (car ctl) "/"))
     (setq minor (cadr major)
