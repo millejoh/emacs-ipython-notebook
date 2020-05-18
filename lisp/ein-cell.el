@@ -168,12 +168,18 @@ a number will limit the number of lines in a cell output."
 ;;; EIEIO related utils
 
 (defmacro ein:oset-if-empty (obj slot value)
+  "Set the slot if it is not set or nil.
+WARNING: OBJ and SLOT are evaluated multiple times,
+  only use symbols/variables."
   `(unless (and (slot-boundp ,obj ,slot) (slot-value ,obj ,slot))
      (setf (slot-value ,obj, slot) ,value)))
 
 (defmacro ein:oref-safe (obj slot)
-  `(when (slot-boundp ,obj ,slot)
-     (slot-value ,obj ,slot)))
+  "Slot value if bound or nil.
+WARNING: OBJ and SLOT are evaluated multiple times,
+  only use symbols/variables."
+  `(and (slot-boundp ,obj ,slot)
+        (slot-value ,obj ,slot)))
 
 (defun ein:make-mm-handle (image)
   (let ((mime-type (mailcap-extension-to-mime
