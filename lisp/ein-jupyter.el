@@ -53,15 +53,22 @@ Note some options like '-v' and '-network' are imposed by EIN."
   :group 'ein
   :type 'string)
 
+(defcustom ein:jupyter-cannot-find-jupyter nil
+  "Use purcell's `exec-path-from-shell'"
+  :group 'ein
+  :type 'boolean)
+
 (defcustom ein:jupyter-server-command "jupyter"
   "The default command to start a jupyter notebook server.
 
 Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use-subcommand' to nil."
   :group 'ein
   :type 'string
+  :set-after '(ein:jupyter-cannot-find-jupyter)
   :set (lambda (symbol value)
 	 (set-default symbol value)
-	 (unless (memq system-type '(ms-dos windows-nt))
+	 (when (and ein:jupyter-cannot-find-jupyter
+		    (memq window-system '(mac ns x)))
 	   (let (exec-path-from-shell-check-startup-files)
 	     (exec-path-from-shell-initialize)))))
 
