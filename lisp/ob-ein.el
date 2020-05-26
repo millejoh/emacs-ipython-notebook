@@ -131,21 +131,30 @@
     result))
 
 (defun ob-ein--process-outputs (result-type cell params)
-  (let* ((render (let ((stdout-p
+  (let* ((session (ein:aand (cdr (assoc :session params))
+			    (unless (string= "none" it)
+			      (format "%s" it))))
+	 (render (let ((stdout-p
 			(lambda (out)
 			  (and (equal "stream" (plist-get out :output_type))
 			       (equal "stdout" (plist-get out :name))))))
 		   (if (eq result-type 'output)
 		       (lambda (out)
-			 (and (funcall stdout-p out) (plist-get out :text)))
+			 (if (funcall stdout-p out)
+			     (plist-get out :text)
+			   (when session ;; should aways be true under ob-ein
+			     (concat (ob-ein--proxy-images
+				       out (cdr (assoc :image params)))
+				     "\n"))))
 		     (lambda (out)
 		       (and (not (funcall stdout-p out))
-			    (ob-ein--proxy-images
-			      out (cdr (assoc :image params))))))))
+			    (concat (ob-ein--proxy-images
+				       out (cdr (assoc :image params)))
+				     "\n"))))))
 	 (outputs (cl-loop for out in (ein:oref-safe cell 'outputs)
 			   collect (funcall render out))))
     (when outputs
-      (ein:join-str "\n" outputs))))
+      (ein:join-str "" outputs))))
 
 (defun ob-ein--get-name-create (src-block-info)
   "Get the name of a src block or add a uuid as the name."

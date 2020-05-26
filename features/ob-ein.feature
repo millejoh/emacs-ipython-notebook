@@ -111,7 +111,7 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I should not see "[....]"
 
 @org
-Scenario: ":results output" just gets stdout
+Scenario: ":results output"
   Given I stop the server
   When I open temp file "ecukes.org"
   And I call "org-mode"
@@ -132,7 +132,7 @@ Scenario: ":results output" just gets stdout
   And I type "math.pi"
   And I ctrl-c-ctrl-c
   And I wait for buffer to say "done 0"
-  And I should not see "3.14159"
+  And I should see "3.14159"
   And I should see "start 0"
 
 @svg
