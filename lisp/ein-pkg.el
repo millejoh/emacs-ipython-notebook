@@ -8,4 +8,5 @@
     (deferred "0.5")
     (polymode "20190714")
     (exec-path-from-shell "20191229")
-    (dash "2.13.0")))
+    (dash "2.13.0")
+    (magit "20200526")))
