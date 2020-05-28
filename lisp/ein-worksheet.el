@@ -1108,17 +1108,6 @@ current worksheet buffer."
   (interactive (list (ein:worksheet--get-ws-or-error)))
   (ein:worksheet-execute-all-cells ws :below (ein:worksheet-get-current-cell)))
 
-(defun ein:worksheet-rename-sheet (ws name)
-  "Change worksheet name (*not* notebook name)."
-  (interactive (let ((ws (ein:worksheet--get-ws-or-error)))
-                 (list ws
-                       (read-from-minibuffer
-                        "New worksheet name: " (ein:worksheet-name ws)))))
-  (unless (equal name (or (ein:worksheet-name ws) ""))
-    (ein:worksheet-set-name ws name)
-    (ein:worksheet-set-modified-p ws t)
-    (ein:worksheet-set-buffer-name ws)))
-
 (defun ein:get-url-or-port--worksheet ()
   (when (ein:worksheet-p ein:%worksheet%)
     (ein:worksheet-url-or-port ein:%worksheet%)))

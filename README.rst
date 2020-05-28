@@ -185,20 +185,6 @@ Keymap (C-h m)
    C-c C-y		ein:worksheet-yank-cell-km
    C-c C-z		ein:notebook-kernel-interrupt-command-km
    C-c ESC		Prefix Command
-   C-c !		ein:worksheet-rename-sheet-km
-   C-c +		ein:notebook-worksheet-insert-next-km
-   C-c -		ein:notebook-worksheet-delete-km
-   C-c 1		ein:notebook-worksheet-open-1th-km
-   C-c 2		ein:notebook-worksheet-open-2th-km
-   C-c 3		ein:notebook-worksheet-open-3th-km
-   C-c 4		ein:notebook-worksheet-open-4th-km
-   C-c 5		ein:notebook-worksheet-open-5th-km
-   C-c 6		ein:notebook-worksheet-open-6th-km
-   C-c 7		ein:notebook-worksheet-open-7th-km
-   C-c 8		ein:notebook-worksheet-open-8th-km
-   C-c 9		ein:notebook-worksheet-open-last-km
-   C-c {		ein:notebook-worksheet-open-prev-or-last-km
-   C-c }		ein:notebook-worksheet-open-next-or-first-km
    C-c C-S-l	ein:worksheet-clear-all-output-km
    C-c C-#		ein:notebook-close-km
    C-c C-$		ein:tb-show-km
@@ -209,7 +195,4 @@ Keymap (C-h m)
    
    C-c C-x C-r	ein:notebook-restart-session-command-km
    
-   C-c M-+		ein:notebook-worksheet-insert-prev-km
    C-c M-w		ein:worksheet-copy-cell-km
-   C-c M-{		ein:notebook-worksheet-move-prev-km
-   C-c M-}		ein:notebook-worksheet-move-next-km

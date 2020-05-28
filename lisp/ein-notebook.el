@@ -65,41 +65,12 @@
 (defun ein:notebook-cell-has-image-output-p (_ignore cell)
   (ein:cell-has-image-output-p cell))
 
-;; As opening/saving notebook treats possibly huge data, define these
-;; timeouts separately:
-
-(defcustom ein:notebook-querty-timeout-save (* 60 1000) ; 1 min
-  "Query timeout for saving notebook.
-Similar to `ein:notebook-querty-timeout-open', but for saving
-notebook.  For global setting and more information, see
-`ein:query-timeout'."
-  :type '(choice (integer :tag "Timeout [ms]" 5000)
-                 (const :tag "Use global setting" nil))
-  :group 'ein)
-
-(defcustom ein:notebook-set-buffer-file-name nil
-  "[DEPRECATED] Set `buffer-file-name' of notebook buffer. Currently does nothing."
-  :type 'boolean
-  :group 'ein)
-
 (defvar ein:notebook-after-rename-hook nil
   "Hooks to run after notebook is renamed successfully.
 Current buffer for these functions is set to the notebook buffer.")
 
-
-;;; Class and variable
-
-(defvar ein:base-kernel-url "/api/")
-(defvar ein:create-session-url "/api/sessions")
-;; Currently there is no way to know this setting.  Maybe I should ask IPython
-;; developers for an API to get this from notebook server.
-;;
-;; 10April2014 (JMM) - The most recent documentation for the RESTful interface
-;; is at:
-;; https://github.com/ipython/ipython/wiki/IPEP-16%3A-Notebook-multi-directory-dashboard-and-URL-mapping
-
-(defvar ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
-(defvar ein:notebook-buffer-name-template "*ein: %s/%s*")
+(defconst ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
+(defconst ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
@@ -385,7 +356,7 @@ notebook buffer then the user will be prompted to select an opened notebook."
                                             (ein:$notebook-notebook-path notebook)))))
 
 (defun ein:notebook-install-kernel (notebook)
-  (let* ((base-url (concat ein:base-kernel-url "kernels"))
+  (let* ((base-url "/api/kernels")
          (kernelspec (ein:$notebook-kernelspec notebook))
          (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
                                  (ein:$notebook-notebook-path notebook)
@@ -461,26 +432,7 @@ This is equivalent to do ``C-c`` in the console program."
    :get-current
    (lambda () ein:%worksheet%)
    :get-name
-   #'ein:worksheet-name
-   :get-buffer
-   (lambda (ws)
-     (ein:notebook-worksheet--render-maybe ein:%notebook% ws "clicked")
-     (ein:worksheet-buffer ws))
-   :delete
-   (lambda (ws)
-     (ein:notebook-worksheet-delete ein:%notebook% ws t))
-   :insert-prev
-   (lambda (ws) (ein:notebook-worksheet-insert-prev ein:%notebook% ws))
-   :insert-next
-   (lambda (ws) (ein:notebook-worksheet-insert-next ein:%notebook% ws))
-   :move-prev
-   (lambda (ws) (ein:notebook-worksheet-move-prev ein:%notebook% ws))
-   :move-next
-   (lambda (ws) (ein:notebook-worksheet-move-next ein:%notebook% ws))
-   ))
-
-(defun ein:notebook-set-buffer-file-name-maybe (notebook)
-  (ein:log 'warn "This function is deprecated. Who could be calling me?"))
+   #'ein:worksheet-name))
 
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
@@ -756,18 +708,6 @@ as usual."
                           (ein:kernel-delete-session callback :kernel kernel))
       (funcall callback nil))))
 
-(defun ein:fast-content-from-notebook (notebook)
-  "Quickly generate a basic content structure from notebook. This
-function does not generate the full json representation of the
-notebook worksheets."
-  (make-ein:$content :name (ein:$notebook-notebook-name notebook)
-                     :path (ein:$notebook-notebook-path notebook)
-                     :url-or-port (ein:$notebook-url-or-port notebook)
-                     :type "notebook"
-                     :notebook-version (ein:$notebook-api-version notebook)))
-
-;;; Worksheet
-
 (defmacro ein:notebook--worksheet-render-new (notebook type)
   "Create new worksheet of TYPE in NOTEBOOK."
   (let ((func (intern (format "ein:%s-new" type)))
@@ -776,222 +716,6 @@ notebook worksheets."
        (setf ,slot (append ,slot (list ws)))
        (ein:notebook--worksheet-render ,notebook ws)
        ws)))
-
-(defun ein:notebook-worksheet-render-new (notebook)
-  "Create new worksheet in NOTEBOOK."
-  (ein:notebook--worksheet-render-new notebook worksheet))
-
-(defun ein:notebook-worksheet-open-next-or-new (notebook ws &optional show)
-  "Open next worksheet.  Create new if none.
-
-Try to open the worksheet to the worksheet WS using the function
-`ein:notebook-worksheet-open-next', open a new worksheet if not
-found.
-
-SHOW is a function to be called with the worksheet buffer if
-given."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     #'switch-to-buffer))
-  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
-    (unless next
-      (ein:log 'info "Creating new worksheet...")
-      (setq next (ein:notebook-worksheet-render-new notebook))
-      (ein:log 'info "Creating new worksheet... Done."))
-    (when show
-      (funcall show (ein:worksheet-buffer next)))))
-
-(defun ein:notebook-worksheet-open-next-or-first (notebook ws &optional show)
-  "Open next or first worksheet.
-
-Try to open the worksheet to the worksheet WS using the function
-`ein:notebook-worksheet-open-next', open the first worksheet if
-not found.
-
-SHOW is a function to be called with the worksheet buffer if
-given."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     #'switch-to-buffer))
-  (let ((next (ein:notebook-worksheet-open-next notebook ws)))
-    (unless next
-      (setq next (car (ein:$notebook-worksheets notebook))))
-    (when show
-      (funcall show (ein:worksheet-buffer next)))))
-
-(defun ein:notebook-worksheet-open-prev-or-last (notebook ws &optional show)
-  "Open previous or last worksheet.
-See also `ein:notebook-worksheet-open-next-or-first' and
-`ein:notebook-worksheet-open-prev'."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     #'switch-to-buffer))
-  (let ((prev (ein:notebook-worksheet-open-prev notebook ws)))
-    (unless prev
-      (setq prev (car (last (ein:$notebook-worksheets notebook)))))
-    (when show
-      (funcall show (ein:worksheet-buffer prev)))))
-
-(cl-defun ein:notebook-worksheet--render-maybe (notebook ws &optional (adj "next"))
-  "Render worksheet WS of NOTEBOOK if it does not have buffer.
-ADJ is a adjective to describe worksheet to be rendered."
-  (if (ein:worksheet-has-buffer-p ws)
-      (ein:log 'verbose "The worksheet already has a buffer.")
-    (ein:log 'verbose "Rendering %s worksheet..." adj)
-    (ein:notebook--worksheet-render notebook ws)
-    (ein:log 'verbose "Rendering %s worksheet... Done." adj)))
-
-(cl-defun ein:notebook-worksheet--open-new
-    (notebook new &optional (adj "next") show)
-  "Open (possibly new) worksheet NEW of NOTEBOOK with SHOW function.
-ADJ is a adjective to describe worksheet to be opened.
-SHOW is a function to be called with worksheet buffer if given."
-  (when new
-    (ein:notebook-worksheet--render-maybe notebook new adj))
-  (when show
-    (assert (ein:worksheet-p new) nil "No %s worksheet." adj)
-    (funcall show (ein:worksheet-buffer new))))
-
-(defun ein:notebook-worksheet-open-next (notebook ws &optional show)
-  "Open next worksheet.
-
-Search the worksheet after the worksheet WS, render it if it is
-not yet, then return the worksheet.  If there is no such
-worksheet, return nil.  Open the first worksheet if the worksheet
-WS is an instance of `ein:scratchsheet'.
-
-SHOW is a function to be called with the worksheet buffer if
-given."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     #'switch-to-buffer))
-  (let ((next (if (ein:scratchsheet-p ws)
-                  (car (ein:$notebook-worksheets notebook))
-                (cl-loop with worksheets = (ein:$notebook-worksheets notebook)
-                      for current in worksheets
-                      for next in (cdr worksheets)
-                      when (eq current ws) return next))))
-    (ein:notebook-worksheet--open-new notebook next "next" show)
-    next))
-
-(defun ein:notebook-worksheet-open-prev (notebook ws &optional show)
-  "Open previous worksheet.
-See also `ein:notebook-worksheet-open-next'."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     #'switch-to-buffer))
-  (let ((prev (if (ein:scratchsheet-p ws)
-                  (car (last (ein:$notebook-worksheets notebook)))
-                (cl-loop for (prev current) on (ein:$notebook-worksheets notebook)
-                      when (eq current ws) return prev))))
-    (ein:notebook-worksheet--open-new notebook prev "previous" show)
-    prev))
-
-(defun ein:notebook-worksheet-open-ith (notebook i &optional show)
-  "Open I-th (zero-origin) worksheet."
-  (let ((ws (nth i (ein:$notebook-worksheets notebook))))
-    (unless ws (error "No %s-th worksheet" (1+ i)))
-    (ein:notebook-worksheet--open-new notebook ws (format "%s-th" i) show)))
-
-(defmacro ein:notebook-worksheet--defun-open-nth (n)
-  "Define a command to open N-th (one-origin) worksheet."
-  (assert (and (integerp n) (> n 0)) t "Bad nth worksheet n=%s" n)
-  (let ((func (intern (format "ein:notebook-worksheet-open-%sth" n))))
-    `(defun ,func (notebook &optional show)
-       ,(format "Open %d-th worksheet." n)
-       (interactive (list (ein:notebook--get-nb-or-error)
-                          #'switch-to-buffer))
-       (ein:notebook-worksheet-open-ith notebook ,(1- n) show))))
-
-(defmacro ein:notebook-worksheet--defun-all-open-nth (min max)
-  `(progn
-     ,@(cl-loop for n from min to max
-             collect `(ein:notebook-worksheet--defun-open-nth ,n))))
-
-(ein:notebook-worksheet--defun-all-open-nth 1 8)
-
-(defun ein:notebook-worksheet-open-last (notebook &optional show)
-  "Open the last worksheet."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     #'switch-to-buffer))
-  (let ((last (car (last (ein:$notebook-worksheets notebook)))))
-    (ein:notebook-worksheet--open-new notebook last "last" show)
-    last))
-
-(defun ein:notebook-worksheet-insert-new (notebook ws &optional render show
-                                                   inserter)
-  (let ((new (ein:notebook--worksheet-new notebook)))
-    (setf (ein:$notebook-worksheets notebook)
-          (funcall inserter (ein:$notebook-worksheets notebook) ws new))
-    (when (or render show)
-      (ein:notebook--worksheet-render notebook new))
-    (when show
-      (funcall show (ein:worksheet-buffer new)))
-    new))
-
-(cl-defun ein:notebook-worksheet-insert-next
-    (notebook ws &optional (render t) (show #'switch-to-buffer))
-  "Insert a new worksheet after this worksheet and open it.
-See also `ein:notebook-worksheet-insert-prev'.
-
-.. The worksheet WS is searched in the worksheets slot of
-   NOTEBOOK and a newly created worksheet is inserted after WS.
-   Worksheet buffer is created when RENDER or SHOW is non-`nil'.
-   SHOW is a function which take a buffer."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)))
-  (ein:notebook-worksheet-insert-new notebook ws render show
-                                     #'ein:list-insert-after))
-
-(cl-defun ein:notebook-worksheet-insert-prev
-    (notebook ws &optional (render t) (show #'switch-to-buffer))
-  "Insert a new worksheet before this worksheet and open it.
-See also `ein:notebook-worksheet-insert-next'."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)))
-  (ein:notebook-worksheet-insert-new notebook ws render show
-                                     #'ein:list-insert-before))
-
-(defun ein:notebook-worksheet-delete (notebook ws &optional confirm)
-  "Delete the current worksheet.
-When used as a lisp function, delete worksheet WS from NOTEBOOk."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)
-                     t))
-  (when confirm
-    (unless (y-or-n-p
-             "Really remove this worksheet? There is no undo.")
-      (error "Quit deleting the current worksheet.")))
-  (setf (ein:$notebook-worksheets notebook)
-        (delq ws (ein:$notebook-worksheets notebook)))
-  (setf (ein:$notebook-dirty notebook) t)
-  (kill-buffer (ein:worksheet-buffer ws)))
-
-(defun ein:notebook-worksheet-move-prev (notebook ws)
-  "Switch the current worksheet with the previous one."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)))
-  (assert (ein:worksheet-p ws) nil "Not worksheet.")
-  (setf (ein:$notebook-worksheets notebook)
-        (ein:list-move-left (ein:$notebook-worksheets notebook) ws)))
-
-(defun ein:notebook-worksheet-move-next (notebook ws)
-  "Switch the current worksheet with the previous one."
-  (interactive (list (ein:notebook--get-nb-or-error)
-                     (ein:worksheet--get-ws-or-error)))
-  (assert (ein:worksheet-p ws) nil "Not worksheet.")
-  (setf (ein:$notebook-worksheets notebook)
-        (ein:list-move-right (ein:$notebook-worksheets notebook) ws)))
-
-(cl-defun ein:notebook-worksheet-index
-    (&optional (notebook ein:%notebook%) (ws ein:%worksheet%))
-  "Return an index of the worksheet WS in NOTEBOOK."
-  (cl-loop for i from 0
-        for ith-ws in (ein:$notebook-worksheets notebook)
-        when (eq ith-ws ws)
-        return i))
-
-;;; Scratch sheet
 
 (defun ein:notebook-scratchsheet-render-new (notebook)
   "Create new scratchsheet in NOTEBOOK."
@@ -1013,9 +737,6 @@ worksheet to save result."
     (when popup
       (pop-to-buffer (ein:worksheet-buffer ss)))
     ss))
-
-
-;;; Opened notebooks
 
 (defvar ein:notebook--opened-map (make-hash-table :test 'equal)
   "A map: (URL-OR-PORT NOTEBOOK-ID) => notebook instance.")
@@ -1089,8 +810,6 @@ associated with current buffer (if any)."
                  when (ein:worksheet-modified-p ws)
                  return t))))
 
-
-;;; Notebook mode
 (defvar ein:notebook-mode-map (make-sparse-keymap))
 
 (defmacro ein:notebook--define-key (keymap key defn)
@@ -1153,25 +872,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
   (define-key map "\M-."          'ein:pytools-jump-to-source-command)
   (define-key map "\M-,"          'ein:pytools-jump-back-command)
   (ein:notebook--define-key map (kbd "C-c C-/") ein:notebook-scratchsheet-open)
-  ;; Worksheets
-  (ein:notebook--define-key map (kbd "C-c !")     ein:worksheet-rename-sheet)
-  (ein:notebook--define-key map (kbd "C-c {")     ein:notebook-worksheet-open-prev-or-last)
-  (ein:notebook--define-key map (kbd "C-c }")     ein:notebook-worksheet-open-next-or-first)
-  (ein:notebook--define-key map (kbd "C-c M-{")   ein:notebook-worksheet-move-prev)
-  (ein:notebook--define-key map (kbd "C-c M-}")   ein:notebook-worksheet-move-next)
-  (ein:notebook--define-key map (kbd "C-c +")     ein:notebook-worksheet-insert-next)
-  (ein:notebook--define-key map (kbd "C-c M-+")   ein:notebook-worksheet-insert-prev)
-  (ein:notebook--define-key map (kbd "C-c -")     ein:notebook-worksheet-delete)
-  (ein:notebook--define-key map "\C-c1" ein:notebook-worksheet-open-1th)
-  (ein:notebook--define-key map "\C-c2" ein:notebook-worksheet-open-2th)
-  (ein:notebook--define-key map "\C-c3" ein:notebook-worksheet-open-3th)
-  (ein:notebook--define-key map "\C-c4" ein:notebook-worksheet-open-4th)
-  (ein:notebook--define-key map "\C-c5" ein:notebook-worksheet-open-5th)
-  (ein:notebook--define-key map "\C-c6" ein:notebook-worksheet-open-6th)
-  (ein:notebook--define-key map "\C-c7" ein:notebook-worksheet-open-7th)
-  (ein:notebook--define-key map "\C-c8" ein:notebook-worksheet-open-8th)
-  (ein:notebook--define-key map "\C-c9" ein:notebook-worksheet-open-last)
-  ;; Menu
   (easy-menu-define ein:notebook-menu map "EIN Notebook Mode Menu"
     `("EIN Notebook"
       ("File"
@@ -1240,39 +940,6 @@ Tried add-function: the &rest from :around is an emacs-25 compilation issue."
             ("Reconnect session" ein:notebook-reconnect-session-command)
             ("Switch kernel" ein:notebook-switch-kernel)
             ("Interrupt kernel" ein:notebook-kernel-interrupt-command))))
-      ("Worksheets [Experimental]"
-       ,@(ein:generate-menu
-          '(("Rename worksheet" ein:worksheet-rename-sheet)
-            ("Insert next worksheet"
-             ein:notebook-worksheet-insert-next)
-            ("Insert previous worksheet"
-             ein:notebook-worksheet-insert-prev)
-            ("Delete worksheet" ein:notebook-worksheet-delete)
-            ("Move worksheet left"  ein:notebook-worksheet-move-prev)
-            ("Move worksheet right" ein:notebook-worksheet-move-next)
-            ))
-       "---"
-       ,@(ein:generate-menu
-          '(("Open previous worksheet"
-             ein:notebook-worksheet-open-prev)
-            ("Open previous or last worksheet"
-             ein:notebook-worksheet-open-prev-or-last)
-            ("Open next worksheet"
-             ein:notebook-worksheet-open-next)
-            ("Open next or first worksheet"
-             ein:notebook-worksheet-open-next-or-first)
-            ("Open next or new worksheet"
-             ein:notebook-worksheet-open-next-or-new)
-            ))
-       "---"
-       ,@(ein:generate-menu
-          (append
-           (cl-loop for n from 1 to 8
-                 collect
-                 (list
-                  (format "Open %d-th worksheet" n)
-                  (intern (format "ein:notebook-worksheet-open-%sth" n))))
-           '(("Open last worksheet" ein:notebook-worksheet-open-last)))))
       ;; Misc:
       ,@(ein:generate-menu
          '(("Open scratch sheet" ein:notebook-scratchsheet-open)))))
