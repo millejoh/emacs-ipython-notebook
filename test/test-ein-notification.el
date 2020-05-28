@@ -13,7 +13,7 @@
   (let* ((ein:%notification% (ein:notification))
          (kernel (oref ein:%notification% :kernel)))
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
-    (should (string-prefix-p "IP[y]: /1\\ /2\\ /3\\ [+]" (ein:header-line)))))
+    (should (string-prefix-p "IP[y]: " (ein:header-line)))))
 
 (ert-deftest ein:header-line-kernel-status-busy ()
   (let* ((ein:%notification% (ein:notification))
@@ -21,7 +21,7 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set kernel
                                  'status_busy.Kernel)
-    (should (string-prefix-p "IP[y]: Kernel busy... | /1\\ /2\\ /3\\ [+]"
+    (should (string-prefix-p "IP[y]: Kernel busy..."
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-status-busy ()
@@ -30,7 +30,7 @@
     (oset ein:%notification% :tab (ein:testing-notification-tab-mock))
     (ein:notification-status-set notebook
                                  'notebook_saved.Notebook)
-    (should (string-prefix-p "IP[y]: Notebook saved | /1\\ /2\\ /3\\ [+]"
+    (should (string-prefix-p "IP[y]: Notebook saved"
                              (ein:header-line)))))
 
 (ert-deftest ein:header-line-notebook-complex ()
@@ -44,9 +44,8 @@
                                  'notebook_saving.Notebook)
     (should (string-prefix-p
              (concat "IP[y]: Saving notebook... | "
-                     (substitute-command-keys "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command-km] | ")
-                     ;;"Kernel requires restart C-c C-x C-r | "
-                     "/1\\ /2\\ /3\\ [+]") (ein:header-line)))))
+                     (substitute-command-keys "Kernel requires restart \\<ein:notebook-mode-map>\\[ein:notebook-restart-session-command-km]"))
+	     (ein:header-line)))))
 
 (ert-deftest ein:notification-and-events ()
   (let* ((notification (ein:notification))

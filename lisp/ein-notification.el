@@ -42,18 +42,7 @@
 (define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
-(defvar ein:header-line-tab-map (make-sparse-keymap))
-(defvar ein:header-line-insert-tab-map (make-sparse-keymap))
 (defvar ein:header-line-switch-kernel-map (make-sparse-keymap))
-(defvar ein:header-line-tab-help
-  "\
-mouse-1 (left click) : switch to this tab
-mouse-3 (right click) : pop to this tab
-mouse-2 (middle click) : delete this tab
-M-mouse-1/3 (Alt + left/right click): insert new tab to left/right
-S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
-  "Help message.")
-;; Note: can't put this below of `ein:notification-setup'...
 
 (cl-defmethod ein:notification-status-set ((ns ein:notification-status) status)
   (let* ((message (cdr (assoc status (slot-value ns 's2m)))))
@@ -129,20 +118,7 @@ GET-CURRENT : function
 GET-NAME : function
   Return a name of the worksheet given as its argument.
 
-GET-BUFFER : function
-  Get a buffer of given worksheet.  Render it if needed.
-
-DELETE : function
-  Remove a given worksheet.
-
-INSERT-PREV / INSERT-NEXT : function
-  Insert new worksheet before/after the specified worksheet.
-
-MOVE-PREV / MOVE-NEXT : function
-  Switch this worksheet to the previous/next one.
-
-\(fn buffer events &key get-list get-current get-name get-buffer delete \
-insert-prev insert-next move-prev move-next)"
+\(fn buffer events &key get-list get-current get-name)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (make-instance 'ein:notification
@@ -153,14 +129,6 @@ insert-prev insert-next move-prev move-next)"
           (apply #'make-instance 'ein:notification-tab tab-slots))
     ein:%notification%))
 
-
-;;; Tabs
-
-(defface ein:notification-tab-selected
-  '((t :inherit (header-line match) :underline t))
-  "Face for headline selected tab."
-  :group 'ein)
-
 (defface ein:notification-tab-normal
   '((t :inherit (header-line) :underline t :height 0.8))
   "Face for headline selected tab."
@@ -170,54 +138,13 @@ insert-prev insert-next move-prev move-next)"
   (let ((list (funcall (slot-value tab 'get-list)))
         (current (funcall (slot-value tab 'get-current)))
         (get-name (slot-value tab 'get-name)))
-    (ein:join-str
-     " "
-     (append
-      (cl-loop for i from 1
-            for elem in list
-            if (eq elem current)
-            collect (propertize
-                     (or (ein:and-let* ((name (funcall get-name elem)))
-                           (format "/%d: %s\\" i name))
-                         (format "/%d\\" i))
-                     'ein:worksheet elem
-                     'keymap ein:header-line-tab-map
-                     'help-echo ein:header-line-tab-help
-                     'mouse-face 'highlight
-                     'face 'ein:notification-tab-selected)
-            else
-            collect (propertize
-                     (format "/%d\\" i)
-                     'ein:worksheet elem
-                     'keymap ein:header-line-tab-map
-                     'help-echo ein:header-line-tab-help
-                     'mouse-face 'highlight
-                     'face 'ein:notification-tab-normal))
-      (list
-       (propertize "[+]"
-                   'keymap ein:header-line-insert-tab-map
-                   'help-echo "Click (mouse-1) to insert a new tab."
-                   'mouse-face 'highlight
-                   'face 'ein:notification-tab-normal)
-       (propertize (aif (and (ein:get-notebook) (ein:$notebook-kernelspec (ein:get-notebook)))
-                       (format "|%s|" (ein:$kernelspec-name it))
-                     "|unknown: please click and select a kernel|")
-                   'keymap ein:header-line-switch-kernel-map
-                   'help-echo "Click (mouse-1) to change the running kernel."
-                   'mouse-face 'highlight
-                   'face 'ein:notification-tab-normal))))))
-
-(let ((map ein:header-line-tab-map))
-  (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
-  (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
-  (define-key map [header-line S-mouse-1] 'ein:header-line-move-prev-tab)
-  (define-key map [header-line S-mouse-3] 'ein:header-line-move-next-tab)
-  (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
-  (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
-  (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
-
-(define-key ein:header-line-insert-tab-map
-  [header-line mouse-1] 'ein:header-line-insert-new-tab)
+    (propertize (aif (and (ein:get-notebook) (ein:$notebook-kernelspec (ein:get-notebook)))
+		    (format "|%s|" (ein:$kernelspec-name it))
+		  "|unknown: please click and select a kernel|")
+		'keymap ein:header-line-switch-kernel-map
+		'help-echo "Click (mouse-1) to change the running kernel."
+		'mouse-face 'highlight
+		'face 'ein:notification-tab-normal)))
 
 (define-key ein:header-line-switch-kernel-map
   [header-line mouse-1] 'ein:header-line-switch-kernel)
@@ -233,59 +160,6 @@ insert-prev insert-next move-prev move-next)"
                 image (dx . dy) (width . height)))
        ,key-event
      ,@body))
-
-(defun ein:header-line-select-window (key-event)
-  (ein:with-destructuring-bind-key-event key-event (select-window window)))
-
-(defun ein:header-line-key-event-get-worksheet (key-event)
-  (ein:with-destructuring-bind-key-event key-event
-    (get-char-property (cdr object) 'ein:worksheet (car object))))
-
-(defun ein:header-line-key-event-get-buffer (key-event)
-  (funcall (slot-value (slot-value ein:%notification% 'tab) 'get-buffer)
-           (ein:header-line-key-event-get-worksheet key-event)))
-
-(defun ein:header-line-switch-to-this-tab (key-event)
-  (interactive "e")
-  (ein:header-line-select-window key-event)
-  (switch-to-buffer (ein:header-line-key-event-get-buffer key-event)))
-
-(defun ein:header-line-pop-to-this-tab (key-event)
-  (interactive "e")
-  (ein:header-line-select-window key-event)
-  (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
-
-(defun ein:header-line-do-slot-function (key-event slot)
-  "Call SLOT function on worksheet instance fetched from KEY-EVENT."
-  (ein:header-line-select-window key-event)
-  (funcall (slot-value (slot-value ein:%notification% 'tab) slot)
-           (ein:header-line-key-event-get-worksheet key-event)))
-
-(defmacro ein:header-line-define-mouse-commands (&rest name-slot-list)
-  `(progn
-     ,@(cl-loop for (name slot) on name-slot-list by 'cddr
-             collect
-             `(defun ,name (key-event)
-                ,(format "Run slot %s
-Generated by `ein:header-line-define-mouse-commands'" slot)
-                (interactive "e")
-                (ein:header-line-do-slot-function key-event ,slot)))))
-
-(ein:header-line-define-mouse-commands
- ein:header-line-delete-this-tab :delete
- ein:header-line-insert-prev-tab :insert-prev
- ein:header-line-insert-next-tab :insert-next
- ein:header-line-move-prev-tab :move-prev
- ein:header-line-move-next-tab :move-next
- )
-
-(defun ein:header-line-insert-new-tab (key-event)
-  "Insert new tab."
-  (interactive "e")
-  (ein:header-line-select-window key-event)
-  (let ((notification (slot-value ein:%notification% 'tab)))
-    (funcall (slot-value notification 'insert-next)
-             (car (last (funcall (slot-value notification 'get-list)))))))
 
 (defun ein:header-line-switch-kernel (key-event)
   (interactive "e")
