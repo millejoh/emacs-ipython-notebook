@@ -230,7 +230,7 @@ a number will limit the number of lines in a cell output."
 (defun ein:insert-image (image)
   (condition-case-unless-debug err
       (let ((buffer-undo-list t))
-        (insert-image image "."))
+        (insert-image image (ein:propertize-read-only ".")))
     (error (ein:log 'warn "Could not insert image: %s" (error-message-string err)))))
 
 (defun ein:cell-class-from-type (type)
