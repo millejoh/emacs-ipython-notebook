@@ -83,7 +83,7 @@
   :type '(string)
   :group 'ein)
 
-(defsubst ob-ein-anonymous-p (path)
+(defun ob-ein-anonymous-p (path)
   "Return t if PATH looks like ob-ein-anonymous-path.  Fragile"
   (string-match (replace-regexp-in-string "%s" ".+"
                   (replace-regexp-in-string "\\." "\\\\." ob-ein-anonymous-path))

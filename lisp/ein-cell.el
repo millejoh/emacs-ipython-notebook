@@ -812,8 +812,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                     " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
-  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
-  (ein:insert-read-only "\n"))
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel))))
 
 (cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
   "Insert pyerr type output in the buffer.
@@ -856,8 +855,7 @@ Called from ewoc pretty printer `ein:worksheet-pp'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
-  (ein:insert-read-only "\n"))
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel))))
 
 (make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
 
@@ -873,7 +871,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
    json
    (cl-case type
      ((:text/html)
-      (funcall (ein:output-area-get-html-renderer) value))
+      (funcall (ein:output-area-get-html-renderer) value)
+      (ein:insert-read-only "\n"))
      ((:image/svg+xml :image/png :image/jpeg)
       (let ((image (create-image (condition-case nil
                                      (base64-decode-string value)
@@ -881,7 +880,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                  (intern-soft (ein:cell-extract-image-format type))
                                  t)))
         (if ein:output-area-inlined-images
-            (ein:insert-image image)
+	    (progn
+             (ein:insert-image image)
+	     (ein:insert-read-only "\n"))
           (unless starting-p ;; don't display on ein:worksheet-render
             (let* ((handle (ein:make-mm-handle image))
                    (type (mm-handle-media-type handle))
@@ -892,9 +893,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
               (if (and (stringp method) (> (length method) 0))
                   (mm-display-external handle method)
                 (ein:log 'warn "ein:cell-append-mime-type: %s"
-                         "no viewer method found in mailcap")))))))
+                         "no viewer method found in mailcap")))
+	    ;; avoid newline if spawning external viewer
+	    ))))
      (otherwise
-      (ein:insert-read-only value)))))
+      (ein:insert-read-only value)
+      (ein:insert-read-only "\n")))))
 
 (defun ein:cell-append-text (data &rest properties)
   "escape ANSI in plaintext:"
