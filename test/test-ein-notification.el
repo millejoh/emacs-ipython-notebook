@@ -6,8 +6,7 @@
 (defun ein:testing-notification-tab-mock ()
   (make-instance 'ein:notification-tab
                  :get-list (lambda () '(a b c))
-                 :get-current (lambda () 'a)
-                 :get-name #'ignore))
+                 :get-current (lambda () 'a)))
 
 (ert-deftest ein:header-line-normal ()
   (let* ((ein:%notification% (ein:notification))

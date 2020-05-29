@@ -167,7 +167,7 @@
 
 (When "^new \\(.+\\) notebook$"
       (lambda (prefix)
-        (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+        (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
           (let (notebook)
             (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
               (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
@@ -175,11 +175,7 @@
                            (ks (ein:get-kernelspec url-or-port found)))
                 (setq notebook (ein:testing-new-notebook url-or-port ks))))
             (should notebook)
-            (let ((buf-name (format ein:notebook-buffer-name-template
-                                    (ein:$notebook-url-or-port notebook)
-                                    (ein:$notebook-notebook-name notebook))))
-              (switch-to-buffer buf-name)
-              (Then "I should be in buffer \"%s\"" buf-name))))))
+            (switch-to-buffer (ein:notebook-buffer notebook))))))
 
 (When "^I kill buffer and reopen$"
       (lambda ()
@@ -363,20 +359,17 @@
 
 (When "^old notebook \"\\(.+\\)\"$"
       (lambda (path)
-        (lexical-let ((url-or-port (car (ein:jupyter-server-conn-info))) notebook)
+        (let (notebook
+	      (url-or-port (car (ein:jupyter-server-conn-info))))
           (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
             (cl-loop repeat 2
-                  until (and notebook
-                             (ein:aand (ein:$notebook-kernel notebook)
-                                       (ein:kernel-live-p it)))
-                  do (ein:notebook-open url-or-port path nil
-                                        (lambda (nb created) (setq notebook nb)))
-                  do (sleep-for 0 1000)))
-          (let ((buf-name (format ein:notebook-buffer-name-template
-                                  (ein:$notebook-url-or-port notebook)
-                                  (ein:$notebook-notebook-name notebook))))
-            (switch-to-buffer buf-name)
-            (Then "I should be in buffer \"%s\"" buf-name)))))
+		     do (ein:notebook-open url-or-port path nil
+					   (lambda (nb created) (setq notebook nb)))
+		     until (and notebook
+				(ein:aand (ein:$notebook-kernel notebook)
+					  (ein:kernel-live-p it)))
+		     do (sleep-for 0 1000)))
+          (switch-to-buffer (ein:notebook-buffer notebook)))))
 
 (When "^I dump buffer"
       (lambda () (message "%s" (buffer-string))))

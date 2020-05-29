@@ -70,7 +70,6 @@
 Current buffer for these functions is set to the notebook buffer.")
 
 (defconst ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
-(defconst ein:notebook-buffer-name-template "*ein: %s/%s*")
 
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
@@ -114,9 +113,9 @@ And I don't know if I can on account of the dont-save-cells nonsense."
 
 (defun ein:notebook-buffer (notebook)
   "Return first buffer in NOTEBOOK's worksheets."
-  (aif notebook
-      (seq-some #'ein:worksheet-buffer (append (ein:$notebook-worksheets it)
-                                               (ein:$notebook-scratchsheets it)))))
+  (awhen notebook
+    (seq-some #'ein:worksheet-buffer (append (ein:$notebook-worksheets it)
+					     (ein:$notebook-scratchsheets it)))))
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the direct and indirect buffers."
@@ -132,9 +131,6 @@ And I don't know if I can on account of the dont-save-cells nonsense."
 
 ;;;###autoload
 (defalias 'ein:notebook-name 'ein:$notebook-notebook-name)
-
-(defun ein:notebook-name-getter (notebook)
-  (cons #'ein:notebook-name notebook))
 
 ;;; Open notebook
 
@@ -409,8 +405,8 @@ This is equivalent to do ``C-c`` in the console program."
 (cl-defun ein:notebook--worksheet-new (notebook
                                        &optional (func #'ein:worksheet-new))
   (funcall func
-           (ein:$notebook-nbformat notebook)
-           (ein:notebook-name-getter notebook)
+	   (ein:$notebook-nbformat notebook)
+           (apply-partially #'ein:$notebook-notebook-path notebook)
            (ein:$notebook-kernel notebook)
            (ein:$notebook-events notebook)))
 
@@ -430,9 +426,7 @@ This is equivalent to do ``C-c`` in the console program."
    :get-list
    (lambda () (ein:$notebook-worksheets ein:%notebook%))
    :get-current
-   (lambda () ein:%worksheet%)
-   :get-name
-   #'ein:worksheet-name))
+   (lambda () ein:%worksheet%)))
 
 (defun ein:notebook-from-json (notebook data)
   (destructuring-bind (&key metadata nbformat nbformat_minor
@@ -532,14 +526,6 @@ This is equivalent to do ``C-c`` in the console program."
       (ein:notebook-save-notebook notebook callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook &optional callback cbargs errback)
-  (unless (ein:notebook-buffer notebook)
-    (let ((buf (format ein:notebook-buffer-name-template
-                       (ein:$notebook-url-or-port notebook)
-                       (ein:$notebook-notebook-name notebook))))
-      (ein:log 'error "ein:notebook-save-notebook: notebook %s has no buffer!" buf)
-      (setf (ewoc--buffer (ein:worksheet--ewoc
-                           (first (ein:$notebook-worksheets notebook))))
-            (get-buffer buf))))
   (condition-case err
       (with-current-buffer (ein:notebook-buffer notebook)
         (cl-letf (((symbol-function 'delete-trailing-whitespace) #'ignore))
@@ -628,7 +614,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (mapc #'ein:worksheet-set-buffer-name
         (append (ein:$notebook-worksheets notebook)
                 (ein:$notebook-scratchsheets notebook)))
-  (ein:and-let* ((kernel (ein:$notebook-kernel notebook)))
+  (when-let ((kernel (ein:$notebook-kernel notebook)))
     (ein:session-rename (ein:$kernel-url-or-port kernel)
                         (ein:$kernel-session-id kernel)
                         (ein:$content-path content))
@@ -743,10 +729,6 @@ worksheet to save result."
 
 (defun ein:notebook-get-opened-notebook (url-or-port path)
   (gethash (list url-or-port path) ein:notebook--opened-map))
-
-(defun ein:notebook-get-opened-buffer (url-or-port path)
-  (ein:aand (ein:notebook-get-opened-notebook url-or-port path)
-            (ein:notebook-buffer it)))
 
 (defun ein:notebook-put-opened-notebook (notebook)
   (puthash (list (ein:$notebook-url-or-port notebook)

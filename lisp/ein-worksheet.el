@@ -313,21 +313,15 @@ Unshift in list parlance means prepending to list."
         (ein:log 'debug "ein:worksheet--shift-undo-list: buffer-undo-list %s in %s"
                  buffer-undo-list (ein:cell-buffer cell))))))
 
-
-;;; Class and variable
-
-(defvar ein:worksheet-buffer-name-template "*ein: %s/%s*")
-
 (ein:deflocal ein:%worksheet% nil
   "Buffer local variable to store an instance of `ein:worksheet'.")
 
-
-;;; Initialization of object and buffer
-
-(defun ein:worksheet-new (nbformat get-notebook-name kernel events &rest args)
+(defun ein:worksheet-new (nbformat notebook-path kernel events &rest args)
   (apply #'make-instance 'ein:worksheet
-         :nbformat nbformat :get-notebook-name get-notebook-name
-         :kernel kernel :events events
+         :nbformat nbformat
+	 :notebook-path notebook-path
+         :kernel kernel
+	 :events events
          args))
 
 (cl-defmethod ein:worksheet-bind-events ((ws ein:worksheet))
@@ -361,27 +355,11 @@ Unshift in list parlance means prepending to list."
     (ein:with-live-buffer (ein:cell-buffer cell)
       (ein:worksheet-set-modified-p ein:%worksheet% value))))
 
-(cl-defmethod ein:worksheet-notebook-name ((ws ein:worksheet))
-  (ein:funcall-packed (ein:worksheet--notebook-name ws)))
+(cl-defmethod ein:worksheet-notebook-path ((ws ein:worksheet))
+  (funcall (ein:worksheet--notebook-path ws)))
 
 (cl-defmethod ein:worksheet-url-or-port ((ws ein:worksheet))
   (ein:kernel-url-or-port (ein:worksheet--kernel ws)))
-
-(cl-defmethod ein:worksheet-name ((ws ein:worksheet))
-  (plist-get (ein:worksheet--metadata ws) :name))
-
-(cl-defmethod ein:worksheet-set-name ((ws ein:worksheet) name)
-  "Set worksheet name.
-
-\(fn ws name)"
-  (assert (stringp name) nil "NAME must be a string.  Got: %S" name)
-  (setf (ein:worksheet--metadata ws) (plist-put (ein:worksheet--metadata ws) :name name)))
-
-(cl-defmethod ein:worksheet-full-name ((ws ein:worksheet))
-  (let ((nb-name (ein:worksheet-notebook-name ws)))
-    (aif (ein:worksheet-name ws)
-        (concat nb-name "/" it)
-      nb-name)))
 
 (cl-defmethod ein:worksheet-buffer ((ws ein:worksheet))
   (ein:and-let* (((slot-boundp ws :ewoc))
@@ -391,9 +369,7 @@ Unshift in list parlance means prepending to list."
     buffer))
 
 (cl-defmethod ein:worksheet--buffer-name ((ws ein:worksheet))
-  (format ein:worksheet-buffer-name-template
-          (ein:worksheet-url-or-port ws)
-          (ein:worksheet-full-name ws)))
+  (format "*ein: %s/%s*" (ein:worksheet-url-or-port ws) (ein:worksheet-notebook-path ws)))
 
 (cl-defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
   (or (ein:worksheet-buffer ws)
@@ -473,7 +449,7 @@ Unshift in list parlance means prepending to list."
     (set-buffer-modified-p nil)
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)
-    (ein:log 'info "Worksheet %s is ready" (ein:worksheet-full-name ws))))
+    (ein:log 'info "Worksheet %s is ready" (ein:worksheet-notebook-path ws))))
 
 (defun ein:worksheet-pp (ewoc-data)
   "Consider disabling `buffer-undo-list' here instead of `ein:cell--ewoc-invalidate'

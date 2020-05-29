@@ -118,7 +118,7 @@ GET-CURRENT : function
 GET-NAME : function
   Return a name of the worksheet given as its argument.
 
-\(fn buffer events &key get-list get-current get-name)"
+\(fn buffer events &key get-list get-current)"
   (with-current-buffer buffer
     (setq ein:%notification%
           (make-instance 'ein:notification
@@ -136,8 +136,7 @@ GET-NAME : function
 
 (cl-defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
   (let ((list (funcall (slot-value tab 'get-list)))
-        (current (funcall (slot-value tab 'get-current)))
-        (get-name (slot-value tab 'get-name)))
+        (current (funcall (slot-value tab 'get-current))))
     (propertize (aif (and (ein:get-notebook) (ein:$notebook-kernelspec (ein:get-notebook)))
 		    (format "|%s|" (ein:$kernelspec-name it))
 		  "|unknown: please click and select a kernel|")

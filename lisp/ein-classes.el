@@ -161,8 +161,8 @@
 ;;; Worksheet
 (defclass ein:worksheet ()
   ((nbformat :initarg :nbformat :type integer)
-   (get-notebook-name :initarg :get-notebook-name :type cons
-                      :accessor ein:worksheet--notebook-name)
+   (notebook-path :initarg :notebook-path :type function
+		  :accessor ein:worksheet--notebook-path)
    (saved-cells :initarg :saved-cells :initform nil
                 :accessor ein:worksheet--saved-cells
                 :documentation
@@ -285,15 +285,7 @@ notebook that saved "*".  So don't add `:type'!")
 
 (defclass ein:notification-tab ()
   ((get-list :initarg :get-list :type function)
-   (get-current :initarg :get-current :type function)
-   (get-name :initarg :get-name :type function)
-   (get-buffer :initarg :get-buffer :type function)
-   (delete :initarg :delete :type function)
-   (insert-prev :initarg :insert-prev :type function)
-   (insert-next :initarg :insert-next :type function)
-   (move-prev :initarg :move-prev :type function)
-   (move-next :initarg :move-next :type function)
-   )
+   (get-current :initarg :get-current :type function))
   ;; These "methods" are for not depending on what the TABs for.
   ;; Probably I'd want change this to be a separated Emacs lisp
   ;; library at some point.

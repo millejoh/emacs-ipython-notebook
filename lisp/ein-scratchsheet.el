@@ -28,25 +28,22 @@
 
 (require 'ein-worksheet)
 
-(defvar ein:scratchsheet-buffer-name-template "*ein:scratch %s/%s*")
-
 (defclass ein:scratchsheet (ein:worksheet)
-  ;; Note that `data' slot is accessed when rendering worksheet.
-  ;; So, set valid empty data (`nil') here.
   ((data :initarg :data :initform nil))
-  :documentation
-  "Worksheet without needs for saving.")
+  :documentation "Worksheet without needs for saving.")
 
-(defun ein:scratchsheet-new (nbformat get-notebook-name kernel events &rest args)
+(defun ein:scratchsheet-new (nbformat notebook-path kernel events &rest args)
   (apply #'make-instance 'ein:scratchsheet
-         :nbformat nbformat :get-notebook-name get-notebook-name
-         :kernel kernel :events events
+         :nbformat nbformat
+	 :notebook-path notebook-path
+         :kernel kernel
+	 :events events
          args))
 
 (cl-defmethod ein:worksheet--buffer-name ((ws ein:scratchsheet))
-  (format ein:scratchsheet-buffer-name-template
-          (ein:worksheet-url-or-port ws)
-          (ein:worksheet-full-name ws)))
+  (format "*ein:scratch %s/%s*"
+	  (ein:worksheet-url-or-port ws)
+	  (ein:worksheet-notebook-path ws)))
 
 (provide 'ein-scratchsheet)
 
