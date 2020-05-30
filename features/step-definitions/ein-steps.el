@@ -1,3 +1,8 @@
+(When "^I minibuffer press \"\\(.+\\)\"$"
+  (lambda (keybinding)
+    (switch-to-buffer " *Minibuf-1*")
+    (When (format "I press \"%s\"" keybinding))))
+
 (When "^I insert percent sign$" ;; https://github.com/ecukes/ecukes/issues/58
       (lambda ()
         (insert-char 37)))

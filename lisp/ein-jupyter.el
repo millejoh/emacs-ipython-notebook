@@ -118,8 +118,8 @@ with the call to the jupyter notebook."
            (error (ein:log 'warn "ein:jupyter-default-kernel: %s" err)
                   '((string :tag "Ask"))))))
 
-(defvar *ein:jupyter-server-process-name* "ein server")
-(defvar *ein:jupyter-server-buffer-name*
+(defconst *ein:jupyter-server-process-name* "ein server")
+(defconst *ein:jupyter-server-buffer-name*
   (format "*%s*" *ein:jupyter-server-process-name*))
 
 (defun ein:jupyter-get-default-kernel (kernels)
@@ -157,7 +157,7 @@ with the call to the jupyter notebook."
                                (list (format "--notebook-dir=%s"
                                              (convert-standard-filename dir)))
                                args
-                               (let ((copy ein:jupyter-server-args))
+                               (let ((copy (cl-copy-list ein:jupyter-server-args)))
                                  (when ein:debug
                                    (add-to-list 'copy "--debug"))
                                  copy)))))

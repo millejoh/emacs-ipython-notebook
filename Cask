@@ -9,7 +9,6 @@
  (depends-on "websocket")
  (depends-on "request")
  (depends-on "dash")
- (depends-on "magit")
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")
