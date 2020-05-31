@@ -80,6 +80,8 @@ How do I...
       M-x customize-group RET mailcap
       Mailcap User Mime Data
 
+   On a typical Linux system, one might configure a viewer for MIME Type ``image/png`` as a shell command ``convert %s -background white -alpha remove -alpha off - | display -immutable``.
+
 ... get IDE-like behavior?
    The official python module for EIN is elpy_, installed separately.  Other `program modes`_ for non-python kernels may be installed with varying degrees of EIN compatibility.
 
