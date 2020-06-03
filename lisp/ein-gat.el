@@ -93,18 +93,24 @@
 				       (car args) (process-exit-status proc)))))
     process))
 
-(defun ein:gat-run-local (&rest args)
+(defsubst ein:gat-run-local (&optional refresh)
   (interactive "P")
+  (ein:gat--run-local-or-remote nil refresh))
+
+(defsubst ein:gat-run-remote (&optional refresh)
+  (interactive "P")
+  (ein:gat--run-local-or-remote t refresh))
+
+(defun ein:gat--run-local-or-remote (remote-p refresh)
   (when-let ((notebook (aand (ein:get-notebook)
 			     (ein:$notebook-notebook-name it)))
 	     (gat-executable "gat")
-	     (cb-run (apply-partially
-		      #'ein:gat-chain (current-buffer) nil
-		      gat-executable nil "--project" ein:gat-project
-		      "--region" ein:gat-region "--zone" ein:gat-zone
-		      "run-local")))
+	     (gat-chain-args (list (current-buffer) nil
+				   gat-executable nil "--project" ein:gat-project
+				   "--region" ein:gat-region "--zone" ein:gat-zone
+				   (if remote-p "run-remote" "run-local"))))
     (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
-      (if (or current-prefix-arg (and (null pre-docker) (null post-docker)))
+      (if (or refresh (null pre-docker) (null post-docker))
 	  (magit-with-editor
 	    (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
 		   (base-image (ein:gat-elicit-base-image))
@@ -114,12 +120,15 @@
 		(apply-partially
 		 #'ein:gat-chain
 		 (current-buffer)
-		 cb-run
+		 (apply #'apply-partially #'ein:gat-chain
+			(append gat-chain-args (list "--dockerfile" dockerfile)))
 		 gat-executable nil "--project" ein:gat-project
 		 "--region" ein:gat-region "--zone" ein:gat-zone
 		 "dockerfile" dockerfile)
 		with-editor-emacsclient-executable nil dockerfile)))
-	(funcall cb-run)))))
+	(let ((magit-process-popup-time 0))
+	  (apply #'ein:gat-chain (append gat-chain-args
+					 (list "--dockerfile" pre-docker))))))))
 
 (defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
 				 "jupyter/base-notebook"
