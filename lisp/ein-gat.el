@@ -23,6 +23,8 @@
 
 ;;; Code:
 
+(require 'with-editor)
+
 (declare-function magit--process-coding-system "magit-process")
 (declare-function magit-call-process "magit-process")
 
@@ -44,11 +46,19 @@
   :type 'string
   :group 'ein)
 
-(defsubst ein:gat-where-am-i ()
-  (when (ein:get-notebook)
-    (file-name-as-directory default-directory)))
+(defun ein:gat-where-am-i (&optional print-message)
+  (interactive "p")
+  (if (ein:get-notebook)
+      (let ((where (file-name-as-directory default-directory)))
+	(prog1 where
+	  (when print-message
+	    (message where))))
+    (prog1 nil
+      (when print-message
+	(message "nowhere")))))
 
 (defun ein:gat-call-gat (&rest args)
+  "Return exit status returned by `call-process'."
   (interactive (split-string (read-string "gat ")))
   (if-let ((default-directory (ein:gat-where-am-i)))
       (let ((default-process-coding-system (magit--process-coding-system))
@@ -56,18 +66,60 @@
 	    (args `("--project" ,ein:gat-project
 		    "--region" ,ein:gat-region
 		    "--zone" ,ein:gat-zone
-		    ,@args)))
+		    ,@args))
+	    (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS=" (getenv "GAT_APPLICATION_CREDENTIALS"))
+				       process-environment)))
 	(apply #'magit-call-process gat-executable args))
-    (error "ein:gat-call-gat: cannot ascertain cwd")))
+    (ein:log 'error "ein:gat-call-gat: cannot ascertain cwd")
+    -1))
 
-;; logic to handle the bash
-;; bespoke elisp wrappers for each gat chunk
-;; magit generally does not halt a sequence of `magit-call-git' calls for errors
+(defun ein:gat-chain (buffer callback &rest args)
+  (declare (indent 0))
+  (let* ((default-process-coding-system (magit--process-coding-system))
+	 (inhibit-magit-refresh t)
+	 (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS="
+					    (getenv "GAT_APPLICATION_CREDENTIALS"))
+				    process-environment))
+	 (process (apply #'magit-start-process args)))
+    (set-process-sentinel process
+			  (lambda (proc event)
+			    (magit-process-sentinel proc event)
+			    (if (zerop (process-exit-status proc))
+				(when callback
+				  (save-excursion
+				    (with-current-buffer buffer
+				      (funcall callback))))
+			      (ein:log 'error "ein:gat-chain: %s exited %s"
+				       (car args) (process-exit-status proc)))))
+    process))
 
-(defun ein:gat-run-local ()
-  (interactive)
-  ;; run-local calls build calls dockerfile
-  (ein:gat-call-gat "dockerfile"))
+(defun ein:gat-run-local (&rest args)
+  (interactive "P")
+  (when-let ((notebook (aand (ein:get-notebook)
+			     (ein:$notebook-notebook-name it)))
+	     (gat-executable "gat")
+	     (cb-run (apply-partially
+		      #'ein:gat-chain (current-buffer) nil
+		      gat-executable nil "--project" ein:gat-project
+		      "--region" ein:gat-region "--zone" ein:gat-zone
+		      "run-local")))
+    (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
+      (if (or current-prefix-arg (and (null pre-docker) (null post-docker)))
+	  (magit-with-editor
+	    (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
+		   (base-image (ein:gat-elicit-base-image))
+		   (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
+	      (ein:gat-chain
+		(current-buffer)
+		(apply-partially
+		 #'ein:gat-chain
+		 (current-buffer)
+		 cb-run
+		 gat-executable nil "--project" ein:gat-project
+		 "--region" ein:gat-region "--zone" ein:gat-zone
+		 "dockerfile" dockerfile)
+		with-editor-emacsclient-executable nil dockerfile)))
+	(funcall cb-run)))))
 
 (defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
 				 "jupyter/base-notebook"
@@ -87,8 +139,19 @@
    "FROM image: " ein:gat-base-images nil 'confirm
    nil 'ein:gat-base-images (car ein:gat-base-images)))
 
-(defun ein:gat-dockerfile-p ()
-  "Is there a Dockerfile sitting in `ein:gat-where-am-i'?"
-  (directory-files (ein:gat-where-am-i) nil "^Dockerfile"))
+(defun ein:gat-dockerfiles-state ()
+  "Return cons of (pre-Dockerfile . post-Dockerfile).
+Pre-Dockerfile is Dockerfile.<notebook> if extant, else Dockerfile."
+  (-if-let* ((notebook (ein:get-notebook))
+	     (notebook-name (ein:$notebook-notebook-name notebook))
+	     (dockers (directory-files (file-name-as-directory default-directory)
+				       nil "^Dockerfile")))
+      (let* ((pre-docker-p (lambda (f) (or (string= f (format "Dockerfile.%s" (file-name-sans-extension notebook-name)))
+					   (string= f "Dockerfile"))))
+	     (pre-docker (seq-find pre-docker-p (sort (cl-copy-list dockers) #'string>)))
+	     (post-docker-p (lambda (f) (string= f (format "%s.gat" pre-docker))))
+	     (post-docker (and (stringp pre-docker) (seq-find post-docker-p (sort (cl-copy-list dockers) #'string>)))))
+	`(,pre-docker . ,post-docker))
+    '(nil)))
 
 (provide 'ein-gat)

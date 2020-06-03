@@ -9,4 +9,5 @@
     (polymode "20190714")
     (exec-path-from-shell "20191229")
     (dash "2.13.0")
-    (magit "20200526")))
+    (magit "20200526")
+    (with-editor "20200522")))
