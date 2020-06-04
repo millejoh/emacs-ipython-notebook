@@ -88,7 +88,8 @@
 				(when callback
 				  (save-excursion
 				    (with-current-buffer buffer
-				      (funcall callback))))
+				      (let ((magit-process-popup-time 0))
+					(funcall callback)))))
 			      (ein:log 'error "ein:gat-chain: %s exited %s"
 				       (car args) (process-exit-status proc)))))
     process))
