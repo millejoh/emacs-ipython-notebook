@@ -519,13 +519,11 @@ Return language name as a string or `nil' when not defined.
       ;; does not need to care about newline (DOM does it for JS).
       ;; FIXME: Maybe I should abstract ewoc in some way and get rid
       ;;        of this.
-      (let ((last-out (and (> index 0)
-                           (nth (1- index) (slot-value cell 'outputs)))))
+      (when-let ((last-out (and (> index 0)
+				(nth (1- index) (slot-value cell 'outputs)))))
         ;; If previous output is stream type, consider adding newline
-        (when (and last-out
-                   (equal (plist-get last-out :output_type) "stream"))
-          ;; Check if the last output is from the same stream.
-          ;; If so, do *NOT* insert newline, otherwise insert newline.
+        (when (equal (plist-get last-out :output_type) "stream")
+          ;; but don't if we're merely continuing the previous stream
           (unless (and (equal (plist-get out :output_type) "stream")
                        (equal (plist-get out      :stream)
                               (plist-get last-out :stream)))
@@ -554,7 +552,8 @@ Return language name as a string or `nil' when not defined.
           (and ein:cell-max-num-outputs
                (> (ein:cell-num-outputs cell) ein:cell-max-num-outputs)))
       ;; Add a newline after the last ".".
-      (ein:insert-read-only "\n")
+      (unless (zerop (ein:cell-num-outputs cell))
+        (ein:insert-read-only "\n"))
     (let ((last-out (car (last (slot-value cell 'outputs)))))
       (when (equal (plist-get last-out :output_type) "stream")
         (ein:cell-append-stream-text-fontified "\n" last-out)))))
@@ -812,7 +811,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                     " "))
                         'font-lock-face 'ein:cell-output-prompt)
   (ein:insert-read-only "\n")
-  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel))))
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
+  (ein:insert-read-only "\n"))
 
 (cl-defmethod ein:cell-append-pyerr ((cell ein:codecell) json)
   "Insert pyerr type output in the buffer.
@@ -855,7 +855,8 @@ Called from ewoc pretty printer `ein:worksheet-pp'."
 (cl-defmethod ein:cell-append-display-data ((cell ein:codecell) json)
   "Insert display-data type output in the buffer.
 Called from ewoc pretty printer via `ein:cell-insert-output'."
-  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel))))
+  (ein:cell-append-mime-type json (not (ein:oref-safe cell 'kernel)))
+  (ein:insert-read-only "\n"))
 
 (make-obsolete-variable 'ein:output-type-preference nil "0.17.0")
 
@@ -871,8 +872,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
    json
    (cl-case type
      ((:text/html)
-      (funcall (ein:output-area-get-html-renderer) value)
-      (ein:insert-read-only "\n"))
+      (funcall (ein:output-area-get-html-renderer) value))
      ((:image/svg+xml :image/png :image/jpeg)
       (let ((image (create-image (condition-case nil
                                      (base64-decode-string value)
@@ -880,9 +880,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                                  (intern-soft (ein:cell-extract-image-format type))
                                  t)))
         (if ein:output-area-inlined-images
-	    (progn
-             (ein:insert-image image)
-	     (ein:insert-read-only "\n"))
+            (ein:insert-image image)
+          (ein:insert-read-only " ")
           (unless starting-p ;; don't display on ein:worksheet-render
             (let* ((handle (ein:make-mm-handle image))
                    (type (mm-handle-media-type handle))
@@ -891,15 +890,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
               (when (and (stringp method) (string-match "^[^% \t]+$" method))
                 (setq method (concat method " %s")))
               (if (and (stringp method) (> (length method) 0))
-		  (with-temp-buffer
-		    (mm-display-external handle method))
+                  (save-excursion
+                    (with-temp-buffer
+                      (mm-display-external handle method)))
                 (ein:log 'warn "ein:cell-append-mime-type: %s"
-                         "no viewer method found in mailcap")))
-	    ;; avoid newline if spawning external viewer
-	    ))))
+                         "no viewer method found in mailcap")))))))
      (otherwise
-      (ein:insert-read-only value)
-      (ein:insert-read-only "\n")))))
+      (ein:insert-read-only value)))))
 
 (defun ein:cell-append-text (data &rest properties)
   "escape ANSI in plaintext:"
