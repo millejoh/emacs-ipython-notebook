@@ -47,7 +47,7 @@ Note that this variable must be set *before* compiling EIN.")
          '(("Open notebook" ein:process-find-file-callback))))))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '(".*\\.ipynb\\'" . ein:ipynb-mode))
+(add-to-list 'auto-mode-alist '("\\.ipynb\\'" . ein:ipynb-mode))
 
 (provide 'ein-ipynb-mode)
 
