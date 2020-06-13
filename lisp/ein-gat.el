@@ -46,6 +46,11 @@
   :type 'string
   :group 'ein)
 
+(defcustom ein:gat-machine-types (split-string (string-trim (shell-command-to-string (format "gcloud compute machine-types list --filter=\"zone:%s\" --format=\"value[terminator=' '](name)\"" ein:gat-zone))))
+  "gcloud machine types."
+  :type '(repeat string)
+  :group 'ein)
+
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
   (if (ein:get-notebook)
@@ -106,16 +111,23 @@
   (when-let ((notebook (aand (ein:get-notebook)
 			     (ein:$notebook-notebook-name it)))
 	     (gat-executable "gat")
-	     (gat-chain-args (list (current-buffer) nil
-				   gat-executable nil "--project" ein:gat-project
-				   "--region" ein:gat-region "--zone" ein:gat-zone
-				   (if remote-p "run-remote" "run-local"))))
+	     (gat-chain-args `(,(current-buffer) nil
+			       ,gat-executable nil "--project" ,ein:gat-project
+			       "--region" ,ein:gat-region "--zone" ,ein:gat-zone
+			       ,@(if remote-p
+				     (append '("run-remote")
+					     `("--machine"
+					       ,(ein:gat-elicit-machine))
+					     `(,@(aif (ein:gat-elicit-disksizegb)
+						     (list "--disksizegb"
+							   (number-to-string it)))))
+				   (list "run-local")))))
     (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
       (if (or refresh (null pre-docker) (null post-docker))
 	  (magit-with-editor
 	    (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
 		   (base-image (ein:gat-elicit-base-image))
-		   (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
+		   (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
 	      (ein:gat-chain
 		(current-buffer)
 		(apply-partially
@@ -148,6 +160,33 @@
   (ein:completing-read
    "FROM image: " ein:gat-base-images nil 'confirm
    nil 'ein:gat-base-images (car ein:gat-base-images)))
+
+(defvar-local ein:gat-disksizegb-history '("default")
+  "Hopefully notebook-specific history of user entered disk size.")
+
+(defvar-local ein:gat-machine-history '("e2-standard-2")
+  "Hopefully notebook-specific history of user entered machine type.")
+
+(defun ein:gat-elicit-machine ()
+  (interactive)
+  (ein:completing-read
+   "Machine Type: " ein:gat-machine-types nil t nil
+   'ein:gat-machine-history (car ein:gat-machine-history)))
+
+(defun ein:gat-elicit-disksizegb ()
+  "Return nil for default [currently max(8, 6 + image size)]."
+  (interactive)
+  (cl-loop with answer
+	   do (setq answer (ein:completing-read
+			    "Disk GiB: " '("default") nil nil nil
+			    'ein:gat-disksizegb-history (car ein:gat-disksizegb-history)))
+	   if (string= answer "default")
+	   do (setq answer nil)
+	   else
+	   do (setq answer (string-to-number answer))
+	   end
+	   until (or (null answer) (> answer 0))
+	   finally return answer))
 
 (defun ein:gat-dockerfiles-state ()
   "Return cons of (pre-Dockerfile . post-Dockerfile).
