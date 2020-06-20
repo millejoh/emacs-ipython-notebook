@@ -39,6 +39,7 @@ README.rst: README.in.rst lisp/ein.el lisp/ein-notebook.el
 
 .PHONY: autoloads
 autoloads:
+	rm -f lisp/ein-autoloads.el
 	$(EMACS) -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
 
 .PHONY: clean
