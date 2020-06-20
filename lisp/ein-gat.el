@@ -130,20 +130,23 @@
 	      (magit-with-editor
 		(let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
 		       (base-image (ein:gat-elicit-base-image))
-		       (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
-		  (ein:gat-chain
-		    (current-buffer)
-		    (apply #'apply-partially
-			   #'ein:gat-chain
-			   (current-buffer)
-			   (apply #'apply-partially
-				  #'ein:gat-chain
-				  (current-buffer)
-				  (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
-					 (append gat-chain-args (list "log" "-f")))
-				  (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
-			   (append gat-chain-args (list "dockerfile" dockerfile)))
-		    with-editor-emacsclient-executable nil dockerfile)))
+		       (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
+		       (my-editor (when (and (boundp 'server-name)
+					     (server-running-p server-name))
+				    `("-s" ,server-name))))
+		  (apply #'ein:gat-chain
+			 (current-buffer)
+			 (apply #'apply-partially
+				#'ein:gat-chain
+				(current-buffer)
+				(apply #'apply-partially
+				       #'ein:gat-chain
+				       (current-buffer)
+				       (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+					      (append gat-chain-args (list "log" "-f")))
+				       (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
+				(append gat-chain-args (list "dockerfile" dockerfile)))
+			 `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
 	    (error "ein:gat--run-local-or-remote: magit not installed"))
 	(let ((magit-process-popup-time 0))
 	  (apply #'ein:gat-chain (current-buffer)
