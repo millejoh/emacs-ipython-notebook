@@ -48,6 +48,7 @@
 (require 'ein-pytools)
 (require 'ein-traceback)
 (require 'ein-python-send)
+(require 'ein-gat)
 
 (autoload 'ob-ein-anonymous-p "ob-ein")
 

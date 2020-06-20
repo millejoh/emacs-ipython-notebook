@@ -27,6 +27,9 @@
 
 (declare-function magit--process-coding-system "magit-process")
 (declare-function magit-call-process "magit-process")
+(declare-function magit-start-process "magit-process")
+(declare-function magit-process-sentinel "magit-process")
+(declare-function magit-with-editor "magit-git")
 
 (defcustom ein:gat-zone (string-trim (shell-command-to-string
 				      "gcloud config get-value compute/zone"))
@@ -67,17 +70,18 @@
   (interactive (split-string (read-string "gat ")))
   (if-let ((default-directory (ein:gat-where-am-i)))
       (let ((default-process-coding-system (magit--process-coding-system))
-	    (gat-executable "gat")
 	    (args `("--project" ,ein:gat-project
 		    "--region" ,ein:gat-region
 		    "--zone" ,ein:gat-zone
 		    ,@args))
 	    (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS=" (getenv "GAT_APPLICATION_CREDENTIALS"))
 				       process-environment)))
-	(apply #'magit-call-process gat-executable args))
+	(apply #'magit-call-process "gat" args))
     (ein:log 'error "ein:gat-call-gat: cannot ascertain cwd")
     -1))
 
+(defvar magit-process-popup-time)
+(defvar inhibit-magit-refresh)
 (defun ein:gat-chain (buffer callback &rest args)
   (declare (indent 0))
   (let* ((default-process-coding-system (magit--process-coding-system))
@@ -91,10 +95,9 @@
 			    (magit-process-sentinel proc event)
 			    (if (zerop (process-exit-status proc))
 				(when callback
-				  (save-excursion
-				    (with-current-buffer buffer
-				      (let ((magit-process-popup-time 0))
-					(funcall callback)))))
+				  (with-current-buffer buffer
+				    (let ((magit-process-popup-time 0))
+				      (funcall callback))))
 			      (ein:log 'error "ein:gat-chain: %s exited %s"
 				       (car args) (process-exit-status proc)))))
     process))
@@ -110,18 +113,17 @@
 (defun ein:gat--run-local-or-remote (remote-p refresh)
   (when-let ((notebook (aand (ein:get-notebook)
 			     (ein:$notebook-notebook-name it)))
-	     (gat-executable "gat")
-	     (gat-chain-args `(,(current-buffer) nil
-			       ,gat-executable nil "--project" ,ein:gat-project
-			       "--region" ,ein:gat-region "--zone" ,ein:gat-zone
-			       ,@(if remote-p
-				     (append '("run-remote")
-					     `("--machine"
-					       ,(ein:gat-elicit-machine))
-					     `(,@(aif (ein:gat-elicit-disksizegb)
-						     (list "--disksizegb"
-							   (number-to-string it)))))
-				   (list "run-local")))))
+	     (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+			       "--region" ,ein:gat-region "--zone"
+			       ,ein:gat-zone))
+	     (gat-chain-run (if remote-p
+				(append '("run-remote")
+					`("--machine"
+					  ,(ein:gat-elicit-machine))
+					`(,@(aif (ein:gat-elicit-disksizegb)
+						(list "--disksizegb"
+						      (number-to-string it)))))
+			      (list "run-local"))))
     (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
       (if (or refresh (null pre-docker) (null post-docker))
 	  (magit-with-editor
@@ -130,18 +132,23 @@
 		   (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
 	      (ein:gat-chain
 		(current-buffer)
-		(apply-partially
-		 #'ein:gat-chain
-		 (current-buffer)
-		 (apply #'apply-partially #'ein:gat-chain
-			(append gat-chain-args (list "--dockerfile" dockerfile)))
-		 gat-executable nil "--project" ein:gat-project
-		 "--region" ein:gat-region "--zone" ein:gat-zone
-		 "dockerfile" dockerfile)
+		(apply #'apply-partially
+		       #'ein:gat-chain
+		       (current-buffer)
+		       (apply #'apply-partially
+			      #'ein:gat-chain
+			      (current-buffer)
+			      (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+				     (append gat-chain-args (list "log" "-f")))
+			      (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
+		       (append gat-chain-args (list "dockerfile" dockerfile)))
 		with-editor-emacsclient-executable nil dockerfile)))
 	(let ((magit-process-popup-time 0))
-	  (apply #'ein:gat-chain (append gat-chain-args
-					 (list "--dockerfile" pre-docker))))))))
+	  (apply #'ein:gat-chain (current-buffer)
+		 (when remote-p
+		   (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+			  (append gat-chain-args (list "log" "-f"))))
+		 (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))))))
 
 (defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
 				 "jupyter/base-notebook"
