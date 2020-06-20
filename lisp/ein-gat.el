@@ -24,12 +24,12 @@
 ;;; Code:
 
 (require 'with-editor)
+(require 'magit-git nil t)
 
 (declare-function magit--process-coding-system "magit-process")
 (declare-function magit-call-process "magit-process")
 (declare-function magit-start-process "magit-process")
 (declare-function magit-process-sentinel "magit-process")
-(declare-function magit-with-editor "magit-git")
 
 (defcustom ein:gat-zone (string-trim (shell-command-to-string
 				      "gcloud config get-value compute/zone"))
@@ -126,23 +126,25 @@
 			      (list "run-local"))))
     (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
       (if (or refresh (null pre-docker) (null post-docker))
-	  (magit-with-editor
-	    (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
-		   (base-image (ein:gat-elicit-base-image))
-		   (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
-	      (ein:gat-chain
-		(current-buffer)
-		(apply #'apply-partially
-		       #'ein:gat-chain
-		       (current-buffer)
-		       (apply #'apply-partially
-			      #'ein:gat-chain
-			      (current-buffer)
-			      (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
-				     (append gat-chain-args (list "log" "-f")))
-			      (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
-		       (append gat-chain-args (list "dockerfile" dockerfile)))
-		with-editor-emacsclient-executable nil dockerfile)))
+	  (if (fboundp 'magit-with-editor)
+	      (magit-with-editor
+		(let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
+		       (base-image (ein:gat-elicit-base-image))
+		       (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook)))))
+		  (ein:gat-chain
+		    (current-buffer)
+		    (apply #'apply-partially
+			   #'ein:gat-chain
+			   (current-buffer)
+			   (apply #'apply-partially
+				  #'ein:gat-chain
+				  (current-buffer)
+				  (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+					 (append gat-chain-args (list "log" "-f")))
+				  (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
+			   (append gat-chain-args (list "dockerfile" dockerfile)))
+		    with-editor-emacsclient-executable nil dockerfile)))
+	    (error "ein:gat--run-local-or-remote: magit not installed"))
 	(let ((magit-process-popup-time 0))
 	  (apply #'ein:gat-chain (current-buffer)
 		 (when remote-p
