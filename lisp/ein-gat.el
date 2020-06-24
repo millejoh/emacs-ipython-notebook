@@ -54,6 +54,13 @@
   :type '(repeat string)
   :group 'ein)
 
+(defcustom ein:gat-gpu-types (split-string "nvidia-tesla-t4")
+  "https://accounts.google.com/o/oauth2/auth?client_id=[client-id]&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/compute&response_type=code
+curl -d code=[page-code] -d client_id=[client-id] -d client_secret=[client-secret] -d redirect_uri=urn:ietf:wg:oauth:2.0:oob -d grant_type=authorization_code https://accounts.google.com/o/oauth2/token
+curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis.com/compute/v1/projects/[project-id]/zones/[zone-id]/acceleratorTypes | jq -r -c '.items[].selfLink'"
+  :type '(repeat string)
+  :group 'ein)
+
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
   (if (ein:get-notebook)
@@ -122,7 +129,11 @@
 					  ,(ein:gat-elicit-machine))
 					`(,@(aif (ein:gat-elicit-disksizegb)
 						(list "--disksizegb"
-						      (number-to-string it)))))
+						      (number-to-string it))))
+					`(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
+							 (nonzero (not (zerop gpus))))
+					      (list "--gpus"
+						    (number-to-string gpus)))))
 			      (list "run-local"))))
     (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
       (if (or refresh (null pre-docker) (null post-docker))
@@ -176,6 +187,9 @@
 (defvar-local ein:gat-disksizegb-history '("default")
   "Hopefully notebook-specific history of user entered disk size.")
 
+(defvar-local ein:gat-gpus-history '("0")
+  "Hopefully notebook-specific history of user entered gpu count.")
+
 (defvar-local ein:gat-machine-history '("e2-standard-2")
   "Hopefully notebook-specific history of user entered machine type.")
 
@@ -184,6 +198,15 @@
   (ein:completing-read
    "Machine Type: " ein:gat-machine-types nil t nil
    'ein:gat-machine-history (car ein:gat-machine-history)))
+
+(defun ein:gat-elicit-gpus ()
+  (interactive)
+  (cl-loop for answer =
+	   (string-to-number (ein:completing-read
+			      "Number GPUs: " '("0") nil nil nil
+			      'ein:gat-gpus-history (car ein:gat-gpus-history)))
+	   until (>= answer 0)
+	   finally return answer))
 
 (defun ein:gat-elicit-disksizegb ()
   "Return nil for default [currently max(8, 6 + image size)]."
