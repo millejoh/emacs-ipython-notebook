@@ -16,6 +16,7 @@
  (depends-on "deferred")
  (depends-on "polymode")
  (depends-on "julia-mode")
+ (depends-on "magit")
  (depends-on "ess")
  (depends-on "f")
  (depends-on "s")

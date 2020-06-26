@@ -23,14 +23,14 @@
 
 ;;; Code:
 
-(require 'with-editor)
-(require 'magit-git nil t)
+(require 'magit-process nil t)
 
-(declare-function magit--process-coding-system "magit-process")
-(declare-function magit-call-process "magit-process")
-(declare-function magit-start-process "magit-process")
-(declare-function magit-process-sentinel "magit-process")
+;; (declare-function magit--process-coding-system "magit-process")
+;; (declare-function magit-call-process "magit-process")
+;; (declare-function magit-start-process "magit-process")
+;; (declare-function magit-process-sentinel "magit-process")
 
+(defconst ein:gat-status-cd 7 "gat exits 7 if requiring a change directory.")
 (defcustom ein:gat-zone (string-trim (shell-command-to-string
 				      "gcloud config get-value compute/zone"))
   "gcloud project zone."
@@ -61,6 +61,33 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
   :type '(repeat string)
   :group 'ein)
 
+(defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
+				 "jupyter/base-notebook"
+				 "jupyter/datascience-notebook"
+				 "jupyter/minimal-notebook"
+				 "jupyter/pyspark-notebook"
+				 "jupyter/r-notebook"
+				 "jupyter/scipy-notebook"
+				 "jupyter/tensorflow-notebook")
+  "Known https://hub.docker.com/u/jupyter images."
+  :type '(repeat (string :tag "FROM-appropriate docker image"))
+  :group 'ein)
+
+(defvar ein:gat-previous-worktree nil)
+
+(defconst ein:gat-master-worktree "master")
+
+(defvar ein:gat-current-worktree ein:gat-master-worktree)
+
+(defvar-local ein:gat-disksizegb-history '("default")
+  "Hopefully notebook-specific history of user entered disk size.")
+
+(defvar-local ein:gat-gpus-history '("0")
+  "Hopefully notebook-specific history of user entered gpu count.")
+
+(defvar-local ein:gat-machine-history '("e2-standard-2")
+  "Hopefully notebook-specific history of user entered machine type.")
+
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
   (if (ein:get-notebook)
@@ -87,8 +114,10 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
     (ein:log 'error "ein:gat-call-gat: cannot ascertain cwd")
     -1))
 
-(defvar magit-process-popup-time)
-(defvar inhibit-magit-refresh)
+;; (defvar magit-process-popup-time)
+;; (defvar inhibit-magit-refresh)
+;; (defvar magit-process-raise-error)
+;; (defvar magit-process-display-mode-line-error)
 (defun ein:gat-chain (buffer callback &rest args)
   (declare (indent 0))
   (let* ((default-process-coding-system (magit--process-coding-system))
@@ -97,17 +126,111 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 					    (getenv "GAT_APPLICATION_CREDENTIALS"))
 				    process-environment))
 	 (process (apply #'magit-start-process args)))
-    (set-process-sentinel process
-			  (lambda (proc event)
-			    (magit-process-sentinel proc event)
-			    (if (zerop (process-exit-status proc))
-				(when callback
-				  (with-current-buffer buffer
-				    (let ((magit-process-popup-time 0))
-				      (funcall callback))))
-			      (ein:log 'error "ein:gat-chain: %s exited %s"
-				       (car args) (process-exit-status proc)))))
+    (set-process-sentinel
+     process
+     (lambda (proc event)
+       (let* ((gat-status (process-exit-status proc))
+              (process-buf (process-buffer proc))
+              (section (process-get proc 'section))
+              (gat-status-cd-p (= gat-status ein:gat-status-cd))
+              new-worktree-dir)
+	 (let ((magit-process-display-mode-line-error
+		(if gat-status-cd-p nil magit-process-display-mode-line-error))
+	       (magit-process-raise-error
+		(if gat-status-cd-p nil magit-process-raise-error)))
+	   (magit-process-sentinel proc event))
+	 (cond
+          ((or (zerop gat-status) gat-status-cd-p)
+           (when (and gat-status-cd-p (buffer-live-p process-buf))
+             (alet (with-current-buffer process-buf
+                     (buffer-substring-no-properties (oref section content)
+                                                     (oref section end)))
+               (setq new-worktree-dir (progn (string-match "^cd\\s-+\\(\\S-+\\)" it)
+                                             (match-string 1 it)))))
+           (when callback
+             (with-current-buffer buffer
+               (let ((magit-process-popup-time 0))
+                 (apply callback (when new-worktree-dir
+                                   `(:worktree-dir ,new-worktree-dir)))))))
+          (t
+           (ein:log 'error "ein:gat-chain: %s exited %s"
+		     (car args) (process-exit-status proc)))))))
     process))
+
+(defun ein:gat--path (archepath worktree-dir)
+  "Form new relative path from ARCHEPATH root, WORKTREE-DIR subroot, and ARCHEPATH leaf.
+
+With WORKTREE-DIR of 3/4/1/2/.gat/fantab,
+1/2/eager.ipynb -> 1/2/.gat/fantab/eager.ipynb
+1/2/.gat/fubar/subdir/eager.ipynb -> 1/2/.gat/fantab/subdir/eager.ipynb
+
+With WORKTREE-DIR of /home/dick/gat/test-repo2
+.gat/getout/eager.ipynb -> eager.ipynb
+"
+  (when-let ((root (directory-file-name (or (awhen (cl-search ".gat/" archepath :from-end)
+                                              (cl-subseq archepath 0 it))
+                                            (file-name-directory archepath)
+                                            ""))))
+    (if (zerop (length root))
+        (concat (replace-regexp-in-string
+                 "^\\./" ""
+                 (file-name-as-directory
+                  (cl-subseq worktree-dir
+                             (or (cl-search ".gat/" worktree-dir :from-end)
+                                 (length worktree-dir)))))
+                (file-name-nondirectory archepath))
+      (concat (file-name-as-directory
+               (cl-subseq worktree-dir
+                          (cl-search root worktree-dir :from-end)))
+              (or (awhen (string-match "\\(\\.gat/[^/]+/\\)" archepath)
+                    (cl-subseq archepath (+ it (length (match-string 1 archepath)))))
+                  (file-name-nondirectory archepath))))))
+
+(defun ein:gat-edit (&optional _refresh)
+  (interactive "P")
+  (when-let ((notebook (ein:get-notebook))
+             (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+                               "--region" ,ein:gat-region "--zone"
+                               ,ein:gat-zone)))
+    (if (special-variable-p 'magit-process-popup-time)
+	(let ((magit-process-popup-time -1))
+	  (apply #'ein:gat-chain (current-buffer)
+                 (cl-function
+                  (lambda (&rest args &key worktree-dir)
+                    (ein:notebook-open
+                     (ein:$notebook-url-or-port notebook)
+                     (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                    worktree-dir)
+                     (ein:$notebook-kernelspec notebook))))
+		 (append gat-chain-args
+                         (list "edit"
+                               (alet (ein:gat-elicit-worktree t)
+                                 (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                                 (setq ein:gat-current-worktree it))))))
+      (error "ein:gat-create: magit not installed"))))
+
+(defun ein:gat-create (&optional _refresh)
+  (interactive "P")
+  (when-let ((notebook (ein:get-notebook))
+             (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+                               "--region" ,ein:gat-region "--zone"
+                               ,ein:gat-zone)))
+    (if (special-variable-p 'magit-process-popup-time)
+	(let ((magit-process-popup-time -1))
+	  (apply #'ein:gat-chain (current-buffer)
+                 (cl-function
+                  (lambda (&rest args &key worktree-dir)
+                    (ein:notebook-open
+                     (ein:$notebook-url-or-port notebook)
+                     (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                    worktree-dir)
+                     (ein:$notebook-kernelspec notebook))))
+		 (append gat-chain-args
+                         (list "create"
+                               (alet (ein:gat-elicit-worktree nil)
+                                 (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                                 (setq ein:gat-current-worktree it))))))
+      (error "ein:gat-create: magit not installed"))))
 
 (defsubst ein:gat-run-local (&optional refresh)
   (interactive "P")
@@ -159,39 +282,20 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 				(append gat-chain-args (list "dockerfile" dockerfile)))
 			 `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
 	    (error "ein:gat--run-local-or-remote: magit not installed"))
-	(let ((magit-process-popup-time 0))
-	  (apply #'ein:gat-chain (current-buffer)
-		 (when remote-p
-		   (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
-			  (append gat-chain-args (list "log" "-f"))))
-		 (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))))))
-
-(defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
-				 "jupyter/base-notebook"
-				 "jupyter/datascience-notebook"
-				 "jupyter/minimal-notebook"
-				 "jupyter/pyspark-notebook"
-				 "jupyter/r-notebook"
-				 "jupyter/scipy-notebook"
-				 "jupyter/tensorflow-notebook")
-  "Known https://hub.docker.com/u/jupyter images."
-  :type '(repeat (string :tag "FROM-appropriate docker image"))
-  :group 'ein)
+	(if (special-variable-p 'magit-process-popup-time)
+	    (let ((magit-process-popup-time 0))
+	      (apply #'ein:gat-chain (current-buffer)
+		     (when remote-p
+		       (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+			      (append gat-chain-args (list "log" "-f"))))
+		     (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))
+	  (error "ein:gat--run-local-or-remote: magit not installed"))))))
 
 (defun ein:gat-elicit-base-image ()
   "Using a defcustom as HIST is suspect but pithy."
   (ein:completing-read
    "FROM image: " ein:gat-base-images nil 'confirm
    nil 'ein:gat-base-images (car ein:gat-base-images)))
-
-(defvar-local ein:gat-disksizegb-history '("default")
-  "Hopefully notebook-specific history of user entered disk size.")
-
-(defvar-local ein:gat-gpus-history '("0")
-  "Hopefully notebook-specific history of user entered gpu count.")
-
-(defvar-local ein:gat-machine-history '("e2-standard-2")
-  "Hopefully notebook-specific history of user entered machine type.")
 
 (defun ein:gat-elicit-machine ()
   (interactive)
@@ -207,6 +311,18 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 			      'ein:gat-gpus-history (car ein:gat-gpus-history)))
 	   until (>= answer 0)
 	   finally return answer))
+
+(defun ein:gat-elicit-worktree (extant)
+  (let ((already (split-string
+                  (string-trim
+                   (shell-command-to-string
+                    (format "gat --project %s --region %s --zone %s list"
+                            ein:gat-project ein:gat-region ein:gat-zone))))))
+    (if extant
+        (ein:completing-read
+         "Experiment: " already nil t nil nil
+         ein:gat-previous-worktree)
+      (read-string "New experiment: "))))
 
 (defun ein:gat-elicit-disksizegb ()
   "Return nil for default [currently max(8, 6 + image size)]."
