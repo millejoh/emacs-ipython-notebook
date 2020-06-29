@@ -321,11 +321,11 @@ server command."
           until (car (ein:jupyter-server-conn-info))
           do (sleep-for 0 500)
           finally do
-          (with-current-buffer *ein:jupyter-server-buffer-name*
-            (setq ein:jupyter-server-notebook-directory
-                  (convert-standard-filename notebook-directory)))
-          (if (car (ein:jupyter-server-conn-info))
-              (with-current-buffer *ein:jupyter-server-buffer-name*
+          (-if-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
+                     (url-or-port (ein:jupyter-server-conn-info)))
+              (with-current-buffer buffer
+                (setq ein:jupyter-server-notebook-directory
+                      (convert-standard-filename notebook-directory))
                 (add-hook 'kill-buffer-query-functions
                           (lambda () (or (not (ein:jupyter-server-process))
                                          (ein:jupyter-server-stop nil)))
