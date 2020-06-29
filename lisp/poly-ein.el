@@ -314,7 +314,7 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 (defun poly-ein-init-input-cell (_type)
   "Contrary to intuition, this inits the entire buffer of input cells
 (collectively denoted by the chunkmode pm-inner/ein-input-cell), not each individual one."
-  (mapc (lambda (f) (add-to-list 'after-change-functions f))
+  (mapc (lambda (f) (add-hook 'after-change-functions f t t))
         (buffer-local-value 'after-change-functions (pm-base-buffer)))
   (poly-ein-copy-state (pm-base-buffer) (current-buffer))
   (setq-local font-lock-dont-widen t)

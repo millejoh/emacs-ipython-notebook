@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'magit-process nil t)
+(declare-function ein:jupyter-running-notebook-directory "ein-jupyter")
 
 ;; (declare-function magit--process-coding-system "magit-process")
 ;; (declare-function magit-call-process "magit-process")
@@ -90,11 +91,10 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
-  (if (ein:get-notebook)
-      (let ((where (file-name-as-directory default-directory)))
-	(prog1 where
-	  (when print-message
-	    (message where))))
+  (aif (ein:jupyter-running-notebook-directory)
+      (prog1 it
+        (when print-message
+          (message it)))
     (prog1 nil
       (when print-message
 	(message "nowhere")))))

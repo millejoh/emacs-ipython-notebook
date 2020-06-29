@@ -121,6 +121,13 @@ with the call to the jupyter notebook."
 (defconst *ein:jupyter-server-process-name* "ein server")
 (defconst *ein:jupyter-server-buffer-name*
   (format "*%s*" *ein:jupyter-server-process-name*))
+(defvar-local ein:jupyter-server-notebook-directory nil
+  "Keep track of prevailing --notebook-dir argument.")
+
+(defun ein:jupyter-running-notebook-directory ()
+  (-when-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
+               (process (get-buffer-process buffer)))
+    (buffer-local-value 'ein:jupyter-server-notebook-directory buffer)))
 
 (defun ein:jupyter-get-default-kernel (kernels)
   (cond (ein:%notebooklist-new-kernel%
@@ -167,24 +174,21 @@ with the call to the jupyter notebook."
     (set-process-query-on-exit-flag proc nil)
     proc))
 
-(defun ein:jupyter-server-conn-info (&optional buffer-name)
-  "Return the url-or-port and password for BUFFER or the global session."
-  (unless buffer-name
-    (setq buffer-name *ein:jupyter-server-buffer-name*))
-  (let ((buffer (get-buffer buffer-name))
-        (result '(nil nil)))
-    (if buffer
-        (with-current-buffer buffer
-          (save-excursion
-            (goto-char (point-max))
-            (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
-                                nil "") ;; important if we start-stop-start
-            (when (re-search-forward "\\([[:alnum:]]+\\) is\\( now\\)? running" nil t)
-              (let ((hub-p (cl-search "jupyterhub" (downcase (match-string 1)))))
-                (when (re-search-forward "\\(https?://[^:]*:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t)
-                  (let ((raw-url (match-string 1))
-                        (token (or (match-string 2) (and (not hub-p) ""))))
-                    (setq result (list (ein:url raw-url) token)))))))))
+(defun ein:jupyter-server-conn-info ()
+  "Return the url-or-port and password for global session."
+  (let ((result '(nil nil)))
+    (when (ein:jupyter-running-notebook-directory)
+      (with-current-buffer *ein:jupyter-server-buffer-name*
+        (save-excursion
+          (goto-char (point-max))
+          (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
+                              nil "") ;; important if we start-stop-start
+          (when (re-search-forward "\\([[:alnum:]]+\\) is\\( now\\)? running" nil t)
+            (let ((hub-p (cl-search "jupyterhub" (downcase (match-string 1)))))
+              (when (re-search-forward "\\(https?://[^:]*:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?" nil t)
+                (let ((raw-url (match-string 1))
+                      (token (or (match-string 2) (and (not hub-p) ""))))
+                  (setq result (list (ein:url raw-url) token)))))))))
     result))
 
 (defun ein:jupyter-server-login-and-open (&optional callback)
@@ -314,10 +318,17 @@ server command."
                                            `("--port" ,(format "%s" port)
                                              "--port-retries" "0")))))
     (cl-loop repeat 30
-          until (car (ein:jupyter-server-conn-info *ein:jupyter-server-buffer-name*))
+          until (car (ein:jupyter-server-conn-info))
           do (sleep-for 0 500)
           finally do
-          (unless (car (ein:jupyter-server-conn-info *ein:jupyter-server-buffer-name*))
+          (if (car (ein:jupyter-server-conn-info))
+              (with-current-buffer *ein:jupyter-server-buffer-name*
+                (add-hook 'kill-buffer-query-functions
+                          (lambda () (or (not (ein:jupyter-server-process))
+                                         (ein:jupyter-server-stop nil)))
+                          nil t)
+                (setq ein:jupyter-server-notebook-directory
+                      (convert-standard-filename notebook-directory)))
             (ein:log 'warn "Jupyter server failed to start, cancelling operation")
             (ein:jupyter-server-stop t)))
     (when (and (not no-login-p) (ein:jupyter-server-process))
@@ -338,7 +349,7 @@ server command."
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   (interactive)
-  (ein:and-let* ((url-or-port (first (ein:jupyter-server-conn-info)))
+  (ein:and-let* ((url-or-port (car (ein:jupyter-server-conn-info)))
                  (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
     (cl-loop repeat 10
@@ -367,6 +378,7 @@ server command."
       (kill-buffer (ein:shared-output-buffer)))
     (when log
       (with-current-buffer *ein:jupyter-server-buffer-name*
-        (write-region (point-min) (point-max) log)))))
+        (write-region (point-min) (point-max) log)))
+    t))
 
 (provide 'ein-jupyter)

@@ -102,9 +102,7 @@ ERRBACK of arity 1 for the contents."
                                                &key data symbol-status response
                                                &allow-other-keys)
   (let (content)
-    (if (< (ein:notebook-version-numeric url-or-port) 3)
-        (setq content (ein:new-content-legacy url-or-port path data))
-      (setq content (ein:new-content url-or-port path data)))
+    (setq content (ein:new-content url-or-port path data))
     (when callback
       (funcall callback content))))
 
@@ -149,25 +147,6 @@ ERRBACK of arity 1 for the contents."
   (aif (gethash url-or-port *ein:content-hierarchy*) it
     (ein:log 'warn "No recorded content hierarchy for %s" url-or-port)
     nil))
-
-(defun ein:new-content-legacy (url-or-port path data)
-  "Content API in 2.x a bit inconsistent."
-  (if (plist-get data :type)
-      (ein:new-content url-or-port path data)
-    (let ((content (make-ein:$content
-                    :url-or-port url-or-port
-                    :notebook-version (ein:notebook-version-numeric url-or-port)
-                    :path path)))
-      (setf (ein:$content-name content) (substring path (or (cl-position ?/ path) 0))
-            (ein:$content-path content) path
-            (ein:$content-type content) "directory"
-            ;;(ein:$content-created content) (plist-get data :created)
-            ;;(ein:$content-last-modified content) (plist-get data :last_modified)
-            (ein:$content-format content) nil
-            (ein:$content-writable content) nil
-            (ein:$content-mimetype content) nil
-            (ein:$content-raw-content content) (ein:fix-legacy-content-data data))
-      content)))
 
 (defun ein:new-content (url-or-port path data)
   ;; data is like (:size 72 :content nil :writable t :path Untitled7.ipynb :name Untitled7.ipynb :type notebook)

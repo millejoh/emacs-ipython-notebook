@@ -110,7 +110,6 @@
  (Given "I finally stop the server"))
 
 (Fail
- (When "remove git repo")
  (if noninteractive
      (ein:testing-after-scenario)
    (keyboard-quit))) ;; useful to prevent emacs from quitting

@@ -420,7 +420,7 @@ This is equivalent to do ``C-c`` in the console program."
     (ein:notebook-mode)
     (ein:notebook--notification-setup notebook)
     (setq ein:%notebook% notebook)
-    (poly-ein-fontify-buffer (ein:notebook-buffer notebook))))
+    (poly-ein-fontify-buffer (current-buffer))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
@@ -520,13 +520,6 @@ This is equivalent to do ``C-c`` in the console program."
                        it
                      (make-hash-table)))
       (cells . ,(apply #'vector all-cells)))))
-
-(defun ein:notebook-maybe-save-notebook (notebook &optional callback cbargs)
-  (if (cl-some #'(lambda (ws)
-                   (buffer-modified-p
-                    (ein:worksheet-buffer ws)))
-               (ein:$notebook-worksheets notebook))
-      (ein:notebook-save-notebook notebook callback cbargs)))
 
 (defun ein:notebook-save-notebook (notebook &optional callback cbargs errback)
   (condition-case err
@@ -990,6 +983,12 @@ the first argument and CBARGS as the rest of arguments."
 
 
 (add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
+
+;; I tried to make this buffer-local, but when rewriting ein:notebook-avoid-recursion,
+;; (with-current-buffer b
+;;   (let (kill-buffer-query-functions)
+;;     (kill-buffer)))
+;; is problematic.
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
 (ein:python-send--init)
 

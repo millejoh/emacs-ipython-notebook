@@ -189,15 +189,19 @@
       (with-temp-buffer
         (shell-command (format "rm -rf %s" git-dir))))))
 
-(When "^new \\(.+\\)\\( in \"\\(.+\\)\"\\)? notebook$"
-  (lambda (prefix _path path)
+(When "^new \\(.+\\) notebook\\( in \".+\"\\)?\\(\\)$"
+  (lambda (prefix path workaround)
     (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (let (notebook)
         (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
           (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
-                       (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
+                       (found (seq-some (lambda (x) (and (cl-search prefix x) x)) kslist))
                        (ks (ein:get-kernelspec url-or-port found)))
-            (setq notebook (ein:testing-new-notebook url-or-port ks nil path))))
+            (setq notebook
+                  (ein:testing-new-notebook
+                   url-or-port ks nil
+                   (when path (progn (string-match "\"\\([^\"]+\\)\"" path)
+                                     (match-string 1 path)))))))
         (should notebook)
         (switch-to-buffer (ein:notebook-buffer notebook))))))
 
