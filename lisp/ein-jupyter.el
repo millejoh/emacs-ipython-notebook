@@ -125,9 +125,9 @@ with the call to the jupyter notebook."
   "Keep track of prevailing --notebook-dir argument.")
 
 (defun ein:jupyter-running-notebook-directory ()
-  (-when-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
-               (process (get-buffer-process buffer)))
-    (buffer-local-value 'ein:jupyter-server-notebook-directory buffer)))
+  (when (ein:jupyter-server-process)
+    (buffer-local-value 'ein:jupyter-server-notebook-directory
+                        (get-buffer *ein:jupyter-server-buffer-name*))))
 
 (defun ein:jupyter-get-default-kernel (kernels)
   (cond (ein:%notebooklist-new-kernel%
@@ -177,7 +177,7 @@ with the call to the jupyter notebook."
 (defun ein:jupyter-server-conn-info ()
   "Return the url-or-port and password for global session."
   (let ((result '(nil nil)))
-    (when (ein:jupyter-running-notebook-directory)
+    (when (ein:jupyter-server-process)
       (with-current-buffer *ein:jupyter-server-buffer-name*
         (save-excursion
           (goto-char (point-max))
@@ -321,14 +321,15 @@ server command."
           until (car (ein:jupyter-server-conn-info))
           do (sleep-for 0 500)
           finally do
+          (with-current-buffer *ein:jupyter-server-buffer-name*
+            (setq ein:jupyter-server-notebook-directory
+                  (convert-standard-filename notebook-directory)))
           (if (car (ein:jupyter-server-conn-info))
               (with-current-buffer *ein:jupyter-server-buffer-name*
                 (add-hook 'kill-buffer-query-functions
                           (lambda () (or (not (ein:jupyter-server-process))
                                          (ein:jupyter-server-stop nil)))
-                          nil t)
-                (setq ein:jupyter-server-notebook-directory
-                      (convert-standard-filename notebook-directory)))
+                          nil t))
             (ein:log 'warn "Jupyter server failed to start, cancelling operation")
             (ein:jupyter-server-stop t)))
     (when (and (not no-login-p) (ein:jupyter-server-process))

@@ -627,7 +627,8 @@ NAME is any non-empty string that does not contain '/' or '\\'.
               (aif ein:%notebook%
                   (ein:notebook-tidy-opened-notebooks it))))
           buffers)
-    (ein:notebook-avoid-recursion (mapc (lambda (b) (ignore-errors (kill-buffer b))) buffers))))
+    (ein:notebook-avoid-recursion
+     (mapc (lambda (b) (ignore-errors (kill-buffer b))) buffers))))
 
 (defun ein:notebook-kill-buffer-query ()
   (if-let ((notebook (ein:get-notebook))
