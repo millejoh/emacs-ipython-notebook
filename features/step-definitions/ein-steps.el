@@ -175,29 +175,29 @@
     (cl-letf (((symbol-function 'read-string) (lambda (&rest _args) branch)))
       (call-interactively #'ein:gat-create))))
 
-(When "^new git repo$"
-  (lambda ()
-    (Given "remove git repo")
-    (let ((git-dir (concat default-directory "features/test-repo")))
+(When "^new git repo \"\\(.+\\)\"$"
+  (lambda (repo)
+    (Given (format "remove git repo \"%s\"" repo))
+    (let ((git-dir (concat default-directory "features/" repo)))
       (make-directory git-dir)
       (with-temp-buffer
         (shell-command (format "git init -q %s" git-dir))))))
 
-(When "^remove git repo$"
-  (lambda ()
-    (let ((git-dir (concat default-directory "features/test-repo")))
+(When "^remove git repo \"\\(.+\\)\"$"
+  (lambda (repo)
+    (let ((git-dir (concat default-directory "features/" repo)))
       (with-temp-buffer
         (shell-command (format "rm -rf %s" git-dir))))))
 
-(When "^new \\(.+\\) notebook$"
-  (lambda (prefix)
+(When "^new \\(.+\\)\\( in \"\\(.+\\)\"\\)? notebook$"
+  (lambda (prefix _path path)
     (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (let (notebook)
         (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
           (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
                        (found (seq-some (lambda (x) (and (search prefix x) x)) kslist))
                        (ks (ein:get-kernelspec url-or-port found)))
-            (setq notebook (ein:testing-new-notebook url-or-port ks))))
+            (setq notebook (ein:testing-new-notebook url-or-port ks nil path))))
         (should notebook)
         (switch-to-buffer (ein:notebook-buffer notebook))))))
 

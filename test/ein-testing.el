@@ -112,15 +112,15 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                 continue)
       (error "Timeout: %s" predicate))))
 
-(defun ein:testing-new-notebook (url-or-port ks &optional retry)
+(defun ein:testing-new-notebook (url-or-port ks &optional retry subdir)
   (condition-case err
       (let (notebook)
         (ein:testing-wait-until (lambda ()
                                   (ein:notebooklist-list-get url-or-port))
                                 nil 10000 1000)
         (ein:notebooklist-new-notebook url-or-port ks
-                                       (lambda (nb created)
-                                         (setq notebook nb)))
+                                       (lambda (nb created) (setq notebook nb))
+                                       nil nil subdir)
         (ein:testing-wait-until (lambda ()
                                   (and notebook
                                        (ein:aand (ein:$notebook-kernel notebook)
@@ -133,7 +133,7 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                  (progn (ein:log 'error notice) nil)
                (ein:log 'info notice)
                (sleep-for 0 1500)
-               (ein:testing-new-notebook url-or-port ks t))))))
+               (ein:testing-new-notebook url-or-port ks t subdir))))))
 
 (defadvice ert-run-tests-batch (after ein:testing-dump-logs-hook activate)
   "Hook `ein:testing-dump-logs-hook' because `kill-emacs-hook'

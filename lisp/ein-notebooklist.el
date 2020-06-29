@@ -114,11 +114,8 @@ This function adds NBLIST to `ein:notebooklist-map'."
   "Get an instance of `ein:$notebooklist' by URL-OR-PORT as a key."
   (gethash url-or-port ein:notebooklist-map))
 
-(defun ein:notebooklist-url (url-or-port path)
-  (let* ((version (ein:notebook-version-numeric url-or-port))
-         (base-path (cond ((= version 2) "api/notebooks")
-                          (t "api/contents"))))
-    (ein:url url-or-port base-path path)))
+(defsubst ein:notebooklist-url (url-or-port &rest paths)
+  (apply #'ein:url url-or-port "api/contents" paths))
 
 (defun ein:notebooklist-sentinel (url-or-port process event)
   "Remove URL-OR-PORT from ein:notebooklist-map when PROCESS dies"
@@ -255,7 +252,7 @@ This function is called via `ein:notebook-after-rename-hook'."
 (add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
 
 ;;;###autoload
-(defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry)
+(defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry explicit-path)
   (interactive (list (ein:notebooklist-ask-url-or-port)
                      (ein:completing-read
                       "Select kernel: "
@@ -263,7 +260,7 @@ This function is called via `ein:notebook-after-rename-hook'."
                        (ein:$notebooklist-url-or-port ein:%notebooklist%))
                       nil t nil nil "default" nil)))
   (let* ((notebooklist (ein:notebooklist-list-get url-or-port))
-         (path (ein:$notebooklist-path notebooklist))
+         (path (or explicit-path (ein:$notebooklist-path notebooklist)))
          (url (ein:notebooklist-url url-or-port path)))
     (ein:query-singleton-ajax
      url
@@ -272,9 +269,11 @@ This function is called via `ein:notebook-after-rename-hook'."
      :headers (list (cons "Content-Type" "application/json"))
      :parser #'ein:json-read
      :error (apply-partially #'ein:notebooklist-new-notebook-error
-                             url-or-port kernelspec path callback no-pop retry)
+                             url-or-port kernelspec callback no-pop retry explicit-path)
      :success (apply-partially #'ein:notebooklist-new-notebook-success
-                               url-or-port kernelspec path callback no-pop))))
+                               url-or-port kernelspec
+                               path
+                               callback no-pop))))
 
 (cl-defun ein:notebooklist-new-notebook-success (url-or-port
                                                  kernelspec
@@ -283,17 +282,12 @@ This function is called via `ein:notebook-after-rename-hook'."
                                                  no-pop
                                                  &key data
                                                  &allow-other-keys)
-  (let ((nbname (plist-get data :name))
-        (nbpath (plist-get data :path)))
-    (when (< (ein:notebook-version-numeric url-or-port) 3)
-      (if (string= nbpath "")
-          (setq nbpath nbname)
-        (setq nbpath (format "%s/%s" nbpath nbname))))
+  (let ((nbpath (plist-get data :path)))
     (ein:notebook-open url-or-port nbpath kernelspec callback nil no-pop)
     (ein:notebooklist-open* url-or-port path)))
 
 (cl-defun ein:notebooklist-new-notebook-error
-    (url-or-port kernelspec path callback no-pop retry
+    (url-or-port kernelspec callback no-pop retry explicit-path
                  &key symbol-status error-thrown &allow-other-keys)
   (let ((notice (format "ein:notebooklist-new-notebook-error: %s %s"
                         symbol-status error-thrown)))
@@ -301,7 +295,7 @@ This function is called via `ein:notebook-after-rename-hook'."
         (ein:log 'error notice)
       (ein:log 'info notice)
       (sleep-for 0 1500)
-      (ein:notebooklist-new-notebook url-or-port kernelspec callback no-pop t))))
+      (ein:notebooklist-new-notebook url-or-port kernelspec callback no-pop t explicit-path))))
 
 ;;;###autoload
 (defun ein:notebooklist-new-notebook-with-name
