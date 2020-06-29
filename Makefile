@@ -48,7 +48,6 @@ clean:
 	rm -rf log
 	rm -f features/Untitled*.ipynb
 	rm -f features/Renamed.ipynb
-	rm -f test/Untitled*.ipynb
 
 $(CASK_DIR): Cask
 	$(CASK) install

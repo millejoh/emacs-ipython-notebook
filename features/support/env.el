@@ -24,9 +24,6 @@
 (unless (member "jupyterhub" ecukes-include-tags)
   (!cons "jupyterhub" ecukes-exclude-tags))
 
-(when (file-exists-p (concat default-directory "features/support/test-poly.el"))
-  (load-file (concat default-directory "features/support/test-poly.el")))
-
 (when (getenv "GITHUB_ACTIONS")
   (cl-assert (not (eq system-type 'darwin)))
   (!cons "memory" ecukes-exclude-tags)
@@ -113,6 +110,7 @@
  (Given "I finally stop the server"))
 
 (Fail
+ (When "remove git repo")
  (if noninteractive
      (ein:testing-after-scenario)
    (keyboard-quit))) ;; useful to prevent emacs from quitting
