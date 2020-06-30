@@ -420,9 +420,7 @@ This is equivalent to do ``C-c`` in the console program."
     (ein:notebook-mode)
     (ein:notebook--notification-setup notebook)
     (setq ein:%notebook% notebook)
-    (if (eq 'ein:worksheet (type-of ws))
-        (poly-ein-fontify-buffer (current-buffer))
-      (poly-ein-wtf-buffer (current-buffer)))))
+    (poly-ein-fontify-buffer (current-buffer))))
 
 (defun ein:notebook--notification-setup (notebook)
   (ein:notification-setup
