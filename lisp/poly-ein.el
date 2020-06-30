@@ -245,6 +245,18 @@ TYPE can be 'body, nil."
       (pm-map-over-spans
        (lambda (span)
          (with-current-buffer (pm-span-buffer span)
+           (message "hey %s" (buffer-name))
+           (cl-assert (eq font-lock-function 'poly-lock-mode))
+           (jit-lock-function (nth 1 span))))))))
+
+(defun poly-ein-wtf-buffer (buffer)
+  "Called from `ein:notebook--worksheet-render'"
+  (with-current-buffer buffer
+    (save-excursion
+      (pm-map-over-spans
+       (lambda (span)
+         (with-current-buffer (pm-span-buffer span)
+           (message "hey %s" (buffer-name))
            (cl-assert (eq font-lock-function 'poly-lock-mode))
            (jit-lock-function (nth 1 span))))))))
 
@@ -330,6 +342,8 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 					  ido-temp-list)))))
 	    nil t)
   (ein:notebook-mode)
+  (backtrace)
+  (message "what %s %s" ein:notebook-mode (buffer-name))
   (unless (eq 'ein:notebook-mode (caar minor-mode-map-alist))
     ;; move `ein:notebook-mode' to the head of `minor-mode-map-alist'
     (when-let ((entry (assq 'ein:notebook-mode minor-mode-map-alist)))
