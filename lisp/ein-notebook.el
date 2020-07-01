@@ -60,15 +60,13 @@
 
 (make-obsolete-variable 'ein:notebook-discard-output-on-save nil "0.17.0")
 
+(make-obsolete-variable 'ein:notebook-after-rename-hook nil "0.17.0")
+
 (defvar *ein:notebook--pending-query* (make-hash-table :test 'equal)
   "A map: (URL-OR-PORT . PATH) => t/nil")
 
 (defun ein:notebook-cell-has-image-output-p (_ignore cell)
   (ein:cell-has-image-output-p cell))
-
-(defvar ein:notebook-after-rename-hook nil
-  "Hooks to run after notebook is renamed successfully.
-Current buffer for these functions is set to the notebook buffer.")
 
 (defconst ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 
@@ -982,8 +980,6 @@ the first argument and CBARGS as the rest of arguments."
                         kill-buffer-query-functions)))
      ,@body))
 
-
-(add-hook 'kill-emacs-query-functions 'ein:notebook-close-notebooks t)
 
 ;; I tried to make this buffer-local, but when rewriting ein:notebook-avoid-recursion,
 ;; (with-current-buffer b

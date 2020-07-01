@@ -1,6 +1,6 @@
-========================================================================
- EIN -- Emacs IPython Notebook |build-status| |melpa-dev| |melpa-stable|
-========================================================================
+==========================================================
+ EIN -- Emacs IPython Notebook |build-status| |melpa-dev|
+==========================================================
 
 .. COMMENTARY (see Makefile)
 
@@ -59,13 +59,13 @@ How do I...
 -----------
 
 ... report a bug?
-   File an issue using ``M-x ein:dev-bug-report-template``.
+   Note EIN is tested only for *released* GNU Emacs versions
+   .. CI VERSION (see Makefile)
+   and later.  Pre-release versions will not work.
 
    First try ``emacs -Q -f package-initialize --eval "(setq debug-on-error t)"`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
-   Note EIN is tested only for *released* GNU Emacs versions
-   .. CI VERSION (see Makefile)
-   and later.  Pre-release versions are unlikely to work.
+   Then file an issue using ``M-x ein:dev-bug-report-template``.
 
 ... display images inline?
    We find inserting images into emacs disruptive, and so default to spawning an external viewer.  To override this,
@@ -129,6 +129,31 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython
 .. _scimax: https://github.com/jkitchin/scimax
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
+
+Google Cloud Engine
+===================
+Install the `gat utility`_.  Then from a notebook buffer::
+
+   M-x ein:gat-run-local
+
+attempts running your containerized notebook locally.  If that succeeds, try::
+
+   M-x ein:gat-run-remote
+
+to attempt the same run in Google Cloud Engine.
+
+You can fork your notebook via::
+
+   M-x ein:gat-create
+
+then switch between forks via::
+
+   M-x ein:gat-edit
+
+See `gat usage`_ for more information.
+
+.. _gat utility: https://dickmaogat.readthedocs.io/en/latest/install.html
+.. _gat usage: https://dickmaogat.readthedocs.io/en/latest/usage.html
 
 Keymap (C-h m)
 ==============

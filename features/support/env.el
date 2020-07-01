@@ -35,6 +35,8 @@
 
 (defvar ein:testing-jupyter-server-root (f-parent (f-dirname load-file-name)))
 
+(defconst ein:testing-project-path (ecukes-project-path))
+
 (defun ein:testing-after-scenario ()
   (ein:testing-flush-queries)
   (with-current-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info)))
@@ -76,8 +78,13 @@
 
 (Setup
  (ein:dev-start-debug)
+ (setenv "GAT_APPLICATION_CREDENTIALS" "nonempty")
  (custom-set-variables '(python-indent-guess-indent-offset-verbose nil)
-                       '(ein:jupyter-use-containers nil))
+                       '(ein:jupyter-use-containers nil)
+                       '(ein:gat-zone "abc")
+                       '(ein:gat-region "abc")
+                       '(ein:gat-project "abc")
+                       '(ein:gat-machine-types '("abc")))
  (setq ein:jupyter-default-kernel
        (cl-loop with cand = ""
              for (k . spec) in
@@ -110,6 +117,8 @@
  (Given "I finally stop the server"))
 
 (Fail
+ (let ((default-directory ein:testing-project-path))
+   (And "remove git repo \"test-repo\""))
  (if noninteractive
      (ein:testing-after-scenario)
    (keyboard-quit))) ;; useful to prevent emacs from quitting

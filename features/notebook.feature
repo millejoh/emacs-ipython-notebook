@@ -90,6 +90,7 @@ Scenario: Assign variable, save, kill notebook buffer, get it back, check variab
   And I wait for the smoke to clear
   And I kill buffer and reopen
   And I press "C-c C-b"
+  And I dump buffer
   And I type "b"
   And I wait for cell to execute
   Then I should see "3.1415"

@@ -34,6 +34,8 @@
 ;;
 ;; Org_ users please find ob-ein_, a jupyter Babel_ backend.
 ;;
+;; `Google Cloud Engine`_ integration is in alpha.
+;;
 ;; EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 ;; introduced by `[gregsexton]`_.
 ;;

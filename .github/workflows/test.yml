@@ -51,6 +51,22 @@ jobs:
 
     - uses: actions/cache@v1
       with:
+        path: ~/.local
+        key: ${{ runner.os }}-dot-local-000
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/.config
+        key: ${{ runner.os }}-dot-config-000
+
+    - uses: actions/cache@v1
+      if: startsWith(runner.os, 'Linux')
+      with:
+        path: ~/go
+        key: ${{ runner.os }}-go-000
+
+    - uses: actions/cache@v1
+      with:
         path: ~/.emacs.d
         key: emacs.d
 
@@ -60,9 +76,13 @@ jobs:
         key: cask-001
 
     - name: paths
-      uses: dickmao/setup-paths@master
-      with:
-        paths: local/bin:local/cask/bin:local/R/bin:local/julia-1.3.1/bin
+      run: |
+        echo "::add-path::$HOME/local/bin"
+        echo "::add-path::$HOME/local/cask/bin"
+        echo "::add-path::$HOME/local/R/bin"
+        echo "::add-path::$HOME/local/julia-1.3.1/bin"
+        echo "::add-path::$HOME/go/bin"
+        echo "::set-env name=LD_LIBRARY_PATH::$HOME/.local/lib"
 
     - name: apt-get
       if: startsWith(runner.os, 'Linux')
@@ -76,7 +96,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
         python -m ipykernel install --user
-        sh tools/install-R.sh
+
+    - name: gat
+      if: startsWith(runner.os, 'Linux')
+      run: |
+        curl -sLk https://github.com/dickmao/gat/archive/master.tar.gz | tar xfz -
+        make -C gat-master install
+        gat --project abc --region abc --zone abc version
+
+    - name: R
+      if: startsWith(runner.os, 'Linux')
+      run: sh tools/install-R.sh
 
     - name: julia
       if: startsWith(runner.os, 'Linux')

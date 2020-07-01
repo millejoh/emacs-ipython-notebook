@@ -243,14 +243,6 @@ See `ein:format-time-string'."
     (ein:notebooklist-open* (ein:$notebooklist-url-or-port nblist)
                             (ein:$notebooklist-path nblist) resync callback)))
 
-(defun ein:notebooklist-refresh-related ()
-  "Reload notebook list in which current notebook locates.
-This function is called via `ein:notebook-after-rename-hook'."
-  (ein:notebooklist-open* (ein:$notebook-url-or-port ein:%notebook%)
-                          (ein:$notebook-notebook-path ein:%notebook%)))
-
-(add-hook 'ein:notebook-after-rename-hook 'ein:notebooklist-refresh-related)
-
 ;;;###autoload
 (defun ein:notebooklist-new-notebook (url-or-port kernelspec &optional callback no-pop retry explicit-path)
   (interactive (list (ein:notebooklist-ask-url-or-port)

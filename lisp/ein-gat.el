@@ -62,14 +62,14 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
   :type '(repeat string)
   :group 'ein)
 
-(defcustom ein:gat-base-images '("jupyter/all-spark-notebook"
-				 "jupyter/base-notebook"
+(defcustom ein:gat-base-images '("jupyter/scipy-notebook"
+                                 "jupyter/tensorflow-notebook"
 				 "jupyter/datascience-notebook"
-				 "jupyter/minimal-notebook"
-				 "jupyter/pyspark-notebook"
 				 "jupyter/r-notebook"
-				 "jupyter/scipy-notebook"
-				 "jupyter/tensorflow-notebook")
+				 "jupyter/minimal-notebook"
+				 "jupyter/base-notebook"
+				 "jupyter/pyspark-notebook"
+                                 "jupyter/all-spark-notebook")
   "Known https://hub.docker.com/u/jupyter images."
   :type '(repeat (string :tag "FROM-appropriate docker image"))
   :group 'ein)
@@ -91,28 +91,17 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
-  (aif (ein:jupyter-running-notebook-directory)
-      (prog1 it
+  (if-let ((notebook-dir (ein:jupyter-running-notebook-directory))
+           (notebook (ein:get-notebook))
+           (where (directory-file-name
+                   (concat (file-name-as-directory notebook-dir)
+                           (file-name-directory (ein:$notebook-notebook-path notebook))))))
+      (prog1 where
         (when print-message
-          (message it)))
+          (message where)))
     (prog1 nil
       (when print-message
 	(message "nowhere")))))
-
-(defun ein:gat-call-gat (&rest args)
-  "Return exit status returned by `call-process'."
-  (interactive (split-string (read-string "gat ")))
-  (if-let ((default-directory (ein:gat-where-am-i)))
-      (let ((default-process-coding-system (magit--process-coding-system))
-	    (args `("--project" ,ein:gat-project
-		    "--region" ,ein:gat-region
-		    "--zone" ,ein:gat-zone
-		    ,@args))
-	    (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS=" (getenv "GAT_APPLICATION_CREDENTIALS"))
-				       process-environment)))
-	(apply #'magit-call-process "gat" args))
-    (ein:log 'error "ein:gat-call-gat: cannot ascertain cwd")
-    -1))
 
 ;; (defvar magit-process-popup-time)
 ;; (defvar inhibit-magit-refresh)
@@ -120,10 +109,12 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 ;; (defvar magit-process-display-mode-line-error)
 (defun ein:gat-chain (buffer callback &rest args)
   (declare (indent 0))
-  (let* ((default-process-coding-system (magit--process-coding-system))
+  (let* ((default-directory (ein:gat-where-am-i))
+         (default-process-coding-system (magit--process-coding-system))
 	 (inhibit-magit-refresh t)
 	 (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS="
-					    (getenv "GAT_APPLICATION_CREDENTIALS"))
+					    (or (getenv "GAT_APPLICATION_CREDENTIALS")
+                                                (error "GAT_APPLICATION_CREDENTIALS undefined")))
 				    process-environment))
 	 (process (apply #'magit-start-process args)))
     (set-process-sentinel
@@ -137,8 +128,13 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 	 (let ((magit-process-display-mode-line-error
 		(if gat-status-cd-p nil magit-process-display-mode-line-error))
 	       (magit-process-raise-error
-		(if gat-status-cd-p nil magit-process-raise-error)))
-	   (magit-process-sentinel proc event))
+		(if gat-status-cd-p nil magit-process-raise-error))
+               (short-circuit (lambda (&rest _args) (when gat-status-cd-p 0))))
+           (add-function :before-until (symbol-function 'process-exit-status)
+                         short-circuit)
+           (unwind-protect
+               (magit-process-sentinel proc event)
+             (remove-function (symbol-function 'process-exit-status) short-circuit)))
 	 (cond
           ((or (zerop gat-status) gat-status-cd-p)
            (when (and gat-status-cd-p (buffer-live-p process-buf))
@@ -146,7 +142,7 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
                      (buffer-substring-no-properties (oref section content)
                                                      (oref section end)))
                (setq new-worktree-dir (progn (string-match "^cd\\s-+\\(\\S-+\\)" it)
-                                             (match-string 1 it)))))
+                                             (string-trim (match-string 1 it))))))
            (when callback
              (with-current-buffer buffer
                (let ((magit-process-popup-time 0))
@@ -188,49 +184,53 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defun ein:gat-edit (&optional _refresh)
   (interactive "P")
-  (when-let ((notebook (ein:get-notebook))
-             (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-                               "--region" ,ein:gat-region "--zone"
-                               ,ein:gat-zone)))
-    (if (special-variable-p 'magit-process-popup-time)
-	(let ((magit-process-popup-time -1))
-	  (apply #'ein:gat-chain (current-buffer)
-                 (cl-function
-                  (lambda (&rest args &key worktree-dir)
-                    (ein:notebook-open
-                     (ein:$notebook-url-or-port notebook)
-                     (ein:gat--path (ein:$notebook-notebook-path notebook)
-                                    worktree-dir)
-                     (ein:$notebook-kernelspec notebook))))
-		 (append gat-chain-args
-                         (list "edit"
-                               (alet (ein:gat-elicit-worktree t)
-                                 (setq ein:gat-previous-worktree ein:gat-current-worktree)
-                                 (setq ein:gat-current-worktree it))))))
-      (error "ein:gat-create: magit not installed"))))
+  (if-let ((default-directory (ein:gat-where-am-i))
+           (notebook (ein:get-notebook))
+           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+                             "--region" ,ein:gat-region "--zone"
+                             ,ein:gat-zone)))
+      (if (special-variable-p 'magit-process-popup-time)
+          (let ((magit-process-popup-time -1))
+            (apply #'ein:gat-chain (current-buffer)
+                   (cl-function
+                    (lambda (&rest args &key worktree-dir)
+                      (ein:notebook-open
+                       (ein:$notebook-url-or-port notebook)
+                       (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                      worktree-dir)
+                       (ein:$notebook-kernelspec notebook))))
+                   (append gat-chain-args
+                           (list "edit"
+                                 (alet (ein:gat-elicit-worktree t)
+                                   (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                                   (setq ein:gat-current-worktree it))))))
+        (error "ein:gat-create: magit not installed"))
+    (message "ein:gat-edit: not a notebook buffer")))
 
 (defun ein:gat-create (&optional _refresh)
   (interactive "P")
-  (when-let ((notebook (ein:get-notebook))
-             (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-                               "--region" ,ein:gat-region "--zone"
-                               ,ein:gat-zone)))
-    (if (special-variable-p 'magit-process-popup-time)
-	(let ((magit-process-popup-time -1))
-	  (apply #'ein:gat-chain (current-buffer)
-                 (cl-function
-                  (lambda (&rest args &key worktree-dir)
-                    (ein:notebook-open
-                     (ein:$notebook-url-or-port notebook)
-                     (ein:gat--path (ein:$notebook-notebook-path notebook)
-                                    worktree-dir)
-                     (ein:$notebook-kernelspec notebook))))
-		 (append gat-chain-args
-                         (list "create"
-                               (alet (ein:gat-elicit-worktree nil)
-                                 (setq ein:gat-previous-worktree ein:gat-current-worktree)
-                                 (setq ein:gat-current-worktree it))))))
-      (error "ein:gat-create: magit not installed"))))
+  (if-let ((default-directory (ein:gat-where-am-i))
+           (notebook (ein:get-notebook))
+           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+                             "--region" ,ein:gat-region "--zone"
+                             ,ein:gat-zone)))
+      (if (special-variable-p 'magit-process-popup-time)
+          (let ((magit-process-popup-time 0))
+            (apply #'ein:gat-chain (current-buffer)
+                   (cl-function
+                    (lambda (&rest args &key worktree-dir)
+                      (ein:notebook-open
+                       (ein:$notebook-url-or-port notebook)
+                       (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                      worktree-dir)
+                       (ein:$notebook-kernelspec notebook))))
+                   (append gat-chain-args
+                           (list "create"
+                                 (alet (ein:gat-elicit-worktree nil)
+                                   (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                                   (setq ein:gat-current-worktree it))))))
+        (error "ein:gat-create: magit not installed"))
+    (message "ein:gat-create: not a notebook buffer")))
 
 (defsubst ein:gat-run-local (&optional refresh)
   (interactive "P")
@@ -238,58 +238,68 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defsubst ein:gat-run-remote (&optional refresh)
   (interactive "P")
+  ;; surreptitiously coerce `find-file-visit-truename' to chase links
+  ;; to allow looking in gcsfuse mounted directories like `run-remote`.
+  (let ((symbol 'find-file-visit-truename))
+    (unless (symbol-value symbol)
+      (custom-push-theme 'theme-value symbol 'user 'set (custom-quote t))
+      (funcall #'set-default symbol t)
+      (put symbol 'customized-value (list (custom-quote t)))))
   (ein:gat--run-local-or-remote t refresh))
 
 (defun ein:gat--run-local-or-remote (remote-p refresh)
-  (when-let ((notebook (aand (ein:get-notebook)
-			     (ein:$notebook-notebook-name it)))
-	     (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-			       "--region" ,ein:gat-region "--zone"
-			       ,ein:gat-zone))
-	     (gat-chain-run (if remote-p
-				(append '("run-remote")
-					`("--machine"
-					  ,(ein:gat-elicit-machine))
-					`(,@(aif (ein:gat-elicit-disksizegb)
-						(list "--disksizegb"
-						      (number-to-string it))))
-					`(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
-							 (nonzero (not (zerop gpus))))
-					      (list "--gpus"
-						    (number-to-string gpus)))))
-			      (list "run-local"))))
-    (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
-      (if (or refresh (null pre-docker) (null post-docker))
-	  (if (fboundp 'magit-with-editor)
-	      (magit-with-editor
-		(let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
-		       (base-image (ein:gat-elicit-base-image))
-		       (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
-		       (my-editor (when (and (boundp 'server-name)
-					     (server-running-p server-name))
-				    `("-s" ,server-name))))
-		  (apply #'ein:gat-chain
-			 (current-buffer)
-			 (apply #'apply-partially
-				#'ein:gat-chain
-				(current-buffer)
-				(apply #'apply-partially
-				       #'ein:gat-chain
-				       (current-buffer)
-				       (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
-					      (append gat-chain-args (list "log" "-f")))
-				       (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
-				(append gat-chain-args (list "dockerfile" dockerfile)))
-			 `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
-	    (error "ein:gat--run-local-or-remote: magit not installed"))
-	(if (special-variable-p 'magit-process-popup-time)
-	    (let ((magit-process-popup-time 0))
-	      (apply #'ein:gat-chain (current-buffer)
-		     (when remote-p
-		       (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
-			      (append gat-chain-args (list "log" "-f"))))
-		     (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))
-	  (error "ein:gat--run-local-or-remote: magit not installed"))))))
+  (if-let ((default-directory (ein:gat-where-am-i))
+           (notebook (aand (ein:get-notebook)
+                           (ein:$notebook-notebook-name it)))
+           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
+                             "--region" ,ein:gat-region "--zone"
+                             ,ein:gat-zone))
+           (gat-chain-run (if remote-p
+                              (append '("run-remote")
+                                      `("--machine"
+                                        ,(ein:gat-elicit-machine))
+                                      `(,@(aif (ein:gat-elicit-disksizegb)
+                                              (list "--disksizegb"
+                                                    (number-to-string it))))
+                                      `(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
+                                                       (nonzero (not (zerop gpus))))
+                                            (list "--gpus"
+                                                  (number-to-string gpus)))))
+                            (list "run-local"))))
+      (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
+        (if (or refresh (null pre-docker) (null post-docker))
+            (if (fboundp 'magit-with-editor)
+                (magit-with-editor
+                  (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
+                         (base-image (ein:gat-elicit-base-image))
+                         (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
+                         (my-editor (when (and (boundp 'server-name)
+                                               (server-running-p server-name))
+                                      `("-s" ,server-name))))
+                    (apply #'ein:gat-chain
+                           (current-buffer)
+                           (apply #'apply-partially
+                                  #'ein:gat-chain
+                                  (current-buffer)
+                                  (apply #'apply-partially
+                                         #'ein:gat-chain
+                                         (current-buffer)
+                                         (when remote-p
+                                           (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+                                                  (append gat-chain-args (list "log" "-f"))))
+                                         (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile)))
+                                  (append gat-chain-args (list "dockerfile" dockerfile)))
+                           `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
+              (error "ein:gat--run-local-or-remote: magit not installed"))
+          (if (special-variable-p 'magit-process-popup-time)
+              (let ((magit-process-popup-time 0))
+                (apply #'ein:gat-chain (current-buffer)
+                       (when remote-p
+                         (apply #'apply-partially #'ein:gat-chain (current-buffer) nil
+                                (append gat-chain-args (list "log" "-f"))))
+                       (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))
+            (error "ein:gat--run-local-or-remote: magit not installed"))))
+    (message "ein:gat--run-local-or-remote: not a notebook buffer")))
 
 (defun ein:gat-elicit-base-image ()
   "Using a defcustom as HIST is suspect but pithy."
@@ -342,7 +352,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 (defun ein:gat-dockerfiles-state ()
   "Return cons of (pre-Dockerfile . post-Dockerfile).
 Pre-Dockerfile is Dockerfile.<notebook> if extant, else Dockerfile."
-  (-if-let* ((notebook (ein:get-notebook))
+  (-if-let* ((default-directory (ein:gat-where-am-i))
+             (notebook (ein:get-notebook))
 	     (notebook-name (ein:$notebook-notebook-name notebook))
 	     (dockers (directory-files (file-name-as-directory default-directory)
 				       nil "^Dockerfile")))

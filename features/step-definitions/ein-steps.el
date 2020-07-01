@@ -139,6 +139,8 @@
                                  (buffer-list))
              until (buffer-live-p buf)
              do (sleep-for 0 500)
+             do (with-current-buffer "magit-process: test-repo"
+                  (And "I dump buffer"))
              finally do (and (should (buffer-live-p buf))
                              (switch-to-buffer buf)))))
 
@@ -187,6 +189,7 @@
   (lambda (repo)
     (let ((git-dir (concat default-directory "features/" repo)))
       (with-temp-buffer
+        (message (format "rm -rf %s" git-dir))
         (shell-command (format "rm -rf %s" git-dir))))))
 
 (When "^new \\(.+\\) notebook\\( in \".+\"\\)?\\(\\)$"
@@ -361,7 +364,8 @@
     (let ((was (widget-at)))
       (When "I press \"RET\"")
       (unless file
-        (cl-loop until (not (equal was (widget-at)))
+        (cl-loop until (and (> (length (buffer-string)) 0)
+                            (not (equal was (widget-at))))
                  do (sleep-for 0 500))))))
 
 (When "^I click on dir \"\\(.+\\)\"$"
@@ -407,9 +411,15 @@
     (ein:testing-wait-until
      (lambda ()
        (let ((says (s-contains? (s-replace "\\n" "\n" bogey) (buffer-string))))
-         (aif (if negate (not says) says)
-             it)))
+         (awhen (if negate (not says) says) it)))
      nil 35000 2000)))
+
+(When "^I wait to be in buffer like \"\\(.+\\)\"$"
+  (lambda (substr)
+    (cl-loop repeat 10
+             until (search substr (buffer-name))
+             do (sleep-for 0 500)
+             finally do (should (search substr (buffer-name))))))
 
 (When "^I wait for cell to execute$"
   (lambda ()
