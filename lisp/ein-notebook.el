@@ -119,12 +119,14 @@ And I don't know if I can on account of the dont-save-cells nonsense."
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the direct and indirect buffers."
-  (cl-mapcan (lambda (ws)
-               (when-let ((ws-buf (ein:worksheet-buffer ws)))
-                 (with-current-buffer ws-buf
-                   (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
-             (append (ein:$notebook-worksheets notebook)
-                     (ein:$notebook-scratchsheets notebook))))
+  (cl-remove-if-not
+   #'identity
+   (cl-mapcan (lambda (ws)
+                (when-let ((ws-buf (ein:worksheet-buffer ws)))
+                  (with-current-buffer ws-buf
+                    (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+              (append (ein:$notebook-worksheets notebook)
+                      (ein:$notebook-scratchsheets notebook)))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))
@@ -631,7 +633,7 @@ NAME is any non-empty string that does not contain '/' or '\\'.
               (aif ein:%notebook%
                   (ein:notebook-tidy-opened-notebooks it))))
           buffers)
-    (ein:notebook-avoid-recursion (mapc #'kill-buffer buffers))))
+    (ein:notebook-avoid-recursion (mapc (lambda (b) (ignore-errors (kill-buffer b))) buffers))))
 
 (defun ein:notebook-kill-buffer-query ()
   (if-let ((notebook (ein:get-notebook))
@@ -639,9 +641,10 @@ NAME is any non-empty string that does not contain '/' or '\\'.
       (prog1 nil
         (cond ((ein:scratchsheet-p ws)
                (ein:notebook-close-worksheet notebook ws)
-               (with-current-buffer (ein:worksheet-buffer ws)
-                 (ein:notebook-avoid-recursion
-                  (mapc #'kill-buffer (eieio-oref pm/polymode '-buffers)))))
+               (awhen (ein:worksheet-buffer ws)
+                 (with-current-buffer it
+                   (ein:notebook-avoid-recursion
+                    (mapc (lambda (b) (ignore-errors (kill-buffer b))) (eieio-oref pm/polymode '-buffers))))))
               (t
                (cl-assert (ein:worksheet-p ws))
                (ein:notebook-close notebook))))

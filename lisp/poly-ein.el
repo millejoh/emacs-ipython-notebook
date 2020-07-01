@@ -166,8 +166,7 @@
   "Copy the undo accounting to the base buffer and run BODY in it."
   `(let ((base-buffer (pm-base-buffer))
          (derived-buffer (current-buffer))
-         (pm-allow-post-command-hook nil)
-         (pm-initialization-in-progress t))
+         (pm-allow-post-command-hook nil))
      (poly-ein--set-buffer derived-buffer base-buffer)
      (unwind-protect
          (progn ,@body)
@@ -376,34 +375,35 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
                    src-buf dest-buf)))
 
 (defsubst poly-ein--set-buffer (src-buf dest-buf &optional switch)
-  (when (and (not (eq src-buf dest-buf))
-             (buffer-live-p src-buf)
-             (buffer-live-p dest-buf))
-    (cl-destructuring-bind (point window-start region-begin pos-visible _)
-        (with-current-buffer src-buf (list (point)
-                                           (window-start)
-                                           (and switch (region-active-p) (mark))
-                                           (pos-visible-in-window-p)
-                                           (when switch (deactivate-mark))))
-      (poly-ein-copy-state src-buf dest-buf)
-      (if switch
-          (switch-to-buffer dest-buf)
-        (set-buffer dest-buf))
-      (when region-begin
-        (setq deactivate-mark nil) ;; someone is setting this, I don't know who
-        (push-mark region-begin t t))
-      (goto-char point)
-      (setq syntax-propertize--done (point-min))
-      (when switch
-        (when pos-visible
-          (set-window-start (get-buffer-window) window-start))
-        (bury-buffer-internal src-buf)
-        (set-window-prev-buffers
-         nil
-         (assq-delete-all src-buf (window-prev-buffers nil)))
-        (run-hook-with-args 'polymode-switch-buffer-hook src-buf dest-buf)
-        (pm--run-hooks pm/polymode :switch-buffer-functions src-buf dest-buf)
-        (pm--run-hooks pm/chunkmode :switch-buffer-functions src-buf dest-buf)))))
+  (let ((pm-initialization-in-progress t))
+    (when (and (not (eq src-buf dest-buf))
+               (buffer-live-p src-buf)
+               (buffer-live-p dest-buf))
+      (cl-destructuring-bind (point window-start region-begin pos-visible _)
+          (with-current-buffer src-buf (list (point)
+                                             (window-start)
+                                             (and switch (region-active-p) (mark))
+                                             (pos-visible-in-window-p)
+                                             (when switch (deactivate-mark))))
+        (poly-ein-copy-state src-buf dest-buf)
+        (if switch
+            (switch-to-buffer dest-buf)
+          (set-buffer dest-buf))
+        (when region-begin
+          (setq deactivate-mark nil) ;; someone is setting this, I don't know who
+          (push-mark region-begin t t))
+        (goto-char point)
+        (setq syntax-propertize--done (point-min))
+        (when switch
+          (when pos-visible
+            (set-window-start (get-buffer-window) window-start))
+          (bury-buffer-internal src-buf)
+          (set-window-prev-buffers
+           nil
+           (assq-delete-all src-buf (window-prev-buffers nil)))
+          (run-hook-with-args 'polymode-switch-buffer-hook src-buf dest-buf)
+          (pm--run-hooks pm/polymode :switch-buffer-functions src-buf dest-buf)
+          (pm--run-hooks pm/chunkmode :switch-buffer-functions src-buf dest-buf))))))
 
 (defsubst poly-ein--span-start-end (args)
   (if (or pm-initialization-in-progress (not poly-ein-mode))
