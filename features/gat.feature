@@ -15,14 +15,14 @@ Scenario: gat create from repo, then create from worktree, then run-local
   Then I switch to buffer like ".gat/baz/Untitled"
   When I call "ein:gat-run-local"
   And I switch to buffer like "Dockerfile.Untitled"
+  And I should see "FROM jupyter"
   And I press "C-x #"
   And I switch to buffer like "magit-process: baz"
-  Then I wait for buffer to say ". gat --project"
-
-@gat
-Scenario: go back up directory, I need this to follow preceding
-  And remove git repo "test-repo"
+  Then I wait for buffer to say "Building image"
+  And I dump buffer
+  And I go to word "run"
+  And eval "(ignore-errors (kill-process (magit-section-value-if 'process)))"
+  And I wait for buffer to not say "run . gat"
   And I am in notebooklist buffer
-  And I press "C-c C-r"
   And I click on "Home"
-  Then I should see "support"
+  Then I wait for buffer to say "support"

@@ -248,6 +248,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (ein:gat--run-local-or-remote t refresh))
 
 (defun ein:gat--run-local-or-remote (remote-p refresh)
+  (unless with-editor-emacsclient-executable
+    (error "Could not determine emacsclient"))
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (aand (ein:get-notebook)
                            (ein:$notebook-notebook-name it)))

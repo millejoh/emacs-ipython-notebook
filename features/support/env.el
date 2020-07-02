@@ -18,6 +18,10 @@
 (require 'ein-file)
 (require 'poly-ein)
 (require 'ob-ein)
+(require 'with-editor)
+
+(unless with-editor-emacsclient-executable
+  (!cons "gat" ecukes-exclude-tags))
 
 (!cons "timestamp" ecukes-exclude-tags)
 
@@ -114,11 +118,11 @@
  (ein:testing-after-scenario))
 
 (Teardown
- (Given "I finally stop the server"))
+ (Given "I finally stop the server")
+ (let ((default-directory ein:testing-project-path))
+   (And "remove git repo \"test-repo\"")))
 
 (Fail
- (let ((default-directory ein:testing-project-path))
-   (And "remove git repo \"test-repo\""))
  (if noninteractive
      (ein:testing-after-scenario)
    (keyboard-quit))) ;; useful to prevent emacs from quitting

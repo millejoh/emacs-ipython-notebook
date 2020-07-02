@@ -119,7 +119,8 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                                   (ein:notebooklist-list-get url-or-port))
                                 nil 10000 1000)
         (ein:notebooklist-new-notebook url-or-port ks
-                                       (lambda (nb created) (setq notebook nb))
+                                       (lambda (nb created)
+                                         (setq notebook nb))
                                        nil nil subdir)
         (ein:testing-wait-until (lambda ()
                                   (and notebook

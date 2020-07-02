@@ -63,7 +63,7 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/go
-        key: ${{ runner.os }}-go-000
+        key: ${{ runner.os }}-go-001
 
     - uses: actions/cache@v1
       with:

@@ -43,7 +43,7 @@ Scenario: kernel reconnect succeeds
   And header does not say "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command-km]"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
   And I should see "ein:kernel-retrieve-session--complete"
   And I switch to buffer like "Untitled"
   And I kill processes like "websocket"
@@ -56,14 +56,14 @@ Scenario: kernel reconnect succeeds
   And header does not say "Kernel requires reconnect \<ein:notebook-mode-map>\[ein:notebook-reconnect-session-command-km]"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
   And I should see "ein:kernel-retrieve-session--complete"
   And I switch to buffer like "Untitled"
   And I clear log expr "ein:log-all-buffer-name"
   And I restart kernel
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
   And I should see "ein:kernel-retrieve-session--complete"
   And I switch to buffer like "Untitled"
   And I kill kernel
@@ -86,8 +86,11 @@ Scenario: Assign variable, save, kill notebook buffer, get it back, check variab
   And I type "b = math.pi"
   And I press "RET"
   And I wait for cell to execute
+  And I clear log expr "ein:log-all-buffer-name"
   And I press "C-x C-s"
-  And I wait for the smoke to clear
+  And I switch to log expr "ein:log-all-buffer-name"
+  And I wait for buffer to say "Notebook is saved"
+  And I switch to buffer like "Untitled"
   And I kill buffer and reopen
   And I press "C-c C-b"
   And I dump buffer

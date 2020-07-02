@@ -3,7 +3,7 @@ Scenario: Breadcrumbs
   Given I am in notebooklist buffer
   When I click on dir "step-definitions" until "ein-steps"
   And I click on "Home"
-  Then I should see "support"
+  Then I wait for buffer to say "support"
 
 @kernel
 Scenario: Default kernel
@@ -87,7 +87,7 @@ Scenario: No token server
   Given I start the server configured "c.NotebookApp.token = u''\n"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
 
 @login
 Scenario: With token server, get from server buffer
@@ -95,7 +95,7 @@ Scenario: With token server, get from server buffer
   And I login disabling crib token
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
 
 @login
 Scenario: With password server
@@ -103,7 +103,7 @@ Scenario: With password server
   And I login with password "foo"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
 
 @login
 Scenario: To the cloud with password
@@ -111,7 +111,7 @@ Scenario: To the cloud with password
   And I login forcing ping with password "foo"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
 
 @login
 Scenario: Logging into nowhere
@@ -143,7 +143,7 @@ Scenario: Someone uses jupyter-notebook
   Given I start and login to the server configured "\n"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"
   And I customize "ein:jupyter-default-server-command" to "jupyter"
   And I set "ein:jupyter-server-use-subcommand" to "notebook"
 
@@ -152,4 +152,4 @@ Scenario: With token server
   Given I start and login to the server configured "\n"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
-  And I should not see "[error]"
+  And I should not see ": [error]"

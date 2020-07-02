@@ -139,8 +139,6 @@
                                  (buffer-list))
              until (buffer-live-p buf)
              do (sleep-for 0 500)
-             do (with-current-buffer "magit-process: test-repo"
-                  (And "I dump buffer"))
              finally do (and (should (buffer-live-p buf))
                              (switch-to-buffer buf)))))
 
