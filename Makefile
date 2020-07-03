@@ -48,7 +48,7 @@ clean:
 	rm -rf log
 	rm -f features/Untitled*.ipynb
 	rm -f features/Renamed.ipynb
-	rm -f features/test-repo
+	rm -rf features/test-repo
 
 $(CASK_DIR): Cask
 	$(CASK) install
