@@ -11,7 +11,7 @@ No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
-`Google Cloud Engine`_ integration is in alpha.
+`Google Compute Engine`_ integration is in alpha.
 
 EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
@@ -142,7 +142,7 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _scimax: https://github.com/jkitchin/scimax
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
-Google Cloud Engine
+Google Compute Engine
 ===================
 Install the `gat utility`_.  Then from a notebook buffer::
 
@@ -152,7 +152,7 @@ attempts running your containerized notebook locally.  If that succeeds, try::
 
    M-x ein:gat-run-remote
 
-to attempt the same run in Google Cloud Engine.
+attempts the same run in Google Compute Engine.
 
 You can fork your notebook via::
 
