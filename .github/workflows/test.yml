@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        emacs_version: [25.1, 26.3, 27.0]
+        emacs_version: [25.1, 26.3, 27.1]
         python-version: [3.7]
 
     steps:
