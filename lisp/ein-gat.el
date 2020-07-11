@@ -238,13 +238,6 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defsubst ein:gat-run-remote (&optional refresh)
   (interactive "P")
-  ;; surreptitiously coerce `find-file-visit-truename' to chase links
-  ;; to allow looking in gcsfuse mounted directories like `run-remote`.
-  (let ((symbol 'find-file-visit-truename))
-    (unless (symbol-value symbol)
-      (custom-push-theme 'theme-value symbol 'user 'set (custom-quote t))
-      (funcall #'set-default symbol t)
-      (put symbol 'customized-value (list (custom-quote t)))))
   (ein:gat--run-local-or-remote t refresh))
 
 (defun ein:gat--run-local-or-remote (remote-p refresh)
