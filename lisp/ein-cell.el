@@ -96,10 +96,10 @@
   :group 'ein)
 
 (defface ein:cell-input-area
-  '((((class color) (background light))
-     :background "honeydew1")
+  `((((class color) (background light))
+     :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
     (((class color) (background dark))
-     :background "#383838"))
+     :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for cell input area"
   :group 'ein)
 
@@ -120,9 +120,9 @@
 
 (defface ein:cell-output-stderr
   '((((class color) (background light))
-     :background "PeachPuff")
+     :background "PeachPuff" ,@(when (>= emacs-major-version 27) '(:extend t)))
     (((class color) (background dark))
-     :background "#8c5353"))
+     :background "#8c5353" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for stderr cell output"
   :group 'ein)
 
