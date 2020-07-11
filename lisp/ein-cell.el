@@ -896,9 +896,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
               (when (and (stringp method) (string-match "^[^% \t]+$" method))
                 (setq method (concat method " %s")))
               (if (and (stringp method) (> (length method) 0))
-                  (save-excursion
-                    (with-temp-buffer
-                      (mm-display-external handle method)))
+                  (unless noninteractive
+                    (save-excursion
+                      (with-temp-buffer
+                        (mm-display-external handle method))))
                 (ein:log 'warn "ein:cell-append-mime-type: %s"
                          "no viewer method found in mailcap")))))))
      (otherwise

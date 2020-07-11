@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        emacs_version: [25.1, 26.3, snapshot]
+        emacs_version: [25.1, 26.3, 27.0]
         python-version: [3.7]
 
     steps:
@@ -28,7 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: nix
-      uses: purcell/setup-emacs@master
+      uses: dickmao/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
 

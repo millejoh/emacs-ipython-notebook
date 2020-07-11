@@ -20,6 +20,9 @@
 (require 'ob-ein)
 (require 'with-editor)
 
+(when (>= emacs-major-version 27)
+  (require 'org-tempo))
+
 (unless with-editor-emacsclient-executable
   (!cons "gat" ecukes-exclude-tags))
 
