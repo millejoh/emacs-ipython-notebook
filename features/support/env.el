@@ -56,8 +56,8 @@
                          finally do (unless done-p
                                       (ein:display-warning (format "cannot close %s" path))))
              do (when (or (ob-ein-anonymous-p path)
-                          (search "Untitled" path)
-                          (search "Renamed" path))
+                          (cl-search "Untitled" path)
+                          (cl-search "Renamed" path))
                   (ein:notebooklist-delete-notebook ein:%notebooklist% url-or-port path)
                   (cl-loop with fullpath = (concat (file-name-as-directory ein:testing-jupyter-server-root) path)
                            repeat 10
@@ -70,7 +70,7 @@
       (cl-loop for nb in it
             for path = (ein:$notebook-notebook-path nb)
             do (ein:log 'debug "Notebook %s still open" path)
-            finally do (assert nil)))
+            finally do (cl-assert nil)))
   (cl-loop repeat 5
            for stragglers = (file-name-all-completions "Untitled"
                                                        ein:testing-jupyter-server-root)

@@ -50,6 +50,9 @@ clean:
 	rm -f features/Renamed.ipynb
 	rm -rf features/test-repo
 
+.PHONY: cask
+cask: $(CASK_DIR)
+
 $(CASK_DIR): Cask
 	$(CASK) install
 	touch $(CASK_DIR)

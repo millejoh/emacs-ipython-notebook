@@ -350,8 +350,8 @@ server command."
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional force log)
   (interactive)
-  (ein:and-let* ((url-or-port (car (ein:jupyter-server-conn-info)))
-                 (_ok (or force (y-or-n-p "Stop server and close notebooks?"))))
+  (-when-let* ((url-or-port (car (ein:jupyter-server-conn-info)))
+               (ok (or force (y-or-n-p "Stop server and close notebooks?"))))
     (ein:notebook-close-notebooks t)
     (cl-loop repeat 10
              until (not (seq-some (lambda (proc)

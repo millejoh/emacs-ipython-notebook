@@ -19,7 +19,7 @@
 (When "^I type session port \\([0-9]+\\)$"
   (lambda (port)
     (ein:process-refresh-processes)
-    (assert (not (ein:process-url-match (ein:url port))))
+    (cl-assert (not (ein:process-url-match (ein:url port))))
     (When (format "I type \"ein :session localhost:%s :results raw drawer\"" port))))
 
 (When "^I ctrl-c-ctrl-c$"
@@ -282,7 +282,7 @@
 
 (When "^I login if necessary$"
   (lambda ()
-    (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+    (cl-multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (when token
         (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
                    (lambda (&rest _args) url-or-port))
@@ -293,7 +293,7 @@
 
 (When "^I login disabling crib token$"
   (lambda ()
-    (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+    (cl-multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
       (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
                  (lambda (&rest _args) url-or-port))
                 ((symbol-function 'ein:crib-token)
@@ -303,17 +303,18 @@
 
 (When "^I login \\(forcing ping \\)?with password \"\\(.+\\)\"$"
   (lambda (no-crib password)
-    (multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (let ((bindings '(((symbol-function 'ein:notebooklist-ask-url-or-port)
-                         (lambda (&rest _args) url-or-port))
-                        ((symbol-function 'read-passwd)
-                         (lambda (&rest _args) password)))))
-        (if no-crib
-            (setq bindings (append bindings
-                                   (list '((symbol-function 'ein:notebooklist-token-or-password) (lambda (&rest _args) nil))))))
-        (eval `(cl-letf ,bindings
-                 (When "I call \"ein:notebooklist-login\"")
-                 (And "I wait for the smoke to clear")))))))
+    (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
+      (let ((orig-crib (symbol-function 'ein:notebooklist-token-or-password)))
+        (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                   (lambda (&rest _args) url-or-port))
+                  ((symbol-function 'read-passwd)
+                   (lambda (&rest _args) password))
+                  ((symbol-function 'ein:notebooklist-token-or-password)
+                   (if no-crib
+                       #'ignore
+                     orig-crib)))
+          (When "I call \"ein:notebooklist-login\"")
+          (And "I wait for the smoke to clear"))))))
 
 (When "^dump diagnostic"
   (lambda ()
@@ -460,7 +461,7 @@
           (cl-letf (((symbol-function 'read-file-name)
                      (lambda (&rest _args) ein:jupyter-server-command))
                     ((symbol-function 'read-string)
-                     (lambda (&rest _args)
+                     (lambda (&rest args)
                        (error "%s" (car args))))
                     ((symbol-function 'read-directory-name)
                      (lambda (&rest _args) ein:jupyter-default-notebook-directory)))

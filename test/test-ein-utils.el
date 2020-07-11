@@ -164,9 +164,10 @@ def f():
   (should (equal (ein:list-move-right '(a b c d) 'd) '(d a b c)))
   (should-error  (ein:list-move-right '(a b c d) 'X)))
 
-(defun ein:testing-choose-setting-should-equal
-  (_setting value desired &optional single-p)
-  (should (equal (ein:choose-setting 'setting value single-p) desired)))
+(defvar test-ein-utils-setting)
+(defun ein:testing-choose-setting-should-equal (setting value desired &optional single-p)
+  (setq test-ein-utils-setting setting)
+  (should (equal (ein:choose-setting 'test-ein-utils-setting value single-p) desired)))
 
 (ert-deftest ein:choose-setting-single-string ()
   (let ((test 'ein:testing-choose-setting-should-equal))
@@ -179,10 +180,10 @@ def f():
     (funcall test 1 'whatever 1 #'integerp)))
 
 (ert-deftest ein:choose-setting-alist ()
-  (let* ((test (lambda (&rest args)
-                 (apply #'ein:testing-choose-setting-should-equal
-                        '(("a" . 1) ("b" . 2) ("c" . 3))
-                        args))))
+  (let ((test (lambda (&rest args)
+                (apply #'ein:testing-choose-setting-should-equal
+                       '(("a" . 1) ("b" . 2) ("c" . 3))
+                       args))))
     (funcall test "a" 1)
     (funcall test "b" 2)))
 

@@ -66,6 +66,7 @@
   data
   api-version)
 
+(define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 (ein:deflocal ein:%notebooklist% nil
   "Buffer local variable to store an instance of `ein:$notebooklist'.")
 
@@ -83,8 +84,6 @@
   :type '(choice (const :tag "Ascending" :ascending)
                  (const :tag "Descending" :descending))
   :group 'ein)
-
-(define-obsolete-variable-alias 'ein:notebooklist 'ein:%notebooklist% "0.1.2")
 
 (defvar ein:notebooklist-buffer-name-template "*ein:notebooklist %s*")
 

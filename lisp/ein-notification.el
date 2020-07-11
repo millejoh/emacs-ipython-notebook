@@ -37,9 +37,9 @@
 (declare-function ein:list-available-kernels "ein:notebook")
 (declare-function ein:notebook-switch-kernel "ein:notebook")
 
+(define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 (ein:deflocal ein:%notification% nil
   "Buffer local variable to hold an instance of `ein:notification'.")
-(define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
 
 (defvar ein:header-line-format '(:eval (ein:header-line)))
 (defvar ein:header-line-switch-kernel-map (make-sparse-keymap))
@@ -131,17 +131,6 @@ GET-NAME : function
   "Face for headline selected tab."
   :group 'ein)
 
-(cl-defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
-  (let ((list (funcall (slot-value tab 'get-list)))
-        (current (funcall (slot-value tab 'get-current))))
-    (propertize (aif (and (ein:get-notebook) (ein:$notebook-kernelspec (ein:get-notebook)))
-		    (format "|%s|" (ein:$kernelspec-name it))
-		  "|unknown: please click and select a kernel|")
-		'keymap ein:header-line-switch-kernel-map
-		'help-echo "Click (mouse-1) to change the running kernel."
-		'mouse-face 'highlight
-		'face 'ein:notification-tab-normal)))
-
 (define-key ein:header-line-switch-kernel-map
   [header-line mouse-1] 'ein:header-line-switch-kernel)
 
@@ -157,7 +146,7 @@ GET-NAME : function
        ,key-event
      ,@body))
 
-(defun ein:header-line-switch-kernel (key-event)
+(defun ein:header-line-switch-kernel (_key-event)
   (interactive "e")
   (let* ((notebook (or (ein:get-notebook)
                        (ein:completing-read
@@ -174,11 +163,17 @@ GET-NAME : function
    (slot-value ein:%notification% 'execution-count)
    (ein:join-str
     " | "
-    (delete nil
-            (list (slot-value (slot-value ein:%notification% 'notebook) 'message)
-                  (slot-value (slot-value ein:%notification% 'kernel) 'message)
-                  (ein:notification-tab-create-line
-                   (slot-value ein:%notification% 'tab)))))))
+    (cl-remove-if-not
+     #'identity
+     (list (slot-value (slot-value ein:%notification% 'notebook) 'message)
+           (slot-value (slot-value ein:%notification% 'kernel) 'message)
+           (propertize (aif (aand (ein:get-notebook) (ein:$notebook-kernelspec it))
+                           (format "|%s|" (ein:$kernelspec-name it))
+                         "|unknown: please click and select a kernel|")
+                       'keymap ein:header-line-switch-kernel-map
+                       'help-echo "Click (mouse-1) to change the running kernel."
+                       'mouse-face 'highlight
+                       'face 'ein:notification-tab-normal))))))
 
 (provide 'ein-notification)
 

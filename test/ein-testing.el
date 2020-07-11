@@ -62,7 +62,7 @@
                          (prefix "kernels/")
                          (is-websocket (cl-search "*websocket" bname))
                          (kernel-start (cl-search prefix bname))
-                         (sofar (subseq bname (+ kernel-start (length prefix))))
+                         (sofar (cl-subseq bname (+ kernel-start (length prefix))))
                          (kernel-end (cl-search "/" sofar)))
             (ein:testing-save-buffer
              bname

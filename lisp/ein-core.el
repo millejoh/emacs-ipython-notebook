@@ -44,8 +44,7 @@
   :group 'applications
   :prefix "ein:")
 
-;;; Configuration
-
+(define-obsolete-variable-alias 'ein:url-or-port 'ein:urls "0.17.0")
 (defcustom ein:urls nil
   "List of default url-or-port values.
 This will be used for completion. So put your IPython servers.
@@ -55,7 +54,6 @@ to type every time)."
   :group 'ein)
 
 (make-obsolete-variable 'ein:default-url-or-port nil "0.17.0")
-(define-obsolete-variable-alias 'ein:url-or-port 'ein:urls "0.17.0")
 
 (defcustom ein:filename-translations nil
   "Convert file paths between Emacs and Python process.

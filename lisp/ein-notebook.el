@@ -70,6 +70,7 @@
 
 (defconst ein:notebook-pager-buffer-name-template "*ein:pager %s/%s*")
 
+(define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 (ein:deflocal ein:%notebook% nil
   "Buffer local variable to store an instance of `ein:$notebook'.")
 
@@ -78,8 +79,6 @@
 (defun ein:get-notebook-or-error ()
   (or (ein:get-notebook)
       (error "No notebook related to the current buffer.")))
-
-(define-obsolete-variable-alias 'ein:notebook 'ein:%notebook% "0.1.2")
 
 (defun ein:notebook-new (url-or-port notebook-path pre-kernelspec &rest args)
   (let ((kernelspec

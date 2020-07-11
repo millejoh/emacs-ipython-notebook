@@ -782,19 +782,6 @@ See `ein:kernel-history-request' for other usable options."
           finally (error "Timeout"))
     result))
 
-(defun ein:kernel-history-search-synchronously (kernel pattern &rest args)
-  "Search execution history in KERNEL using PATTERN.
-Return matched history as a list of strings.
-See `ein:kernel-history-request-synchronously' and
-`ein:kernel-history-request' for usable options."
-  (let ((reply
-         (apply #'ein:kernel-history-request-synchronously
-                kernel
-                :hist-access-type "search"
-                :pattern pattern
-                args)))
-    (mapcar #'caddr (plist-get (car reply) :history))))
-
 (provide 'ein-kernel)
 
 ;;; ein-kernel.el ends here
