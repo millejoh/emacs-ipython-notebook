@@ -34,6 +34,7 @@
 (when (getenv "GITHUB_ACTIONS")
   (cl-assert (not (eq system-type 'darwin)))
   (!cons "memory" ecukes-exclude-tags)
+  (!cons "julia" ecukes-exclude-tags)
   (!cons "content" ecukes-exclude-tags)
   (!cons "svg" ecukes-exclude-tags))
 
