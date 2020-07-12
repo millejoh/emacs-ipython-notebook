@@ -880,28 +880,31 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      ((:text/html)
       (funcall (ein:output-area-get-html-renderer) value))
      ((:image/svg+xml :image/png :image/jpeg)
-      (let ((image (create-image (condition-case nil
-                                     (base64-decode-string value)
-                                   (error value))
-                                 (intern-soft (ein:cell-extract-image-format type))
-                                 t)))
-        (if ein:output-area-inlined-images
-            (ein:insert-image image)
-          (ein:insert-read-only " ")
-          (unless starting-p ;; don't display on ein:worksheet-render
-            (let* ((handle (ein:make-mm-handle image))
-                   (type (mm-handle-media-type handle))
-                   (method (seq-some (lambda (i) (cdr (assoc 'viewer i)))
-                                     (mailcap-mime-info type 'all))))
-              (when (and (stringp method) (string-match "^[^% \t]+$" method))
-                (setq method (concat method " %s")))
-              (if (and (stringp method) (> (length method) 0))
-                  (unless noninteractive
-                    (save-excursion
-                      (with-temp-buffer
-                        (mm-display-external handle method))))
-                (ein:log 'warn "ein:cell-append-mime-type: %s"
-                         "no viewer method found in mailcap")))))))
+      (-if-let* ((img-type (intern-soft (ein:cell-extract-image-format type)))
+                 (supported (image-type-available-p img-type))
+                 (image (create-image (condition-case nil
+                                          (base64-decode-string value)
+                                        (error value))
+                                      img-type
+                                      t)))
+          (if ein:output-area-inlined-images
+              (ein:insert-image image)
+            (ein:insert-read-only " ")
+            (unless starting-p ;; don't display on ein:worksheet-render
+              (let* ((handle (ein:make-mm-handle image))
+                     (type (mm-handle-media-type handle))
+                     (method (seq-some (lambda (i) (cdr (assoc 'viewer i)))
+                                       (mailcap-mime-info type 'all))))
+                (when (and (stringp method) (string-match "^[^% \t]+$" method))
+                  (setq method (concat method " %s")))
+                (if (and (stringp method) (> (length method) 0))
+                    (unless noninteractive
+                      (save-excursion
+                        (with-temp-buffer
+                          (mm-display-external handle method))))
+                  (ein:log 'warn "ein:cell-append-mime-type: %s"
+                           "no viewer method found in mailcap")))))
+        (ein:log 'warn "ein:cell-append-mime-type: %s not supported" type)))
      (otherwise
       (ein:insert-read-only value)))))
 
