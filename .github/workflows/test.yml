@@ -133,7 +133,7 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       run: |
         rm -rf ~/.matplotlib ~/.cache/fontconfig
-        cask exec ecukes --tags "@image"
+        make test
       continue-on-error: ${{ matrix.emacs_version == 'snapshot' }}
 
     - name: test-mem-constrained
