@@ -21,13 +21,9 @@ introduced by `[gregsexton]`_.
    :target: https://github.com/millejoh/emacs-ipython-notebook/actions
    :alt: Build Status
 .. |melpa-dev|
-   image:: http://melpa.milkbox.net/packages/ein-badge.svg
-   :target: http://melpa.milkbox.net/#/ein
-   :alt: MELPA development version
-.. |melpa-stable|
-   image:: http://melpa-stable.milkbox.net/packages/ein-badge.svg
-   :target: http://melpa-stable.milkbox.net/#/ein
-   :alt: MELPA stable version
+   image:: https://melpa.org/packages/ein-badge.svg
+   :target: http://melpa.org/#/ein
+   :alt: MELPA current version
 .. _Jupyter: http://jupyter.org
 .. _Babel: https://orgmode.org/worg/org-contrib/babel/intro.html
 .. _Org: https://orgmode.org
@@ -57,7 +53,7 @@ Start EIN using **ONE** of the following:
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
 - ``M-x ein:login`` to a running jupyter server
 
-Use ``C-u M-x ein:login`` for services such as ``mybinder.org`` requiring cookie authentication.
+A local jupyter process can be stopped via ``M-x ein:stop``.
 
 Alternatively, ob-ein_.
 
