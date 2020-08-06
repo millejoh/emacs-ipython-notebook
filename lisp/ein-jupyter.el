@@ -309,8 +309,7 @@ server command."
          nil))
   (if (ein:jupyter-server-process)
       (error "ein:jupyter-server-start: please first M-x ein:stop"))
-  (add-hook 'kill-emacs-hook #'(lambda ()
-                                 (ignore-errors (ein:jupyter-server-stop t))))
+  (add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:jupyter-server-stop t))))
   (let ((proc (ein:jupyter-server--run *ein:jupyter-server-buffer-name*
                                        server-command
                                        notebook-directory
@@ -318,20 +317,20 @@ server command."
                                            `("--port" ,(format "%s" port)
                                              "--port-retries" "0")))))
     (cl-loop repeat 30
-          until (car (ein:jupyter-server-conn-info))
-          do (sleep-for 0 500)
-          finally do
-          (-if-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
-                     (url-or-port (ein:jupyter-server-conn-info)))
-              (with-current-buffer buffer
-                (setq ein:jupyter-server-notebook-directory
-                      (convert-standard-filename notebook-directory))
-                (add-hook 'kill-buffer-query-functions
-                          (lambda () (or (not (ein:jupyter-server-process))
-                                         (ein:jupyter-server-stop nil)))
-                          nil t))
-            (ein:log 'warn "Jupyter server failed to start, cancelling operation")
-            (ein:jupyter-server-stop t)))
+             until (car (ein:jupyter-server-conn-info))
+             do (sleep-for 0 500)
+             finally do
+             (-if-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
+                        (url-or-port (ein:jupyter-server-conn-info)))
+                 (with-current-buffer buffer
+                   (setq ein:jupyter-server-notebook-directory
+                         (convert-standard-filename notebook-directory))
+                   (add-hook 'kill-buffer-query-functions
+                             (lambda () (or (not (ein:jupyter-server-process))
+                                            (ein:jupyter-server-stop nil)))
+                             nil t))
+               (ein:log 'warn "Jupyter server failed to start, cancelling operation")
+               (ein:jupyter-server-stop t)))
     (when (and (not no-login-p) (ein:jupyter-server-process))
       (unless login-callback
         (setq login-callback #'ignore))

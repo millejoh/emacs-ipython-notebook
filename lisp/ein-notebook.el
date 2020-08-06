@@ -971,7 +971,7 @@ the first argument and CBARGS as the rest of arguments."
                       callback cbargs))))
 
 (defun ein:notebook-close-notebooks (&optional blithely)
-  "Used in `ein:jupyter-server-stop' and `kill-emacs-query-functions' hook."
+  "Used in `ein:jupyter-server-stop' and `kill-emacs-hook'."
   (aif (ein:notebook-opened-notebooks)
       (if (and (cl-notevery #'identity (mapcar #'ein:notebook-close it))
                (not blithely))
@@ -986,6 +986,7 @@ the first argument and CBARGS as the rest of arguments."
 ;;     (kill-buffer)))
 ;; is problematic.
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
+(add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:notebook-close-notebooks t))))
 (ein:python-send--init)
 
 (provide 'ein-notebook)
