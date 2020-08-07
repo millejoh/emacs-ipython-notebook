@@ -52,6 +52,22 @@
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))
 
+(defun poly-ein-syntax-propertize-extend-region-function (start end)
+  "This was *not* added to `syntax-propertize-extend-region-functions'
+Intended as a salve for `show-paren-mode', was never called by the scan_lists.
+
+;; `syntax-propertize-extend-region-functions' always buffer-local
+(add-hook 'syntax-propertize-extend-region-functions
+            #'poly-ein-syntax-propertize-extend-region-function
+            t)
+"
+  (when poly-ein-mode
+    (save-restriction
+      (widen)
+      (let ((range (pm-innermost-range (max start (point-min)))))
+        (unless (equal range `(,start . ,end))
+          range)))))
+
 (defun poly-ein--decorate-functions ()
   "Affect global definitions of ppss and jit-lock rather intrusively."
   (mapc (lambda (fun)
@@ -152,6 +168,15 @@
   (add-function :before-until
                 (symbol-function 'pm--synchronize-points)
                 (lambda (&rest _args) poly-ein-mode))
+
+  (let ((dont-lookup-props
+         (lambda (f &rest args)
+           (let ((parse-sexp-lookup-properties (if poly-ein-mode
+                                                   nil
+                                                 parse-sexp-lookup-properties)))
+             (apply f args)))))
+    (add-function :around (symbol-function 'scan-lists) dont-lookup-props)
+    (add-function :around (symbol-function 'scan-sexps) dont-lookup-props))
 
   (advice-add 'other-buffer
 	      :filter-args

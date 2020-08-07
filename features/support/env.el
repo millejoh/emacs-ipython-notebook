@@ -19,6 +19,7 @@
 (require 'poly-ein)
 (require 'ob-ein)
 (require 'with-editor)
+(require 'paren)
 
 (when (>= emacs-major-version 27)
   (require 'org-tempo))

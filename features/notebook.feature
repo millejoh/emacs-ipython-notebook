@@ -1,3 +1,13 @@
+@paren
+Scenario: show-paren-mode should behave
+  Given new python notebook
+  And I press "C-c C-b"
+  And I press "C-c C-p"
+  And I type "x = np.arange(0"
+  And I press "C-b"
+  And I press "C-b"
+  And eval "(let ((orig (point))) (funcall show-paren-data-function) (should (equal (point) orig)))"
+
 @rename
 Scenario: rename notebook
   Given new python notebook
