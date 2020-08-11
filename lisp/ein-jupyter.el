@@ -77,7 +77,8 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
   :group 'ein
   :type 'string
   :set-after '(ein:jupyter-server-command)
-  :set (lambda (_symbol value)
+  :set (lambda (symbol value)
+	 (set-default symbol value)
          (set-default 'ein:jupyter-server-command value)))
 
 (defcustom ein:jupyter-server-use-subcommand "notebook"
