@@ -28,7 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: nix
-      uses: dickmao/setup-emacs@master
+      uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
 
