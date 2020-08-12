@@ -399,7 +399,8 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
                               (overlay-start ol) (overlay-end ol)
                               dest-buf)))
           (with-current-buffer src-buf (overlays-in (point-min) (point-max))))
-    (pm--move-vars (append ein:local-variables '(header-line-format buffer-undo-list))
+    (pm--move-vars (append ein:local-variables
+                           '(header-line-format buffer-undo-list isearch-mode))
                    src-buf dest-buf)))
 
 (defun poly-ein--set-buffer (src-buf dest-buf &optional switch)
