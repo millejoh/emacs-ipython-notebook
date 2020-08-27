@@ -185,7 +185,20 @@ Intended as a salve for `show-paren-mode', was never called by the scan_lists.
 		(if poly-ein-mode
 		    (cons (or (buffer-base-buffer (car args)) (car args))
 			  (cdr args))
-		  args))))
+		  args)))
+
+  (let* ((unadorned (symbol-function 'isearch-done))
+         (after-isearch-done
+          (lambda (&rest _args)
+            "Clear `isearch-mode' for all base and indirect buffers."
+            (-when-let* ((poly-ein-mode-p poly-ein-mode)
+                         (notebook (ein:get-notebook))
+                         (buffers (cl-remove-if (apply-partially #'string= (buffer-name))
+                                                (ein:notebook-buffer-list notebook))))
+              ;; could just call unadorned, but what if `isearch-done' calls itself?
+              (cl-letf (((symbol-function 'isearch-done) unadorned))
+                (mapc (lambda (b) (with-current-buffer b (isearch-done))) buffers))))))
+    (add-function :after (symbol-function 'isearch-done) after-isearch-done)))
 
 (defmacro poly-ein-base (&rest body)
   "Copy the undo accounting to the base buffer and run BODY in it."
