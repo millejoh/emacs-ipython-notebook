@@ -9,6 +9,8 @@ idiosyncrasies of in-browser editing.
 No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 `prevailing documentation`_, which should be disregarded.
 
+*EIN has multiple* Issues_ *with minified ipynb, Doom, and Spacemacs.*
+
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
 `Google Compute Engine`_ integration is in alpha.
@@ -96,6 +98,7 @@ How do I...
 ... send expressions from a python buffer to a running kernel?
    Unpublicized keybindings *exclusively* for the Python language ``C-c C-/ e`` and ``C-c C-/ r`` send the current statement or region respectively to a running kernel.  If the region is not set, ``C-c C-/ r`` sends the entire buffer.  You must manually inspect the ``*ein:shared output*`` buffer for errors.
 
+.. _Issues: https://github.com/millejoh/emacs-ipython-notebook/issues
 .. _prevailing documentation: http://millejoh.github.io/emacs-ipython-notebook
 .. _spacemacs layer: https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/ipython-notebook
 .. _company-mode: https://github.com/company-mode/company-mode

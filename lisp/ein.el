@@ -32,6 +32,8 @@
 ;; No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 ;; `prevailing documentation`_, which should be disregarded.
 ;;
+;; *EIN has multiple* Issues_ *with minified ipynb, Doom, and Spacemacs.*
+;;
 ;; Org_ users please find ob-ein_, a jupyter Babel_ backend.
 ;;
 ;; `Google Compute Engine`_ integration is in alpha.
