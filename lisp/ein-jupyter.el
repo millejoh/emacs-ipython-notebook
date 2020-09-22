@@ -238,9 +238,7 @@ our singleton jupyter server process here."
                 when (cl-destructuring-bind
                          (&key password url token &allow-other-keys)
                          (ein:json-read-from-string line)
-                       (prog1 (or (equal (ein:url url) url-or-port)
-                                  (equal (url-host (url-generic-parse-url url))
-                                         "0.0.0.0"))
+                       (prog1 (equal (ein:url url) url-or-port)
                          (setq password0 password) ;; t or :json-false
                          (setq token0 token)))
                 return (list password0 token0))
