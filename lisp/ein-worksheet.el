@@ -390,15 +390,14 @@ Unshift in list parlance means prepending to list."
                (impl-name
                 (and pm/polymode
                      (not (eq (pm-base-buffer) (current-buffer)))
-                     (let ((chunkmode (nth 3 (pm-innermost-span))))
-                       (format "%s%s[%s]" (if pm-hide-implementation-buffers " " "")
-                               base-name
-                               (replace-regexp-in-string
-                                "poly-\\|-mode" ""
-                                (symbol-name
-                                 (pm--get-existing-mode
-                                  (eieio-oref chunkmode 'mode)
-                                  (eieio-oref chunkmode 'fallback-mode))))))))
+                     (format "%s%s[%s]" (if pm-hide-implementation-buffers " " "")
+                             base-name
+                             (replace-regexp-in-string
+                              "poly-\\|-mode" ""
+                              (symbol-name
+                               (pm--get-existing-mode
+                                (eieio-oref pm/chunkmode 'mode)
+                                (eieio-oref pm/chunkmode 'fallback-mode)))))))
                (new-name (or impl-name base-name)))
           (unless (string= new-name (buffer-name b))
             (rename-buffer new-name)))))))
