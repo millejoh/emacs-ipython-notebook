@@ -31,6 +31,8 @@
 (require 'url)
 (require 'deferred)
 
+(make-obsolete-variable 'ein:enable-gc-adjust nil "0.17.0")
+
 ;;; Macros and core functions/variables
 
 (defmacro ein:with-undo-disabled (&rest body)
