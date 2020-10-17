@@ -977,6 +977,18 @@ the first argument and CBARGS as the rest of arguments."
         t)
     t))
 
+(defsubst ein:notebook-forbid-narrow-to-region (&rest _args)
+  "Narrowing causes severe problems for EIN.
+Stefan Monnier, the author of `called-interactively-p' warns against its use.
+It should err on the side of a false negative, that is,
+it might return nil when the call was really interactive.  In that case,
+we are no worse off than when we didn't have this safeguard at all (modulo the
+increased latency of the `add-function').  Far worse would be if noninteractive
+notebook code attempted to narrow-to-region, and `called-interactively-p' mistakenly
+returned t."
+  (and (ein:eval-if-bound 'ein:notebook-mode)
+       (called-interactively-p 'any)
+       (message "`narrow-to-region' disabled under EIN")))
 
 ;; I tried to make this buffer-local, but when rewriting ein:notebook-avoid-recursion,
 ;; (with-current-buffer b
@@ -985,6 +997,11 @@ the first argument and CBARGS as the rest of arguments."
 ;; is problematic.
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
 (add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:notebook-close-notebooks t))))
+
+(add-function
+ :before-until (symbol-function 'narrow-to-region)
+ #'ein:notebook-forbid-narrow-to-region)
+
 (ein:python-send--init)
 
 (provide 'ein-notebook)
