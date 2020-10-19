@@ -142,7 +142,7 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 Google Compute Engine
-===================
+=====================
 Install the `gat utility`_.  Then from a notebook buffer::
 
    M-x ein:gat-run-local
