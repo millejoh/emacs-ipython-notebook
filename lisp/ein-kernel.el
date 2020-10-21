@@ -294,7 +294,7 @@ See https://github.com/ipython/ipython/pull/3307"
                                (unless (ein:$websocket-closed-by-client websocket)
                                  (ein:log 'verbose "WS closed unexpectedly: %s" (websocket-url ws))
                                  (ein:kernel-disconnect kernel))
-                             (ein:log 'error "ein:start-single-websocket: on-close no client data for %s." ws)))
+                             (ein:log 'error "ein:start-single-websocket: on-close no client data for %s." (websocket-url ws))))
                          (apply-partially
                           (lambda (cb ws)
                             (-if-let* ((websocket (websocket-client-data ws))
@@ -304,7 +304,7 @@ See https://github.com/ipython/ipython/pull/3307"
                                     (run-hook-with-args 'ein:on-kernel-connect-functions kernel)
                                     (when cb (funcall cb kernel)))
                                   (ein:log 'verbose "WS opened: %s" (websocket-url ws)))
-                              (ein:log 'error "ein:start-single-websocket: on-open no client data for %s." ws)))
+                              (ein:log 'error "ein:start-single-websocket: on-open no client data for %s." (websocket-url ws))))
                           open-callback)))))
 
 (defun ein:kernel-start-websocket (kernel callback)
