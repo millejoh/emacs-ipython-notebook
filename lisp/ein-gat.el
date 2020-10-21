@@ -267,7 +267,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                 (magit-with-editor
                   (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
                          (base-image (ein:gat-elicit-base-image))
-                         (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
+                         (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
                          (my-editor (when (and (boundp 'server-name)
                                                (server-running-p server-name))
                                       `("-s" ,server-name))))
