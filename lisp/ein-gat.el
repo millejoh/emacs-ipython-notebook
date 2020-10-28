@@ -32,25 +32,50 @@
 ;; (declare-function magit-process-sentinel "magit-process")
 
 (defconst ein:gat-status-cd 7 "gat exits 7 if requiring a change directory.")
-(defcustom ein:gat-zone (string-trim (shell-command-to-string
-				      "gcloud config get-value compute/zone"))
+
+(defcustom ein:gat-python-command (if (equal system-type 'windows-nt)
+                                      (or (executable-find "py")
+                                          (executable-find "pythonw")
+                                          "python")
+                                    "python")
+  "Python executable name."
+  :type (append '(choice)
+                (let (result)
+                  (dolist (py '("python" "python3" "pythonw" "py")
+                              result)
+                    (setq result (append result `((const :tag ,py ,py))))))
+                '((string :tag "Other")))
+  :group 'ein)
+
+(defsubst ein:gat-shell-command (command)
+  (string-trim (shell-command-to-string (concat "2>/dev/null " command))))
+
+(defcustom ein:gat-gce-zone (ein:gat-shell-command "gcloud config get-value compute/zone")
   "gcloud project zone."
   :type 'string
   :group 'ein)
 
-(defcustom ein:gat-region (string-trim (shell-command-to-string
-					"gcloud config get-value compute/region"))
+(defcustom ein:gat-gce-region (ein:gat-shell-command "gcloud config get-value compute/region")
   "gcloud project region."
   :type 'string
   :group 'ein)
 
-(defcustom ein:gat-project (string-trim (shell-command-to-string
-					 "gcloud config get-value core/project"))
+(defcustom ein:gat-aws-region (ein:gat-shell-command "aws configure get region")
+  "gcloud project region."
+  :type 'string
+  :group 'ein)
+
+(defcustom ein:gat-gce-project (ein:gat-shell-command "gcloud config get-value core/project")
   "gcloud project id."
   :type 'string
   :group 'ein)
 
-(defcustom ein:gat-machine-types (split-string (string-trim (shell-command-to-string (format "gcloud compute machine-types list --filter=\"zone:%s\" --format=\"value[terminator=' '](name)\"" ein:gat-zone))))
+(defcustom ein:gat-aws-machine-types (split-string "g3s.xlarge p2.xlarge p3.2xlarge")
+  "gcloud machine types."
+  :type '(repeat string)
+  :group 'ein)
+
+(defcustom ein:gat-gce-machine-types (split-string (ein:gat-shell-command (format "gcloud compute machine-types list --filter=\"zone:%s\" --format=\"value[terminator=' '](name)\"" ein:gat-gce-zone)))
   "gcloud machine types."
   :type '(repeat string)
   :group 'ein)
@@ -69,7 +94,8 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 				 "jupyter/minimal-notebook"
 				 "jupyter/base-notebook"
 				 "jupyter/pyspark-notebook"
-                                 "jupyter/all-spark-notebook")
+                                 "jupyter/all-spark-notebook"
+                                 "dickmao/pytorch-gpu")
   "Known https://hub.docker.com/u/jupyter images."
   :type '(repeat (string :tag "FROM-appropriate docker image"))
   :group 'ein)
@@ -86,7 +112,7 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 (defvar-local ein:gat-gpus-history '("0")
   "Hopefully notebook-specific history of user entered gpu count.")
 
-(defvar-local ein:gat-machine-history '("e2-standard-2")
+(defvar-local ein:gat-machine-history nil
   "Hopefully notebook-specific history of user entered machine type.")
 
 (defun ein:gat-where-am-i (&optional print-message)
@@ -107,8 +133,12 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 ;; (defvar inhibit-magit-refresh)
 ;; (defvar magit-process-raise-error)
 ;; (defvar magit-process-display-mode-line-error)
-(defun ein:gat-chain (buffer callback &rest args)
+(cl-defun ein:gat-chain (buffer callback &rest args &key public-ip-address &allow-other-keys)
   (declare (indent 0))
+  (when public-ip-address
+    (setq args (butlast args 2))
+    (ein:login (ein:url (format "http://%s:8888" public-ip-address))
+               (lambda (buffer _url-or-port) (pop-to-buffer buffer))))
   (let* ((default-directory (ein:gat-where-am-i))
          (default-process-coding-system (magit--process-coding-system))
 	 (inhibit-magit-refresh t)
@@ -116,7 +146,13 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 					    (or (getenv "GAT_APPLICATION_CREDENTIALS")
                                                 (error "GAT_APPLICATION_CREDENTIALS undefined")))
 				    process-environment))
-	 (process (apply #'magit-start-process args)))
+         (activate-with-editor-mode
+          (when (string= (car args) with-editor-emacsclient-executable)
+            (lambda () (when (string= (buffer-name) (car (last args)))
+                         (with-editor-mode 1)))))
+         (process (apply #'magit-start-process args)))
+    (when activate-with-editor-mode
+      (add-hook 'find-file-hook activate-with-editor-mode))
     (set-process-sentinel
      process
      (lambda (proc event)
@@ -124,7 +160,9 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
               (process-buf (process-buffer proc))
               (section (process-get proc 'section))
               (gat-status-cd-p (= gat-status ein:gat-status-cd))
-              new-worktree-dir)
+              worktree-dir public-ip-address)
+         (when activate-with-editor-mode
+           (remove-hook 'find-file-hook activate-with-editor-mode))
 	 (let ((magit-process-display-mode-line-error
 		(if gat-status-cd-p nil magit-process-display-mode-line-error))
 	       (magit-process-raise-error
@@ -137,17 +175,27 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
              (remove-function (symbol-function 'process-exit-status) short-circuit)))
 	 (cond
           ((or (zerop gat-status) gat-status-cd-p)
-           (when (and gat-status-cd-p (buffer-live-p process-buf))
-             (alet (with-current-buffer process-buf
-                     (buffer-substring-no-properties (oref section content)
-                                                     (oref section end)))
-               (setq new-worktree-dir (progn (string-match "^cd\\s-+\\(\\S-+\\)" it)
-                                             (string-trim (match-string 1 it))))))
-           (when callback
-             (with-current-buffer buffer
-               (let ((magit-process-popup-time 0))
-                 (apply callback (when new-worktree-dir
-                                   `(:worktree-dir ,new-worktree-dir)))))))
+           (alet (and (bufferp process-buf)
+                      (with-current-buffer process-buf
+                        (buffer-substring-no-properties (oref section content)
+                                                        (oref section end))))
+             (when it
+               (when gat-status-cd-p
+                 (setq worktree-dir (when (string-match "^cd\\s-+\\(\\S-+\\)" it)
+                                          (string-trim (match-string 1 it)))))
+               (when-let ((last-line (car (last (split-string (string-trim it) "\n")))))
+                 (setq public-ip-address
+                       (when (string-match "^\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)\\s-+\\S-+$" last-line)
+                         (string-trim (match-string 1 last-line))))))
+             (when callback
+               (with-current-buffer buffer
+                 (let ((magit-process-popup-time 0))
+                   (apply callback
+                          (append
+                           (when worktree-dir
+                             `(:worktree-dir ,worktree-dir))
+                           (when public-ip-address
+                             `(:public-ip-address ,public-ip-address)))))))))
           (t
            (ein:log 'error "ein:gat-chain: %s exited %s"
 		     (car args) (process-exit-status proc)))))))
@@ -186,9 +234,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (interactive "P")
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (ein:get-notebook))
-           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-                             "--region" ,ein:gat-region "--zone"
-                             ,ein:gat-zone)))
+           (gat-chain-args `("gat" nil "--project" "-"
+                             "--region" ,ein:gat-aws-region "--zone" "-")))
       (if (special-variable-p 'magit-process-popup-time)
           (let ((magit-process-popup-time -1))
             (apply #'ein:gat-chain (current-buffer)
@@ -211,9 +258,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (interactive "P")
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (ein:get-notebook))
-           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-                             "--region" ,ein:gat-region "--zone"
-                             ,ein:gat-zone)))
+           (gat-chain-args `("gat" nil "--project" "-"
+                             "--region" ,ein:gat-aws-region "--zone" " -")))
       (if (special-variable-p 'magit-process-popup-time)
           (let ((magit-process-popup-time 0))
             (apply #'ein:gat-chain (current-buffer)
@@ -234,25 +280,91 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defsubst ein:gat-run-local (&optional refresh)
   (interactive "P")
-  (ein:gat--run-local-or-remote nil refresh))
+  (ein:gat--run-local-or-remote nil refresh nil))
 
 (defsubst ein:gat-run-remote (&optional refresh)
   (interactive "P")
-  (ein:gat--run-local-or-remote t refresh))
+  (ein:gat--run-local-or-remote t refresh nil))
 
-(defun ein:gat--run-local-or-remote (remote-p refresh)
+(defun ein:gat-hash-password (raw-password)
+  (let ((gat-hash-password-python
+         (format "%s - <<EOF
+from notebook.auth import passwd
+print(passwd('%s'))
+EOF
+" ein:gat-python-command raw-password)))
+    (ein:gat-shell-command gat-hash-password-python)))
+
+(defun ein:gat-crib-password ()
+  (let* ((gat-crib-password-python
+          (format "%s - <<EOF
+from traitlets.config.application import Application
+from traitlets import Unicode
+class NotebookApp(Application):
+  password = Unicode(u'', config=True,)
+
+app = NotebookApp()
+app.load_config_file('jupyter_notebook_config.py', '~/.jupyter')
+print(app.password)
+EOF
+" ein:gat-python-command))
+         (config-dir
+          (elt (assoc-default
+                'config
+                (json-read-from-string (ein:gat-shell-command "jupyter --paths --json")))
+               0))
+         (config-json (expand-file-name "jupyter_notebook_config.json" config-dir))
+         (config-py (expand-file-name "jupyter_notebook_config.py" config-dir))
+         password)
+    (when (file-exists-p config-py)
+      (setq password
+            (ein:gat-shell-command gat-crib-password-python)))
+    (unless (stringp password)
+      (when (file-exists-p config-json)
+        (-let* (((&alist 'NotebookApp (&alist 'password))
+                 (json-read-file config-json)))
+          password)))
+    password))
+
+(defun ein:gat-kaggle-env (var json-key)
+  (when-let ((val (or (getenv var)
+                      (let ((json (expand-file-name "kaggle.json" "~/.kaggle")))
+                        (when (file-exists-p json)
+                          (assoc-default json-key (json-read-file json)))))))
+    (format "--env %s=%s" var val)))
+
+(defun ein:gat--run-local-or-remote (remote-p refresh batch-p)
   (unless with-editor-emacsclient-executable
     (error "Could not determine emacsclient"))
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (aand (ein:get-notebook)
                            (ein:$notebook-notebook-name it)))
-           (gat-chain-args `("gat" nil "--project" ,ein:gat-project
-                             "--region" ,ein:gat-region "--zone"
-                             ,ein:gat-zone))
+           (password (or (ein:gat-crib-password)
+                         (let ((new-password
+                                (read-passwd "Enter new password for remote server [none]: " t)))
+                           (if (zerop (length new-password))
+                               ""
+                             (let ((hashed (ein:gat-hash-password new-password)))
+                               (if (string-prefix-p "sha1:" hashed)
+                                   hashed
+                                 (prog1 nil
+                                   (ein:log 'error "ein:gat--run-local-or-remote: %s %s"
+                                            "Could not hash" new-password))))))))
+           (gat-chain-args `("gat" nil
+                             "--project" "-"
+                             "--region" ,ein:gat-aws-region
+                             "--zone" "-"))
            (gat-chain-run (if remote-p
                               (append '("run-remote")
-                                      `("--machine"
-                                        ,(ein:gat-elicit-machine))
+                                      `("--user" "root")
+                                      `("--env" "GRANT_SUDO=1")
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_USERNAME" 'username)
+                                        (split-string it))
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_KEY" 'key)
+                                        (split-string it))
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_NULL" 'null)
+                                        (split-string it))
+                                      `("--machine" ,(ein:gat-elicit-machine))
                                       `(,@(aif (ein:gat-elicit-disksizegb)
                                               (list "--disksizegb"
                                                     (number-to-string it))))
@@ -267,7 +379,15 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                 (magit-with-editor
                   (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension notebook)))
                          (base-image (ein:gat-elicit-base-image))
-                         (_ (with-temp-file dockerfile (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\nCMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]" base-image notebook notebook))))
+                         (_ (with-temp-file
+                                dockerfile
+                              (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\n" base-image notebook))
+                              (insert (cond (batch-p
+                                             (format "CMD [ \"start.sh\", \"jupyter\", \"nbconvert\", \"--ExecutePreprocessor.timeout=21600\", \"--to\", \"notebook\", \"--execute\", \"%s\" ]\n" notebook))
+                                            ((zerop (length password))
+                                             (format "CMD [ \"start-notebook.sh\", \"--NotebookApp.token=''\" ]\n"))
+                                            (t
+                                             (format "CMD [ \"start-notebook.sh\", \"--NotebookApp.password=%s\" ]\n" password))))))
                          (my-editor (when (and (boundp 'server-name)
                                                (server-running-p server-name))
                                       `("-s" ,server-name))))
@@ -294,7 +414,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                                 (append gat-chain-args (list "log" "-f"))))
                        (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker))))
             (error "ein:gat--run-local-or-remote: magit not installed"))))
-    (message "ein:gat--run-local-or-remote: not a notebook buffer")))
+    (message "ein:gat--run-local-or-remote: aborting")))
 
 (defun ein:gat-elicit-base-image ()
   "Using a defcustom as HIST is suspect but pithy."
@@ -305,8 +425,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 (defun ein:gat-elicit-machine ()
   (interactive)
   (ein:completing-read
-   "Machine Type: " ein:gat-machine-types nil t nil
-   'ein:gat-machine-history (car ein:gat-machine-history)))
+   "Machine Type: " ein:gat-aws-machine-types nil t nil
+   'ein:gat-machine-history (car (or ein:gat-machine-history ein:gat-aws-machine-types))))
 
 (defun ein:gat-elicit-gpus ()
   (interactive)
@@ -316,13 +436,13 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 			      'ein:gat-gpus-history (car ein:gat-gpus-history)))
 	   until (>= answer 0)
 	   finally return answer))
+(add-function :override (symbol-function 'ein:gat-elicit-gpus) #'ignore)
 
 (defun ein:gat-elicit-worktree (extant)
   (let ((already (split-string
-                  (string-trim
-                   (shell-command-to-string
-                    (format "gat --project %s --region %s --zone %s list"
-                            ein:gat-project ein:gat-region ein:gat-zone))))))
+                  (ein:gat-shell-command
+                   (format "gat --project %s --region %s --zone - list"
+                           "-" ein:gat-aws-region)))))
     (if extant
         (ein:completing-read
          "Experiment: " already nil t nil nil
