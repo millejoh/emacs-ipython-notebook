@@ -447,8 +447,7 @@ Unshift in list parlance means prepending to list."
           (ein:worksheet-insert-cell-below ws 'code nil t))))
     (set-buffer-modified-p nil)
     (ein:worksheet-bind-events ws)
-    (ein:worksheet-set-kernel ws)
-    (ein:log 'info "Worksheet %s is ready" (ein:worksheet-notebook-path ws))))
+    (ein:worksheet-set-kernel ws)))
 
 (defun ein:worksheet-pp (ewoc-data)
   "Consider disabling `buffer-undo-list' here instead of `ein:cell--ewoc-invalidate'

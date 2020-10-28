@@ -905,6 +905,8 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                   (ein:log 'warn "ein:cell-append-mime-type: %s"
                            "no viewer method found in mailcap")))))
         (ein:log 'warn "ein:cell-append-mime-type: %s not supported" type)))
+     ((:text/plain)
+      (ein:insert-read-only (ansi-color-apply value)))
      (otherwise
       (ein:insert-read-only value)))))
 

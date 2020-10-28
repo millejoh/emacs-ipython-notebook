@@ -82,20 +82,22 @@
       (when (<= level ein:log-message-level)
         (message "ein: %s" (ein:log-strip-timestamp msg))))))
 
+(make-obsolete-variable 'ein:debug nil "0.17.0")
+
 (defmacro ein:log (level string &rest args)
   (declare (indent 1))
   `(ein:log-wrapper ,level (lambda () (format ,string ,@args))))
 
-;; FIXME: this variable must go to somewhere more central
-(defvar ein:debug nil
+(defsubst ein:debug-p ()
   "Set to non-`nil' to raise errors instead of suppressing it.
-Change the behavior of `ein:log-ignore-errors'.")
+Change the behavior of `ein:log-ignore-errors'."
+  (>= ein:log-level (alist-get 'debug ein:log-level-def)))
 
 (defmacro ein:log-ignore-errors (&rest body)
   "Execute BODY; if an error occurs, log the error and return nil.
 Otherwise, return result of last form in BODY."
   (declare (debug t) (indent 0))
-  `(if ein:debug
+  `(if (ein:debug-p)
        (progn ,@body)
      (condition-case err
          (progn ,@body)

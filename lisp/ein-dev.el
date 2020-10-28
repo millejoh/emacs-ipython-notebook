@@ -102,9 +102,8 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (interactive)
   (message (concat "debug-on-error=%s websocket-debug=%s "
                    "websocket-callback-debug-on-error=%s "
-                   "ein:debug=%s ein:log-level=%s ein:log-message-level=%s")
+                   "ein:log-level=%s ein:log-message-level=%s")
            debug-on-error websocket-debug websocket-callback-debug-on-error
-           ein:debug
            (ein:log-level-int-to-name ein:log-level)
            (ein:log-level-int-to-name ein:log-message-level)))
 
@@ -132,7 +131,6 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq request-message-level (quote verbose))
   (setq websocket-debug t)
   (setq websocket-callback-debug-on-error t)
-  (setq ein:debug t)
   (ein:log-set-level 'debug)
   (ein:log-set-message-level 'verbose)
   (ein:dev-patch-backtrace)
@@ -149,7 +147,6 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq request-log-level -1)
   (setq request-message-level 'warn)
   (setq websocket-callback-debug-on-error nil)
-  (setq ein:debug nil)
   (ein:log-set-level 'verbose)
   (ein:log-set-message-level 'info)
   (ein:dev-depatch-backtrace)

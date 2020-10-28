@@ -166,7 +166,7 @@ with the call to the jupyter notebook."
                                              (convert-standard-filename dir)))
                                args
                                (let ((copy (cl-copy-list ein:jupyter-server-args)))
-                                 (when ein:debug
+                                 (when (ein:debug-p)
                                    (cl-pushnew "--debug" copy))
                                  copy)))))
          (proc (apply #'start-process

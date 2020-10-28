@@ -155,7 +155,7 @@
 	 (outputs (cl-loop for out in (ein:oref-safe cell 'outputs)
 			   collect (funcall render out))))
     (when outputs
-      (ein:join-str "" outputs))))
+      (ansi-color-apply (ein:join-str "" outputs)))))
 
 (defun ob-ein--get-name-create (src-block-info)
   "Get the name of a src block or add a uuid as the name."
