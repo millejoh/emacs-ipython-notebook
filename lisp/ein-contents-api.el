@@ -247,10 +247,10 @@ ERRBACK of arity 1 for the contents."
   (when callback
     (apply callback cbargs)))
 
-(cl-defun ein:content-save-error (url errcb errcbargs &key response data &allow-other-keys)
+(cl-defun ein:content-save-error (url errcb errcbargs &key response &allow-other-keys)
   (ein:log 'error
-    "Content save %s failed %s %s."
-    url (request-response-error-thrown response) (plist-get data :message))
+    "ein:content-save-error: %s %s."
+    url (error-message-string (request-response-error-thrown response)))
   (when errcb
     (apply errcb errcbargs)))
 

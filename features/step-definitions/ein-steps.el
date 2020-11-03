@@ -218,7 +218,7 @@
   (lambda (final-p _workaround)
     (cancel-function-timers #'ein:notebooklist-reload)
     (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
-      (ein:jupyter-server-stop t))
+      (ein:jupyter-server-stop nil (car (ein:jupyter-server-conn-info))))
     (cl-loop repeat 10
              with buffer = (get-buffer *ein:jupyter-server-buffer-name*)
              until (null (get-buffer-process buffer))

@@ -968,9 +968,9 @@ the first argument and CBARGS as the rest of arguments."
                          (apply callback data cbargs)))
                       callback cbargs))))
 
-(defun ein:notebook-close-notebooks (&optional blithely)
+(defun ein:notebook-close-notebooks (&optional predicate blithely)
   "Used in `ein:jupyter-server-stop' and `kill-emacs-hook'."
-  (aif (ein:notebook-opened-notebooks)
+  (aif (ein:notebook-opened-notebooks predicate)
       (if (and (cl-notevery #'identity (mapcar #'ein:notebook-close it))
                (not blithely))
           (y-or-n-p "Some notebooks could not be saved.  Exit anyway?")
@@ -996,8 +996,7 @@ returned t."
 ;;     (kill-buffer)))
 ;; is problematic.
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
-(add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:notebook-close-notebooks t))))
-
+(add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:jupyter-server-stop))))
 (add-function
  :before-until (symbol-function 'narrow-to-region)
  #'ein:notebook-forbid-narrow-to-region)

@@ -27,20 +27,21 @@
 ;;; Code:
 
 (require 'ein-process)
-
-(defvar ein:ipynb-parent-mode 'js-mode
-  "A mode (a symbol) to use for parent mode for `ein:ipynb-mode'.
-Note that this variable must be set *before* compiling EIN.")
-
-(defalias 'ein:ipynb-parent-mode ein:ipynb-parent-mode)
+(require 'js)
 
 ;;;###autoload
-(define-derived-mode ein:ipynb-mode ein:ipynb-parent-mode "ein:ipynb"
-  "A simple mode for ipynb file.")
+(define-derived-mode ein:ipynb-mode js-mode "ein:ipynb"
+  "A simple mode for ipynb file.
+
+\\{ein:ipynb-mode-map}
+"
+  :group 'ein)
 
 (let ((map ein:ipynb-mode-map))
+  (set-keymap-parent map js-mode-map)
   (define-key map "\C-c\C-z" 'ein:process-find-file-callback)
   (define-key map "\C-c\C-o" 'ein:process-find-file-callback)
+  (define-key map "\C-c\C-r" 'ein:gat-run-remote)
   (easy-menu-define ein:ipynb-menu map "EIN IPyNB Mode Menu"
     `("EIN IPyNB File"
       ,@(ein:generate-menu

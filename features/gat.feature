@@ -15,8 +15,8 @@ Scenario: gat create from repo, then create from worktree, then run-local
   Then I switch to buffer like ".gat/baz/Untitled"
   When I call "ein:gat-run-local"
   And I switch to buffer like "Dockerfile.Untitled"
-  And I should see "FROM jupyter"
-  And I press "C-x #"
+  And I should see "FROM dickmao"
+  And I press "C-c C-c"
   And I switch to buffer like "magit-process: baz"
   Then I wait for buffer to say "Building image"
   And I dump buffer

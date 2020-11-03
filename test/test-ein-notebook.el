@@ -869,7 +869,8 @@ defined."
       ;; Edit notebook.
       (ein:cell-goto (ein:get-cell-at-point))
       (insert latin)
-      (should (ein:notebook-save-notebook (ein:get-notebook))))))
+      (cl-letf (((symbol-function 'request) #'ignore))
+        (should-not (ein:notebook-save-notebook (ein:get-notebook)))))))
 
 (ert-deftest ein:notebook-to-json-after-closing-a-worksheet ()
   (with-current-buffer (ein:testing-notebook-make-new)
@@ -1182,7 +1183,7 @@ value of `ein:worksheet-enable-undo'."
     (should-not (gethash `(,ein:testing-notebook-dummy-url "Killed Notebook.ipynb") ein:notebook--opened-map))
     (should (= (hash-table-count ein:notebook--opened-map) 2))
     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _args) nil)))
-      (ein:notebook-close-notebooks t)
+      (ein:notebook-close-notebooks nil t)
       (should-not (ein:notebook-opened-notebooks)))))
 
 ;;; Buffer and kill hooks

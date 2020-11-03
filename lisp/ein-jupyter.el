@@ -26,6 +26,7 @@
 (require 'ein-core)
 (require 'ein-notebooklist)
 (require 'ein-dev)
+(require 'ein-gat)
 (require 'exec-path-from-shell)
 
 (defcustom ein:jupyter-use-containers nil
@@ -306,9 +307,8 @@ server command."
          (lambda (buffer _url-or-port)
            (pop-to-buffer buffer))
          nil))
-  (if (ein:jupyter-server-process)
-      (error "ein:jupyter-server-start: please first M-x ein:stop"))
-  (add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:jupyter-server-stop t))))
+  (when (ein:jupyter-server-process)
+    (error "ein:jupyter-server-start: First `M-x ein:stop'"))
   (let ((proc (ein:jupyter-server--run *ein:jupyter-server-buffer-name*
                                        server-command
                                        notebook-directory
@@ -320,16 +320,15 @@ server command."
              do (sleep-for 0 500)
              finally do
              (-if-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
-                        (url-or-port (ein:jupyter-server-conn-info)))
+                        (url-or-port (car (ein:jupyter-server-conn-info))))
                  (with-current-buffer buffer
                    (setq ein:jupyter-server-notebook-directory
                          (convert-standard-filename notebook-directory))
                    (add-hook 'kill-buffer-query-functions
                              (lambda () (or (not (ein:jupyter-server-process))
-                                            (ein:jupyter-server-stop nil)))
+                                            (ein:jupyter-server-stop t url-or-port)))
                              nil t))
-               (ein:log 'warn "Jupyter server failed to start, cancelling operation")
-               (ein:jupyter-server-stop t)))
+               (ein:log 'warn "Jupyter server failed to start, cancelling operation")))
     (when (and (not no-login-p) (ein:jupyter-server-process))
       (unless login-callback
         (setq login-callback #'ignore))
@@ -346,38 +345,57 @@ server command."
 (defalias 'ein:stop 'ein:jupyter-server-stop)
 
 ;;;###autoload
-(defun ein:jupyter-server-stop (&optional force log)
-  (interactive)
-  (-when-let* ((url-or-port (car (ein:jupyter-server-conn-info)))
-               (ok (or force (y-or-n-p "Stop server and close notebooks?"))))
-    (ein:notebook-close-notebooks t)
-    (cl-loop repeat 10
-             until (not (seq-some (lambda (proc)
-                                    (cl-search "request curl"
-                                               (process-name proc)))
-                                  (process-list)))
-             do (sleep-for 0 500))
-    (let* ((proc (ein:jupyter-server-process))
-           (pid (process-id proc)))
-      (if (eq system-type 'windows-nt)
-          (ein:query-singleton-ajax
-           (ein:url url-or-port "api/shutdown")
-           :type "POST")
-        (ein:log 'info "Signaled %s with pid %s" proc pid)
-        (signal-process pid 15))
-      (run-at-time 2 nil
-                   (lambda ()
-                     (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                     (signal-process pid (if (eq system-type 'windows-nt) 9 15)))))
-
-    ;; `ein:notebooklist-sentinel' frequently does not trigger
-    (ein:notebooklist-list-remove url-or-port)
-    (kill-buffer (ein:notebooklist-get-buffer url-or-port))
-    (when (ein:shared-output-healthy-p)
-      (kill-buffer (ein:shared-output-buffer)))
-    (when log
-      (with-current-buffer *ein:jupyter-server-buffer-name*
-        (write-region (point-min) (point-max) log)))
-    t))
+(defun ein:jupyter-server-stop (&optional ask-p url-or-port)
+  (interactive "p")
+  (let ((my-url-or-port (car (ein:jupyter-server-conn-info)))
+        (all-p t))
+    (dolist (url-or-port
+             (if url-or-port (list url-or-port) (ein:notebooklist-keys))
+             (prog1 all-p
+               (when (and (null (ein:notebooklist-keys))
+                          (ein:shared-output-healthy-p))
+                 (kill-buffer (ein:shared-output-buffer)))))
+      (let ((gat-dir (alist-get (intern url-or-port) ein:gat-urls))
+            (my-p (string= url-or-port my-url-or-port)))
+        (ein:notebook-close-notebooks
+         (lambda (notebook)
+           (string= url-or-port (ein:$notebook-url-or-port notebook)))
+         t)
+        (cl-loop repeat 10
+                 until (null (seq-some (lambda (proc)
+                                         (cl-search "request curl"
+                                                    (process-name proc)))
+                                       (process-list)))
+                 do (sleep-for 0 500))
+        (if (not (or (and (not ask-p) (or my-p gat-dir))
+                     (and ask-p (or my-p gat-dir)
+                          (prog1 (y-or-n-p (format "Shutdown %s?" url-or-port))
+                            (message "")))))
+            (setq all-p nil)
+          (cond (my-p
+                 (-when-let* ((proc (ein:jupyter-server-process))
+                              (pid (process-id proc)))
+                   (run-at-time 2 nil
+                                (lambda ()
+                                  (ein:log 'info "Resignaled %s with pid %s" proc pid)
+                                  (signal-process pid (if (eq system-type 'windows-nt) 9 15))))))
+                (gat-dir
+                 (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+                   (-when-let* ((gat-chain-args `("gat" nil
+                                                  "--project" "-"
+                                                  "--region" ,ein:gat-aws-region
+                                                  "--zone" "-"))
+                                (now (truncate (float-time)))
+                                (gat-log-exec (append gat-chain-args
+                                                      (list "log" "--after" (format "%s" now)
+                                                            "--until" "Deleted: sha256:")))
+                                (magit-process-popup-time 0))
+                     (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)))))
+          ;; NotebookPasswordApp::shutdown_server() also ignores req response.
+          (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")
+                                    :type "POST"))
+        ;; `ein:notebooklist-sentinel' frequently does not trigger
+        (ein:notebooklist-list-remove url-or-port)
+        (kill-buffer (ein:notebooklist-get-buffer url-or-port))))))
 
 (provide 'ein-jupyter)
