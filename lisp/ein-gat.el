@@ -362,7 +362,7 @@ EOF
                      (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it))
                        it))))
              (default-directory (ein:gat-where-am-i))
-             (password (if (not remote-p)
+             (password (if (or batch-p (not remote-p))
                            ""
                          (or (ein:gat-crib-password)
                              (let ((new-password
@@ -402,7 +402,9 @@ EOF
              (now (truncate (float-time)))
              (gat-log-exec (append gat-chain-args
                                    (list "log" "--after" (format "%s" now)
-                                         "--until" "is running at:")))
+                                         "--until" (if batch-p
+                                                       "Deleted: sha256:"
+                                                     "is running at:"))))
              (command (cond (batch-p
                              (format "start.sh jupyter nbconvert --ExecutePreprocessor.timeout=21600 --to notebook --execute %s" ipynb-name))
                             ((zerop (length password))
@@ -433,7 +435,8 @@ EOF
                           (apply-partially
                            #'ein:gat-chain
                            (current-buffer)
-                           (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory)
+                           (unless batch-p
+                             (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
                            gat-log-exec))
                         (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
                        (append gat-chain-args (list "dockerfile" dockerfile)))
@@ -447,7 +450,8 @@ EOF
                     (apply-partially
                      #'ein:gat-chain
                      (current-buffer)
-                     (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory)
+                     (unless batch-p
+                       (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
                      gat-log-exec))
                   (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
             (error "ein:gat--run: magit not installed"))))

@@ -127,8 +127,8 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _scimax: https://github.com/jkitchin/scimax
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
-Google Compute Engine
-=====================
+Amazon Web Services
+===================
 Install the `gat utility`_.  Then from a notebook buffer::
 
    M-x ein:gat-run-local
@@ -137,7 +137,7 @@ attempts running your containerized notebook locally.  If that succeeds, try::
 
    M-x ein:gat-run-remote
 
-attempts the same run in Google Compute Engine.
+attempts the same run in AWS.
 
 You can fork your notebook via::
 
