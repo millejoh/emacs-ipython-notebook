@@ -96,8 +96,6 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defvar ein:gat-previous-worktree nil)
 
-(defvar ein:gat-executable nil)
-
 (defvar ein:gat-urls nil)
 
 (defconst ein:gat-master-worktree "master")
@@ -263,77 +261,74 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defun ein:gat-edit (&optional _refresh)
   (interactive "P")
-  (unless (ein:gat-install-gat)
-    (error "Could not install gat"))
-  (if-let ((default-directory (ein:gat-where-am-i))
-           (notebook (ein:get-notebook))
-           (gat-chain-args `(,ein:gat-executable nil "--project" "-"
-                             "--region" ,ein:gat-aws-region "--zone" "-")))
-      (if (special-variable-p 'magit-process-popup-time)
-          (let ((magit-process-popup-time -1))
-            (ein:gat-chain
-              (current-buffer)
-              (cl-function
-               (lambda (&rest args &key worktree-dir &allow-other-keys)
-                 (ein:notebook-open
-                  (ein:$notebook-url-or-port notebook)
-                  (ein:gat--path (ein:$notebook-notebook-path notebook)
-                                 worktree-dir)
-                  (ein:$notebook-kernelspec notebook))))
-              (append gat-chain-args
-                      (list "edit"
-                            (alet (ein:gat-elicit-worktree t)
-                              (setq ein:gat-previous-worktree ein:gat-current-worktree)
-                              (setq ein:gat-current-worktree it))))))
-        (error "ein:gat-create: magit not installed"))
-    (message "ein:gat-edit: not a notebook buffer")))
+  (ein:gat-install-gat
+   (if-let ((default-directory (ein:gat-where-am-i))
+            (notebook (ein:get-notebook))
+            (gat-chain-args `("gat" nil "--project" "-"
+                              "--region" ,ein:gat-aws-region "--zone" "-")))
+       (if (special-variable-p 'magit-process-popup-time)
+           (let ((magit-process-popup-time -1))
+             (ein:gat-chain
+               (current-buffer)
+               (cl-function
+                (lambda (&rest args &key worktree-dir &allow-other-keys)
+                  (ein:notebook-open
+                   (ein:$notebook-url-or-port notebook)
+                   (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                  worktree-dir)
+                   (ein:$notebook-kernelspec notebook))))
+               (append gat-chain-args
+                       (list "edit"
+                             (alet (ein:gat-elicit-worktree t)
+                               (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                               (setq ein:gat-current-worktree it))))))
+         (error "ein:gat-create: magit not installed"))
+     (message "ein:gat-edit: not a notebook buffer"))))
 
 (defun ein:gat-create (&optional _refresh)
   (interactive "P")
-  (unless (ein:gat-install-gat)
-    (error "Could not install gat"))
-  (if-let ((default-directory (ein:gat-where-am-i))
-           (notebook (ein:get-notebook))
-           (gat-chain-args `(,ein:gat-executable nil "--project" "-"
-                             "--region" ,ein:gat-aws-region "--zone" " -")))
-      (if (special-variable-p 'magit-process-popup-time)
-          (let ((magit-process-popup-time 0))
-            (ein:gat-chain
-              (current-buffer)
-              (cl-function
-               (lambda (&rest args &key worktree-dir &allow-other-keys)
-                 (ein:notebook-open
-                  (ein:$notebook-url-or-port notebook)
-                  (ein:gat--path (ein:$notebook-notebook-path notebook)
-                                 worktree-dir)
-                  (ein:$notebook-kernelspec notebook))))
-              (append gat-chain-args
-                      (list "create"
-                            (alet (ein:gat-elicit-worktree nil)
-                              (setq ein:gat-previous-worktree ein:gat-current-worktree)
-                              (setq ein:gat-current-worktree it))))))
-        (error "ein:gat-create: magit not installed"))
-    (message "ein:gat-create: not a notebook buffer")))
+  (ein:gat-install-gat
+   (if-let ((default-directory (ein:gat-where-am-i))
+            (notebook (ein:get-notebook))
+            (gat-chain-args `("gat" nil "--project" "-"
+                              "--region" ,ein:gat-aws-region "--zone" " -")))
+       (if (special-variable-p 'magit-process-popup-time)
+           (let ((magit-process-popup-time 0))
+             (ein:gat-chain
+               (current-buffer)
+               (cl-function
+                (lambda (&rest args &key worktree-dir &allow-other-keys)
+                  (ein:notebook-open
+                   (ein:$notebook-url-or-port notebook)
+                   (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                  worktree-dir)
+                   (ein:$notebook-kernelspec notebook))))
+               (append gat-chain-args
+                       (list "create"
+                             (alet (ein:gat-elicit-worktree nil)
+                               (setq ein:gat-previous-worktree ein:gat-current-worktree)
+                               (setq ein:gat-current-worktree it))))))
+         (error "ein:gat-create: magit not installed"))
+     (message "ein:gat-create: not a notebook buffer"))))
 
-(defun ein:gat-install-gat ()
-  (interactive)
-  (unless ein:gat-executable
-    (if-let ((gat-executable (executable-find "gat")))
-        (setq ein:gat-executable gat-executable)
-      (ein:log 'info "ein:gat-install-gat: Installing gat...")
-      (let* ((dir (make-temp-file "gat-install" t))
-             (commands `(,(format "cd %s" dir)
-                         "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
-                         "make -C gat install"))
-             (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; "))))
-        (compilation-start compile nil (lambda (&rest _args) "*gat-install*")))))
-  (cl-loop repeat 100
-           until (or (setq ein:gat-executable (executable-find "gat"))
-                     (not (get-buffer-process "*gat-install*")))
-           do (sleep-for 0 5000)
-           do (with-current-buffer "*gat-install*"
-                (ein:log 'info "hey %s" (buffer-string))))
-  ein:gat-executable)
+(defmacro ein:gat-install-gat (&rest body)
+  `(if (executable-find "gat")
+       (progn ,@body)
+     (ein:log 'info "ein:gat-install-gat: Installing gat...")
+     (let* ((orig-buf (current-buffer))
+            (bufname "*gat-install*")
+            (dir (make-temp-file "gat-install" t))
+            (commands `(,(format "cd %s" dir)
+                        "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
+                        "make -C gat install"))
+            (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
+            (callback (lambda (_buf msg)
+                        (when (cl-search "finished" msg)
+                          (with-current-buffer orig-buf
+                            ,@body)))))
+       (compilation-start compile nil (lambda (&rest _args) bufname))
+       (with-current-buffer bufname
+         (add-hook 'compilation-finish-functions callback nil t)))))
 
 ;;;###autoload
 (defun ein:gat-run-local-batch (&optional refresh)
@@ -406,108 +401,107 @@ EOF
 (defun ein:gat--run (remote-p batch-p refresh)
   (unless with-editor-emacsclient-executable
     (error "Could not determine emacsclient"))
-  (unless (ein:gat-install-gat)
-    (error "Could not install gat"))
-  (-if-let* ((ipynb-name
-              (cond ((string= major-mode "ein:ipynb-mode")
-                     (file-name-nondirectory (buffer-file-name)))
-                    (t
-                     (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it))
-                       it))))
-             (default-directory (ein:gat-where-am-i))
-             (password (if (or batch-p (not remote-p))
-                           ""
-                         (or (ein:gat-crib-password)
-                             (let ((new-password
-                                    (read-passwd "Enter new password for remote server [none]: " t)))
-                               (if (zerop (length new-password))
-                                   new-password
-                                 (let ((hashed (ein:gat-hash-password new-password)))
-                                   (if (string-prefix-p "sha1:" hashed)
-                                       hashed
-                                     (prog1 nil
-                                       (ein:log 'error "ein:gat--run: %s %s"
-                                                "Could not hash" new-password)))))))))
-             (gat-chain-args `(,ein:gat-executable nil
-                               "--project" "-"
-                               "--region" ,ein:gat-aws-region
-                               "--zone" "-"))
-             (common-options (append `("--user" "root")
-                                     `("--env" "GRANT_SUDO=1")
-                                     (awhen (ein:gat-kaggle-env "KAGGLE_USERNAME" 'username)
-                                       (split-string it))
-                                     (awhen (ein:gat-kaggle-env "KAGGLE_KEY" 'key)
-                                       (split-string it))
-                                     (awhen (ein:gat-kaggle-env "KAGGLE_NULL" 'null)
-                                       (split-string it))))
-             (gat-chain-run (if remote-p
-                                (append '("run-remote")
-                                        common-options
-                                        `("--machine" ,(ein:gat-elicit-machine))
-                                        `(,@(aif (ein:gat-elicit-disksizegb)
-                                                (list "--disksizegb"
-                                                      (number-to-string it))))
-                                        `(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
-                                                         (nonzero (not (zerop gpus))))
-                                              (list "--gpus"
-                                                    (number-to-string gpus)))))
-                              (append '("run-local") common-options)))
-             (now (truncate (float-time)))
-             (gat-log-exec (append gat-chain-args
-                                   (list "log" "--after" (format "%s" now)
-                                         "--until" "is running at:"
-                                         "--nextunit" "shutdown.service")))
-             (command (cond (batch-p
-                             (format "start.sh jupyter nbconvert --ExecutePreprocessor.timeout=21600 --to notebook --execute %s" ipynb-name))
-                            ((zerop (length password))
-                             (format "start-notebook.sh --NotebookApp.token=''"))
-                            (t
-                             (format "start-notebook.sh --NotebookApp.password=%s" password)))))
-      (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
-        (if (or refresh (null pre-docker) (null post-docker))
-            (if (fboundp 'magit-with-editor)
-                (magit-with-editor
-                  (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension ipynb-name)))
-                         (base-image (ein:gat-elicit-base-image))
-                         (_ (with-temp-file dockerfile
-                              (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\n"
-                                              base-image ipynb-name))))
-                         (my-editor (when (and (boundp 'server-name)
-                                               (server-running-p server-name))
-                                      `("-s" ,server-name))))
-                    (ein:gat-chain
-                      (current-buffer)
-                      (apply-partially
-                       #'ein:gat-chain
+  (ein:gat-install-gat
+   (-if-let* ((ipynb-name
+               (cond ((string= major-mode "ein:ipynb-mode")
+                      (file-name-nondirectory (buffer-file-name)))
+                     (t
+                      (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it))
+                        it))))
+              (default-directory (ein:gat-where-am-i))
+              (password (if (or batch-p (not remote-p))
+                            ""
+                          (or (ein:gat-crib-password)
+                              (let ((new-password
+                                     (read-passwd "Enter new password for remote server [none]: " t)))
+                                (if (zerop (length new-password))
+                                    new-password
+                                  (let ((hashed (ein:gat-hash-password new-password)))
+                                    (if (string-prefix-p "sha1:" hashed)
+                                        hashed
+                                      (prog1 nil
+                                        (ein:log 'error "ein:gat--run: %s %s"
+                                                 "Could not hash" new-password)))))))))
+              (gat-chain-args `("gat" nil
+                                "--project" "-"
+                                "--region" ,ein:gat-aws-region
+                                "--zone" "-"))
+              (common-options (append `("--user" "root")
+                                      `("--env" "GRANT_SUDO=1")
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_USERNAME" 'username)
+                                        (split-string it))
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_KEY" 'key)
+                                        (split-string it))
+                                      (awhen (ein:gat-kaggle-env "KAGGLE_NULL" 'null)
+                                        (split-string it))))
+              (gat-chain-run (if remote-p
+                                 (append '("run-remote")
+                                         common-options
+                                         `("--machine" ,(ein:gat-elicit-machine))
+                                         `(,@(aif (ein:gat-elicit-disksizegb)
+                                                 (list "--disksizegb"
+                                                       (number-to-string it))))
+                                         `(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
+                                                          (nonzero (not (zerop gpus))))
+                                               (list "--gpus"
+                                                     (number-to-string gpus)))))
+                               (append '("run-local") common-options)))
+              (now (truncate (float-time)))
+              (gat-log-exec (append gat-chain-args
+                                    (list "log" "--after" (format "%s" now)
+                                          "--until" "is running at:"
+                                          "--nextunit" "shutdown.service")))
+              (command (cond (batch-p
+                              (format "start.sh jupyter nbconvert --ExecutePreprocessor.timeout=21600 --to notebook --execute %s" ipynb-name))
+                             ((zerop (length password))
+                              (format "start-notebook.sh --NotebookApp.token=''"))
+                             (t
+                              (format "start-notebook.sh --NotebookApp.password=%s" password)))))
+       (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
+         (if (or refresh (null pre-docker) (null post-docker))
+             (if (fboundp 'magit-with-editor)
+                 (magit-with-editor
+                   (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension ipynb-name)))
+                          (base-image (ein:gat-elicit-base-image))
+                          (_ (with-temp-file dockerfile
+                               (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\n"
+                                               base-image ipynb-name))))
+                          (my-editor (when (and (boundp 'server-name)
+                                                (server-running-p server-name))
+                                       `("-s" ,server-name))))
+                     (ein:gat-chain
                        (current-buffer)
                        (apply-partially
                         #'ein:gat-chain
                         (current-buffer)
-                        (when remote-p
-                          (apply-partially
-                           #'ein:gat-chain
-                           (current-buffer)
-                           (unless batch-p
-                             (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
-                           gat-log-exec))
-                        (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
-                       (append gat-chain-args (list "dockerfile" dockerfile)))
-                      `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
-              (error "ein:gat--run: magit not installed"))
-          (if (special-variable-p 'magit-process-popup-time)
-              (let ((magit-process-popup-time 0))
-                (ein:gat-chain
-                  (current-buffer)
-                  (when remote-p
-                    (apply-partially
-                     #'ein:gat-chain
-                     (current-buffer)
-                     (unless batch-p
-                       (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
-                     gat-log-exec))
-                  (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
-            (error "ein:gat--run: magit not installed"))))
-    (message "ein:gat--run: aborting")))
+                        (apply-partially
+                         #'ein:gat-chain
+                         (current-buffer)
+                         (when remote-p
+                           (apply-partially
+                            #'ein:gat-chain
+                            (current-buffer)
+                            (unless batch-p
+                              (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
+                            gat-log-exec))
+                         (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
+                        (append gat-chain-args (list "dockerfile" dockerfile)))
+                       `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
+               (error "ein:gat--run: magit not installed"))
+           (if (special-variable-p 'magit-process-popup-time)
+               (let ((magit-process-popup-time 0))
+                 (ein:gat-chain
+                   (current-buffer)
+                   (when remote-p
+                     (apply-partially
+                      #'ein:gat-chain
+                      (current-buffer)
+                      (unless batch-p
+                        (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
+                      gat-log-exec))
+                   (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
+             (error "ein:gat--run: magit not installed"))))
+     (message "ein:gat--run: aborting"))))
 
 (defun ein:gat-elicit-base-image ()
   "Using a defcustom as HIST is suspect but pithy."

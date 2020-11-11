@@ -69,7 +69,7 @@ test: quick test-int
 
 .PHONY: test-int
 test-int:
-	$(CASK) exec ecukes --tags "@gat" --reporter magnars
+	$(CASK) exec ecukes --reporter magnars
 
 .PHONY: test-unit
 test-unit:

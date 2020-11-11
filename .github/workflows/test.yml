@@ -17,8 +17,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        emacs_version: [27.1]
+        os: [ubuntu-latest, macos-latest]
+        emacs_version: [25.1, 26.3, 27.1]
         python-version: [3.7]
 
     steps:
@@ -99,14 +99,20 @@ jobs:
         pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
         python -m ipykernel install --user
 
+    - name: R
+      if: startsWith(runner.os, 'Linux')
+      run: sh tools/install-R.sh
+
+    - name: julia
+      if: startsWith(runner.os, 'Linux')
+      run: sh tools/install-julia.sh
+
     - name: versions
       run: |
         jupyter kernelspec list
         curl --version
         ipython --version
         emacs --version
-        tar --version
-        cmake --version
 
     - name: gnupg
       if: startsWith(runner.os, 'macOS')

@@ -174,8 +174,16 @@
 
 (When "^I gat create \"\\(.+\\)\"$"
   (lambda (branch)
-    (cl-letf (((symbol-function 'read-string) (lambda (&rest _args) branch)))
-      (call-interactively #'ein:gat-create))))
+    (let ((need-wait (not (executable-find "gat"))))
+      (cl-letf (((symbol-function 'read-string) (lambda (&rest _args) branch)))
+        (call-interactively #'ein:gat-create)
+        (when need-wait
+          (cl-loop repeat 5
+                   until (get-buffer-process "*gat-install*")
+                   do (sleep-for 0 1000))
+          (cl-loop repeat 100
+                   until (not (get-buffer-process "*gat-install*"))
+                   do (sleep-for 0 5000)))))))
 
 (When "^new git repo \"\\(.+\\)\"$"
   (lambda (repo)
