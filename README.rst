@@ -146,7 +146,7 @@ Amazon Web Services
 ===================
 EIN has moved from GCE to AWS as the former's provisioning of GPUs appears stringent for customers without an established history.
 
-From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot instance.  You must ``M-x ein:stop`` the server to stop incurring charges!
+From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot instance.  You must ``M-x ein:stop`` or exit emacs to stop incurring charges!
 
 ``M-x ein:gat-run-remote-batch`` runs the notebook in `batch mode`_.
 
@@ -156,6 +156,7 @@ See `gat usage`_ for more information.
 
 .. _gat utility: https://dickmaogat.readthedocs.io/en/latest/install.html
 .. _gat usage: https://dickmaogat.readthedocs.io/en/latest/usage.html
+.. _batch mode: https://nbconvert.readthedocs.io/en/latest/execute_api.html
 
 Keymap (C-h m)
 ==============
