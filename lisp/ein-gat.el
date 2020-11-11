@@ -96,6 +96,8 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defvar ein:gat-previous-worktree nil)
 
+(defvar ein:gat-executable nil)
+
 (defvar ein:gat-urls nil)
 
 (defconst ein:gat-master-worktree "master")
@@ -108,12 +110,17 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 (defvar-local ein:gat-gpus-history '("0")
   "Hopefully notebook-specific history of user entered gpu count.")
 
-(defvar-local ein:gat-machine-history nil
+(defvar ein:gat-machine-history nil
   "Hopefully notebook-specific history of user entered machine type.")
 
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
-  (cond ((string= major-mode "ein:ipynb-mode")
+  (cond ((and (string= major-mode "magit-process-mode")
+              (string-prefix-p "ein-gat:" (buffer-name)))
+         (aprog1 default-directory
+           (when print-message
+             (message it))))
+        ((string= major-mode "ein:ipynb-mode")
          (aprog1 (directory-file-name (file-name-directory (buffer-file-name)))
            (when print-message
              (message it))))
@@ -138,6 +145,22 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
                  (pop-to-buffer buffer)
                  (ein:notebook-open url-or-port ipynb-name)))))
 
+(defun ein:gat-process-filter (proc string)
+  "Copied `magit-process-filter' with added wrinkle of `ansi-color'.
+Advising `insert' in `magit-process-filter' is a little gross,
+and moreover, how would I avoid messing `magit-process-filter' of other processes?"
+  (with-current-buffer (process-buffer proc)
+    (let ((inhibit-read-only t))
+      (goto-char (process-mark proc))
+      ;; Find last ^M in string.  If one was found, ignore
+      ;; everything before it and delete the current line.
+      (when-let ((ret-pos (cl-position ?\r string :from-end t)))
+        (cl-callf substring string (1+ ret-pos))
+        (delete-region (line-beginning-position) (point)))
+      (insert (propertize (ansi-color-filter-apply string) 'magit-section
+                          (process-get proc 'section)))
+      (set-marker (process-mark proc) (point)))))
+
 ;; (defvar magit-process-popup-time)
 ;; (defvar inhibit-magit-refresh)
 ;; (defvar magit-process-raise-error)
@@ -147,19 +170,19 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
   (let* ((default-directory (or notebook-dir (ein:gat-where-am-i)))
          (default-process-coding-system (magit--process-coding-system))
 	 (inhibit-magit-refresh t)
-	 (process-environment (cons (concat "GOOGLE_APPLICATION_CREDENTIALS="
-					    (or (getenv "GAT_APPLICATION_CREDENTIALS")
-                                                (error "GAT_APPLICATION_CREDENTIALS undefined")))
-				    process-environment))
+	 (_ (awhen (getenv "GAT_APPLICATION_CREDENTIALS")
+              (push (concat "GOOGLE_APPLICATION_CREDENTIALS=" it) process-environment)))
          (activate-with-editor-mode
           (when (string= (car exec) with-editor-emacsclient-executable)
             (lambda () (when (string= (buffer-name) (car (last exec)))
                          (with-editor-mode 1)))))
-         (process (apply #'magit-start-process exec)))
+         (process (let ((magit-buffer-name-format "%xein-gat%v: %t%x"))
+                    (apply #'magit-start-process exec))))
     (when activate-with-editor-mode
       (add-hook 'find-file-hook activate-with-editor-mode))
     ;; (with-current-buffer (process-buffer process)
     ;;   (special-mode))
+    (with-editor-set-process-filter process #'ein:gat-process-filter)
     (set-process-sentinel
      process
      (lambda (proc event)
@@ -240,9 +263,11 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defun ein:gat-edit (&optional _refresh)
   (interactive "P")
+  (unless (ein:gat-install-gat)
+    (error "Could not install gat"))
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (ein:get-notebook))
-           (gat-chain-args `("gat" nil "--project" "-"
+           (gat-chain-args `(,ein:gat-executable nil "--project" "-"
                              "--region" ,ein:gat-aws-region "--zone" "-")))
       (if (special-variable-p 'magit-process-popup-time)
           (let ((magit-process-popup-time -1))
@@ -265,9 +290,11 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 
 (defun ein:gat-create (&optional _refresh)
   (interactive "P")
+  (unless (ein:gat-install-gat)
+    (error "Could not install gat"))
   (if-let ((default-directory (ein:gat-where-am-i))
            (notebook (ein:get-notebook))
-           (gat-chain-args `("gat" nil "--project" "-"
+           (gat-chain-args `(,ein:gat-executable nil "--project" "-"
                              "--region" ,ein:gat-aws-region "--zone" " -")))
       (if (special-variable-p 'magit-process-popup-time)
           (let ((magit-process-popup-time 0))
@@ -288,18 +315,37 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
         (error "ein:gat-create: magit not installed"))
     (message "ein:gat-create: not a notebook buffer")))
 
+(defun ein:gat-install-gat ()
+  (interactive)
+  (unless ein:gat-executable
+    (if-let ((gat-executable (executable-find "gat")))
+        (setq ein:gat-executable gat-executable)
+      (ein:log 'info "ein:gat-install-gat: Installing gat...")
+      (let* ((dir (make-temp-file "curl-gat" t))
+             (commands `(,(format "cd %s" dir)
+                         "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
+                         "make -C gat install"))
+             (bash (format "bash -ex -c '%s'" (mapconcat #'identity commands "; "))))
+        (compilation-start bash nil (lambda (&rest _args) "*gat-install*")))
+      (setq ein:gat-executable (executable-find "gat"))))
+  ein:gat-executable)
+
+;;;###autoload
 (defun ein:gat-run-local-batch (&optional refresh)
   (interactive "P")
   (ein:gat--run nil t refresh))
 
+;;;###autoload
 (defun ein:gat-run-local (&optional refresh)
   (interactive "P")
   (ein:gat--run nil nil refresh))
 
+;;;###autoload
 (defun ein:gat-run-remote-batch (&optional refresh)
   (interactive "P")
   (ein:gat--run t t refresh))
 
+;;;###autoload
 (defun ein:gat-run-remote (&optional refresh)
   (interactive "P")
   (ein:gat--run t nil refresh))
@@ -355,6 +401,8 @@ EOF
 (defun ein:gat--run (remote-p batch-p refresh)
   (unless with-editor-emacsclient-executable
     (error "Could not determine emacsclient"))
+  (unless (ein:gat-install-gat)
+    (error "Could not install gat"))
   (-if-let* ((ipynb-name
               (cond ((string= major-mode "ein:ipynb-mode")
                      (file-name-nondirectory (buffer-file-name)))
@@ -375,7 +423,7 @@ EOF
                                      (prog1 nil
                                        (ein:log 'error "ein:gat--run: %s %s"
                                                 "Could not hash" new-password)))))))))
-             (gat-chain-args `("gat" nil
+             (gat-chain-args `(,ein:gat-executable nil
                                "--project" "-"
                                "--region" ,ein:gat-aws-region
                                "--zone" "-"))
@@ -402,9 +450,8 @@ EOF
              (now (truncate (float-time)))
              (gat-log-exec (append gat-chain-args
                                    (list "log" "--after" (format "%s" now)
-                                         "--until" (if batch-p
-                                                       "Deleted: sha256:"
-                                                     "is running at:"))))
+                                         "--until" "is running at:"
+                                         "--nextunit" "shutdown.service")))
              (command (cond (batch-p
                              (format "start.sh jupyter nbconvert --ExecutePreprocessor.timeout=21600 --to notebook --execute %s" ipynb-name))
                             ((zerop (length password))
@@ -466,7 +513,7 @@ EOF
 (defun ein:gat-elicit-machine ()
   (interactive)
   (ein:completing-read
-   "Machine Type: " ein:gat-aws-machine-types nil t nil
+   "Machine Type: " (cl-copy-list ein:gat-aws-machine-types) nil t nil
    'ein:gat-machine-history (car (or ein:gat-machine-history ein:gat-aws-machine-types))))
 
 (defun ein:gat-elicit-gpus ()

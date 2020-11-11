@@ -357,21 +357,21 @@ server command."
                  (kill-buffer (ein:shared-output-buffer)))))
       (let ((gat-dir (alist-get (intern url-or-port) ein:gat-urls))
             (my-p (string= url-or-port my-url-or-port)))
-        (ein:notebook-close-notebooks
-         (lambda (notebook)
-           (string= url-or-port (ein:$notebook-url-or-port notebook)))
-         t)
-        (cl-loop repeat 10
-                 until (null (seq-some (lambda (proc)
-                                         (cl-search "request curl"
-                                                    (process-name proc)))
-                                       (process-list)))
-                 do (sleep-for 0 500))
         (if (not (or (and (not ask-p) (or my-p gat-dir))
                      (and ask-p (or my-p gat-dir)
                           (prog1 (y-or-n-p (format "Shutdown %s?" url-or-port))
                             (message "")))))
             (setq all-p nil)
+          (ein:notebook-close-notebooks
+           (lambda (notebook)
+             (string= url-or-port (ein:$notebook-url-or-port notebook)))
+           t)
+          (cl-loop repeat 10
+                   until (null (seq-some (lambda (proc)
+                                           (cl-search "request curl"
+                                                      (process-name proc)))
+                                         (process-list)))
+                   do (sleep-for 0 500))
           (cond (my-p
                  (-when-let* ((proc (ein:jupyter-server-process))
                               (pid (process-id proc)))
@@ -388,7 +388,7 @@ server command."
                                 (now (truncate (float-time)))
                                 (gat-log-exec (append gat-chain-args
                                                       (list "log" "--after" (format "%s" now)
-                                                            "--until" "Deleted: sha256:")))
+                                                            "--nextunit" "shutdown.service")))
                                 (magit-process-popup-time 0))
                      (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)))))
           ;; NotebookPasswordApp::shutdown_server() also ignores req response.

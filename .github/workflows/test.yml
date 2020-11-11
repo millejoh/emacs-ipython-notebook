@@ -97,13 +97,6 @@ jobs:
         pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
         python -m ipykernel install --user
 
-    - name: gat
-      if: startsWith(runner.os, 'Linux')
-      run: |
-        curl -sLk https://github.com/dickmao/gat/archive/master.tar.gz | tar xfz -
-        make -C gat-master install
-        gat --project abc --region abc --zone abc version
-
     - name: R
       if: startsWith(runner.os, 'Linux')
       run: sh tools/install-R.sh
