@@ -142,6 +142,7 @@ See `gat usage`_ for more information.
 
 .. _gat utility: https://dickmaogat.readthedocs.io/en/latest/install.html
 .. _gat usage: https://dickmaogat.readthedocs.io/en/latest/usage.html
+.. _batch mode: https://nbconvert.readthedocs.io/en/latest/execute_api.html
 
 Keymap (C-h m)
 ==============

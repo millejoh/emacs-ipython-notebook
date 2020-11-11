@@ -327,7 +327,10 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                          "make -C gat install"))
              (bash (format "bash -ex -c '%s'" (mapconcat #'identity commands "; "))))
         (compilation-start bash nil (lambda (&rest _args) "*gat-install*")))
-      (setq ein:gat-executable (executable-find "gat"))))
+      (ein:log 'info "ein:gat-install-gat: Installing gat... done")
+      (cl-loop repeat 60
+               until (setq ein:gat-executable (executable-find "gat"))
+               do (sleep-for 0 1000))))
   ein:gat-executable)
 
 ;;;###autoload
