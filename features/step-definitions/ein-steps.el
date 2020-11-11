@@ -175,9 +175,7 @@
 (When "^I gat create \"\\(.+\\)\"$"
   (lambda (branch)
     (cl-letf (((symbol-function 'read-string) (lambda (&rest _args) branch)))
-      (call-interactively #'ein:gat-create)
-      (with-current-buffer "*gat-install*"
-        (And "I dump buffer")))))
+      (call-interactively #'ein:gat-create))))
 
 (When "^new git repo \"\\(.+\\)\"$"
   (lambda (repo)

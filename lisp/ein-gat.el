@@ -321,16 +321,18 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
     (if-let ((gat-executable (executable-find "gat")))
         (setq ein:gat-executable gat-executable)
       (ein:log 'info "ein:gat-install-gat: Installing gat...")
-      (let* ((dir (make-temp-file "curl-gat" t))
+      (let* ((dir (make-temp-file "gat-install" t))
              (commands `(,(format "cd %s" dir)
                          "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
                          "make -C gat install"))
-             (bash (format "bash -ex -c '%s'" (mapconcat #'identity commands "; "))))
-        (compilation-start bash nil (lambda (&rest _args) "*gat-install*")))
-      (ein:log 'info "ein:gat-install-gat: Installing gat... done")
-      (cl-loop repeat 60
-               until (setq ein:gat-executable (executable-find "gat"))
-               do (sleep-for 0 1000))))
+             (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; "))))
+        (compilation-start compile nil (lambda (&rest _args) "*gat-install*")))))
+  (cl-loop repeat 100
+           until (or (setq ein:gat-executable (executable-find "gat"))
+                     (not (get-buffer-process "*gat-install*")))
+           do (sleep-for 0 5000)
+           do (with-current-buffer "*gat-install*"
+                (ein:log 'info "hey %s" (buffer-string))))
   ein:gat-executable)
 
 ;;;###autoload
