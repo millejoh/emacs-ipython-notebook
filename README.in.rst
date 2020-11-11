@@ -40,7 +40,7 @@ Start EIN using **ONE** of the following:
 - Open an ``.ipynb`` file, press ``C-c C-o``, or,
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
 - ``M-x ein:login`` to a running jupyter server
-- [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``
+- [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``.  See `Amazon Web Services`_.
 
 A local jupyter process can be stopped via ``M-x ein:stop``.
 
@@ -130,23 +130,13 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 
 Amazon Web Services
 ===================
-From a notebook buffer::
+EIN has moved from GCE to AWS as the former's provisioning of GPUs appears stringent for customers without an established history.
 
-   M-x ein:gat-run-local
+From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot instance.  You must ``M-x ein:stop`` the server to stop incurring charges!
 
-attempts running your containerized notebook locally.  If that succeeds, try::
+``M-x ein:gat-run-remote-batch`` runs the notebook in `batch mode`_.
 
-   M-x ein:gat-run-remote
-
-attempts the same run in AWS.
-
-You can fork your notebook via::
-
-   M-x ein:gat-create
-
-then switch between forks via::
-
-   M-x ein:gat-edit
+Results appear in the ``run-remote`` directory.
 
 See `gat usage`_ for more information.
 

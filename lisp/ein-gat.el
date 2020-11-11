@@ -516,7 +516,7 @@ EOF
    "Machine Type: " (cl-copy-list ein:gat-aws-machine-types) nil t nil
    'ein:gat-machine-history (car (or ein:gat-machine-history ein:gat-aws-machine-types))))
 
-(defun ein:gat-elicit-gpus ()
+(defun ein:gat-elicit-gpus (&rest _args)
   (interactive)
   (cl-loop for answer =
 	   (string-to-number (ein:completing-read
