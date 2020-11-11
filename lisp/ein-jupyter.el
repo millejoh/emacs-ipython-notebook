@@ -27,7 +27,7 @@
 (require 'ein-notebooklist)
 (require 'ein-dev)
 (require 'ein-gat)
-(require 'exec-path-from-shell)
+(require 'exec-path-from-shell nil t)
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -68,10 +68,12 @@ Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use
   :set-after '(ein:jupyter-cannot-find-jupyter)
   :set (lambda (symbol value)
 	 (set-default symbol value)
-	 (when (and ein:jupyter-cannot-find-jupyter
+	 (when (and (featurep 'exec-path-from-shell)
+                    ein:jupyter-cannot-find-jupyter
 		    (memq window-system '(mac ns x)))
-	   (let (exec-path-from-shell-check-startup-files)
-	     (exec-path-from-shell-initialize)))))
+           (eval `(let (,@(when (boundp 'exec-path-from-shell-check-startup-files)
+                            (list 'exec-path-from-shell-check-startup-files)))
+                    (exec-path-from-shell-initialize))))))
 
 (defcustom ein:jupyter-default-server-command ein:jupyter-server-command
   "Obsolete alias for `ein:jupyter-server-command'"

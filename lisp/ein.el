@@ -36,7 +36,7 @@
 ;;
 ;; Org_ users please find ob-ein_, a jupyter Babel_ backend.
 ;;
-;; `Amazon Web Services`_ integration is in alpha.
+;; `Amazon Web Services`_ integration is in preview.
 ;;
 ;; EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 ;; introduced by `[gregsexton]`_.

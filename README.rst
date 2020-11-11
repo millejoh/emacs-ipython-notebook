@@ -13,7 +13,7 @@ No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
-`Amazon Web Services`_ integration is in alpha.
+`Amazon Web Services`_ integration is in preview.
 
 EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
@@ -51,9 +51,10 @@ Usage
 =====
 Start EIN using **ONE** of the following:
 
-- Open an ``.ipynb`` file normally in emacs and press ``C-c C-o``, or,
+- Open an ``.ipynb`` file, press ``C-c C-o``, or,
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
 - ``M-x ein:login`` to a running jupyter server
+- [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``
 
 A local jupyter process can be stopped via ``M-x ein:stop``.
 
@@ -143,7 +144,7 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 
 Amazon Web Services
 ===================
-Install the `gat utility`_.  Then from a notebook buffer::
+From a notebook buffer::
 
    M-x ein:gat-run-local
 
