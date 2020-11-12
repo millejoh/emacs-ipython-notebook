@@ -70,7 +70,7 @@
   :type 'string
   :group 'ein)
 
-(defcustom ein:gat-aws-machine-types (split-string "t2.medium g3s.xlarge p2.xlarge p3.2xlarge")
+(defcustom ein:gat-aws-machine-types (split-string (ein:gat-shell-command "aws ec2 describe-instance-types --no-paginate --filters Name=current-generation,Values=true --query 'sort_by(InstanceTypes, &InstanceType)[].InstanceType' --output text"))
   "gcloud machine types."
   :type '(repeat string)
   :group 'ein)
@@ -314,21 +314,24 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
 (defmacro ein:gat-install-gat (&rest body)
   `(if (executable-find "gat")
        (progn ,@body)
-     (ein:log 'info "ein:gat-install-gat: Installing gat...")
-     (let* ((orig-buf (current-buffer))
-            (bufname "*gat-install*")
-            (dir (make-temp-file "gat-install" t))
-            (commands `(,(format "cd %s" dir)
-                        "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
-                        "make -C gat install"))
-            (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
-            (callback (lambda (_buf msg)
-                        (when (cl-search "finished" msg)
-                          (with-current-buffer orig-buf
-                            ,@body)))))
-       (compilation-start compile nil (lambda (&rest _args) bufname))
-       (with-current-buffer bufname
-         (add-hook 'compilation-finish-functions callback nil t)))))
+     (if (or (not (executable-find "aws"))
+             (zerop (length ein:gat-aws-region)))
+         (ein:log 'error "ein:gat-install-gat: `aws configure region` must be valid")
+       (ein:log 'info "ein:gat-install-gat: Installing gat...")
+       (let* ((orig-buf (current-buffer))
+              (bufname "*gat-install*")
+              (dir (make-temp-file "gat-install" t))
+              (commands `(,(format "cd %s" dir)
+                          "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
+                          "make -C gat install"))
+              (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
+              (callback (lambda (_buf msg)
+                          (when (cl-search "finished" msg)
+                            (with-current-buffer orig-buf
+                              ,@body)))))
+         (compilation-start compile nil (lambda (&rest _args) bufname))
+         (with-current-buffer bufname
+           (add-hook 'compilation-finish-functions callback nil t))))))
 
 ;;;###autoload
 (defun ein:gat-run-local-batch (&optional refresh)
@@ -354,7 +357,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (let ((gat-hash-password-python
          (format "%s - <<EOF
 from notebook.auth import passwd
-print(passwd('%s'))
+print(passwd('%s', 'sha1'))
 EOF
 " ein:gat-python-command raw-password)))
     (ein:gat-shell-command gat-hash-password-python)))
@@ -417,7 +420,7 @@ EOF
                                 (if (zerop (length new-password))
                                     new-password
                                   (let ((hashed (ein:gat-hash-password new-password)))
-                                    (if (string-prefix-p "sha1:" hashed)
+                                    (if (cl-search ":" hashed)
                                         hashed
                                       (prog1 nil
                                         (ein:log 'error "ein:gat--run: %s %s"
@@ -456,7 +459,7 @@ EOF
                              ((zerop (length password))
                               (format "start-notebook.sh --NotebookApp.token=''"))
                              (t
-                              (format "start-notebook.sh --NotebookApp.password=%s" password)))))
+                              (format "start-notebook.sh --NotebookApp.password='%s'" password)))))
        (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
          (if (or refresh (null pre-docker) (null post-docker))
              (if (fboundp 'magit-with-editor)
