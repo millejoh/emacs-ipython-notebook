@@ -70,7 +70,7 @@
   :type 'string
   :group 'ein)
 
-(defcustom ein:gat-aws-machine-types (split-string (ein:gat-shell-command "aws ec2 describe-instance-types --no-paginate --filters Name=current-generation,Values=true --query 'sort_by(InstanceTypes, &InstanceType)[].InstanceType' --output text"))
+(defcustom ein:gat-aws-machine-types (split-string (ein:gat-shell-command "aws ec2 describe-instance-type-offerings --location-type=region --page-size=1000 --filter Name=location,Values=us-east-2 --query 'sort_by(InstanceTypeOfferings, &InstanceType)[].InstanceType' --output text"))
   "gcloud machine types."
   :type '(repeat string)
   :group 'ein)
