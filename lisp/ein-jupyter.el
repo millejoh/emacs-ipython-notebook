@@ -395,9 +395,9 @@ server command."
                      (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)))))
           ;; NotebookPasswordApp::shutdown_server() also ignores req response.
           (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")
-                                    :type "POST"))
-        ;; `ein:notebooklist-sentinel' frequently does not trigger
-        (ein:notebooklist-list-remove url-or-port)
-        (kill-buffer (ein:notebooklist-get-buffer url-or-port))))))
+                                    :type "POST")
+          ;; `ein:notebooklist-sentinel' frequently does not trigger
+          (ein:notebooklist-list-remove url-or-port)
+          (kill-buffer (ein:notebooklist-get-buffer url-or-port)))))))
 
 (provide 'ein-jupyter)

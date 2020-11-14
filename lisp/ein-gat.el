@@ -135,13 +135,13 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
              (when print-message
 	       (message "nowhere")))))))
 
-(cl-defun ein:gat-jupyter-login (ipynb-name notebook-dir &rest args &key public-ip-address)
+(cl-defun ein:gat-jupyter-login (ipynb-name notebook-dir callback &rest args &key public-ip-address)
   (let ((url-or-port (ein:url (format "http://%s:8888" public-ip-address))))
     (setf (alist-get (intern url-or-port) ein:gat-urls) notebook-dir)
     (ein:login url-or-port
                (lambda (buffer url-or-port)
                  (pop-to-buffer buffer)
-                 (ein:notebook-open url-or-port ipynb-name)))))
+                 (ein:notebook-open url-or-port ipynb-name nil callback)))))
 
 (defun ein:gat-process-filter (proc string)
   "Copied `magit-process-filter' with added wrinkle of `ansi-color'.
@@ -406,11 +406,17 @@ EOF
     (error "Could not determine emacsclient"))
   (ein:gat-install-gat
    (-if-let* ((ipynb-name
-               (cond ((string= major-mode "ein:ipynb-mode")
-                      (file-name-nondirectory (buffer-file-name)))
-                     (t
-                      (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it))
-                        it))))
+               (if (string= major-mode "ein:ipynb-mode")
+                   (file-name-nondirectory (buffer-file-name))
+                 (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it)) it)))
+              (callback
+               (when (string= major-mode "ein:ipynb-mode")
+                 (apply-partially (lambda (buffer*
+                                           _notebook _created
+                                           &rest _args)
+                                    (when (buffer-live-p buffer*)
+                                      (kill-buffer-if-not-modified buffer*)))
+                                  (current-buffer))))
               (default-directory (ein:gat-where-am-i))
               (password (if (or batch-p (not remote-p))
                             ""
@@ -485,7 +491,7 @@ EOF
                             #'ein:gat-chain
                             (current-buffer)
                             (unless batch-p
-                              (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
+                              (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
                             gat-log-exec))
                          (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
                         (append gat-chain-args (list "dockerfile" dockerfile)))
@@ -500,7 +506,7 @@ EOF
                       #'ein:gat-chain
                       (current-buffer)
                       (unless batch-p
-                        (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory))
+                        (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
                       gat-log-exec))
                    (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
              (error "ein:gat--run: magit not installed"))))
