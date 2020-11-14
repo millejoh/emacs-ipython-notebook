@@ -120,7 +120,7 @@ Scenario: Logging into nowhere
   Then I should see "[error] Login to http://127.0.0.1:0 failed"
 
 @login
-Scenario: Logging into nowhere
+Scenario: Logging into nowhere again
   Given I login erroneously to adfljdsf.org:8432
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "[error] Login to https://adfljdsf.org:8432 failed"

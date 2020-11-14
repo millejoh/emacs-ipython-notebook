@@ -122,11 +122,11 @@ ERRBACK of arity 1 for the contents."
                            0
                            (or (cl-position ?/ (ein:$content-path content) :from-end t)
                                0)))))
-    (json-encode `((:type . ,(ein:$content-type content))
-                   (:name . ,(ein:$content-name content))
-                   (:path . ,path)
-                   (:format . ,(or (ein:$content-format content) "json"))
-                   (:content ,@(ein:$content-raw-content content))))))
+    (ignore-errors (json-encode `((:type . ,(ein:$content-type content))
+                                  (:name . ,(ein:$content-name content))
+                                  (:path . ,path)
+                                  (:format . ,(or (ein:$content-format content) "json"))
+                                  (:content ,@(ein:$content-raw-content content)))))))
 
 (defun ein:content-from-notebook (nb)
   (let ((nb-content (ein:notebook-to-json nb)))

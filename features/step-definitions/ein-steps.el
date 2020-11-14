@@ -268,10 +268,14 @@
 (When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
   (lambda (login config)
     (When "I stop the server")
-    (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
-    (let ((ein:jupyter-server-args '("--no-browser" "--debug" "--config=.ecukes-temp-config.py")))
+    (if config
+        (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
+      (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" "c.NotebookApp.token=u''\n"))))
+    (let ((ein:jupyter-server-args '("--no-browser" "--config=.ecukes-temp-config.py")))
       (ein:jupyter-server-start (executable-find ein:jupyter-server-command)
-                                ein:testing-jupyter-server-root (not login)))
+                                ein:testing-jupyter-server-root (not login))
+      (with-current-buffer (get-buffer *ein:jupyter-server-buffer-name*)
+        (And "I wait for buffer to say \"is running at:\"")))
     (if login
         (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
 

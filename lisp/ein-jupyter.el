@@ -314,9 +314,9 @@ server command."
   (let ((proc (ein:jupyter-server--run *ein:jupyter-server-buffer-name*
                                        server-command
                                        notebook-directory
-                                       (if (numberp port)
-                                           `("--port" ,(format "%s" port)
-                                             "--port-retries" "0")))))
+                                       (when (numberp port)
+                                         `("--port" ,(format "%s" port)
+                                           "--port-retries" "0")))))
     (cl-loop repeat 30
              until (car (ein:jupyter-server-conn-info))
              do (sleep-for 0 500)
