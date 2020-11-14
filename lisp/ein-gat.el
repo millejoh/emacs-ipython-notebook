@@ -410,13 +410,14 @@ EOF
                    (file-name-nondirectory (buffer-file-name))
                  (awhen (aand (ein:get-notebook) (ein:$notebook-notebook-name it)) it)))
               (callback
-               (when (string= major-mode "ein:ipynb-mode")
-                 (apply-partially (lambda (buffer*
-                                           _notebook _created
-                                           &rest _args)
-                                    (when (buffer-live-p buffer*)
-                                      (kill-buffer-if-not-modified buffer*)))
-                                  (current-buffer))))
+               (if (string= major-mode "ein:ipynb-mode")
+                   (apply-partially (lambda (buffer*
+                                             _notebook _created
+                                             &rest _args)
+                                      (when (buffer-live-p buffer*)
+                                        (kill-buffer-if-not-modified buffer*)))
+                                    (current-buffer))
+                 #'ignore))
               (default-directory (ein:gat-where-am-i))
               (password (if (or batch-p (not remote-p))
                             ""
