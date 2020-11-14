@@ -10,6 +10,7 @@ Scenario: gat create from repo, then create from worktree, then run-local
   And I wait for buffer to say "Notebook is saved"
   And I switch to buffer like "Untitled"
   When I gat create "foo"
+  Then I possibly wait for gat install
   Then I switch to buffer like ".gat/foo/Untitled"
   When I gat create "baz"
   Then I switch to buffer like ".gat/baz/Untitled"

@@ -133,6 +133,13 @@
     (with-current-buffer ein:log-all-buffer-name
       (And "I wait for buffer to say \"ein:query-sessions--complete\""))))
 
+(When "^I possibly wait for gat install$"
+  (lambda ()
+    (unless (executable-find "gat")
+      (When "I switch to buffer like \"*gat-install*\"")
+      (ein:testing-wait-until (lambda () (not (get-buffer-process (current-buffer))))
+                              nil 500000 5000))))
+
 (When "^I switch to buffer like \"\\(.+\\)\"$"
   (lambda (substr)
     (cl-loop repeat 10
