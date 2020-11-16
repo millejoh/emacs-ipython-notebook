@@ -131,8 +131,8 @@ Scenario: ":results output"
   And I press "RET"
   And I type "math.pi"
   And I ctrl-c-ctrl-c
-  And I wait for buffer to say "done 0"
-  And I should see "3.14159"
+  And I wait for buffer to say "3.14159"
+  And I should see "done 0"
   And I should see "start 0"
 
 @svg
