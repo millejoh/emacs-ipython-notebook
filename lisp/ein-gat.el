@@ -521,9 +521,13 @@ EOF
 
 (defun ein:gat-elicit-machine ()
   (interactive)
-  (ein:completing-read
-   "Machine Type: " (cl-copy-list ein:gat-aws-machine-types) nil t nil
-   'ein:gat-machine-history (car (or ein:gat-machine-history ein:gat-aws-machine-types))))
+  (require 'seq)
+  (let ((reordered (seq-remove (lambda (x) (member x ein:gat-machine-history))
+                               (cl-copy-list ein:gat-aws-machine-types))))
+    (ein:completing-read
+     "Machine Type: " (append (seq-uniq ein:gat-machine-history) reordered)
+     nil t nil 'ein:gat-machine-history
+     (car (or ein:gat-machine-history ein:gat-aws-machine-types)))))
 
 (defun ein:gat-elicit-gpus (&rest _args)
   (interactive)
