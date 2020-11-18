@@ -189,8 +189,6 @@ at point, i.e. any word before then \"(\", if it is present."
                               (push subtree list)))))
       (traverse tree))
     (nreverse list)))
-
-;;; URL utils
 
 (defvar ein:url-localhost "127.0.0.1")
 
@@ -240,7 +238,7 @@ See: http://api.jquery.com/jQuery.ajax/"
          (json-array-type 'list))
      ,@body))
 
-(defun ein:json-read ()
+(defsubst ein:json-read ()
   "Read json from `url-retrieve'-ed buffer.
 
 * `json-object-type' is `plist'. This is mainly for readability.
@@ -248,39 +246,27 @@ See: http://api.jquery.com/jQuery.ajax/"
   data type must be edit-friendly.  `vector' type is not."
   (goto-char (point-max))
   (backward-sexp)
-  (ein:with-json-setting
-   (json-read)))
+  (if (fboundp 'json-parse-buffer)
+      (json-parse-buffer :object-type 'plist :array-type 'array :null-object json-null :false-object json-false)
+    (ein:with-json-setting (json-read))))
 
-(defun ein:json-read-from-string (string)
-  (ein:with-json-setting
-   (json-read-from-string string)))
+(defsubst ein:json-read-from-string (string)
+  (if (fboundp 'json-parse-string)
+      (json-parse-string string :object-type 'plist :array-type 'array :null-object json-null :false-object json-false)
+    (ein:with-json-setting (json-read-from-string string))))
 
-(defun ein:json-any-to-bool (obj)
+(defsubst ein:json-insert (obj)
+  (if (fboundp 'json-insert)
+      (json-insert obj :null-object json-null :false-object json-false)
+    (insert (json-encode obj))))
+
+(defun ein:json-encode (obj)
+  (if (fboundp 'json-serialize)
+      (json-serialize obj :null-object json-null :false-object json-false)
+    (json-encode obj)))
+
+(defsubst ein:json-any-to-bool (obj)
   (if (and obj (not (eq obj json-false))) t json-false))
-
-;; (defun ein:json-encode-char (char)
-;;   "Fixed `json-encode-char'."
-;;   (setq char (json-encode-char0 char 'ucs))
-;;   (let ((control-char (car (rassoc char json-special-chars))))
-;;     (cond
-;;      ;; Special JSON character (\n, \r, etc.).
-;;      (control-char
-;;       (format "\\%c" control-char))
-;;      ;; ASCIIish printable character.
-;;      ((and (> char 31) (< char 127))    ; s/161/127/
-;;       (format "%c" char))
-;;      ;; Fallback: UCS code point in \uNNNN form.
-;;      (t
-;;       (format "\\u%04x" char)))))
-
-;; (defadvice json-encode-char (around ein:json-encode-char (char) activate)
-;;   "Replace `json-encode-char' with `ein:json-encode-char'."
-;;   (setq ad-return-value (ein:json-encode-char char)))
-
-;; (defadvice json-encode (around encode-nil-as-json-empty-object activate)
-;;   (if (null object)
-;;     (setq ad-return-value "{}")
-;;     ad-do-it))
 
 (defun ein:ewoc-create (pretty-printer &optional header footer nosep)
   "Do nothing wrapper of `ewoc-create' to provide better error message."

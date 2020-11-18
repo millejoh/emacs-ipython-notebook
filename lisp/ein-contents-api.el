@@ -101,19 +101,8 @@ ERRBACK of arity 1 for the contents."
 (cl-defun ein:content-query-contents--success (url-or-port path callback
                                                &key data _symbol-status _response
                                                &allow-other-keys)
-  (let (content)
-    (setq content (ein:new-content url-or-port path data))
-    (when callback
-      (funcall callback content))))
-
-(defun ein:fix-legacy-content-data (data)
-  (if (listp (car data))
-      (cl-loop for item in data
-            collecting
-            (ein:fix-legacy-content-data item))
-    (if (string= (plist-get data :path) "")
-        (plist-put data :path (plist-get data :name))
-      (plist-put data :path (format "%s/%s" (plist-get data :path) (plist-get data :name))))))
+  (when callback
+    (funcall callback (ein:new-content url-or-port path data))))
 
 (defun ein:content-to-json (content)
   (let ((path (if (>= (ein:$content-notebook-version content) 3)
@@ -122,11 +111,12 @@ ERRBACK of arity 1 for the contents."
                            0
                            (or (cl-position ?/ (ein:$content-path content) :from-end t)
                                0)))))
-    (ignore-errors (json-encode `((:type . ,(ein:$content-type content))
-                                  (:name . ,(ein:$content-name content))
-                                  (:path . ,path)
-                                  (:format . ,(or (ein:$content-format content) "json"))
-                                  (:content ,@(ein:$content-raw-content content)))))))
+    (ignore-errors
+      (ein:json-encode `((type . ,(ein:$content-type content))
+                         (name . ,(ein:$content-name content))
+                         (path . ,path)
+                         (format . ,(or (ein:$content-format content) "json"))
+                         (content ,@(ein:$content-raw-content content)))))))
 
 (defun ein:content-from-notebook (nb)
   (let ((nb-content (ein:notebook-to-json nb)))
@@ -135,7 +125,7 @@ ERRBACK of arity 1 for the contents."
                        :url-or-port (ein:$notebook-url-or-port nb)
                        :type "notebook"
                        :notebook-version (ein:$notebook-api-version nb)
-                       :raw-content nb-content)))
+                       :raw-content (append nb-content nil))))
 
 ;;; Managing/listing the content hierarchy
 
@@ -153,7 +143,10 @@ ERRBACK of arity 1 for the contents."
   (let ((content (make-ein:$content
                   :url-or-port url-or-port
                   :notebook-version (ein:notebook-version-numeric url-or-port)
-                  :path path)))
+                  :path path))
+        (raw-content (if (vectorp (plist-get data :content))
+                         (append (plist-get data :content) nil)
+                       (plist-get data :content))))
     (setf (ein:$content-name content) (plist-get data :name)
           (ein:$content-path content) (plist-get data :path)
           (ein:$content-type content) (plist-get data :type)
@@ -162,7 +155,7 @@ ERRBACK of arity 1 for the contents."
           (ein:$content-format content) (plist-get data :format)
           (ein:$content-writable content) (plist-get data :writable)
           (ein:$content-mimetype content) (plist-get data :mimetype)
-          (ein:$content-raw-content content) (plist-get data :content))
+          (ein:$content-raw-content content) raw-content)
     content))
 
 (defun ein:content-query-hierarchy* (url-or-port path callback sessions depth content)
@@ -254,42 +247,20 @@ ERRBACK of arity 1 for the contents."
   (when errcb
     (apply errcb errcbargs)))
 
-(defun ein:content-legacy-rename (content new-path callback cbargs)
-  (let ((path (substring new-path 0 (or (cl-position ?/ new-path :from-end t) 0)))
-        (name (substring new-path (or (cl-position ?/ new-path :from-end t) 0))))
-    (ein:query-singleton-ajax
-     (ein:content-url content)
-     :type "PATCH"
-     :data (json-encode `((name . ,name)
-                          (path . ,path)))
-     :parser #'ein:json-read
-     :success (apply-partially #'update-content-path-legacy content callback cbargs)
-     :error (apply-partially #'ein:content-rename-error new-path))))
-
-(cl-defun update-content-path-legacy (content callback cbargs &key data &allow-other-keys)
-  (setf (ein:$content-path content) (ein:trim-left (format "%s/%s" (plist-get data :path) (plist-get data :name))
-                                                   "/")
-        (ein:$content-name content) (plist-get data :name)
-        (ein:$content-last-modified content) (plist-get data :last_modified))
-  (when callback
-    (apply callback cbargs)))
-
 (defun ein:content-rename (content new-path &optional callback cbargs)
-  (if (>= (ein:$content-notebook-version content) 3)
-      (ein:query-singleton-ajax
-       (ein:content-url content)
-       :type "PATCH"
-       :data (json-encode `((path . ,new-path)))
-       :parser #'ein:json-read
-       :success (apply-partially #'update-content-path content callback cbargs)
-       :error (apply-partially #'ein:content-rename-error (ein:$content-path content)))
-    (ein:content-legacy-rename content new-path callback cbargs)))
+  (ein:query-singleton-ajax
+   (ein:content-url content)
+   :type "PATCH"
+   :data (ein:json-encode `((path . ,new-path)))
+   :parser #'ein:json-read
+   :success (apply-partially #'update-content-path content callback cbargs)
+   :error (apply-partially #'ein:content-rename-error (ein:$content-path content))))
 
 (defun ein:session-rename (url-or-port session-id new-path)
   (ein:query-singleton-ajax
    (ein:url url-or-port "api/sessions" session-id)
    :type "PATCH"
-   :data (json-encode `((path . ,new-path)))
+   :data (ein:json-encode `((path . ,new-path)))
    :complete #'ein:session-rename--complete))
 
 (cl-defun ein:session-rename--complete (&key data response _symbol-status
@@ -337,7 +308,7 @@ Call ERRBACK of arity 1 (contents) upon failure."
                              (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))
                          (plist-get nb-json :path))))
     (let ((session-hash (make-hash-table :test 'equal)))
-      (dolist (s data (funcall callback session-hash))
+      (dolist (s (append data nil) (funcall callback session-hash))
         (setf (gethash (read-name (plist-get s :notebook)) session-hash)
               (cons (plist-get s :id) (plist-get s :kernel)))))))
 

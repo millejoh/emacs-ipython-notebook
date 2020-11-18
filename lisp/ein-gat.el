@@ -378,7 +378,7 @@ EOF
          (config-dir
           (elt (assoc-default
                 'config
-                (json-read-from-string (ein:gat-shell-command "jupyter --paths --json")))
+                (ein:json-read-from-string (ein:gat-shell-command "jupyter --paths --json")))
                0))
          (config-json (expand-file-name "jupyter_notebook_config.json" config-dir))
          (config-py (expand-file-name "jupyter_notebook_config.py" config-dir))

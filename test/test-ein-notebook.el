@@ -83,7 +83,7 @@
          (packet (list :header (list :msg_type "execute_reply")
                        :parent_header (list :msg_id msg-id)
                        :content content)))
-    (ein:kernel--handle-shell-reply kernel (json-encode packet))))
+    (ein:kernel--handle-shell-reply kernel (ein:json-encode packet))))
 
 (defun eintest:kernel-fake-stream (kernel msg-id data)
   (let* ((content (list :text data
@@ -91,7 +91,7 @@
          (packet (list :header (list :msg_type "stream")
                        :parent_header (list :msg_id msg-id)
                        :content content)))
-    (ein:kernel--handle-iopub-reply kernel (json-encode packet))))
+    (ein:kernel--handle-iopub-reply kernel (ein:json-encode packet))))
 
 (defun eintest:check-search-forward-from (start string &optional null-string)
   "Search STRING from START and check it is found.

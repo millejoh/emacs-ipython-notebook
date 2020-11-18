@@ -17,9 +17,6 @@
      (with-current-buffer (eintest:notebooklist-make-empty)
        (should-not (,func)))))
 
-
-;; Generic getter
-
 (ert-deftest ein:get-url-or-port--notebooklist ()
   (with-current-buffer (eintest:notebooklist-make-empty)
     (should (equal (ein:get-url-or-port) ein:testing-notebook-dummy-url))))

@@ -210,8 +210,8 @@ See `ein:format-time-string'."
                                        (and (stringp it) it))
                                    (string-match-p "Open\\|Stop\\|Delete" it)
                                    (point))))
-      (aif ein:%notebooklist%
-          (ein:notebooklist-list-remove (ein:$notebooklist-url-or-port it)))
+      (awhen ein:%notebooklist%
+        (ein:notebooklist-list-remove (ein:$notebooklist-url-or-port it)))
       (setq ein:%notebooklist%
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :path (ein:$content-path content)
@@ -256,7 +256,7 @@ See `ein:format-time-string'."
     (ein:query-singleton-ajax
      url
      :type "POST"
-     :data (json-encode '((:type . "notebook")))
+     :data (ein:json-encode '((type . "notebook")))
      :headers (list (cons "Content-Type" "application/json"))
      :parser #'ein:json-read
      :error (apply-partially #'ein:notebooklist-new-notebook-error
@@ -371,8 +371,7 @@ See `ein:format-time-string'."
 
 (defun ein:notebooklist--order-data (nblist-data sort-param sort-order)
   "Try to sanely sort the notebooklist data for the current path."
-  (let* ((groups (-group-by #'(lambda (x) (plist-get x :type))
-                            nblist-data))
+  (let* ((groups (-group-by (lambda (x) (plist-get x :type)) nblist-data))
          (dirs (ein:nblist--sort-group (cdr (assoc "directory" groups))
                                        sort-param
                                        sort-order))

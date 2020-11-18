@@ -55,10 +55,9 @@
     (pop-to-buffer (buffer-name))))
 
 (defun ein:content-file-save ()
-  (when (boundp 'ein:content-file-buffer--content)
-    (setf (ein:$content-raw-content ein:content-file-buffer--content) (buffer-string))
-    (ein:content-save ein:content-file-buffer--content)
-    (set-buffer-modified-p nil)
-    t))
+  (setf (ein:$content-raw-content ein:content-file-buffer--content) (buffer-string))
+  (ein:content-save ein:content-file-buffer--content)
+  (set-buffer-modified-p nil)
+  t)
 
 (provide 'ein-file)

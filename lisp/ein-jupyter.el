@@ -114,7 +114,7 @@ with the call to the jupyter notebook."
                (alist-get
                 'kernelspecs
                 (let ((json-object-type 'alist))
-                  (json-read-from-string
+                  (json-read-from-string ;; intentionally not ein:json-read-from-string
                    (shell-command-to-string
                     (format "%s kernelspec list --json"
                             ein:jupyter-server-command)))))
@@ -398,6 +398,9 @@ server command."
                                     :type "POST")
           ;; `ein:notebooklist-sentinel' frequently does not trigger
           (ein:notebooklist-list-remove url-or-port)
+          (maphash (lambda (k _v) (when (equal (car k) url-or-port)
+                                    (remhash k *ein:notebook--pending-query*)))
+                   *ein:notebook--pending-query*)
           (kill-buffer (ein:notebooklist-get-buffer url-or-port)))))))
 
 (provide 'ein-jupyter)

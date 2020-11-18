@@ -33,7 +33,7 @@
 (defvar ein:testing-notebook-dummy-url "DUMMY-URL")
 
 (defun ein:testing-notebook-from-json (json-string)
-  (let* ((data (ein:json-read-from-string json-string))
+  (let* ((data (ein:with-json-setting (json-read-from-string json-string))) ;; intentionally not ein:json-read-from-string
          (path (plist-get data :path))
          (kernelspec (make-ein:$kernelspec :name "python" :language "python"))
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
@@ -84,10 +84,10 @@
   "Make new notebook.  One empty cell will be inserted
 automatically if CELLS is nil."
   (ein:testing-notebook-from-json
-   (json-encode (ein:testing-notebook-make-data
-                 (or name ein:testing-notebook-dummy-name)
-                 (or path name ein:testing-notebook-dummy-name)
-                 cells))))
+   (ein:json-encode (ein:testing-notebook-make-data
+                     (or name ein:testing-notebook-dummy-name)
+                     (or path name ein:testing-notebook-dummy-name)
+                     cells))))
 
 (defun ein:testing-notebook-make-empty (&optional name path)
   "Make empty notebook and return its buffer.

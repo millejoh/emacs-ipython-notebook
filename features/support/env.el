@@ -100,7 +100,7 @@
              (alist-get
               'kernelspecs
               (let ((json-object-type 'alist))
-                (json-read-from-string
+                (json-read-from-string ;; intentionally not ein:json-read-from-string
                  (shell-command-to-string
                   (format "%s kernelspec list --json"
                           ein:jupyter-server-command)))))

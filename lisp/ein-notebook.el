@@ -162,13 +162,13 @@ and put last warning in minibuffer."
          (pop-to-buffer (pm-span-buffer (pm-innermost-span)))))
      (when (and (not noninteractive)
                 (null (plist-member (ein:$notebook-metadata notebook*) :kernelspec)))
-       (aif (ein:$notebook-kernelspec notebook*)
-           (progn
-             (setf (ein:$notebook-metadata notebook*)
-                   (plist-put (ein:$notebook-metadata notebook*)
-                              :kernelspec (ein:notebook--spec-insert-name
-                                           (ein:$kernelspec-name it) (ein:$kernelspec-spec it))))
-             (ein:notebook-save-notebook notebook*))))
+       (awhen (ein:$notebook-kernelspec notebook*)
+           (setf (ein:$notebook-metadata notebook*)
+                 (plist-put (ein:$notebook-metadata notebook*)
+                            :kernelspec (ein:notebook--spec-insert-name
+                                         (ein:$kernelspec-name it)
+                                         (ein:$kernelspec-spec it))))
+           (ein:notebook-save-notebook notebook*)))
      (when callback*
        (funcall callback* notebook* created))
      (-when-let* ((created created)
@@ -480,17 +480,13 @@ This is equivalent to do ``C-c`` in the console program."
            (4 (ein:write-nbformat4-worksheets notebook))
            (t (ein:log 'error "nbformat version %s unsupported"
                        (ein:$notebook-nbformat notebook))))))
-    ;; Apparently metadata can be either a hashtable or a plist...
-    (let ((metadata (cdr (assq 'metadata data))))
-      (if (hash-table-p metadata)
-          (setf (gethash 'name metadata) (ein:$notebook-notebook-name notebook))
-        (plist-put metadata
-                   :name (ein:$notebook-notebook-name notebook)))
-      (aif (ein:$notebook-nbformat-minor notebook)
-          ;; Do not set nbformat when it is not given from server.
-          (push `(nbformat_minor . ,it) data))
-      (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
-      data)))
+    (awhen (cdr (assq 'metadata data))
+      (setf (alist-get 'metadata data)
+            (plist-put it :name (ein:$notebook-notebook-name notebook))))
+    (awhen (ein:$notebook-nbformat-minor notebook)
+      (push `(nbformat_minor . ,it) data))
+    (push `(nbformat . ,(ein:$notebook-nbformat notebook)) data)
+    data))
 
 
 (defun ein:write-nbformat3-worksheets (notebook)
@@ -505,14 +501,12 @@ This is equivalent to do ``C-c`` in the console program."
                          for i from 0
                          append (ein:worksheet-to-nb4-json ws i))))
     ;; should be in notebook constructor, not here
-    (aif (ein:$notebook-kernelspec notebook)
-        (setf (ein:$notebook-metadata notebook)
-              (plist-put (ein:$notebook-metadata notebook)
-                         :kernelspec (ein:notebook--spec-insert-name
-                                      (ein:$kernelspec-name it) (ein:$kernelspec-spec it)))))
-    `((metadata . ,(aif (ein:$notebook-metadata notebook)
-                       it
-                     (make-hash-table)))
+    (awhen (ein:$notebook-kernelspec notebook)
+      (setf (ein:$notebook-metadata notebook)
+            (plist-put (ein:$notebook-metadata notebook)
+                       :kernelspec (ein:notebook--spec-insert-name
+                                    (ein:$kernelspec-name it) (ein:$kernelspec-spec it)))))
+    `((metadata . ,(ein:$notebook-metadata notebook))
       (cells . ,(apply #'vector all-cells)))))
 
 (defun ein:notebook-save-notebook (notebook &optional callback cbargs errback)

@@ -260,15 +260,15 @@ WARNING: OBJ and SLOT are evaluated multiple times,
   (let ((cell (ein:cell-init (apply #'ein:cell-from-type
                                     (ein:cell--determine-cell-type data) args)
                              data)))
-    (aif (plist-get data :metadata)
+    (awhen (plist-get data :metadata)
       (ein:oset-if-empty cell 'metadata it))
     cell))
 
 (cl-defmethod ein:cell-init ((cell ein:codecell) data)
   (ein:oset-if-empty cell 'outputs (mapcar (lambda (o)
                                              (if (and (plist-member o :metadata)
-                                                        (not (plist-get o :metadata)))
-                                               (plist-put o :metadata (make-hash-table))
+                                                      (not (plist-get o :metadata)))
+                                                 (plist-put o :metadata (make-hash-table))
                                                o))
                                            (plist-get data :outputs)))
   (ein:oset-if-empty cell 'input (or (plist-get data :input)
@@ -783,7 +783,7 @@ If END is non-`nil', return the location of next element."
   from the kernel, one from the \"shell\" channel, and one from the \"iopub\"
   channel.  As a workaround, we remember the cell's traceback and ignore
   traceback outputs that are identical to the one we already have."
-  (let ((new-tb (plist-get json :traceback))
+  (let ((new-tb (append (plist-get json :traceback) nil))
         (old-tb (slot-value cell 'traceback)))
     (when (or
            (null old-tb)
@@ -826,11 +826,11 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
   (mapc (lambda (tb)
           (ein:cell-append-text tb)
           (ein:cell-append-text "\n"))
-        (let ((tb (plist-get json :traceback))
+        (let ((tb (append (plist-get json :traceback) nil))
               (level ein:cell-traceback-level))
           (if (and level (> (- (length tb) 2) level))
               (cons (substitute-command-keys
-                     "\nTruncated Traceback (Use \\[ein:tb-show-km] to view full TB):")
+                     "\nTruncated Traceback (Use \\<ein:notebook-mode-map>\\[ein:tb-show-km] to view full TB):")
                     (last tb (1+ level)))
             tb)))
   (ein:insert-read-only "\n"))

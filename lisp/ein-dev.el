@@ -319,7 +319,7 @@ Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
         (barf-if-buffer-read-only)
         (erase-buffer)
         (save-excursion
-          (insert (json-encode content-data))
+          (ein:json-insert content-data)
           (json-pretty-print (point-min) (point-max))))
       (pop-to-buffer bufname))))
 

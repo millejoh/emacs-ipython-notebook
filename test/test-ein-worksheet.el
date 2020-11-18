@@ -22,7 +22,7 @@
          (json-1 (ein:worksheet-to-json
                   (ein:worksheet-from-json ws-1
                                            (ein:json-read-from-string
-                                            (json-encode json-0))))))
+                                            (ein:json-encode json-0))))))
     (let* ((found (assoc 'metadata json-0)))
       (when found
         (should (cdr found))))

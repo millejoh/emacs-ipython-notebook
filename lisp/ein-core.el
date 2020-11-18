@@ -330,12 +330,11 @@ but can operate in different contexts."
                         ein:get-cell-at-point--shared-output)))
 
 (defun ein:get-traceback-data ()
-  (ein:generic-getter '(ein:get-traceback-data--worksheet
-                        ein:get-traceback-data--shared-output
-                        ein:get-traceback-data--connect)))
+  (append (ein:generic-getter '(ein:get-traceback-data--worksheet
+                                ein:get-traceback-data--shared-output
+                                ein:get-traceback-data--connect))
+          nil))
 
-
-
 ;;; Emacs utilities
 
 (defun ein:clean-compiled-files ()

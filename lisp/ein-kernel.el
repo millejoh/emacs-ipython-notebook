@@ -176,20 +176,14 @@ CALLBACK of arity 1, the kernel.
       (ein:query-singleton-ajax
        (ein:url (ein:$kernel-url-or-port kernel) "api/sessions")
        :type "POST"
-       :data (json-encode
-              (cond ((<= (ein:$kernel-api-version kernel) 4)
-                     `(("notebook" .
-                        (("path" . ,path)))
-                       ,@(if kernelspec
-                             `(("kernel" .
-                                (("name" . ,(ein:$kernelspec-name kernelspec))))))))
-                    (t `(("path" . ,path)
-                         ("type" . "notebook")
-                         ,@(if kernelspec
-                               `(("kernel" .
-                                  (("name" . ,(ein:$kernelspec-name kernelspec))
-                                   ,@(if kernel-id
-                                         `(("id" . ,kernel-id)))))))))))
+       :data (ein:json-encode
+              `((path . ,path)
+                (type . "notebook")
+                ,@(if kernelspec
+                      `((kernel .
+                                ((name . ,(ein:$kernelspec-name kernelspec))
+                                 ,@(if kernel-id
+                                       `((id . ,kernel-id)))))))))
        :parser #'ein:json-read
        :complete (apply-partially #'ein:kernel-retrieve-session--complete kernel callback)
        :success (apply-partially #'ein:kernel-retrieve-session--success kernel callback)

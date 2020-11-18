@@ -130,11 +130,11 @@
   (cond ((= (ein:$kernel-api-version kernel) 2)
          (ein:websocket-send
           (ein:$kernel-shell-channel kernel)
-          (json-encode msg)))
+          (ein:json-encode msg)))
         ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
           (ein:$kernel-websocket kernel)
-          (json-encode (plist-put msg :channel "shell"))))))
+          (ein:json-encode (plist-put msg :channel "shell"))))))
 
 (defun ein:websocket-send-stdin-channel (kernel msg)
   (cond ((= (ein:$kernel-api-version kernel) 2)
@@ -142,7 +142,7 @@
         ((>= (ein:$kernel-api-version kernel) 3)
          (ein:websocket-send
           (ein:$kernel-websocket kernel)
-          (json-encode (plist-put msg :channel "stdin"))))))
+          (ein:json-encode (plist-put msg :channel "stdin"))))))
 
 (provide 'ein-websocket)
 

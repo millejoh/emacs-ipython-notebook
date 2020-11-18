@@ -46,8 +46,9 @@ clean:
 	$(CASK) clean-elc
 	rm -rf test/test-install
 	rm -rf log
-	rm -f features/Untitled*.ipynb
+	rm -f features/[Uu]ntitled*
 	rm -f features/Renamed.ipynb
+	rm -f ert-profile*
 	rm -rf features/test-repo
 
 .PHONY: cask
