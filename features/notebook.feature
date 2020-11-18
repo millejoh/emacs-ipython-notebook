@@ -37,6 +37,27 @@ Scenario: switch kernel
   And I wait for cell to execute
   And I switch kernel to "ir"
 
+@traceback
+Scenario: native json parsing broke traceback
+  Given new python notebook
+  And I type "def func1():"
+  And I press "RET"
+  And I type "func2()"
+  And I press "RET"
+  And I press "C-a"
+  And I type "def func2():"
+  And I press "RET"
+  And I type "1/0"
+  And I press "RET"
+  And I press "C-a"
+  And I type "func1()"
+  And I press "RET"
+  And I wait for cell to execute
+  Then I should see "Traceback"
+  And I press "C-c C-$"
+  And I switch to buffer like "*ein:tb"
+  Then I should see "ZeroDivisionError"
+
 @reconnect
 Scenario: kernel reconnect succeeds
   Given new python notebook
