@@ -260,7 +260,7 @@ See: http://api.jquery.com/jQuery.ajax/"
       (json-insert obj :null-object json-null :false-object json-false)
     (insert (json-encode obj))))
 
-(defun ein:json-encode (obj)
+(defsubst ein:json-encode (obj)
   (if (fboundp 'json-serialize)
       (json-serialize obj :null-object json-null :false-object json-false)
     (json-encode obj)))
