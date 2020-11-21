@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'compile)
 (require 'magit-process nil t)
 (declare-function ein:jupyter-running-notebook-directory "ein-jupyter")
 
