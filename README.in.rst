@@ -39,10 +39,10 @@ Start EIN using **ONE** of the following:
 
 - Open an ``.ipynb`` file, press ``C-c C-o``, or,
 - ``M-x ein:run`` launches a jupyter process from emacs, or,
-- ``M-x ein:login`` to a running jupyter server
+- ``M-x ein:login`` to a running jupyter server, or,
 - [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``.  See `Amazon Web Services`_.
 
-A local jupyter process can be stopped via ``M-x ein:stop``.
+``M-x ein:stop`` prompts to halt local and remote jupyter services.
 
 Alternatively, ob-ein_.
 
@@ -138,11 +138,14 @@ From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebo
 
 Results appear in the ``run-remote`` directory.
 
-See `gat usage`_ for more information.
+See `dickmao/Kaggler`_ for examples of importing Kaggle datasets.
+
+See `gat usage`_ for information about the ``gat`` utility.
 
 .. _gat utility: https://dickmaogat.readthedocs.io/en/latest/install.html
 .. _gat usage: https://dickmaogat.readthedocs.io/en/latest/usage.html
 .. _batch mode: https://nbconvert.readthedocs.io/en/latest/execute_api.html
+.. _dickmao/Kaggler: https://github.com/dickmao/Kaggler/tree/gcspath#importing-datasets
 
 Keymap (C-h m)
 ==============

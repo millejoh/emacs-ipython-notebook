@@ -39,10 +39,16 @@
   :after-hook
   (let* ((filename (file-name-nondirectory buffer-file-truename))
          (remote-filename (concat (file-name-as-directory "run-remote") filename)))
+    ;; fragile hack to refresh s3fuse
+    (call-process "cat" nil nil nil remote-filename)
     (when (and (file-readable-p remote-filename)
                (file-newer-than-file-p remote-filename filename)
                (prog1
-                   (y-or-n-p "Corresponding run-remote is newer. Replace? (will first backup) ")
+                   (let ((inhibit-quit t))
+                     (prog1
+                         (with-local-quit
+                           (y-or-n-p "Corresponding run-remote is newer. Replace? (will first backup) "))
+                       (setq quit-flag nil)))
                  (message "")))
       (if-let ((make-backup-files t)
                (where-to (funcall make-backup-file-name-function buffer-file-name)))
@@ -54,7 +60,7 @@
             (backup-buffer)
             (copy-file remote-filename filename t t)
             (add-hook 'find-file-hook reassure nil)
-            (find-file-noselect filename))
+            (find-file-noselect filename t))
         (message "Backup failed.  Not replaced")))))
 
 (let ((map ein:ipynb-mode-map))

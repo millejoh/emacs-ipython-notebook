@@ -329,7 +329,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                           (when (cl-search "finished" msg)
                             (with-current-buffer orig-buf
                               ,@body)))))
-         (compilation-start compile nil (lambda (&rest _args) bufname))
+         (let ((compilation-scroll-output t))
+           (compilation-start compile nil (lambda (&rest _args) bufname)))
          (with-current-buffer bufname
            (add-hook 'compilation-finish-functions callback nil t))))))
 
@@ -468,7 +469,7 @@ EOF
                              (t
                               (format "start-notebook.sh --NotebookApp.password='%s'" password)))))
        (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
-         (if (or refresh (null pre-docker) (null post-docker))
+         (if (or refresh (null pre-docker))
              (if (fboundp 'magit-with-editor)
                  (magit-with-editor
                    (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension ipynb-name)))
@@ -484,18 +485,14 @@ EOF
                        (apply-partially
                         #'ein:gat-chain
                         (current-buffer)
-                        (apply-partially
-                         #'ein:gat-chain
-                         (current-buffer)
-                         (when remote-p
-                           (apply-partially
-                            #'ein:gat-chain
-                            (current-buffer)
-                            (unless batch-p
-                              (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
-                            gat-log-exec))
-                         (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
-                        (append gat-chain-args (list "dockerfile" dockerfile)))
+                        (when remote-p
+                          (apply-partially
+                           #'ein:gat-chain
+                           (current-buffer)
+                           (unless batch-p
+                             (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
+                           gat-log-exec))
+                        (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
                        `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
                (error "ein:gat--run: magit not installed"))
            (if (special-variable-p 'magit-process-popup-time)
