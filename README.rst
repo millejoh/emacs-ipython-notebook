@@ -3,8 +3,6 @@
 ==========================================================
 
 .. image:: https://github.com/dickmao/emacs-ipython-notebook/blob/master/thumbnail.png
-   :height: 350px
-   :width: 197px
    :target: https://youtu.be/8VzWc9QeOxE
    :alt: Kaggle Notebooks in AWS
 
