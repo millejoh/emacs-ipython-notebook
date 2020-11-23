@@ -468,7 +468,8 @@ EOF
                              ((zerop (length password))
                               (format "start-notebook.sh --NotebookApp.token=''"))
                              (t
-                              (format "start-notebook.sh --NotebookApp.password='%s'" password)))))
+                              (format "start-notebook.sh --NotebookApp.password='%s'" password))))
+              (last-known-buffer (current-buffer)))
        (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
          (if (or refresh (null pre-docker))
              (if (fboundp 'magit-with-editor)
@@ -480,16 +481,17 @@ EOF
                                                base-image ipynb-name))))
                           (my-editor (when (and (boundp 'server-name)
                                                 (server-running-p server-name))
-                                       `("-s" ,server-name))))
+                                       `("-s" ,server-name)))
+                          )
                      (ein:gat-chain
-                       (current-buffer)
+                       last-known-buffer
                        (apply-partially
                         #'ein:gat-chain
-                        (current-buffer)
+                        last-known-buffer
                         (when remote-p
                           (apply-partially
                            #'ein:gat-chain
-                           (current-buffer)
+                           last-known-buffer
                            (unless batch-p
                              (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
                            gat-log-exec))
@@ -499,11 +501,11 @@ EOF
            (if (special-variable-p 'magit-process-popup-time)
                (let ((magit-process-popup-time 0))
                  (ein:gat-chain
-                   (current-buffer)
+                   last-known-buffer
                    (when remote-p
                      (apply-partially
                       #'ein:gat-chain
-                      (current-buffer)
+                      last-known-buffer
                       (unless batch-p
                         (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
                       gat-log-exec))

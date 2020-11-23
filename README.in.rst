@@ -2,6 +2,10 @@
  EIN -- Emacs IPython Notebook |build-status| |melpa-dev|
 ==========================================================
 
+.. image:: https://github.com/dickmao/emacs-ipython-notebook/blob/master/thumbnail.png
+   :target: https://youtu.be/8VzWc9QeOxE
+   :alt: Kaggle Notebooks in AWS
+
 .. COMMENTARY (see Makefile)
 
 .. |build-status|

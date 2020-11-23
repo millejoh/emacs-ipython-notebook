@@ -2,6 +2,12 @@
  EIN -- Emacs IPython Notebook |build-status| |melpa-dev|
 ==========================================================
 
+.. image:: https://github.com/dickmao/emacs-ipython-notebook/blob/master/thumbnail.png
+   :height: 350px
+   :width: 197px
+   :target: https://youtu.be/8VzWc9QeOxE
+   :alt: Kaggle Notebooks in AWS
+
 Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
 notebooks within Emacs.  It channels all the power of Emacs without the
 idiosyncrasies of in-browser editing.
