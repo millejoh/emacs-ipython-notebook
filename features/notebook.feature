@@ -26,7 +26,6 @@ Scenario: in ipython<=7.10, image failed to materialize initially
   And I press "RET"
   And I clear log expr "ein:log-all-buffer-name"
   And I wait for cell to execute
-  And I dump buffer
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "msg_type=display_data"
 

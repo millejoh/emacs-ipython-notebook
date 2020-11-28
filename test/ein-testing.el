@@ -107,11 +107,12 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
   (let* ((int (aif interval it (aif ms (max 300 (/ ms 10)) 300)))
          (count (max 1 (if ms (truncate (/ ms int)) 25))))
     (unless (or (cl-loop repeat count
-                       when (apply predicate predargs)
-                       return t
-                       do (sleep-for 0 int))
+                         when (apply predicate predargs)
+                         return t
+                         do (accept-process-output nil (/ (float int) 1000))
+                         finally return nil)
                 continue)
-      (error "Timeout: %s" predicate))))
+      (cl-assert nil nil "Timeout %s" predicate))))
 
 (defun ein:testing-new-notebook (url-or-port ks &optional retry subdir)
   (condition-case err

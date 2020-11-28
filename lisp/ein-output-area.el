@@ -27,7 +27,14 @@
 ;;; Code:
 
 (require 'xml)
+(require 'shr)
 (require 'ein-core)
+
+
+(defcustom ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/html :text/plain :application/latex :application/tex :application/javascript)
+  "For ipynb prefer :text/html over :text/plain.  For org, opposite."
+  :type 'list
+  :group 'ein)
 
 (defcustom ein:output-area-inlined-images nil
   "Turn on to insert images into buffer.  Default spawns external viewer."
@@ -151,12 +158,12 @@ Usage::
     json))
 
 (defmacro ein:output-area-case-type (json &rest case-body)
-  `(progn (aif (plist-get ,json :data) (setq ,json it))
+  `(progn (awhen (plist-get ,json :data) (setq ,json it))
           (seq-some (lambda (type)
                       (when-let ((value (plist-get ,json type)))
                         ,@case-body
                         t))
-                    (list :image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript))))
+                    ein:output-area-case-types)))
 
 (provide 'ein-output-area)
 

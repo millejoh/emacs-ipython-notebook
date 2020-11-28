@@ -78,20 +78,20 @@ some input
 ;; Insert pyout/display_data
 
 (defun eintest:cell-insert-output (outputs regexp)
-  (ein:testing-with-one-cell
-   (ein:cell-from-json
-    (list :cell_type "code"
-          :outputs outputs
-          :source "some input"
-          :metadata (list :collapsed json-false :autoscroll json-false)
-          :execution_count 111)
-    :ewoc (oref ein:%worksheet% :ewoc))
-   (goto-char (ein:cell-location cell))
-   ;; (message "%s" (buffer-string))
-   (should (looking-at (format "\
+  (let ((shr-width 0))
+    (ein:testing-with-one-cell
+     (ein:cell-from-json
+      (list :cell_type "code"
+            :outputs outputs
+            :source "some input"
+            :metadata (list :collapsed json-false :autoscroll json-false)
+            :execution_count 111)
+      :ewoc (oref ein:%worksheet% :ewoc))
+     (goto-char (ein:cell-location cell))
+     (should (looking-at (format "\
 In \\[111\\]:
 some input
-%s" regexp)))))
+%s" regexp))))))
 
 (defmacro eintest:gene-test-cell-insert-output-pyout-and-display-data (name regexps outputs)
   (declare (indent defun))
@@ -113,8 +113,8 @@ some input
          (ein:join-str
           ""
           (cl-loop for i from 1
-                for x in regexps
-                collect (format "Out \\[%s\\]:\n%s\n" i x))))
+                   for x in regexps
+                   collect (format "Out \\[%s\\]:\n%s\n" i x))))
         (regexp-display-data
          (concat (ein:join-str "\n" regexps) "\n")))
     `(progn
@@ -141,7 +141,7 @@ some input
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
-  ("some output text")
+  ("not shown")
   ((:data (:text/plain "some output text" :text/html "<b>not shown</b>"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data

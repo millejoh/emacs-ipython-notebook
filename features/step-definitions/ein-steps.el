@@ -445,8 +445,8 @@
   (lambda ()
     (poly-ein-base
      (let* ((cell (ein:worksheet-get-current-cell :cell-p #'ein:codecell-p))
-            (orig (if (slot-boundp cell 'input-prompt-number)
-                      (slot-value cell 'input-prompt-number))))
+            (orig (when (slot-boundp cell 'input-prompt-number)
+                    (slot-value cell 'input-prompt-number))))
        (call-interactively #'ein:worksheet-execute-cell)
        (ein:testing-wait-until
         (lambda ()
@@ -454,7 +454,7 @@
                          (slot-value cell 'input-prompt-number))
                     (and (numberp it)
                          (not (equal orig it)))))
-        nil 10000 2000)))))
+        nil 15000 1500)))))
 
 (When "^I undo again$"
   (lambda ()
