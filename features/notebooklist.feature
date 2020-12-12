@@ -66,7 +66,6 @@ Scenario: Delete closes buffers and sessions
   And I clear log expr "ein:log-all-buffer-name"
   And I click on "Delete"
   And I wait for buffer to not say "Stop"
-  And I dump buffer
   Then eval "(should-not (ein:notebook-opened-notebooks)))"
   Then eval "(should-not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list)))"
   And I switch to log expr "ein:log-all-buffer-name"

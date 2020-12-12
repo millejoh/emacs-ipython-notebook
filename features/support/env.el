@@ -90,9 +90,10 @@
  (setenv "GAT_APPLICATION_CREDENTIALS" "nonempty")
  (custom-set-variables '(python-indent-guess-indent-offset-verbose nil)
                        '(ein:jupyter-use-containers nil)
-                       '(ein:gat-zone "abc")
-                       '(ein:gat-region "abc")
-                       '(ein:gat-project "abc")
+                       '(ein:gat-gce-zone "abc")
+                       '(ein:gat-gce-region "abc")
+                       '(ein:gat-aws-region "abc")
+                       '(ein:gat-gce-project "abc")
                        '(ein:gat-machine-types '("abc")))
  (setq ein:jupyter-default-kernel
        (cl-loop with cand = ""

@@ -254,16 +254,16 @@ Unshift in list parlance means prepending to list."
               (let ((u (car uc))
                     (cell-id (or (cdr uc) "")))
                 (if (string= (ein:worksheet--unique-enough-cell-id cell) cell-id)
-                    (setq lst (nconc lst (list (funcall func-same-cell u))))
+                    (push (funcall func-same-cell u) lst)
                   (if (plist-member after-ids cell-id)
                       (progn
                         (ein:log 'debug "unsh adj %s %s" u cell-id)
-                        (setq lst (nconc lst (list (funcall func-after-cell u)))))
-                    (setq lst (nconc lst (list u)))))))
+                        (push (funcall func-after-cell u) lst))
+                    (push u lst)))))
             (cl-assert (= (length buffer-undo-list) (length lst)) t
                        "ein:worksheet--unshift-undo-list %d != %d"
                        (length buffer-undo-list) (length lst))
-            (setq buffer-undo-list lst)
+            (setq buffer-undo-list (nreverse lst))
             (ein:worksheet--update-cell-lengths cell exogenous-input))
         (ein:log 'debug "ein:worksheet--unshift-undo-list: buffer-undo-list %s in %s"
                  buffer-undo-list (ein:cell-buffer cell))))))
