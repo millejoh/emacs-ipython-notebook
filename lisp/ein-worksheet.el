@@ -35,11 +35,20 @@
 (require 'ein-kill-ring)
 (require 'warnings)
 (require 'poly-ein)
+(require 'seq)
 
 ;;; Configuration
 
 ;; (define-obsolete-variable-alias
 ;;   'ein:notebook-enable-undo 'ein:worksheet-enable-undo "0.2.0")
+
+(defconst ein:worksheet--max-buffer-undo-list-length 2000
+  "Emacs gc's buffer-undo-list at `undo-limit` size *bytes* which
+we can't know in elisp-space.  So conservatively prune buffer-undo-list
+at a certain length (which at time of writing is 2000).
+
+Alas, this is bound to fail eventually (a big change drives gc while buffer-undo-list
+is still under the threshold.")
 
 (defcustom ein:worksheet-warn-obsolesced-keybinding t
   "Warn of keybindings we arbitrarily obsolesce."
@@ -147,8 +156,8 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
                   (* (if (< (cdr u) 0) -1 1) (+ ,distance (abs (cdr u))))))
            ((and (consp u) (markerp (car u)))
             (let ((mp (marker-position (car u))))
-              (if (not (null mp))
-                  (let* ((m (set-marker (make-marker) (+ ,distance mp) (marker-buffer (car u)))))
+              (if mp
+                  (let ((m (set-marker (make-marker) (+ ,distance mp) (marker-buffer (car u)))))
                     (cons m (cdr u)))
                 u)))
            ((and (consp u) (null (car u))
@@ -172,6 +181,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     result))
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
+  "Nobody said it was easy.  No one ever said it would be this hard. -- Martin et al."
   (cl-assert (listp buffer-undo-list))
   (let ((len-buffer-undo-list (length buffer-undo-list))
 	(len-which-cell (length ein:%which-cell%)))
@@ -216,9 +226,18 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 	       (ein:log 'debug "multiple-cursors-mode exception fill %s" fill))
 	     (setq ein:%which-cell% (nconc (make-list fill (car ein:%which-cell%))
 				       ein:%which-cell%)))))
-    (cl-assert (= (length buffer-undo-list) (length ein:%which-cell%)) t
-	       "ein:worksheet--jigger-undo-list %d != %d"
-	       (length buffer-undo-list) (length ein:%which-cell%))))
+    (let ((len-a (length buffer-undo-list))
+          (len-b (length ein:%which-cell%))
+          (limit ein:worksheet--max-buffer-undo-list-length))
+      (cl-assert (= len-a len-b) t
+	         "ein:worksheet--jigger-undo-list %d != %d" len-a len-b)
+      (when (> len-a limit)
+        (setq buffer-undo-list
+              (seq-take buffer-undo-list limit)
+              ein:%which-cell%
+              (seq-take ein:%which-cell% limit))
+        (ein:log 'debug "ein:worksheet--jigger-undo-list: trim from %s to %s"
+                 len-a limit)))))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.
