@@ -234,7 +234,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
       (when (> len-a limit)
         (setq buffer-undo-list (seq-take buffer-undo-list limit)
               ein:%which-cell% (seq-take ein:%which-cell% limit))
-        (ein:log 'info "ein:worksheet--jigger-undo-list: trim from %s to %s in %s"
+        (ein:log 'debug "ein:worksheet--jigger-undo-list: trim from %s to %s in %s"
                  len-a limit (buffer-name))))))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
