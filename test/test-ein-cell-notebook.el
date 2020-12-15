@@ -141,7 +141,7 @@ some input
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data
   html
-  ("not shown")
+  ("some output text")
   ((:data (:text/plain "some output text" :text/html "<b>not shown</b>"))))
 
 (eintest:gene-test-cell-insert-output-pyout-and-display-data

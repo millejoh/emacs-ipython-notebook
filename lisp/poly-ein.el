@@ -207,7 +207,8 @@ Intended as a salve for `show-paren-mode', was never called by the scan_lists.
          (pm-allow-post-command-hook nil))
      (poly-ein--set-buffer derived-buffer base-buffer)
      (unwind-protect
-         (progn ,@body)
+         (cl-letf (((symbol-function 'poly-ein-copy-state) #'ignore))
+           ,@body)
        (poly-ein--set-buffer base-buffer derived-buffer))))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
@@ -405,7 +406,8 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 (defun poly-ein-copy-state (src-buf dest-buf)
   "Consolidate fragility here."
   (unless (eq src-buf dest-buf)
-    (with-current-buffer dest-buf (remove-overlays nil nil 'face 'ein:cell-input-area))
+    (with-current-buffer dest-buf
+      (remove-overlays nil nil 'face 'ein:cell-input-area))
     (mapc (lambda (ol)
             (if (eq 'ein:cell-input-area (overlay-get ol 'face))
                 (move-overlay (copy-overlay ol)

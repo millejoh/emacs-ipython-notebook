@@ -120,7 +120,7 @@
 (defun ob-ein--proxy-images (json explicit-file)
   (declare (indent defun))
   (let (result
-        (ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript)))
+        (ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/plain :application/latex :application/tex :application/javascript)))
     (ein:output-area-case-type
      json
      (cl-case type

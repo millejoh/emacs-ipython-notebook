@@ -898,10 +898,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                   (setq method (concat method " %s")))
                 (if (and (stringp method) (> (length method) 0))
                     (unless noninteractive
-                      (cl-letf (((symbol-function 'poly-ein-copy-state) #'ignore))
-                        (save-excursion
-                          (with-temp-buffer
-                            (mm-display-external handle method)))))
+                      (save-excursion
+                        (with-temp-buffer
+                          (mm-display-external handle method))))
                   (ein:log 'warn "ein:cell-append-mime-type: %s"
                            "no viewer method found in mailcap")))))
         (ein:log 'warn "ein:cell-append-mime-type: %s not supported" type)))

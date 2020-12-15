@@ -31,10 +31,8 @@
 (require 'ein-core)
 
 
-(defcustom ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/html :text/plain :application/latex :application/tex :application/javascript)
-  "For ipynb prefer :text/html over :text/plain.  For org, opposite."
-  :type 'list
-  :group 'ein)
+(defvar ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript)
+  "Prefer :text/plain unless it's a single line '<IPython.core.display.HTML object>' or 'TemporalData[TimeSeries, <<1>>]' in which case prefer :text/html.")
 
 (defcustom ein:output-area-inlined-images nil
   "Turn on to insert images into buffer.  Default spawns external viewer."
@@ -158,12 +156,21 @@ Usage::
     json))
 
 (defmacro ein:output-area-case-type (json &rest case-body)
-  `(progn (awhen (plist-get ,json :data) (setq ,json it))
-          (seq-some (lambda (type)
-                      (when-let ((value (plist-get ,json type)))
-                        ,@case-body
-                        t))
-                    ein:output-area-case-types)))
+  `(let* ((types ein:output-area-case-types)
+          (heuristic-p (and (memq :text/plain types)
+                            (memq :text/html types)))
+          (,json (or (plist-get ,json :data) ,json))
+          (plain (plist-get ,json :text/plain))
+          (html (plist-get ,json :text/html)))
+     (when (and heuristic-p
+                (stringp plain) (< (length plain) 60)
+                (stringp html) (> (length html) 300))
+       (delq :text/plain types))
+     (seq-some (lambda (type)
+                 (when-let ((value (plist-get ,json type)))
+                   ,@case-body
+                   t))
+               types)))
 
 (provide 'ein-output-area)
 
