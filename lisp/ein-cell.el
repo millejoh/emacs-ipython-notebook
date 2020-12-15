@@ -328,7 +328,7 @@ WARNING: OBJ and SLOT are evaluated multiple times,
           for node = (ewoc-data en)
           do (setf (ein:$node-data node) new))
     (let ((inhibit-read-only t)
-          (buffer-undo-list t))         ; disable undo recording
+          (buffer-undo-list t))
       ;; delete ewoc nodes that is not copied
       (apply
        #'ewoc-delete (slot-value new 'ewoc)
@@ -469,7 +469,6 @@ Return language name as a string or `nil' when not defined.
 (cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
-  ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
    'font-lock-face 'ein:cell-input-prompt))
@@ -650,7 +649,7 @@ Return language name as a string or `nil' when not defined.
 
 (cl-defmethod ein:cell-invalidate-prompt ((cell ein:codecell))
   (let ((inhibit-read-only t)
-        (buffer-undo-list t))           ; disable undo recording
+        (buffer-undo-list t))
     (ein:cell--ewoc-invalidate (slot-value cell 'ewoc)
                      (ein:cell-element-get cell :prompt))))
 
@@ -899,9 +898,10 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
                   (setq method (concat method " %s")))
                 (if (and (stringp method) (> (length method) 0))
                     (unless noninteractive
-                      (save-excursion
-                        (with-temp-buffer
-                          (mm-display-external handle method))))
+                      (cl-letf (((symbol-function 'poly-ein-copy-state) #'ignore))
+                        (save-excursion
+                          (with-temp-buffer
+                            (mm-display-external handle method)))))
                   (ein:log 'warn "ein:cell-append-mime-type: %s"
                            "no viewer method found in mailcap")))))
         (ein:log 'warn "ein:cell-append-mime-type: %s not supported" type)))
@@ -959,19 +959,19 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
-  (aif (ewoc-next (slot-value cell 'ewoc)
-                  (ein:cell-element-get cell :footer))
-      (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (cl-typep cell 'ein:basecell)
-          cell))))
+  (awhen (ewoc-next (slot-value cell 'ewoc)
+                    (ein:cell-element-get cell :footer))
+    (let ((cell (ein:$node-data (ewoc-data it))))
+      (when (cl-typep cell 'ein:basecell)
+        cell))))
 
 (cl-defmethod ein:cell-prev ((cell ein:basecell))
   "Return previous cell of the given CELL or nil if CELL is the first one."
-  (aif (ewoc-prev (slot-value cell 'ewoc)
-                  (ein:cell-element-get cell :prompt))
-      (let ((cell (ein:$node-data (ewoc-data it))))
-        (when (cl-typep cell 'ein:basecell)
-          cell))))
+  (awhen (ewoc-prev (slot-value cell 'ewoc)
+                    (ein:cell-element-get cell :prompt))
+    (let ((cell (ein:$node-data (ewoc-data it))))
+      (when (cl-typep cell 'ein:basecell)
+        cell))))
 
 (cl-defmethod ein:cell-set-kernel ((cell ein:codecell) kernel)
   (setf (slot-value cell 'kernel) kernel))

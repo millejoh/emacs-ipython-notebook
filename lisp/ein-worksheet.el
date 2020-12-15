@@ -73,7 +73,7 @@ is still under the threshold.")
   "Buffer local variable one-to-one buffer-undo-list item to cell id.")
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)
-  "Gets the first five characters of an md5sum.  How far I can get without r collisions follow a negative binomial with p=1e-6 (should go pretty far)."
+  "Gets the first five characters of an md5sum.  How far I can get without r collisions follows a negative binomial with p=1e-6 (should go pretty far)."
   (intern (substring (slot-value cell 'cell-id) 0 5)))
 
 (defun ein:worksheet--which-cell-hook (change-beg change-end _prev-len)
@@ -232,12 +232,10 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
       (cl-assert (= len-a len-b) t
 	         "ein:worksheet--jigger-undo-list %d != %d" len-a len-b)
       (when (> len-a limit)
-        (setq buffer-undo-list
-              (seq-take buffer-undo-list limit)
-              ein:%which-cell%
-              (seq-take ein:%which-cell% limit))
-        (ein:log 'debug "ein:worksheet--jigger-undo-list: trim from %s to %s"
-                 len-a limit)))))
+        (setq buffer-undo-list (seq-take buffer-undo-list limit)
+              ein:%which-cell% (seq-take ein:%which-cell% limit))
+        (ein:log 'info "ein:worksheet--jigger-undo-list: trim from %s to %s in %s"
+                 len-a limit (buffer-name))))))
 
 (defun ein:worksheet--unshift-undo-list (cell &optional exogenous-input old-cell)
   "Adjust `buffer-undo-list' for adding CELL.
@@ -318,15 +316,15 @@ Unshift in list parlance means prepending to list."
                     (progn
                       (setq offset (+ offset (ein:worksheet--calc-offset u)))
                       (ein:log 'debug "shft del %s (%s) %s" u (ein:worksheet--calc-offset u) cell-id))
-                  (setq wc (nconc wc (list (cdr uc))))
+                  (push (cdr uc) wc)
                   (if (plist-member after-ids cell-id)
                       (progn
                         (ein:log 'debug "shft adj %s %s" u cell-id)
                         ;; 1 for when cell un-executed, there is still a newline
-                        (setq lst (nconc lst (list (funcall (hof-add (- (+ 1 offset pdist odist sdist))) u)))))
-                    (setq lst (nconc lst (list u)))))))
-            (setq buffer-undo-list (nreverse lst))
-            (setq ein:%which-cell% (nreverse wc))
+                        (push (funcall (hof-add (- (+ 1 offset pdist odist sdist))) u) lst))
+                    (push u lst)))))
+            (setq buffer-undo-list lst)
+            (setq ein:%which-cell% wc)
             (ein:worksheet--jigger-undo-list)
             (cl-remprop 'ein:%cell-lengths% (slot-value cell 'cell-id)))
         (ein:log 'debug "ein:worksheet--shift-undo-list: buffer-undo-list %s in %s"
@@ -674,16 +672,22 @@ kill-ring of Emacs (kill-ring for texts)."
     (ein:log 'info "%s cells are copied." (length cells))
     (ein:kill-new cells)))
 
-(defun ein:worksheet-insert-clone (ws cell pivot up)
-  (let ((clone (ein:cell-copy cell)))
+(defun ein:worksheet-insert-clone (ws cell pivot up &optional focus)
+  (let* ((clone (ein:cell-copy cell))
+         (clone-buffer (ein:cell-buffer clone))
+         (clone-buffer-base (buffer-base-buffer clone-buffer))
+         (ws-buffer (ewoc-buffer (ein:worksheet--ewoc ws))))
     ;; Cell can be from another buffer, so reset `ewoc'.
-    (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws))
-    (funcall (intern (concat "ein:worksheet-insert-cell-" up)) ws clone pivot)
+    (when (if clone-buffer-base
+              (not (equal clone-buffer-base ws-buffer))
+            (not (equal clone-buffer ws-buffer)))
+      (setf (ein:basecell--ewoc clone) (ein:worksheet--ewoc ws)))
+    (funcall (intern (concat "ein:worksheet-insert-cell-" up)) ws clone pivot focus)
     clone))
 
 (defun ein:worksheet-yank-cell (ws &optional n)
-  "Insert (\"paste\") the latest killed cell.
-Prefixes are act same as the normal `yank' command."
+  "Paste the latest killed cell.
+Treats prefixes identically to the normal `yank' command."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (let ((arg current-prefix-arg))
                        (cond ((listp arg) 0)
@@ -692,9 +696,9 @@ Prefixes are act same as the normal `yank' command."
   (let* ((cell (ein:worksheet-get-current-cell :noerror t)) ; can be nil
          (killed (ein:current-kill n)))
     (cl-loop for c in killed
-          with last = cell
-          do (setq last (ein:worksheet-insert-clone ws c last "below"))
-          finally (ein:cell-goto last))))
+             with last = cell
+             do (setq last (ein:worksheet-insert-clone ws c last "below"))
+             finally (ein:cell-goto last))))
 
 (defun ein:worksheet--node-positions (cell)
   (let ((result))
@@ -719,23 +723,16 @@ Prefixes are act same as the normal `yank' command."
     cell))
 
 (defun ein:worksheet-insert-cell-below (ws type-or-cell pivot &optional focus)
-  "Insert cell below.  Insert markdown cell instead of code cell
-when the prefix argument is given.
-
-When used as a lisp function, insert a cell of TYPE-OR-CELL just
-after PIVOT and return the new cell."
+  "Insert cell below.
+Insert markdown cell instead of code cell when the prefix argument is given."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (if current-prefix-arg 'markdown 'code)
-                     (ein:worksheet-get-current-cell :noerror t) ; can be nil
+                     (ein:worksheet-get-current-cell :noerror t)
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
-    (cond
-     ((= (ein:worksheet-ncells ws) 0)
-      (ein:cell-enter-last cell))
-     (pivot
+    (if (zerop (ein:worksheet-ncells ws))
+        (ein:cell-enter-last cell)
       (ein:cell-insert-below pivot cell))
-     (t (error
-         "PIVOT is `nil' but ncells != 0.  There is something wrong...")))
     (ein:worksheet--unshift-undo-list cell (- (ein:cell-input-pos-max cell)
                                               (ein:cell-input-pos-min cell)))
     (setf (oref ws :dirty) t)
@@ -743,24 +740,19 @@ after PIVOT and return the new cell."
     cell))
 
 (defun ein:worksheet-insert-cell-above (ws type-or-cell pivot &optional focus)
-  "Insert cell above.  Insert markdown cell instead of code cell
-when the prefix argument is given.
-See also: `ein:worksheet-insert-cell-below'."
+  "Insert cell above.
+Insert markdown cell instead of code cell when the prefix argument is given."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (if current-prefix-arg 'markdown 'code)
-                     (ein:worksheet-get-current-cell :noerror t) ; can be nil
+                     (ein:worksheet-get-current-cell :noerror t)
                      t))
   (let ((cell (ein:worksheet-maybe-new-cell ws type-or-cell)))
-    (cond
-     ((< (ein:worksheet-ncells ws) 2)
-      (ein:cell-enter-first cell))
-     (pivot
+    (if (<= (ein:worksheet-ncells ws) 1)
+        (ein:cell-enter-first cell)
       (let ((prev-cell (ein:cell-prev pivot)))
         (if prev-cell
             (ein:cell-insert-below prev-cell cell)
           (ein:cell-enter-first cell))))
-     (t (error
-         "PIVOT is `nil' but ncells > 0.  There is something wrong...")))
     (ein:worksheet--unshift-undo-list cell (- (ein:cell-input-pos-max cell)
                                               (ein:cell-input-pos-min cell)))
     (setf (oref ws :dirty) t)
@@ -915,7 +907,7 @@ It is set in `ein:notebook-multilang-mode'."
   (ein:worksheet-goto-next-cell-element (or arg 1) nil 0 :after-input))
 
 (defun ein:worksheet-move-cell (ws cell up)
-  ;; effectively kill and yank modulo dirtying kill ring
+  "Effectively kill and yank modulo dirtying kill ring."
   (aif (if up (ein:cell-prev cell) (ein:cell-next cell))
       (let ((inhibit-read-only t)
             (pivot-cell it))
@@ -925,8 +917,7 @@ It is set in `ein:notebook-multilang-mode'."
 
         ;; the clone conveniently makes otl zero
         ;; (as opposed to ein:worksheet-insert-cell)
-        (ein:cell-goto
-         (ein:worksheet-insert-clone ws cell pivot-cell (if up "above" "below")))
+        (ein:worksheet-insert-clone ws cell pivot-cell (if up "above" "below") t)
         (poly-ein-fontify-buffer (ein:worksheet--get-buffer ws)))
     (message "No %s cell" (if up "previous" "next"))))
 
