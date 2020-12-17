@@ -407,13 +407,19 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
   "Consolidate fragility here."
   (unless (eq src-buf dest-buf)
     (with-current-buffer dest-buf
-      (remove-overlays nil nil 'face 'ein:cell-input-area))
+      (save-excursion
+        (save-restriction
+          (widen)
+          (remove-overlays nil nil 'face 'ein:cell-input-area))))
     (mapc (lambda (ol)
             (if (eq 'ein:cell-input-area (overlay-get ol 'face))
                 (move-overlay (copy-overlay ol)
                               (overlay-start ol) (overlay-end ol)
                               dest-buf)))
-          (with-current-buffer src-buf (overlays-in (point-min) (point-max))))
+          (with-current-buffer src-buf
+            (save-restriction
+              (widen)
+              (overlays-in (point-min) (point-max)))))
     (pm--move-vars (append ein:local-variables
                            '(header-line-format buffer-undo-list isearch-mode))
                    src-buf dest-buf)))
