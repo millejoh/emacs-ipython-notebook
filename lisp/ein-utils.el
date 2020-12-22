@@ -215,9 +215,28 @@ at point, i.e. any word before then \"(\", if it is present."
                                     url-or-port))
           (setq parsed-url (url-generic-parse-url url-or-port)))
         (when (localhost-p (url-host parsed-url))
-            (setf (url-host parsed-url) ein:url-localhost))
-        (directory-file-name (concat (file-name-as-directory (url-recreate-url parsed-url))
-                                     (apply #'ein:glom-paths paths)))))))
+	  (setf (url-host parsed-url) ein:url-localhost))
+	(let* (
+	      (path-query (url-path-and-query parsed-url))
+	      (query (cdr path-query))
+	      (query (when query (concat "?" query)))
+	      )
+	  (setf (url-filename parsed-url) (car path-query))
+	  (directory-file-name (concat (file-name-as-directory (url-recreate-url parsed-url))
+				       (apply #'ein:glom-paths paths)
+				       query)))))))
+
+(defun ein:url-join (&rest parts)
+  (cl-loop with path = ""
+	   with query = nil
+	   for p in parts
+	   do (if (string-match "\\?" p)
+		  (let ((p (substring p 0 (match-beginning 0)))
+			(q (substring p (match-end 0))))
+		    (setq path (concat path p))
+		    (setq query (append query (list q))))
+		(setq path (concat path p)))
+	   finally return (concat path (when query (concat "?" (string-join query "&"))))))
 
 (defun ein:url-no-cache (url)
   "Imitate `cache=false' of `jQuery.ajax'.

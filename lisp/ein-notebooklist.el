@@ -694,12 +694,12 @@ and the url-or-port argument of ein:notebooklist-open*."
              (ein:notebooklist-login--error-1 url-or-port error-thrown response errback)
            (setq token (read-passwd (format "Password for %s: " url-or-port)))
            (ein:notebooklist-login--iteration url-or-port callback errback token (1+ iteration) response-status)))
-        ((request-response-header response "x-jupyterhub-version")
+        ((and (not (string-match-p "\\?" url-or-port)) (request-response-header response "x-jupyterhub-version"))
 	 (ein:notebooklist-login--error
 	  url-or-port token callback errback iteration
 	  :data data
 	  :response response
-	  :error-thrown '(error . ("Jupyterhub unsupported"))))
+	  :error-thrown '(error . ("Jupyterhub unsupported without token"))))
         (t (ein:notebooklist-login--success-1 url-or-port callback errback))))
 
 (cl-defun ein:notebooklist-login--error

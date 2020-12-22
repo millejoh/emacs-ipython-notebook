@@ -274,10 +274,10 @@ See https://github.com/ipython/ipython/pull/3307"
 
 (defun ein:start-single-websocket (kernel open-callback)
   "OPEN-CALLBACK (kernel) (e.g., execute cell)"
-  (let ((ws-url (concat (ein:$kernel-ws-url kernel)
-                         (ein:$kernel-kernel-url kernel)
-                         "/channels?session_id="
-                         (ein:$kernel-session-id kernel))))
+  (let ((ws-url (ein:url-join (ein:$kernel-ws-url kernel)
+			      (ein:$kernel-kernel-url kernel)
+			      (concat "/channels?session_id="
+				      (ein:$kernel-session-id kernel)))))
     (ein:log 'verbose "WS start: %s" ws-url)
     (setf (ein:$kernel-websocket kernel)
           (ein:websocket ws-url kernel
