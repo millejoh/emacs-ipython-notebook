@@ -55,10 +55,16 @@ Usage
 =====
 Start EIN using **ONE** of the following:
 
-- Open an ``.ipynb`` file, press ``C-c C-o``, or,
-- ``M-x ein:run`` launches a jupyter process from emacs, or,
-- ``M-x ein:login`` to a running jupyter server, or,
-- [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``.  See `Amazon Web Services`_.
+* Open an ``.ipynb`` file, press ``C-c C-o``, or,
+* ``M-x ein:run`` launches a jupyter process from emacs, or,
+* ``M-x ein:login`` to a running jupyter server, or,
+* [Jupyterhub] ``M-x ein:login`` to any of
+
+  * ``https://hub.data8x.berkeley.edu``
+  * ``https://hub.data8x.berkeley.edu/user/1dcdab3``
+  * ``https://hub.data8x.berkeley.edu/user/1dcdab3/?token=c421c68``, or,
+
+* [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``.  See `Amazon Web Services`_.
 
 ``M-x ein:stop`` prompts to halt local and remote jupyter services.
 

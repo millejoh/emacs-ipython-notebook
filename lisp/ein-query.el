@@ -62,30 +62,25 @@ The proper fix is to sempahore between competing curl processes.")
     (setq settings (plist-put settings :encoding 'binary))
     settings))
 
-(defsubst ein:query-enforce-curl ()
-  (unless (eq request-backend 'curl)
-    (ein:display-warning
-     (format "request-backend: %s unsupported" request-backend))
-    (if (executable-find request-curl)
-        (setq request-backend 'curl)
-      (ein:display-warning
-       (format "The %s program was not found" request-curl) :error))))
-
 (cl-defun ein:query-singleton-ajax (url &rest settings
                                         &key (timeout ein:query-timeout)
                                         &allow-other-keys)
-  (ein:query-enforce-curl)
-  (when timeout
-    (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-  (unless (plist-member settings :sync)
-    (setq settings (plist-put settings :sync ein:force-sync)))
-  (-when-let* ((parsed-url (url-generic-parse-url url))
-               (url-stem (url-host parsed-url))
-               (token (gethash url-stem ein:query-authorization-tokens))
-               (header (cons "Authorization" (format "token %s" token))))
-    (setq settings
-          (plist-put settings :headers (cons header (plist-get settings :headers)))))
-  (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
+  (if (executable-find request-curl)
+      (let ((request-backend 'curl))
+        (when timeout
+          (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
+        (unless (plist-member settings :sync)
+          (setq settings (plist-put settings :sync ein:force-sync)))
+        (-when-let* ((parsed-url (url-generic-parse-url url))
+                     (url-stem (url-host parsed-url))
+                     (token (gethash url-stem ein:query-authorization-tokens))
+                     (header (cons "Authorization" (format "token %s" token))))
+          (setq settings
+                (plist-put settings :headers (cons header (plist-get settings :headers)))))
+        (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
+    (ein:display-warning
+     (format "The %s program was not found, aborting" request-curl)
+     :error)))
 
 (defun ein:query-kernelspecs (url-or-port callback &optional iteration)
   "Send for kernelspecs of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
@@ -165,29 +160,16 @@ The proper fix is to sempahore between competing curl processes.")
       (setf (gethash url-or-port *ein:notebook-version*) it)
     (if hub-p
         (let* ((parsed-url (url-generic-parse-url url-or-port))
-               (url-stem (url-host parsed-url))
                (pq (url-path-and-query parsed-url))
                (path0 (car pq))
                (username (if (and (stringp path0)
                                   (string-match "user/\\([a-z0-9]+\\)" path0))
                              (match-string-no-properties 1 path0)
-                           "")))
-          (ein:query-singleton-ajax
-           (concat (ein:url url-stem "hub/spawn" username) "?token=" (gethash url-or-port ein:query-authorization-tokens ""))
-           :sync t
-           :parser #'ein:json-read
-           :success (cl-function
-                     (lambda (&key data &allow-other-keys)
-                       (aif (plist-get data :version)
-                           (setf (gethash url-or-port *ein:notebook-version*) it)
-                         (ein:log 'error "ein:query-notebook-version--complete: %s"
-                                  "no jupyterhub version, aborting")
-                         (setq callback nil))))
-           :error (cl-function
-                   (lambda (&key response &allow-other-keys)
-                     (ein:log 'error "ein:query-notebook-version--complete: %s, aborting"
-                              (request-response-status-code response))
-                     (setq callback nil)))))
+                           "unrecognized")))
+          (ein:display-warning
+           (format "Server for %s requires start, aborting" username)
+           :error)
+          (setq callback nil))
       (ein:log 'warn "notebook version currently unknowable")))
   (when callback (funcall callback)))
 

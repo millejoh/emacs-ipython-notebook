@@ -249,16 +249,39 @@
       (When "I clear log expr \"ein:log-all-buffer-name\"")
       (When "I clear log expr \"*ein:jupyter-server-buffer-name*\""))))
 
-(When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
+(When "^I login to jupyterhub$"
+  (lambda ()
+    (should
+     (when-let ((hub (seq-find (apply-partially #'string-match-p (concat (file-name-as-directory "user") user-login-name))
+                               (ein:jupyter-crib-running-servers))))
+       (let (done-p)
+         (ein:login hub (lambda () (setq done-p t)))
+         (prog1 t
+           (unwind-protect
+               (ein:testing-wait-until (lambda () done-p) nil 20000 1000)
+             (Given "I finally stop the server"))))))))
+
+(When "^I start jupyterhub configured \"\\(.*\\)\"$"
   (lambda (config)
     (When "I stop the server")
     (cl-letf (((symbol-function 'read-no-blanks-input)
                (lambda (&rest _args) (user-login-name))))
       (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
       (let ((ein:jupyter-server-args
-             '("--debug" "--no-db" "--config=.ecukes-temp-config.py")))
-        (ein:jupyter-server-start (executable-find "jupyterhub") nil))
-      (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
+             '("--no-db" "--config=.ecukes-temp-config.py")))
+        (ein:jupyter-server-start (executable-find "jupyterhub") nil t)
+        (with-current-buffer (get-buffer *ein:jupyter-server-buffer-name*)
+          (And "I wait for buffer to say \"running at\"")))
+      (let ((prev (length (ein:jupyter-crib-running-servers))))
+        (cl-destructuring-bind (url-or-port _token)
+            (ein:jupyter-server-conn-info)
+          (ein:query-singleton-ajax
+           (ein:url url-or-port "hub/login")
+           :data `(("username" . ,user-login-name)
+                   ("password" . ,user-login-name)))
+          (ein:testing-wait-until
+           (lambda () (> (length (ein:jupyter-crib-running-servers)) prev))
+           nil 20000 1000))))))
 
 (When "^newlined region should be \"\\(.*\\)\"$"
   (lambda (region)
@@ -276,8 +299,8 @@
                                 ein:testing-jupyter-server-root (not login))
       (with-current-buffer (get-buffer *ein:jupyter-server-buffer-name*)
         (And "I wait for buffer to say \"is running at:\"")))
-    (if login
-        (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
+    (when login
+      (ein:testing-wait-until (lambda () (ein:notebooklist-list)) nil 20000 1000))))
 
 (When "^I login erroneously to \\(.*\\)$"
   (lambda (port)

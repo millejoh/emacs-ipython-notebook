@@ -65,6 +65,10 @@ test-compile: clean autoloads
 .PHONY: quick
 quick: $(CASK_DIR) test-compile test-ob-ein-recurse test-unit
 
+# Last I tried, I can get jupyterhub to launch a user server
+# on a random port 58153, but that instance is still-born, i.e.,
+# it posts 404 from the browser.  SimpleLocalProcessSpawner
+# results in Module not found.
 .PHONY: test-jupyterhub
 test-jupyterhub: test-compile
 	$(CASK) exec ecukes --tags @jupyterhub --reporter magnars

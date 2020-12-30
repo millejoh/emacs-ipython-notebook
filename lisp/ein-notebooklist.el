@@ -158,7 +158,7 @@ Return nil if unclear what, if any, authentication applies."
                                              url-or-port-list
                                              nil nil nil nil
                                              (car-safe url-or-port-list)))))
-    (ein:url (string-trim url-or-port))))
+    (ein:url url-or-port)))
 
 (defun ein:notebooklist-open* (url-or-port &optional path resync callback errback hub-p)
   "Workhorse of `ein:login'.
@@ -663,7 +663,6 @@ and the url-or-port argument of ein:notebooklist-open*."
                  ,(when current-prefix-arg
                     (read-no-blanks-input "Cookie content: "))
 		 nil))
-  (unless callback (setq callback (lambda (_buffer _url-or-port))))
   (when cookie-name
     (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
            (domain (url-host parsed-url))

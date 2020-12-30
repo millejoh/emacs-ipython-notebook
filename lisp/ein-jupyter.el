@@ -165,8 +165,9 @@ with the call to the jupyter notebook."
                                 ein:jupyter-docker-image)))
                       (t
                        (append (aif ein:jupyter-server-use-subcommand (list it))
-                               (list (format "--notebook-dir=%s"
-                                             (convert-standard-filename dir)))
+                               (when dir
+                                 (list (format "--notebook-dir=%s"
+                                               (convert-standard-filename dir))))
                                args
                                (let ((copy (cl-copy-list ein:jupyter-server-args)))
                                  (when (ein:debug-p)
@@ -299,8 +300,8 @@ server command."
                                  nil nil ein:jupyter-server-command))))))
                  result)
              default-command))
-         (let (result
-               (default-dir ein:jupyter-default-notebook-directory))
+         (let ((default-dir ein:jupyter-default-notebook-directory)
+               result)
            (while (or (not result) (not (file-directory-p result)))
              (setq result (read-directory-name
                            (format "%sNotebook directory: "

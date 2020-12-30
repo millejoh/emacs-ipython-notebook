@@ -12,3 +12,4 @@ dist
 .ipynb_checkpoints
 ein-autoloads.el
 ert-profile
+ein-images

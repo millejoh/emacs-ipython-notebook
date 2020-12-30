@@ -97,7 +97,7 @@ jobs:
       run: |
         mkdir -p ~/local/bin
         python -m pip install --upgrade pip
-        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
+        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib jupyterhub jupyterhub-dummyauthenticator
         python -m ipykernel install --user
 
     - name: R

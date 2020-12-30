@@ -156,7 +156,7 @@ Usage::
     json))
 
 (defmacro ein:output-area-case-type (json &rest case-body)
-  `(let* ((types ein:output-area-case-types)
+  `(let* ((types (cl-copy-list ein:output-area-case-types))
           (heuristic-p (and (memq :text/plain types)
                             (memq :text/html types)))
           (,json (or (plist-get ,json :data) ,json))
