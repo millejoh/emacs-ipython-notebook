@@ -244,8 +244,7 @@ CALLBACK takes one argument kernel (e.g., execute cell now that we're reconnecte
     callback)))
 
 (defun ein:kernel--ws-url (url-or-port)
-  "Assuming URL-OR-PORT already normalized by `ein:url'
-
+  "Assuming URL-OR-PORT already normalized by `ein:url'.
 See https://github.com/ipython/ipython/pull/3307"
   (let* ((parsed-url (url-generic-parse-url url-or-port))
          (protocol (if (string= (url-type parsed-url) "https") "wss" "ws")))
@@ -254,12 +253,6 @@ See https://github.com/ipython/ipython/pull/3307"
             (url-host parsed-url)
             (url-port parsed-url)
             (url-filename parsed-url))))
-
-(defun ein:kernel-send-cookie (channel host)
-  ;; cookie can be an empty string for IPython server with no password,
-  ;; but something must be sent to start channel.
-  (let ((cookie (ein:query-get-cookie host "/")))
-    (ein:websocket-send channel cookie)))
 
 (defun ein:kernel--handle-websocket-reply (kernel _ws frame)
   (-when-let* ((packet (websocket-frame-payload frame))
@@ -701,81 +694,6 @@ Example::
              (ein:log 'info (concat "ein:kernel--handle-iopub-reply: "
                                     "No :clear_output callback for parent_id=%s")
                       parent-id))))))))
-
-(defun ein:kernel-filename-to-python (kernel filename)
-  "See: `ein:filename-to-python'."
-  (ein:filename-to-python (ein:$kernel-url-or-port kernel) filename))
-
-(defun ein:kernel-filename-from-python (kernel filename)
-  "See: `ein:filename-from-python'."
-  (ein:filename-from-python (ein:$kernel-url-or-port kernel) filename))
-
-(defun ein:kernel-construct-defstring (content)
-  "Construct call signature from CONTENT of ``:object_info_reply``.
-Used in `ein:pytools-finish-tooltip', etc."
-  (or (plist-get content :call_def)
-      (plist-get content :init_definition)
-      (plist-get content :definition)))
-
-(defun ein:kernel-construct-help-string (content)
-  "Construct help string from CONTENT of ``:object_info_reply``.
-Used in `ein:pytools-finish-tooltip', etc."
-  (let* ((defstring (ein:aand
-                     (ein:kernel-construct-defstring content)
-                     (ansi-color-apply it)
-                     (ein:string-fill-paragraph it)))
-         (docstring (ein:aand
-                     (or (plist-get content :call_docstring)
-                         (plist-get content :init_docstring)
-                         (plist-get content :docstring)
-                         ;; "<empty docstring>"
-                         )
-                     (ansi-color-apply it)))
-         (help (ein:aand
-                (delete nil (list defstring docstring))
-                (ein:join-str "\n" it))))
-    help))
-
-(defun ein:kernel-request-stream (kernel code func &optional args)
-  "Run lisp callback FUNC with the output stream returned by Python CODE.
-
-The first argument to the lisp function FUNC is the stream output
-as a string and the rest of the argument is the optional ARGS."
-  (ein:kernel-execute
-   kernel
-   code
-   (list :output (cons (lambda (packed msg-type content _metadata)
-                         (let ((func (car packed))
-                               (args (cdr packed)))
-                           (when (equal msg-type "stream")
-                             (aif (plist-get content :text)
-                                 (apply func it args)))))
-                       (cons func args)))))
-
-(cl-defun ein:kernel-history-request-synchronously
-    (kernel &rest args &key (timeout 0.5) (tick-time 0.05) &allow-other-keys)
-  "Send the history request and wait TIMEOUT seconds.
-Return a list (CONTENT METADATA).
-This function checks the request reply every TICK-TIME seconds.
-See `ein:kernel-history-request' for other usable options."
-  ;; As `result' and `finished' are set in callback, make sure they
-  ;; won't be trapped in other let-bindings.
-  (let (result finished)
-    (apply
-     #'ein:kernel-history-request
-     kernel
-     (list :history_reply
-           (cons (lambda (_ignore content metadata)
-                   (setq result (list content metadata))
-                   (setq finished t))
-                 nil))
-     args)
-    (cl-loop repeat (floor (/ timeout tick-time))
-          do (sit-for tick-time)
-          when finished
-          return t
-          finally (error "Timeout"))
-    result))
 
 (provide 'ein-kernel)
 

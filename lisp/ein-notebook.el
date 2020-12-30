@@ -673,7 +673,6 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   "Kill kernel and then kill notebook buffer.
 To close notebook without killing kernel, just close the buffer
 as usual."
-  (declare (indent defun))
   (interactive (list (ein:notebook--get-nb-or-error) nil))
   (unless callback1 (setq callback1 #'ignore))
   (let* ((kernel (ein:$notebook-kernel notebook))

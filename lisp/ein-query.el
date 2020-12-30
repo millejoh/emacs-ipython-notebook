@@ -1,4 +1,4 @@
-;;; ein-query.el --- jQuery like interface on to of url-retrieve -*- lexical-binding: t -*-
+;;; ein-query.el --- jQuery like interface on top of curl -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -27,52 +27,22 @@
 
 (require 'request)
 (require 'url)
-
 (require 'ein-core)
 (require 'ein-log)
 
-
-;;; Utils
-
-(defun ein:safe-funcall-packed (packed &rest args)
-  (when packed
-    (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
-
-
-;;; Variables
-
-(defcustom ein:query-timeout
-  (if (eq request-backend 'url-retrieve) 1000 nil)
-  "Default query timeout for HTTP access in millisecond.
-
-Setting this to `nil' means no timeout.
-If you have ``curl`` command line program, it is automatically set to
-`nil' as ``curl`` is reliable than `url-retrieve' therefore no need for
-a workaround (see below).
-
-If you do the same operation before the timeout, old operation
-will NO LONGER be canceled (as it the cookie jar gets clobbered when curl
-aborts).  Instead you will see Race! in debug messages.
-
-.. note:: This value exists because it looks like `url-retrieve'
-   occasionally fails to finish \(start?) querying.  Timeout is
-   used to let user notice that their operation is not finished.
-   It also prevent opening a lot of useless process buffers.
-   You will see them when closing Emacs if there is no timeout.
-
-   If you know how to fix the problem with `url-retrieve', please
-   let me know or send pull request at github!
-   \(Related bug report in Emacs bug tracker:
-   http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11469)"
-  :type '(choice (integer :tag "Timeout [ms]" 5000)
+(defcustom ein:query-timeout 1000
+  "Default query timeout for HTTP access in millisecond."
+  :type '(choice (integer :tag "Timeout [ms]" 1000)
                  (const :tag "No timeout" nil))
   :group 'ein)
 
-
-;;; Functions
-
 (defvar ein:query-xsrf-cache (make-hash-table :test 'equal)
-  "Hack: remember the last xsrf token by host in case we catch cookie jar in transition.  The proper fix is to sempahore between competing curl processes.")
+  "Remember the last xsrf token by host.
+This is a hack in case we catch cookie jar in transition.
+The proper fix is to sempahore between competing curl processes.")
+
+(defvar ein:query-authorization-tokens (make-hash-table :test 'equal)
+  "Jupyterhub authorization token by url-stem.")
 
 (defun ein:query-prepare-header (url settings &optional securep)
   "Ensure that REST calls to the jupyter server have the correct _xsrf argument."
@@ -92,19 +62,7 @@ aborts).  Instead you will see Race! in debug messages.
     (setq settings (plist-put settings :encoding 'binary))
     settings))
 
-(let ((checked-curl-version nil))
-  (defun ein:warn-on-curl-version ()
-    (let ((curl (executable-find request-curl)))
-      (unless checked-curl-version
-        (setq checked-curl-version t)
-        (with-temp-buffer
-          (call-process curl nil t nil "--version")
-          (goto-char (point-min))
-          (when (search-forward "mingw32" nil t)
-            (warn "The current version of curl (%s) may not work with ein. We recommend you install the latest, official version from the curl website: https://curl.haxx.se" (buffer-string))))))))
-
 (defsubst ein:query-enforce-curl ()
-  (ein:warn-on-curl-version)
   (unless (eq request-backend 'curl)
     (ein:display-warning
      (format "request-backend: %s unsupported" request-backend))
@@ -119,12 +77,119 @@ aborts).  Instead you will see Race! in debug messages.
   (ein:query-enforce-curl)
   (when timeout
     (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-  (setq settings (plist-put settings :sync ein:force-sync))
+  (unless (plist-member settings :sync)
+    (setq settings (plist-put settings :sync ein:force-sync)))
+  (-when-let* ((parsed-url (url-generic-parse-url url))
+               (url-stem (url-host parsed-url))
+               (token (gethash url-stem ein:query-authorization-tokens))
+               (header (cons "Authorization" (format "token %s" token))))
+    (setq settings
+          (plist-put settings :headers (cons header (plist-get settings :headers)))))
   (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
 
-;;; Cookie
+(defun ein:query-kernelspecs (url-or-port callback &optional iteration)
+  "Send for kernelspecs of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  (setq iteration (or iteration 0))
+  (ein:query-singleton-ajax
+   (ein:url url-or-port "api/kernelspecs")
+   :type "GET"
+   :parser 'ein:json-read
+   :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port)
+   :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
+   :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
 
-(defalias 'ein:query-get-cookie 'request-cookie-string)
+(defun ein:normalize-kernelspec-language (name)
+  "Normalize the kernelspec language string"
+  (if (stringp name)
+      (replace-regexp-in-string "[ ]" "-" name)
+    name))
+
+(cl-defun ein:query-kernelspecs--success (url-or-port callback
+                                          &key data _symbol-status _response
+                                          &allow-other-keys)
+  (let ((ks (list :default (plist-get data :default)))
+        (specs (ein:plist-iter (plist-get data :kernelspecs))))
+    (setf (gethash url-or-port *ein:kernelspecs*)
+          (ein:flatten (dolist (spec specs ks)
+                         (let ((name (car spec))
+                               (info (cdr spec)))
+                           (push (list name (make-ein:$kernelspec :name (plist-get info :name)
+                                                                  :display-name (plist-get (plist-get info :spec)
+                                                                                           :display_name)
+                                                                  :resources (plist-get info :resources)
+                                                                  :language (ein:normalize-kernelspec-language
+                                                                             (plist-get (plist-get info :spec)
+                                                                                        :language))
+                                                                  :spec (plist-get info :spec)))
+                                 ks))))))
+  (when callback (funcall callback)))
+
+(cl-defun ein:query-kernelspecs--error
+    (url-or-port callback iteration
+     &key data response error-thrown &allow-other-keys
+     &aux
+     (response-status (request-response-status-code response))
+     (hub-p (request-response-header response "x-jupyterhub-version")))
+  (if (< iteration 3)
+      (if (and hub-p (eq response-status 405))
+          (ein:query-kernelspecs--success url-or-port callback :data data)
+        (ein:log 'verbose "Retry kernelspecs #%s in response to %s"
+                 iteration response-status)
+        (ein:query-kernelspecs url-or-port callback (1+ iteration)))
+    (ein:log 'error
+      "ein:query-kernelspecs--error %s: ERROR %s DATA %s"
+      url-or-port (car error-thrown) (cdr error-thrown))
+    (when callback (funcall callback))))
+
+(cl-defun ein:query-kernelspecs--complete (_url-or-port &key data response &allow-other-keys
+                                           &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+  (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
+
+(defun ein:query-notebook-version (url-or-port callback)
+  "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  (ein:query-singleton-ajax
+   (ein:url url-or-port "api")
+   :parser #'ein:json-read
+   :complete (apply-partially #'ein:query-notebook-version--complete
+                              url-or-port callback)))
+
+(cl-defun ein:query-notebook-version--complete
+    (url-or-port callback
+     &key data response &allow-other-keys
+     &aux
+     (resp-string (format "STATUS: %s DATA: %s"
+                          (request-response-status-code response) data))
+     (hub-p (request-response-header response "x-jupyterhub-version")))
+  (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
+  (aif (plist-get data :version)
+      (setf (gethash url-or-port *ein:notebook-version*) it)
+    (if hub-p
+        (let* ((parsed-url (url-generic-parse-url url-or-port))
+               (url-stem (url-host parsed-url))
+               (pq (url-path-and-query parsed-url))
+               (path0 (car pq))
+               (username (if (and (stringp path0)
+                                  (string-match "user/\\([a-z0-9]+\\)" path0))
+                             (match-string-no-properties 1 path0)
+                           "")))
+          (ein:query-singleton-ajax
+           (concat (ein:url url-stem "hub/spawn" username) "?token=" (gethash url-or-port ein:query-authorization-tokens ""))
+           :sync t
+           :parser #'ein:json-read
+           :success (cl-function
+                     (lambda (&key data &allow-other-keys)
+                       (aif (plist-get data :version)
+                           (setf (gethash url-or-port *ein:notebook-version*) it)
+                         (ein:log 'error "ein:query-notebook-version--complete: %s"
+                                  "no jupyterhub version, aborting")
+                         (setq callback nil))))
+           :error (cl-function
+                   (lambda (&key response &allow-other-keys)
+                     (ein:log 'error "ein:query-notebook-version--complete: %s, aborting"
+                              (request-response-status-code response))
+                     (setq callback nil)))))
+      (ein:log 'warn "notebook version currently unknowable")))
+  (when callback (funcall callback)))
 
 (provide 'ein-query)
 

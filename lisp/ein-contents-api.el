@@ -56,11 +56,12 @@
   :type 'boolean
   :group 'ein)
 
-(defun ein:content-query-contents (url-or-port path callback errback &optional iteration)
+(defun ein:content-query-contents (url-or-port path &optional callback errback iteration)
   "Register CALLBACK of arity 1 for the contents at PATH from the URL-OR-PORT.
 ERRBACK of arity 1 for the contents."
-  (unless iteration
-    (setq iteration 0))
+  (setq callback (or callback #'ignore))
+  (setq errback (or errback #'ignore))
+  (setq iteration (or iteration 0))
   (ein:query-singleton-ajax
    (ein:notebooklist-url url-or-port path)
    :type "GET"
@@ -69,38 +70,37 @@ ERRBACK of arity 1 for the contents."
    :success (apply-partially #'ein:content-query-contents--success url-or-port path callback)
    :error (apply-partially #'ein:content-query-contents--error url-or-port path callback errback iteration)))
 
-(cl-defun ein:content-query-contents--complete (_url-or-port _path
-                                                &key data _symbol-status response
-                                                &allow-other-keys
-                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:content-query-contents--complete
+    (_url-or-port _path
+     &key data _symbol-status response &allow-other-keys
+     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-contents--complete %s" resp-string))
 
-(cl-defun ein:content-query-contents--error (url-or-port path callback errback iteration &key symbol-status response error-thrown data &allow-other-keys)
-  (let ((status-code (request-response-status-code response))) ; may be nil!
-    (cl-case status-code
-      (404 (ein:log 'error "ein:content-query-contents--error %s %s"
-                    status-code (plist-get data :message))
-           (when errback (funcall errback url-or-port status-code)))
-      (t (if (< iteration (if noninteractive 6 3))
-             (progn
-               (ein:log 'verbose "Retry content-query-contents #%s in response to %s" iteration status-code)
-               (sleep-for 0 (* (1+ iteration) 500))
-               (ein:content-query-contents url-or-port path callback errback (1+ iteration)))
-           (let ((notice
-                  (format "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s"
-                          (concat (file-name-as-directory url-or-port) path)
-                          symbol-status (cdr error-thrown))))
-             (if (and (eql status-code 403) noninteractive)
-                 (progn
-                   (ein:log 'info notice)
-                   (when callback
-                     (funcall callback (ein:new-content url-or-port path data))))
-               (ein:log 'error notice)
-               (when errback (funcall errback url-or-port status-code)))))))))
+(cl-defun ein:content-query-contents--error
+    (url-or-port path callback errback iteration
+     &key symbol-status response error-thrown data &allow-other-keys
+     &aux
+     (response-status (request-response-status-code response))
+     (hub-p (request-response-header response "x-jupyterhub-version")))
+  (cl-case response-status
+    (404 (ein:log 'error "ein:content-query-contents--error %s %s"
+                  response-status (plist-get data :message))
+         (when errback (funcall errback url-or-port response-status)))
+    (t (if (< iteration 3)
+           (if (and hub-p (eq response-status 405))
+               (ein:content-query-contents--success url-or-port path callback :data data)
+             (ein:log 'verbose "Retry content-query-contents #%s in response to %s"
+                      iteration response-status)
+             (sleep-for 0 (* (1+ iteration) 500))
+             (ein:content-query-contents url-or-port path callback errback (1+ iteration)))
+         (ein:log 'error "ein:content-query-contents--error %s REQUEST-STATUS %s DATA %s"
+                  (concat (file-name-as-directory url-or-port) path)
+                  symbol-status (cdr error-thrown))
+         (when errback (funcall errback url-or-port response-status))))))
 
-(cl-defun ein:content-query-contents--success (url-or-port path callback
-                                               &key data _symbol-status _response
-                                               &allow-other-keys)
+(cl-defun ein:content-query-contents--success
+    (url-or-port path callback
+     &key data _symbol-status _response &allow-other-keys)
   (when callback
     (funcall callback (ein:new-content url-or-port path data))))
 
@@ -205,8 +205,9 @@ ERRBACK of arity 1 for the contents."
               (setf (gethash url-or-port *ein:content-hierarchy*) (-flatten result)))
             (funcall callback result)))))))
 
-(defun ein:content-query-hierarchy (url-or-port callback)
+(defun ein:content-query-hierarchy (url-or-port &optional callback)
   "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"
+  (setq callback (or callback #'ignore))
   (ein:content-query-sessions
    url-or-port
    (apply-partially (lambda (url-or-port* callback* sessions)
@@ -263,8 +264,7 @@ ERRBACK of arity 1 for the contents."
    :data (ein:json-encode `((path . ,new-path)))
    :complete #'ein:session-rename--complete))
 
-(cl-defun ein:session-rename--complete (&key data response _symbol-status
-                                        &allow-other-keys
+(cl-defun ein:session-rename--complete (&key data response _symbol-status &allow-other-keys
                                         &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:session-rename--complete %s" resp-string))
 
@@ -282,16 +282,12 @@ ERRBACK of arity 1 for the contents."
 
 ;;; Sessions
 
-(defun ein:content-query-sessions (url-or-port callback errback &optional iteration)
+(defun ein:content-query-sessions (url-or-port &optional callback errback iteration)
   "Register CALLBACK of arity 1 to retrieve the sessions.
 Call ERRBACK of arity 1 (contents) upon failure."
-  (declare (indent defun))
-  (unless iteration
-    (setq iteration 0))
-  (unless callback
-    (setq callback #'ignore))
-  (unless errback
-    (setq errback #'ignore))
+  (setq callback (or callback #'ignore))
+  (setq errback (or errback #'ignore))
+  (setq iteration (or iteration 0))
   (ein:query-singleton-ajax
    (ein:url url-or-port "api/sessions")
    :type "GET"
@@ -312,21 +308,27 @@ Call ERRBACK of arity 1 (contents) upon failure."
         (setf (gethash (read-name (plist-get s :notebook)) session-hash)
               (cons (plist-get s :id) (plist-get s :kernel)))))))
 
-(cl-defun ein:content-query-sessions--error (url-or-port callback errback iteration
-                                             &key response error-thrown
-                                             &allow-other-keys)
-  (if (< iteration (if noninteractive 6 3))
-      (progn
-        (ein:log 'verbose "Retry sessions #%s in response to %s" iteration (request-response-status-code response))
+(cl-defun ein:content-query-sessions--error
+    (url-or-port callback errback iteration
+     &key _data response error-thrown &allow-other-keys
+     &aux
+     (response-status (request-response-status-code response))
+     (hub-p (request-response-header response "x-jupyterhub-version")))
+  (if (< iteration 3)
+      (if (and hub-p (eq response-status 405))
+          (ein:content-query-sessions--success url-or-port callback :data [])
+        (let (eval-expression-print-length eval-expression-print-level)
+          (message "wtf %s" response)
+          (ein:log 'verbose "Retry sessions #%s in response to %s %S" iteration response-status response))
         (sleep-for 0 (* (1+ iteration) 500))
         (ein:content-query-sessions url-or-port callback errback (1+ iteration)))
     (ein:log 'error "ein:content-query-sessions--error %s: ERROR %s DATA %s" url-or-port (car error-thrown) (cdr error-thrown))
     (when errback (funcall errback nil))))
 
-(cl-defun ein:content-query-sessions--complete (_url-or-port _callback
-                                                &key data response
-                                                &allow-other-keys
-                                                &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
+(cl-defun ein:content-query-sessions--complete
+    (_url-or-port _callback
+     &key data response &allow-other-keys
+     &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-sessions--complete %s" resp-string))
 
 ;;; Uploads

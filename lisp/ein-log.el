@@ -93,19 +93,6 @@
 Change the behavior of `ein:log-ignore-errors'."
   (>= ein:log-level (alist-get 'debug ein:log-level-def)))
 
-(defmacro ein:log-ignore-errors (&rest body)
-  "Execute BODY; if an error occurs, log the error and return nil.
-Otherwise, return result of last form in BODY."
-  (declare (debug t) (indent 0))
-  `(if (ein:debug-p)
-       (progn ,@body)
-     (condition-case err
-         (progn ,@body)
-       (error
-        (ein:log 'debug "Error: %S" err)
-        (ein:log 'error (error-message-string err))
-        nil))))
-
 (defun ein:log-pop-to-request-buffer ()
   (interactive)
   (aif (get-buffer request-log-buffer-name)

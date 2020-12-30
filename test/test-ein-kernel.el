@@ -3,7 +3,6 @@
 (require 'ert)
 
 (require 'ein-kernel)
-(require 'ein-testing-kernel)
 (require 'ein-testing-notebook)
 
 (defun eintest:kernel-new (port)
@@ -66,13 +65,3 @@
        kernel nil :data (list :ws_url "ws://127.0.0.1:8888" :id kernel-id))
       (ein:kernel-delete-session nil :kernel kernel))
     (should (equal got-url desired-url))))
-
-;;; Test `ein:kernel-construct-help-string'
-
-(ert-deftest ein:kernel-construct-help-string-when-found ()
-  (ein:testing-kernel-construct-help-string-loop))
-
-(ert-deftest ein:kernel-construct-help-string-when-not-found ()
-  (should (equal (ein:kernel-construct-help-string nil) nil)))
-;; Included in `ein:kernel-construct-help-string-when-found', but test
-;; it explicitly to be sure.

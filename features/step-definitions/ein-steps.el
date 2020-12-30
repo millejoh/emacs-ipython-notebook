@@ -252,8 +252,8 @@
 (When "^I start and login to jupyterhub configured \"\\(.*\\)\"$"
   (lambda (config)
     (When "I stop the server")
-    (cl-letf (((symbol-function 'ein:notebooklist-ask-user-pw-pair)
-               (lambda (&rest _args) (list (intern (user-login-name)) ""))))
+    (cl-letf (((symbol-function 'read-no-blanks-input)
+               (lambda (&rest _args) (user-login-name))))
       (with-temp-file ".ecukes-temp-config.py" (insert (s-replace "\\n" "\n" config)))
       (let ((ein:jupyter-server-args
              '("--debug" "--no-db" "--config=.ecukes-temp-config.py")))

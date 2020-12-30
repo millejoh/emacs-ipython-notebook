@@ -42,8 +42,7 @@
   "Python executable name."
   :type (append '(choice)
                 (let (result)
-                  (dolist (py '("python" "python3" "pythonw" "py")
-                              result)
+                  (dolist (py '("python" "python3" "pythonw" "py") result)
                     (setq result (append result `((const :tag ,py ,py))))))
                 '((string :tag "Other")))
   :group 'ein)
