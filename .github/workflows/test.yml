@@ -91,13 +91,13 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       run: |
         sudo apt-get -yq update
-        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base libfuse-dev libxml2-dev libssl-dev
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base libfuse-dev libxml2-dev libssl-dev libzmq3-dev jupyter-core jupyter-client
 
     - name: dependencies
       run: |
         mkdir -p ~/local/bin
         python -m pip install --upgrade pip
-        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib jupyterhub jupyterhub-dummyauthenticator
+        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
         python -m ipykernel install --user
 
     - name: R
