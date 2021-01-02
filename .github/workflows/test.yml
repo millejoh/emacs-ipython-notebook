@@ -91,7 +91,7 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       run: |
         sudo apt-get -yq update
-        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base libfuse-dev libxml2-dev libssl-dev libzmq3-dev jupyter-core jupyter-client
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base libfuse-dev libxml2-dev libssl-dev
 
     - name: dependencies
       run: |

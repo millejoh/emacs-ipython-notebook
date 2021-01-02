@@ -1022,17 +1022,20 @@ Do not clear input prompts when the prefix argument is given."
                  ,(when current-prefix-arg
                     (prog1 (read-char-choice "[RET]all [a]bove [b]elow: " (list ?\r ?a ?b))
                       (message "")))))
-  (ein:kernel-when-ready (slot-value ws 'kernel)
-                         (apply-partially
-                          (lambda (ws* cell* batch* _kernel)
-                            (cl-case batch*
-                              (?\r (ein:worksheet-execute-all-cells ws*))
-                              (?a (ein:worksheet-execute-all-cells ws* :above cell*))
-                              (?b (ein:worksheet-execute-all-cells ws* :below cell*))
-                              (t (ein:cell-execute cell*)
-                                 (setf (oref ws* :dirty) t)
-                                 (ein:worksheet--unshift-undo-list cell*))))
-                          ws cell batch))
+  (if (ein:codecell-p cell)
+      (ein:kernel-when-ready
+       (slot-value ws 'kernel)
+       (apply-partially
+        (lambda (ws* cell* batch* _kernel)
+          (cl-case batch*
+            (?\r (ein:worksheet-execute-all-cells ws*))
+            (?a (ein:worksheet-execute-all-cells ws* :above cell*))
+            (?b (ein:worksheet-execute-all-cells ws* :below cell*))
+            (t (ein:cell-execute cell*)
+               (setf (oref ws* :dirty) t)
+               (ein:worksheet--unshift-undo-list cell*))))
+        ws cell batch))
+    (message "ein:worksheet-execute-cell: not a code cell"))
   cell)
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
