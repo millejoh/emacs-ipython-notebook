@@ -469,47 +469,56 @@ EOF
                              (t
                               (format "start-notebook.sh --NotebookApp.password='%s'" password))))
               (last-known-buffer (current-buffer)))
-       (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
-         (if (or refresh (null pre-docker))
-             (if (fboundp 'magit-with-editor)
-                 (magit-with-editor
-                   (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension ipynb-name)))
-                          (base-image (ein:gat-elicit-base-image))
-                          (_ (with-temp-file dockerfile
-                               (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\n"
-                                               base-image ipynb-name))))
-                          (my-editor (when (and (boundp 'server-name)
-                                                (server-running-p server-name))
-                                       `("-s" ,server-name)))
-                          )
-                     (ein:gat-chain
-                       last-known-buffer
+       (progn
+         (unless (or (file-directory-p
+                      (concat (file-name-as-directory default-directory) ".gat"))
+                     (member ".gat" (split-string default-directory "/")))
+           (let* ((command (format "gat --project - --region %s --zone - create"
+                                   ein:gat-aws-region))
+                  (retcode (shell-command command)))
+             (unless (zerop retcode)
+               (error "ein:gat-where-am-i: \"%s\" exited with %d" command retcode))))
+         (cl-destructuring-bind (pre-docker . post-docker) (ein:gat-dockerfiles-state)
+           (if (or refresh (null pre-docker))
+               (if (fboundp 'magit-with-editor)
+                   (magit-with-editor
+                     (let* ((dockerfile (format "Dockerfile.%s" (file-name-sans-extension ipynb-name)))
+                            (base-image (ein:gat-elicit-base-image))
+                            (_ (with-temp-file dockerfile
+                                 (insert (format "FROM %s\nCOPY --chown=jovyan:users ./%s .\n"
+                                                 base-image ipynb-name))))
+                            (my-editor (when (and (boundp 'server-name)
+                                                  (server-running-p server-name))
+                                         `("-s" ,server-name)))
+                            )
+                       (ein:gat-chain
+                         last-known-buffer
+                         (apply-partially
+                          #'ein:gat-chain
+                          last-known-buffer
+                          (when remote-p
+                            (apply-partially
+                             #'ein:gat-chain
+                             last-known-buffer
+                             (unless batch-p
+                               (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
+                             gat-log-exec))
+                          (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
+                         `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
+                 (error "ein:gat--run: magit not installed"))
+             (if (special-variable-p 'magit-process-popup-time)
+                 (let ((magit-process-popup-time 0))
+                   (ein:gat-chain
+                     last-known-buffer
+                     (when remote-p
                        (apply-partially
                         #'ein:gat-chain
                         last-known-buffer
-                        (when remote-p
-                          (apply-partially
-                           #'ein:gat-chain
-                           last-known-buffer
-                           (unless batch-p
-                             (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
-                           gat-log-exec))
-                        (append gat-chain-args gat-chain-run (list "--dockerfile" dockerfile "--command" command)))
-                       `(,with-editor-emacsclient-executable nil ,@my-editor ,dockerfile))))
-               (error "ein:gat--run: magit not installed"))
-           (if (special-variable-p 'magit-process-popup-time)
-               (let ((magit-process-popup-time 0))
-                 (ein:gat-chain
-                   last-known-buffer
-                   (when remote-p
-                     (apply-partially
-                      #'ein:gat-chain
-                      last-known-buffer
-                      (unless batch-p
-                        (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
-                      gat-log-exec))
-                   (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
-             (error "ein:gat--run: magit not installed"))))
+                        (unless batch-p
+                          (apply-partially #'ein:gat-jupyter-login ipynb-name default-directory callback))
+                        gat-log-exec))
+                     (append gat-chain-args gat-chain-run (list "--dockerfile" pre-docker "--command" command))))
+               (error "ein:gat--run: magit not installed")))))
      (message "ein:gat--run: aborting"))))
 
 (defun ein:gat-elicit-base-image ()
@@ -542,8 +551,8 @@ EOF
 (defun ein:gat-elicit-worktree (extant)
   (let ((already (split-string
                   (ein:gat-shell-command
-                   (format "gat --project %s --region %s --zone - list"
-                           "-" ein:gat-aws-region)))))
+                   (format "gat --project - --region %s --zone - list"
+                           ein:gat-aws-region)))))
     (if extant
         (ein:completing-read
          "Experiment: " already nil t nil nil

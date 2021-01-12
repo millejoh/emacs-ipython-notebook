@@ -6,7 +6,7 @@ Scenario: show-paren-mode should behave
   And I type "x = np.arange(0"
   And I press "C-b"
   And I press "C-b"
-  And eval "(let ((orig (point))) (funcall show-paren-data-function) (should (equal (point) orig)))"
+  And eval "(let ((orig (point))) (funcall show-paren-data-function) (cl-assert (equal (point) orig)))"
 
 @rename
 Scenario: rename notebook
@@ -135,11 +135,3 @@ Scenario: Smoke test julia
   And I wait for cell to execute
   Then I should see "true"
   And I dump buffer
-
-@kernel-on-connect
-Scenario: Test ein:on-kernel-connect-functions abnormal hooks
-  Given I set the kernel connect message
-  Given new python notebook
-  And I wait for the smoke to clear
-  Then I should see message "Hello ein"
-  And I clear the kernel connect message

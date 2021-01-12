@@ -751,8 +751,8 @@ If END is non-`nil', return the location of next element."
         ;; remove from `:element'
         (let* ((element (slot-value cell 'element))
                (old-output (plist-get element :output))
-               (new-ouptut (ein:remove-by-index old-output indices)))
-          (plist-put element :output new-ouptut))
+               (new-output (ein:remove-by-index old-output indices)))
+          (plist-put element :output new-output))
         ;; remove cleared outputs from internal data
         (setf (slot-value cell 'outputs)
               (ein:remove-by-index (slot-value cell 'outputs) indices))))

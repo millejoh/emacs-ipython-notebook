@@ -1,7 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 (require 'f)
 (require 'espuds)
-(require 'ert)
 (require 'python)
 (require 'julia-mode)
 (require 'ess-r-mode)
@@ -71,19 +70,22 @@
                            do (sleep-for 0 1000)
                            finally do (when extant
                                         (ein:display-warning (format "cannot delete %s" path)))))))
-  (aif (ein:notebook-opened-notebooks)
-      (cl-loop for nb in it
-            for path = (ein:$notebook-notebook-path nb)
-            do (ein:log 'debug "Notebook %s still open" path)
-            finally do (cl-assert nil)))
+  (awhen (ein:notebook-opened-notebooks)
+    (cl-loop for nb in it
+             for path = (ein:$notebook-notebook-path nb)
+             do (ein:log 'debug "Notebook %s still open" path)
+             finally do (cl-assert nil)))
   (cl-loop repeat 5
            for stragglers = (file-name-all-completions "Untitled"
                                                        ein:testing-jupyter-server-root)
            until (null stragglers)
-           do (message "ein:testing-after-scenario: fs stale handles: %s"
-                       (mapconcat #'identity stragglers ", "))
-           do (sleep-for 0 1000)
-           finally do (should-not stragglers)))
+           ;; do (message "ein:testing-after-scenario: fs stale handles: %s"
+           ;;             (mapconcat #'identity stragglers ", "))
+           do (sleep-for 0 1000))
+  (mapc #'delete-file
+        (mapcar (apply-partially #'concat
+                                 (file-name-as-directory ein:testing-jupyter-server-root))
+                (file-name-all-completions "Untitled" ein:testing-jupyter-server-root))))
 
 (Setup
  (ein:dev-start-debug)

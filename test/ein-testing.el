@@ -125,9 +125,9 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                                          (setq notebook nb))
                                        nil nil subdir)
         (ein:testing-wait-until (lambda ()
-                                  (and notebook
-                                       (ein:aand (ein:$notebook-kernel notebook)
-                                                 (ein:kernel-live-p it))))
+                                  (aand notebook
+                                       (ein:$notebook-kernel it)
+                                       (ein:kernel-live-p it)))
                                 nil 20000 1000)
         notebook)
     (error (let ((notice (format "ein:testing-new-notebook: [%s] %s"

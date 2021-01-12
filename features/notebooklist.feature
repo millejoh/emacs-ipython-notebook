@@ -66,8 +66,8 @@ Scenario: Delete closes buffers and sessions
   And I clear log expr "ein:log-all-buffer-name"
   And I click on "Delete"
   And I wait for buffer to not say "Stop"
-  Then eval "(should-not (ein:notebook-opened-notebooks)))"
-  Then eval "(should-not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list)))"
+  Then eval "(cl-assert (not (ein:notebook-opened-notebooks)))"
+  Then eval "(cl-assert (not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list))))"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "kernel-delete-session--success"
   Then I should see "notebooklist-delete-notebook--complete"
@@ -152,3 +152,10 @@ Scenario: With token server
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see ": [error]"
+
+@exit
+Scenario: Ask user to save unsaved notebooks
+  Given new python notebook
+  When I type "import math"
+  And I press "RET"
+  Then save on exit

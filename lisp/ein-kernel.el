@@ -51,26 +51,9 @@
 ;;;###autoload
 (defalias 'ein:kernel-id 'ein:$kernel-kernel-id)
 
-(defcustom ein:pre-kernel-execute-functions nil
-  "List of functions to call before sending a message to the kernel for execution. Each function is called with the message (see `ein:kernel--get-msg') about to be sent."
-  :type 'list
-  :group 'ein)
-
-(defcustom ein:on-shell-reply-functions nil
-  "List of functions to call when the kernel responds on the shell channel.
-  Each function should have the call signature: msg-id header content metadata"
-  :type 'list
-  :group 'ein)
-
-(defcustom ein:on-kernel-connect-functions nil
-  "Abnormal hook that is run after a websocket connection is made
-to a jupyter kernel. Functions defined here must accept a single
-argument, which is the kernel that was just connected."
-  :type 'list
-  :group 'ein)
-
-
-;;; Initialization and connection.
+(make-obsolete-variable 'ein:pre-kernel-execute-functions nil "0.17.0")
+(make-obsolete-variable 'ein:on-shell-reply-functions nil "0.17.0")
+(make-obsolete-variable 'ein:on-kernel-connect-functions nil "0.17.0")
 
 (defun ein:kernel-new (url-or-port path kernelspec base-url events &optional api-version)
   (make-ein:$kernel
@@ -287,9 +270,8 @@ See https://github.com/ipython/ipython/pull/3307"
                             (-if-let* ((websocket (websocket-client-data ws))
                                        (kernel (ein:$websocket-kernel websocket)))
                                 (progn
-                                  (when (ein:kernel-live-p kernel)
-                                    (run-hook-with-args 'ein:on-kernel-connect-functions kernel)
-                                    (when cb (funcall cb kernel)))
+                                  (awhen (and (ein:kernel-live-p kernel) cb)
+                                    (funcall it kernel))
                                   (ein:log 'verbose "WS opened: %s" (websocket-url ws)))
                               (ein:log 'error "ein:start-single-websocket: on-open no client data for %s." (websocket-url ws))))
                           open-callback)))))
@@ -389,7 +371,6 @@ Return randomly generated MSG-ID tag uniquely identifying expectation of a kerne
          (msg (ein:kernel--get-msg kernel "execute_request" content))
          (msg-id (plist-get (plist-get msg :header) :msg_id)))
     (ein:log 'debug "ein:kernel-execute: code=%s msg_id=%s" code msg-id)
-    (run-hook-with-args 'ein:pre-kernel-execute-functions msg)
     (ein:websocket-send-shell-channel kernel msg)
     (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
     (unless silent
@@ -644,7 +625,6 @@ Example::
            (callbacks (ein:kernel-get-callbacks-for-msg kernel msg-id)))
       (ein:log 'debug "ein:kernel--handle-shell-reply: msg_type=%s msg_id=%s"
                msg-type msg-id)
-      (run-hook-with-args 'ein:on-shell-reply-functions msg-type header content metadata)
       (aif (plist-get callbacks (intern-soft (format ":%s" msg-type)))
           (ein:funcall-packed it content metadata)
         (ein:log 'info "ein:kernel--handle-shell-reply: No :%s callback for msg_id=%s"

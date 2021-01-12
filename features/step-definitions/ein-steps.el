@@ -5,16 +5,27 @@
     (switch-to-buffer " *Minibuf-1*")
     (When (format "I press \"%s\"" keybinding))))
 
+(When "^save on exit$"
+  (lambda ()
+    (let ((hook (lambda () (ignore-errors (ein:jupyter-server-stop)))))
+      (cl-assert (member hook kill-emacs-hook))
+      (let (asked-p
+            confirm-kill-emacs
+            confirm-kill-processes
+            (kill-emacs-query-functions
+             (list (lambda () (prog1 nil (funcall hook))))))
+        (cl-letf (((symbol-function 'ein:jupyter-server-conn-info)
+                   #'ignore)
+                  ((symbol-function 'y-or-n-p)
+                   (lambda (prompt &rest _args)
+                     (setq asked-p (or asked-p (string-match-p "save" prompt)))
+                     nil)))
+          (And "I press \"C-x C-c\"")
+          (cl-assert asked-p))))))
+
 (When "^I insert percent sign$" ;; https://github.com/ecukes/ecukes/issues/58
   (lambda ()
     (insert-char 37)))
-
-(When "^I \\(set\\|clear\\) the kernel connect message$"
-  (lambda (which)
-    (if (string= which "clear")
-        (setq ein:on-kernel-connect-functions nil)
-      (add-to-list 'ein:on-kernel-connect-functions
-                   (apply-partially #'message "Hello ein")))))
 
 (When "^I type session port \\([0-9]+\\)$"
   (lambda (port)
@@ -40,7 +51,7 @@
                              (slot-value
                               (slot-value ein:%notification% 'kernel)
                               'message)))))
-      (if negate (should-not equal-p) (should equal-p)))))
+      (if negate (cl-assert (not equal-p)) (cl-assert equal-p)))))
 
 (When "^I switch kernel to \"\\(.+\\)\"$"
   (lambda (kernel-name)
@@ -49,8 +60,8 @@
         (cl-loop repeat 10
                  until (ein:kernel-live-p (ein:$notebook-kernel notebook))
                  do (sleep-for 0 500)
-                 finally do (should (string= "R" (ein:$kernelspec-language
-                                                  (ein:$notebook-kernelspec notebook)))))))))
+                 finally do (cl-assert (string= "R" (ein:$kernelspec-language
+                                                     (ein:$notebook-kernelspec notebook)))))))))
 
 (When "^I kill kernel$"
   (lambda ()
@@ -62,7 +73,7 @@
     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest ignore) t)))
       (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)
                                     (lambda (kernel session-p)
-                                      (should-not session-p))))))
+                                      (cl-assert (not session-p)))))))
 (When "^I cannot save upon quit$"
   (lambda ()
     (let ((always-errback
@@ -74,7 +85,7 @@
                     always-errback)
       (cl-letf (((symbol-function 'y-or-n-p)
                  (lambda (prompt) (message "%s" prompt) t)))
-        (should (ein:notebook-opened-notebooks))
+        (cl-assert (ein:notebook-opened-notebooks))
         (ein:notebook-close-notebooks)
         (Then "I should see message \"Some notebooks could not be saved.  Exit anyway?\""))
       (remove-function (symbol-function 'ein:notebook-save-notebook) always-errback))))
@@ -109,7 +120,7 @@
     (let ((buffer (cl-some (lambda (x) (and (cl-search "*websocket" x) x))
                            (mapcar #'buffer-name (buffer-list)))))
       (with-current-buffer buffer
-        (should-not (cl-search "\"matches\"" (buffer-string)))))))
+        (cl-assert (not (cl-search "\"matches\"" (buffer-string))))))))
 
 (When "^I clear log expr \"\\(.+\\)\"$"
   (lambda (log-expr)
@@ -129,7 +140,7 @@
     (cl-loop repeat 10
              until (zerop (hash-table-count *ein:notebook--pending-query*))
              do (sleep-for 0 500)
-             finally do (should (zerop (hash-table-count *ein:notebook--pending-query*))))
+             finally do (cl-assert (zerop (hash-table-count *ein:notebook--pending-query*))))
     (with-current-buffer ein:log-all-buffer-name
       (And "I wait for buffer to say \"ein:query-sessions--complete\""))))
 
@@ -148,8 +159,8 @@
                                  (buffer-list))
              until (buffer-live-p buf)
              do (sleep-for 0 500)
-             finally do (and (should (buffer-live-p buf))
-                             (switch-to-buffer buf)))))
+             finally do (progn (cl-assert (buffer-live-p buf))
+                               (switch-to-buffer buf)))))
 
 (When "^rename notebook to \"\\(.+\\)\" succeeds$"
   (lambda (new-name)
@@ -220,7 +231,7 @@
                    url-or-port ks nil
                    (when path (progn (string-match "\"\\([^\"]+\\)\"" path)
                                      (match-string 1 path)))))))
-        (should notebook)
+        (cl-assert notebook)
         (switch-to-buffer (ein:notebook-buffer notebook))))))
 
 (When "^I kill buffer and reopen$"
@@ -251,7 +262,7 @@
 
 (When "^I login to jupyterhub$"
   (lambda ()
-    (should
+    (cl-assert
      (when-let ((hub (seq-find (apply-partially #'string-match-p (concat (file-name-as-directory "user") user-login-name))
                                (ein:jupyter-crib-running-servers))))
        (let (done-p)
@@ -285,8 +296,8 @@
 
 (When "^newlined region should be \"\\(.*\\)\"$"
   (lambda (region)
-    (should (string= (s-replace "\\n" "\n" region)
-                     (buffer-substring-no-properties (region-beginning) (region-end))))))
+    (cl-assert (string= (s-replace "\\n" "\n" region)
+                        (buffer-substring-no-properties (region-beginning) (region-end))))))
 
 (When "^I start \\(and login to \\)?the server configured \"\\(.*\\)\"$"
   (lambda (login config)
@@ -378,7 +389,7 @@
     (cl-loop repeat 10
              until (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))
              do (sleep-for 0 500)
-             finally do (should (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))))))
+             finally do (cl-assert (gethash key (ein:$kernel-oinfo-cache (ein:get-kernel)))))))
 
 (When "^I wait for the smoke to clear"
   (lambda ()
@@ -391,7 +402,7 @@
              until (cl-search stop (buffer-string))
              do (And (format "I click on \"%s\"" go))
              do (sleep-for 0 1000)
-             finally do (should (cl-search stop (buffer-string))))))
+             finally do (cl-assert (cl-search stop (buffer-string))))))
 
 (When "^I click\\( without going top\\)? on\\( file\\)? \"\\(.+\\)\"$"
   (lambda (stay file word)
@@ -402,7 +413,7 @@
              for search = (re-search-forward (format "\\[%s\\]" word) nil t)
              until search
              do (sleep-for 0 1000)
-             finally do (should search))
+             finally do (cl-assert search))
     (backward-char)
     (let ((was (widget-at)))
       (When "I press \"RET\"")
@@ -430,7 +441,7 @@
                   (When "I press \"RET\"")
                   (cl-loop until (not (equal was (widget-at)))
                            do (sleep-for 0 500)))
-             finally do (should (cl-search stop (buffer-string))))))
+             finally do (cl-assert (cl-search stop (buffer-string))))))
 
 (When "^old notebook \"\\(.+\\)\"$"
   (lambda (path)
@@ -462,7 +473,7 @@
     (cl-loop repeat 10
              until (cl-search substr (buffer-name))
              do (sleep-for 0 500)
-             finally do (should (cl-search substr (buffer-name))))))
+             finally do (cl-assert (cl-search substr (buffer-name))))))
 
 (When "^I wait for cell to execute$"
   (lambda ()
@@ -509,8 +520,8 @@
                      (lambda (&rest _args) ein:jupyter-default-notebook-directory)))
             (call-interactively #'ein:jupyter-server-start))
           ;; should err before getting here
-          (should-not t))
-      (error (should (cl-search "Server command:" (error-message-string err)))))))
+          (cl-assert nil))
+      (error (cl-assert (cl-search "Server command:" (error-message-string err)))))))
 
 (When "^I create a directory \"\\(.+\\)\" with depth \\([0-9]+\\) and width \\([0-9]+\\)$"
   (lambda (dir depth width)
@@ -525,7 +536,7 @@
 (When "^\"\\(.+\\)\" should \\(not \\)?include \"\\(.+\\)\"$"
   (lambda (variable negate value)
     (let ((member-p (member value (symbol-value (intern variable)))))
-      (if negate (should-not member-p) (should member-p)))))
+      (if negate (cl-assert (not member-p)) (cl-assert member-p)))))
 
 (When "^I customize \"\\(.+\\)\" to \"\\(.+\\)\"$"
   (lambda (variable value)
@@ -545,7 +556,7 @@
 
 (When "^the value of \"\\(.+\\)\" is \\(.+\\)$"
   (lambda (variable value)
-    (should (equal (symbol-value (intern variable)) (symbol-value (intern value))))))
+    (cl-assert (equal (symbol-value (intern variable)) (symbol-value (intern value))))))
 
 (When "^I get into notebook mode \"\\(.+\\)\" \"\\(.+\\)\"$"
   (lambda (notebook-dir file-path)
@@ -566,7 +577,7 @@
     (Given "I am in notebooklist buffer")
     (let* ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name))
            (contains-p (member nbpath (ein:notebooklist-list-paths))))
-      (should (if negate (not contains-p) contains-p)))))
+      (cl-assert (if negate (not contains-p) contains-p)))))
 
 (When "I open \\(notebook\\|file\\) \"\\(.+\\)\"$"
   (lambda (content-type file-name)
@@ -586,7 +597,7 @@
 
 (When "^text property at point includes \"\\(.+\\)\"$"
   (lambda (properties)
-    (should-not
-     (cl-mapcan (lambda (prop)
-                  (not (get-text-property (point) (intern prop))))
-                (split-string properties ",")))))
+    (cl-assert (not
+                (cl-mapcan (lambda (prop)
+                             (not (get-text-property (point) (intern prop))))
+                           (split-string properties ","))))))

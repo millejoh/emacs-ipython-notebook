@@ -362,12 +362,12 @@ server command."
                (when (and (null (ein:notebooklist-keys))
                           (ein:shared-output-healthy-p))
                  (kill-buffer (ein:shared-output-buffer)))))
-      (let ((gat-dir (alist-get (intern url-or-port) ein:gat-urls))
-            (my-p (string= url-or-port my-url-or-port)))
-        (if (not (or (and (not ask-p) (or my-p gat-dir))
-                     (and ask-p (or my-p gat-dir)
-                          (prog1 (y-or-n-p (format "Shutdown %s?" url-or-port))
+      (let* ((gat-dir (alist-get (intern url-or-port) ein:gat-urls))
+             (my-p (string= url-or-port my-url-or-port))
+             (close-p (or (not ask-p)
+                          (prog1 (y-or-n-p (format "Close %s?" url-or-port))
                             (message "")))))
+        (if (not close-p)
             (setq all-p nil)
           (ein:notebook-close-notebooks
            (lambda (notebook)
@@ -385,7 +385,10 @@ server command."
                    (run-at-time 2 nil
                                 (lambda ()
                                   (ein:log 'info "Resignaled %s with pid %s" proc pid)
-                                  (signal-process pid (if (eq system-type 'windows-nt) 9 15))))))
+                                  (signal-process pid (if (eq system-type 'windows-nt) 9 15))))
+                   ;; NotebookPasswordApp::shutdown_server() also ignores req response.
+                   (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")
+                                             :type "POST")))
                 (gat-dir
                  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
                    (-when-let* ((gat-chain-args `("gat" nil
@@ -397,10 +400,10 @@ server command."
                                                       (list "log" "--after" (format "%s" now)
                                                             "--nextunit" "shutdown.service")))
                                 (magit-process-popup-time 0))
-                     (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)))))
-          ;; NotebookPasswordApp::shutdown_server() also ignores req response.
-          (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")
-                                    :type "POST")
+                     (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)
+                     ;; NotebookPasswordApp::shutdown_server() also ignores req response.
+                     (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")
+                                               :type "POST")))))
           ;; `ein:notebooklist-sentinel' frequently does not trigger
           (ein:notebooklist-list-remove url-or-port)
           (maphash (lambda (k _v) (when (equal (car k) url-or-port)
