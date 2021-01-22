@@ -128,7 +128,8 @@ Scenario: Logging into nowhere again
 Scenario: Bad curl invocation produces sensible error message
   Given I start the server configured "\n"
   And I login with bad curl
-  And I switch to log expr "ein:log-all-buffer-name"
+  And I call "ein:log-pop-to-all-buffer"
+  And I dump buffer
   Then I should see "no-such-option"
 
 @login

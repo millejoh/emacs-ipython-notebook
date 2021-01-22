@@ -66,7 +66,6 @@
    :kernel-id nil
    :websocket nil
    :base-url base-url
-   :stdin-activep nil
    :oinfo-cache (make-hash-table :test #'equal)
    :username "username"
    :msg-callbacks (make-hash-table :test 'equal)))
@@ -378,93 +377,6 @@ Return randomly generated MSG-ID tag uniquely identifying expectation of a kerne
             (ein:$kernel-after-execute-hook kernel)))
     msg-id))
 
-(defun ein:kernel-complete (kernel line cursor-pos callbacks errback)
-  "Complete code at CURSOR-POS in a string LINE on KERNEL.
-
-CURSOR-POS is the position in the string LINE, not in the buffer.
-
-ERRBACK takes a string (error message).
-
-When calling this method pass a CALLBACKS structure of the form:
-
-    (:complete_reply (FUNCTION . ARGUMENT))
-
-Call signature::
-
-  (funcall FUNCTION ARGUMENT CONTENT METADATA)
-
-CONTENT and METADATA are given by `complete_reply' message.
-
-`complete_reply' message is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#complete
-"
-  (condition-case err
-      (let* ((content (if (< (ein:$kernel-api-version kernel) 4)
-                          (list
-                           ;; :text ""
-                           :line line
-                           :cursor_pos cursor-pos)
-                        (list
-                         :code line
-                         :cursor_pos cursor-pos)))
-             (msg (ein:kernel--get-msg kernel "complete_request" content))
-             (msg-id (plist-get (plist-get msg :header) :msg_id)))
-        (cl-assert (ein:kernel-live-p kernel) nil "kernel not live")
-        (ein:websocket-send-shell-channel kernel msg)
-        (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-        msg-id)
-    (error (if errback (funcall errback (error-message-string err))
-             (ein:display-warning (error-message-string err) :error)))))
-
-
-(cl-defun ein:kernel-history-request (kernel callbacks
-                                      &key
-                                      (output nil)
-                                      (raw t)
-                                      (hist-access-type "tail")
-                                      session
-                                      start
-                                      stop
-                                      (n 10)
-                                      pattern
-                                      unique)
-  "Request execution history to KERNEL.
-
-When calling this method pass a CALLBACKS structure of the form:
-
-    (:history_reply (FUNCTION . ARGUMENT))
-
-Call signature::
-
-  (`funcall' FUNCTION ARGUMENT CONTENT METADATA)
-
-CONTENT and METADATA are given by `history_reply' message.
-
-`history_reply' message is documented here:
-http://ipython.org/ipython-doc/dev/development/messaging.html#history
-
-Relevant Python code:
-
-* :py:method:`IPython.zmq.ipkernel.Kernel.history_request`
-* :py:class:`IPython.core.history.HistoryAccessor`
-"
-  (cl-assert (ein:kernel-live-p kernel) nil "history_reply: Kernel is not active.")
-  (let* ((content (list
-                   :output (ein:json-any-to-bool output)
-                   :raw (ein:json-any-to-bool raw)
-                   :hist_access_type hist-access-type
-                   :session session
-                   :start start
-                   :stop stop
-                   :n n
-                   :pattern pattern
-                   :unique unique))
-         (msg (ein:kernel--get-msg kernel "history_request" content))
-         (msg-id (plist-get (plist-get msg :header) :msg_id)))
-    (ein:websocket-send-shell-channel kernel msg)
-    (ein:kernel-set-callbacks-for-msg kernel msg-id callbacks)
-    msg-id))
-
 (defun ein:kernel-connect-request (kernel callbacks)
   "Request basic information for a KERNEL.
 
@@ -572,7 +484,6 @@ Example::
   (puthash msg-id callbacks (ein:$kernel-msg-callbacks kernel)))
 
 (defun ein:kernel--handle-stdin-reply (kernel packet)
-  (setf (ein:$kernel-stdin-activep kernel) t)
   (cl-destructuring-bind
       (&key header _parent_header _metadata content &allow-other-keys)
       (ein:json-read-from-string packet)
@@ -586,15 +497,23 @@ Example::
                  (let* ((passwd (read-passwd (plist-get content :prompt)))
                         (content (list :value passwd))
                         (msg (ein:kernel--get-msg kernel "input_reply" content)))
-                   (ein:websocket-send-stdin-channel kernel msg)
-                   (setf (ein:$kernel-stdin-activep kernel) nil))
-               (cond ((string-match "ipdb>" (plist-get content :prompt)) (ein:run-ipdb-session kernel "ipdb> "))
-                     ((string-match "(Pdb)" (plist-get content :prompt)) (ein:run-ipdb-session kernel "(Pdb) "))
+                   (ein:websocket-send-stdin-channel kernel msg))
+               (cond ((string-match "^\\(ipdb> \\|(Pdb) \\)"
+                                    (plist-get content :prompt))
+                      (aif (ein:ipdb-get-session kernel)
+                          (pop-to-buffer (ein:$ipdb-session-buffer it))
+                        (let* ((url-or-port (ein:$kernel-url-or-port kernel))
+                               (path (ein:$kernel-path kernel))
+                               (notebook (ein:notebook-get-opened-notebook
+                                          url-or-port path)))
+                          (ein:ipdb-start-session
+                           kernel
+                           (match-string 1 (plist-get content :prompt))
+                           notebook))))
                      (t (let* ((in (read-string (plist-get content :prompt)))
                                (content (list :value in))
                                (msg (ein:kernel--get-msg kernel "input_reply" content)))
-                          (ein:websocket-send-stdin-channel kernel msg)
-                          (setf (ein:$kernel-stdin-activep kernel) nil))))))))))
+                          (ein:websocket-send-stdin-channel kernel msg))))))))))
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (cl-loop with events = (ein:$kernel-events kernel)
@@ -638,42 +557,46 @@ Example::
                (ein:events-trigger events 'execution_count.Kernel it))))))))
 
 (defun ein:kernel--handle-iopub-reply (kernel packet)
-  (if (ein:$kernel-stdin-activep kernel)
-      (ein:ipdb--handle-iopub-reply kernel packet)
-    (cl-destructuring-bind
-        (&key content metadata parent_header header &allow-other-keys)
-        (ein:json-read-from-string packet)
-      (let* ((msg-type (plist-get header :msg_type))
-             (msg-id (plist-get header :msg_id))
-             (parent-id (plist-get parent_header :msg_id))
-             (callbacks (ein:kernel-get-callbacks-for-msg kernel parent-id))
-             (events (ein:$kernel-events kernel)))
-        (ein:log 'debug
-          "ein:kernel--handle-iopub-reply: msg_type=%s msg_id=%s parent_id=%s"
-          msg-type msg-id parent-id)
-        (ein:case-equal msg-type
-          (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
-           (aif (plist-get callbacks :output) ;; ein:cell--handle-output
-               (ein:funcall-packed it msg-type content metadata)
-             (ein:log 'warn (concat "ein:kernel--handle-iopub-reply: "
-                                    "No :output callback for parent_id=%s")
-                      parent-id)))
-          (("status")
-           (ein:case-equal (plist-get content :execution_state)
-             (("busy")
-              (ein:events-trigger events 'status_busy.Kernel))
-             (("idle")
-              (ein:events-trigger events 'status_idle.Kernel))
-             (("dead")
-              (ein:kernel-disconnect kernel))))
-          (("data_pub")
-           (ein:log 'verbose "ein:kernel--handle-iopub-reply: data_pub %S" packet))
-          (("clear_output")
-           (aif (plist-get callbacks :clear_output)
-               (ein:funcall-packed it content metadata)
-             (ein:log 'info (concat "ein:kernel--handle-iopub-reply: "
-                                    "No :clear_output callback for parent_id=%s")
-                      parent-id))))))))
+  (cl-destructuring-bind
+      (&key content metadata parent_header header &allow-other-keys)
+      (ein:json-read-from-string packet)
+    (let* ((msg-type (plist-get header :msg_type))
+           (msg-id (plist-get header :msg_id))
+           (parent-id (plist-get parent_header :msg_id))
+           (callbacks (ein:kernel-get-callbacks-for-msg kernel parent-id))
+           (events (ein:$kernel-events kernel)))
+      (ein:log 'debug
+        "ein:kernel--handle-iopub-reply: msg_type=%s msg_id=%s parent_id=%s"
+        msg-type msg-id parent-id)
+      (ein:case-equal msg-type
+        (("stream" "display_data" "pyout" "pyerr" "error" "execute_result")
+         (aif (plist-get callbacks :output) ;; ein:cell--handle-output
+             (ein:funcall-packed it msg-type content metadata)
+           (ein:log 'warn (concat "ein:kernel--handle-iopub-reply: "
+                                  "No :output callback for parent_id=%s")
+                    parent-id))
+         (when (ein:ipdb-get-session kernel)
+           (ein:ipdb--handle-iopub-reply kernel packet)))
+        (("status")
+         (ein:case-equal (plist-get content :execution_state)
+           (("busy")
+            (ein:events-trigger events 'status_busy.Kernel))
+           (("idle")
+            (ein:events-trigger events 'status_idle.Kernel)
+            (awhen (ein:ipdb-get-session kernel)
+              (ein:ipdb-stop-session it)))
+           (("dead")
+            (ein:kernel-disconnect kernel)
+            (awhen (ein:ipdb-get-session kernel)
+              (ein:ipdb-stop-session it)))))
+        (("data_pub")
+         (ein:log 'verbose "ein:kernel--handle-iopub-reply: data_pub %S" packet))
+        (("clear_output")
+         (aif (plist-get callbacks :clear_output)
+             (ein:funcall-packed it content metadata)
+           (ein:log 'info (concat "ein:kernel--handle-iopub-reply: "
+                                  "No :clear_output callback for parent_id=%s")
+                    parent-id)))))))
 
 (provide 'ein-kernel)
 

@@ -41,14 +41,12 @@ Scenario: native json parsing broke traceback
   Given new python notebook
   And I type "def func1():"
   And I press "RET"
-  And I type "func2()"
+  And I type "    func2()"
   And I press "RET"
-  And I press "C-a"
   And I type "def func2():"
   And I press "RET"
-  And I type "1/0"
+  And I type "    1/0"
   And I press "RET"
-  And I press "C-a"
   And I type "func1()"
   And I press "RET"
   And I wait for cell to execute

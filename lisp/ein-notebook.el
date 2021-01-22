@@ -117,14 +117,18 @@ And I don't know if I can on account of the dont-save-cells nonsense."
 
 (defun ein:notebook-buffer-list (notebook)
   "Return the direct and indirect buffers."
-  (cl-remove-if-not
-   #'identity
-   (cl-mapcan (lambda (ws)
-                (when-let ((ws-buf (ein:worksheet-buffer ws)))
-                  (with-current-buffer ws-buf
-                    (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
-              (append (ein:$notebook-worksheets notebook)
-                      (ein:$notebook-scratchsheets notebook)))))
+  (append
+   (cl-remove-if-not
+    #'identity
+    (cl-mapcan (lambda (ws)
+                 (when-let ((ws-buf (ein:worksheet-buffer ws)))
+                   (with-current-buffer ws-buf
+                     (mapcar #'buffer-name (eieio-oref pm/polymode '-buffers)))))
+               (append (ein:$notebook-worksheets notebook)
+                       (ein:$notebook-scratchsheets notebook))))
+   (awhen (ein:$notebook-kernel notebook)
+     (awhen (ein:ipdb-get-session it)
+       (list (ein:$ipdb-session-buffer it))))))
 
 (defun ein:notebook--get-nb-or-error ()
   (or ein:%notebook% (error "Not in notebook buffer.")))

@@ -46,7 +46,6 @@
 (defvar ein:log-print-level 1 "`print-level' for `ein:log'")
 (defvar ein:log-max-string 1000)
 
-
 (defun ein:log-set-level (level)
   (setq ein:log-level (ein:log-level-name-to-int level)))
 
@@ -93,11 +92,20 @@
 Change the behavior of `ein:log-ignore-errors'."
   (>= ein:log-level (alist-get 'debug ein:log-level-def)))
 
+(defun ein:log-pop-to-ws-buffer ()
+  (interactive)
+  (-if-let* ((kernel (ein:get-kernel--notebook))
+             (websocket (ein:$kernel-websocket kernel)))
+      (pop-to-buffer
+       (websocket-get-debug-buffer-create
+        (ein:$websocket-ws websocket)))
+    (message "Must be run from notebook buffer")))
+
 (defun ein:log-pop-to-request-buffer ()
   (interactive)
   (aif (get-buffer request-log-buffer-name)
       (pop-to-buffer it)
-    (message "No buffer named \"%s\"" request-log-buffer-name)))
+    (message "No buffer %s" request-log-buffer-name)))
 
 (defun ein:log-pop-to-all-buffer ()
   (interactive)

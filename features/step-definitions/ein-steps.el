@@ -144,6 +144,10 @@
     (with-current-buffer ein:log-all-buffer-name
       (And "I wait for buffer to say \"ein:query-sessions--complete\""))))
 
+(When "^I wait for buffer process$"
+  (lambda ()
+    (ein:testing-wait-until (lambda () (get-buffer-process (current-buffer))))))
+
 (When "^I possibly wait for gat install$"
   (lambda ()
     (unless (executable-find "gat")

@@ -10,6 +10,7 @@
 (require 'ein-notebook)
 (require 'ein-testing-notebook)
 (require 'ein-testing-cell)
+(require 'ein-markdown-mode)
 
 ;; Test utils
 
@@ -1163,9 +1164,6 @@ value of `ein:worksheet-enable-undo'."
   (with-current-buffer (ein:testing-notebook-make-empty)
     ;; FIXME: write test with non-empty TB
     (should-not (ein:get-traceback-data))))
-
-
-;; Notebook mode
 
 (ert-deftest ein:notebook-ask-before-kill-emacs-simple ()
   (let ((ein:notebook--opened-map (make-hash-table :test 'equal)))

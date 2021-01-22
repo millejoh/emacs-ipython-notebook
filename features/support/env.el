@@ -18,6 +18,7 @@
 (require 'poly-ein)
 (require 'ob-ein)
 (require 'with-editor)
+(require 'ein-markdown-mode)
 (require 'paren)
 
 (when (>= emacs-major-version 27)
@@ -96,6 +97,7 @@
                        '(ein:gat-gce-region "abc")
                        '(ein:gat-aws-region "abc")
                        '(ein:gat-gce-project "abc")
+                       '(electric-indent-mode nil)
                        '(ein:gat-machine-types '("abc")))
  (setq ein:jupyter-default-kernel
        (cl-loop with cand = ""

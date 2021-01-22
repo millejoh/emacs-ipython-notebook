@@ -221,7 +221,6 @@
   base-url                              ; /api/kernels/
   kernel-url                            ; /api/kernels/<KERNEL-ID>
   ws-url                                ; ws://<URL>[:<PORT>]
-  stdin-activep
   username
   msg-callbacks
   oinfo-cache

@@ -2,11 +2,6 @@
 (require 'ert)
 
 (require 'ein-dev)
-(ein:dev-require-all :ignore-p (lambda (f) (equal f "ein-autoloads.el")))
-(eval-when-compile
- ;; do it also at compile time.
-  (ein:dev-require-all :ignore-p (lambda (f) (equal f "ein-autoloads.el"))))
-
 
 (defun eintest:assert-keymap-fboundp (keymap)
   (let (assert-fboundp)

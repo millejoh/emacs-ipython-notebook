@@ -157,13 +157,7 @@ a number will limit the number of lines in a cell output."
                  (const :tag "Do not truncate cells with long outputs" nil))
   :group 'ein)
 
-(defcustom ein:on-execute-reply-functions nil
-  "List of functions to call after receiving an \"execute_reply\"
-  message on the shell channel, just before updating the
-  worksheet. Each function should have the same call signature as
-  `ein:cell--handle-execute-reply'."
-  :type 'list
-  :group 'ein)
+(make-obsolete-variable 'ein:on-execute-reply-functions nil "0.17.0")
 
 ;;; EIEIO related utils
 
@@ -997,24 +991,26 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
    :set_next_input (cons #'ein:cell--handle-set-next-input cell)))
 
 (cl-defmethod ein:cell--handle-execute-reply ((cell ein:codecell) content metadata)
-  (run-hook-with-args 'ein:on-execute-reply-functions cell content metadata)
-  (ein:cell-set-input-prompt cell (plist-get content :execution_count))
-  (ein:cell-running-set cell nil)
-  (if (equal (plist-get content :status) "error")
-      (ein:cell--handle-output cell "error" content metadata)
-    (let ((events (slot-value cell 'events)))
-      (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
-      (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))
+  (when (buffer-live-p (ein:cell-buffer cell))
+    (ein:cell-set-input-prompt cell (plist-get content :execution_count))
+    (ein:cell-running-set cell nil)
+    (if (equal (plist-get content :status) "error")
+        (ein:cell--handle-output cell "error" content metadata)
+      (let ((events (slot-value cell 'events)))
+        (ein:events-trigger events 'set_dirty.Worksheet (list :value t :cell cell))
+        (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))))
 
 (cl-defmethod ein:cell--handle-set-next-input ((cell ein:codecell) text)
-  (let ((events (slot-value cell 'events)))
-    (ein:events-trigger events 'set_next_input.Worksheet
-                        (list :cell cell :text text))
-    (ein:events-trigger events 'maybe_reset_undo.Worksheet cell)))
+  (when (buffer-live-p (ein:cell-buffer cell))
+    (let ((events (slot-value cell 'events)))
+      (ein:events-trigger events 'set_next_input.Worksheet
+                          (list :cell cell :text text))
+      (ein:events-trigger events 'maybe_reset_undo.Worksheet cell))))
 
 (cl-defmethod ein:cell--handle-output ((cell ein:codecell) msg-type content _metadata)
   (ein:log 'debug "ein:cell--handle-output (cell ein:codecell): %s" msg-type)
-  (let ((json `(:output_type ,msg-type)))
+  (when-let ((json `(:output_type ,msg-type))
+             (live-p (buffer-live-p (ein:cell-buffer cell))))
     (cl-macrolet ((copy-props
                    (src tgt props)
                    `(mapc (lambda (kw)
@@ -1041,8 +1037,9 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) _content _metadata)
   "Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output"
-  (ein:cell-clear-output cell t t t)
-  (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))
+  (when (buffer-live-p (ein:cell-buffer cell))
+    (ein:cell-clear-output cell t t t)
+    (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))
 
 (cl-defmethod ein:cell-has-image-output-p ((cell ein:codecell))
   "Return `t' if given cell has image output, `nil' otherwise."
