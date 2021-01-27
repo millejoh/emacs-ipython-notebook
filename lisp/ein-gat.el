@@ -113,27 +113,38 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
-  (cond ((and (string= major-mode "magit-process-mode")
-              (string-prefix-p "ein-gat:" (buffer-name)))
-         (aprog1 default-directory
-           (when print-message
-             (message it))))
-        ((string= major-mode "ein:ipynb-mode")
-         (aprog1 (directory-file-name (file-name-directory (buffer-file-name)))
-           (when print-message
-             (message it))))
-        (t
-         (if-let ((notebook-dir (ein:jupyter-running-notebook-directory))
-                  (notebook (ein:get-notebook))
-                  (where (directory-file-name
-                          (concat (file-name-as-directory notebook-dir)
-                                  (file-name-directory (ein:$notebook-notebook-path notebook))))))
-             (aprog1 where
-               (when print-message
-                 (message it)))
-           (prog1 nil
+  (let ((from-end (cl-search "/.gat" default-directory :from-end)))
+    (cond ((and (string= major-mode "magit-process-mode")
+                (string-prefix-p "ein-gat:" (buffer-name)))
+           (aprog1 default-directory
              (when print-message
-	       (message "nowhere")))))))
+               (message it))))
+          ((string= major-mode "ein:ipynb-mode")
+           (aprog1 (directory-file-name (file-name-directory (buffer-file-name)))
+             (when print-message
+               (message it))))
+          ((file-directory-p
+            (concat (file-name-as-directory default-directory) ".gat"))
+           (aprog1 default-directory
+             (when print-message
+               (message it))))
+          (from-end
+           (aprog1 (file-name-as-directory
+                    (cl-subseq default-directory 0 from-end))
+             (when print-message
+               (message it))))
+          (t
+           (if-let ((notebook-dir (ein:jupyter-running-notebook-directory))
+                    (notebook (ein:get-notebook))
+                    (where (directory-file-name
+                            (concat (file-name-as-directory notebook-dir)
+                                    (file-name-directory (ein:$notebook-notebook-path notebook))))))
+               (aprog1 where
+                 (when print-message
+                   (message it)))
+             (prog1 nil
+               (when print-message
+	         (message "nowhere"))))))))
 
 (cl-defun ein:gat-jupyter-login (ipynb-name notebook-dir callback &rest args &key public-ip-address)
   (let ((url-or-port (ein:url (format "http://%s:8888" public-ip-address))))
@@ -216,15 +227,16 @@ and moreover, how would I avoid messing `magit-process-filter' of other processe
                        (when (string-match "^\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)\\s-+\\S-+$" last-line)
                          (string-trim (match-string 1 last-line))))))
              (when callback
-               (with-current-buffer buffer
-                 (let ((magit-process-popup-time 0))
-                   (apply callback
-                          (append
-                           (when worktree-dir
-                             `(:worktree-dir ,worktree-dir))
-                           (when-let ((address (or new-public-ip-address
-                                                   public-ip-address)))
-                             `(:public-ip-address ,address)))))))))
+               (when (buffer-live-p buffer)
+                 (set-buffer buffer))
+               (let ((magit-process-popup-time 0))
+                 (apply callback
+                        (append
+                         (when worktree-dir
+                           `(:worktree-dir ,worktree-dir))
+                         (when-let ((address (or new-public-ip-address
+                                                 public-ip-address)))
+                           `(:public-ip-address ,address))))))))
           (t
            (ein:log 'error "ein:gat-chain: %s exited %s"
 		     (car exec) (process-exit-status proc)))))))
@@ -263,20 +275,22 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (interactive "P")
   (ein:gat-install-gat
    (if-let ((default-directory (ein:gat-where-am-i))
-            (notebook (ein:get-notebook))
             (gat-chain-args `("gat" nil "--project" "-"
                               "--region" ,ein:gat-aws-region "--zone" "-")))
        (if (special-variable-p 'magit-process-popup-time)
-           (let ((magit-process-popup-time -1))
+           (let ((magit-process-popup-time -1)
+                 (notebook (ein:get-notebook)))
              (ein:gat-chain
                (current-buffer)
                (cl-function
                 (lambda (&rest args &key worktree-dir &allow-other-keys)
-                  (ein:notebook-open
-                   (ein:$notebook-url-or-port notebook)
-                   (ein:gat--path (ein:$notebook-notebook-path notebook)
-                                  worktree-dir)
-                   (ein:$notebook-kernelspec notebook))))
+                  (if notebook
+                      (ein:notebook-open
+                       (ein:$notebook-url-or-port notebook)
+                       (ein:gat--path (ein:$notebook-notebook-path notebook)
+                                      worktree-dir)
+                       (ein:$notebook-kernelspec notebook))
+                    (cd worktree-dir))))
                (append gat-chain-args
                        (list "edit"
                              (alet (ein:gat-elicit-worktree t)

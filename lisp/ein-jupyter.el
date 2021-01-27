@@ -353,7 +353,9 @@ server command."
 
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional ask-p url-or-port)
-  (interactive "p")
+  (interactive
+   (list t (awhen (ein:get-notebook)
+             (ein:$notebook-url-or-port it))))
   (let ((my-url-or-port (car (ein:jupyter-server-conn-info)))
         (all-p t))
     (dolist (url-or-port
