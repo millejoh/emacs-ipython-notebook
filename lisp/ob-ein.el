@@ -41,6 +41,7 @@
 
 (autoload 'org-element-property "org-element")
 (autoload 'org-element-context "org-element")
+(autoload 'org-element-type "org-element")
 (autoload 'org-id-new "org-id")
 (autoload 'org-redisplay-inline-images "org")
 (autoload 'ein:notebooklist-new-notebook-with-name "ein-notebooklist")
@@ -132,9 +133,9 @@
     result))
 
 (defun ob-ein--process-outputs (result-type cell params)
-  (let* ((session (ein:aand (cdr (assoc :session params))
-			    (unless (string= "none" it)
-			      (format "%s" it))))
+  (let* ((session (aand (cdr (assoc :session params))
+			(unless (string= "none" it)
+			  (format "%s" it))))
 	 (render (let ((stdout-p
 			(lambda (out)
 			  (and (equal "stream" (plist-get out :output_type))
@@ -197,15 +198,14 @@ e.g., ob-c++ is not ob-C.el."
 
 (defun ob-ein--execute-body (body params)
   (let* ((buffer (current-buffer))
-         (processed-params (org-babel-process-params params))
 	 (result-type (cdr (assq :result-type params)))
 	 (result-params (cdr (assq :result-params params)))
-         (session (or (ein:aand (cdr (assoc :session processed-params))
-                                (unless (string= "none" it)
-                                  (format "%s" it)))
+         (session (or (aand (cdr (assoc :session params))
+                            (unless (string= "none" it)
+                              (format "%s" it)))
                       ein:url-localhost))
          (lang (nth 0 (org-babel-get-src-block-info)))
-         (kernelspec (or (cdr (assoc :kernelspec processed-params))
+         (kernelspec (or (cdr (assoc :kernelspec params))
                          (aif (cdr (assoc lang org-src-lang-modes))
                              (cons 'language (format "%s" it))
                            (error "ob-ein--execute-body: %s not among %s"
@@ -216,7 +216,7 @@ e.g., ob-c++ is not ob-C.el."
                      buffer
                      body
                      (ein:$notebook-kernel notebook)
-                     processed-params
+                     params
 		     result-type
                      result-params
                      name))))
@@ -243,7 +243,7 @@ e.g., ob-c++ is not ob-C.el."
                       (ein:log 'error "ob-ein--execute-body: %s timed out" name))
                   (ob-ein--process-outputs result-type
 					   (ein:shared-output-get-cell)
-					   processed-params))))
+					   params))))
       (org-babel-remove-result)
       *ob-ein-sentinel*)))
 
@@ -407,7 +407,34 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
           (t (ein:notebooklist-login url-or-port callback-login)))))
 
 (cl-loop for (lang . mode) in ob-ein-languages
-      do (ob-ein--babelize-lang lang mode))
+         do (ob-ein--babelize-lang lang mode))
+
+(defun ob-ein-kernel-interrupt ()
+  "Interrupt kernel associated with session."
+  (interactive)
+  (org-babel-when-in-src-block
+   (-if-let* ((info (org-babel-get-src-block-info))
+              (pparams (cl-callf org-babel-process-params (nth 2 info)))
+              (params (nth 2 info))
+              (session (or (aand (cdr (assoc :session params))
+                                 (unless (string= "none" it)
+                                   (format "%s" it)))
+                           ein:url-localhost))
+              (nbpath (ob-ein--parse-session session))
+              (anonymous-path (format ob-ein-anonymous-path (nth 0 info)))
+              (parsed-url (url-generic-parse-url nbpath))
+              (slash-path (car (url-path-and-query parsed-url)))
+              (path (if (string= slash-path "") anonymous-path
+                      (substring slash-path 1)))
+              (url-or-port (if (string= slash-path "")
+                               nbpath
+                             (substring nbpath 0 (- (length slash-path)))))
+              (notebook (ein:notebook-get-opened-notebook url-or-port path))
+              (kernel (ein:$notebook-kernel notebook)))
+       (ein:kernel-interrupt kernel)
+     (ein:log 'info "ob-ein-kernel-interrupt: nothing to interrupt"))))
+
+(define-key org-babel-map "\C-k" 'ob-ein-kernel-interrupt)
 
 ;;;###autoload
 (when (featurep 'org)

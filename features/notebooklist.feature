@@ -129,7 +129,7 @@ Scenario: Bad curl invocation produces sensible error message
   Given I start the server configured "\n"
   And I login with bad curl
   And I call "ein:log-pop-to-all-buffer"
-  Then I should see "no-such-option"
+  And I wait for buffer to say "no-such-option"
 
 @login
 Scenario: jupyter not found

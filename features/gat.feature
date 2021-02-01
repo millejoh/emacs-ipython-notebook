@@ -18,7 +18,7 @@ Scenario: gat create from repo, then create from worktree, then run-local
   And I switch to buffer like "Dockerfile.Untitled"
   And I should see "FROM dickmao"
   And I press "C-c C-c"
-  And I switch to buffer like "ein-gat: baz"
+  And I switch to buffer like "ein-gat: test-repo"
   Then I wait for buffer to say "Building image"
   And I go to word "run"
   And eval "(ignore-errors (kill-process (magit-section-value-if 'process)))"

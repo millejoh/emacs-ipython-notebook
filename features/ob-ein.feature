@@ -117,7 +117,7 @@ Scenario: ":results output"
   And I call "org-mode"
   And I type "<s"
   And I press "TAB"
-  And I type "ein :session localhost :results output drawer"
+  And I type "ein :session localhost :results output"
   And I press "RET"
   And I type "print("start {}".format(0))"
   And I press "RET"
@@ -134,6 +134,28 @@ Scenario: ":results output"
   And I wait for buffer to say "3.14159"
   And I should see "done 0"
   And I should see "start 0"
+
+@org
+Scenario: kernel interrupt
+  Given I stop the server
+  When I open temp file "ecukes.org"
+  And I call "org-mode"
+  And I type "<s"
+  And I press "TAB"
+  And I type "ein :session localhost"
+  And I press "RET"
+  And I type "print("start {}".format(0))"
+  And I press "RET"
+  And I type "from time import sleep"
+  And I press "RET"
+  And I type "sleep(10)"
+  And I press "RET"
+  And I type "print("done {}".format(0))"
+  And I press "RET"
+  And I ctrl-c-ctrl-c
+  And I wait for buffer to not say "[....]"
+  And I press "C-c C-v C-k"
+  And I wait for buffer to say "ipython-input"
 
 @svg
 Scenario: portless url with path, image
