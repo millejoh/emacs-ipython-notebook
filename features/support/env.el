@@ -88,7 +88,15 @@
                                  (file-name-as-directory ein:testing-jupyter-server-root))
                 (file-name-all-completions "Untitled" ein:testing-jupyter-server-root))))
 
+(defmacro ein--remove-ecukes-io-advices (function class name)
+  "The princ advice is known to peg CPU when cl-prin1 of nested objects."
+  `(when (ad-find-advice ',function ',class ',name)
+     (ad-remove-advice ',function ',class ',name)
+     (ad-activate ',function)))
+
 (Setup
+ (ein--remove-ecukes-io-advices princ around princ-around)
+ (ein--remove-ecukes-io-advices print around print-around)
  (ein:dev-start-debug)
  (setenv "GAT_APPLICATION_CREDENTIALS" "nonempty")
  (custom-set-variables '(python-indent-guess-indent-offset-verbose nil)
