@@ -410,12 +410,11 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
       (save-excursion
         (save-restriction
           (widen)
-          (remove-overlays nil nil 'face 'ein:cell-input-area))))
+          (remove-overlays))))
     (mapc (lambda (ol)
-            (if (eq 'ein:cell-input-area (overlay-get ol 'face))
-                (move-overlay (copy-overlay ol)
-                              (overlay-start ol) (overlay-end ol)
-                              dest-buf)))
+            (move-overlay (copy-overlay ol)
+                          (overlay-start ol) (overlay-end ol)
+                          dest-buf))
           (with-current-buffer src-buf
             (save-restriction
               (widen)
