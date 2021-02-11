@@ -26,3 +26,4 @@ Scenario: gat create from repo, then create from worktree, then run-local
   And I am in notebooklist buffer
   And I click on "Home"
   Then I wait for buffer to say "support"
+  And remove git repo "test-repo"

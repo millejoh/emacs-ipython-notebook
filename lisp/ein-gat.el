@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'compile)
+(require 'seq)
 (require 'magit-process nil t)
 (autoload 'ein:jupyter-running-notebook-directory "ein-jupyter")
 
@@ -116,14 +117,17 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defvar ein:gat-current-worktree ein:gat-master-worktree)
 
-(defvar-local ein:gat-disksizegb-history '("default")
-  "Hopefully notebook-specific history of user entered disk size.")
+(defvar ein:gat-disksizegb-history '("default")
+  "History of user entered disk size.")
 
-(defvar-local ein:gat-gpus-history '("0")
-  "Hopefully notebook-specific history of user entered gpu count.")
+(defvar ein:gat-gpus-history '("0")
+  "History of user entered gpu count.")
 
 (defvar ein:gat-machine-history nil
-  "Hopefully notebook-specific history of user entered machine type.")
+  "History of user entered machine type.")
+
+(defvar ein:gat-gpu-type-history nil
+  "History of user entered gpu types.")
 
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
@@ -230,8 +234,9 @@ and moreover, how would I avoid messing `magit-process-filter' of other processe
           ((or (zerop gat-status) gat-status-cd-p)
            (alet (and (bufferp process-buf)
                       (with-current-buffer process-buf
-                        (buffer-substring-no-properties (oref section content)
-                                                        (oref section end))))
+                        (when (integer-or-marker-p (oref section content))
+                          (buffer-substring-no-properties (oref section content)
+                                                          (oref section end)))))
              (when it
                (when gat-status-cd-p
                  (setq worktree-dir (when (string-match "^cd\\s-+\\(\\S-+\\)" it)
@@ -285,12 +290,24 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                     (cl-subseq archepath (+ it (length (match-string 1 archepath)))))
                   (file-name-nondirectory archepath))))))
 
+(defun ein:gat-zone ()
+  (interactive)
+  (cl-case (intern ein:gat-vendor)
+    (gce ein:gat-gce-zone)
+    (otherwise "-")))
+
 (defun ein:gat-region ()
   (interactive)
   (cl-case (intern ein:gat-vendor)
     (aws ein:gat-aws-region)
     (gce ein:gat-gce-region)
     (otherwise (or ein:gat-aws-region ein:gat-gce-region))))
+
+(defun ein:gat-project ()
+  (interactive)
+  (cl-case (intern ein:gat-vendor)
+    (gce ein:gat-gce-project)
+    (otherwise "-")))
 
 (defun ein:gat-machine-types ()
   (interactive)
@@ -311,7 +328,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
               (bufname "*gat-install*")
               (dir (make-temp-file "gat-install" t))
               (commands `(,(format "cd %s" dir)
-                          "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
+                          ,(format "git clone --depth=1 --single-branch --branch=%s https://github.com/dickmao/gat.git" (if noninteractive "dev" ein:gat-version))
                           "make -C gat install"))
               (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
               (callback (lambda (_buf msg)
@@ -327,8 +344,8 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (interactive "P")
   (ein:gat-install-gat
    (if-let ((default-directory (ein:gat-where-am-i))
-            (gat-chain-args `("gat" nil "--project" "-"
-                              "--region" ,(ein:gat-region) "--zone" "-")))
+            (gat-chain-args `("gat" nil "--project" ,(ein:gat-project)
+                              "--region" ,(ein:gat-region) "--zone" ,(ein:gat-zone))))
        (if (special-variable-p 'magit-process-popup-time)
            (let ((magit-process-popup-time -1)
                  (notebook (ein:get-notebook)))
@@ -357,7 +374,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
   (ein:gat-install-gat
    (if-let ((default-directory (ein:gat-where-am-i))
             (notebook (ein:get-notebook))
-            (gat-chain-args `("gat" nil "--project" "-"
+            (gat-chain-args `("gat" nil "--project" ,(ein:gat-project)
                               "--region" ,(ein:gat-region) "--zone" " -")))
        (if (special-variable-p 'magit-process-popup-time)
            (let ((magit-process-popup-time 0))
@@ -478,11 +495,10 @@ EOF
                                         (ein:log 'error "ein:gat--run: %s %s"
                                                  "Could not hash" new-password)))))))))
               (gat-chain-args `("gat" nil
-                                "--project" "-"
-                                "--region" (ein:gat-region)
-                                "--zone" "-"))
-              (common-options (append `("--vendor" ,ein:gat-vendor)
-                                      '("--bespoke")
+                                "--project" ,(ein:gat-project)
+                                "--region" ,(ein:gat-region)
+                                "--zone" ,(ein:gat-zone)))
+              (common-options (append '("--bespoke")
                                       '("--user" "root")
                                       '("--env" "GRANT_SUDO=1")
                                       (awhen (ein:gat-kaggle-env "KAGGLE_USERNAME" 'username)
@@ -494,6 +510,7 @@ EOF
               (gat-chain-run (if remote-p
                                  (append '("run-remote")
                                          common-options
+                                         `("--vendor" ,ein:gat-vendor)
                                          `("--machine" ,(ein:gat-elicit-machine))
                                          `(,@(aif (ein:gat-elicit-disksizegb)
                                                  (list "--disksizegb"
@@ -501,7 +518,9 @@ EOF
                                          `(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
                                                           (nonzero (not (zerop gpus))))
                                                (list "--gpus"
-                                                     (number-to-string gpus)))))
+                                                     (number-to-string gpus)
+                                                     "--gpu"
+                                                     (ein:gat-elicit-gpu-type)))))
                                (append '("run-local") common-options)))
               (now (truncate (float-time)))
               (gat-log-exec (append gat-chain-args
@@ -519,8 +538,8 @@ EOF
          (unless (or (file-directory-p
                       (concat (file-name-as-directory default-directory) ".gat"))
                      (member ".gat" (split-string default-directory "/")))
-           (let* ((command (format "gat --project - --region %s --zone - create"
-                                   (ein:gat-region)))
+           (let* ((command (format "gat --project %s --region %s --zone %s create"
+                                   (ein:gat-project) (ein:gat-region) (ein:gat-zone)))
                   (retcode (shell-command command)))
              (unless (zerop retcode)
                (error "ein:gat-where-am-i: \"%s\" exited with %d" command retcode))))
@@ -584,7 +603,18 @@ EOF
    nil t nil 'ein:gat-machine-history
    (car (or ein:gat-machine-history (ein:gat-machine-types)))))
 
-(defun ein:gat-elicit-gpus (&rest _args)
+(defun ein:gat-elicit-gpu-type ()
+  (interactive)
+  (let ((types ein:gat-gpu-types))
+    (ein:completing-read
+     "GPU: "
+     (append (seq-uniq ein:gat-gpu-type-history)
+             (seq-remove (lambda (x) (member x ein:gat-gpu-type-history))
+                         (cl-copy-list types)))
+     nil t nil 'ein:gat-gpu-type-history
+     (car (or ein:gat-gpu-type-history types)))))
+
+(defun ein:gat-elicit-gpus ()
   (interactive)
   (cl-loop for answer =
 	   (string-to-number (ein:completing-read
@@ -592,13 +622,12 @@ EOF
 			      'ein:gat-gpus-history (car ein:gat-gpus-history)))
 	   until (>= answer 0)
 	   finally return answer))
-(add-function :override (symbol-function 'ein:gat-elicit-gpus) #'ignore)
 
 (defun ein:gat-elicit-worktree (extant)
   (let ((already (split-string
                   (ein:gat-shell-command
-                   (format "gat --project - --region %s --zone - list"
-                           (ein:gat-region))))))
+                   (format "gat --project %s --region %s --zone %s list"
+                           (ein:gat-project) (ein:gat-region) (ein:gat-zone))))))
     (if extant
         (ein:completing-read
          "Experiment: " already nil t nil nil
