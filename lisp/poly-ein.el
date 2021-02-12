@@ -95,8 +95,8 @@ Intended as a salve for `show-paren-mode', was never called by the scan_lists.
        (when poly-ein-mode
          (let ((src-buf (current-buffer))
                (dest-buf (pm-span-buffer span)))
-           ;; (font-lock-flush)
-           (poly-ein--set-buffer src-buf dest-buf visibly))))))
+           (unless (eq src-buf dest-buf)
+             (poly-ein--set-buffer src-buf dest-buf visibly)))))))
 
   (fmakunbound 'poly-lock-mode)
   (defalias 'poly-lock-mode (symbol-function (default-value 'font-lock-function)))
