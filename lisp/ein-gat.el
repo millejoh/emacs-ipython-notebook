@@ -178,7 +178,7 @@ and moreover, how would I avoid messing `magit-process-filter' of other processe
   (declare (indent 0))
   (let* ((default-directory (or notebook-dir (ein:gat-where-am-i)))
          (default-process-coding-system (magit--process-coding-system))
-	 (inhibit-magit-refresh t)
+	 (magit-inhibit-refresh t)
 	 (_ (awhen (getenv "GAT_APPLICATION_CREDENTIALS")
               (push (concat "GOOGLE_APPLICATION_CREDENTIALS=" it) process-environment)))
          (activate-with-editor-mode
