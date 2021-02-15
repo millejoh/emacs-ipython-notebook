@@ -160,6 +160,14 @@ Return nil if unclear what, if any, authentication applies."
                                              (car-safe url-or-port-list)))))
     (ein:url url-or-port)))
 
+(defsubst ein:notebooklist-canonical-url-or-port (url-host username)
+  "Canonicalize.
+For the record,
+  https://hub.data8x.berkeley.edu
+needs to look like
+  https://hub.data8x.berkeley.edu/user/1dcdab3c2f59736806b85af865a1a28d"
+  (ein:url url-host "user" username))
+
 (defun ein:notebooklist-open* (url-or-port &optional path resync callback errback hub-p)
   "Workhorse of `ein:login'.
 
@@ -169,7 +177,7 @@ version and kernelspecs.
 
 Full jupyterhub url is https://hub.data8x.berkeley.edu/user/1dcdab3c2f59736806b85af865a1a28d/?token=c421c6863ddb4e7ea5a311c31c948cd0
 
-URL-STEM is https://hub.data8x.berkeley.edu
+URL-HOST is hub.data8x.berkeley.edu
 USERNAME is 1dcdab3c2f59736806b85af865a1a28d
 TOKEN is c421c6863ddb4e7ea5a311c31c948cd0
 
@@ -183,20 +191,49 @@ ERRBACK takes one argument, the resulting buffer."
        errback)
     (when hub-p
       (let* ((parsed-url (url-generic-parse-url url-or-port))
-             (url-stem (url-host parsed-url))
+             (url-host (url-host parsed-url))
+             (cookies (ein:query-get-cookies url-host "/user/"))
+             (previous-users
+              (mapcar
+               (lambda (entry)
+                 (file-name-nondirectory (directory-file-name (plist-get entry :path))))
+               cookies))
              (pq (url-path-and-query parsed-url))
              (path0 (car pq))
              (query (cdr pq))
              (username (if (and (stringp path0)
                                 (string-match "user/\\([a-z0-9]+\\)" path0))
                            (match-string-no-properties 1 path0)
-                         (read-no-blanks-input "User: ")))
-             (token (if (and (stringp query)
-                             (string-match "token=\\([a-z0-9]+\\)" query))
-                        (match-string-no-properties 1 query)
-                      (read-no-blanks-input "Token: "))))
-        (setf url-or-port (ein:url url-stem "user" username))
-        (setf (gethash url-or-port ein:query-authorization-tokens) token)))
+                         (read-no-blanks-input "User: " (car previous-users))))
+             (oauth-good-p
+              (cl-some
+               (lambda (entry)
+                 (and (member username (split-string (plist-get entry :path) "/"))
+                      (string= (mapconcat #'identity
+                                          (list "jupyterhub" "user" username)
+                                          "-")
+                               (plist-get entry :name))
+                      (numberp (plist-get entry :expire))
+                      (> (plist-get entry :expire)
+                         (string-to-number (format-time-string "%s")))))
+               cookies))
+             (key (ein:query-divine-authorization-tokens-key
+                   (setf url-or-port (ein:notebooklist-canonical-url-or-port url-host username))))
+             (token
+              (if (and (stringp query)
+                       (string-match "token=\\([a-z0-9]+\\)" query))
+                  (match-string-no-properties 1 query)
+                (unless oauth-good-p
+                  (read-no-blanks-input "Token: ")))))
+        (setq errback (or errback #'ignore))
+        (setq callback (or callback #'ignore))
+        (let ((belay-tokens
+               (lambda (&rest _args)
+                 (setf (gethash key ein:query-authorization-tokens) nil))))
+          (add-function :before (var errback) belay-tokens)
+          (add-function :before (var callback) belay-tokens))
+        (when token
+          (setf (gethash key ein:query-authorization-tokens) token))))
     (ein:query-notebook-version
      url-or-port
      (lambda ()
@@ -565,12 +602,14 @@ See `ein:format-time-string'."
 
 (defun ein:notebooklist-render (url-or-port restore-point sessions)
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-    (render-header url-or-port sessions)
-    (render-directory url-or-port sessions)
-    (ein:notebooklist-mode)
-    (widget-setup)
-    (aif (get-buffer-window (current-buffer))
-        (set-window-point it (or restore-point (point-min))))))
+    (if (not (ein:$notebooklist-path ein:%notebooklist%))
+        (ein:log 'error "ein:notebooklist-render: cannot render null")
+      (render-header url-or-port sessions)
+      (render-directory url-or-port sessions)
+      (ein:notebooklist-mode)
+      (widget-setup)
+      (awhen (get-buffer-window (current-buffer))
+        (set-window-point it (or restore-point (point-min)))))))
 
 ;;;###autoload
 (defun ein:notebooklist-list-paths (&optional content-type)
@@ -675,12 +714,14 @@ and the url-or-port argument of ein:notebooklist-open*."
           ((string= token "") ;; all authentication disabled
            (ein:log 'verbose "Skipping login %s" url-or-port)
            (ein:notebooklist-open* url-or-port nil nil callback nil))
-          (t (ein:notebooklist-login--iteration url-or-port callback nil token 0 nil)))))
+          (t
+           (ein:notebooklist-login--iteration url-or-port callback nil token 0 nil)))))
 
 (defun ein:notebooklist-login--parser ()
   (save-excursion
     (goto-char (point-min))
-    (list :bad-page (re-search-forward "<input type=.?password" nil t))))
+    (when (re-search-forward "<input type=.?password" nil t)
+      (list :reprompt t))))
 
 (defun ein:notebooklist-login--success-1 (url-or-port callback errback &optional hub-p)
   (ein:log 'info "Login to %s complete." url-or-port)
@@ -707,7 +748,7 @@ and the url-or-port argument of ein:notebooklist-open*."
      &allow-other-keys &aux
      (response-status (request-response-status-code response))
      (hub-p (request-response-header response "x-jupyterhub-version")))
-  (if (plist-get data :bad-page)
+  (if (plist-get data :reprompt)
       (cond ((>= iteration 0)
              (ein:notebooklist-login--error-1 url-or-port error-thrown response errback))
             (hub-p (ein:notebooklist-open* url-or-port nil nil callback errback t))

@@ -390,9 +390,6 @@ Adapted from twittering-mode.el's `case-string'."
   (cond (noninteractive (if (consp (cl-second args))
                             (car (cl-second args))
                           (cl-second args)))
-        ((eq completing-read-function 'completing-read-default)
-         (cl-letf (((symbol-function 'ido-completion-help) #'self-insert-command))
-           (apply #'ido-completing-read args)))
         (t (apply completing-read-function args))))
 
 (defun ein:plist-iter (plist)

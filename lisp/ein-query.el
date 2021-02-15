@@ -42,18 +42,41 @@ This is a hack in case we catch cookie jar in transition.
 The proper fix is to sempahore between competing curl processes.")
 
 (defvar ein:query-authorization-tokens (make-hash-table :test 'equal)
-  "Jupyterhub authorization token by url-stem.")
+  "Jupyterhub authorization token by (host . username).
+This data structure venally conflates three purposes:
+1. Lookup authorization token upon jupyterhub authentication,
+2. Indicate authentication is complete by assigning nil to the
+hash value in belay-tokens but KEEPING the hash key intact so that,
+3. ob-ein can retrieve the prevailing username for the hub host.")
+
+(defun ein:query-get-cookies (host path-prefix)
+  "Return (:path :expire :name :value) for HOST, matching PATH-PREFIX."
+  (when-let ((filename (request--curl-cookie-jar)))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (cl-loop for (domain _flag path _secure _http-only expire name value)
+               in (request--netscape-cookie-parse)
+               when (and (string= domain host)
+                         (cl-search path-prefix path))
+               collect `(:path ,path :expire ,expire :name ,name :value ,value)))))
 
 (defun ein:query-prepare-header (url settings &optional securep)
   "Ensure that REST calls to the jupyter server have the correct _xsrf argument."
   (let* ((host (url-host (url-generic-parse-url url)))
          (cookies (request-cookie-alist host "/" securep))
          (xsrf (or (cdr (assoc-string "_xsrf" cookies))
-                   (gethash host ein:query-xsrf-cache))))
-    (ein:log 'debug "EIN:QUERY-PREPARE-HEADER: Found xsrf: %s" xsrf)
+                   (gethash host ein:query-xsrf-cache)))
+         (key (ein:query-divine-authorization-tokens-key url))
+         (token (aand key
+                      (stringp (gethash key ein:query-authorization-tokens))
+                      (cons "Authorization" (format "token %s" it)))))
     (setq settings (plist-put settings :headers
                               (append (plist-get settings :headers)
                                       (list (cons "User-Agent" "Mozilla/5.0")))))
+    (when token
+      (setq settings (plist-put settings :headers
+                                (append (plist-get settings :headers)
+                                        (list token)))))
     (when xsrf
       (setq settings (plist-put settings :headers
                                 (append (plist-get settings :headers)
@@ -61,6 +84,17 @@ The proper fix is to sempahore between competing curl processes.")
       (setf (gethash host ein:query-xsrf-cache) xsrf))
     (setq settings (plist-put settings :encoding 'binary))
     settings))
+
+(defun ein:query-divine-authorization-tokens-key (url)
+  "Infer semblance of jupyterhub root.
+From https://hub.data8x.berkeley.edu/hub/user/806b3e7/notebooks/Untitled.ipynb,
+get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
+  (-when-let* ((parsed-url (url-generic-parse-url url))
+               (url-host (url-host parsed-url))
+               (slash-path (car (url-path-and-query parsed-url)))
+               (components (split-string slash-path "/" t)))
+    (awhen (member "user" components)
+      (cons url-host (cl-second it)))))
 
 (cl-defun ein:query-singleton-ajax (url &rest settings
                                         &key (timeout ein:query-timeout)
@@ -71,12 +105,6 @@ The proper fix is to sempahore between competing curl processes.")
           (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
         (unless (plist-member settings :sync)
           (setq settings (plist-put settings :sync ein:force-sync)))
-        (-when-let* ((parsed-url (url-generic-parse-url url))
-                     (url-stem (url-host parsed-url))
-                     (token (gethash url-stem ein:query-authorization-tokens))
-                     (header (cons "Authorization" (format "token %s" token))))
-          (setq settings
-                (plist-put settings :headers (cons header (plist-get settings :headers)))))
         (apply #'request (url-encode-url url) (ein:query-prepare-header url settings)))
     (ein:display-warning
      (format "The %s program was not found, aborting" request-curl)
@@ -159,15 +187,11 @@ The proper fix is to sempahore between competing curl processes.")
   (aif (plist-get data :version)
       (setf (gethash url-or-port *ein:notebook-version*) it)
     (if hub-p
-        (let* ((parsed-url (url-generic-parse-url url-or-port))
-               (pq (url-path-and-query parsed-url))
-               (path0 (car pq))
-               (username (if (and (stringp path0)
-                                  (string-match "user/\\([a-z0-9]+\\)" path0))
-                             (match-string-no-properties 1 path0)
-                           "unrecognized")))
+        (let ((key (ein:query-divine-authorization-tokens-key url-or-port)))
+          (remhash key ein:query-authorization-tokens)
           (ein:display-warning
-           (format "Server for %s requires start, aborting" username)
+           (format "Server for user %s requires start, aborting"
+                   (or (cdr key) "unknown"))
            :error)
           (setq callback nil))
       (ein:log 'warn "notebook version currently unknowable")))

@@ -45,6 +45,7 @@
 (autoload 'org-id-new "org-id")
 (autoload 'org-redisplay-inline-images "org")
 (autoload 'ein:notebooklist-new-notebook-with-name "ein-notebooklist")
+(autoload 'ein:notebooklist-canonical-url-or-port "ein-notebooklist")
 (autoload 'ein:notebooklist-login "ein-notebooklist")
 (autoload 'ein:notebook-get-opened-notebook "ein-notebook")
 (autoload 'ein:notebook-url "ein-notebook")
@@ -321,9 +322,10 @@ one at a time.  Further, we do not order the queued up blocks!"
 
 (defun ob-ein--parse-session (session)
   (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
-    (let ((tokens (split-string session "/"))
-          (parsed-url (url-generic-parse-url session)))
-      (cond ((null (url-host parsed-url))
+    (let* ((tokens (split-string session "/"))
+           (parsed-url (url-generic-parse-url session))
+           (url-host (url-host parsed-url)))
+      (cond ((null url-host)
              (let* ((candidate (apply #'ein:url (car tokens) (cdr tokens)))
                     (parsed-candidate (url-generic-parse-url candidate))
                     (missing (url-scheme-get-property
@@ -333,7 +335,14 @@ one at a time.  Further, we do not order the queued up blocks!"
                         (= (url-port parsed-candidate) missing))
                    (apply #'ein:url url-or-port (cdr tokens))
                  candidate)))
-            (t (ein:url session))))))
+            (t
+             (if-let ((username
+                       (cdr (seq-find
+                             (lambda (key)
+                               (and (string= (car key) url-host) (stringp (cdr key))))
+                             (hash-table-keys ein:query-authorization-tokens)))))
+                 (ein:url (ein:notebooklist-canonical-url-or-port url-host username))
+               (ein:url session)))))))
 
 (defun ob-ein--initiate-session (session kernelspec callback)
   "Retrieve notebook based on SESSION path and KERNELSPEC, starting jupyter instance
@@ -343,11 +352,16 @@ if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
          (anonymous-path (format ob-ein-anonymous-path (nth 0 info)))
          (parsed-url (url-generic-parse-url nbpath))
          (slash-path (car (url-path-and-query parsed-url)))
-         (path (if (string= slash-path "") anonymous-path
-                 (substring slash-path 1)))
-         (url-or-port (if (string= slash-path "")
-                          nbpath
-                        (substring nbpath 0 (- (length slash-path)))))
+         (_ (awhen (cdr (url-path-and-query parsed-url))
+              (error "Cannot handle :session `%s`" it)))
+         (ipynb-p (file-name-extension (file-name-nondirectory slash-path)))
+         (path (if ipynb-p
+                   (file-name-nondirectory slash-path)
+                 anonymous-path))
+         (url-or-port (directory-file-name
+                       (if ipynb-p
+                           (cl-subseq nbpath 0 (- (length path)))
+                         nbpath)))
          (notebook (ein:notebook-get-opened-notebook url-or-port path))
          (callback-nbopen (lambda (nb _created)
                             (cl-loop repeat 50

@@ -446,10 +446,11 @@ This is equivalent to do ``C-c`` in the console program."
         (cl-case (ein:$notebook-nbformat notebook)
           (3 (ein:read-nbformat3-worksheets notebook data))
           (4 (ein:read-nbformat4-worksheets notebook data))
-          (t (ein:log 'error "nbformat version %s unsupported"
-                      (ein:$notebook-nbformat notebook)))))
-  (ein:notebook--worksheet-render notebook
-                                  (cl-first (ein:$notebook-worksheets notebook)))
+          (t (prog1 nil
+               (ein:log 'error "nbformat version %s unsupported"
+                        (ein:$notebook-nbformat notebook))))))
+  (awhen (ein:$notebook-worksheets notebook)
+    (ein:notebook--worksheet-render notebook (cl-first it)))
   notebook)
 
 (defun ein:read-nbformat3-worksheets (notebook data)
@@ -565,7 +566,6 @@ This is equivalent to do ``C-c`` in the console program."
 
 (defun ein:notebook-rename-command (path)
   "Rename current notebook and save it immediately.
-
 NAME is any non-empty string that does not contain '/' or '\\'."
   (interactive
    (list (read-string "Rename to: "

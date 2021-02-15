@@ -87,7 +87,7 @@ ERRBACK of arity 1 for the contents."
                   response-status (plist-get data :message))
          (when errback (funcall errback url-or-port response-status)))
     (t (if (< iteration 3)
-           (if (and hub-p (eq response-status 405))
+           (if (and hub-p data (eq response-status 405))
                (ein:content-query-contents--success url-or-port path callback :data data)
              (ein:log 'verbose "Retry content-query-contents #%s in response to %s"
                       iteration response-status)
@@ -310,13 +310,13 @@ Call ERRBACK of arity 1 (contents) upon failure."
 
 (cl-defun ein:content-query-sessions--error
     (url-or-port callback errback iteration
-     &key _data response error-thrown &allow-other-keys
+     &key data response error-thrown &allow-other-keys
      &aux
      (response-status (request-response-status-code response))
      (hub-p (request-response-header response "x-jupyterhub-version")))
   (if (< iteration 3)
-      (if (and hub-p (eq response-status 405))
-          (ein:content-query-sessions--success url-or-port callback :data [])
+      (if (and hub-p data (eq response-status 405))
+          (ein:content-query-sessions--success url-or-port callback :data data)
         (ein:log 'verbose "Retry sessions #%s in response to %s %S" iteration response-status response)
         (sleep-for 0 (* (1+ iteration) 500))
         (ein:content-query-sessions url-or-port callback errback (1+ iteration)))
