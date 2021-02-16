@@ -386,7 +386,6 @@ server command."
                               (pid (process-id proc)))
                    (run-at-time 2 nil
                                 (lambda ()
-                                  (ein:log 'info "Resignaled %s with pid %s" proc pid)
                                   (signal-process pid (if (eq system-type 'windows-nt) 9 15))))
                    ;; NotebookPasswordApp::shutdown_server() also ignores req response.
                    (ein:query-singleton-ajax (ein:url url-or-port "api/shutdown")

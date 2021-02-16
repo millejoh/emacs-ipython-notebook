@@ -168,7 +168,8 @@ needs to look like
   https://hub.data8x.berkeley.edu/user/1dcdab3c2f59736806b85af865a1a28d"
   (ein:url url-host "user" username))
 
-(defun ein:notebooklist-open* (url-or-port &optional path resync callback errback hub-p)
+(cl-defun ein:notebooklist-open* (url-or-port &optional path resync callback errback hub-p
+                                              &aux (canonical-p (not hub-p)) tokens-key)
   "Workhorse of `ein:login'.
 
 A notebooklist can be opened from any PATH within the server root hierarchy.
@@ -201,53 +202,49 @@ ERRBACK takes one argument, the resulting buffer."
              (pq (url-path-and-query parsed-url))
              (path0 (car pq))
              (query (cdr pq))
-             (username (if (and (stringp path0)
-                                (string-match "user/\\([a-z0-9]+\\)" path0))
+             (_ (setf canonical-p
+                      (and (stringp path0)
+                           (string-match "user/\\([a-z0-9]+\\)" path0))))
+             (username (if canonical-p
                            (match-string-no-properties 1 path0)
                          (read-no-blanks-input "User: " (car previous-users))))
-             (oauth-good-p
-              (cl-some
-               (lambda (entry)
-                 (and (member username (split-string (plist-get entry :path) "/"))
-                      (string= (mapconcat #'identity
-                                          (list "jupyterhub" "user" username)
-                                          "-")
-                               (plist-get entry :name))
-                      (numberp (plist-get entry :expire))
-                      (> (plist-get entry :expire)
-                         (string-to-number (format-time-string "%s")))))
-               cookies))
-             (key (ein:query-divine-authorization-tokens-key
-                   (setf url-or-port (ein:notebooklist-canonical-url-or-port url-host username))))
+             (_ (setf url-or-port
+                      (ein:notebooklist-canonical-url-or-port url-host username)))
+             (_ (setf tokens-key
+                      (ein:query-divine-authorization-tokens-key url-or-port)))
              (token
               (if (and (stringp query)
                        (string-match "token=\\([a-z0-9]+\\)" query))
-                  (match-string-no-properties 1 query)
-                (unless oauth-good-p
+                  (prog1
+                      (match-string-no-properties 1 query)
+                    (cl-assert canonical-p))
+                (when canonical-p
                   (read-no-blanks-input "Token: ")))))
-        (setq errback (or errback #'ignore))
-        (setq callback (or callback #'ignore))
+        (when token
+          (setf (gethash tokens-key ein:query-authorization-tokens) token))))
+    (if (not canonical-p)
+        ;; Retread to get _xsrf for canonical url
+        (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil)
+      (when tokens-key
         (let ((belay-tokens
                (lambda (&rest _args)
-                 (setf (gethash key ein:query-authorization-tokens) nil))))
+                 (setf (gethash tokens-key ein:query-authorization-tokens) nil))))
           (add-function :before (var errback) belay-tokens)
-          (add-function :before (var callback) belay-tokens))
-        (when token
-          (setf (gethash key ein:query-authorization-tokens) token))))
-    (ein:query-notebook-version
-     url-or-port
-     (lambda ()
-       (ein:query-kernelspecs
-        url-or-port
-        (lambda ()
-          (deferred:$
-            (deferred:next
-              (lambda ()
-                (ein:content-query-hierarchy url-or-port))))
-          (ein:content-query-contents
-           url-or-port path
-           (apply-partially #'ein:notebooklist-open--finish url-or-port callback)
-           errback)))))))
+          (add-function :before (var callback) belay-tokens)))
+      (ein:query-notebook-version
+       url-or-port
+       (lambda ()
+         (ein:query-kernelspecs
+          url-or-port
+          (lambda ()
+            (deferred:$
+              (deferred:next
+                (lambda ()
+                  (ein:content-query-hierarchy url-or-port))))
+            (ein:content-query-contents
+             url-or-port path
+             (apply-partially #'ein:notebooklist-open--finish url-or-port callback)
+             errback))))))))
 
 (make-obsolete-variable 'ein:notebooklist-keepalive-refresh-time nil "0.17.0")
 (make-obsolete-variable 'ein:enable-keepalive nil "0.17.0")
@@ -663,8 +660,14 @@ or even this (if you want fast Emacs start-up)::
            iteration response-status url-or-port)
   (setq callback (or callback #'ignore))
   (setq errback (or errback #'ignore))
-  (let* ((parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
+  (let* ((request-curl-options (if (getenv "GITHUB_ACTIONS")
+                                   request-curl-options
+                                 (cons "--junk-session-cookies" request-curl-options)))
+         (parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
+         (host (url-host parsed-url))
          (query (cdr (url-path-and-query parsed-url))))
+    (unless (getenv "GITHUB_ACTIONS")
+      (remhash host ein:query-xsrf-cache))
     (ein:query-singleton-ajax
      (ein:url url-or-port (if query "" "login"))
      ;; do not use :type "POST" here (see git history)

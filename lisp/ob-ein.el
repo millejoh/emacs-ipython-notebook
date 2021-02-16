@@ -341,7 +341,7 @@ one at a time.  Further, we do not order the queued up blocks!"
                              (lambda (key)
                                (and (string= (car key) url-host) (stringp (cdr key))))
                              (hash-table-keys ein:query-authorization-tokens)))))
-                 (ein:url (ein:notebooklist-canonical-url-or-port url-host username))
+                 (ein:notebooklist-canonical-url-or-port url-host username)
                (ein:url session)))))))
 
 (defun ob-ein--initiate-session (session kernelspec callback)
