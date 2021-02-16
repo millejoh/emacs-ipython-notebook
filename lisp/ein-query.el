@@ -68,7 +68,7 @@ hash value in belay-tokens but KEEPING the hash key intact so that,
                    (gethash host ein:query-xsrf-cache)))
          (key (ein:query-divine-authorization-tokens-key url))
          (token (aand key
-                      (stringp (gethash key ein:query-authorization-tokens))
+                      (gethash key ein:query-authorization-tokens)
                       (cons "Authorization" (format "token %s" it)))))
     (setq settings (plist-put settings :headers
                               (append (plist-get settings :headers)
