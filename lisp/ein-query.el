@@ -42,12 +42,7 @@ This is a hack in case we catch cookie jar in transition.
 The proper fix is to sempahore between competing curl processes.")
 
 (defvar ein:query-authorization-tokens (make-hash-table :test 'equal)
-  "Jupyterhub authorization token by (host . username).
-This data structure venally conflates three purposes:
-1. Lookup authorization token upon jupyterhub authentication,
-2. Indicate authentication is complete by assigning nil to the
-hash value in belay-tokens but KEEPING the hash key intact so that,
-3. ob-ein can retrieve the prevailing username for the hub host.")
+  "Jupyterhub authorization token by (host . username).")
 
 (defun ein:query-get-cookies (host path-prefix)
   "Return (:path :expire :name :value) for HOST, matching PATH-PREFIX."

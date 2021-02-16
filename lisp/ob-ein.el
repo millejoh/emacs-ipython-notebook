@@ -335,14 +335,7 @@ one at a time.  Further, we do not order the queued up blocks!"
                         (= (url-port parsed-candidate) missing))
                    (apply #'ein:url url-or-port (cdr tokens))
                  candidate)))
-            (t
-             (if-let ((username
-                       (cdr (seq-find
-                             (lambda (key)
-                               (and (string= (car key) url-host) (stringp (cdr key))))
-                             (hash-table-keys ein:query-authorization-tokens)))))
-                 (ein:notebooklist-canonical-url-or-port url-host username)
-               (ein:url session)))))))
+            (t (ein:url session))))))
 
 (defun ob-ein--initiate-session (session kernelspec callback)
   "Retrieve notebook based on SESSION path and KERNELSPEC, starting jupyter instance

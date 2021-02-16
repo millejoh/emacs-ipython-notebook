@@ -228,7 +228,7 @@ ERRBACK takes one argument, the resulting buffer."
       (when tokens-key
         (let ((belay-tokens
                (lambda (&rest _args)
-                 (setf (gethash tokens-key ein:query-authorization-tokens) nil))))
+                 (remhash tokens-key ein:query-authorization-tokens))))
           (add-function :before (var errback) belay-tokens)
           (add-function :before (var callback) belay-tokens)))
       (ein:query-notebook-version
