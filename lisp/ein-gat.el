@@ -334,6 +334,10 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
               (callback (lambda (_buf msg)
                           (when (cl-search "finished" msg)
                             (with-current-buffer orig-buf
+                              (custom-set-default
+                               'ein:gat-version
+                               (ein:gat-shell-command
+                                "gat --project - --region - --zone - version"))
                               ,@body)))))
          (let ((compilation-scroll-output t))
            (compilation-start compile nil (lambda (&rest _args) bufname)))
