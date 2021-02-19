@@ -662,14 +662,14 @@ or even this (if you want fast Emacs start-up)::
            iteration response-status url-or-port)
   (setq callback (or callback #'ignore))
   (setq errback (or errback #'ignore))
-  (let* ((request-curl-options (if (and (not (getenv "GITHUB_ACTIONS"))
-                                        (not response-status))
+  (let* ((reset-p (not response-status))
+         (request-curl-options (if reset-p
                                    (cons "--junk-session-cookies" request-curl-options)
                                  request-curl-options))
          (parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
          (host (url-host parsed-url))
          (query (cdr (url-path-and-query parsed-url))))
-    (unless (getenv "GITHUB_ACTIONS")
+    (when reset-p
       (remhash host ein:query-xsrf-cache))
     (ein:query-singleton-ajax
      (ein:url url-or-port (if query "" "login"))
