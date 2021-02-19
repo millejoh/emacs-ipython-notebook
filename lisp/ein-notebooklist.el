@@ -224,7 +224,9 @@ ERRBACK takes one argument, the resulting buffer."
           (setf (gethash tokens-key ein:query-authorization-tokens) token))))
     (if (not canonical-p)
         ;; Retread to get _xsrf for canonical url
-        (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil)
+        (progn
+          (ein:notebooklist-list-remove url-or-port)
+          (ein:notebooklist-login--iteration url-or-port callback errback nil -1 nil))
       (when tokens-key
         (let ((belay-tokens
                (lambda (&rest _args)
