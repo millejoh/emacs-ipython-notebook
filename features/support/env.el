@@ -37,7 +37,8 @@
   (!cons "memory" ecukes-exclude-tags)
   (!cons "julia" ecukes-exclude-tags)
   (!cons "content" ecukes-exclude-tags)
-  (!cons "svg" ecukes-exclude-tags))
+  (!cons "svg" ecukes-exclude-tags)
+  (!cons "org" ecukes-exclude-tags))
 
 (defalias 'activate-cursor-for-undo #'ignore)
 (defalias 'deactivate-cursor-after-undo #'ignore)
