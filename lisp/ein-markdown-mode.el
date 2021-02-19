@@ -7983,7 +7983,6 @@ rows and columns and the column alignment."
   (setq-local comment-auto-fill-only-comments nil)
   (setq-local comment-use-syntax t)
   (setq-local syntax-propertize-function #'ein:markdown-syntax-propertize)
-  (syntax-propertize (point-max)) ;; Propertize before hooks run, etc.
   ;; Font lock.
   (setq font-lock-defaults
         '(ein:markdown-mode-font-lock-keywords
