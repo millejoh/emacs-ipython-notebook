@@ -660,9 +660,10 @@ or even this (if you want fast Emacs start-up)::
            iteration response-status url-or-port)
   (setq callback (or callback #'ignore))
   (setq errback (or errback #'ignore))
-  (let* ((request-curl-options (if (getenv "GITHUB_ACTIONS")
-                                   request-curl-options
-                                 (cons "--junk-session-cookies" request-curl-options)))
+  (let* ((request-curl-options (if (and (not (getenv "GITHUB_ACTIONS"))
+                                        (not response-status))
+                                   (cons "--junk-session-cookies" request-curl-options)
+                                 request-curl-options))
          (parsed-url (url-generic-parse-url (file-name-as-directory url-or-port)))
          (host (url-host parsed-url))
          (query (cdr (url-path-and-query parsed-url))))

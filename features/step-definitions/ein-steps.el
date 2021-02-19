@@ -331,7 +331,7 @@
   (lambda ()
     (let ((request-curl-options '("--no-such-option")))
       (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                 (lambda (&rest _args) (ein:url 8888)))
+                 (lambda (&rest _args) (ein:url 55217)))
                 ((symbol-function 'read-passwd)
                  (lambda (&rest _args) "foo")))
         (When "I call \"ein:notebooklist-login\"")
