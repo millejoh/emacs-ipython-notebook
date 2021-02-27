@@ -46,8 +46,7 @@ Scenario: Stop after closing notebook
   And I keep clicking "Resync" until "Stop"
   And I click on "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
-  And I dump buffer
-  Then I should see "kernel-delete-session--success"
+  Then I wait for buffer to say "kernel-delete-session--success"
   And I am in notebooklist buffer
   And I go to word "Untitled"
   And I go to beginning of line
@@ -69,7 +68,7 @@ Scenario: Delete closes buffers and sessions
   Then eval "(cl-assert (not (ein:notebook-opened-notebooks)))"
   Then eval "(cl-assert (not (seq-some (lambda (b) (cl-search "Untitled" (buffer-name b))) (buffer-list))))"
   And I switch to log expr "ein:log-all-buffer-name"
-  Then I should see "kernel-delete-session--success"
+  Then I wait for buffer to say "kernel-delete-session--success"
   Then I should see "notebooklist-delete-notebook--complete"
 
 @content

@@ -26,6 +26,7 @@
 (require 'polymode)
 (require 'ein-cell)
 (require 'jit-lock)
+(require 'quail)
 (require 'display-line-numbers nil t)
 (require 'undo-tree nil t)
 
@@ -201,15 +202,26 @@ Intended as a salve for `show-paren-mode', was never called by the scan_lists.
     (add-function :after (symbol-function 'isearch-done) after-isearch-done)))
 
 (defmacro poly-ein-base (&rest body)
-  "Copy the undo accounting to the base buffer and run BODY in it."
+  "Copy the undo accounting to the base buffer and run BODY in it.
+This is a bottleneck as we do this on every `pm-get-span'."
   `(let ((base-buffer (pm-base-buffer))
          (derived-buffer (current-buffer))
-         (pm-allow-post-command-hook nil))
+         (pm-allow-post-command-hook nil)
+         (quail (aand (overlayp quail-overlay)
+                      (overlay-start quail-overlay)
+                      (list it (overlay-end quail-overlay))))
+         (quail-conv (aand (overlayp quail-conv-overlay)
+                           (overlay-start quail-conv-overlay)
+                           (list it (overlay-end quail-conv-overlay)))))
      (poly-ein--set-buffer derived-buffer base-buffer)
      (unwind-protect
          (cl-letf (((symbol-function 'poly-ein-copy-state) #'ignore))
            ,@body)
-       (poly-ein--set-buffer base-buffer derived-buffer))))
+       (poly-ein--set-buffer base-buffer derived-buffer)
+       (when quail
+         (apply #'move-overlay quail-overlay quail))
+       (when quail-conv
+         (apply #'move-overlay quail-conv-overlay quail-conv)))))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
   ()

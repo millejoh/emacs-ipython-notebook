@@ -207,6 +207,16 @@
                    until (not (get-buffer-process "*gat-install*"))
                    do (sleep-for 0 5000)))))))
 
+(When "^I trust things$"
+  (lambda ()
+    (let ((trustee (concat (file-name-as-directory
+                            ein:testing-jupyter-server-root)
+                           ".ein.ipynb")))
+      (ein:testing-wait-until (lambda ()
+                                (file-exists-p trustee))
+                              nil 10000 1000)
+      (shell-command (format "jupyter trust %s" trustee)))))
+
 (When "^new git repo \"\\(.+\\)\"$"
   (lambda (repo)
     (Given (format "remove git repo \"%s\"" repo))

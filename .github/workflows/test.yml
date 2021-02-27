@@ -101,11 +101,11 @@ jobs:
         python -m ipykernel install --user
 
     - name: R
-      if: startsWith(runner.os, 'Linux')
+      if: startsWith(runner.os, 'disable')
       run: sh tools/install-R.sh
 
     - name: julia
-      if: startsWith(runner.os, 'Linux')
+      if: startsWith(runner.os, 'disable')
       run: sh tools/install-julia.sh
 
     - name: versions

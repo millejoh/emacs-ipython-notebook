@@ -32,6 +32,7 @@ Scenario: no session defaults to localhost, and no output shouldn't leave [....]
   And I press "RET"
   And I type "(1 + 5 ** 0.5) / 2"
   And I ctrl-c-ctrl-c
+  And I trust things
   And I wait for buffer to say "1.618"
   And I should not see "[....]"
   And I press "M->"
@@ -62,7 +63,6 @@ Scenario: ein-python can be python2 or python3
   And I wait for buffer to say "ob-ein--initiate-session: switching"
   And I switch to buffer like "ecukes.org"
   And I wait for buffer to say "1.618"
-  And I dump buffer
 
 @org
 Scenario: Specific port, portless localhost refers to same, concurrent execution
@@ -104,15 +104,12 @@ Scenario: Specific port, portless localhost refers to same, concurrent execution
   And I press "RET"
   And I type "import math ; 4 * math.atan(1.0)"
   And I ctrl-c-ctrl-c
-  And I dump buffer
   And I wait for buffer to say "1.618"
-  And I dump buffer
   And I wait for buffer to say "3.1415"
   And I should not see "[....]"
 
 @org
 Scenario: ":results output"
-  Given I stop the server
   When I open temp file "ecukes.org"
   And I call "org-mode"
   And I type "<s"
@@ -179,7 +176,6 @@ Scenario: portless url with path, image
   And I press "RET"
   And I type "import matplotlib.pyplot as plt ; import numpy as np ; x = np.linspace(0, 1, 100) ; y = np.random.rand(100,1) ; plt.plot(x,y)"
   And I ctrl-c-ctrl-c
-  And I dump buffer
   And I wait for buffer to say "file:ein-image"
 
 @export
@@ -203,5 +199,4 @@ Scenario: Test ob-exp captures code and results.
   And I type "ein :results scalar :exports both"
   And I press "RET"
   And I type "ratio"
-  And I dump buffer
   And I call "org-latex-export-to-latex"

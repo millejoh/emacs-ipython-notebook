@@ -484,7 +484,8 @@ Return language name as a string or `nil' when not defined.
     (let ((ol (make-overlay start (point))))
       (overlay-put ol 'face (ein:cell-get-input-area-face cell))
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
-      (overlay-put ol 'evaporate t))))
+      (overlay-put ol 'evaporate t)
+      (overlay-put ol 'category 'ein))))
 
 (cl-defmethod ein:cell-get-input-area-face ((_cell ein:basecell))
   "Return the face (symbol) for input area."
@@ -540,7 +541,8 @@ Return language name as a string or `nil' when not defined.
 	  (("stream")         (ein:cell-append-stream       cell out)))
 	(let ((ol (make-overlay start (point))))
 	  (overlay-put ol 'face (ein:cell-get-output-area-face-for-output-type output-type))
-	  (overlay-put ol 'evaporate t))))))
+	  (overlay-put ol 'evaporate t)
+          (overlay-put ol 'category 'ein))))))
 
 (cl-defmethod ein:cell-insert-footer ((_cell ein:basecell))
   "Insert footer (just a new line) of the CELL in the buffer.
