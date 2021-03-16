@@ -38,6 +38,8 @@
   (!cons "julia" ecukes-exclude-tags)
   (!cons "content" ecukes-exclude-tags)
   (!cons "svg" ecukes-exclude-tags)
+  (!cons "gat" ecukes-exclude-tags)
+  (!cons "pass" ecukes-exclude-tags) ;; salt?  stopped working around 20210316
   (!cons "switch" ecukes-exclude-tags))
 
 (defalias 'activate-cursor-for-undo #'ignore)

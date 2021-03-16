@@ -116,7 +116,7 @@ with the call to the jupyter notebook."
                 (let ((json-object-type 'alist))
                   (json-read-from-string ;; intentionally not ein:json-read-from-string
                    (shell-command-to-string
-                    (format "%s kernelspec list --json"
+                    (format "2>/dev/null %s kernelspec list --json"
                             ein:jupyter-server-command)))))
                collect `(,k . ,(alist-get 'display_name (alist-get 'spec spec)))))
            (error (ein:log 'warn "ein:jupyter-default-kernel: %s" err)
@@ -237,7 +237,7 @@ our singleton jupyter server process here."
                 (apply #'ein:jupyter-process-lines url-or-port
                        ein:jupyter-server-command
                        (split-string
-                        (format "%s%s %s"
+                        (format "2>/dev/null %s%s %s"
                                 (aif ein:jupyter-server-use-subcommand
                                     (concat it " ") "")
                                 "list" "--json")))
