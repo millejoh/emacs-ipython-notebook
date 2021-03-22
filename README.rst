@@ -6,9 +6,8 @@
    :target: https://youtu.be/8VzWc9QeOxE
    :alt: Kaggle Notebooks in AWS
 
-Emacs IPython Notebook (EIN) lets you run Jupyter (formerly IPython)
-notebooks within Emacs.  It channels all the power of Emacs without the
-idiosyncrasies of in-browser editing.
+Emacs IPython Notebook (EIN) connects to instances of ``jupyter notebook``, but
+alas **not** ``jupyter lab``.
 
 No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 `prevailing documentation`_, which should be disregarded.
