@@ -20,6 +20,7 @@
 (require 'with-editor)
 (require 'ein-markdown-mode)
 (require 'paren)
+(require 'ein-gat)
 
 (when (>= emacs-major-version 27)
   (require 'org-tempo))

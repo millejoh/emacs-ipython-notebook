@@ -25,7 +25,7 @@
 
 (require 'compile)
 (require 'magit-process nil t)
-(declare-function ein:jupyter-running-notebook-directory "ein-jupyter")
+(autoload 'ein:jupyter-running-notebook-directory "ein-jupyter")
 
 ;; (declare-function magit--process-coding-system "magit-process")
 ;; (declare-function magit-call-process "magit-process")
@@ -294,6 +294,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
          (with-current-buffer bufname
            (add-hook 'compilation-finish-functions callback nil t))))))
 
+;;;###autoload
 (defun ein:gat-edit (&optional _refresh)
   (interactive "P")
   (ein:gat-install-gat
@@ -322,6 +323,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
          (error "ein:gat-create: magit not installed"))
      (message "ein:gat-edit: not a notebook buffer"))))
 
+;;;###autoload
 (defun ein:gat-create (&optional _refresh)
   (interactive "P")
   (ein:gat-install-gat

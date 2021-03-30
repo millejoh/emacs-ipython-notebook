@@ -4,6 +4,7 @@
 (when load-file-name
   (add-to-list 'load-path
                (concat (file-name-directory load-file-name) "mocker")))
+(require 'cl)
 (require 'mocker)
 
 (require 'ein-cell)
