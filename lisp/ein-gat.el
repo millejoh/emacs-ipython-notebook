@@ -271,6 +271,29 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                     (cl-subseq archepath (+ it (length (match-string 1 archepath)))))
                   (file-name-nondirectory archepath))))))
 
+(defmacro ein:gat-install-gat (&rest body)
+  `(if (executable-find "gat")
+       (progn ,@body)
+     (if (or (not (executable-find "aws"))
+             (zerop (length ein:gat-aws-region)))
+         (ein:log 'error "ein:gat-install-gat: `aws configure region` must be valid")
+       (ein:log 'info "ein:gat-install-gat: Installing gat...")
+       (let* ((orig-buf (current-buffer))
+              (bufname "*gat-install*")
+              (dir (make-temp-file "gat-install" t))
+              (commands `(,(format "cd %s" dir)
+                          "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
+                          "make -C gat install"))
+              (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
+              (callback (lambda (_buf msg)
+                          (when (cl-search "finished" msg)
+                            (with-current-buffer orig-buf
+                              ,@body)))))
+         (let ((compilation-scroll-output t))
+           (compilation-start compile nil (lambda (&rest _args) bufname)))
+         (with-current-buffer bufname
+           (add-hook 'compilation-finish-functions callback nil t))))))
+
 (defun ein:gat-edit (&optional _refresh)
   (interactive "P")
   (ein:gat-install-gat
@@ -324,29 +347,6 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
                                (setq ein:gat-current-worktree it))))))
          (error "ein:gat-create: magit not installed"))
      (message "ein:gat-create: not a notebook buffer"))))
-
-(defmacro ein:gat-install-gat (&rest body)
-  `(if (executable-find "gat")
-       (progn ,@body)
-     (if (or (not (executable-find "aws"))
-             (zerop (length ein:gat-aws-region)))
-         (ein:log 'error "ein:gat-install-gat: `aws configure region` must be valid")
-       (ein:log 'info "ein:gat-install-gat: Installing gat...")
-       (let* ((orig-buf (current-buffer))
-              (bufname "*gat-install*")
-              (dir (make-temp-file "gat-install" t))
-              (commands `(,(format "cd %s" dir)
-                          "git clone --depth=1 --single-branch --branch=dev https://github.com/dickmao/gat.git"
-                          "make -C gat install"))
-              (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
-              (callback (lambda (_buf msg)
-                          (when (cl-search "finished" msg)
-                            (with-current-buffer orig-buf
-                              ,@body)))))
-         (let ((compilation-scroll-output t))
-           (compilation-start compile nil (lambda (&rest _args) bufname)))
-         (with-current-buffer bufname
-           (add-hook 'compilation-finish-functions callback nil t))))))
 
 ;;;###autoload
 (defun ein:gat-run-local-batch (&optional refresh)

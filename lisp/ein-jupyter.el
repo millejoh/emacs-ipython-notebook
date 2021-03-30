@@ -26,8 +26,8 @@
 (require 'ein-core)
 (require 'ein-notebooklist)
 (require 'ein-dev)
-(require 'ein-gat)
 (require 'exec-path-from-shell nil t)
+(autoload 'ein:gat-chain "ein-gat")
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -351,6 +351,8 @@ server command."
 ;;;###autoload
 (defalias 'ein:stop 'ein:jupyter-server-stop)
 
+(defvar ein:gat-urls)
+(defvar ein:gat-aws-region)
 ;;;###autoload
 (defun ein:jupyter-server-stop (&optional ask-p url-or-port)
   (interactive
@@ -364,7 +366,8 @@ server command."
                (when (and (null (ein:notebooklist-keys))
                           (ein:shared-output-healthy-p))
                  (kill-buffer (ein:shared-output-buffer)))))
-      (let* ((gat-dir (alist-get (intern url-or-port) ein:gat-urls))
+      (let* ((gat-dir (alist-get (intern url-or-port)
+				 (awhen (bound-and-true-p ein:gat-urls) it)))
              (my-p (string= url-or-port my-url-or-port))
              (close-p (or (not ask-p)
                           (prog1 (y-or-n-p (format "Close %s?" url-or-port))
@@ -394,7 +397,7 @@ server command."
                  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
                    (-when-let* ((gat-chain-args `("gat" nil
                                                   "--project" "-"
-                                                  "--region" ,ein:gat-aws-region
+                                                  "--region" ,(aif (bound-and-true-p ein:gat-aws-region) it "us-east-1")
                                                   "--zone" "-"))
                                 (now (truncate (float-time)))
                                 (gat-log-exec (append gat-chain-args
