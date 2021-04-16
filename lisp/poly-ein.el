@@ -423,14 +423,16 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
         (save-restriction
           (widen)
           (remove-overlays))))
-    (mapc (lambda (ol)
-            (move-overlay (copy-overlay ol)
-                          (overlay-start ol) (overlay-end ol)
-                          dest-buf))
-          (with-current-buffer src-buf
+    (with-current-buffer src-buf
+      (mapc (lambda (ol)
+              (move-overlay
+	       (if (eq 'ein:cell-input-area (overlay-get ol 'face))
+		   (copy-overlay ol)
+		 ol)
+	       (overlay-start ol) (overlay-end ol) dest-buf))
             (save-restriction
-              (widen)
-              (overlays-in (point-min) (point-max)))))
+	      (widen)
+	      (overlays-in (point-min) (point-max)))))
     (pm--move-vars (append ein:local-variables
                            '(header-line-format buffer-undo-list isearch-mode))
                    src-buf dest-buf)))
