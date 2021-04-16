@@ -216,7 +216,7 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 	       (when pm/polymode
 		 (dolist (b (eieio-oref pm/polymode '-buffers))
 		   (when (buffer-live-p b)
-		     (poly-ein-copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
+		     (poly-ein--copy-state (ein:worksheet--get-buffer ein:%worksheet%) b))))
 	       (ein:display-warning msg :error)
 	       (error "ein:worksheet--jigger-undo-list: aborting")))
 	    ((< fill 0)

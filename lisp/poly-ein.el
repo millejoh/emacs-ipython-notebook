@@ -97,7 +97,7 @@ Intended as a salve for `show-paren-mode', was never called by the scan_lists.
          (let ((src-buf (current-buffer))
                (dest-buf (pm-span-buffer span)))
            (unless (eq src-buf dest-buf)
-             (poly-ein--set-buffer src-buf dest-buf visibly)))))))
+             (poly-ein-set-buffer src-buf dest-buf visibly)))))))
 
   (fmakunbound 'poly-lock-mode)
   (defalias 'poly-lock-mode (symbol-function (default-value 'font-lock-function)))
@@ -213,11 +213,11 @@ This is a bottleneck as we do this on every `pm-get-span'."
          (quail-conv (aand (overlayp quail-conv-overlay)
                            (overlay-start quail-conv-overlay)
                            (list it (overlay-end quail-conv-overlay)))))
-     (poly-ein--set-buffer derived-buffer base-buffer)
+     (poly-ein-set-buffer derived-buffer base-buffer)
      (unwind-protect
-         (cl-letf (((symbol-function 'poly-ein-copy-state) #'ignore))
+         (cl-letf (((symbol-function 'poly-ein--copy-state) #'ignore))
            ,@body)
-       (poly-ein--set-buffer base-buffer derived-buffer)
+       (poly-ein-set-buffer base-buffer derived-buffer)
        (when quail
          (apply #'move-overlay quail-overlay quail))
        (when quail-conv
@@ -370,7 +370,6 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 (collectively denoted by the chunkmode pm-inner/ein-input-cell), not each individual one."
   (mapc (lambda (f) (add-hook 'after-change-functions f t t))
         (buffer-local-value 'after-change-functions (pm-base-buffer)))
-  (poly-ein-copy-state (pm-base-buffer) (current-buffer))
   (setq-local font-lock-dont-widen t)
   (setq-local syntax-propertize-chunks 0) ;; internal--syntax-propertize too far
   (add-hook 'buffer-list-update-hook #'poly-ein--record-window-buffer nil t)
@@ -415,8 +414,8 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
   :hostmode 'pm-host/ein
   :innermodes '(pm-inner/ein-input-cell))
 
-(defun poly-ein-copy-state (src-buf dest-buf)
-  "Consolidate fragility here."
+(defun poly-ein--copy-state (src-buf dest-buf)
+  "Dangerous to call this outside `poly-ein-set-buffer' (loses overlays)."
   (unless (eq src-buf dest-buf)
     (with-current-buffer dest-buf
       (save-excursion
@@ -425,11 +424,7 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
           (remove-overlays))))
     (with-current-buffer src-buf
       (mapc (lambda (ol)
-              (move-overlay
-	       (if (eq 'ein:cell-input-area (overlay-get ol 'face))
-		   (copy-overlay ol)
-		 ol)
-	       (overlay-start ol) (overlay-end ol) dest-buf))
+              (move-overlay ol (overlay-start ol) (overlay-end ol) dest-buf))
             (save-restriction
 	      (widen)
 	      (overlays-in (point-min) (point-max)))))
@@ -437,7 +432,7 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
                            '(header-line-format buffer-undo-list isearch-mode))
                    src-buf dest-buf)))
 
-(defun poly-ein--set-buffer (src-buf dest-buf &optional switch)
+(defun poly-ein-set-buffer (src-buf dest-buf &optional switch)
   (let ((pm-initialization-in-progress t))
     (when (and (not (eq src-buf dest-buf))
                (buffer-live-p src-buf)
@@ -448,7 +443,7 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
                                              (and switch (region-active-p) (mark))
                                              (pos-visible-in-window-p)
                                              (when switch (deactivate-mark))))
-        (poly-ein-copy-state src-buf dest-buf)
+        (poly-ein--copy-state src-buf dest-buf)
         (if switch
             (switch-to-buffer dest-buf)
           (set-buffer dest-buf))
