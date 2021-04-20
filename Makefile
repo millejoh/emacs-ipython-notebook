@@ -137,8 +137,7 @@ backup-melpa:
 	    (let* ((my-desc (package-tar-file-info)) \
 	           (name (package-desc-name my-desc)) \
 	           (other-pkgs (cdr (assq name package-alist)))) \
-	      (when other-pkgs \
-	        (mapcar (lambda (odesc) \
+	        (mapc (lambda (odesc) \
 	                  (let* ((odir (package-desc-dir odesc)) \
 	                         (parent (file-name-directory odir)) \
 	                         (leaf (file-name-nondirectory odir))) \
@@ -148,7 +147,7 @@ backup-melpa:
 	                      (rename-file odir \
 	                                   (expand-file-name (format \"BACKUP-%s\" leaf) parent) \
 	                                   t)))) \
-	                other-pkgs))))"
+	                other-pkgs)))"
 
 .PHONY: install
 install: dist backup-melpa
