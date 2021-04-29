@@ -517,23 +517,23 @@ Example::
 
 (defun ein:kernel--handle-payload (kernel callbacks payload)
   (cl-loop with events = (ein:$kernel-events kernel)
-        for p in payload
-        for text = (or (plist-get p :text) (plist-get (plist-get p :data) :text/plain))
-        for source = (plist-get p :source)
-        if (member source '("IPython.kernel.zmq.page.page"
-                            "IPython.zmq.page.page"
-                            "page"))
-        do (when (not (equal (ein:trim text) ""))
-             (ein:events-trigger
-              events 'open_with_text.Pager (list :text text)))
-        else if
-        (member
-         source
-         '("IPython.kernel.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
-           "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
-           "set_next_input"))
-        do (let ((cb (plist-get callbacks :set_next_input)))
-             (when cb (ein:funcall-packed cb text)))))
+           for p in (append payload nil)
+           for text = (or (plist-get p :text) (plist-get (plist-get p :data) :text/plain))
+           for source = (plist-get p :source)
+           if (member source '("IPython.kernel.zmq.page.page"
+                               "IPython.zmq.page.page"
+                               "page"))
+           do (unless (equal (ein:trim text) "")
+		(ein:events-trigger
+		 events 'open_with_text.Pager (list :text text)))
+           else if
+           (member
+            source
+            '("IPython.kernel.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
+              "IPython.zmq.zmqshell.ZMQInteractiveShell.set_next_input"
+              "set_next_input"))
+           do (let ((cb (plist-get callbacks :set_next_input)))
+		(when cb (ein:funcall-packed cb text)))))
 
 (defun ein:kernel--handle-shell-reply (kernel packet)
   (cl-destructuring-bind

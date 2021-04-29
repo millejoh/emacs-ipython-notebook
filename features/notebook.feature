@@ -36,6 +36,15 @@ Scenario: switch kernel
   And I wait for cell to execute
   And I switch kernel to "ir"
 
+@pager
+Scenario: so-called paging in ein:kernel--handle-payload
+  Given new python notebook
+  And I type "help?"
+  And I wait for cell to execute
+  And I switch to buffer like "*ein:pager"
+  And I should see "help()"
+  And I press "C-x k"
+
 @traceback
 Scenario: native json parsing broke traceback
   Given new python notebook
