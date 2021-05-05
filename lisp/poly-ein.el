@@ -417,17 +417,14 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
 (defun poly-ein--copy-state (src-buf dest-buf)
   "Dangerous to call this outside `poly-ein-set-buffer' (loses overlays)."
   (unless (eq src-buf dest-buf)
-    (with-current-buffer dest-buf
-      (save-excursion
-        (save-restriction
-          (widen)
-          (remove-overlays))))
-    (with-current-buffer src-buf
-      (mapc (lambda (ol)
-              (move-overlay ol (overlay-start ol) (overlay-end ol) dest-buf))
+    (dolist (b (eieio-oref pm/polymode '-buffers))
+      (unless (eq b dest-buf)
+	(with-current-buffer b
+	  (save-excursion
             (save-restriction
 	      (widen)
-	      (overlays-in (point-min) (point-max)))))
+	      (dolist (ol (overlays-in (point-min) (point-max)))
+		(move-overlay ol (overlay-start ol) (overlay-end ol) dest-buf)))))))
     (pm--move-vars (append ein:local-variables
                            '(header-line-format buffer-undo-list isearch-mode))
                    src-buf dest-buf)))
