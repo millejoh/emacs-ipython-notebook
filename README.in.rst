@@ -92,6 +92,9 @@ How do I...
 ... get IDE-like behavior?
    The official python module for EIN is elpy_, installed separately.  Other `program modes`_ for non-python kernels may be installed with varying degrees of EIN compatibility.
 
+... render LaTeX?
+   The official LaTeX module for EIN is math-preview_, installed separately.
+
 ... send expressions from a python buffer to a running kernel?
    Unpublicized keybindings *exclusively* for the Python language ``C-c C-/ e`` and ``C-c C-/ r`` send the current statement or region respectively to a running kernel.  If the region is not set, ``C-c C-/ r`` sends the entire buffer.  You must manually inspect the ``*ein:shared output*`` buffer for errors.
 
@@ -101,6 +104,7 @@ How do I...
 .. _company-mode: https://github.com/company-mode/company-mode
 .. _jupyterhub: https://github.com/jupyterhub/jupyterhub
 .. _elpy: https://melpa.org/#/elpy
+.. _math-preview: https://gitlab.com/matsievskiysv/math-preview
 .. _program modes: https://www.gnu.org/software/emacs/manual/html_node/emacs/Program-Modes.html
 .. _undo boundaries: https://www.gnu.org/software/emacs/manual/html_node/elisp/Undo.html
 
