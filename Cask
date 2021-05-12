@@ -14,7 +14,7 @@
  (depends-on "espuds")
  (depends-on "mocker")
  (depends-on "deferred")
- (depends-on "polymode")
+ (depends-on "polymode" :git dickmao/polymode :branch issue-289)
  (depends-on "julia-mode")
  (depends-on "magit")
  (depends-on "ess")

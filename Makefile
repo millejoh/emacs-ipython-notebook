@@ -152,6 +152,6 @@ backup-melpa:
 .PHONY: install
 install: dist backup-melpa
 	$(EMACS) -Q --batch --eval "(package-initialize)" \
-	  --eval "(add-to-list 'package-archives '(\"melpa\" . \"http://melpa.org/packages/\"))" \
+	  --eval "(add-to-list 'package-archives '(\"shmelpa\" . \"https://shmelpa.commandlinesystems.com/packages/\"))" \
 	  --eval "(package-refresh-contents)" \
 	  --eval "(package-install-file (car (file-expand-wildcards \"dist/ein*.tar\")))"

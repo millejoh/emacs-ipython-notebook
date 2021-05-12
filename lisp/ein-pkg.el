@@ -2,10 +2,10 @@
   "0.17.0"
   "Emacs IPython Notebook"
   '((emacs "25")
-    (websocket "20190620")
-    (anaphora "20180618")
-    (request "20200117")
+    (websocket "1.12")
+    (anaphora "1.0.4")
+    (request "0.3.3")
     (deferred "0.5")
-    (polymode "20190714")
+    (polymode "0.2.2")
     (dash "2.13.0")
-    (with-editor "20200522")))
+    (with-editor)))
