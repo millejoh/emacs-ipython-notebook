@@ -16,7 +16,6 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         emacs_version: [25.1, 26.3, 27.1]
