@@ -8,4 +8,4 @@
     (deferred "0.5")
     (polymode "0.2.2")
     (dash "2.13.0")
-    (with-editor)))
+    (with-editor "0pre")))
