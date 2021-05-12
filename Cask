@@ -5,16 +5,10 @@
 (files "lisp/*.el")
 
 (development
- (depends-on "anaphora")
- (depends-on "websocket")
- (depends-on "request")
- (depends-on "dash")
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")
  (depends-on "mocker")
- (depends-on "deferred")
- (depends-on "polymode" :git dickmao/polymode :branch issue-289)
  (depends-on "julia-mode")
  (depends-on "magit")
  (depends-on "ess")
