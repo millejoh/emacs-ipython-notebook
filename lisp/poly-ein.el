@@ -215,7 +215,7 @@ This is a bottleneck as we do this on every `pm-get-span'."
                            (list it (overlay-end quail-conv-overlay)))))
      (poly-ein-set-buffer derived-buffer base-buffer)
      (unwind-protect
-         (cl-letf (((symbol-function 'poly-ein--copy-state) #'ignore))
+	 (cl-letf (((symbol-function 'poly-ein--copy-state) #'ignore))
            ,@body)
        (save-current-buffer
 	 (with-current-buffer derived-buffer

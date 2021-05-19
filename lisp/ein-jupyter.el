@@ -28,6 +28,9 @@
 (require 'ein-dev)
 (require 'exec-path-from-shell nil t)
 (autoload 'ein:gat-chain "ein-gat")
+(autoload 'ein:gat-project "ein-gat")
+(autoload 'ein:gat-region "ein-gat")
+(autoload 'ein:gat-zone "ein-gat")
 
 (defcustom ein:jupyter-use-containers nil
   "Take EIN in a different direcsh."
@@ -396,12 +399,13 @@ server command."
                 (gat-dir
                  (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
                    (-when-let* ((gat-chain-args `("gat" nil
-                                                  "--project" "-"
-                                                  "--region" ,(aif (bound-and-true-p ein:gat-aws-region) it "us-east-1")
-                                                  "--zone" "-"))
+                                                  "--project" ,(ein:gat-project)
+                                                  "--region" ,(ein:gat-region)
+                                                  "--zone" ,(ein:gat-zone)))
                                 (now (truncate (float-time)))
                                 (gat-log-exec (append gat-chain-args
                                                       (list "log" "--after" (format "%s" now)
+							    "--vendor" (aif (bound-and-true-p ein:gat-vendor) it "aws")
                                                             "--nextunit" "shutdown.service")))
                                 (magit-process-popup-time 0))
                      (ein:gat-chain (current-buffer) nil gat-log-exec :notebook-dir gat-dir)

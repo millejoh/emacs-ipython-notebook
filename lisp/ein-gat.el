@@ -62,8 +62,11 @@
 (defcustom ein:gat-vendor
   (ein:gat-shell-command "gat --project - --region - --zone - vendor")
   "Currently, aws or gce."
-  :type 'string
-  :group 'ein)
+  :type '(choice (const :tag "aws" "aws") (const :tag "gce" "gce"))
+  :group 'ein
+  :set (lambda (symbol value)
+	 (setq ein:gat-machine-history nil)
+         (set-default symbol value)))
 
 (defcustom ein:gat-gce-zone (ein:gat-shell-command "gcloud config get-value compute/zone")
   "gcloud project zone."
@@ -129,6 +132,9 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 (defvar ein:gat-gpu-type-history nil
   "History of user entered gpu types.")
 
+(defvar ein:gat-keyname-history nil
+  "History of user entered aws ssh keyname.")
+
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
   (let ((from-end (cl-search "/.gat" default-directory :from-end)))
@@ -165,16 +171,18 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 	         (message "nowhere"))))))))
 
 (cl-defun ein:gat-jupyter-login (ipynb-name notebook-dir callback &rest args &key public-ip-address)
-  (let ((url-or-port (ein:url (format "http://%s:8888" public-ip-address))))
-    (setf (alist-get (intern url-or-port) ein:gat-urls) notebook-dir)
-    (ein:login url-or-port
-               (lambda (buffer url-or-port)
-                 (pop-to-buffer buffer)
-                 (ein:notebook-open url-or-port ipynb-name nil callback)))))
+  (if public-ip-address
+      (let ((url-or-port (ein:url (format "http://%s:8888" public-ip-address))))
+	(setf (alist-get (intern url-or-port) ein:gat-urls) notebook-dir)
+	(ein:login url-or-port
+		   (lambda (buffer url-or-port)
+                     (pop-to-buffer buffer)
+                     (ein:notebook-open url-or-port ipynb-name nil callback))))
+    (ein:log 'error "ein:gat-jupyter-login: no public ip address")))
 
 (defun ein:gat-process-filter (proc string)
   "Copied `magit-process-filter' with added wrinkle of `ansi-color'.
-Advising `insert' in `magit-process-filter' is a little gross,
+Advising `insert' in `magit-process-filter' is a little sus,
 and moreover, how would I avoid messing `magit-process-filter' of other processes?"
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
@@ -243,7 +251,7 @@ and moreover, how would I avoid messing `magit-process-filter' of other processe
                                           (string-trim (match-string 1 it)))))
                (when-let ((last-line (car (last (split-string (string-trim it) "\n")))))
                  (setq new-public-ip-address
-                       (when (string-match "^\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)\\s-+\\S-+$" last-line)
+                       (when (string-match "^\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)" last-line)
                          (string-trim (match-string 1 last-line))))))
              (when callback
                (when (buffer-live-p buffer)
@@ -516,10 +524,14 @@ EOF
                                          common-options
                                          `("--vendor" ,ein:gat-vendor)
                                          `("--machine" ,(ein:gat-elicit-machine))
-                                         `(,@(aif (ein:gat-elicit-disksizegb)
-                                                 (list "--disksizegb"
-                                                       (number-to-string it))))
-                                         `(,@(-when-let* ((gpus (ein:gat-elicit-gpus))
+                                         `(,@(awhen (ein:gat-elicit-disksizegb)
+                                               (list "--disksizegb"
+                                                     (number-to-string it))))
+					 `(,@(when (string= ein:gat-vendor "aws")
+                                               (list "--keyname"
+						     (ein:gat-elicit-keyname))))
+                                         `(,@(-when-let* ((gce-p (string= ein:gat-vendor "gce"))
+							  (gpus (ein:gat-elicit-gpus))
                                                           (nonzero (not (zerop gpus))))
                                                (list "--gpus"
                                                      (number-to-string gpus)
@@ -529,6 +541,7 @@ EOF
               (now (truncate (float-time)))
               (gat-log-exec (append gat-chain-args
                                     (list "log" "--after" (format "%s" now)
+					  "--vendor" ein:gat-vendor
                                           "--until" "is running at:"
                                           "--nextunit" "shutdown.service")))
               (command (cond (batch-p
@@ -596,22 +609,34 @@ EOF
    "FROM image: " ein:gat-base-images nil 'confirm
    nil 'ein:gat-base-images (car ein:gat-base-images)))
 
+(defun ein:gat-elicit-keyname ()
+  (interactive)
+  (ein:completing-read
+   (format "Keyname%s: " (aif (car ein:gat-keyname-history)
+			     (format " [%s]" it) ""))
+   nil nil nil nil
+   'ein:gat-keyname-history (car ein:gat-keyname-history)))
+
 (defun ein:gat-elicit-machine ()
   (interactive)
-  (require 'seq)
-  (ein:completing-read
-   "Machine Type: "
-   (append (seq-uniq ein:gat-machine-history)
-           (seq-remove (lambda (x) (member x ein:gat-machine-history))
-                       (cl-copy-list (ein:gat-machine-types))))
-   nil t nil 'ein:gat-machine-history
-   (car (or ein:gat-machine-history (ein:gat-machine-types)))))
+  (let ((machine ""))
+    (while (zerop (length machine))
+      (setq machine (ein:completing-read
+		     (format "Machine Type%s: " (aif (car ein:gat-machine-history)
+						    (format " [%s]" it) ""))
+		     (append (seq-uniq ein:gat-machine-history)
+			     (seq-remove (lambda (x) (member x ein:gat-machine-history))
+					 (cl-copy-list (ein:gat-machine-types))))
+		     nil t nil 'ein:gat-machine-history
+		     (car ein:gat-machine-history))))
+    machine))
 
 (defun ein:gat-elicit-gpu-type ()
   (interactive)
   (let ((types ein:gat-gpu-types))
     (ein:completing-read
-     "GPU: "
+     (format "GPU%s: " (aif (car ein:gat-gpu-type-history)
+			   (format " [%s]" it) ""))
      (append (seq-uniq ein:gat-gpu-type-history)
              (seq-remove (lambda (x) (member x ein:gat-gpu-type-history))
                          (cl-copy-list types)))
@@ -621,9 +646,12 @@ EOF
 (defun ein:gat-elicit-gpus ()
   (interactive)
   (cl-loop for answer =
-	   (string-to-number (ein:completing-read
-			      "Number GPUs: " '("0") nil nil nil
-			      'ein:gat-gpus-history (car ein:gat-gpus-history)))
+	   (string-to-number
+	    (ein:completing-read
+	     (format "Number GPUs%s: "
+		     (format " [%s]" (or (car ein:gat-gpus-history) "0")))
+	     '("0") nil nil nil
+	     'ein:gat-gpus-history (car ein:gat-gpus-history)))
 	   until (>= answer 0)
 	   finally return answer))
 
@@ -643,8 +671,13 @@ EOF
   (interactive)
   (cl-loop with answer
 	   do (setq answer (ein:completing-read
-			    "Disk GiB: " '("default") nil nil nil
-			    'ein:gat-disksizegb-history (car ein:gat-disksizegb-history)))
+			    (format "Disk GiB%s: "
+				    (format " [%s]"
+					    (or (car ein:gat-disksizegb-history)
+						"default")))
+			    '("default") nil nil nil
+			    'ein:gat-disksizegb-history
+			    (car ein:gat-disksizegb-history)))
 	   if (string= answer "default")
 	   do (setq answer nil)
 	   else
