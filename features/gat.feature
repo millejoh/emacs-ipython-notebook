@@ -9,10 +9,10 @@ Scenario: gat create from repo, then create from worktree, then run-local
   And I switch to log expr "ein:log-all-buffer-name"
   And I wait for buffer to say "Notebook is saved"
   And I switch to buffer like "Untitled"
-  When I gat create "foo"
+  When I gat create "foo" in "test-repo"
   Then I possibly wait for gat install
   Then I switch to buffer like ".gat/foo/Untitled"
-  When I gat create "baz"
+  When I gat create "baz" in "test-repo"
   Then I switch to buffer like ".gat/baz/Untitled"
   When I call "ein:gat-run-local"
   And I switch to buffer like "Dockerfile.Untitled"
