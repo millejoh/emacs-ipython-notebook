@@ -217,11 +217,13 @@ This is a bottleneck as we do this on every `pm-get-span'."
      (unwind-protect
          (cl-letf (((symbol-function 'poly-ein--copy-state) #'ignore))
            ,@body)
-       (poly-ein-set-buffer base-buffer derived-buffer)
-       (when quail
-         (apply #'move-overlay quail-overlay quail))
-       (when quail-conv
-         (apply #'move-overlay quail-conv-overlay quail-conv)))))
+       (save-current-buffer
+	 (with-current-buffer derived-buffer
+	   (poly-ein-set-buffer base-buffer derived-buffer)
+	   (when quail
+             (apply #'move-overlay quail-overlay quail))
+	   (when quail-conv
+             (apply #'move-overlay quail-conv-overlay quail-conv)))))))
 
 (defclass pm-inner-overlay-chunkmode (pm-inner-auto-chunkmode)
   ()
