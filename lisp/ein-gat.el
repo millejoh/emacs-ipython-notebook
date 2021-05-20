@@ -59,6 +59,9 @@
 
 (defconst ein:gat-required-version "0.0.3")
 
+(defvar ein:gat-machine-history nil
+  "History of user entered machine type.")
+
 (defcustom ein:gat-vendor
   (ein:gat-shell-command "gat --project - --region - --zone - vendor")
   "Currently, aws or gce."
@@ -125,9 +128,6 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defvar ein:gat-gpus-history '("0")
   "History of user entered gpu count.")
-
-(defvar ein:gat-machine-history nil
-  "History of user entered machine type.")
 
 (defvar ein:gat-gpu-type-history nil
   "History of user entered gpu types.")
