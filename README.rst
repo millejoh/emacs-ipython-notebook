@@ -16,7 +16,7 @@ No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
-`Amazon Web Services`_ integration is in preview.
+`AWS GCE (Preview)`_ integration is in alpha.
 
 EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
 introduced by `[gregsexton]`_.
