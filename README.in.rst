@@ -50,7 +50,7 @@ Start EIN using **ONE** of the following:
   * ``https://hub.data8x.berkeley.edu/user/1dcdab3``
   * ``https://hub.data8x.berkeley.edu/user/1dcdab3/?token=c421c68``, or,
 
-* [Preview] To run on AWS, open an ``.ipynb`` file, press ``C-c C-r``.  See `Amazon Web Services`_.
+* [Preview] To run on AWS or GCE, open an ``.ipynb`` file, press ``C-c C-r``.  See `AWS GCE (Preview)`_.
 
 ``M-x ein:stop`` prompts to halt local and remote jupyter services.
 
@@ -142,11 +142,13 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _scimax: https://github.com/jkitchin/scimax
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
-Amazon Web Services
-===================
-EIN has moved from GCE to AWS as the former's provisioning of GPUs appears stringent for customers without an established history.
+AWS GCE (Preview)
+=================
+::
 
-From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot instance.  You must ``M-x ein:stop`` or exit emacs to stop incurring charges!
+   M-x customize-option RET ein:gat-vendor
+
+From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot or GCE preemptible instance.  You must ``M-x ein:stop`` or exit emacs to stop incurring charges!
 
 ``M-x ein:gat-run-remote-batch`` runs the notebook in `batch mode`_.
 
