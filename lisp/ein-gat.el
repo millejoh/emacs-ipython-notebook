@@ -336,7 +336,7 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
               (bufname "*gat-install*")
               (dir (make-temp-file "gat-install" t))
               (commands `(,(format "cd %s" dir)
-                          ,(format "git clone --depth=1 --single-branch --branch=%s https://github.com/dickmao/gat.git" (if noninteractive "dev" ein:gat-version))
+                          ,(format "git clone --depth=1 --single-branch --branch=%s https://github.com/dickmao/gat.git" (if noninteractive "dev" ein:gat-required-version))
                           "make -C gat install"))
               (compile (format "bash -ex -c '%s'" (mapconcat #'identity commands "; ")))
               (callback (lambda (_buf msg)
