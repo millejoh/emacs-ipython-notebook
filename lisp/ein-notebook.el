@@ -166,12 +166,12 @@ and put last warning in minibuffer."
      (when (and (not noninteractive)
                 (null (plist-member (ein:$notebook-metadata notebook*) :kernelspec)))
        (awhen (ein:$notebook-kernelspec notebook*)
-         (setf (ein:$notebook-metadata notebook*)
-               (plist-put (ein:$notebook-metadata notebook*)
-                          :kernelspec (ein:notebook--spec-insert-name
-                                       (ein:$kernelspec-name it)
-                                       (ein:$kernelspec-spec it))))
-         (ein:notebook-save-notebook notebook*)))
+           (setf (ein:$notebook-metadata notebook*)
+                 (plist-put (ein:$notebook-metadata notebook*)
+                            :kernelspec (ein:notebook--spec-insert-name
+                                         (ein:$kernelspec-name it)
+                                         (ein:$kernelspec-spec it))))
+           (ein:notebook-save-notebook notebook*)))
      (when callback*
        (funcall callback* notebook* created))
      (-when-let* ((created created)
