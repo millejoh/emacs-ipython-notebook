@@ -560,7 +560,9 @@ See `ein:format-time-string'."
                         'link
                         :notify (apply-partially
                                  (lambda (url-or-port* path* &rest _args)
-                                   (ein:notebook-open url-or-port* path*))
+                                   (ein:notebook-open url-or-port* path* nil
+                                                      (lambda (_nb _created)
+                                                        (funcall reloader nil))))
                                  url-or-port path)
                         "Open")
                        (widget-insert " ")
@@ -572,11 +574,10 @@ See `ein:format-time-string'."
                              (cl-function
                               (lambda (url-or-port*
                                        path*
-                                       &rest _ignore
-                                       &aux (callback (lambda (_kernel) t)))
+                                       &rest _ignore)
                                 (ein:message-whir
-                                 "Ending session" (var callback)
-                                 (ein:kernel-delete-session callback
+                                 "Ending session" (var reloader)
+                                 (ein:kernel-delete-session reloader
                                                             :url-or-port url-or-port*
                                                             :path path*))))
                              url-or-port path)
