@@ -419,16 +419,6 @@
              do (sleep-for 0 1000)
              finally do (cl-assert (cl-search stop (buffer-string))))))
 
-(When "^I wait until buffer\\( does not\\)? say \"\\(.+\\)\"$"
-  (lambda (negate this)
-    (let ((tester (lambda ()
-                    (funcall (if negate #'not #'identity)
-                             (cl-search this (buffer-string))))))
-      (cl-loop repeat 10
-               until (funcall tester)
-               do (sleep-for 0 1000)
-               finally do (cl-assert (funcall tester))))))
-
 (When "^I click\\( without going top\\)? on\\( file\\)? \"\\(.+\\)\"$"
   (lambda (stay file word)
     ;; from espuds "go to word" without the '\\b's
