@@ -419,6 +419,16 @@
              do (sleep-for 0 1000)
              finally do (cl-assert (cl-search stop (buffer-string))))))
 
+(When "^I wait until buffer\\( does not\\)? say \"\\(.+\\)\"$"
+  (lambda (negate this)
+    (let ((tester (lambda ()
+                    (funcall (if negate #'not #'identity)
+                             (cl-search this (buffer-string))))))
+      (cl-loop repeat 10
+               until (funcall tester)
+               do (sleep-for 0 1000)
+               finally do (cl-assert (funcall tester))))))
+
 (When "^I click\\( without going top\\)? on\\( file\\)? \"\\(.+\\)\"$"
   (lambda (stay file word)
     ;; from espuds "go to word" without the '\\b's
@@ -466,9 +476,9 @@
         (cl-loop repeat 2
                  do (ein:notebook-open url-or-port path nil
                                        (lambda (nb _created) (setq notebook nb)))
-                 until (and notebook
-                            (ein:aand (ein:$notebook-kernel notebook)
-                                      (ein:kernel-live-p it)))
+                 until (aand notebook
+                             (ein:$notebook-kernel notebook)
+                             (ein:kernel-live-p it))
                  do (sleep-for 0 1000)))
       (switch-to-buffer (ein:notebook-buffer notebook)))))
 

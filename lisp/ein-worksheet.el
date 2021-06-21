@@ -47,8 +47,8 @@
 we can't know in elisp-space.  So conservatively prune buffer-undo-list
 at a certain length (which at time of writing is 2000).
 
-Alas, this is bound to fail eventually (a big change drives gc while buffer-undo-list
-is still under the threshold.")
+Alas, this is bound to fail eventually (a big change drives gc while
+buffer-undo-list is still under the threshold.")
 
 (defcustom ein:worksheet-warn-obsolesced-keybinding t
   "Warn of keybindings we arbitrarily obsolesce."

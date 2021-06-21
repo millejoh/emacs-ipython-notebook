@@ -313,7 +313,7 @@ of minor mode."
                  (ein:$notebook-notebook-name notebook))
          (ein:$notebook-events notebook))))
 
-(defalias 'ein:notebook-reconnect-kernel 'ein:notebook-reconnect-session-command "The distinction between kernel and session is a bit mysterious, all the action is now occurring in `ein:notebook-reconnect-session-command' these days, for which this function is now an alias.")
+(defalias 'ein:notebook-reconnect-kernel 'ein:notebook-reconnect-session-command)
 
 (define-obsolete-function-alias
   'ein:notebook-show-in-shared-output
@@ -619,10 +619,10 @@ NAME is any non-empty string that does not contain '/' or '\\'.
   (let ((buffers (ein:notebook-buffer-list notebook)))
     (mapc (lambda (b)
             (with-current-buffer b
-              (aif ein:%worksheet%
-                  (ein:notebook-close-worksheet ein:%notebook% it))
-              (aif ein:%notebook%
-                  (ein:notebook-tidy-opened-notebooks it))))
+              (awhen ein:%worksheet%
+                (ein:notebook-close-worksheet ein:%notebook% it))
+              (awhen ein:%notebook%
+                (ein:notebook-tidy-opened-notebooks it))))
           buffers)
     (ein:notebook-avoid-recursion
      (mapc (lambda (b) (ignore-errors (kill-buffer b))) buffers))))

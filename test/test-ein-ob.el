@@ -1,9 +1,7 @@
 ; -*- lexical-binding:t -*-
 (require 'ert)
 (require 'ob-ein)
-
-
-;; Test utils
+(require 'org)
 
 (ert-deftest ein:ob-anonymous-p ()
   (should (ob-ein-anonymous-p ".ein-python.ipynb"))

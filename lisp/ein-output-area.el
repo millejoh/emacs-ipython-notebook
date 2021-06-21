@@ -32,7 +32,9 @@
 
 
 (defvar ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript)
-  "Prefer :text/plain unless it's a single line '<IPython.core.display.HTML object>' or 'TemporalData[TimeSeries, <<1>>]' in which case prefer :text/html.")
+  "Prefer :text/plain.
+Unless it's a single line '<IPython.core.display.HTML object>' or
+'TemporalData[TimeSeries, <<1>>]' in which case prefer :text/html.")
 
 (defcustom ein:output-area-inlined-images nil
   "Turn on to insert images into buffer.  Default spawns external viewer."

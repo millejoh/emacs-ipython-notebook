@@ -82,7 +82,9 @@
   :group 'ein)
 
 (defcustom ob-ein-anonymous-path ".%s.ipynb"
-  "When session header doesn't specify ipynb, prosecute all interactions for a given language in this throwaway notebook (substitute %s with language)."
+  "Applies when session header doesn't specify ipynb.
+Prosecute all interactions for a given language in this throwaway
+notebook (substitute %s with language)."
   :type '(string)
   :group 'ein)
 

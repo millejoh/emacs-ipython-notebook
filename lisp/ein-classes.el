@@ -251,7 +251,7 @@
   ((traceback :initform nil :initarg :traceback :type list)
    (cell-type :initarg :cell-type :initform "code")
    (kernel :initarg :kernel :type ein:$kernel :accessor ein:cell-kernel)
-   (element-names :initform (:prompt :input :output :footer))
+   (element-names :initform '(:prompt :input :output :footer))
    (input-prompt-number :initarg :input-prompt-number
                         :documentation "\
 Integer or \"*\" (running state).
@@ -263,7 +263,7 @@ notebook that saved "*".  So don't add `:type'!")
 
 (defclass ein:textcell (ein:basecell)
   ((cell-type :initarg :cell-type :initform "text")
-   (element-names :initform (:prompt :input :footer))))
+   (element-names :initform '(:prompt :input :footer))))
 
 (defclass ein:htmlcell (ein:textcell)
   ((cell-type :initarg :cell-type :initform "html")))

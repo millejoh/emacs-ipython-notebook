@@ -46,7 +46,7 @@ Optionally append ':tag', e.g., ':latest' in the customary way."
   :type 'string)
 
 (defcustom ein:jupyter-docker-mount-point "/home/jovyan/ipynb"
-  "Directory in docker image where to mount `ein:jupyter-default-notebook-directory'."
+  "Where in docker image to mount `ein:jupyter-default-notebook-directory'."
   :group 'ein
   :type 'string)
 
@@ -64,8 +64,8 @@ Note some options like '-v' and '-network' are imposed by EIN."
 
 (defcustom ein:jupyter-server-command "jupyter"
   "The default command to start a jupyter notebook server.
-
-Changing this to `jupyter-notebook' requires customizing `ein:jupyter-server-use-subcommand' to nil."
+Changing this to `jupyter-notebook' requires customizing
+`ein:jupyter-server-use-subcommand' to nil."
   :group 'ein
   :type 'string
   :set-after '(ein:jupyter-cannot-find-jupyter)

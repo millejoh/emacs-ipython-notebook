@@ -45,7 +45,9 @@
   :group 'ein)
 
 (defcustom ein:content-query-max-branch 6
-  "Don't descend into more than this number of directories per depth.  The total number of parallel queries should therefore be O({max_branch}^{max_depth})"
+  "Don't descend into more than this number of directories per depth.
+The total number of parallel queries should therefore be
+O({max_branch}^{max_depth})."
   :type 'integer
   :group 'ein)
 

@@ -1929,7 +1929,7 @@ Depending on your font, some reasonable choices are:
 
 (defconst ein:markdown-footnote-chars
   "[[:alnum:]-]"
-  "Regular expression matching any character that is allowed in a footnote identifier.")
+  "Regex matching any character allowed in a footnote identifier.")
 
 (defconst ein:markdown-regex-footnote-definition
   (concat "^ \\{0,3\\}\\[\\(\\^" ein:markdown-footnote-chars "*?\\)\\]:\\(?:[ \t]+\\|$\\)")
@@ -8001,8 +8001,6 @@ rows and columns and the column alignment."
         (if ein:markdown-nested-imenu-heading-index
             #'ein:markdown-imenu-create-nested-index
           #'ein:markdown-imenu-create-flat-index))
-  ;; For menu support in XEmacs
-  (easy-menu-add ein:markdown-mode-menu ein:markdown-mode-map)
   ;; Defun movement
   (setq-local beginning-of-defun-function #'ein:markdown-beginning-of-defun)
   (setq-local end-of-defun-function #'ein:markdown-end-of-defun)

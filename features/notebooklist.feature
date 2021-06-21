@@ -45,6 +45,7 @@ Scenario: Stop after closing notebook
   And I clear log expr "ein:log-all-buffer-name"
   And I keep clicking "Resync" until "Stop"
   And I click on "Stop"
+  And I wait until buffer does not say "Stop"
   And I switch to log expr "ein:log-all-buffer-name"
   Then I wait for buffer to say "kernel-delete-session--success"
   And I am in notebooklist buffer
