@@ -299,7 +299,7 @@ TYPE can be 'body, nil."
        (lambda (span)
          (with-current-buffer (pm-span-buffer span)
            (cl-assert (eq font-lock-function 'poly-lock-mode))
-           (jit-lock-function (nth 1 span))))))))
+           (ignore-errors (jit-lock-function (nth 1 span)))))))))
 
 (defun poly-ein--relative-to-input (pos cell)
   "Return -1 if POS before input, 1 if after input, 0 if within"
