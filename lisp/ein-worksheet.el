@@ -859,7 +859,7 @@ When NTH is specified, return NTH cell.  Note that this function is
       (funcall (if up #'ein:cell-prev #'ein:cell-next) cell))))
 
 (defun ein:worksheet-goto-input (ewoc-node up)
-  (aif (ein:worksheet-next-input-cell ewoc-node up)
+  (aif (and ewoc-node (ein:worksheet-next-input-cell ewoc-node up))
       (ein:cell-goto it)
     (message "No %s input" (if up "previous" "next"))))
 

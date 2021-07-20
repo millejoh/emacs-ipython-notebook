@@ -135,6 +135,9 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 (defvar ein:gat-keyname-history nil
   "History of user entered aws ssh keyname.")
 
+(defvar ein:gat-preemptible-history nil
+  "History of preemptible opt-in.")
+
 (defun ein:gat-where-am-i (&optional print-message)
   (interactive "p")
   (let ((from-end (cl-search "/.gat" default-directory :from-end)))
@@ -524,6 +527,8 @@ EOF
                                          common-options
                                          `("--vendor" ,ein:gat-vendor)
                                          `("--machine" ,(ein:gat-elicit-machine))
+                                         `(,@(when (string= (ein:gat-elicit-preemptible) "y")
+                                               (list "--spot")))
                                          `(,@(awhen (ein:gat-elicit-disksizegb)
                                                (list "--disksizegb"
                                                      (number-to-string it))))
@@ -571,8 +576,7 @@ EOF
                                                  base-image ipynb-name))))
                             (my-editor (when (and (boundp 'server-name)
                                                   (server-running-p server-name))
-                                         `("-s" ,server-name)))
-                            )
+                                         `("-s" ,server-name))))
                        (ein:gat-chain
                          last-known-buffer
                          (apply-partially
@@ -608,6 +612,18 @@ EOF
   (ein:completing-read
    "FROM image: " ein:gat-base-images nil 'confirm
    nil 'ein:gat-base-images (car ein:gat-base-images)))
+
+(defun ein:gat-elicit-preemptible ()
+  (interactive)
+  (let ((kind (cl-case (intern ein:gat-vendor)
+                (gce "Preemptible")
+                (otherwise "Spot")))
+        (default (or (car ein:gat-preemptible-history) "n")))
+    (ein:completing-read
+     (format "%s [%s]: " kind default)
+     (split-string "y n")
+     nil t nil
+     'ein:gat-preemptible-history default)))
 
 (defun ein:gat-elicit-keyname ()
   (interactive)
