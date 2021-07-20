@@ -262,6 +262,7 @@ See `ein:format-time-string'."
   (ein:log 'verbose "Opening notebooklist at %s"
            (ein:url url-or-port (ein:$content-path content)))
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+    (ein:notebooklist-mode)
     (let ((restore-point (aand (widget-at)
                                (awhen (widget-value it)
                                  (and (stringp it) it))
@@ -605,7 +606,6 @@ See `ein:format-time-string'."
         (ein:log 'error "ein:notebooklist-render: cannot render null")
       (render-header url-or-port sessions)
       (render-directory url-or-port sessions)
-      (ein:notebooklist-mode)
       (widget-setup)
       (awhen (get-buffer-window (current-buffer))
         (set-window-point it (or restore-point (point-min)))))))
