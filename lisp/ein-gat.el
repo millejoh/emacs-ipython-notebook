@@ -57,7 +57,7 @@
   :type 'string
   :group 'ein)
 
-(defconst ein:gat-required-version "0.0.3")
+(defconst ein:gat-required-version "0.0.4-pre")
 
 (defvar ein:gat-machine-history nil
   "History of user entered machine type.")
@@ -327,9 +327,13 @@ With WORKTREE-DIR of /home/dick/gat/test-repo2
     (gce ein:gat-gce-machine-types)
     (otherwise (or ein:gat-aws-machine-types ein:gat-gce-machine-types))))
 
+(defsubst ein:gat-need-upgrade ()
+  (version-list-< (version-to-list ein:gat-version)
+                  (version-to-list ein:gat-required-version)))
+
 (defmacro ein:gat-install-gat (&rest body)
   `(if (and (executable-find "gat")
-            (string= ein:gat-required-version ein:gat-version))
+            (not (ein:gat-need-upgrade)))
        (progn ,@body)
      (if (zerop (length (ein:gat-region)))
          (ein:log 'error "ein:gat-install-gat: no cloud utilities detected")
