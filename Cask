@@ -5,7 +5,7 @@
 (files "lisp/*.el")
 
 (development
- (depends-on "polymode" :git "https://github.com/dickmao/polymode" :branch "issue-289")
+ (depends-on "polymode")
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")
