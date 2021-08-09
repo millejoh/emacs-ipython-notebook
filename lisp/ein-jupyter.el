@@ -158,6 +158,7 @@ with the call to the jupyter notebook."
   (get-buffer-process (get-buffer *ein:jupyter-server-buffer-name*)))
 
 (defun ein:jupyter-server--run (buf user-cmd dir &optional args)
+  (ein:with-read-only-buffer (get-buffer-create buf))
   (let* ((cmd (if ein:jupyter-use-containers "docker" user-cmd))
          (vargs (cond (ein:jupyter-use-containers
                        (split-string
