@@ -5,7 +5,6 @@
 (files "lisp/*.el")
 
 (development
- (depends-on "polymode")
  (depends-on "ert-runner")
  (depends-on "ecukes")
  (depends-on "espuds")
