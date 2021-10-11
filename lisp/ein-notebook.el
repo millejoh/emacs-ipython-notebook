@@ -240,7 +240,7 @@ where `created' indicates a new notebook or an existing one."
 
 (defun ein:notebook-open--callback (notebook callback0 content)
   (ein:log 'verbose "Opened notebook %s" (ein:$notebook-notebook-path notebook))
-  (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-version content)
+  (setf (ein:$notebook-api-version notebook) (ein:$content-notebook-api-version content)
         (ein:$notebook-notebook-name notebook) (ein:$content-name content))
   (ein:notebook-bind-events notebook (ein:events-new))
   (ein:notebook-set-kernelspec notebook (plist-get (ein:$content-raw-content content) :metadata))

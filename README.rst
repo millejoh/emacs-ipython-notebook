@@ -6,13 +6,11 @@
    :target: https://youtu.be/8VzWc9QeOxE
    :alt: Kaggle Notebooks in AWS
 
-Emacs IPython Notebook (EIN) connects to instances of ``jupyter notebook``, but
-alas **not** ``jupyter lab``.
+Emacs IPython Notebook (EIN), despite its name, is a jupyter client for all
+languages.
 
 No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 `prevailing documentation`_, which should be disregarded.
-
-*EIN has multiple* Issues_ *with minified ipynb, Doom, and Spacemacs.*
 
 Org_ users please find ob-ein_, a jupyter Babel_ backend.
 
@@ -187,11 +185,11 @@ Keymap (C-h m)
    C-c		Prefix Command
    C-x		Prefix Command
    ESC		Prefix Command
-   <C-down>	ein:worksheet-goto-next-input-km
-   <C-up>		ein:worksheet-goto-prev-input-km
-   <M-S-return>	ein:worksheet-execute-cell-and-insert-below-km
-   <M-down>	ein:worksheet-not-move-cell-down-km
-   <M-up>		ein:worksheet-not-move-cell-up-km
+   C-<down>	ein:worksheet-goto-next-input-km
+   C-<up>		ein:worksheet-goto-prev-input-km
+   M-S-<return>	ein:worksheet-execute-cell-and-insert-below-km
+   M-<down>	ein:worksheet-not-move-cell-down-km
+   M-<up>		ein:worksheet-not-move-cell-up-km
    
    C-x C-s		ein:notebook-save-notebook-command-km
    C-x C-w		ein:notebook-rename-command-km

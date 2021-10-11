@@ -37,15 +37,15 @@
          (path (plist-get data :path))
          (kernelspec (make-ein:$kernelspec :name "python" :language "python"))
          (content (make-ein:$content :url-or-port ein:testing-notebook-dummy-url
-                                     :notebook-version "5.7.0"
+                                     :notebook-api-version "5"
                                      :path path)))
     (ignore content)
-    (cl-letf (((symbol-function 'ein:need-notebook-version) (lambda (&rest _ignore) "5.7.0"))
+    (cl-letf (((symbol-function 'ein:need-notebook-api-version) (lambda (&rest _ignore) "5"))
               ((symbol-function 'ein:kernel-retrieve-session) #'ignore)
               ((symbol-function 'ein:notebook-enable-autosaves) #'ignore))
       (let ((notebook (ein:notebook-new ein:testing-notebook-dummy-url path kernelspec)))
         (setf (ein:$notebook-kernel notebook)
-              (ein:kernel-new 8888 "" nil  "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-version (ein:$notebook-url-or-port notebook))))
+              (ein:kernel-new 8888 "" nil  "/kernels" (ein:$notebook-events notebook) (ein:need-notebook-api-version (ein:$notebook-url-or-port notebook))))
         (setf (ein:$kernel-events (ein:$notebook-kernel notebook))
               (ein:events-new))
         ; matryoshka: new-content makes a ein:$content using CONTENT as template

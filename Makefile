@@ -60,8 +60,8 @@ $(CASK_DIR): Cask
 	touch $(CASK_DIR)
 
 .PHONY: test-compile
-test-compile: clean autoloads
-	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
+test-compile: clean
+	! ($(CASK) eval "(let ((byte-compile-error-on-warn (quote not docstrings))) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 
 .PHONY: quick
 quick: $(CASK_DIR) test-compile test-ob-ein-recurse test-unit

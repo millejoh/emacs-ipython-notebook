@@ -64,7 +64,7 @@
 
 "
   url-or-port
-  notebook-version
+  notebook-api-version
   name
   path
   type

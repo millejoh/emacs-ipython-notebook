@@ -111,7 +111,7 @@ get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
   (ein:query-singleton-ajax
    (ein:url url-or-port "api/kernelspecs")
    :type "GET"
-   :parser 'ein:json-read
+   :parser #'ein:json-read
    :complete (apply-partially #'ein:query-kernelspecs--complete url-or-port)
    :success (apply-partially #'ein:query-kernelspecs--success url-or-port callback)
    :error (apply-partially #'ein:query-kernelspecs--error url-or-port callback iteration)))
@@ -163,24 +163,32 @@ get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
                                            &aux (resp-string (format "STATUS: %s DATA: %s" (request-response-status-code response) data)))
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
-(defun ein:query-notebook-version (url-or-port callback)
+(defun ein:query-notebook-api-version (url-or-port callback)
   "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
   (ein:query-singleton-ajax
-   (ein:url url-or-port "api")
-   :parser #'ein:json-read
-   :complete (apply-partially #'ein:query-notebook-version--complete
+   (ein:url url-or-port "api/spec.yaml")
+   ;; the melpa yaml package was taking too long, unfortunately
+   :parser (lambda ()
+	     (if (re-search-forward "notebook api\\s-+version: \\(\\S-+\\)"
+				    nil t)
+		 ;; emacs-25.3 doesn't have the right string-trim
+		 (string-remove-prefix
+		  "\"" (string-remove-suffix
+			"\"" (match-string-no-properties 1)))
+	       ""))
+   :complete (apply-partially #'ein:query-notebook-api-version--complete
                               url-or-port callback)))
 
-(cl-defun ein:query-notebook-version--complete
+(cl-defun ein:query-notebook-api-version--complete
     (url-or-port callback
-     &key data response &allow-other-keys
-     &aux
+     &key data response
+     &allow-other-keys &aux
      (resp-string (format "STATUS: %s DATA: %s"
                           (request-response-status-code response) data))
      (hub-p (request-response-header response "x-jupyterhub-version")))
-  (ein:log 'debug "ein:query-notebook-version--complete %s" resp-string)
-  (aif (plist-get data :version)
-      (setf (gethash url-or-port *ein:notebook-version*) it)
+  (ein:log 'debug "ein:query-notebook-api-version--complete %s" resp-string)
+  (if (not (zerop (string-to-number data)))
+      (setf (gethash url-or-port *ein:notebook-api-version*) data)
     (if hub-p
         (let ((key (ein:query-divine-authorization-tokens-key url-or-port)))
           (remhash key ein:query-authorization-tokens)
@@ -189,7 +197,7 @@ get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
                    (or (cdr key) "unknown"))
            :error)
           (setq callback nil))
-      (ein:log 'warn "notebook version currently unknowable")))
+      (ein:log 'warn "notebook api version currently unknowable")))
   (when callback (funcall callback)))
 
 (provide 'ein-query)

@@ -107,7 +107,7 @@ ERRBACK of arity 1 for the contents."
     (funcall callback (ein:new-content url-or-port path data))))
 
 (defun ein:content-to-json (content)
-  (let ((path (if (>= (ein:$content-notebook-version content) 3)
+  (let ((path (if (>= (ein:$content-notebook-api-version content) 3)
                   (ein:$content-path content)
                 (substring (ein:$content-path content)
                            0
@@ -126,7 +126,7 @@ ERRBACK of arity 1 for the contents."
                        :path (ein:$notebook-notebook-path nb)
                        :url-or-port (ein:$notebook-url-or-port nb)
                        :type "notebook"
-                       :notebook-version (ein:$notebook-api-version nb)
+                       :notebook-api-version (ein:$notebook-api-version nb)
                        :raw-content (append nb-content nil))))
 
 ;;; Managing/listing the content hierarchy
@@ -144,7 +144,7 @@ ERRBACK of arity 1 for the contents."
   ;; data is like (:size 72 :content nil :writable t :path Untitled7.ipynb :name Untitled7.ipynb :type notebook)
   (let ((content (make-ein:$content
                   :url-or-port url-or-port
-                  :notebook-version (ein:notebook-version-numeric url-or-port)
+                  :notebook-api-version (ein:notebook-api-version-numeric url-or-port)
                   :path path))
         (raw-content (if (vectorp (plist-get data :content))
                          (append (plist-get data :content) nil)
@@ -300,7 +300,7 @@ Call ERRBACK of arity 1 (contents) upon failure."
 
 (cl-defun ein:content-query-sessions--success (url-or-port callback &key data &allow-other-keys)
   (cl-flet ((read-name (nb-json)
-                       (if (< (ein:notebook-version-numeric url-or-port) 3)
+                       (if (< (ein:notebook-api-version-numeric url-or-port) 3)
                            (if (string= (plist-get nb-json :path) "")
                                (plist-get nb-json :name)
                              (format "%s/%s" (plist-get nb-json :path) (plist-get nb-json :name)))

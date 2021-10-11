@@ -233,7 +233,7 @@ ERRBACK takes one argument, the resulting buffer."
                  (remhash tokens-key ein:query-authorization-tokens))))
           (add-function :before (var errback) belay-tokens)
           (add-function :before (var callback) belay-tokens)))
-      (ein:query-notebook-version
+      (ein:query-notebook-api-version
        url-or-port
        (lambda ()
          (ein:query-kernelspecs
@@ -274,7 +274,7 @@ See `ein:format-time-string'."
             (make-ein:$notebooklist :url-or-port url-or-port
                                     :path (ein:$content-path content)
                                     :data (ein:$content-raw-content content)
-                                    :api-version (ein:$content-notebook-version content)))
+                                    :api-version (ein:$content-notebook-api-version content)))
       (ein:notebooklist-list-add ein:%notebooklist%)
       (let ((inhibit-read-only t))
         (erase-buffer))
@@ -445,7 +445,7 @@ See `ein:format-time-string'."
   (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
     (widget-insert
      (format "Contents API %s (%s)\n\n"
-             (ein:need-notebook-version url-or-port)
+             (ein:need-notebook-api-version url-or-port)
              url-or-port))
     (let ((breadcrumbs (generate-breadcrumbs
                         (ein:$notebooklist-path ein:%notebooklist%))))

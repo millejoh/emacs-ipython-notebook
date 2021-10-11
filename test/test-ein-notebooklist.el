@@ -9,7 +9,7 @@
               ((symbol-function 'ein:content-query-sessions) #'ignore))
       (ein:notebooklist-open--finish url-or-port #'ignore
         (make-ein:$content :url-or-port url-or-port
-                           :notebook-version "5.7.0"
+                           :notebook-api-version "5"
                            :path "")))))
 
 (defmacro eintest:notebooklist-is-empty-context-of (func)

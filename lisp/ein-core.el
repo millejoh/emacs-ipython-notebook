@@ -69,7 +69,7 @@ the source is in git repository) or elpa version."
 
 ;;; Server attribute getters.  These should be moved to ein-open.el
 
-(defvar *ein:notebook-version* (make-hash-table :test #'equal)
+(defvar *ein:notebook-api-version* (make-hash-table :test #'equal)
   "url-or-port to major notebook version")
 
 (defvar *ein:kernelspecs* (make-hash-table :test #'equal)
@@ -95,14 +95,14 @@ the source is in git repository) or elpa version."
     (ein:log 'warn "No recorded kernelspecs for %s" url-or-port)
     nil))
 
-(defsubst ein:notebook-version-numeric (url-or-port)
-  (truncate (string-to-number (ein:need-notebook-version url-or-port))))
+(defsubst ein:notebook-api-version-numeric (url-or-port)
+  (truncate (string-to-number (ein:need-notebook-api-version url-or-port))))
 
-(defun ein:need-notebook-version (url-or-port)
-  "Callers assume `ein:query-notebook-version' succeeded.  If not, we hardcode a guess."
-  (aif (gethash url-or-port *ein:notebook-version*) it
+(defun ein:need-notebook-api-version (url-or-port)
+  "Callers assume `ein:query-notebook-api-version' succeeded.  If not, we hardcode a guess."
+  (aif (gethash url-or-port *ein:notebook-api-version*) it
     (ein:log 'warn "No recorded notebook version for %s" url-or-port)
-    "5.7.0"))
+    "5"))
 
 (defun ein:generic-getter (func-list)
   "Internal function for generic getter functions (`ein:get-*').
