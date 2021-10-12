@@ -169,7 +169,7 @@ get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
    (ein:url url-or-port "api/spec.yaml")
    ;; the melpa yaml package was taking too long, unfortunately
    :parser (lambda ()
-	     (if (re-search-forward "notebook api\\s-+version: \\(\\S-+\\)"
+	     (if (re-search-forward "api\\s-+version: \\(\\S-+\\)"
 				    nil t)
 		 ;; emacs-25.3 doesn't have the right string-trim
 		 (string-remove-prefix
