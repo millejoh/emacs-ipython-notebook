@@ -92,7 +92,32 @@
 
 (defface ein:cell-input-prompt
   '((t :inherit header-line))
-  "Face for cell input prompt"
+  "Default face for cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-code-input-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for Code cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-text-input-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for Text cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-html-input-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for HTML cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-markdown-input-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for Markdown cell input prompt"
+  :group 'ein)
+
+(defface ein:cell-raw-input-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for Raw cell input prompt"
   :group 'ein)
 
 (defface ein:cell-input-area
@@ -101,6 +126,31 @@
     (((class color) (background dark))
      :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for cell input area"
+  :group 'ein)
+
+(defface ein:cell-code-input-area
+  '((t :inherit ein:cell-input-area))
+  "Face for Code cell input area"
+  :group 'ein)
+
+(defface ein:cell-text-input-area
+  '((t :inherit ein:cell-input-area))
+  "Face for Text cell input area"
+  :group 'ein)
+
+(defface ein:cell-html-input-area
+  '((t :inherit ein:cell-input-area))
+  "Face for HTML cell input area"
+  :group 'ein)
+
+(defface ein:cell-markdown-input-area
+  '((t :inherit ein:cell-input-area))
+  "Face for Markdown cell input area"
+  :group 'ein)
+
+(defface ein:cell-raw-input-area
+  '((t :inherit ein:cell-input-area))
+  "Face for Raw cell input area"
   :group 'ein)
 
 (defface ein:cell-output-area
@@ -116,6 +166,11 @@
 (defface ein:cell-output-prompt
   '((t :inherit header-line))
   "Face for cell output prompt"
+  :group 'ein)
+
+(defface ein:cell-shared-output-prompt
+  '((t :inherit ein:cell-input-prompt))
+  "Face for cell shared output prompt"
   :group 'ein)
 
 (defface ein:cell-output-stderr
@@ -465,12 +520,22 @@ Return language name as a string or `nil' when not defined.
   Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only
    (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
-   'font-lock-face 'ein:cell-input-prompt))
+   'font-lock-face (ein:cell-get-input-prompt-face cell)))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
    (format "%s:" (slot-value cell 'cell-type))
-   'font-lock-face 'ein:cell-input-prompt))
+   'font-lock-face (ein:cell-get-input-prompt-face cell)))
+
+(cl-defmethod ein:cell-get-input-prompt-face (cell)
+  "Return the face (symbol) for input prompt."
+  (ein:case-equal (slot-value cell 'cell-type)
+    (("code")           'ein:cell-code-input-prompt)
+    (("text")           'ein:cell-text-input-prompt)
+    (("html")           'ein:cell-html-input-prompt)
+    (("markdown")       'ein:cell-markdown-input-prompt)
+    (("raw")            'ein:cell-raw-input-prompt)
+    (("shared-output")  'ein:cell-shared-output-prompt)))
 
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
@@ -487,9 +552,14 @@ Return language name as a string or `nil' when not defined.
       (overlay-put ol 'evaporate t)
       (overlay-put ol 'category 'ein))))
 
-(cl-defmethod ein:cell-get-input-area-face ((_cell ein:basecell))
+(cl-defmethod ein:cell-get-input-area-face (cell)
   "Return the face (symbol) for input area."
-  'ein:cell-input-area)
+  (ein:case-equal (slot-value cell 'cell-type)
+    (("code")           'ein:cell-code-input-area)
+    (("text")           'ein:cell-text-input-area)
+    (("html")           'ein:cell-html-input-area)
+    (("markdown")       'ein:cell-markdown-input-area)
+    (("raw")            'ein:cell-raw-input-area)))
 
 (cl-defmethod ein:cell-get-output-area-face-for-output-type (output-type)
   "Return the face (symbol) for output area."
