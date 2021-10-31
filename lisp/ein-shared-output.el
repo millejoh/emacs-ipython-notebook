@@ -56,7 +56,7 @@ Called from ewoc pretty printer via `ein:cell-pp'."
   ;; Newline is inserted in `ein:cell-insert-input'.
   (ein:insert-read-only
    (format "In [%s]" (or (ein:oref-safe cell 'input-prompt-number)  " "))
-   'font-lock-face 'ein:cell-input-prompt))
+   'font-lock-face (ein:cell-get-input-prompt-face cell)))
 
 (cl-defmethod ein:cell-execute ((cell ein:shared-output-cell) kernel code
                                 &rest args)
