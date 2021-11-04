@@ -6,7 +6,7 @@
 input=`cat`
 replace="$input"
 if [ ! -z "$3" ]; then
-    replace=$(awk "/$3/,EOF { print \"   \" \$0 }" <<<"$input")
+    replace=$(awk "BEGIN{IGNORECASE=1} /$3/,EOF { print \"   \" \$0 }" <<<"$input")
 fi
 
 # Escape it for use as a Sed replacement string.
