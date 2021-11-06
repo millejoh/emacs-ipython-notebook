@@ -90,38 +90,12 @@
 
 ;;; Faces
 
-
 (defface ein:basecell-input-area-face
   `((((class color) (background light))
      :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
     (((class color) (background dark))
      :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for cell input area"
-  :group 'ein)
-
-(defface ein:cell-code-input-area
-  '((t :inherit ein:cell-input-area))
-  "Face for Code cell input area"
-  :group 'ein)
-
-(defface ein:cell-text-input-area
-  '((t :inherit ein:cell-input-area))
-  "Face for Text cell input area"
-  :group 'ein)
-
-(defface ein:cell-html-input-area
-  '((t :inherit ein:cell-input-area))
-  "Face for HTML cell input area"
-  :group 'ein)
-
-(defface ein:cell-markdown-input-area
-  '((t :inherit ein:cell-input-area))
-  "Face for Markdown cell input area"
-  :group 'ein)
-
-(defface ein:cell-raw-input-area
-  '((t :inherit ein:cell-input-area))
-  "Face for Raw cell input area"
   :group 'ein)
 
 (defface ein:cell-output-area
@@ -137,11 +111,6 @@
 (defface ein:cell-output-prompt
   '((t :inherit header-line))
   "Face for cell output prompt"
-  :group 'ein)
-
-(defface ein:cell-shared-output-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for cell shared output prompt"
   :group 'ein)
 
 (defface ein:cell-output-stderr
