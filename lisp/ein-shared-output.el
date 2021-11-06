@@ -28,10 +28,6 @@
 
 ;;; Code:
 
-(require 'eieio)
-
-(require 'ein-cell)
-
 (defclass ein:shared-output-cell (ein:codecell)
   ((cell-type :initarg :cell-type :initform "shared-output")
    ;; (element-names :initform (:prompt :output :footer))

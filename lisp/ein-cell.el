@@ -41,6 +41,7 @@
 (require 'ein-node)
 (require 'ein-kernel)
 (require 'ein-output-area)
+(require 'ein-shared-output)
 
 (autoload 'mm-encode-buffer "mm-encode")
 (autoload 'mm-possibly-verify-or-decrypt "mm-decode")
