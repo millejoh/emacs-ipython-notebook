@@ -7,7 +7,7 @@
    :alt: Kaggle Notebooks in AWS
 
 Emacs IPython Notebook (EIN), despite its name, is a jupyter client for all
-languages.
+languages.  It does not work under non-WSL Windows environments.
 
 No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 `prevailing documentation`_, which should be disregarded.
@@ -179,12 +179,8 @@ Keymap (C-h m)
 
 ::
 
-   key             binding
-   ---             -------
-   
-   C-c		Prefix Command
-   C-x		Prefix Command
-   ESC		Prefix Command
+   Key             Binding
+   -------------------------------------------------------------------------------
    C-<down>	ein:worksheet-goto-next-input-km
    C-<up>		ein:worksheet-goto-prev-input-km
    M-S-<return>	ein:worksheet-execute-cell-and-insert-below-km
@@ -217,10 +213,8 @@ Keymap (C-h m)
    C-c C-u		ein:worksheet-change-cell-type-km
    C-c C-v		ein:worksheet-set-output-visibility-all-km
    C-c C-w		ein:worksheet-copy-cell-km
-   C-c C-x		Prefix Command
    C-c C-y		ein:worksheet-yank-cell-km
    C-c C-z		ein:notebook-kernel-interrupt-command-km
-   C-c ESC		Prefix Command
    C-c C-S-l	ein:worksheet-clear-all-output-km
    C-c C-#		ein:notebook-close-km
    C-c C-$		ein:tb-show-km

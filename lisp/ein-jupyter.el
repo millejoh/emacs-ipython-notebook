@@ -148,10 +148,22 @@ with the call to the jupyter notebook."
 
 (defun ein:jupyter-process-lines (_url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
-  (condition-case err
-      (apply #'process-lines command args)
-    (error (ein:log 'info "ein:jupyter-process-lines: %s" (error-message-string err))
-           nil)))
+  (with-temp-buffer
+    (let ((status (apply #'call-process command nil (list (current-buffer) nil) nil args)))
+      (if (zerop status)
+          (progn
+            (goto-char (point-min))
+            (let (lines)
+	      (while (not (eobp))
+	        (setq lines (cons (buffer-substring-no-properties
+			           (line-beginning-position)
+			           (line-end-position))
+			          lines))
+	        (forward-line 1))
+	      (nreverse lines)))
+        (prog1 nil
+          (ein:log 'warn "ein:jupyter-process-lines: '%s %s' returned %s"
+                   command (ein:join-str " " args) status))))))
 
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session."
@@ -241,7 +253,7 @@ our singleton jupyter server process here."
                 (apply #'ein:jupyter-process-lines url-or-port
                        ein:jupyter-server-command
                        (split-string
-                        (format "2>/dev/null %s%s %s"
+                        (format "%s%s %s"
                                 (aif ein:jupyter-server-use-subcommand
                                     (concat it " ") "")
                                 "list" "--json")))

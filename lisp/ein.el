@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; Emacs IPython Notebook (EIN), despite its name, is a jupyter client for all
-;; languages.
+;; languages.  It does not work under non-WSL Windows environments.
 ;;
 ;; No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
 ;; `prevailing documentation`_, which should be disregarded.

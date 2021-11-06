@@ -993,6 +993,8 @@ returned t."
 ;; is problematic.
 (add-hook 'kill-buffer-query-functions 'ein:notebook-kill-buffer-query)
 (add-hook 'kill-emacs-hook (lambda () (ignore-errors (ein:jupyter-server-stop))))
+(remove-function (symbol-function 'narrow-to-region)
+                  #'ein:notebook-forbid-narrow-to-region)
 (add-function
  :before-until (symbol-function 'narrow-to-region)
  #'ein:notebook-forbid-narrow-to-region)

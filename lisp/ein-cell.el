@@ -90,37 +90,8 @@
 
 ;;; Faces
 
-(defface ein:cell-input-prompt
-  '((t :inherit header-line))
-  "Default face for cell input prompt"
-  :group 'ein)
 
-(defface ein:cell-code-input-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for Code cell input prompt"
-  :group 'ein)
-
-(defface ein:cell-text-input-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for Text cell input prompt"
-  :group 'ein)
-
-(defface ein:cell-html-input-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for HTML cell input prompt"
-  :group 'ein)
-
-(defface ein:cell-markdown-input-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for Markdown cell input prompt"
-  :group 'ein)
-
-(defface ein:cell-raw-input-prompt
-  '((t :inherit ein:cell-input-prompt))
-  "Face for Raw cell input prompt"
-  :group 'ein)
-
-(defface ein:cell-input-area
+(defface ein:basecell-input-area-face
   `((((class color) (background light))
      :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
     (((class color) (background dark))
@@ -334,8 +305,8 @@ WARNING: OBJ and SLOT are evaluated multiple times,
   cell)
 
 (cl-defmethod ein:cell-init ((cell ein:textcell) data)
-  (aif (plist-get data :source)
-      (setf (slot-value cell 'input) it))
+  (awhen (plist-get data :source)
+    (setf (slot-value cell 'input) it))
   cell)
 
 (cl-defmethod ein:cell-convert ((cell ein:basecell) type)
@@ -441,7 +412,7 @@ WARNING: OBJ and SLOT are evaluated multiple times,
         (ein:cell-element-get cell :input)
         (ein:cell-element-get cell :footer)))
 
-(cl-defmethod ein:cell-all-element  ((cell ein:codecell))
+(cl-defmethod ein:cell-all-element ((cell ein:codecell))
   (append (cl-call-next-method)
           (ein:cell-element-get cell :output)))
 
@@ -519,23 +490,13 @@ Return language name as a string or `nil' when not defined.
   "Insert prompt of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
   (ein:insert-read-only
-   (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number)  " "))
-   'font-lock-face (ein:cell-get-input-prompt-face cell)))
+   (format "In [%s]:" (or (ein:oref-safe cell 'input-prompt-number) " "))
+   'font-lock-face (ein:cell-input-prompt-face cell)))
 
 (cl-defmethod ein:cell-insert-prompt ((cell ein:textcell))
   (ein:insert-read-only
    (format "%s:" (slot-value cell 'cell-type))
-   'font-lock-face (ein:cell-get-input-prompt-face cell)))
-
-(cl-defmethod ein:cell-get-input-prompt-face (cell)
-  "Return the face (symbol) for input prompt."
-  (ein:case-equal (slot-value cell 'cell-type)
-    (("code")           'ein:cell-code-input-prompt)
-    (("text")           'ein:cell-text-input-prompt)
-    (("html")           'ein:cell-html-input-prompt)
-    (("markdown")       'ein:cell-markdown-input-prompt)
-    (("raw")            'ein:cell-raw-input-prompt)
-    (("shared-output")  'ein:cell-shared-output-prompt)))
+   'font-lock-face (ein:cell-input-prompt-face cell)))
 
 (cl-defmethod ein:cell-insert-input ((cell ein:basecell))
   "Insert input of the CELL in the buffer.
@@ -547,19 +508,10 @@ Return language name as a string or `nil' when not defined.
             (propertize "\n" 'read-only t))
     ;; Highlight background using overlay.
     (let ((ol (make-overlay start (point))))
-      (overlay-put ol 'face (ein:cell-get-input-area-face cell))
+      (overlay-put ol 'face (ein:cell-input-area-face cell))
       ;; `evaporate' = `t': Overlay is deleted when the region become empty.
       (overlay-put ol 'evaporate t)
       (overlay-put ol 'category 'ein))))
-
-(cl-defmethod ein:cell-get-input-area-face (cell)
-  "Return the face (symbol) for input area."
-  (ein:case-equal (slot-value cell 'cell-type)
-    (("code")           'ein:cell-code-input-area)
-    (("text")           'ein:cell-text-input-area)
-    (("html")           'ein:cell-html-input-area)
-    (("markdown")       'ein:cell-markdown-input-area)
-    (("raw")            'ein:cell-raw-input-area)))
 
 (cl-defmethod ein:cell-get-output-area-face-for-output-type (output-type)
   "Return the face (symbol) for output area."
@@ -1129,6 +1081,47 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
            when (and (plist-get out :traceback)
                      (member (plist-get out :output_type) '("pyerr" "error")))
            return (plist-get out :traceback)))
+
+(defun ein:cell-recursively-define (what children parent fun1 fun2)
+  (cl-loop for child in children
+           append (when-let ((spuds (eieio-class-children child)))
+                    (ein:cell-recursively-define
+                     what
+                     spuds
+                     (intern (concat (symbol-name child) "-" what))
+                     fun1 fun2))
+           collect (macroexpand-1 `(,fun1 ,child))
+           collect (when parent (macroexpand-1 `(,fun2 ,child ,parent)))))
+
+(defmacro ein:cell-defface-input-prompt (class parent)
+  `(defface ,(intern (concat (symbol-name class) "-input-prompt-face"))
+     '((t :inherit ,parent))
+     "Face for cell input prompt"
+     :group 'ein))
+
+(defmacro ein:cell-defface-input-area (class parent)
+  `(defface ,(intern (concat (symbol-name class) "-input-area-face"))
+     '((t :inherit ,parent))
+     "Face for cell input area"
+     :group 'ein))
+
+(defmacro ein:cell-defmethod-input-prompt (class)
+  `(cl-defmethod ein:cell-input-prompt-face ((cell ,class))
+     (quote ,(intern (concat (symbol-name class) "-input-prompt-face")))))
+
+(defmacro ein:cell-defmethod-input-area (class)
+  `(cl-defmethod ein:cell-input-area-face ((cell ,class))
+     (quote ,(intern (concat (symbol-name class) "-input-area-face")))))
+
+(mapc #'eval (ein:cell-recursively-define "input-prompt-face"
+                                          (list ein:basecell) 'header-line
+                                          'ein:cell-defmethod-input-prompt
+                                          'ein:cell-defface-input-prompt))
+
+(mapc #'eval (ein:cell-recursively-define "input-area-face"
+                                          (list ein:basecell) nil
+                                          'ein:cell-defmethod-input-area
+                                          'ein:cell-defface-input-area))
 
 (provide 'ein-cell)
 
