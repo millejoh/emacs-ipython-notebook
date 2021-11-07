@@ -149,7 +149,7 @@ with the call to the jupyter notebook."
 (defun ein:jupyter-process-lines (_url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
   (with-temp-buffer
-    (let ((status (apply #'call-process command nil (list (current-buffer) nil) nil args)))
+    (let ((status (apply #'call-process (executable-find command) nil (list (current-buffer) nil) nil args)))
       (if (zerop status)
           (progn
             (goto-char (point-min))
