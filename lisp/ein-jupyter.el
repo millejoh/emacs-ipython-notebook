@@ -148,22 +148,25 @@ with the call to the jupyter notebook."
 
 (defun ein:jupyter-process-lines (_url-or-port command &rest args)
   "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
-  (with-temp-buffer
-    (let ((status (apply #'call-process (executable-find command) nil (list (current-buffer) nil) nil args)))
-      (if (zerop status)
-          (progn
-            (goto-char (point-min))
-            (let (lines)
-	      (while (not (eobp))
-	        (setq lines (cons (buffer-substring-no-properties
-			           (line-beginning-position)
-			           (line-end-position))
-			          lines))
-	        (forward-line 1))
-	      (nreverse lines)))
-        (prog1 nil
-          (ein:log 'warn "ein:jupyter-process-lines: '%s %s' returned %s"
-                   command (ein:join-str " " args) status))))))
+  (if-let ((found (executable-find command)))
+      (with-temp-buffer
+        (let ((status (apply #'call-process found nil (list (current-buffer) nil) nil args)))
+          (if (zerop status)
+              (progn
+                (goto-char (point-min))
+                (let (lines)
+	          (while (not (eobp))
+	            (setq lines (cons (buffer-substring-no-properties
+			               (line-beginning-position)
+			               (line-end-position))
+			              lines))
+	            (forward-line 1))
+	          (nreverse lines)))
+            (prog1 nil
+              (ein:log 'warn "ein:jupyter-process-lines: '%s %s' returned %s"
+                       found (ein:join-str " " args) status)))))
+    (prog1 nil
+      (ein:log 'warn "ein:jupyter-process-lines: cannot find %s" command))))
 
 (defsubst ein:jupyter-server-process ()
   "Return the emacs process object of our session."
