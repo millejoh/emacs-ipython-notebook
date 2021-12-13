@@ -7990,8 +7990,7 @@ rows and columns and the column alignment."
           (font-lock-multiline . t)
           (font-lock-syntactic-face-function . ein:markdown-syntactic-face)
           (font-lock-extra-managed-props
-           . (composition display invisible rear-nonsticky
-                          keymap help-echo mouse-face))))
+           . (composition display invisible keymap help-echo mouse-face))))
   ;; Math mode
   (when ein:markdown-enable-math (ein:markdown-toggle-math t))
   ;; Add a buffer-local hook to reload after file-local variables are read
