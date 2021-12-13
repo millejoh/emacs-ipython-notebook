@@ -53,22 +53,6 @@
         (narrow-to-region (car range) (cdr range))
         (apply f args)))))
 
-(defun poly-ein-syntax-propertize-extend-region-function (start end)
-  "This was *not* added to `syntax-propertize-extend-region-functions'
-Intended as a salve for `show-paren-mode', was never called by the scan_lists.
-
-;; `syntax-propertize-extend-region-functions' always buffer-local
-(add-hook 'syntax-propertize-extend-region-functions
-            #'poly-ein-syntax-propertize-extend-region-function
-            t)
-"
-  (when poly-ein-mode
-    (save-restriction
-      (widen)
-      (let ((range (pm-innermost-range (max start (point-min)))))
-        (unless (equal range `(,start . ,end))
-          range)))))
-
 (defun poly-ein--decorate-functions ()
   "Affect global definitions of ppss and jit-lock rather intrusively."
   (mapc (lambda (fun)
@@ -344,7 +328,14 @@ TYPE can be 'body, nil."
           (add-function :filter-args (local 'syntax-propertize-function)
                         #'poly-ein--span-start-end)))
     (add-function :around (local 'font-lock-syntactic-face-function)
-                  (apply-partially #'poly-ein--narrow-to-inner #'identity))))
+                  (apply-partially #'poly-ein--narrow-to-inner #'identity))
+    (unless (eq font-lock-support-mode 'jit-lock-mode)
+      (when (and (boundp font-lock-support-mode)
+                 (eval font-lock-support-mode))
+        (ein:log 'info "poly-ein-initialize: deactivating %s in %s"
+                 font-lock-support-mode type)
+        (funcall (symbol-function font-lock-support-mode) -1)
+        (jit-lock-mode t)))))
 
 (defun poly-ein--record-window-buffer ()
   "(pm--visible-buffer-name) needs to get onto window's prev-buffers.
