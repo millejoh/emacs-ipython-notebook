@@ -30,7 +30,7 @@
 (require 'ein-core)
 (require 'ein-log)
 
-(defcustom ein:query-timeout 1000
+(defcustom ein:query-timeout 10000
   "Default query timeout for HTTP access in millisecond."
   :type '(choice (integer :tag "Timeout [ms]" 1000)
                  (const :tag "No timeout" nil))
