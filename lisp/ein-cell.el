@@ -456,6 +456,9 @@ Return language name as a string or `nil' when not defined.
     (output (ein:cell-insert-output (cadr path) data))
     (footer (ein:cell-insert-footer data))))
 
+(declare-function ein:cell-input-prompt-face "ein-cell")
+(declare-function ein:cell-input-area-face "ein-cell")
+
 (cl-defmethod ein:cell-insert-prompt ((cell ein:codecell))
   "Insert prompt of the CELL in the buffer.
   Called from ewoc pretty printer via `ein:cell-pp'."
@@ -1084,12 +1087,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      (quote ,(intern (concat (symbol-name class) "-input-area-face")))))
 
 (mapc #'eval (ein:cell-recursively-define "input-prompt-face"
-                                          (list ein:basecell) 'header-line
+                                          (list 'ein:basecell) 'header-line
                                           'ein:cell-defmethod-input-prompt
                                           'ein:cell-defface-input-prompt))
 
 (mapc #'eval (ein:cell-recursively-define "input-area-face"
-                                          (list ein:basecell) nil
+                                          (list 'ein:basecell) nil
                                           'ein:cell-defmethod-input-area
                                           'ein:cell-defface-input-area))
 
