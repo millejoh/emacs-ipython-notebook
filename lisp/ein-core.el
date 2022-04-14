@@ -99,7 +99,8 @@ the source is in git repository) or elpa version."
   (truncate (string-to-number (ein:need-notebook-api-version url-or-port))))
 
 (defun ein:need-notebook-api-version (url-or-port)
-  "Callers assume `ein:query-notebook-api-version' succeeded.  If not, we hardcode a guess."
+  "Callers assume `ein:query-notebook-api-version' succeeded.
+If not, we hardcode a guess."
   (aif (gethash url-or-port *ein:notebook-api-version*) it
     (ein:log 'warn "No recorded notebook version for %s" url-or-port)
     "5"))

@@ -73,13 +73,16 @@ buffer-undo-list is still under the threshold.")
   "Buffer local variable one-to-one buffer-undo-list item to cell id.")
 
 (defsubst ein:worksheet--unique-enough-cell-id (cell)
-  "Gets the first five characters of an md5sum.  How far I can get without r collisions follows a negative binomial with p=1e-6 (should go pretty far)."
+  "Gets the first five characters of an md5sum.
+How far I can get without r collisions follows a negative
+binomial with p=1e-6 (should go pretty far)."
   (intern (substring (slot-value cell 'cell-id) 0 5)))
 
 (defun ein:worksheet--which-cell-hook (change-beg change-end _prev-len)
-  "Hook important for undo thats runs for everything we type (an after-change-functions hook).
-
-Normalize `buffer-undo-list' by removing extraneous details, and update the ein:%which-cell% ledger that associates changes in `buffer-undo-list' with individual cells."
+  "This is a costly after-change-functions hook.
+Normalize `buffer-undo-list' by removing extraneous details, and
+update the ein:%which-cell% ledger that associates changes in
+`buffer-undo-list' with individual cells."
   (when (and buffer-undo-list (listp buffer-undo-list))
     (setq buffer-undo-list (cl-delete-if (lambda (u) (or (numberp u) (and (consp u) (markerp (car u))))) buffer-undo-list))
     (let ((fill (- (length buffer-undo-list) (length ein:%which-cell%))))
@@ -144,7 +147,8 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
 
 ;; can use apply-partially instead here
 (defmacro hof-add (distance)
-"Return function that adds signed DISTANCE those undo elements.  'hof' refers to higher-order function,"
+  "Return function that adds signed DISTANCE those undo elements.
+'hof' refers to higher-order function,"
   `(lambda (u)
      (cond ((numberp u)
             (+ u ,distance))
@@ -181,7 +185,9 @@ Normalize `buffer-undo-list' by removing extraneous details, and update the ein:
     result))
 
 (defun ein:worksheet--jigger-undo-list (&optional change-cell-id)
-  "Nobody said it was easy.  No one ever said it would be this hard. -- Martin et al."
+  "Nobody said it was easy.
+No one ever said it would be this hard.
+-- Martin et al."
   (cl-assert (listp buffer-undo-list))
   (let ((len-buffer-undo-list (length buffer-undo-list))
 	(len-which-cell (length ein:%which-cell%)))
@@ -294,7 +300,8 @@ Unshift in list parlance means prepending to list."
         (t 0)))
 
 (defun ein:worksheet--shift-undo-list (cell)
-  "Adjust `buffer-undo-list' for deleting CELL.  Shift in list parlance means removing the front."
+  "Adjust `buffer-undo-list' for deleting CELL.
+Shift in list parlance means removing the front."
   (when buffer-local-enable-undo
     (ein:with-live-buffer (ein:cell-buffer cell)
       (if (listp buffer-undo-list)
@@ -391,12 +398,16 @@ Unshift in list parlance means prepending to list."
 (cl-defmethod ein:worksheet--get-buffer ((ws ein:worksheet))
   (or (ein:worksheet-buffer ws)
       (with-current-buffer (generate-new-buffer (ein:worksheet--buffer-name ws))
-        (let ((buffer-undo-list t))
-          (setf (ein:worksheet--ewoc ws)
-                (ein:ewoc-create 'ein:worksheet-pp
-                                 (ein:propertize-read-only "\n")
-                                 nil t))
-          (current-buffer)))))
+        (prog1 (current-buffer)
+          (unless (eq font-lock-support-mode 'jit-lock-mode)
+            (ein:log 'info "ein:worksheet--get-buffer: deactivating %s in %s"
+                     font-lock-support-mode (buffer-name))
+            (setq-local font-lock-support-mode 'jit-lock-mode))
+          (let ((buffer-undo-list t))
+            (setf (ein:worksheet--ewoc ws)
+                  (ein:ewoc-create 'ein:worksheet-pp
+                                   (ein:propertize-read-only "\n")
+                                   nil t)))))))
 
 (cl-defmethod ein:worksheet-set-buffer-name ((ws ein:worksheet))
   (ein:with-live-buffer (ein:worksheet-buffer ws)
@@ -452,23 +463,23 @@ Unshift in list parlance means prepending to list."
     (ein:worksheet-undo-setup ws)
     (let ((inhibit-read-only t)
           (ewoc (ein:worksheet--ewoc ws)))
-      (let ((cells (ein:worksheet--saved-cells ws)))
-        (if cells
-            (let ((buffer-undo-list t))
-              (mapc (lambda (c)
-                      (setf (slot-value c 'ewoc) ewoc)
-                      (ein:cell-enter-last c)
-                      (ein:worksheet--update-cell-lengths c (- (ein:cell-input-pos-max c)
-                                                               (ein:cell-input-pos-min c))))
-                    cells))
-          (ein:worksheet-insert-cell-below ws 'code nil t))))
+      (if-let ((cells (ein:worksheet--saved-cells ws)))
+          (let ((buffer-undo-list t))
+            (mapc (lambda (c)
+                    (setf (slot-value c 'ewoc) ewoc)
+                    (ein:cell-enter-last c)
+                    (ein:worksheet--update-cell-lengths c (- (ein:cell-input-pos-max c)
+                                                             (ein:cell-input-pos-min c))))
+                  cells))
+        (ein:worksheet-insert-cell-below ws 'code nil t)))
     (set-buffer-modified-p nil)
     (ein:worksheet-bind-events ws)
     (ein:worksheet-set-kernel ws)))
 
 (defun ein:worksheet-pp (ewoc-data)
-  "Consider disabling `buffer-undo-list' here instead of `ein:cell--ewoc-invalidate'
-which is probably unnecessarily 'surgical'."
+  "Consider disabling `buffer-undo-list' here.
+We currently disable in `ein:cell--ewoc-invalidate' which is probably
+unnecessarily 'surgical'."
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
     (cl-case (car path)
@@ -767,9 +778,9 @@ directly."
                      (ein:worksheet-get-current-cell)
                      t))
   (let ((type (ein:case-equal (slot-value cell 'cell-type)
-                              (("code") "markdown")
-                              (("markdown") "raw")
-                              (("raw") "code"))))
+                (("code") "markdown")
+                (("markdown") "raw")
+                (("raw") "code"))))
     (let ((relpos (ein:cell-relative-point cell))
           (new (ein:cell-convert-inplace cell type)))
       (when (ein:codecell-p new)

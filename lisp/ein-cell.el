@@ -1033,7 +1033,7 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
       (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell))))
 
 (cl-defmethod ein:cell--handle-clear-output ((cell ein:codecell) _content _metadata)
-  "Jupyter messaging spec 5.0 no longer has stdout, stderr, or other fields for clear_output"
+  "Spec 5.0 no longer has stdout fields for clear_output."
   (when (buffer-live-p (ein:cell-buffer cell))
     (ein:cell-clear-output cell t t t)
     (ein:events-trigger (slot-value cell 'events) 'maybe_reset_undo.Worksheet cell)))

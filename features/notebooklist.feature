@@ -115,12 +115,12 @@ Scenario: Logging into nowhere again
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "[error] Login to https://adfljdsf.org:8432 failed"
 
-@login
+@login2
 Scenario: Bad curl invocation produces sensible error message
   Given I start the server configured "\n"
   And I login with bad curl
   And I call "ein:log-pop-to-all-buffer"
-  And I wait for buffer to say "no-such-option"
+  And I wait for buffer to say "error-thrown"
 
 @login
 Scenario: jupyter not found

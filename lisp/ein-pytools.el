@@ -43,7 +43,9 @@ selecting it."
 is executed last time.  When the prefix argument ``C-u`` is
 given, open the last point in the other window."
   (interactive "P")
-  (call-interactively #'xref-pop-marker-stack))
+  (call-interactively (if (fboundp 'xref-go-back)
+                          #'xref-go-back
+                        (symbol-function 'xref-pop-marker-stack))))
 
 (define-obsolete-function-alias
   'ein:pytools-eval-string-internal

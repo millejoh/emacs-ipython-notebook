@@ -110,9 +110,9 @@ Execute BODY if BUFFER is not live anyway."
   "Adapted from `python-dotty-syntax-table'.")
 
 (defun ein:beginning-of-object (&optional code-syntax-table)
-  "Move to the beginning of the dotty.word.at.point. User may
-specify a custom syntax table. If one is not supplied `ein:dotty-syntax-table' will
-be assumed."
+  "Move to the beginning of the dotty.word.at.point.
+User may specify a custom syntax table. If one is not supplied
+`ein:dotty-syntax-table' will be assumed."
   (with-syntax-table (or code-syntax-table ein:dotty-syntax-table)
     (while (re-search-backward "\\(\\sw\\|\\s_\\|\\s\\.\\|\\s\\\\|[%@|]\\)\\="
                                (when (> (point) 2000) (- (point) 2000))
@@ -138,9 +138,9 @@ The result is unspecified if there isn't a symbol under the point."
 
 
 (defun ein:object-prefix-at-point ()
-  "Similar to `ein:object-at-point', but instead of returning the entire object
-only returns the string up to the current point. For example, given pd.Series, if the
-cursor is at the S then 'pd.S' will be returned."
+  "Like `ein:object-at-point', but only return substring up to point.
+For example, given pd.Series, if the cursor is at the S then
+'pd.S' will be returned."
   (ein:and-let* ((obj (ein:object-at-point))
                  (delta (- (point) (ein:object-start-pos))))
     (substring obj 0 delta)))
@@ -148,13 +148,14 @@ cursor is at the S then 'pd.S' will be returned."
 (defun ein:object-at-point ()
   "Return dotty.words.at.point.
 When region is active, text in region is returned after trimmed
-white spaces, newlines and dots.
-When object is not found at the point, return the object just
-before previous opening parenthesis."
-  ;; For auto popup tooltip (or something like eldoc), probably it is
-  ;; better to return function (any word before "(").  I should write
-  ;; another function or add option to this function when the auto
-  ;; popup tooltip is implemented.
+white spaces, newlines and dots.  When object is not found at the
+point, return the object just before previous opening
+parenthesis.
+
+For auto popup tooltip (or something like eldoc), probably it is
+better to return function (any word before '(').  I should write
+another function or add option to this function when the auto
+popup tooltip is implemented."
   (if (region-active-p)
       (ein:trim (buffer-substring (region-beginning) (region-end))
                 "\\s-\\|\n\\|\\.")
@@ -293,8 +294,7 @@ See: http://api.jquery.com/jQuery.ajax/"
     (comint-carriage-motion start (point))))
 
 (defun ein:maybe-truncate-string-lines (string nlines)
-  "Truncate multi-line `string' to the number of lines specified by `nlines'. If actual
-number of lines is less than `nlines' then just return the string."
+  "Truncate multi-line `string' to NLINES."
   (if nlines
     (let ((lines (split-string string "[\n]")))
       (if (> (length lines) nlines)
@@ -351,7 +351,7 @@ number of lines is less than `nlines' then just return the string."
     (fill-paragraph justify)
     (buffer-string)))
 
-(defmacro ein:case-equal (str &rest clauses)
+(cl-defmacro ein:case-equal (str &rest clauses)
   "Similar to `case' but comparison is done by `equal'.
 Adapted from twittering-mode.el's `case-string'."
   (declare (indent 1))

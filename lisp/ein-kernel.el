@@ -90,7 +90,8 @@
    :parent_header (make-hash-table)))
 
 (cl-defun ein:kernel-session-p (kernel callback &optional iteration)
-  "Don't make any changes on the server side.  CALLBACK with arity 2, kernel and a boolean whether session exists on server."
+  "Don't make any changes on the server side.  CALLBACK with arity
+2, kernel and a boolean whether session exists on server."
   (unless iteration
     (setq iteration 0))
   (let ((session-id (ein:$kernel-session-id kernel)))
@@ -139,15 +140,19 @@
    :kernel kernel))
 
 (cl-defun ein:kernel-retrieve-session (kernel &optional iteration callback)
-  "Formerly ein:kernel-start, but that was misnomer because 1. the server really starts a session (and an accompanying kernel), and 2. it may not even start a session if one exists for the same path.
+  "Formerly ein:kernel-start, but that was a misnomer.
 
-If 'picking up from where we last left off', that is, we restart emacs and reconnect to same server, jupyter will hand us back the original, still running session.
+The server 1. really starts a session (and an accompanying
+kernel), and 2. may not even start a session if one exists for
+the same path.
 
-The server logic is here (could not find other documentation)
-https://github.com/jupyter/notebook/blob/04a686dbaf9dfe553324a03cb9e6f778cf1e3da1/notebook/services/sessions/handlers.py#L56-L81
+If 'picking up from where we last left off', that is, we restart
+emacs and reconnect to same server, jupyter will hand us back the
+original, still running session.
 
-CALLBACK of arity 1, the kernel.
-"
+CALLBACK of arity 1, the kernel."
+;; The server logic is here (could not find other documentation)
+;; https://github.com/jupyter/notebook/blob/04a686dbaf9dfe553324a03cb9e6f778cf1e3da1/notebook/services/sessions/handlers.py#L56-L81
   (unless iteration
     (setq iteration 0))
   (if (<= (ein:$kernel-api-version kernel) 2)
@@ -204,9 +209,11 @@ CALLBACK of arity 1, the kernel.
     (ein:kernel-start-websocket kernel callback)))
 
 (defun ein:kernel-reconnect-session (kernel &optional callback)
-  "Check if session still exists.  If it does, retrieve it.  If it doesn't, ask the user to create a new session (ein:kernel-retrieve-session both retrieves and creates).
-
-CALLBACK takes one argument kernel (e.g., execute cell now that we're reconnected)"
+  "If session does not already exist, prompt user to create a new session.
+Otherwise, return extant session.
+`ein:kernel-retrieve-session; both retrieves and creates.
+CALLBACK takes one argument kernel (e.g., execute cell now that
+we're reconnected)."
   (ein:kernel-disconnect kernel)
   (ein:kernel-session-p
    kernel
@@ -296,7 +303,8 @@ delete the kernel on the server side"
        (ein:aand (ein:$kernel-websocket kernel) (ein:websocket-open-p it))))
 
 (defun ein:kernel-when-ready (kernel callback)
-  "Execute CALLBACK of arity 1 (the kernel) when KERNEL is ready.  Warn user otherwise."
+  "Execute CALLBACK of arity 1 (the kernel) when KERNEL is ready.
+Warn user otherwise."
   (if (ein:kernel-live-p kernel)
       (funcall callback kernel)
     (ein:log 'verbose "Kernel %s unavailable" (ein:$kernel-kernel-id kernel))
@@ -354,11 +362,13 @@ The CALLBACKS plist looks like:
    :clear_output   CLEAR-OUTPUT-CALLBACK
    :set_next_input SET-NEXT-INPUT)
 
-Right hand sides ending -CALLBACK above are of the form (FUNCTION ARG1 ... ARGN).
+Right hand sides ending -CALLBACK above are of the form (FUNCTION
+ARG1 ... ARGN).
+
 (Hindsight: this was all much better implemented using `apply-partially')
 
-Return randomly generated MSG-ID tag uniquely identifying expectation of a kernel response.
-"
+Return randomly generated MSG-ID tag uniquely identifying
+expectation of a kernel response."
   (cl-assert (ein:kernel-live-p kernel) nil "execute_reply: Kernel is not active.")
   (let* ((content (list
                    :code code
@@ -422,7 +432,8 @@ Example::
 (cl-defun ein:kernel-delete-session (&optional callback
                                      &key url-or-port path kernel
                                      &aux (session-id))
-  "Regardless of success or error, we clear all state variables of kernel and funcall CALLBACK (kernel)"
+  "Regardless of success or error, we clear all state variables of
+kernel and funcall CALLBACK (kernel)"
   (cond (kernel
          (setq url-or-port (ein:$kernel-url-or-port kernel))
          (setq path (ein:$kernel-path kernel))

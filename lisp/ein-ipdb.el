@@ -25,6 +25,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defvar *ein:ipdb-sessions* (make-hash-table)
   "Kernel Id to ein:$ipdb-session.")
 

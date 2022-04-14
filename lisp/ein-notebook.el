@@ -369,7 +369,8 @@ notebook buffer then the user will be prompted to select an opened notebook."
     (setf (ein:$notebook-kernel notebook) kernel)))
 
 (defun ein:notebook-reconnect-session-command ()
-   "It seems convenient but undisciplined to blithely create a new session if the original one no longer exists."
+   "It seems convenient but undisciplined to blithely create a new
+session if the original one no longer exists."
    (interactive)
    (ein:kernel-reconnect-session (ein:$notebook-kernel ein:%notebook%)))
 
@@ -791,10 +792,12 @@ associated with current buffer (if any)."
 
 (defmacro ein:notebook--define-key (keymap key defn)
   "Ideally we could override just the keymap binding with a
-(string . wrapped) cons pair (as opposed to messing with the DEFN itself),
-but then describe-minor-mode unhelpfully shows ?? for the keymap commands.
+(string . wrapped) cons pair (as opposed to messing with the DEFN
+itself), but then describe-minor-mode unhelpfully shows ?? for
+the keymap commands.
 
-Tried add-function: the &rest from :around is an emacs-25 compilation issue."
+Tried add-function: the &rest from :around is an emacs-25
+compilation issue."
   (let ((km (intern (concat (symbol-name defn) "-km")))
 	(docstring (and (functionp defn) (ein:get-docstring defn))))
     `(if ,docstring
@@ -975,13 +978,14 @@ the first argument and CBARGS as the rest of arguments."
 
 (defsubst ein:notebook-forbid-narrow-to-region (&rest _args)
   "Narrowing causes severe problems for EIN.
-Stefan Monnier, the author of `called-interactively-p' warns against its use.
-It should err on the side of a false negative, that is,
-it might return nil when the call was really interactive.  In that case,
-we are no worse off than when we didn't have this safeguard at all (modulo the
-increased latency of the `add-function').  Far worse would be if noninteractive
-notebook code attempted to narrow-to-region, and `called-interactively-p' mistakenly
-returned t."
+Stefan Monnier, the author of `called-interactively-p' warns
+against its use.  It should err on the side of a false negative,
+that is, it might return nil when the call was really
+interactive.  In that case, we are no worse off than when we
+didn't have this safeguard at all (modulo the increased latency
+of the `add-function').  Far worse would be if noninteractive
+notebook code attempted to narrow-to-region, and
+`called-interactively-p' mistakenly returned t."
   (and (ein:eval-if-bound 'ein:notebook-mode)
        (called-interactively-p 'any)
        (message "`narrow-to-region' disabled under EIN")))

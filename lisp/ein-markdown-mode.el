@@ -1785,7 +1785,10 @@ variable-height variable `markdown-header-scaling'." ,num1)
             :group 'ein:markdown-faces))))))
 
 (defun ein:markdown-update-header-faces (&optional _scaling _scaling-values)
-  "Update header faces using current values of ein:markdown-header-scaling and ein:markdown-header-scaling-values.  Arguments are ignored but retained to avoid breakage."
+  "Update header faces using current values of
+ein:markdown-header-scaling and
+ein:markdown-header-scaling-values.  Arguments are ignored but
+retained to avoid breakage."
   (ein:markdown-make-header-faces)
   (dotimes (num 6)
     (let* ((face-name (intern (format "ein:markdown-header-face-%s" (1+ num))))
@@ -2463,7 +2466,8 @@ intact additional processing."
                          (match-beginning 5) (match-end 5)))))))))
 
 (defun ein:markdown-get-defined-references ()
-  "Return all defined reference labels and their line numbers (not including square brackets)."
+  "Return all defined reference labels and their line numbers (not
+including square brackets)."
   (save-excursion
     (goto-char (point-min))
     (let (refs)
@@ -5369,10 +5373,9 @@ such references found.")
 
 (defun-markdown-ref-checker
   ein:markdown-check-refs
-  "Show all undefined ein:markdown references in current `ein:markdown-mode' buffer.
-
-Links which have empty reference definitions are considered to be
-defined."
+  "Show all undefined ein:markdown references in current
+`ein:markdown-mode' buffer.  Links which have empty reference
+definitions are considered to be defined."
   ein:markdown-get-undefined-refs
   ein:markdown-reference-check-buffer
   "No undefined references found"

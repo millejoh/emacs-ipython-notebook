@@ -164,7 +164,7 @@ get (\"hub.data8x.berkeley.edu\" . \"806b3e7\")"
   (ein:log 'debug "ein:query-kernelspecs--complete %s" resp-string))
 
 (defun ein:query-notebook-api-version (url-or-port callback)
-  "Send for notebook version of URL-OR-PORT with CALLBACK arity 0 (just a semaphore)"
+  "Get notebook version of URL-OR-PORT with CALLBACK arity 0 (a semaphore)."
   (ein:query-singleton-ajax
    (ein:url url-or-port "api/spec.yaml")
    ;; the melpa yaml package was taking too long, unfortunately

@@ -147,7 +147,8 @@ with the call to the jupyter notebook."
          (symbol-name ein:jupyter-default-kernel))))
 
 (defun ein:jupyter-process-lines (_url-or-port command &rest args)
-  "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS with `kubectl exec'."
+  "If URL-OR-PORT registered as a k8s url, preface COMMAND ARGS
+with `kubectl exec'."
   (if-let ((found (executable-find command)))
       (with-temp-buffer
         (let ((status (apply #'call-process found nil (list (current-buffer) nil) nil args)))
@@ -173,7 +174,7 @@ with the call to the jupyter notebook."
   (get-buffer-process (get-buffer *ein:jupyter-server-buffer-name*)))
 
 (defun ein:jupyter-server--run (buf user-cmd dir &optional args)
-  (ein:with-read-only-buffer (get-buffer-create buf))
+  (get-buffer-create buf)
   (let* ((cmd (if ein:jupyter-use-containers "docker" user-cmd))
          (vargs (cond (ein:jupyter-use-containers
                        (split-string
@@ -224,9 +225,10 @@ with the call to the jupyter notebook."
 
 Determine if there is a running jupyter server (started via a
 call to `ein:jupyter-server-start') and then try to guess if
-token authentication is enabled. If a token is found use it to generate a
-call to `ein:notebooklist-login' and once authenticated open the notebooklist buffer
-via a call to `ein:notebooklist-open'."
+token authentication is enabled. If a token is found use it to
+generate a call to `ein:notebooklist-login' and once
+authenticated open the notebooklist buffer via a call to
+`ein:notebooklist-open'."
   (interactive)
   (when (ein:jupyter-server-process)
     (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
@@ -237,9 +239,9 @@ via a call to `ein:notebooklist-open'."
 
 (defsubst ein:set-process-sentinel (proc url-or-port)
   "URL-OR-PORT might get redirected from (ein:jupyter-server-conn-info).
-This is currently only the case for jupyterhub.
-Once login handshake provides the new URL-OR-PORT, we set various state as pertains
-our singleton jupyter server process here."
+This is currently only the case for jupyterhub.  Once login
+handshake provides the new URL-OR-PORT, we set various state as
+pertains our singleton jupyter server process here."
 
   ;; Would have used `add-function' if it didn't produce gv-ref warnings.
   (set-process-sentinel
@@ -251,7 +253,8 @@ our singleton jupyter server process here."
 
 ;;;###autoload
 (defun ein:jupyter-crib-token (url-or-port)
-  "Shell out to jupyter for its credentials knowledge.  Return list of (PASSWORD TOKEN)."
+  "Shell out to jupyter for its credentials knowledge.  Return list
+of (PASSWORD TOKEN)."
   (aif (cl-loop for line in
                 (apply #'ein:jupyter-process-lines url-or-port
                        ein:jupyter-server-command

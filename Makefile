@@ -39,7 +39,7 @@ README.rst: README.in.rst lisp/ein.el lisp/ein-notebook.el
 
 .PHONY: autoloads
 autoloads:
-	$(EMACS) -Q --batch --eval "(package-initialize)" --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
+	$(CASK) emacs -Q --batch -l package --eval "(let ((v (format \"%s.%s\" emacs-major-version emacs-minor-version))) (custom-set-variables (backquote (package-user-dir ,(concat \".cask/\" v)))))" -f package-initialize --eval "(package-generate-autoloads \"ein\" \"./lisp\")"
 
 .PHONY: clean
 clean:
@@ -64,7 +64,7 @@ test-compile: clean
 	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 
 .PHONY: quick
-quick: $(CASK_DIR) test-compile test-ob-ein-recurse test-unit
+quick: $(CASK_DIR) autoloads test-compile test-ob-ein-recurse test-unit
 
 # Last I tried, I can get jupyterhub to launch a user server
 # on a random port 58153, but that instance is still-born, i.e.,

@@ -122,7 +122,27 @@
      ;; global-font-lock-mode will call an after-change-mode-hook
      ;; that calls font-lock-initial-fontify, which fontifies the entire buffer!
      (cl-letf (((symbol-function 'global-font-lock-mode-enable-in-buffers) #'ignore))
+       (when-let (b (or (cl-second args) (current-buffer)))
+         (with-current-buffer b
+           (unless (eq font-lock-support-mode 'jit-lock-mode)
+             (ein:log 'info "pm--mode-setup: deactivating %s in %s"
+                      font-lock-support-mode (buffer-name))
+             (setq-local font-lock-support-mode 'jit-lock-mode))))
        (apply f args))))
+
+  (add-function
+   :around (symbol-function 'pm--common-setup)
+   (lambda (f &rest args)
+     "somewhere between pm--mode-setup and pm--common-setup is a
+      kill-all-local-variables that douses any early attempt at
+      overriding font-lock-support-mode."
+     (when-let (b (or (cl-second args) (current-buffer)))
+       (with-current-buffer b
+         (unless (eq font-lock-support-mode 'jit-lock-mode)
+           (ein:log 'info "pm--common-setup: deactivating %s in %s"
+                    font-lock-support-mode (buffer-name))
+           (setq-local font-lock-support-mode 'jit-lock-mode))))
+     (apply f args)))
 
   (add-function
    :around (symbol-function 'jit-lock-mode)
@@ -223,11 +243,11 @@ TYPE can be 'body, nil."
               (span `(nil ,(point-min) ,(point-min)))
               (cell (ein:worksheet-get-current-cell :pos pos :noerror t)))
      ;; Change :mode if necessary
-     (-when-let* ((lang
+     (-when-let* ((nb (ein:get-notebook))
+                  (lang
                    (condition-case err
                        (ein:$kernelspec-language
-                        (ein:$notebook-kernelspec
-                         (ein:get-notebook)))
+                        (ein:$notebook-kernelspec nb))
                      (error (message "%s: defaulting language to python"
                                      (error-message-string err))
                             "python")))
@@ -328,14 +348,7 @@ TYPE can be 'body, nil."
           (add-function :filter-args (local 'syntax-propertize-function)
                         #'poly-ein--span-start-end)))
     (add-function :around (local 'font-lock-syntactic-face-function)
-                  (apply-partially #'poly-ein--narrow-to-inner #'identity))
-    (unless (eq font-lock-support-mode 'jit-lock-mode)
-      (when (and (boundp font-lock-support-mode)
-                 (eval font-lock-support-mode))
-        (ein:log 'info "poly-ein-initialize: deactivating %s in %s"
-                 font-lock-support-mode type)
-        (funcall (symbol-function font-lock-support-mode) -1)
-        (jit-lock-mode t)))))
+                  (apply-partially #'poly-ein--narrow-to-inner #'identity))))
 
 (defun poly-ein--record-window-buffer ()
   "(pm--visible-buffer-name) needs to get onto window's prev-buffers.

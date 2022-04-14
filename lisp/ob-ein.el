@@ -340,8 +340,9 @@ one at a time.  Further, we do not order the queued up blocks!"
             (t (ein:url session))))))
 
 (defun ob-ein--initiate-session (session kernelspec callback)
-  "Retrieve notebook based on SESSION path and KERNELSPEC, starting jupyter instance
-if necessary.  Install CALLBACK (i.e., cell execution) upon notebook retrieval."
+  "Retrieve notebook of SESSION path and KERNELSPEC.
+Start jupyter instance if necessary.
+Install CALLBACK (i.e., cell execution) upon notebook retrieval."
   (let* ((nbpath (ob-ein--parse-session session))
          (info (org-babel-get-src-block-info))
          (anonymous-path (format ob-ein-anonymous-path (nth 0 info)))

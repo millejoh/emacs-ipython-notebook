@@ -152,7 +152,7 @@ Scenario: kernel interrupt
   And I ctrl-c-ctrl-c
   And I wait for buffer to not say "[....]"
   And I press "C-c C-v C-k"
-  And I wait for buffer to say "ipython-input"
+  And I wait for buffer to say "KeyboardInterrupt"
 
 @svg
 Scenario: portless url with path, image

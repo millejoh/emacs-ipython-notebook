@@ -208,7 +208,7 @@ ERRBACK of arity 1 for the contents."
             (funcall callback result)))))))
 
 (defun ein:content-query-hierarchy (url-or-port &optional callback)
-  "Send for content hierarchy of URL-OR-PORT with CALLBACK arity 1 for content hierarchy"
+  "Get hierarchy of URL-OR-PORT with CALLBACK arity 1 for which hierarchy."
   (setq callback (or callback #'ignore))
   (ein:content-query-sessions
    url-or-port
@@ -335,7 +335,8 @@ Call ERRBACK of arity 1 (contents) upon failure."
 
 
 (defun ein:get-local-file (path)
-  "If path exists, get contents and try to guess type of file (one of file, notebook, or directory)
+  "Get contents of PATH.
+Guess type of file (one of file, notebook, or directory)
 and content format (one of json, text, or base64)."
   (unless (file-readable-p path)
     (error "File %s is not accessible and cannot be uploaded." path))

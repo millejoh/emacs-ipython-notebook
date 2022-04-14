@@ -101,10 +101,11 @@
   :type '(repeat string)
   :group 'ein)
 
+;; https://accounts.google.com/o/oauth2/auth?client_id=[client-id]&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/compute&response_type=code
+;; curl -d code=[page-code] -d client_id=[client-id] -d client_secret=[client-secret] -d redirect_uri=urn:ietf:wg:oauth:2.0:oob -d grant_type=authorization_code https://accounts.google.com/o/oauth2/token
+;; curl -sLk -H "Authorization: Bearer [access-token]" https://compute.googleapis.com/compute/v1/projects/[project-id]/zones/[zone-id]/acceleratorTypes | jq -r -c '.items[].selfLink'
 (defcustom ein:gat-gpu-types (split-string "nvidia-tesla-t4 nvidia-tesla-v100")
-  "https://accounts.google.com/o/oauth2/auth?client_id=[client-id]&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/compute&response_type=code
-curl -d code=[page-code] -d client_id=[client-id] -d client_secret=[client-secret] -d redirect_uri=urn:ietf:wg:oauth:2.0:oob -d grant_type=authorization_code https://accounts.google.com/o/oauth2/token
-curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis.com/compute/v1/projects/[project-id]/zones/[zone-id]/acceleratorTypes | jq -r -c '.items[].selfLink'"
+  "Gat gpu types."
   :type '(repeat string)
   :group 'ein)
 
@@ -185,8 +186,9 @@ curl -sLk -H \"Authorization: Bearer [access-token]\" https://compute.googleapis
 
 (defun ein:gat-process-filter (proc string)
   "Copied `magit-process-filter' with added wrinkle of `ansi-color'.
-Advising `insert' in `magit-process-filter' is a little sus,
-and moreover, how would I avoid messing `magit-process-filter' of other processes?"
+Advising `insert' in `magit-process-filter' is a little sus, and
+moreover, how would I avoid messing `magit-process-filter' of
+other processes?"
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
       (goto-char (process-mark proc))
@@ -273,7 +275,7 @@ and moreover, how would I avoid messing `magit-process-filter' of other processe
     process))
 
 (defun ein:gat--path (archepath worktree-dir)
-  "Form new relative path from ARCHEPATH root, WORKTREE-DIR subroot, and ARCHEPATH leaf.
+  "Form relative path from ARCHEPATH root, WORKTREE-DIR subroot, ARCHEPATH leaf.
 
 With WORKTREE-DIR of 3/4/1/2/.gat/fantab,
 1/2/eager.ipynb -> 1/2/.gat/fantab/eager.ipynb
@@ -463,17 +465,17 @@ EOF
                0))
          (config-json (expand-file-name "jupyter_notebook_config.json" config-dir))
          (config-py (expand-file-name "jupyter_notebook_config.py" config-dir))
-         password)
+         result)
     (when (file-exists-p config-py)
-      (setq password
+      (setq result
             (awhen (ein:gat-shell-command gat-crib-password-python)
               (unless (zerop (length it)) it))))
-    (unless (stringp password)
+    (unless (stringp result)
       (when (file-exists-p config-json)
         (-let* (((&alist 'NotebookApp (&alist 'password))
                  (json-read-file config-json)))
-          password)))
-    password))
+          (setq result password))))
+    result))
 
 (defun ein:gat-kaggle-env (var json-key)
   (when-let ((val (or (getenv var)

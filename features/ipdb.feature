@@ -14,7 +14,7 @@ Scenario: ein-ipdb works... poorly
   And I wait for buffer process
   And I type "c"
   And I press "RET"
-  And I wait for buffer to say "ipython-input"
+  And I wait for buffer to say "0\n"
   And I type "c"
   And I press "RET"
   And I wait for buffer to say "Finished"
@@ -36,7 +36,7 @@ Scenario: ein-ipdb needs to not flail on C-d
   And I wait for buffer process
   And I type "c"
   And I press "RET"
-  And I wait for buffer to say "ipython-input"
+  And I wait for buffer to say "0\n"
   And I press "C-d"
   And I wait for buffer to say "Finished"
   And eval "(kill-buffer)"
@@ -57,7 +57,7 @@ Scenario: kill buffer
   And I wait for buffer process
   And I type "c"
   And I press "RET"
-  And I wait for buffer to say "ipython-input"
+  And I wait for buffer to say "0\n"
   And I switch to buffer like "Untitled"
   Then I should see "In [*]"
   And header says "Kernel busy..."

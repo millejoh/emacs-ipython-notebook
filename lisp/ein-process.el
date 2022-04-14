@@ -49,7 +49,8 @@
                           standard-output error-buffer))))))
 
 (defun ein:process-divine-port (pid args &optional error-buffer)
-  "Returns port on which PID is listening or 0 if none.  Supply ERROR-BUFFER to capture stderr"
+  "Returns port on which PID is listening or 0 if none.
+Supply ERROR-BUFFER to capture stderr."
   (if (string-match "\\bport\\(=\\|\\s-+\\)\\(\\S-+\\)" args)
       (string-to-number (match-string 2 args))
     (if (executable-find ein:process-lsof)
@@ -156,11 +157,12 @@
   (ein:$process-url proc))
 
 (defsubst ein:process-path (proc filename)
-  "Construct path by eliding PROC's dir from filename"
+  "Construct path by eliding PROC's dir from filename."
   (cl-subseq filename (length (file-name-as-directory (ein:$process-dir proc)))))
 
 (defun ein:process-open-notebook* (filename callback)
-  "Open FILENAME as a notebook and start a notebook server if necessary.  CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
+  "Open FILENAME as a notebook and start a notebook server if necessary.
+CALLBACK with arity 2 (passed into `ein:notebook-open--callback')."
   (ein:process-refresh-processes)
   (let* ((proc (ein:process-dir-match filename)))
     (if proc

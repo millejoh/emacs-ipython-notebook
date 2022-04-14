@@ -698,9 +698,9 @@ or even this (if you want fast Emacs start-up)::
 ;;;###autoload
 (defun ein:notebooklist-login (url-or-port callback &optional cookie-name cookie-content token)
   "Deal with security before main entry of ein:notebooklist-open*.
-
-CALLBACK takes two arguments, the buffer created by ein:notebooklist-open--success
-and the url-or-port argument of ein:notebooklist-open*."
+CALLBACK takes two arguments, the buffer created by
+ein:notebooklist-open--success and the url-or-port argument of
+ein:notebooklist-open*."
   (interactive `(,(ein:notebooklist-ask-url-or-port)
                  ,(lambda (buffer _url-or-port) (pop-to-buffer buffer))
                  ,(when current-prefix-arg
