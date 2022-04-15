@@ -115,7 +115,7 @@ Scenario: Logging into nowhere again
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should see "[error] Login to https://adfljdsf.org:8432 failed"
 
-@login2
+@login
 Scenario: Bad curl invocation produces sensible error message
   Given I start the server configured "\n"
   And I login with bad curl
