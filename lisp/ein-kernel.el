@@ -70,11 +70,9 @@
    :username "username"
    :msg-callbacks (make-hash-table :test 'equal)))
 
-
 (defun ein:kernel-del (kernel)
   "Destructor for `ein:$kernel'."
   (ein:kernel-disconnect kernel))
-
 
 (defun ein:kernel--get-msg (kernel msg-type content)
   (list

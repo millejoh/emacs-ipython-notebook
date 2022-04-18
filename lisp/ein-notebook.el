@@ -360,12 +360,13 @@ notebook buffer then the user will be prompted to select an opened notebook."
 (defun ein:notebook-install-kernel (notebook)
   (let* ((base-url "/api/kernels")
          (kernelspec (ein:$notebook-kernelspec notebook))
-         (kernel (ein:kernel-new (ein:$notebook-url-or-port notebook)
-                                 (ein:$notebook-notebook-path notebook)
-                                 kernelspec
-                                 base-url
-                                 (ein:$notebook-events notebook)
-                                 (ein:$notebook-api-version notebook))))
+         (kernel (ein:kernel-new
+                  (ein:$notebook-url-or-port notebook)
+                  (ein:$notebook-notebook-path notebook)
+                  kernelspec
+                  base-url
+                  (ein:$notebook-events notebook)
+                  (ein:$notebook-api-version notebook))))
     (setf (ein:$notebook-kernel notebook) kernel)))
 
 (defun ein:notebook-reconnect-session-command ()

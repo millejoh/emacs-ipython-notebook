@@ -202,12 +202,9 @@
   spec
   language)
 
-;; FIXME: Rewrite `ein:$kernel' using `defclass'.  It should ease
-;;        testing since I can mock I/O using method overriding.
 (cl-defstruct ein:$kernel
-  "Should perhaps be named ein:$session.  We glom session and kernel as defined by the server as just ein:$kernel in the client.
-
-"
+  "Should be named ein:$session.  We glom session and kernel as
+defined by the server as just ein:$kernel in the client."
   url-or-port
   path
   kernelspec
@@ -224,10 +221,8 @@
   username
   msg-callbacks
   oinfo-cache
-  ;; FIXME: Use event instead of hook.
   after-start-hook
   after-execute-hook)
-
 
 ;;; Cells
 
