@@ -54,6 +54,7 @@
 (autoload 'ein:process-url-or-port "ein-process")
 (autoload 'ein:process-url-match "ein-process")
 (autoload 'ein:process-refresh-processes "ein-process")
+(autoload 'ein:jupyter-my-url-or-port "ein-jupyter")
 (autoload 'ein:jupyter-server-start "ein-jupyter" nil t)
 (autoload 'ein:shared-output-get-cell "ein-shared-output")
 (autoload 'ein:shared-output-eval-string "ein-shared-output")
