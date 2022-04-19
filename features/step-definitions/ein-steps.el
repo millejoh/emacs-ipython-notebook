@@ -183,7 +183,10 @@
 
 (When "^I am in notebooklist buffer$"
   (lambda ()
-    (switch-to-buffer (ein:notebooklist-get-buffer (ein:jupyter-my-url-or-port)))
+    (switch-to-buffer
+     (ein:notebooklist-get-buffer
+      (let ((default-directory ein:testing-project-path))
+        (ein:jupyter-my-url-or-port))))
     (ein:testing-wait-until (lambda () (eq major-mode 'ein:notebooklist-mode)))))
 
 (When "^I wait \\([.0-9]+\\) seconds?$"
@@ -277,7 +280,8 @@
              (clrhash ein:notebooklist-map)))
     (unless final-p
       (When "I clear log expr \"ein:log-all-buffer-name\"")
-      (When "I clear log expr \"*ein:jupyter-server-buffer-name*\""))))
+      (When "I clear log expr \"*ein:jupyter-server-buffer-name*\""))
+    (setq default-directory ein:testing-project-path)))
 
 (When "^I login to jupyterhub$"
   (lambda ()
@@ -594,13 +598,15 @@
   (lambda (file-name)
     (find-file file-name)
     (when (string= (file-name-extension file-name) "ipynb")
-      (ein:ipynb-mode))
-    ))
+      (ein:ipynb-mode))))
 
 (When "notebooklist-list-paths\\( does not\\)? contains? \"\\(.+\\)\"$"
   (lambda (negate file-name)
     (Given "I am in notebooklist buffer")
-    (let* ((nbpath (ein:url (ein:jupyter-my-url-or-port) file-name))
+    (let* ((nbpath (ein:url
+                    (let ((default-directory ein:testing-project-path))
+                      (ein:jupyter-my-url-or-port))
+                    file-name))
            (contains-p (member nbpath (ein:notebooklist-list-paths))))
       (cl-assert (if negate (not contains-p) contains-p)))))
 

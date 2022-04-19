@@ -137,6 +137,9 @@
  (setq transient-mark-mode t)
  (Given "I start and login to the server configured \"\\n\""))
 
+(Before
+ (setq default-directory ein:testing-project-path))
+
 (After
  (ein:testing-after-scenario))
 
