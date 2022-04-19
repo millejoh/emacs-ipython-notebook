@@ -47,7 +47,7 @@
         (insert raw-content)))
     (set-visited-file-name (buffer-name))
     (set-auto-mode)
-    (add-hook 'write-contents-functions 'ein:content-file-save) ;; FIXME Brittle, will not work
+    (add-hook 'write-contents-functions 'ein:content-file-save nil t) ;; FIXME Brittle, will not work
                                                                 ;; if user changes major mode.
     (ein:log 'verbose "Opened file %s" (ein:$content-name content))
     (set-buffer-modified-p nil)

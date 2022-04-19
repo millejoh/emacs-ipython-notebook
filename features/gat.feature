@@ -27,3 +27,4 @@ Scenario: gat create from repo, then create from worktree, then run-local
   And I click on "Home"
   Then I wait for buffer to say "support"
   And remove git repo "test-repo"
+  And eval "(kill-buffer)"

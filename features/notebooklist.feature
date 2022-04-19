@@ -32,6 +32,7 @@ Scenario: File open
   And I click without going top on file "Open"
   And I switch to buffer like "notebooklist.feature"
   Then I should see "File open"
+  And I press "C-x k"
 
 @stop
 Scenario: Stop after closing notebook
@@ -102,6 +103,20 @@ Scenario: To the cloud with password
   And I switch to log expr "ein:log-all-buffer-name"
   Then I should not see "[warn]"
   And I should not see ": [error]"
+  And new python notebook
+  When I type "import math"
+  And I wait for cell to execute
+
+@login
+Scenario: Nonempty base_url and password
+  Given I start the server configured "c.NotebookApp.base_url=u'nonempty'\nc.NotebookApp.password=u'sha1:712118ed6c09:bc02227d84b76b720cc320b855e1006d0b120f98'\n"
+  And I login forcing ping with password "foo"
+  And I switch to log expr "ein:log-all-buffer-name"
+  Then I should not see "[warn]"
+  And I should not see ": [error]"
+  And new python notebook
+  When I type "import math"
+  And I wait for cell to execute
 
 @login
 Scenario: Logging into nowhere

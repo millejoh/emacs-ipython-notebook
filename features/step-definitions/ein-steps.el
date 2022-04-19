@@ -14,7 +14,7 @@
             confirm-kill-processes
             (kill-emacs-query-functions
              (list (lambda () (prog1 nil (funcall hook))))))
-        (cl-letf (((symbol-function 'ein:jupyter-server-conn-info)
+        (cl-letf (((symbol-function 'ein:jupyter-my-url-or-port)
                    #'ignore)
                   ((symbol-function 'y-or-n-p)
                    (lambda (prompt &rest _args)
@@ -183,7 +183,7 @@
 
 (When "^I am in notebooklist buffer$"
   (lambda ()
-    (switch-to-buffer (ein:notebooklist-get-buffer (car (ein:jupyter-server-conn-info))))
+    (switch-to-buffer (ein:notebooklist-get-buffer (ein:jupyter-my-url-or-port)))
     (ein:testing-wait-until (lambda () (eq major-mode 'ein:notebooklist-mode)))))
 
 (When "^I wait \\([.0-9]+\\) seconds?$"
@@ -235,19 +235,20 @@
 
 (When "^new \\(.+\\) notebook\\( in \".+\"\\)?\\(\\)$"
   (lambda (prefix path workaround)
-    (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (let (notebook)
-        (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
-          (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
-                       (found (seq-some (lambda (x) (and (cl-search prefix x) x)) kslist))
-                       (ks (ein:get-kernelspec url-or-port found)))
-            (setq notebook
-                  (ein:testing-new-notebook
-                   url-or-port ks nil
-                   (when path (progn (string-match "\"\\([^\"]+\\)\"" path)
-                                     (match-string 1 path)))))))
-        (cl-assert notebook)
-        (switch-to-buffer (ein:notebook-buffer notebook))))))
+    (let ((url-or-port (let ((default-directory ein:testing-project-path))
+                         (ein:jupyter-my-url-or-port)))
+          notebook)
+      (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
+        (-when-let* ((kslist (mapcar #'car (ein:list-available-kernels url-or-port)))
+                     (found (seq-some (lambda (x) (and (cl-search prefix x) x)) kslist))
+                     (ks (ein:get-kernelspec url-or-port found)))
+          (setq notebook
+                (ein:testing-new-notebook
+                 url-or-port ks nil
+                 (when path (progn (string-match "\"\\([^\"]+\\)\"" path)
+                                   (match-string 1 path)))))))
+      (cl-assert notebook)
+      (switch-to-buffer (ein:notebook-buffer notebook)))))
 
 (When "^I kill buffer and reopen$"
   (lambda ()
@@ -259,7 +260,10 @@
   (lambda (final-p _workaround)
     (cancel-function-timers #'ein:notebooklist-reload)
     (cl-letf (((symbol-function 'y-or-n-p) #'ignore))
-      (ein:jupyter-server-stop nil (car (ein:jupyter-server-conn-info))))
+      (ein:jupyter-server-stop
+       nil
+       (let ((default-directory ein:testing-project-path))
+         (ein:jupyter-my-url-or-port))))
     (cl-loop repeat 10
              with buffer = (get-buffer *ein:jupyter-server-buffer-name*)
              until (null (get-buffer-process buffer))
@@ -279,7 +283,12 @@
   (lambda ()
     (cl-assert
      (when-let ((hub (seq-find (apply-partially #'string-match-p (concat (file-name-as-directory "user") user-login-name))
-                               (ein:jupyter-crib-running-servers))))
+                               (mapcar
+                                (lambda (json)
+                                  (cl-destructuring-bind (&key url &allow-other-keys)
+                                      json
+                                    (ein:url url)))
+                                (ein:jupyter-crib-running-servers)))))
        (let (done-p)
          (ein:login hub (lambda () (setq done-p t)))
          (prog1 t
@@ -298,16 +307,15 @@
         (ein:jupyter-server-start (executable-find "jupyterhub") nil t)
         (with-current-buffer (get-buffer *ein:jupyter-server-buffer-name*)
           (And "I wait for buffer to say \"running at\"")))
-      (let ((prev (length (ein:jupyter-crib-running-servers))))
-        (cl-destructuring-bind (url-or-port _token)
-            (ein:jupyter-server-conn-info)
-          (ein:query-singleton-ajax
-           (ein:url url-or-port "hub/login")
-           :data `(("username" . ,user-login-name)
-                   ("password" . ,user-login-name)))
-          (ein:testing-wait-until
-           (lambda () (> (length (ein:jupyter-crib-running-servers)) prev))
-           nil 20000 1000))))))
+      (let ((prev (length (ein:jupyter-crib-running-servers)))
+            (url-or-port (ein:jupyter-my-url-or-port)))
+        (ein:query-singleton-ajax
+         (ein:url url-or-port "hub/login")
+         :data `(("username" . ,user-login-name)
+                 ("password" . ,user-login-name)))
+        (ein:testing-wait-until
+         (lambda () (> (length (ein:jupyter-crib-running-servers)) prev))
+         nil 20000 1000)))))
 
 (When "^newlined region should be \"\\(.*\\)\"$"
   (lambda (region)
@@ -350,18 +358,19 @@
 
 (When "^I login if necessary$"
   (lambda ()
-    (cl-multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (when token
-        (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                   (lambda (&rest _args) url-or-port))
-                  ((symbol-function 'read-passwd)
-                   (lambda (&rest _args) token)))
-          (When "I call \"ein:notebooklist-login\"")
-          (And "I wait for the smoke to clear"))))))
+    (-when-let* ((url-or-port (ein:jupyter-my-url-or-port))
+                 (token (ein:jupyter-crib-token url-or-port)))
+      (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                 (lambda (&rest _args) url-or-port))
+                ((symbol-function 'read-passwd)
+                 (lambda (&rest _args) token)))
+        (When "I call \"ein:notebooklist-login\"")
+        (And "I wait for the smoke to clear")))))
 
 (When "^I login disabling crib token$"
   (lambda ()
-    (cl-multiple-value-bind (url-or-port token) (ein:jupyter-server-conn-info)
+    (-when-let* ((url-or-port (ein:jupyter-my-url-or-port))
+                 (token (ein:jupyter-crib-token url-or-port)))
       (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
                  (lambda (&rest _args) url-or-port))
                 ((symbol-function 'ein:crib-token)
@@ -371,18 +380,19 @@
 
 (When "^I login \\(forcing ping \\)?with password \"\\(.+\\)\"$"
   (lambda (no-crib password)
-    (cl-destructuring-bind (url-or-port token) (ein:jupyter-server-conn-info)
-      (let ((orig-crib (symbol-function 'ein:notebooklist-token-or-password)))
-        (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
-                   (lambda (&rest _args) url-or-port))
-                  ((symbol-function 'read-passwd)
-                   (lambda (&rest _args) password))
-                  ((symbol-function 'ein:notebooklist-token-or-password)
-                   (if no-crib
-                       #'ignore
-                     orig-crib)))
-          (When "I call \"ein:notebooklist-login\"")
-          (And "I wait for the smoke to clear"))))))
+    (let* ((url-or-port (ein:jupyter-my-url-or-port))
+           (token (ein:jupyter-crib-token url-or-port))
+           (orig-crib (symbol-function 'ein:notebooklist-token-or-password)))
+      (cl-letf (((symbol-function 'ein:notebooklist-ask-url-or-port)
+                 (lambda (&rest _args) url-or-port))
+                ((symbol-function 'read-passwd)
+                 (lambda (&rest _args) password))
+                ((symbol-function 'ein:notebooklist-token-or-password)
+                 (if no-crib
+                     #'ignore
+                   orig-crib)))
+        (When "I call \"ein:notebooklist-login\"")
+        (And "I wait for the smoke to clear")))))
 
 (When "^dump diagnostic"
   (lambda ()
@@ -461,7 +471,7 @@
 (When "^old notebook \"\\(.+\\)\"$"
   (lambda (path)
     (let (notebook
-          (url-or-port (car (ein:jupyter-server-conn-info))))
+          (url-or-port (ein:jupyter-my-url-or-port)))
       (with-current-buffer (ein:notebooklist-get-buffer url-or-port)
         (cl-loop repeat 2
                  do (ein:notebook-open url-or-port path nil
@@ -590,7 +600,7 @@
 (When "notebooklist-list-paths\\( does not\\)? contains? \"\\(.+\\)\"$"
   (lambda (negate file-name)
     (Given "I am in notebooklist buffer")
-    (let* ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name))
+    (let* ((nbpath (ein:url (ein:jupyter-my-url-or-port) file-name))
            (contains-p (member nbpath (ein:notebooklist-list-paths))))
       (cl-assert (if negate (not contains-p) contains-p)))))
 
@@ -598,7 +608,7 @@
   (lambda (content-type file-name)
     (Given "I am in notebooklist buffer")
     (And "I clear log expr \"ein:log-all-buffer-name\"")
-    (let ((nbpath (ein:url (car (ein:jupyter-server-conn-info)) file-name)))
+    (let ((nbpath (ein:url (ein:jupyter-my-url-or-port) file-name)))
       (cl-letf (((symbol-function 'ein:notebooklist-ask-path)
                  (lambda (&rest _args) nbpath)))
         (When (format "I press \"C-c C-%s\"" (if (string= content-type "file") "f" "o")))

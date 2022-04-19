@@ -101,7 +101,7 @@ Supply ERROR-BUFFER to capture stderr."
   (hash-table-values ein:%processes%))
 
 (defun ein:process-alive-p (proc)
-  (not (null (process-attributes (ein:$process-pid proc)))))
+  (process-attributes (ein:$process-pid proc)))
 
 (defun ein:process-suitable-notebook-dir (filename)
   "Return the uppermost parent dir of DIR that contains ipynb files."

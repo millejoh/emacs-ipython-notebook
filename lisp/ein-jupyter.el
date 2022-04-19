@@ -151,7 +151,7 @@ with the call to the jupyter notebook."
 with `kubectl exec'."
   (if-let ((found (executable-find command)))
       (with-temp-buffer
-        (let ((status (apply #'call-process found nil (list (current-buffer) nil) nil args)))
+        (let ((status (apply #'call-process found nil t nil args)))
           (if (zerop status)
               (progn
                 (goto-char (point-min))
@@ -199,28 +199,27 @@ with `kubectl exec'."
     (set-process-query-on-exit-flag proc nil)
     proc))
 
-(defun ein:jupyter-server-conn-info ()
-  "Return the url-or-port and password for global session."
-  (let ((result '(nil nil)))
-    (when (ein:jupyter-server-process)
-      (with-current-buffer *ein:jupyter-server-buffer-name*
-        (save-excursion
-          (goto-char (point-max))
-          (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
-                              nil "") ;; important if we start-stop-start
-          (-when-let* ((running-p
-                        (and (re-search-forward
-                              "\\([[:alnum:]]+\\) is\\( now\\)? running"
-                              nil t)
-                             (re-search-forward
-                              "\\(https?://[^:]*:[0-9]+\\)\\(?:/\\?token=\\([[:alnum:]]+\\)\\)?"
-                              nil t)))
-                       (raw-url (match-string 1))
-                       (token (or (match-string 2) "")))
-            (setq result (list (ein:url raw-url) token))))))
-    result))
+(defun ein:jupyter-my-url-or-port ()
+  (when-let ((my-pid (aand (ein:jupyter-server-process) (process-id it))))
+    (catch 'done
+      (dolist (json (ein:jupyter-crib-running-servers))
+        (cl-destructuring-bind (&key pid url &allow-other-keys)
+            json
+          (when (equal my-pid pid)
+            (throw 'done (ein:url url))))))))
 
-(defun ein:jupyter-server-login-and-open (&optional callback)
+(defun ein:jupyter-server-ready-p ()
+  (when (ein:jupyter-server-process)
+    (with-current-buffer *ein:jupyter-server-buffer-name*
+      (save-excursion
+        (goto-char (point-max))
+        (re-search-backward (format "Process %s" *ein:jupyter-server-process-name*)
+                            nil "") ;; important if we start-stop-start
+        (re-search-forward
+         "\\([[:alnum:]]+\\) is\\( now\\)? running"
+         nil t)))))
+
+(defun ein:jupyter-server-login-and-open (url-or-port &optional callback)
   "Log in and open a notebooklist buffer for a running jupyter notebook server.
 
 Determine if there is a running jupyter server (started via a
@@ -230,15 +229,13 @@ generate a call to `ein:notebooklist-login' and once
 authenticated open the notebooklist buffer via a call to
 `ein:notebooklist-open'."
   (interactive)
-  (when (ein:jupyter-server-process)
-    (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
-      (if-let ((token (ein:notebooklist-token-or-password url-or-port)))
-	  (ein:notebooklist-login url-or-port callback nil nil token)
-	(ein:log 'error "`(ein:notebooklist-token-or-password %s)` must return non-nil"
-		 url-or-port)))))
+  (if-let ((token (ein:notebooklist-token-or-password url-or-port)))
+      (ein:notebooklist-login url-or-port callback nil nil token)
+    (ein:log 'error "`(ein:notebooklist-token-or-password %s)` must return non-nil"
+	     url-or-port)))
 
 (defsubst ein:set-process-sentinel (proc url-or-port)
-  "URL-OR-PORT might get redirected from (ein:jupyter-server-conn-info).
+  "URL-OR-PORT might get redirected.
 This is currently only the case for jupyterhub.  Once login
 handshake provides the new URL-OR-PORT, we set various state as
 pertains our singleton jupyter server process here."
@@ -285,10 +282,7 @@ of (PASSWORD TOKEN)."
                            (aif ein:jupyter-server-use-subcommand
                                (concat it " ") "")
                            "list" "--json")))
-           collecting (cl-destructuring-bind
-                          (&key url &allow-other-keys)
-                          (ein:json-read-from-string line)
-                        (ein:url url))))
+           collecting (ein:json-read-from-string line)))
 
 ;;;###autoload
 (defun ein:jupyter-server-start (server-command
@@ -345,11 +339,11 @@ server command."
                                          `("--port" ,(format "%s" port)
                                            "--port-retries" "0")))))
     (cl-loop repeat 30
-             until (car (ein:jupyter-server-conn-info))
+             until (ein:jupyter-server-ready-p)
              do (sleep-for 0 500)
              finally do
-             (-if-let* ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
-                        (url-or-port (car (ein:jupyter-server-conn-info))))
+             (if-let ((buffer (get-buffer *ein:jupyter-server-buffer-name*))
+                      (url-or-port (ein:jupyter-my-url-or-port)))
                  (with-current-buffer buffer
                    (setq ein:jupyter-server-notebook-directory
                          (convert-standard-filename notebook-directory))
@@ -358,14 +352,17 @@ server command."
                                             (ein:jupyter-server-stop t url-or-port)))
                              nil t))
                (ein:log 'warn "Jupyter server failed to start, cancelling operation")))
-    (when (and (not no-login-p) (ein:jupyter-server-process))
+    (when-let ((login-p (not no-login-p))
+               (url-or-port (ein:jupyter-my-url-or-port)))
       (unless login-callback
         (setq login-callback #'ignore))
       (add-function :after (var login-callback)
                     (apply-partially (lambda (proc* _buffer url-or-port)
                                        (ein:set-process-sentinel proc* url-or-port))
                                      proc))
-      (ein:jupyter-server-login-and-open login-callback))))
+      (ein:jupyter-server-login-and-open
+       url-or-port
+       login-callback))))
 
 ;;;###autoload
 (defalias 'ein:run 'ein:jupyter-server-start)
@@ -380,7 +377,7 @@ server command."
   (interactive
    (list t (awhen (ein:get-notebook)
              (ein:$notebook-url-or-port it))))
-  (let ((my-url-or-port (car (ein:jupyter-server-conn-info)))
+  (let ((my-url-or-port (ein:jupyter-my-url-or-port))
         (all-p t))
     (dolist (url-or-port
              (if url-or-port (list url-or-port) (ein:notebooklist-keys))

@@ -45,6 +45,7 @@ autoloads:
 clean:
 	$(CASK) clean-elc
 	rm -rf test/test-install
+	rm -f test/curl-cookie-jar
 	rm -rf log
 	rm -f features/[Uu]ntitled*
 	rm -f features/Renamed.ipynb
@@ -78,8 +79,8 @@ test-jupyterhub: test-compile
 test: quick test-int
 
 .PHONY: test-int
-test-int:
-	$(CASK) exec ecukes --reporter magnars
+test-int: clean
+	$(CASK) exec ecukes --reporter magnars --debug
 
 .PHONY: test-unit
 test-unit:

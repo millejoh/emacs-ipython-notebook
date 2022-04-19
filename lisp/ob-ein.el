@@ -54,7 +54,6 @@
 (autoload 'ein:process-url-or-port "ein-process")
 (autoload 'ein:process-url-match "ein-process")
 (autoload 'ein:process-refresh-processes "ein-process")
-(autoload 'ein:jupyter-server-conn-info "ein-jupyter")
 (autoload 'ein:jupyter-server-start "ein-jupyter" nil t)
 (autoload 'ein:shared-output-get-cell "ein-shared-output")
 (autoload 'ein:shared-output-eval-string "ein-shared-output")
@@ -323,21 +322,21 @@ one at a time.  Further, we do not order the queued up blocks!"
         (ein:shared-output-eval-string kernel body)))))
 
 (defun ob-ein--parse-session (session)
-  (cl-multiple-value-bind (url-or-port _password) (ein:jupyter-server-conn-info)
-    (let* ((tokens (split-string session "/"))
-           (parsed-url (url-generic-parse-url session))
-           (url-host (url-host parsed-url)))
-      (cond ((null url-host)
-             (let* ((candidate (apply #'ein:url (car tokens) (cdr tokens)))
-                    (parsed-candidate (url-generic-parse-url candidate))
-                    (missing (url-scheme-get-property
-                              (url-type parsed-candidate)
-                              'default-port)))
-               (if (and url-or-port
-                        (= (url-port parsed-candidate) missing))
-                   (apply #'ein:url url-or-port (cdr tokens))
-                 candidate)))
-            (t (ein:url session))))))
+  (let* ((url-or-port (ein:jupyter-my-url-or-port))
+         (tokens (split-string session "/"))
+         (parsed-url (url-generic-parse-url session))
+         (url-host (url-host parsed-url)))
+    (cond ((null url-host)
+           (let* ((candidate (apply #'ein:url (car tokens) (cdr tokens)))
+                  (parsed-candidate (url-generic-parse-url candidate))
+                  (missing (url-scheme-get-property
+                            (url-type parsed-candidate)
+                            'default-port)))
+             (if (and url-or-port
+                      (= (url-port parsed-candidate) missing))
+                 (apply #'ein:url url-or-port (cdr tokens))
+               candidate)))
+          (t (ein:url session)))))
 
 (defun ob-ein--initiate-session (session kernelspec callback)
   "Retrieve notebook of SESSION path and KERNELSPEC.

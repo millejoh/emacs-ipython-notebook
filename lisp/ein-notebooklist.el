@@ -34,7 +34,6 @@
 (require 'ido)
 
 (declare-function ein:jupyter-crib-token "ein-jupyter")
-(declare-function ein:jupyter-server-conn-info "ein-jupyter")
 (declare-function ein:jupyter-get-default-kernel "ein-jupyter")
 (declare-function ein:jupyter-crib-running-servers "ein-jupyter")
 (declare-function ein:file-open "ein-file")
@@ -135,11 +134,9 @@ Jupyter requires one or the other but not both.
 Return empty string token if all authentication disabled.
 Return nil if unclear what, if any, authentication applies."
   (cl-multiple-value-bind (password-p token) (ein:jupyter-crib-token url-or-port)
-    (cl-multiple-value-bind (my-url-or-port my-token) (ein:jupyter-server-conn-info)
-      (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
-            ((and (stringp token) (eq password-p :json-false)) token)
-            ((equal url-or-port my-url-or-port) my-token)
-            (t nil)))))
+    (cond ((eq password-p t) (read-passwd (format "Password for %s: " url-or-port)))
+          ((and (stringp token) (eq password-p :json-false)) token)
+          (t nil))))
 
 (defun ein:notebooklist-ask-url-or-port ()
   (let* ((default (ein:url (aif (ein:get-notebook)
@@ -152,7 +149,12 @@ Return nil if unclear what, if any, authentication applies."
                                      (if (stringp ein:urls)
                                          (list ein:urls)
                                        ein:urls)
-                                     (ein:jupyter-crib-running-servers)))))
+                                     (mapcar
+                                      (lambda (json)
+                                        (cl-destructuring-bind (&key url &allow-other-keys)
+                                            json
+                                          (ein:url url)))
+                                      (ein:jupyter-crib-running-servers))))))
          (url-or-port (let (ido-report-no-match ido-use-faces)
                         (ein:completing-read "URL or port: "
                                              url-or-port-list
