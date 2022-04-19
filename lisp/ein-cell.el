@@ -250,6 +250,8 @@ WARNING: OBJ and SLOT are evaluated multiple times,
   (let ((cell (ein:cell-init (apply #'ein:cell-from-type
                                     (ein:cell--determine-cell-type data) args)
                              data)))
+    (awhen (plist-get data :id)
+      (setf (slot-value cell 'cell-id) it))
     (awhen (plist-get data :metadata)
       (ein:oset-if-empty cell 'metadata it))
     cell))
