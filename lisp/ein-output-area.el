@@ -41,6 +41,14 @@ Unless it's a single line '<IPython.core.display.HTML object>' or
   :type 'boolean
   :group 'ein)
 
+(defcustom ein:output-area-inlined-image-properties '(:foreground "black" :background "white")
+  "Additional properties for inlined images.
+This is passed to `create-image' for some supported image types,
+such as SVG ones whose foregrounds are taken from the current
+frame by default and may appear unreadable."
+  :type '(plist :value-type color)
+  :group 'ein)
+
 (defcustom ein:shr-env
   '((shr-table-horizontal-line ?-)
     (shr-table-vertical-line ?|)

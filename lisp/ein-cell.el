@@ -874,11 +874,13 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
      ((:image/svg+xml :image/png :image/jpeg)
       (-if-let* ((img-type (intern-soft (ein:cell-extract-image-format type)))
                  (supported (image-type-available-p img-type))
-                 (image (create-image (condition-case nil
-                                          (base64-decode-string value)
-                                        (error value))
-                                      img-type
-                                      t)))
+                 (image (apply #'create-image
+                               (condition-case nil
+                                   (base64-decode-string value)
+                                 (error value))
+                               img-type
+                               t
+                               ein:output-area-inlined-image-properties)))
           (if ein:output-area-inlined-images
               (ein:insert-image image)
             (ein:insert-read-only " ")
