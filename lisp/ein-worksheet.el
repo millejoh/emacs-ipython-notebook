@@ -57,9 +57,20 @@ buffer-undo-list is still under the threshold.")
 
 (defcustom ein:worksheet-enable-undo t
   "When non-`nil', allow undo of cell inputs only (as opposed to
-  whole-cell operations such as killing, moving, executing cells).
+whole-cell operations such as killing, moving, executing cells).
+Undoing's behavior is also configured by
+`ein:worksheet-disable-undo-if-other-key'.
 
-  Changes to this variable only take effect for newly opened worksheets."
+Changes to this variable only take effect for newly opened worksheets."
+  :type 'boolean
+  :group 'ein)
+
+(defcustom ein:worksheet-disable-undo-if-other-key t
+  "When non-`nil' and \"C-/\" isn't `undo', disable undoing cell
+inputs. This non-`nil' value takes precedence over non-nil
+`ein:worksheet-enable-undo'.
+
+Changes to this variable only take effect for newly opened worksheets."
   :type 'boolean
   :group 'ein)
 
@@ -438,11 +449,12 @@ Shift in list parlance means removing the front."
 (cl-defmethod ein:worksheet-undo-setup ((ws ein:worksheet))
   (with-current-buffer (ein:worksheet--get-buffer ws)
     (setq buffer-local-enable-undo ein:worksheet-enable-undo)
-    (let ((undo-binding (key-binding (kbd "C-/"))))
-      (if buffer-local-enable-undo
-          (unless (eq undo-binding 'undo)
-            (setq buffer-local-enable-undo nil)
-            (ein:display-warning-once (format "Disabling undo for %s" undo-binding)))))
+    (when (and ein:worksheet-disable-undo-if-other-key
+               buffer-local-enable-undo)
+      (let ((undo-binding (key-binding (kbd "C-/"))))
+        (unless (eq undo-binding 'undo)
+          (setq buffer-local-enable-undo nil)
+          (ein:display-warning-once (format "Disabling undo for %s" undo-binding)))))
     (ein:worksheet-reinstall-undo-hooks ws)
     (if buffer-local-enable-undo
         (progn
