@@ -932,13 +932,15 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:codecell) _wsidx)
   (let ((execute-count (aif (ein:oref-safe cell 'input-prompt-number)
                            (and (numberp it) it)))
-        (metadata (slot-value cell 'metadata)))
+        (metadata (slot-value cell 'metadata))
+	(cell-id (slot-value cell 'cell-id)))
     `((source . ,(ein:cell-get-text cell))
       (cell_type . "code")
       (execution_count . ,execute-count)
       (outputs . ,(apply #'vector (slot-value cell 'outputs)))
       (metadata . ,(plist-put metadata :collapsed (if (slot-value cell 'collapsed) t
-                                                    json-false))))))
+                                                    json-false)))
+      (id . ,cell-id))))
 
 
 (cl-defmethod ein:cell-to-json ((cell ein:textcell))
@@ -946,10 +948,12 @@ Called from ewoc pretty printer via `ein:cell-insert-output'."
     (source    . ,(ein:cell-get-text cell))))
 
 (cl-defmethod ein:cell-to-nb4-json ((cell ein:textcell) _wsidx)
-  (let ((metadata (slot-value cell 'metadata)))
+  (let ((metadata (slot-value cell 'metadata))
+	(cell-id (slot-value cell 'cell-id)))
     `((cell_type . ,(slot-value cell 'cell-type))
       (source    . ,(ein:cell-get-text cell))
-      (metadata . ,(plist-put metadata :collapsed json-false)))))
+      (metadata . ,(plist-put metadata :collapsed json-false))
+      (id . ,cell-id))))
 
 (cl-defmethod ein:cell-next ((cell ein:basecell))
   "Return next cell of the given CELL or nil if CELL is the last one."
