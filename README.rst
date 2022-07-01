@@ -81,7 +81,7 @@ How do I...
    25.1
    and later.  Pre-release versions will not work.
 
-   First try ``emacs -Q -f package-initialize --eval "(setq debug-on-error t)"`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
+   First try ``emacs -Q -f package-initialize -f ein:dev-start-debug`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
    Then file an issue using ``M-x ein:dev-bug-report-template``.
 
@@ -226,3 +226,18 @@ Keymap (C-h m)
    C-c C-x C-r	ein:notebook-restart-session-command-km
    
    C-c M-w		ein:worksheet-copy-cell-km
+   
+   
+   This is a minor mode.  If called interactively, toggle the
+   ‘Ein:Notebook mode’ mode.  If the prefix argument is positive,
+   enable the mode, and if it is zero or negative, disable the mode.
+   
+   If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable
+   the mode if ARG is nil, omitted, or is a positive number.
+   Disable the mode if ARG is a negative number.
+   
+   To check whether the minor mode is enabled in the current buffer,
+   evaluate ‘ein:notebook-mode’.
+   
+   The mode’s hook is called both when the mode is enabled and when
+   it is disabled.

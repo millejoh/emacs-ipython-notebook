@@ -70,7 +70,7 @@ How do I...
    .. CI VERSION (see Makefile)
    and later.  Pre-release versions will not work.
 
-   First try ``emacs -Q -f package-initialize --eval "(setq debug-on-error t)"`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
+   First try ``emacs -Q -f package-initialize -f ein:dev-start-debug`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
 
    Then file an issue using ``M-x ein:dev-bug-report-template``.
 
