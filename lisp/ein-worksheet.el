@@ -1054,7 +1054,9 @@ Do not clear input prompts when the prefix argument is given."
 		  (setf (oref ws* :dirty) t)
 		  (ein:worksheet--unshift-undo-list cell*))))
 	   ws cell batch)))
-	((ein:markdowncell-p cell) (progn (math-preview-at-point) (message "trying math-preview-at-point")))
+	((ein:markdowncell-p cell)
+         (when (fboundp 'math-preview-at-point)
+           (math-preview-at-point)))
       (t (message "ein:worksheet-execute-cell: not a code cell"))))
 
 (defun ein:worksheet-execute-cell-and-goto-next (ws cell &optional insert)
