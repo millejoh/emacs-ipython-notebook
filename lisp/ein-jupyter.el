@@ -252,24 +252,28 @@ pertains our singleton jupyter server process here."
 (defun ein:jupyter-crib-token (url-or-port)
   "Shell out to jupyter for its credentials knowledge.  Return list
 of (PASSWORD TOKEN)."
-  (aif (cl-loop for line in
-                (apply #'ein:jupyter-process-lines url-or-port
-                       ein:jupyter-server-command
-                       (split-string
-                        (format "%s%s %s"
-                                (aif ein:jupyter-server-use-subcommand
-                                    (concat it " ") "")
-                                "list" "--json")))
-                with token0
-                with password0
-                when (cl-destructuring-bind
-                         (&key password url token &allow-other-keys)
-                         (ein:json-read-from-string line)
-                       (prog1 (equal (ein:url url) url-or-port)
-                         (setq password0 password) ;; t or :json-false
-                         (setq token0 token)))
-                return (list password0 token0))
-      it (list nil nil)))
+  (or (cl-loop for line in
+               (apply #'ein:jupyter-process-lines url-or-port
+                      ein:jupyter-server-command
+                      (split-string
+                       (format "%s%s %s"
+                               (aif ein:jupyter-server-use-subcommand
+                                   (concat it " ") "")
+                               "list" "--json")))
+               with token0
+               with password0
+               when (cl-destructuring-bind
+                        (&key password url token notebook_dir pid &allow-other-keys)
+                        (ein:json-read-from-string line)
+                      (prog1 (and (equal (ein:url url) url-or-port)
+                                  (let ((pal (process-attributes pid)))
+                                    (and pal
+                                         (string-match "python.*jupyter.*notebook"
+                                                       (cdr (assoc 'args pal))))))
+                        (setq password0 password) ;; t or :json-false
+                        (setq token0 token)))
+               return (list password0 token0))
+      (list nil nil)))
 
 ;;;###autoload
 (defun ein:jupyter-crib-running-servers ()
