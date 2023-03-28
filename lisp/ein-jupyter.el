@@ -259,7 +259,7 @@ of (PASSWORD TOKEN)."
                with token0
                with password0
                when (cl-destructuring-bind
-                        (&key password url token notebook_dir pid &allow-other-keys)
+                        (&key password url token pid &allow-other-keys)
                         (ein:json-read-from-string line)
                       (prog1 (and (equal (ein:url url) url-or-port)
                                   (let ((pal (process-attributes pid)))
