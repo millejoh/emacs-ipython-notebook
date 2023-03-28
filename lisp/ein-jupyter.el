@@ -50,7 +50,8 @@ Optionally append ':tag', e.g., ':latest' in the customary way."
   :group 'ein
   :type 'string)
 
-(defcustom ein:jupyter-docker-additional-switches "-e JUPYTER_ENABLE_LAB=no --rm"
+(defcustom ein:jupyter-docker-additional-switches
+  '("-e" "JUPYTER_ENABLE_LAB=no" "--rm")
   "Additional options to the 'docker run' call.
 
 Note some options like '-v' and '-network' are imposed by EIN."
@@ -177,12 +178,10 @@ with `kubectl exec'."
   (get-buffer-create buf)
   (let* ((cmd (if ein:jupyter-use-containers "docker" user-cmd))
          (vargs (cond (ein:jupyter-use-containers
-                       (split-string
-                        (format "run --network host -v %s:%s %s %s"
-                                dir
-                                ein:jupyter-docker-mount-point
-                                ein:jupyter-docker-additional-switches
-                                ein:jupyter-docker-image)))
+                       `("run" "--network" "host" "-v"
+                         ,(concat dir ":" ein:jupyter-docker-mount-point)
+                         ,@ein:jupyter-docker-additional-switches
+                         ,ein:jupyter-docker-image))
                       (t
                        (append (aif ein:jupyter-server-use-subcommand (list it))
                                (when dir
@@ -255,11 +254,8 @@ of (PASSWORD TOKEN)."
   (or (cl-loop for line in
                (apply #'ein:jupyter-process-lines url-or-port
                       ein:jupyter-server-command
-                      (split-string
-                       (format "%s%s %s"
-                               (aif ein:jupyter-server-use-subcommand
-                                   (concat it " ") "")
-                               "list" "--json")))
+                      (nconc (aif ein:jupyter-server-use-subcommand (list it) nil)
+                             '("list" "--json")))
                with token0
                with password0
                when (cl-destructuring-bind
@@ -281,11 +277,8 @@ of (PASSWORD TOKEN)."
   (cl-loop for line in
            (apply #'ein:jupyter-process-lines nil
                   ein:jupyter-server-command
-                  (split-string
-                   (format "%s%s %s"
-                           (aif ein:jupyter-server-use-subcommand
-                               (concat it " ") "")
-                           "list" "--json")))
+                  (nconc (aif ein:jupyter-server-use-subcommand (list it) nil)
+                         '("list" "--json")))
            collecting (ein:json-read-from-string line)))
 
 ;;;###autoload

@@ -627,8 +627,7 @@ EOF
         (default (or (car ein:gat-preemptible-history) "n")))
     (ein:completing-read
      (format "%s [%s]: " kind default)
-     (split-string "y n")
-     nil t nil
+     '("y" "n") nil t nil
      'ein:gat-preemptible-history default)))
 
 (defun ein:gat-elicit-keyname ()
