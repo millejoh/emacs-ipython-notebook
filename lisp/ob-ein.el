@@ -81,7 +81,7 @@
   :type '(repeat (cons string symbol))
   :group 'ein)
 
-(defcustom ob-ein-anonymous-path ".%s.ipynb"
+(defcustom ob-ein-anonymous-path "ob-%s.ipynb"
   "Applies when session header doesn't specify ipynb.
 Prosecute all interactions for a given language in this throwaway
 notebook (substitute %s with language)."
