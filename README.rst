@@ -50,9 +50,9 @@ Alternatively, directly clone this repo and ``make install``.
 
 **Note**: For `JupyterLab > 3.0`, you may need to set below variable:
 
-```elisp
-(setq ein:jupyter-server-use-subcommand "server")
-```
+::
+
+   (setq ein:jupyter-server-use-subcommand "server")
 
 Usage
 =====
