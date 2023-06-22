@@ -48,11 +48,11 @@ Then
 
 Alternatively, directly clone this repo and ``make install``.
 
-**Note**: For `JupyterLab > 3.0`, you may need to set below variable:
+For jupyterlab 3.0+, reconfigure the subcommand from "notebook" to "server".
 
 ::
 
-   (setq ein:jupyter-server-use-subcommand "server")
+   M-x customize-option RET ein:jupyter-server-use-subcommand RET
 
 Usage
 =====

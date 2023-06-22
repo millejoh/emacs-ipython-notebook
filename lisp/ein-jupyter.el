@@ -87,11 +87,12 @@ Changing this to `jupyter-notebook' requires customizing
 	 (set-default symbol value)
          (set-default 'ein:jupyter-server-command value)))
 
+;;;###autoload
 (defcustom ein:jupyter-server-use-subcommand "notebook"
-  "Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") need to Omit."
+  "For JupyterLab 3.0+ change the subcommand to \"server\".
+Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") select Omit."
   :group 'ein
   :type '(choice (string :tag "Subcommand" "notebook")
-                 (string :tag "JupyterLab" "server")
                  (const :tag "Omit" nil)))
 
 (defcustom ein:jupyter-server-args '("--no-browser")

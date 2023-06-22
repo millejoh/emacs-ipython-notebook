@@ -37,6 +37,12 @@ Then
 
 Alternatively, directly clone this repo and ``make install``.
 
+For jupyterlab 3.0+, reconfigure the subcommand from "notebook" to "server".
+
+::
+
+   M-x customize-option RET ein:jupyter-server-use-subcommand RET
+
 Usage
 =====
 Start EIN using **ONE** of the following:
