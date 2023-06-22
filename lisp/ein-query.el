@@ -57,8 +57,11 @@ The proper fix is to sempahore between competing curl processes.")
 
 (defun ein:query-prepare-header (url settings &optional securep)
   "Ensure that REST calls to the jupyter server have the correct _xsrf argument."
-  (let* ((host (url-host (url-generic-parse-url url)))
-         (cookies (request-cookie-alist host "/" securep))
+  (let* ((parsed-url (url-generic-parse-url url))
+         (host (url-host parsed-url))
+         (slash-path (car (url-path-and-query parsed-url)))
+         (cookies (or (request-cookie-alist host slash-path securep)
+                      (request-cookie-alist host "/" securep)))
          (xsrf (or (cdr (assoc-string "_xsrf" cookies))
                    (gethash host ein:query-xsrf-cache)))
          (key (ein:query-divine-authorization-tokens-key url))
