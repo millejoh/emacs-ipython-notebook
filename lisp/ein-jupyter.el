@@ -91,6 +91,7 @@ Changing this to `jupyter-notebook' requires customizing
   "Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") need to Omit."
   :group 'ein
   :type '(choice (string :tag "Subcommand" "notebook")
+                 (string :tag "JupyterLab" "server")
                  (const :tag "Omit" nil)))
 
 (defcustom ein:jupyter-server-args '("--no-browser")
