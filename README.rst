@@ -84,7 +84,7 @@ How do I...
 
 ... report a bug?
    Note EIN is tested only for *released* GNU Emacs versions
-   25.1
+   26.3
    and later.  Pre-release versions will not work.
 
    First try ``emacs -Q -f package-initialize -f ein:dev-start-debug`` and reproduce the bug.  The ``-Q`` skips any user configuration that might interfere with EIN.
