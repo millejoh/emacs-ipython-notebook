@@ -4,8 +4,8 @@
 (require 'org)
 
 (ert-deftest ein:ob-anonymous-p ()
-  (should (ob-ein-anonymous-p ".ein-python.ipynb"))
-  (should (ob-ein-anonymous-p ".ein.ipynb"))
+  (should (ob-ein-anonymous-p "ob-ein-python.ipynb"))
+  (should (ob-ein-anonymous-p "ob-ein.ipynb"))
   (should-not (ob-ein-anonymous-p "ein-python.ipynb"))
   (should-not (ob-ein-anonymous-p "Untitled.ipynb")))
 
