@@ -88,11 +88,11 @@ Changing this to `jupyter-notebook' requires customizing
          (set-default 'ein:jupyter-server-command value)))
 
 ;;;###autoload
-(defcustom ein:jupyter-server-use-subcommand "notebook"
+(defcustom ein:jupyter-server-use-subcommand '("notebook")
   "For JupyterLab 3.0+ change the subcommand to \"server\".
 Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") select Omit."
   :group 'ein
-  :type '(choice (string :tag "Subcommand" "notebook")
+  :type '(choice (repeat :tag "Subcommands" (string))
                  (const :tag "Omit" nil)))
 
 (defcustom ein:jupyter-server-args '("--no-browser")
@@ -186,7 +186,7 @@ with `kubectl exec'."
                                 ein:jupyter-docker-additional-switches
                                 ein:jupyter-docker-image)))
                       (t
-                       (append (aif ein:jupyter-server-use-subcommand (list it))
+                       (append (aif ein:jupyter-server-use-subcommand it)
                                (when dir
                                  (list (format "--notebook-dir=%s"
                                                (convert-standard-filename dir))))
@@ -257,11 +257,9 @@ of (PASSWORD TOKEN)."
   (aif (cl-loop for line in
                 (apply #'ein:jupyter-process-lines url-or-port
                        ein:jupyter-server-command
-                       (split-string
-                        (format "%s%s %s"
-                                (aif ein:jupyter-server-use-subcommand
-                                    (concat it " ") "")
-                                "list" "--json")))
+                       (append
+                        ein:jupyter-server-use-subcommand
+                        '("list" "--json")))
                 with token0
                 with password0
                 when (cl-destructuring-bind
@@ -279,11 +277,9 @@ of (PASSWORD TOKEN)."
   (cl-loop for line in
            (apply #'ein:jupyter-process-lines nil
                   ein:jupyter-server-command
-                  (split-string
-                   (format "%s%s %s"
-                           (aif ein:jupyter-server-use-subcommand
-                               (concat it " ") "")
-                           "list" "--json")))
+                  (append
+                   ein:jupyter-server-use-subcommand
+                   '("list" "--json")))
            collecting (ein:json-read-from-string line)))
 
 ;;;###autoload
