@@ -186,7 +186,7 @@ with `kubectl exec'."
                                 ein:jupyter-docker-additional-switches
                                 ein:jupyter-docker-image)))
                       (t
-                       (append (aif ein:jupyter-server-use-subcommand it)
+                       (append ein:jupyter-server-use-subcommand
                                (when dir
                                  (list (format "--notebook-dir=%s"
                                                (convert-standard-filename dir))))
