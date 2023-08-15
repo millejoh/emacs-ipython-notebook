@@ -230,7 +230,6 @@ token authentication is enabled. If a token is found use it to
 generate a call to `ein:notebooklist-login' and once
 authenticated open the notebooklist buffer via a call to
 `ein:notebooklist-open'."
-  (interactive)
   (if-let ((token (ein:notebooklist-token-or-password url-or-port)))
       (ein:notebooklist-login url-or-port callback nil nil token)
     (ein:log 'error "`(ein:notebooklist-token-or-password %s)` must return non-nil"
