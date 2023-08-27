@@ -16,7 +16,6 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         emacs_version: [26.3, 27.2, 28.2, 29.1]
@@ -34,44 +33,6 @@ jobs:
       uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
-
-    - uses: actions/cache@v2
-      if: startsWith(runner.os, 'Linux')
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-002
-
-    - uses: actions/cache@v2
-      if: startsWith(runner.os, 'macOS')
-      with:
-        path: ~/Library/Caches/pip
-        key: ${{ runner.os }}-pip-002
-
-    - uses: actions/cache@v2
-      with:
-        path: ~/local
-        key: ${{ runner.os }}-local-002
-
-    - uses: actions/cache@v2
-      with:
-        path: ~/.local
-        key: ${{ runner.os }}-dot-local-001
-
-    - uses: actions/cache@v2
-      with:
-        path: ~/.config
-        key: ${{ runner.os }}-dot-config-001
-
-    - uses: actions/cache@v2
-      if: startsWith(runner.os, 'Linux')
-      with:
-        path: ~/go
-        key: ${{ runner.os }}-go-002
-
-    - uses: actions/cache@v2
-      with:
-        path: ~/.emacs.d
-        key: emacs.d-000
 
     - uses: actions/cache@v2
       id: cache-cask-packages
@@ -92,56 +53,13 @@ jobs:
 
     - name: paths
       run: |
-        echo "$HOME/bin" >> $GITHUB_PATH
-        echo "$HOME/local/bin" >> $GITHUB_PATH
         echo "$HOME/.cask/bin" >> $GITHUB_PATH
-        echo "$HOME/local/R/bin" >> $GITHUB_PATH
-        echo "$HOME/local/julia-1.3.1/bin" >> $GITHUB_PATH
-        echo "$HOME/go/bin" >> $GITHUB_PATH
-        echo "PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=$HOME/.local/lib" >> $GITHUB_ENV
 
     - name: apt-get
       if: startsWith(runner.os, 'disable')
       run: |
         sudo apt-get -yq update
         DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils nodejs gfortran gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev texlive-latex-base libfuse-dev libxml2-dev libssl-dev libzmq3-dev jupyter-core jupyter-client
-
-    - name: dependencies
-      if: startsWith(runner.os, 'disable')
-      run: |
-        mkdir -p ~/local/bin
-        python -m pip install --upgrade pip
-        pip install yq setuptools wheel jupyter ipykernel ipython numpy matplotlib
-        python -m ipykernel install --user
-
-    - name: R
-      if: startsWith(runner.os, 'disable')
-      run: sh tools/install-R.sh
-
-    - name: julia
-      if: startsWith(runner.os, 'disable')
-      run: sh tools/install-julia.sh
-
-    - name: versions
-      if: startsWith(runner.os, 'disable')
-      run: |
-        jupyter kernelspec list
-        curl --version
-        ipython --version
-        emacs --version
-
-    - name: gnupg
-      if: startsWith(runner.os, 'disable')
-      run: |
-         brew list gnupg &>/dev/null || HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg
-
-    - name: test
-      if: startsWith(runner.os, 'disable')
-      run: |
-        rm -rf ~/.matplotlib ~/.cache/fontconfig
-        make test
-      continue-on-error: ${{ matrix.emacs_version == 'snapshot' }}
 
     - name: test-mem-constrained
       run: |
