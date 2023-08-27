@@ -138,11 +138,6 @@ if I call this between links in a deferred chain.  Adding a flush-queue."
                (sleep-for 0 1500)
                (ein:testing-new-notebook url-or-port ks t subdir))))))
 
-(defadvice ert-run-tests-batch (after ein:testing-dump-logs-hook activate)
-  "Hook `ein:testing-dump-logs-hook' because `kill-emacs-hook'
-is not run in batch mode before Emacs 24.1."
-  (ein:testing-dump-logs))
-
 (add-hook 'kill-emacs-hook #'ein:testing-dump-logs)
 
 (with-eval-after-load "ein-notebook"

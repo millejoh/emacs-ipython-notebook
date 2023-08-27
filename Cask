@@ -1,7 +1,7 @@
 (source gnu)
 (source melpa)
 
-(package-descriptor "lisp/ein-pkg.el")
+(package-file "lisp/ein.el")
 (files "lisp/*.el")
 
 (development

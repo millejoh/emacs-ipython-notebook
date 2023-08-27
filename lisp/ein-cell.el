@@ -507,7 +507,7 @@ Return language name as a string or `nil' when not defined.
       (progn
         (when (and (not (slot-value cell 'collapsed))
                    (= index ein:cell-max-num-outputs)
-                   (> (point) (point-at-bol)))
+                   (> (point) (line-beginning-position)))
           ;; The first output which exceeds `ein:cell-max-num-outputs'.
           (ein:insert-read-only "\n"))
         (ein:insert-read-only "."))

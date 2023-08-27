@@ -5,6 +5,8 @@
 ;; Authors:  dickmao <github id: dickmao>
 ;;           John Miller <millejoh at millejoh.com>
 ;;           Takafumi Arakaki <aka.tkf at gmail.com>
+;; Version: 0.17.1pre
+;; Package-Requires: ((emacs "26.1") (websocket "1.12") (anaphora "1.0.4") (request "0.3.3") (deferred "0.5") (polymode "0.2.2") (dash "2.13.0") (with-editor "0pre"))
 ;; URL: https://github.com/dickmao/emacs-ipython-notebook
 ;; Keywords: jupyter, literate programming, reproducible research
 

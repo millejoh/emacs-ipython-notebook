@@ -29,32 +29,6 @@
 
 (defvar ein:dev-trace-curl nil "Turn on to really go after it.")
 
-(defadvice backtrace (around ein:dev-short-backtrace)
-  "A hack to shorten backtrace.
-
-As code cells hold base64-encoded image data, backtrace tends to
-be VERY long.  So I am setting `print-level' to *1*.  Note that
-setting it globally via `setq' does not work because the value
-for debugger is hard-coded.  See `debugger-setup-buffer'."
-  (let ((print-level 1)
-        (print-length 1)
-        (print-circle t))
-    ad-do-it))
-
-(defun ein:dev-patch-backtrace ()
-  "Monkey patch `backtrace' function to make it shorter."
-  (interactive)
-  (ad-enable-advice 'backtrace 'around 'ein:dev-short-backtrace)
-  (ad-activate 'backtrace))
-
-(defun ein:dev-depatch-backtrace ()
-  "Undo `ein:dev-patch-backtrace'."
-  (interactive)
-  (ad-deactivate 'backtrace)
-  (ad-disable-advice 'backtrace 'around 'ein:dev-short-backtrace)
-  ;; In case it has other advices.
-  (ad-activate 'backtrace))
-
 ;;;###autoload
 (defun ein:dev-start-debug ()
   "Start logging a bunch of stuff."
@@ -77,8 +51,7 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (setq websocket-debug t)
   (setq websocket-callback-debug-on-error t)
   (ein:log-set-level 'debug)
-  (ein:log-set-message-level 'verbose)
-  (ein:dev-patch-backtrace))
+  (ein:log-set-message-level 'verbose))
 
 ;;;###autoload
 (defun ein:dev-stop-debug ()
@@ -92,7 +65,6 @@ Impossible to maintain because it needs to match start."
   (setq websocket-callback-debug-on-error nil)
   (ein:log-set-level 'verbose)
   (ein:log-set-message-level 'info)
-  (ein:dev-depatch-backtrace)
   (let ((curl-trace (concat temporary-file-directory "curl-trace")))
     (setq request-curl-options
           (cl-remove-if (lambda (x) (member x `("--trace-ascii" ,curl-trace)))
@@ -107,21 +79,10 @@ Impossible to maintain because it needs to match start."
           (buffer-string))))
 
 (defun ein:dev-packages ()
-  (let (result)
-    (cl-labels ((extract
-                 (lst)
-                 (mapcar (lambda (x) (symbol-name (cl-first x))) lst))
-                (define-package
-                  (args)
-                  (setq result (extract (nth 3 args)))))
-      (condition-case err
-          (load "ein-pkg")
-        (error
-         (with-temp-buffer
-           (ein:log 'warn "ein:dev-packages: %s" (error-message-string err))
-           (insert-file-contents (locate-library "ein-pkg"))
-           (setq result (extract (eval (nth 4 (car (read-from-string (buffer-string))))))))))
-      result)))
+  (with-temp-buffer
+    (insert-file-contents (locate-library "ein"))
+    (mapcar (lambda (x) (symbol-name (cl-first x)))
+	    (package-desc-reqs (package-buffer-info)))))
 
 (defun ein:dev-sys-info ()
   "Returns a list."

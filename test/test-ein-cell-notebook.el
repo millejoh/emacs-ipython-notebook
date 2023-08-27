@@ -24,7 +24,7 @@
   (ein:testing-with-one-cell 'code
     (insert "some text")
     (should (equal (marker-position (ein:cell-location cell :input))
-                   (1- (point-at-bol))))))
+                   (1- (line-beginning-position))))))
 
 (ert-deftest ein:cell-location-codecell-input-end ()
   (ein:testing-with-one-cell 'code

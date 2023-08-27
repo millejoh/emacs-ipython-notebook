@@ -33,8 +33,8 @@
 
 (defvar ein:output-area-case-types '(:image/svg+xml :image/png :image/jpeg :text/plain :text/html :application/latex :application/tex :application/javascript)
   "Prefer :text/plain.
-Unless it's a single line '<IPython.core.display.HTML object>' or
-'TemporalData[TimeSeries, <<1>>]' in which case prefer :text/html.")
+Unless it's a single line \"<IPython.core.display.HTML object>\" or
+\"TemporalData[TimeSeries, <<1>>]\" in which case prefer :text/html.")
 
 (defcustom ein:output-area-inlined-images nil
   "Turn on to insert images into buffer.  Default spawns external viewer."
@@ -55,14 +55,14 @@ frame by default and may appear unreadable."
     (shr-table-corner ?+))
   "Variables let-bound while calling `shr-insert-document'.
 
-To use default shr setting::
+To use default shr setting:
 
     (setq ein:shr-env nil)
 
-Draw boundaries for table (default)::
+Draw boundaries for table (default):
 
     (setq ein:shr-env
-          '((shr-table-horizontal-line ?-)
+          \\='((shr-table-horizontal-line ?-)
             (shr-table-vertical-line ?|)
             (shr-table-corner ?+)))
 "

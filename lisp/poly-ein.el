@@ -236,7 +236,7 @@ This is a bottleneck as we do this on every `pm-get-span'."
 (cl-defmethod pm-get-span ((cm pm-inner-overlay-chunkmode) &optional pos)
   "Return a list of the form (TYPE POS-START POS-END RESULT-CM).
 
-TYPE can be 'body, nil."
+TYPE can be \\='body, nil."
   (poly-ein-base
    (setq pos (or pos (point)))
    (when-let ((result-cm cm)
@@ -415,10 +415,11 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
   :type 'hook :group 'poly-ein)
 
 ;;;###autoload (autoload 'poly-ein-mode "poly-ein")
-(define-polymode poly-ein-mode
-  :lighter " PM-ipynb"
-  :hostmode 'pm-host/ein
-  :innermodes '(pm-inner/ein-input-cell))
+(with-suppressed-warnings ((obsolete easy-mmode-define-keymap))
+  (define-polymode poly-ein-mode
+		   :lighter " PM-ipynb"
+		   :hostmode 'pm-host/ein
+		   :innermodes '(pm-inner/ein-input-cell)))
 
 (defun poly-ein--copy-state (src-buf dest-buf)
   "Dangerous to call this outside `poly-ein-set-buffer' (loses overlays)."

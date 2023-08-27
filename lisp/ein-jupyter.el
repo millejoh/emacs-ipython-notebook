@@ -39,7 +39,7 @@
 
 (defcustom ein:jupyter-docker-image "jupyter/datascience-notebook"
   "Docker pull whichever jupyter image you prefer.  This defaults to
-the 'jupyter docker stacks' on hub.docker.com.
+the `jupyter docker stacks` on hub.docker.com.
 
 Optionally append ':tag', e.g., ':latest' in the customary way."
   :group 'ein
@@ -51,7 +51,7 @@ Optionally append ':tag', e.g., ':latest' in the customary way."
   :type 'string)
 
 (defcustom ein:jupyter-docker-additional-switches "-e JUPYTER_ENABLE_LAB=no --rm"
-  "Additional options to the 'docker run' call.
+  "Additional options to the `docker run` call.
 
 Note some options like '-v' and '-network' are imposed by EIN."
   :group 'ein
@@ -193,7 +193,7 @@ with `kubectl exec'."
                                args
                                (let ((copy (cl-copy-list ein:jupyter-server-args)))
                                  (when (ein:debug-p)
-                                   (cl-pushnew "--debug" copy))
+                                   (cl-pushnew "--debug" copy :test #'equal))
                                  copy)))))
          (proc (apply #'start-process
                       *ein:jupyter-server-process-name* buf cmd vargs)))

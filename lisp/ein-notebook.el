@@ -142,7 +142,7 @@ And I don't know if I can on account of the dont-save-cells nonsense."
                         (ein:$notebook-notebook-path notebook)))
 
 (defsubst ein:notebook--spec-insert-name (name spec)
-  "Add kernel NAME, e.g., 'python2', to the kernelspec member of ipynb metadata."
+  "Add kernel NAME, e.g., python2, to the kernelspec member of ipynb metadata."
   (if (plist-member spec :name)
       spec
     (plist-put spec :name name)))

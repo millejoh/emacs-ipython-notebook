@@ -156,7 +156,7 @@ update the ein:%which-cell% ledger that associates changes in
 ;; can use apply-partially instead here
 (defmacro hof-add (distance)
   "Return function that adds signed DISTANCE those undo elements.
-'hof' refers to higher-order function,"
+hof refers to higher-order function,"
   `(lambda (u)
      (cond ((numberp u)
             (+ u ,distance))
@@ -487,7 +487,7 @@ Shift in list parlance means removing the front."
 (defun ein:worksheet-pp (ewoc-data)
   "Consider disabling `buffer-undo-list' here.
 We currently disable in `ein:cell--ewoc-invalidate' which is probably
-unnecessarily 'surgical'."
+unnecessarily surgical."
   (let ((path (ein:$node-path ewoc-data))
         (data (ein:$node-data ewoc-data)))
     (cl-case (car path)
@@ -647,7 +647,7 @@ If you really want use this command, you can do something like this
 \(but be careful when using it!)::
 
   \(define-key ein:notebook-mode-map \"\\C-c\\C-d\"
-              'ein:worksheet-delete-cell)"
+              \\='ein:worksheet-delete-cell)"
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      t))
@@ -661,7 +661,7 @@ If you really want use this command, you can do something like this
   (when focus (ein:worksheet-focus-cell)))
 
 (defun ein:worksheet-kill-cell (ws cells &optional focus)
-  "Kill (\"cut\") the cell at point or cells in region.
+  "Kill the cell at point or cells in region.
 Note that the kill-ring for cells is not shared with the default
 kill-ring of Emacs (kill-ring for texts)."
   (interactive (list (ein:worksheet--get-ws-or-error)
@@ -802,7 +802,7 @@ directly."
 (defun ein:worksheet-split-cell-at-point (ws cell &optional no-trim focus)
   "Split cell at current position. Newlines at the splitting
 point will be removed. This can be omitted by giving a prefix
-argument \(C-u)."
+argument."
   (interactive (list (ein:worksheet--get-ws-or-error)
                      (ein:worksheet-get-current-cell)
                      current-prefix-arg
@@ -1155,24 +1155,6 @@ current worksheet buffer."
          (end (ein:cell-input-pos-max cell)))
     (indent-rigidly
      beg end (- (ein:find-leftmost-column beg end)))))
-
-;;; Workarounds
-
-(defadvice fill-paragraph (around ein:worksheet-fill-paragraph activate)
-  "Prevent \"Text is read-only\" error when filling paragraph in
-EIN worksheet."
-  (if ein:%worksheet%
-      (let* ((cell (ein:worksheet-get-current-cell))
-             (beg (copy-marker (ein:cell-input-pos-min cell))))
-        (save-excursion
-          (goto-char beg)
-          (insert "\n"))
-        (unwind-protect
-            ad-do-it
-          (save-excursion
-            (goto-char beg)
-            (delete-char 1))))
-    ad-do-it))
 
 (provide 'ein-worksheet)
 

@@ -140,7 +140,7 @@ The result is unspecified if there isn't a symbol under the point."
 (defun ein:object-prefix-at-point ()
   "Like `ein:object-at-point', but only return substring up to point.
 For example, given pd.Series, if the cursor is at the S then
-'pd.S' will be returned."
+pd.S will be returned."
   (ein:and-let* ((obj (ein:object-at-point))
                  (delta (- (point) (ein:object-start-pos))))
     (substring obj 0 delta)))
@@ -153,9 +153,9 @@ point, return the object just before previous opening
 parenthesis.
 
 For auto popup tooltip (or something like eldoc), probably it is
-better to return function (any word before '(').  I should write
-another function or add option to this function when the auto
-popup tooltip is implemented."
+better to return function (any word before left parenthesis).  I
+should write another function or add option to this function when
+the auto popup tooltip is implemented."
   (if (region-active-p)
       (ein:trim (buffer-substring (region-beginning) (region-end))
                 "\\s-\\|\n\\|\\.")
@@ -164,7 +164,7 @@ popup tooltip is implemented."
         (aif (thing-at-point 'symbol)
             it
           (unless (looking-at "(")
-            (search-backward "(" (point-at-bol) t))
+            (search-backward "(" (line-beginning-position) t))
           (thing-at-point 'symbol))))))
 
 (defun ein:function-at-point ()
@@ -172,7 +172,7 @@ popup tooltip is implemented."
 at point, i.e. any word before then \"(\", if it is present."
   (save-excursion
     (unless (looking-at "(")
-      (search-backward "(" (point-at-bol) t))
+      (search-backward "(" (line-beginning-position) t))
     (ein:object-at-point)))
 
 (defun ein:object-at-point-or-error ()
@@ -376,7 +376,7 @@ Adapted from twittering-mode.el's `case-string'."
       (goto-char beg)
       (while (< (point) end)
         (back-to-indentation)
-        (unless (= (point) (point-at-eol))
+        (unless (= (point) (line-end-position))
           (setq mincol (if mincol
                            (min mincol (current-column))
                          (current-column))))
@@ -405,9 +405,9 @@ Adapted from twittering-mode.el's `case-string'."
 (defun ein:plist-exclude (plist keys)
   "Exclude entries specified by KEYS in PLIST.
 
-Example::
+Example:
 
-    (ein:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
+    (ein:plist-exclude \\='(:a 1 :b 2 :c 3 :d 4) \\='(:b :c))"
   (cl-loop for (k v) on plist by 'cddr
         unless (memq k keys)
         nconc (list k v)))
@@ -415,9 +415,9 @@ Example::
 (defun ein:clip-list (list first last)
   "Return elements in region of the LIST specified by FIRST and LAST element.
 
-Example::
+Example:
 
-    (ein:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
+    (ein:clip-list \\='(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
   (cl-loop for elem in list
         with clipped
         with in-region-p = nil
@@ -592,7 +592,7 @@ otherwise it should be a function, which is called on `time'."
 (defun ein:message-whir-subr (mesg doneback)
   "Display MESG with a modest animation until done-p returns t.
 
-DONEBACK returns t or 'error when calling process is done, and nil if not done."
+DONEBACK returns t or \\='error when calling process is done, and nil if not done."
   (let* ((mesg mesg)
          (doneback doneback)
          (count -1))

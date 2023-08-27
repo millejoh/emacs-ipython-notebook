@@ -144,7 +144,7 @@ The server 1. really starts a session (and an accompanying
 kernel), and 2. may not even start a session if one exists for
 the same path.
 
-If 'picking up from where we last left off', that is, we restart
+If picking up from where we last left off, that is, we restart
 emacs and reconnect to same server, jupyter will hand us back the
 original, still running session.
 
@@ -405,7 +405,7 @@ Example::
 
   (ein:kernel-connect-request
    (ein:get-kernel)
-   '(:kernel_connect_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
+   \\='(:kernel_connect_reply (message . \"CONTENT: %S\\nMETADATA: %S\")))
 "
   ;(cl-assert (ein:kernel-live-p kernel) nil "connect_reply: Kernel is not active.")
   (let* ((msg (ein:kernel--get-msg kernel "connect_request" (make-hash-table)))
