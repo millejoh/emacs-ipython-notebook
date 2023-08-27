@@ -123,7 +123,7 @@ Supply ERROR-BUFFER to capture stderr."
   (cl-loop for line in (condition-case err
                            (apply #'process-lines
                                   ein:jupyter-server-command
-                                  (append ein:jupyter-server-use-subcommand
+                                  (append (split-string (or ein:jupyter-server-use-subcommand ""))
                                           '("list" "--json")))
                          ;; often there is no local jupyter installation
                          (error (ein:log 'info "ein:process-refresh-processes: %s" err) nil))

@@ -88,11 +88,11 @@ Changing this to `jupyter-notebook' requires customizing
          (set-default 'ein:jupyter-server-command value)))
 
 ;;;###autoload
-(defcustom ein:jupyter-server-use-subcommand '("notebook")
+(defcustom ein:jupyter-server-use-subcommand "notebook"
   "For JupyterLab 3.0+ change the subcommand to \"server\".
 Users of \"jupyter-notebook\" (as opposed to \"jupyter notebook\") select Omit."
   :group 'ein
-  :type '(choice (repeat :tag "Subcommands" (string))
+  :type '(choice (string :tag "Subcommand" "notebook")
                  (const :tag "Omit" nil)))
 
 (defcustom ein:jupyter-server-args '("--no-browser")
@@ -186,7 +186,7 @@ with `kubectl exec'."
                                 ein:jupyter-docker-additional-switches
                                 ein:jupyter-docker-image)))
                       (t
-                       (append ein:jupyter-server-use-subcommand
+                       (append (split-string (or ein:jupyter-server-use-subcommand ""))
                                (when dir
                                  (list (format "--notebook-dir=%s"
                                                (convert-standard-filename dir))))
@@ -257,7 +257,7 @@ of (PASSWORD TOKEN)."
                 (apply #'ein:jupyter-process-lines url-or-port
                        ein:jupyter-server-command
                        (append
-                        ein:jupyter-server-use-subcommand
+                        (split-string (or ein:jupyter-server-use-subcommand ""))
                         '("list" "--json")))
                 with token0
                 with password0
@@ -277,7 +277,7 @@ of (PASSWORD TOKEN)."
            (apply #'ein:jupyter-process-lines nil
                   ein:jupyter-server-command
                   (append
-                   ein:jupyter-server-use-subcommand
+                   (split-string (or ein:jupyter-server-use-subcommand ""))
                    '("list" "--json")))
            collecting (ein:json-read-from-string line)))
 

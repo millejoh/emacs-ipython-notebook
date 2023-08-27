@@ -36,7 +36,7 @@ Then
 
 Alternatively, directly clone this repo and ``make install``.
 
-For jupyterlab 3.0+, reconfigure the subcommand from `'("notebook")` to `'("server")`.
+For jupyterlab 3.0+, reconfigure the subcommand from "notebook" to "server".
 
 ::
 
