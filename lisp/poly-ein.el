@@ -414,6 +414,10 @@ But `C-x b` seems to consult `buffer-list' and not the C (window)->prev_buffers.
   "Hook for poly-ein-mode"
   :type 'hook :group 'poly-ein)
 
+(unless (fboundp 'with-suppressed-warnings)
+  (defmacro with-suppressed-warnings (warnings &rest body)
+    `(progn (ignore ',warnings) ,@body)))
+
 ;;;###autoload (autoload 'poly-ein-mode "poly-ein")
 (with-suppressed-warnings ((obsolete easy-mmode-define-keymap))
   (define-polymode poly-ein-mode

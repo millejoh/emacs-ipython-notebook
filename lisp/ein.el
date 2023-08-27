@@ -30,16 +30,16 @@
 ;; Emacs IPython Notebook (EIN), despite its name, is a jupyter client for all
 ;; languages.  It does not work under non-WSL Windows environments.
 ;;
-;; No require statements, e.g. ``(require 'ein)``, are necessary, contrary to the
-;; `prevailing documentation`_, which should be disregarded.
+;; As of 2023, EIN has been sunset for a number of years having been
+;; unable to keep up with jupyter's web-first ecosystem.  Even during
+;; its heyday EIN never fully reconciled emac's monolithic buffer
+;; architecture to the notebook's by-cell discretization, leaving
+;; gaping functional holes like crippled undo.
 ;;
-;; Org_ users please find ob-ein_, a jupyter Babel_ backend.
-;;
-;; `AWS GCE (Preview)`_ integration is in alpha.
-;;
-;; EIN was originally written by `[tkf]`_.  A jupyter Babel_ backend was first
-;; introduced by `[gregsexton]`_.
-;;
+;; Certainly in 2012 when jupyter was much smaller, an emacs client
+;; made perfect sense.  With many years of hindsight, it's now clear
+;; the json-driven, git-averse notebook format is anathema to emacs's
+;; plain text ethos.
 
 ;;; Code:
 

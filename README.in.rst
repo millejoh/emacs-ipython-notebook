@@ -32,7 +32,6 @@ Then
 
 ::
 
-   M-x package-refresh-contents RET
    M-x package-install RET ein RET
 
 Alternatively, directly clone this repo and ``make install``.
@@ -50,13 +49,6 @@ Start EIN using **ONE** of the following:
 * Open an ``.ipynb`` file, press ``C-c C-o``, or,
 * ``M-x ein:run`` launches a jupyter process from emacs, or,
 * ``M-x ein:login`` to a running jupyter server, or,
-* [Jupyterhub] ``M-x ein:login`` to any of
-
-  * ``https://hub.data8x.berkeley.edu``
-  * ``https://hub.data8x.berkeley.edu/user/1dcdab3``
-  * ``https://hub.data8x.berkeley.edu/user/1dcdab3/?token=c421c68``, or,
-
-* [Preview] To run on AWS or GCE, open an ``.ipynb`` file, press ``C-c C-r``.  See `AWS GCE (Preview)`_.
 
 ``M-x ein:stop`` prompts to halt local and remote jupyter services.
 
@@ -96,13 +88,7 @@ How do I...
    On a typical Linux system, one might configure a viewer for MIME Type ``image/png`` as a shell command ``convert %s -background white -alpha remove -alpha off - | display -immutable``.
 
 ... get IDE-like behavior?
-   The official python module for EIN is elpy_, installed separately.  Other `program modes`_ for non-python kernels may be installed with varying degrees of EIN compatibility.
-
-... render LaTeX?
-   The official LaTeX module for EIN is math-preview_, installed separately.
-
-... send expressions from a python buffer to a running kernel?
-   Unpublicized keybindings *exclusively* for the Python language ``C-c C-/ e`` and ``C-c C-/ r`` send the current statement or region respectively to a running kernel.  If the region is not set, ``C-c C-/ r`` sends the entire buffer.  You must manually inspect the ``*ein:shared output*`` buffer for errors.
+   You can't.  EIN's architecture is fundamentally incompatible with LSP.
 
 .. _Issues: https://github.com/millejoh/emacs-ipython-notebook/issues
 .. _prevailing documentation: http://millejoh.github.io/emacs-ipython-notebook
@@ -147,22 +133,6 @@ The ``:session`` is the notebook url, e.g., ``http://localhost:8888/my.ipynb``, 
 .. _ob-ipython: https://github.com/gregsexton/ob-ipython
 .. _scimax: https://github.com/jkitchin/scimax
 .. _jupyter kernel: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
-
-AWS GCE (Preview)
-=================
-::
-
-   M-x customize-option RET ein:gat-vendor
-
-From a notebook or raw ipynb buffer, ``M-x ein:gat-run-remote`` opens the notebook on an AWS spot or GCE preemptible instance.  You must ``M-x ein:stop`` or exit emacs to stop incurring charges!
-
-``M-x ein:gat-run-remote-batch`` runs the notebook in `batch mode`_.
-
-Results appear in the ``run-remote`` directory.
-
-See `dickmao/Kaggler`_ for examples of importing Kaggle datasets.
-
-See `gat usage`_ for information about the ``gat`` utility.
 
 .. _gat utility: https://dickmaogat.readthedocs.io/en/latest/install.html
 .. _gat usage: https://dickmaogat.readthedocs.io/en/latest/usage.html

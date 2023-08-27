@@ -16,6 +16,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         emacs_version: [26.3, 27.2, 28.2, 29.1]
@@ -38,59 +39,60 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-001
+        key: ${{ runner.os }}-pip-002
 
     - uses: actions/cache@v2
       if: startsWith(runner.os, 'macOS')
       with:
         path: ~/Library/Caches/pip
-        key: ${{ runner.os }}-pip-001
+        key: ${{ runner.os }}-pip-002
 
     - uses: actions/cache@v2
       with:
         path: ~/local
-        key: ${{ runner.os }}-local-001
+        key: ${{ runner.os }}-local-002
 
     - uses: actions/cache@v2
       with:
         path: ~/.local
-        key: ${{ runner.os }}-dot-local-000
+        key: ${{ runner.os }}-dot-local-001
 
     - uses: actions/cache@v2
       with:
         path: ~/.config
-        key: ${{ runner.os }}-dot-config-000
+        key: ${{ runner.os }}-dot-config-001
 
     - uses: actions/cache@v2
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/go
-        key: ${{ runner.os }}-go-001
+        key: ${{ runner.os }}-go-002
 
     - uses: actions/cache@v2
       with:
         path: ~/.emacs.d
-        key: emacs.d
+        key: emacs.d-000
 
     - uses: actions/cache@v2
       id: cache-cask-packages
       with:
         path: .cask
-        key: cache-cask-packages-000
+        key: cache-cask-packages-001
 
     - uses: actions/cache@v2
       id: cache-cask-executable
       with:
         path: ~/.cask
-        key: cache-cask-executable-000
+        key: cache-cask-executable-001
 
-    - uses: conao3/setup-cask@master
+    - uses: cask/setup-cask@master
       if: steps.cache-cask-executable.outputs.cache-hit != 'true'
       with:
-        version: snapshot
+          version: snapshot
 
     - name: paths
       run: |
+        echo "$HOME/bin" >> $GITHUB_PATH
         echo "$HOME/local/bin" >> $GITHUB_PATH
         echo "$HOME/.cask/bin" >> $GITHUB_PATH
         echo "$HOME/local/R/bin" >> $GITHUB_PATH
