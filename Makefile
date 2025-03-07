@@ -32,7 +32,7 @@ README.rst: cask README.in.rst lisp/ein.el lisp/ein-notebook.el
 	perl -ne "s/^((\s*)C-c C-c(\s+).*)$$/\$${1}\n\$${2}C-u C-c C-c    \$${3}ein:worksheet-execute-all-cells/; print" README.rst0 > README.rst1
 	perl -ne "s/^(\s*)\S+.*CI VERSION.*$$/\$${1}$(TEST_VERSION)/; print" README.rst1 > README.rst0
 	grep ';;' lisp/ein.el \
-	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
+	    | gawk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
 	    | tools/readme-sed.sh "COMMENTARY" README.rst0 > README.rst
 	rm README.rst0 README.rst1

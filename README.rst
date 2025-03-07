@@ -15,10 +15,12 @@ its heyday EIN never fully reconciled emac's monolithic buffer
 architecture to the notebook's by-cell discretization, leaving
 gaping functional holes like crippled undo.
 
-Certainly in 2012 when jupyter was much smaller, an emacs client
-made perfect sense.  With many years of hindsight, it's now clear
-the json-driven, git-averse notebook format is anathema to emacs's
-plain text ethos.
+**As of 2025, a greenfield notebook implementation resides at,**
+
+https://github.com/commercial-emacs/xjupyter.git
+
+It features full-fledged undo and relies on "mode overlays"
+instead of the complex and fragile polymode.
 
 .. |build-status|
    image:: https://github.com/millejoh/emacs-ipython-notebook/workflows/CI/badge.svg
@@ -205,16 +207,16 @@ Keymap (C-h m)
    C-c M-w		ein:worksheet-copy-cell-km
    
    
-   This is a minor mode.  If called interactively, toggle the
-   ‘Ein:Notebook mode’ mode.  If the prefix argument is positive,
-   enable the mode, and if it is zero or negative, disable the mode.
+   This is a minor mode.  If called interactively, toggle the ‘Ein:Notebook
+   mode’ mode.  If the prefix argument is positive, enable the mode, and if
+   it is zero or negative, disable the mode.
    
-   If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable
-   the mode if ARG is nil, omitted, or is a positive number.
-   Disable the mode if ARG is a negative number.
+   If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+   mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+   if ARG is a negative number.
    
    To check whether the minor mode is enabled in the current buffer,
-   evaluate ‘ein:notebook-mode’.
+   evaluate the variable ‘ein:notebook-mode’.
    
-   The mode’s hook is called both when the mode is enabled and when
-   it is disabled.
+   The mode’s hook is called both when the mode is enabled and when it is
+   disabled.
